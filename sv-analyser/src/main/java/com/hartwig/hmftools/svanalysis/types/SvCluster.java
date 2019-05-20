@@ -910,7 +910,7 @@ public class SvCluster
 
     public void buildArmClusters()
     {
-        isSpecificCluster(this);
+        // isSpecificCluster(this);
 
         for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
@@ -976,7 +976,7 @@ public class SvCluster
             }
         }
 
-        // isSpecificCluster(this);
+        isSpecificCluster(this);
         mArmClusters.forEach(x -> x.setFeatures());
     }
 

@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -141,12 +142,6 @@ public class SvArmCluster
                 return;
             }
 
-            if(var1 == var2)
-            {
-                mType = ARM_CL_ISOLATED_BE;
-                return;
-            }
-
             final SvLinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
 
             if(tiPair != null && tiPair.hasBreakend(be2, true))
@@ -165,80 +160,107 @@ public class SvArmCluster
             }
         }
 
-        // otherwise count the number of foldbacks, TIs, DSBs and consecutive BEs to determine the type
+        // otherwise count the number of foldbacks, LINE, TIs and DSBs to determine the type
         int dsbCount = 0;
         int foldbackCount = 0;
         int suspectLine = 0;
         int tiCount = 0;
 
-        for (int i = 0; i < mBreakends.size() - 1; ++i)
+        List<SvBreakend> tiBreakends = Lists.newArrayList();
+
+        for (int i = 0; i < mBreakends.size(); ++i)
         {
             final SvBreakend be1 = mBreakends.get(i);
-            final SvBreakend be2 = mBreakends.get(i+1);
 
             if(be1.getSV().isLineElement(be1.usesStart()))
             {
                 ++suspectLine;
             }
 
-            if(be1.getSV().getFoldbackLink(be1.usesStart()).equals(be2.getSV().id()))
+            if(be1.getSV().isFoldback())
             {
                 ++foldbackCount;
             }
 
-            final SvLinkedPair tiPair = be1.getSV().getLinkedPair(be1.usesStart());
-
-            if(tiPair != null && tiPair.hasBreakend(be2, true))
+            if(be1.orientation() == -1)
             {
-                ++tiCount;
-            }
-            else
-            {
-                final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
+                final SvLinkedPair tiPair = be1.getSV().getLinkedPair(be1.usesStart());
 
-                if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
+                if (tiPair != null && be1.position() + tiPair.length() <= mEndPos)
                 {
-                    ++dsbCount;
-                }
-                else
-                {
-                    // check for breakends which ought to be a in a DB but may have an unclustered SV in between
-                    if(be1.orientation() == 1 && be2.orientation() == -1)
-                    {
-                        ++dsbCount;
-                    }
-                    else if(be1.orientation() == -1 && be2.orientation() == 1
-                    && be2.position() - be1.position() < getMinTemplatedInsertionLength(be1, be2))
-                    {
-                        ++dsbCount;
-                    }
+                    tiBreakends.add(be1);
+                    tiBreakends.add(tiPair.getOtherBreakend(be1).getOrigBreakend());
+                    ++tiCount;
                 }
             }
+        }
+
+        if((foldbackCount % 2) == 2)
+        {
+            LOGGER.warn("cluster({}) armgGroup({}) has invalid foldback count({})", mCluster.id(), toString(), foldbackCount);
+        }
+        else
+        {
+            foldbackCount /= 2; // to avoid double counting
         }
 
         mTICount = tiCount;
 
-        if(mBreakends.size() == tiCount * 2 + 1)
+        if(suspectLine > 0)
+        {
+            mType = ARM_CL_COMPLEX_LINE;
+            return;
+        }
+        else if(foldbackCount > 1)
+        {
+            mType = ARM_CL_COMPLEX_FOLDBACK;
+            return;
+        }
+
+        int nonTiBreakendCount = mBreakends.size() - tiCount * 2;
+
+        if(foldbackCount == 0 && nonTiBreakendCount > 2)
+        {
+            // cannot just be a DSB with TIs, so early exit for further analysis
+            mType = ARM_CL_COMPLEX_OTHER;
+            return;
+        }
+
+        List<SvBreakend> unlinkedBreakends = mBreakends.stream().filter(x -> !tiBreakends.contains(x)).collect(Collectors.toList());
+
+        // check for DSBs which were masked by TIs in between
+        for (int i = 0; i < unlinkedBreakends.size() - 1; ++i)
+        {
+            final SvBreakend be1 = unlinkedBreakends.get(i);
+            final SvBreakend be2 = unlinkedBreakends.get(i+1);
+
+            if(be1.orientation() == 1 && be2.orientation() == -1)
+            {
+                ++dsbCount;
+            }
+            else if(be1.orientation() == -1 && be2.orientation() == 1
+            && be2.position() - be1.position() < getMinTemplatedInsertionLength(be1, be2))
+            {
+                ++dsbCount;
+            }
+        }
+
+        if(nonTiBreakendCount == 1)
         {
             // if after removing all TIs, all that is left is a single breakend then classify it as such
             mType = ARM_CL_ISOLATED_BE;
         }
-
-        if(suspectLine > 0)
+        else if(foldbackCount == 1 && dsbCount == 0)
         {
-            mType = ARM_CL_COMPLEX_LINE;
+            mType = ARM_CL_FOLDBACK;
         }
-        else if(mBreakends.size() == 3 && foldbackCount == 1 && dsbCount == 1)
+        else if(nonTiBreakendCount == 3 && foldbackCount == 1 && dsbCount == 1)
         {
             mType = ARM_CL_FOLDBACK_DSB;
         }
-        else if(foldbackCount == 0 && dsbCount >= mBreakends.size() / 2)
+        else if(foldbackCount == 0 && dsbCount == 1 && nonTiBreakendCount == 2)
         {
             mType = ARM_CL_DSB;
-        }
-        else if(foldbackCount > 0)
-        {
-            mType = ARM_CL_COMPLEX_FOLDBACK;
         }
         else
         {

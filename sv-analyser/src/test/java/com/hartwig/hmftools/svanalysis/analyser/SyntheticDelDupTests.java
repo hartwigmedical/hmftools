@@ -7,6 +7,12 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSv;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_ISOLATED_BE;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
@@ -64,6 +70,11 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(true));
 
+        cluster.buildArmClusters();
+        assertEquals(1, cluster.getArmClusters().size());
+        assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
+        assertEquals(1, cluster.getArmClusters().get(0).getTICount());
+
         // test 2 DSBs but with an overlapping end less than permitted TI length
         var1 = createInv(tester.nextVarId(), "1", 100, 400, 1);
         var2 = createInv(tester.nextVarId(), "1", 90, 1000, -1);
@@ -82,8 +93,8 @@ public class SyntheticDelDupTests
 
 
         // test 2 overlapping breakends
-        var1 = createInv(tester.nextVarId(), "1", 100, 400, 1);
-        var2 = createInv(tester.nextVarId(), "1", 250, 350, -1);
+        var1 = createInv(tester.nextVarId(), "1", 100, 10400, 1);
+        var2 = createInv(tester.nextVarId(), "1", 250, 10350, -1);
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -96,6 +107,11 @@ public class SyntheticDelDupTests
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL_EXT_TI);
         assertEquals(cluster.getSynDelDupLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(false));
+
+        cluster.buildArmClusters();
+        assertEquals(2, cluster.getArmClusters().size());
+        assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
+        assertEquals(ARM_CL_TI_ONLY, cluster.getArmClusters().get(1).getType());
 
         // test 2 overlapping breakends but where a pair of breakend form an overlapping DB
         var1 = createInv(tester.nextVarId(), "1", 500, 1000, 1);
@@ -114,8 +130,8 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(true));
 
         // 3 overlapping breakends
-        var1 = createInv(tester.nextVarId(), "1", 200, 400, 1);
-        var2 = createInv(tester.nextVarId(), "1", 100, 350, -1);
+        var1 = createInv(tester.nextVarId(), "1", 200, 10400, 1);
+        var2 = createInv(tester.nextVarId(), "1", 100, 10350, -1);
 
         cluster = new SvCluster(0);
         cluster.addVariant(var1);
@@ -129,7 +145,12 @@ public class SyntheticDelDupTests
         assertEquals(cluster.getSynDelDupLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(false) - var2.position(false));
 
-        // 4 overlapping breakends
+        cluster.buildArmClusters();
+        assertEquals(2, cluster.getArmClusters().size());
+        assertEquals(ARM_CL_COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
+        assertEquals(ARM_CL_TI_ONLY, cluster.getArmClusters().get(1).getType());
+
+        // 4 overlapping breakends - also forming 2 facing foldbacks
         var1 = createInv(tester.nextVarId(), "1", 300, 400, 1);
         var2 = createInv(tester.nextVarId(), "1", 100, 250, -1);
 
@@ -139,11 +160,17 @@ public class SyntheticDelDupTests
 
         addAndPrepareCluster(tester, cluster);
         tester.ClusteringMethods.markInversionPairTypes(cluster);
+        tester.Analyser.markFoldbacks();
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP_INT_TI);
         assertEquals(cluster.getSynDelDupLength(), var1.position(false) - var2.position(true));
         assertEquals(cluster.getSynDelDupTILength(), var1.position(true) - var2.position(false));
+
+        cluster.buildArmClusters();
+        assertEquals(1, cluster.getArmClusters().size());
+        assertEquals(ARM_CL_COMPLEX_FOLDBACK, cluster.getArmClusters().get(0).getType());
+
 
         // test reciprocal inversion defined as a TI greater than 50% of the synthetic length and internal to a DEL
         var1 = createInv(tester.nextVarId(), "1", 100, 1000, 1);
