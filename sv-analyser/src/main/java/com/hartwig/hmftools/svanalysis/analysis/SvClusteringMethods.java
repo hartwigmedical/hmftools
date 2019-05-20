@@ -224,6 +224,7 @@ public class SvClusteringMethods {
                         {
                             // keep one and remove the other
                             cluster.mergeOtherCluster(nextCluster, false);
+                            cluster.addClusterReason(CLUSTER_REASON_PROXIMITY);
                             clusters.remove(nextCluster);
                         }
                         else
@@ -244,7 +245,6 @@ public class SvClusteringMethods {
                         if (nextVar.getClusterReason().isEmpty())
                             nextVar.addClusterReason(CLUSTER_REASON_PROXIMITY, var.id());
                     }
-
                 }
 
                 // move the index to the SV which was just proximity cluster so the next comparison is with the closest candidate
@@ -304,11 +304,23 @@ public class SvClusteringMethods {
                     SvCluster newCluster = new SvCluster(getNextClusterId());
                     newClusters.add(newCluster);
                     newCluster.addVariant(var);
-                    var.clearClusterReason();
                 }
             }
 
             clustersToRemove.add(cluster);
+
+            for(SvCluster newCluster : newClusters)
+            {
+                if(newCluster.getSvCount() > 1)
+                {
+                    newCluster.addClusterReason(CLUSTER_REASON_PROXIMITY);
+                }
+                else
+                {
+                    newCluster.getSV(0).clearClusterReason();
+                }
+            }
+
             clusters.addAll(newClusters);
         }
 

@@ -279,7 +279,6 @@ public class SvVarData
     public final SvCluster getCluster() { return mCluster; }
     public void setCluster(final SvCluster cluster)
     {
-        // isSpecificSV(this);
         mCluster = cluster;
     }
 
