@@ -129,7 +129,7 @@ public class SvTestHelper
 
     public void mergeOnProximity()
     {
-        ClusteringMethods.clusterByProximity(AllVariants, Analyser.getClusters());
+        ClusteringMethods.clusterByProximity(Analyser.getClusters());
     }
 
     public final List<SvCluster> getClusters() { return Analyser.getClusters(); }

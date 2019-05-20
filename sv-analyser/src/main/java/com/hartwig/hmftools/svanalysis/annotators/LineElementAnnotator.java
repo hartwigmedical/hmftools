@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.areVariantsLinkedByDistance;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_BE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -112,9 +113,8 @@ public class LineElementAnnotator {
 
     public static boolean hasPolyAorTMotif(final SvVarData var)
     {
-        return var.getSvData().insertSequence().contains(POLY_A_MOTIF) || var.getSvData().insertSequence() .contains(POLY_T_MOTIF);
+        return var.getSvData().insertSequence().contains(POLY_A_MOTIF) || var.getSvData().insertSequence().contains(POLY_T_MOTIF);
     }
-
 
     public static void markLineCluster(final SvCluster cluster, int proximityLength)
     {
@@ -129,6 +129,9 @@ public class LineElementAnnotator {
             -  has a suspected line element
             -  every variant in the cluster is part of a KNOWN line element
         */
+
+        if(cluster.getResolvedType() == RESOLVED_TYPE_DUP_BE)
+            return;
 
         // isSpecificCluster(cluster);
 

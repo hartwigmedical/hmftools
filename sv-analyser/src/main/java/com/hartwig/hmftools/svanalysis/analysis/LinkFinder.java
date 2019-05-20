@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -87,10 +88,6 @@ public class LinkFinder
                 if(var1.type() == INS || var1.isNullBreakend())
                     continue;
 
-                if(var1.isDupBreakend(lowerBreakend.usesStart()))
-                    continue;
-
-                final SvVarData lowerSV = lowerBreakend.getSV();
                 for (int j = i+1; j < breakendList.size(); ++j)
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
@@ -104,9 +101,6 @@ public class LinkFinder
                         continue;
 
                     if(var2.type() == INS || var2.isNullBreakend())
-                        continue;
-
-                    if(var2.isDupBreakend(upperBreakend.usesStart()))
                         continue;
 
                     boolean v1Start = lowerBreakend.usesStart();
@@ -204,9 +198,6 @@ public class LinkFinder
             if(var1.type() == INS || (var1.isNullBreakend() && !allowSingleBEs))
                 continue;
 
-            if(var1.isDupBreakend(true) && var1.isDupBreakend(false))
-                continue;
-
             for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
             {
                 boolean v1Start = isStart(be1);
@@ -226,9 +217,6 @@ public class LinkFinder
                         continue;
 
                     if(var2.type() == INS || (var2.isNullBreakend() && !allowSingleBEs))
-                        continue;
-
-                    if(var2.isDupBreakend(true) && var2.isDupBreakend(false))
                         continue;
 
                     for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
@@ -321,8 +309,8 @@ public class LinkFinder
 
             for (int i = 0; i < breakendList.size() - 1; ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvBreakend nextBreakend = breakendList.get(i+1);
+                SvBreakend breakend = breakendList.get(i);
+                SvBreakend nextBreakend = breakendList.get(i+1);
                 SvVarData var1 = breakend.getSV();
                 SvVarData var2 = nextBreakend.getSV();
 

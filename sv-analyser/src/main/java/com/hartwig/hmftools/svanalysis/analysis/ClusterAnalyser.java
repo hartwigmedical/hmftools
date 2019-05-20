@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLIC
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateChainedClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.calcNetCopyNumberChangeAcrossCluster;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.checkLooseFoldbacks;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.reportClusterRepRepairSegments;
@@ -52,6 +51,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
@@ -154,7 +154,8 @@ public class ClusterAnalyser {
         mClusters.clear();
 
         mPcClustering.start();
-        mClusteringMethods.clusterByProximity(mAllVariants, mClusters);
+        mClusteringMethods.clusterByProximity(mClusters);
+        mClusteringMethods.clusterExcludedVariants(mClusters);
         mPcClustering.pause();
 
         // mark line clusters since these are exluded from most subsequent logic
@@ -1214,6 +1215,8 @@ public class ClusterAnalyser {
                 if(breakend.isAssembledLink())
                     continue;
 
+                isSpecificSV(breakend.getSV());
+
                 SvBreakend nextBreakend = breakendList.get(i + 1);
 
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
@@ -1516,8 +1519,6 @@ public class ClusterAnalyser {
     private void reportClusterFeatures(final SvCluster cluster)
     {
         // reportDoubleMinutes(cluster, mClusteringMethods.getChrBreakendMap());
-
-        checkLooseFoldbacks(cluster); // required for cluster-level arm group info (eg COMPLEX OTHER)
 
         annotateChainedClusters(cluster, mClusteringMethods.getProximityDistance());
 

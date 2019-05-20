@@ -75,9 +75,6 @@ public class SvVarData
     private SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
-    private String mConsecBEStart;
-    private String mConsecBEEnd;
-
     private List<GeneAnnotation> mGenesStart;
     private List<GeneAnnotation> mGenesEnd;
 
@@ -104,7 +101,6 @@ public class SvVarData
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
 
-    public static String ASSEMBLY_TYPE_DSB = "dsb";
     public static String ASSEMBLY_TYPE_TI = "asm";
     public static String ASSEMBLY_TYPE_EQV = "eqv";
 
@@ -161,9 +157,6 @@ public class SvVarData
         mFoldbackLenEnd = -1;
         mFoldbackInfoStart = "";
         mFoldbackInfoEnd = "";
-
-        mConsecBEStart = "";
-        mConsecBEEnd = "";
 
         mGenesStart = Lists.newArrayList();
         mGenesEnd = Lists.newArrayList();
@@ -559,25 +552,12 @@ public class SvVarData
         return mFoldbackBeStart != null ? mFoldbackBeStart.getSV() : mFoldbackBeEnd.getSV();
     }
 
-    public String getConsecBEStart(boolean useStart) { return useStart ? mConsecBEStart : mConsecBEEnd; }
-    public void setConsecBEStart(final String info, boolean useStart)
-    {
-        if(useStart)
-        {
-            mConsecBEStart = mConsecBEStart.isEmpty() ? info : mConsecBEStart + ";" + info;
-        }
-        else
-        {
-            mConsecBEEnd = mConsecBEEnd.isEmpty() ? info : mConsecBEEnd + ";" + info;
-        }
-    }
-
     public final String typeStr()
     {
         //if(chromosome(true).equals(chromosome(false)) && mStartArm != mEndArm )
         //    return "CRS";
         if(isNoneSegment())
-            return "NONE";
+            return "INF";
         else
             return type().toString();
     }

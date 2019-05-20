@@ -360,66 +360,6 @@ public class ClusterAnnotations
         return nextSvData;
     }
 
-    public static void checkLooseFoldbacks(final SvCluster cluster)
-    {
-        if (cluster.isResolved() || cluster.isFullyChained(true))
-            return;
-
-        final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            for (int i = 0; i < breakendList.size() - 1; ++i)
-            {
-                final SvBreakend lowerBreakend = breakendList.get(i);
-                SvBreakend upperBreakend = breakendList.get(i + 1);
-
-                boolean isFoldback = false;
-
-                if (lowerBreakend.arm() != upperBreakend.arm())
-                    continue;
-
-                if (lowerBreakend.orientation() != upperBreakend.orientation())
-                {
-                    // allow for short DBs where the breakends remain in a foldback
-                    if (i < breakendList.size() - 2)
-                    {
-                        final SvBreakend nextBreakend = breakendList.get(i + 2);
-
-                        if (!lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
-                                && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
-                                .equals(nextBreakend.getSV().getFoldbackLink(nextBreakend.usesStart())))
-                        {
-                            isFoldback = true;
-                            upperBreakend = nextBreakend;
-                        }
-                    }
-
-                    if (!isFoldback)
-                        continue;
-                }
-
-                final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
-                final SvBreakend backBE = lowerBreakend.orientation() == 1 ? upperBreakend : lowerBreakend;
-
-                if (frontBE.getSV().getDBLink(frontBE.usesStart()) != null)
-                {
-                    // check for an overlapping short DB which would invalidate these consecutive breakends
-                    if (frontBE.getSV().getDBLink(frontBE.usesStart()).length() < 0)
-                        continue;
-                }
-
-                final SvVarData frontSv = frontBE.getSV();
-                final SvVarData backSv = backBE.getSV();
-
-                frontSv.setConsecBEStart(backSv.origId(), frontBE.usesStart());
-                backSv.setConsecBEStart(frontSv.origId(), backBE.usesStart());
-            }
-        }
-    }
-
     private static int CHAIN_TI_COUNT = 0;
     private static int CHAIN_TI_DB_COUNT = 1;
     private static int CHAIN_TI_SHORT_COUNT = 2;

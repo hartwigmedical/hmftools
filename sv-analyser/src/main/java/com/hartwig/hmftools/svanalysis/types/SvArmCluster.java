@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -166,7 +168,6 @@ public class SvArmCluster
         // otherwise count the number of foldbacks, TIs, DSBs and consecutive BEs to determine the type
         int dsbCount = 0;
         int foldbackCount = 0;
-        int consecCount = 0;
         int suspectLine = 0;
         int tiCount = 0;
 
@@ -180,11 +181,9 @@ public class SvArmCluster
                 ++suspectLine;
             }
 
-            final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
-
-            if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
+            if(be1.getSV().getFoldbackLink(be1.usesStart()).equals(be2.getSV().id()))
             {
-                ++dsbCount;
+                ++foldbackCount;
             }
 
             final SvLinkedPair tiPair = be1.getSV().getLinkedPair(be1.usesStart());
@@ -193,14 +192,27 @@ public class SvArmCluster
             {
                 ++tiCount;
             }
+            else
+            {
+                final SvLinkedPair dbPair = be1.getSV().getDBLink(be1.usesStart());
 
-            if(be1.getSV().getFoldbackLink(be1.usesStart()).equals(be2.getSV().id()))
-            {
-                ++foldbackCount;
-            }
-            else if(be1.getSV().getConsecBEStart(be1.usesStart()).equals(be2.getSV().id()))
-            {
-                ++consecCount;
+                if(dbPair != null && dbPair == be2.getSV().getDBLink(be2.usesStart()))
+                {
+                    ++dsbCount;
+                }
+                else
+                {
+                    // check for breakends which ought to be a in a DB but may have an unclustered SV in between
+                    if(be1.orientation() == 1 && be2.orientation() == -1)
+                    {
+                        ++dsbCount;
+                    }
+                    else if(be1.orientation() == -1 && be2.orientation() == 1
+                    && be2.position() - be1.position() < getMinTemplatedInsertionLength(be1, be2))
+                    {
+                        ++dsbCount;
+                    }
+                }
             }
         }
 
@@ -220,7 +232,7 @@ public class SvArmCluster
         {
             mType = ARM_CL_FOLDBACK_DSB;
         }
-        else if(foldbackCount == 0 && consecCount == 0 && dsbCount >= mBreakends.size() / 2)
+        else if(foldbackCount == 0 && dsbCount >= mBreakends.size() / 2)
         {
             mType = ARM_CL_DSB;
         }
