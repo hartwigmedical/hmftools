@@ -891,7 +891,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- upcoming
+- [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-29)
+  - Add biallelic status to somatic VCF
   - Removed low VAF SGL filtering logic
   - Create plot directory before writing to it
   - Allow plotting of negative copy numbers
