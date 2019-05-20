@@ -6,5 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class PurityAdjustedSomaticVariantImpl implements PurityAdjustedSomaticVariant {
+public abstract class PurityAdjustedSomaticVariantImpl implements PurityAdjustedSomaticVariant {
+    public abstract static class Builder implements PurityAdjustedSomaticVariantBuilder {}
 }

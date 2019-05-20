@@ -181,9 +181,6 @@ public class PurityPloidyEstimateApplication {
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
                     .build();
 
-            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
-
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
@@ -218,6 +215,8 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Generating charts");
+            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
+                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
