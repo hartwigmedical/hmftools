@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
@@ -27,8 +26,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROM
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
@@ -652,7 +649,7 @@ public class ClusterAnnotations
                     String existingInfo = breakend.getSV().getFoldbackInfo(breakend.usesStart());
 
                     if(existingInfo.isEmpty())
-                        existingInfo = breakend.getSV().getFoldbackInfo(!breakend.usesStart());;
+                        existingInfo = breakend.getSV().getFoldbackInfo(!breakend.usesStart());
 
                     long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
                     double positionPercent;

@@ -38,8 +38,8 @@ public class AmberQCTest {
     }
 
     @NotNull
-    private static AmberQC createWithContamination(double contaimination) {
-        return ImmutableAmberQC.builder().meanBAF(0.5).contamination(contaimination).build();
+    private static AmberQC createWithContamination(double contamination) {
+        return ImmutableAmberQC.builder().meanBAF(0.5).contamination(contamination).build();
     }
 
 }

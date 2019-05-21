@@ -4,6 +4,5 @@ public enum Clonality {
     CLONAL,
     SUBCLONAL,
     INCONSISTENT,
-    UNKNOWN;
-
+    UNKNOWN
 }

@@ -502,9 +502,9 @@ PolyclonalProportion | 0.09 | Proportion of copy number regions that are more th
 [Gender](#1-gender) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
 [Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
-MaxPurity | 1.00 | Maximim purity with score within 10% of best
+MaxPurity | 1.00 | Maximum purity with score within 10% of best
 MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
-MaxPloidy | 3.13 | Maximim ploidy with score within 10% of best
+MaxPloidy | 3.13 | Maximum ploidy with score within 10% of best
 
 #### Purity Range File
 
