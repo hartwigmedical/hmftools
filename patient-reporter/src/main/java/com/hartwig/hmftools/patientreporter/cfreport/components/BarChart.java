@@ -274,8 +274,8 @@ public class BarChart extends InlineBarChart {
 
     class Indicator {
 
-        String name;
-        double value;
+        final String name;
+        final double value;
 
         Indicator(@NotNull String name, double value) {
             this.name = name;

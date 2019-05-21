@@ -1,25 +1,19 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
+import java.io.IOException;
+import java.time.LocalDate;
+
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;
-import com.itextpdf.io.image.ImageData;
-import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.Style;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
 
 public final class ReportResources {
 
@@ -62,12 +56,12 @@ public final class ReportResources {
 
     public static final float BODY_TEXT_LEADING = 10F;
 
-    public static float maxPointSizeForWidth(@NotNull PdfFont font, float initalFontSize, float minFontSize, @NotNull String text,
+    public static float maxPointSizeForWidth(@NotNull PdfFont font, float initialFontSize, float minFontSize, @NotNull String text,
             float maxWidth) {
         final float fontIncrement = 0.1f;
 
-        float fontSize = initalFontSize;
-        float width = font.getWidth(text, initalFontSize);
+        float fontSize = initialFontSize;
+        float width = font.getWidth(text, initialFontSize);
         while (width > maxWidth && fontSize > minFontSize) {
             fontSize -= fontIncrement;
             width = font.getWidth(text, fontSize);

@@ -11,11 +11,10 @@ import org.junit.Test;
 public class SummaryChapterTest {
 
     @Test
-    public void canSortSummaryOfGenesCoorectly() {
+    public void canSortSummaryOfGenesCorrectly() {
         Set<String> genes = Sets.newHashSet("A", "C", "B");
         Set<String> sortedGenes = SummaryChapter.sortSummaryGenes(genes);
         Set<String> correctGenes = Sets.newHashSet("A", "B", "C");
         assertEquals(correctGenes, sortedGenes);
     }
-
 }

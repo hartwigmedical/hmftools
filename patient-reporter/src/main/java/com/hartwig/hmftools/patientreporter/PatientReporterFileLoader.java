@@ -26,11 +26,10 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-public final class PatientReporterFileLoader {
+final class PatientReporterFileLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PatientReporterFileLoader.class);
 

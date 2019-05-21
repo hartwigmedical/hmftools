@@ -16,9 +16,9 @@ public class InlineBarChart extends Div {
     public static final Scale LOG10_SCALE = Math::log10;
     private static final Scale LINEAR_SCALE = (v) -> v;
 
-    private double value;
-    private double min;
-    private double max;
+    private final double value;
+    private final double min;
+    private final double max;
 
     private boolean isEnabled = true;
 
@@ -43,7 +43,7 @@ public class InlineBarChart extends Div {
         return scaledValue(value());
     }
 
-    public final double min() {
+    final double min() {
         return min;
     }
 

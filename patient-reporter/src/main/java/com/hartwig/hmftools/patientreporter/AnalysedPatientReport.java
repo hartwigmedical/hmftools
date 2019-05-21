@@ -3,11 +3,10 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
