@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
@@ -33,18 +32,12 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
-import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_CLUSTER_COUNT_REPLICATION;
-import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_SV_REPLICATION_MULTIPLE;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_DEL_LENGTH;
-import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -544,20 +537,18 @@ public class SvClusteringMethods {
         if(cluster.hasLinkingLineElements())
             return;
 
-        // isSpecificCluster(cluster);
-
-        if(cluster.isSyntheticSimpleType(false))
-        {
-            if(cluster.getSynDelDupLength() >= mDelDupCutoffLength)
-            {
-                for (final SvVarData var : cluster.getSVs())
-                {
-                    cluster.registerLongDelDup(var);
-                }
-            }
-
+        if(cluster.isSyntheticSimpleType(true))
             return;
+
+        /*
+        if(cluster.getSyntheticLength() >= mDelDupCutoffLength)
+        {
+            for (final SvVarData var : cluster.getSVs())
+            {
+                cluster.registerLongDelDup(var);
+            }
         }
+        */
 
         if(cluster.getTypeCount(DEL) > 0 || cluster.getTypeCount(DUP) > 0)
         {
@@ -738,7 +729,7 @@ public class SvClusteringMethods {
                     otherCluster.mergeOtherCluster(cluster);
                     otherCluster.addClusterReason(CLUSTER_REASON_SOLO_SINGLE);
                     otherCluster.setResolved(true, resolvedType);
-                    otherCluster.setSynDelDupData(abs(otherVar.position(true) - var.position(true)), 0);
+                    otherCluster.setSyntheticData(abs(otherVar.position(true) - var.position(true)), 0);
 
                     clusters.remove(cluster);
                     foundMerges = true;
@@ -1075,207 +1066,6 @@ public class SvClusteringMethods {
         }
     }
 
-    public void markInversionPairTypes(SvCluster cluster)
-    {
-        // determine overlap configurations
-
-        /* 4 types of inversion pairs
-        1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
-            - outer breakends face out (the DEL)
-            - TI enclosed
-        2. DEL with external inverted TI
-            - resultant type = DEL
-            - length = other 2 breakends
-        3. DUP with external inverted TI
-            - 2 x TIs, but TI breakends don't overlap
-            - type = DUP
-            - TI and DUP length are interchangable, but choose shorter for TI
-        4. DUP with enclosed inverted TI
-            - no overlapping breakends
-            - TI from the innermost 2
-            - outer breakends face in
-            - resultant type = DUP
-            - length is outside 2 breakends (ie the other 2)
-         */
-
-        final SvVarData var1 = cluster.getSV(0);
-        final SvVarData var2 = cluster.getSV(1);
-
-        // isSpecificCluster(cluster);
-
-        // first test for a reciprocal inversion, marked by having 2 DBs and the TI > 50% of the length of the synthetic DEL
-        if(cluster.getLinkedPairs().isEmpty())
-            return;
-
-        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
-
-        SvBreakend be1 = tiPair.getFirstBreakend();
-        SvBreakend be2 = tiPair.getSecondBreakend();
-        SvBreakend otherBe1 = be1.getOtherBreakend();
-        SvBreakend otherBe2 = be2.getOtherBreakend();
-        SvLinkedPair db1 = be1.getSV().getDBLink(be1.usesStart());
-        SvLinkedPair db2 = be2.getSV().getDBLink(be2.usesStart());
-
-        if(db1 != null && db1.hasBreakend(otherBe2) && db2 != null && db2.hasBreakend(otherBe1))
-        {
-            long syntheticLength = abs(otherBe2.position() - otherBe1.position());
-
-            if(tiPair.length() > 0.5 * syntheticLength)
-            {
-                cluster.setSynDelDupData(syntheticLength, tiPair.length());
-                boolean isResolved = syntheticLength < mDelDupCutoffLength;
-                cluster.setResolved(isResolved, RESOLVED_TYPE_RECIPROCAL_INV);
-                return;
-            }
-        }
-
-        resolveSyntheticDelDupCluster(cluster);
-    }
-
-    private boolean resolveSyntheticDelDupCluster(SvCluster cluster)
-    {
-        if(cluster.getLinkedPairs().isEmpty() || cluster.hasReplicatedSVs())
-            return false;
-
-        // first work out if there are 1 or 2 templated insertions
-        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
-
-        SvBreakend lowerBreakend = tiPair.getBreakend(true);
-        SvBreakend upperBreakend = tiPair.getBreakend(false);
-
-        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
-        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
-
-        if(otherBe1.orientation() == otherBe2.orientation())
-            return false;
-
-        if(otherBe1.arm() != otherBe2.arm())
-            return false;
-
-        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
-        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
-            return false;
-
-        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
-        // otherwise it's a DEL
-        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
-        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
-
-        // the TI is considered enclosed if boths its ends are within the bounds of the synthetic DEL or DUP
-        // this needs to allow for either end of the TI facing the breakends of a synthetic DEL but within its min TI distance
-        int lowerMinTILengthBuffer = (lowerBreakend.position() < otherLowerBe.position() && otherLowerBe.orientation() == 1) ?
-                getMinTemplatedInsertionLength(lowerBreakend, otherLowerBe) : 0;
-
-        int upperMinTILengthBuffer = (upperBreakend.position() > otherUpperBe.position() && otherUpperBe.orientation() == -1) ?
-                getMinTemplatedInsertionLength(upperBreakend, otherUpperBe) : 0;
-
-        boolean isTIEnclosed = lowerBreakend.position() >= otherLowerBe.position() - lowerMinTILengthBuffer
-                && upperBreakend.position() <= otherUpperBe.position() + upperMinTILengthBuffer;
-
-        String resolvedType = "";
-        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
-
-        if(otherLowerBe.orientation() == 1)
-        {
-            resolvedType = isTIEnclosed ? RESOLVED_TYPE_DEL_INT_TI : RESOLVED_TYPE_DEL_EXT_TI;
-        }
-        else
-        {
-            // no longer calling a DEL with overlap less than the minimum TI distance a DEL
-            resolvedType = isTIEnclosed ? RESOLVED_TYPE_DUP_INT_TI : RESOLVED_TYPE_DUP_EXT_TI;
-        }
-
-        // correct for DB subtracting 1
-        // int delDupLength = otherPair.linkType() == LINK_TYPE_DB ? otherPair.length() + 1 : otherPair.length();
-
-        boolean isResolved = syntheticLength < mDelDupCutoffLength;
-        cluster.setResolved(isResolved, resolvedType);
-        cluster.setSynDelDupData(syntheticLength, tiPair.length());
-
-        return true;
-    }
-
-    public void markBndPairTypes(SvCluster cluster)
-    {
-        final SvVarData var1 = cluster.getSV(0);
-        final SvVarData var2 = cluster.getSV(1);
-
-        /* possible configurations:
-            1. Reciprocal Translocation
-            - 2 DBs, no overlappying breakends OR
-            - TIs converted to DBs since too short
-
-            2. One set of breakends facing (the TI) the other facing away (the DEL)
-            - DEL with TI
-
-            3. Two sets of facing breakends so 2 TIs
-            - but rather than a closed loop, one set remain unlinked (the overlap being the DUP)
-
-            Other configurations are nothing
-         */
-
-        // isSpecificCluster(cluster);
-
-        if(cluster.getLinkedPairs().isEmpty())
-        {
-            if(arePairedDeletionBridges(var1, var2))
-                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
-
-            return;
-        }
-
-        // first work out if there are 1 or 2 templated insertions
-        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
-
-        SvBreakend lowerBreakend = tiPair.getBreakend(true);
-        SvBreakend upperBreakend = tiPair.getBreakend(false);
-
-        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
-        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
-
-        if(otherBe1.orientation() == otherBe2.orientation())
-            return;
-
-        if(otherBe1.arm() != otherBe2.arm() || !otherBe1.chromosome().equals(otherBe2.chromosome()))
-            return;
-
-        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
-        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
-            return;
-
-        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
-        // otherwise it's a DEL
-        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
-        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
-
-        String resolvedType = "";
-        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
-
-        if(otherLowerBe.orientation() == 1)
-        {
-            resolvedType = RESOLVED_TYPE_DEL_EXT_TI;
-        }
-        else
-        {
-            resolvedType = RESOLVED_TYPE_DUP_EXT_TI;
-        }
-
-        boolean isResolved = syntheticLength < mDelDupCutoffLength;
-        cluster.setResolved(isResolved, resolvedType);
-        cluster.setSynDelDupData(syntheticLength, tiPair.length());
-    }
-
-    public boolean markDelDupPairTypes(SvCluster cluster)
-    {
-        if(cluster.getTypeCount(DUP) == 2)
-        {
-            // to prevent misclassification of otherwise randomly clustered DUPs, require an assembled TI
-            if(cluster.getAssemblyLinkedPairs().size() != 1)
-                return false;
-        }
-
-        return resolveSyntheticDelDupCluster(cluster);
-    }
 
     private boolean tiTraversesComplexSVs(final SvCluster cluster, final SvLinkedPair pair)
     {
@@ -1383,4 +1173,206 @@ public class SvClusteringMethods {
 
         return true;
     }
+
+
+    // old synthetic classification methods
+
+    public void markInversionPairTypes(SvCluster cluster)
+    {
+        // determine overlap configurations
+
+        /* 4 types of inversion pairs
+        1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
+            - outer breakends face out (the DEL)
+            - TI enclosed
+        2. DEL with external inverted TI
+            - resultant type = DEL
+            - length = other 2 breakends
+        3. DUP with external inverted TI
+            - 2 x TIs, but TI breakends don't overlap
+            - type = DUP
+            - TI and DUP length are interchangable, but choose shorter for TI
+        4. DUP with enclosed inverted TI
+            - no overlapping breakends
+            - TI from the innermost 2
+            - outer breakends face in
+            - resultant type = DUP
+            - length is outside 2 breakends (ie the other 2)
+         */
+
+        // first test for a reciprocal inversion, marked by having 2 DBs and the TI > 50% of the length of the synthetic DEL
+        if(cluster.getLinkedPairs().isEmpty())
+            return;
+
+        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
+
+        SvBreakend be1 = tiPair.getFirstBreakend();
+        SvBreakend be2 = tiPair.getSecondBreakend();
+        SvBreakend otherBe1 = be1.getOtherBreakend();
+        SvBreakend otherBe2 = be2.getOtherBreakend();
+        SvLinkedPair db1 = be1.getSV().getDBLink(be1.usesStart());
+        SvLinkedPair db2 = be2.getSV().getDBLink(be2.usesStart());
+
+        if(db1 != null && db1.hasBreakend(otherBe2) && db2 != null && db2.hasBreakend(otherBe1))
+        {
+            long syntheticLength = abs(otherBe2.position() - otherBe1.position());
+
+            if(tiPair.length() > 0.5 * syntheticLength)
+            {
+                cluster.setSyntheticData(syntheticLength, tiPair.length());
+                boolean isResolved = syntheticLength < mDelDupCutoffLength;
+                cluster.setResolved(isResolved, RESOLVED_TYPE_RECIPROCAL_INV);
+                return;
+            }
+        }
+
+        resolveSyntheticDelDupCluster(cluster);
+    }
+
+    private boolean resolveSyntheticDelDupCluster(SvCluster cluster)
+    {
+        if(cluster.getLinkedPairs().isEmpty() || cluster.hasReplicatedSVs())
+            return false;
+
+        // first work out if there are 1 or 2 templated insertions
+        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
+
+        SvBreakend lowerBreakend = tiPair.getBreakend(true);
+        SvBreakend upperBreakend = tiPair.getBreakend(false);
+
+        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
+        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
+
+        if(otherBe1.orientation() == otherBe2.orientation())
+            return false;
+
+        if(otherBe1.arm() != otherBe2.arm())
+            return false;
+
+        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
+        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
+            return false;
+
+        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
+        // otherwise it's a DEL
+        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
+        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
+
+        // the TI is considered enclosed if boths its ends are within the bounds of the synthetic DEL or DUP
+        // this needs to allow for either end of the TI facing the breakends of a synthetic DEL but within its min TI distance
+        int lowerMinTILengthBuffer = (lowerBreakend.position() < otherLowerBe.position() && otherLowerBe.orientation() == 1) ?
+                getMinTemplatedInsertionLength(lowerBreakend, otherLowerBe) : 0;
+
+        int upperMinTILengthBuffer = (upperBreakend.position() > otherUpperBe.position() && otherUpperBe.orientation() == -1) ?
+                getMinTemplatedInsertionLength(upperBreakend, otherUpperBe) : 0;
+
+        boolean isTIEnclosed = lowerBreakend.position() >= otherLowerBe.position() - lowerMinTILengthBuffer
+                && upperBreakend.position() <= otherUpperBe.position() + upperMinTILengthBuffer;
+
+        String resolvedType = "";
+        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
+
+        if(otherLowerBe.orientation() == 1)
+        {
+            resolvedType = isTIEnclosed ? RESOLVED_TYPE_DEL_INT_TI : RESOLVED_TYPE_DEL_EXT_TI;
+        }
+        else
+        {
+            // no longer calling a DEL with overlap less than the minimum TI distance a DEL
+            resolvedType = isTIEnclosed ? RESOLVED_TYPE_DUP_INT_TI : RESOLVED_TYPE_DUP_EXT_TI;
+        }
+
+        // correct for DB subtracting 1
+        // int delDupLength = otherPair.linkType() == LINK_TYPE_DB ? otherPair.length() + 1 : otherPair.length();
+
+        boolean isResolved = syntheticLength < mDelDupCutoffLength;
+        cluster.setResolved(isResolved, resolvedType);
+        cluster.setSyntheticData(syntheticLength, tiPair.length());
+
+        return true;
+    }
+
+    public void markBndPairTypes(SvCluster cluster)
+    {
+        final SvVarData var1 = cluster.getSV(0);
+        final SvVarData var2 = cluster.getSV(1);
+
+        /* possible configurations:
+            1. Reciprocal Translocation
+            - 2 DBs, no overlappying breakends OR
+            - TIs converted to DBs since too short
+
+            2. One set of breakends facing (the TI) the other facing away (the DEL)
+            - DEL with TI
+
+            3. Two sets of facing breakends so 2 TIs
+            - but rather than a closed loop, one set remain unlinked (the overlap being the DUP)
+
+            Other configurations are nothing
+         */
+
+        // isSpecificCluster(cluster);
+
+        if(cluster.getLinkedPairs().isEmpty())
+        {
+            if(arePairedDeletionBridges(var1, var2))
+                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
+
+            return;
+        }
+
+        // first work out if there are 1 or 2 templated insertions
+        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
+
+        SvBreakend lowerBreakend = tiPair.getBreakend(true);
+        SvBreakend upperBreakend = tiPair.getBreakend(false);
+
+        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
+        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
+
+        if(otherBe1.orientation() == otherBe2.orientation())
+            return;
+
+        if(otherBe1.arm() != otherBe2.arm() || !otherBe1.chromosome().equals(otherBe2.chromosome()))
+            return;
+
+        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
+        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
+            return;
+
+        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
+        // otherwise it's a DEL
+        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
+        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
+
+        String resolvedType = "";
+        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
+
+        if(otherLowerBe.orientation() == 1)
+        {
+            resolvedType = RESOLVED_TYPE_DEL_EXT_TI;
+        }
+        else
+        {
+            resolvedType = RESOLVED_TYPE_DUP_EXT_TI;
+        }
+
+        boolean isResolved = syntheticLength < mDelDupCutoffLength;
+        cluster.setResolved(isResolved, resolvedType);
+        cluster.setSyntheticData(syntheticLength, tiPair.length());
+    }
+
+    public boolean markDelDupPairTypes(SvCluster cluster)
+    {
+        if(cluster.getTypeCount(DUP) == 2)
+        {
+            // to prevent misclassification of otherwise randomly clustered DUPs, require an assembled TI
+            if(cluster.getAssemblyLinkedPairs().size() != 1)
+                return false;
+        }
+
+        return resolveSyntheticDelDupCluster(cluster);
+    }
+
+
 }

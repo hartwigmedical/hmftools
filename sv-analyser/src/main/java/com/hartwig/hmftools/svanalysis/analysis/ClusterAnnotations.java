@@ -29,7 +29,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATIO
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
@@ -471,6 +470,7 @@ public class ClusterAnnotations
                 }
             }
 
+            /*
             // check for synthetic DELs and DUPs from longer chains
             if(inconsistentChains == 0 && !isIncomplete && !isComplex
             && chainCount == 1 && chain.getLinkCount() == shortTICount
@@ -480,10 +480,10 @@ public class ClusterAnnotations
                 long syntheticLength = abs(lastBreakend.position() - firstBreakend.position());
                 long avgLinkLength = round(chainLinkLength/chain.getLinkCount());
 
-                cluster.setSynDelDupData(syntheticLength, avgLinkLength);
+                cluster.setSyntheticData(syntheticLength, avgLinkLength);
 
                 if((firstBreakend.position() < lastBreakend.position() && firstBreakend.orientation() == 1)
-                        || (lastBreakend.position() < firstBreakend.position() && lastBreakend.orientation() == 1))
+                || (lastBreakend.position() < firstBreakend.position() && lastBreakend.orientation() == 1))
                 {
                     cluster.setResolved(false, RESOLVED_TYPE_DEL_EXT_TI);
                 }
@@ -495,6 +495,7 @@ public class ClusterAnnotations
                 LOGGER.debug("cluster({}) chainLinks({}) synLen({}) avgTILen({}) marked as {}",
                         cluster.id(), chain.getLinkCount(), syntheticLength, avgLinkLength, cluster.getResolvedType());
             }
+            */
 
             String chainInfo = startChrArm + "-" + endChrArm;
 

@@ -69,8 +69,8 @@ public class SvCluster
     private String mClusteringReasons;
 
     // for synthetic DELs and DUPs
-    private long mSynDelDupTI;
-    private long mSynDelDupLength;
+    private long mSyntheticTILength;
+    private long mSyntheticLength;
 
     private boolean mHasReplicatedSVs;
 
@@ -101,15 +101,23 @@ public class SvCluster
     public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
     public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
     public static String RESOLVED_TYPE_LINE = "LINE";
-    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_INT_TI";
-    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_EXT_TI";
-    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_INT_TI";
-    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_EXT_TI";
+
+    public static String RESOLVED_TYPE_SYNTH_DEL = "SYNTH_DEL";
+    public static String RESOLVED_TYPE_SYNTH_DUP = "SYNTH_DUP";
+    public static String RESOLVED_TYPE_RECIPROCAL_DUP_PAIR = "RECIP_DUPS";
+    public static String RESOLVED_TYPE_RECIPROCAL_DUP_DEL = "RECIP_DUP_DEL";
+
     public static String RESOLVED_TYPE_SGL_PAIR_INS = "SGL_PAIR_INS";
     public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SGL_PAIR_DEL";
     public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SGL_PAIR_DUP";
     public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
     public static String RESOLVED_TYPE_COMPLEX = "COMPLEX";
+
+    // deprecated shortly
+    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_INT_TI";
+    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_EXT_TI";
+    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_INT_TI";
+    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_EXT_TI";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -129,8 +137,8 @@ public class SvCluster
         mIsConsistent = false;
         mIsResolved = false;
         mResolvedType = RESOLVED_TYPE_NONE;
-        mSynDelDupTI = 0;
-        mSynDelDupLength = 0;
+        mSyntheticTILength = 0;
+        mSyntheticLength = 0;
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
         mChrBreakendMap = new HashMap();
@@ -200,8 +208,8 @@ public class SvCluster
             mResolvedType = RESOLVED_TYPE_NONE;
         }
 
-        mSynDelDupTI = 0;
-        mSynDelDupLength = 0;
+        mSyntheticTILength = 0;
+        mSyntheticLength = 0;
 
         // isSpecificSV(var.id())
 
@@ -303,6 +311,13 @@ public class SvCluster
     {
         if(checkResolved && !mIsResolved)
             return false;
+
+        if(mResolvedType == RESOLVED_TYPE_SYNTH_DEL || mResolvedType == RESOLVED_TYPE_SYNTH_DUP
+        || mResolvedType == RESOLVED_TYPE_RECIPROCAL_INV || mResolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS
+        || mResolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR || mResolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_DEL)
+        {
+            return true;
+        }
 
         if(mResolvedType == RESOLVED_TYPE_DEL_EXT_TI || mResolvedType == RESOLVED_TYPE_DEL_INT_TI
         || mResolvedType == RESOLVED_TYPE_DUP_INT_TI || mResolvedType == RESOLVED_TYPE_DUP_EXT_TI)
@@ -500,14 +515,14 @@ public class SvCluster
     public boolean isResolved() { return mIsResolved; }
     public final String getResolvedType() { return mResolvedType; }
 
-    public void setSynDelDupData(long length, long tiLength)
+    public void setSyntheticData(long length, long tiLength)
     {
-        mSynDelDupLength = length;
-        mSynDelDupTI = tiLength;
+        mSyntheticLength = length;
+        mSyntheticTILength = tiLength;
     }
 
-    public long getSynDelDupTILength() { return mSynDelDupTI; }
-    public long getSynDelDupLength() { return mSynDelDupLength; }
+    public long getSyntheticTILength() { return mSyntheticTILength; }
+    public long getSyntheticLength() { return mSyntheticLength; }
 
     private void updateClusterDetails()
     {

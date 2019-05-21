@@ -42,20 +42,25 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_DUP_DEL;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_DUP_PAIR;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_INV;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SYNTH_DEL;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SYNTH_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_CLUSTER_COUNT_REPLICATION;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_SV_REPLICATION_MULTIPLE;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
 import java.util.Map;
@@ -486,10 +491,15 @@ public class ClusterAnalyser {
 
         if (cluster.isSimpleSVs())
         {
-            if(cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2)
+            if(cluster.getSvCount() == 2 && (cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2) && cluster.getTypeCount(DEL) != 2)
             {
-                if(mClusteringMethods.markDelDupPairTypes(cluster))
+                markSyntheticDelDups(cluster);
+
+                if(cluster.getResolvedType() != RESOLVED_TYPE_NONE)
                     return;
+
+                // if(mClusteringMethods.markDelDupPairTypes(cluster))
+                //    return;
             }
 
             boolean hasLongSVs = false;
@@ -506,38 +516,326 @@ public class ClusterAnalyser {
             return;
         }
 
-        // next simple reciprocal inversions and translocations
-        if (cluster.getSvCount() == 2 && cluster.isConsistent())
+        markSyntheticTypes(cluster);
+
+        if(cluster.getResolvedType() != RESOLVED_TYPE_NONE)
+            return;
+
+        cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
+    }
+
+    private void markSyntheticTypes(SvCluster cluster)
+    {
+        if(cluster.getTypeCount(SGL) == 0)
         {
-            // isSpecificCluster(cluster);
+            markSyntheticReciprocalInversion(cluster);
 
-            if(cluster.getTypeCount(BND) == 2)
-            {
-                mClusteringMethods.markBndPairTypes(cluster);
-            }
-            else if(cluster.getTypeCount(INV) == 2)
-            {
-                mClusteringMethods.markInversionPairTypes(cluster);
-            }
-            else if(cluster.getTypeCount(SGL) == 2)
-            {
-                final SvVarData sgl1 = cluster.getSV(0);
-                final SvVarData sgl2 = cluster.getSV(1);
-                String resolvedType = markSinglePairResolvedType(sgl1, sgl2);
+            if (cluster.getResolvedType() != RESOLVED_TYPE_NONE)
+                return;
 
-                if(resolvedType != RESOLVED_TYPE_NONE)
+            markSyntheticReciprocalTranslocation(cluster);
+
+            if (cluster.getResolvedType() != RESOLVED_TYPE_NONE)
+                return;
+
+            markSyntheticDelDups(cluster);
+        }
+        else if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getTypeCount(SGL) == 2)
+        {
+            final SvVarData sgl1 = cluster.getSV(0);
+            final SvVarData sgl2 = cluster.getSV(1);
+            String resolvedType = markSinglePairResolvedType(sgl1, sgl2);
+
+            if(resolvedType != RESOLVED_TYPE_NONE)
+            {
+                long length = abs(sgl1.position(true) - sgl2.position(true));
+                cluster.setResolved(true, resolvedType);
+                cluster.setSyntheticData(length, 0);
+            }
+        }
+    }
+
+    private void markSyntheticDelDups(SvCluster cluster)
+    {
+        if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getTypeCount(SGL) > 0)
+            return;
+
+        SvChain chain = cluster.getChains().get(0);
+
+        final SvBreakend startBreakend = chain.getOpenBreakend(true);
+        final SvBreakend endBreakend = chain.getOpenBreakend(false);
+
+        if(!startBreakend.chromosome().equals(endBreakend.chromosome()) || startBreakend.arm() != endBreakend.arm())
+            return;
+
+        if(startBreakend.orientation() == endBreakend.orientation())
+            return;
+
+        boolean faceAway = (startBreakend.position() < endBreakend.position()) == (startBreakend.orientation() == 1);
+
+        int totalChainLength = 0;
+        boolean hasLongTIs = false;
+        for(SvLinkedPair pair : chain.getLinkedPairs())
+        {
+            if(pair.length() > SHORT_TI_LENGTH)
+            {
+                hasLongTIs = true;
+            }
+
+            totalChainLength += pair.length();
+        }
+
+        long avgTiLength = round(totalChainLength / (double)chain.getLinkCount());
+        long syntheticLength = abs(startBreakend.position() - endBreakend.position());
+
+        String resolvedType = "";
+
+        if(!hasLongTIs)
+        {
+            resolvedType = faceAway ? RESOLVED_TYPE_SYNTH_DEL : RESOLVED_TYPE_SYNTH_DUP;
+        }
+        else
+        {
+            // skip DEL-DUP constituents due to likely being false positives
+            if(cluster.getSvCount() == 2 && cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2)
+                return;
+
+            if(!faceAway && syntheticLength > SHORT_TI_LENGTH)
+            {
+                resolvedType = RESOLVED_TYPE_RECIPROCAL_DUP_PAIR;
+            }
+            else if(faceAway)
+            {
+                resolvedType = RESOLVED_TYPE_RECIPROCAL_DUP_DEL;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) synLen({}) marked as {}",
+                cluster.id(), chain.getLinkCount(), totalChainLength, avgTiLength, syntheticLength, resolvedType);
+
+        cluster.setResolved(true, resolvedType);
+        cluster.setSyntheticData(syntheticLength, avgTiLength);
+    }
+
+    private void markSyntheticReciprocalInversion(SvCluster cluster)
+    {
+        if(!cluster.isFullyChained(false) || cluster.getChains().size() != 1)
+            return;
+
+        SvChain chain = cluster.getChains().get(0);
+
+        int totalChainLength = 0;
+        int totalLinks = 0;
+
+        // check chains are both short and have the correct orientations
+        SvLinkedPair tiPair = null;
+
+        for (SvLinkedPair pair : chain.getLinkedPairs())
+        {
+            if(tiPair == null)
+            {
+                tiPair = pair;
+            }
+            else if(pair.length() > tiPair.length())
+            {
+                if(tiPair.length() > SHORT_TI_LENGTH)
+                    return; // can only be one long pair
+
+                tiPair = pair;
+            }
+
+
+            totalChainLength += pair.length();
+            ++totalLinks;
+        }
+
+        if(tiPair == null)
+            return;
+
+        SvBreakend startBe1 = tiPair.getBreakend(true);
+        SvBreakend endBe1 = tiPair.getBreakend(false);
+
+        SvBreakend startBe2 = chain.getOpenBreakend(true);
+        SvBreakend endBe2 = chain.getOpenBreakend(false);
+
+        // check for same arm and opposite orientations
+        if(!startBe1.getChrArm().equals(startBe2.getChrArm()))
+            return;
+
+        if(!startBe2.getChrArm().equals(endBe2.getChrArm()) || startBe2.orientation() == endBe2.orientation())
+            return;
+
+        // check for linked, short DBs at both ends
+        SvLinkedPair startDB = startBe1.getSV().getDBLink(startBe1.usesStart());
+        SvLinkedPair endDB = endBe1.getSV().getDBLink(endBe1.usesStart());
+
+        if(startDB == null || startDB.length() > mConfig.ProximityDistance || endDB == null || endDB.length() > mConfig.ProximityDistance)
+            return;
+
+        long syntheticLength = 0;
+        if ((startDB.hasBreakend(startBe2) && endDB.hasBreakend(endBe2)) || (startDB.hasBreakend(endBe2) && endDB.hasBreakend(startBe2)))
+        {
+            syntheticLength = abs(startBe2.position() - endBe2.position());
+        }
+        else
+        {
+            return;
+        }
+
+        // require the large TI to be at least 50% of the length of teh
+        if (tiPair.length() < 0.5 * syntheticLength)
+            return;
+
+        long avgTiLength = round(totalChainLength / (double)totalLinks);
+
+        String resolvedType = RESOLVED_TYPE_RECIPROCAL_INV;
+
+        LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) synLen({}) marked as {}",
+                cluster.id(), totalLinks, totalChainLength, avgTiLength, syntheticLength, resolvedType);
+
+        cluster.setResolved(true, resolvedType);
+        cluster.setSyntheticData(syntheticLength, tiPair.length());
+    }
+
+    private void markSyntheticReciprocalTranslocation(SvCluster cluster)
+    {
+        // can be formed from 1 BNDs, 1 chain and a BND, or 2 chains
+
+        if(cluster.getChains().size() > 2)
+            return;
+
+        /*
+        if(cluster.getSvCount() == 2 && cluster.getTypeCount(BND) == 2 && cluster.getLinkedPairs().isEmpty())
+        {
+            final SvVarData var1 = cluster.getSV(0);
+            final SvVarData var2 = cluster.getSV(1);
+
+            if(arePairedDeletionBridges(var1, var2))
+                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
+
+            return;
+        }
+        */
+
+        SvBreakend startBe1 = null;
+        SvBreakend endBe1 = null;
+        SvBreakend startBe2 = null;
+        SvBreakend endBe2 = null;
+
+        int totalChainLength = 0;
+        int totalLinks = 0;
+
+        if(cluster.getChains().isEmpty())
+        {
+            if(cluster.getSvCount() != 2 || cluster.getTypeCount(BND) != 2)
+                return;
+
+            final SvVarData var1 = cluster.getSV(0);
+            final SvVarData var2 = cluster.getSV(1);
+
+            startBe1 = var1.getBreakend(true);
+            endBe1 = var1.getBreakend(false);
+            startBe2 = var2.getBreakend(true);
+            endBe2 = var2.getBreakend(false);
+
+        }
+        else if(cluster.isFullyChained(false) && cluster.getChains().size() == 2)
+        {
+            SvChain chain1 = cluster.getChains().get(0);
+            SvChain chain2 = cluster.getChains().get(1);
+
+            // check chains are both short and have the correct orientations
+            for(SvChain chain : cluster.getChains())
+            {
+                for (SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    long length = abs(sgl1.position(true) - sgl2.position(true));
-                    cluster.setResolved(true, resolvedType);
-                    cluster.setSynDelDupData(length, 0);
+                    if (pair.length() > SHORT_TI_LENGTH)
+                        return;
+
+                    totalChainLength += pair.length();
+                    ++totalLinks;
                 }
             }
+
+            startBe1 = chain1.getOpenBreakend(true);
+            endBe1 = chain1.getOpenBreakend(false);
+            startBe2 = chain2.getOpenBreakend(true);
+            endBe2 = chain2.getOpenBreakend(false);
+        }
+        else if(cluster.getChains().size() == 1 && cluster.getUnlinkedSVs().size() == 1)
+        {
+            // check for a single SV and a chain
+            SvVarData var = cluster.getUnlinkedSVs().get(0);
+            if(var.type() != BND)
+                return;
+
+            SvChain chain = cluster.getChains().get(0);
+
+            for (SvLinkedPair pair : chain.getLinkedPairs())
+            {
+                if (pair.length() > SHORT_TI_LENGTH)
+                    return;
+
+                totalChainLength += pair.length();
+                ++totalLinks;
+            }
+
+            startBe1 = chain.getOpenBreakend(true);
+            endBe1 = chain.getOpenBreakend(false);
+
+            startBe2 = var.getBreakend(true);
+            endBe2 = var.getBreakend(false);
+        }
+        else
+        {
+            return;
         }
 
-        if(cluster.getResolvedType() == RESOLVED_TYPE_NONE)
+        if(startBe1.getChrArm().equals(endBe1.getChrArm()) || startBe2.getChrArm().equals(endBe2.getChrArm()))
+            return;
+
+        // check for linked, short DBs at both ends
+        SvLinkedPair startDB = startBe1.getSV().getDBLink(startBe1.usesStart());
+        SvLinkedPair endDB = endBe1.getSV().getDBLink(endBe1.usesStart());
+
+        if(startDB == null || startDB.length() > mConfig.ProximityDistance || endDB == null || endDB.length() > mConfig.ProximityDistance)
+            return;
+
+        if(startBe1.getChrArm().equals(startBe2.getChrArm()) && startBe1.orientation() != startBe2.orientation()
+        && endBe1.getChrArm().equals(endBe2.getChrArm()) && endBe1.orientation() != endBe2.orientation())
         {
-            cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
+            // start to start
+            if (!startDB.hasBreakend(startBe2) || !endDB.hasBreakend(endBe2))
+                return;
+
+            // if(arePairedDeletionBridges(var1, var2))
+
         }
+        else if(startBe1.getChrArm().equals(endBe2.getChrArm()) && startBe1.orientation() != endBe2.orientation()
+        && endBe1.getChrArm().equals(startBe2.getChrArm()) && endBe1.orientation() != startBe2.orientation())
+        {
+            // start to end
+            if (!startDB.hasBreakend(endBe2) || !endDB.hasBreakend(startBe2))
+                return;
+        }
+        else
+        {
+            return;
+        }
+
+        long avgTiLength = round(totalChainLength / (double)totalLinks);
+
+        String resolvedType = RESOLVED_TYPE_RECIPROCAL_TRANS ;
+
+        LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) marked as {}",
+                cluster.id(), totalLinks, totalChainLength, avgTiLength, resolvedType);
+
+        cluster.setResolved(true, resolvedType);
+        cluster.setSyntheticData(0, avgTiLength);
     }
 
     private boolean mergePloidyResolvingClusters(List<SvCluster> clusters)
@@ -1296,7 +1594,7 @@ public class ClusterAnalyser {
                 {
                     nextBreakend = breakendList.get(j);
 
-                    // first skip over an breakends in a DB with the initial breakend
+                    // first skip over any breakends in a DB with the initial breakend
                     if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
                     && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
                     {

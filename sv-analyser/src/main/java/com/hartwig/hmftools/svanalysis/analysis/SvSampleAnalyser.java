@@ -510,7 +510,7 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
                 mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,MinCopyNumber,MaxCopyNumber");
-                mClusterFileWriter.write(",SynDelDupLen,SynDelDupAvgTILen,Annotations,UnchainedSVs,AlleleValidPerc");
+                mClusterFileWriter.write(",SyntheticLen,SyntheticTILen,Annotations,UnchainedSVs,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
             }
@@ -569,7 +569,7 @@ public class SvSampleAnalyser {
                         cluster.getUnlinkedRemoteSVs().size(), cluster.getMinCNChange(), cluster.getMaxCNChange()));
 
                 writer.write(String.format(",%d,%d,%s,%d,%.2f",
-                        cluster.getSynDelDupLength(), cluster.getSynDelDupTILength(), cluster.getAnnotations(),
+                        cluster.getSyntheticLength(), cluster.getSyntheticTILength(), cluster.getAnnotations(),
                         cluster.getUnlinkedSVs().size(), cluster.getValidAllelePloidySegmentPerc()));
 
                 final int[] armClusterData = getArmClusterData(cluster);
@@ -645,7 +645,7 @@ public class SvSampleAnalyser {
                                 beStart.getSV().origId(), beEnd.getSV().origId(), beStart.getChrArm()));
 
                         writer.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
-                                pair.isAssembled(), pair.length(), cluster.getSynDelDupLength(),
+                                pair.isAssembled(), pair.length(), cluster.getSyntheticLength(),
                                 pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
                                 pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
                                 pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));

@@ -290,18 +290,23 @@ public class LineElementAnnotator {
         }
         else if(hasSuspected)
         {
+            long svInLineCount = cluster.getSVs().stream().filter(x-> x.inLineElement()).count();
+
             if(LOGGER.isDebugEnabled())
             {
-                long suspectLine = cluster.getSVs().stream().
-                        filter(x -> (x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT)
-                            || x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT))).count();
-
                 long polyAorT = cluster.getSVs().stream().filter(x -> hasPolyAorTMotif(x)).count();
+                long suspectLine = cluster.getSVs().stream()
+                        .filter(x -> (x.getLineElement(true).contains(SUSPECTED_LINE_ELEMENT)
+                        || x.getLineElement(false).contains(SUSPECTED_LINE_ELEMENT))).count();
 
-                LOGGER.debug("cluster({}) marked as line with suspect line elements", cluster.id(), suspectLine, polyAorT);
+                LOGGER.debug("cluster({}) anyLine({}) suspect({}) known({}) polyAT({})",
+                        cluster.id(), svInLineCount, suspectLine, knownCount, polyAorT);
             }
 
-            cluster.markAsLine();
+            if(cluster.getSvCount() <= 10 || svInLineCount * 2 >= cluster.getSvCount())
+            {
+                cluster.markAsLine();
+            }
         }
         else if(hasPolyAorT)
         {
