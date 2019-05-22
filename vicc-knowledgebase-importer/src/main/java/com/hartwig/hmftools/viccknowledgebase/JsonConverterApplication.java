@@ -44,73 +44,11 @@ public class JsonConverterApplication {
         String knowledgebasePath = cmd.getOptionValue(PATH_KNOWLEDGEBASE_FILES);
 
         readingAllJsonFile(cmd.getOptionValue(ALL_JSON_FILE), knowledgebasePath);
-        readingBrcaJsonFile(cmd.getOptionValue(BRCA_JSON_FILE), knowledgebasePath);
-        readingCgiJsonFile(cmd.getOptionValue(CGI_JSON_FILE), knowledgebasePath);
-        readingCivicJsonFile(cmd.getOptionValue(CIVIC_JSON_FILE), knowledgebasePath);
-        readingJaxJsonFile(cmd.getOptionValue(JAX_JSON_FILE), knowledgebasePath);
-        readingJaxTrialsJsonFile(cmd.getOptionValue(JAXTRIALS_JSON_FILE), knowledgebasePath);
-        readingMolecularMatchJsonFile(cmd.getOptionValue(MOLECULARMATCH_JSON_FILE), knowledgebasePath);
-        readingMolecularMatchTrialsJsonFile(cmd.getOptionValue(MOLECULARMATCHTRIALS_JSON_FILE), knowledgebasePath);
-        readingOncokbJsonFile(cmd.getOptionValue(ONCOKB_JSON_FILE), knowledgebasePath);
-        readingPmkbJsonFile(cmd.getOptionValue(PMKB_JSON_FILE), knowledgebasePath);
-        readingSageJsonFile(cmd.getOptionValue(SAGE_JSON_FILE), knowledgebasePath);
     }
 
     private static void readingAllJsonFile(@NotNull String allJsonFile, @NotNull String knowledgebasePath) throws IOException {
         String allJsonFilePath = knowledgebasePath + File.separator + allJsonFile;
         ViccFactory.extractAllFile(allJsonFilePath);
-    }
-
-    private static void readingBrcaJsonFile(@NotNull String brcaJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String brcaJsonFilePath = knowledgebasePath + File.separator + brcaJsonFile;
-        ViccFactory.extractBRCAFile(brcaJsonFilePath);
-    }
-
-    private static void readingCgiJsonFile(@NotNull String cgiJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String cgiJsonFilePath = knowledgebasePath + File.separator + cgiJsonFile;
-        ViccFactory.extractCgiFile(cgiJsonFilePath);
-    }
-
-    private static void readingCivicJsonFile(@NotNull String civicJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String civicJsonFilePath = knowledgebasePath + File.separator + civicJsonFile;
-        ViccFactory.extractCivicFile(civicJsonFilePath);
-    }
-
-    private static void readingJaxJsonFile(@NotNull String jaxJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String jaxJsonFilePath = knowledgebasePath + File.separator + jaxJsonFile;
-        ViccFactory.extractJaxFile(jaxJsonFilePath);
-    }
-
-    private static void readingJaxTrialsJsonFile(@NotNull String jaxTrialsJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String jaxTrialsJsonFilePath = knowledgebasePath + File.separator + jaxTrialsJsonFile;
-        ViccFactory.extractJaxTrialsFile(jaxTrialsJsonFilePath);
-    }
-
-    private static void readingMolecularMatchJsonFile(@NotNull String molecularMatchJsonFile, @NotNull String knowledgebasePath)
-            throws IOException {
-        String molecularMatchJsonFilePath = knowledgebasePath + File.separator + molecularMatchJsonFile;
-        ViccFactory.extractMolecularMatchFile(molecularMatchJsonFilePath);
-    }
-
-    private static void readingMolecularMatchTrialsJsonFile(@NotNull String molecularMatchTrialsJsonFile, @NotNull String knowledgebasePath)
-            throws IOException {
-        String molecularMatchTrialsJsonFilePath = knowledgebasePath + File.separator + molecularMatchTrialsJsonFile;
-        ViccFactory.extractMolecularMatchTrailsFile(molecularMatchTrialsJsonFilePath);
-    }
-
-    private static void readingOncokbJsonFile(@NotNull String oncokbJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String oncokbJsonFilePath = knowledgebasePath + File.separator + oncokbJsonFile;
-        ViccFactory.extractOncokbFile(oncokbJsonFilePath);
-    }
-
-    private static void readingPmkbJsonFile(@NotNull String pmkbJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String pmkbJsonFilePath = knowledgebasePath + File.separator + pmkbJsonFile;
-        ViccFactory.extractPmkbFile(pmkbJsonFilePath);
-    }
-
-    private static void readingSageJsonFile(@NotNull String sageJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String sageJsonFilePath = knowledgebasePath + File.separator + sageJsonFile;
-        ViccFactory.extractSageFile(sageJsonFilePath);
     }
 
     @NotNull
