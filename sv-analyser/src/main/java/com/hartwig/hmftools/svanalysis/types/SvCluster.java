@@ -113,12 +113,6 @@ public class SvCluster
     public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
     public static String RESOLVED_TYPE_COMPLEX = "COMPLEX";
 
-    // deprecated shortly
-    public static String RESOLVED_TYPE_DEL_INT_TI = "DEL_INT_TI";
-    public static String RESOLVED_TYPE_DEL_EXT_TI = "DEL_EXT_TI";
-    public static String RESOLVED_TYPE_DUP_INT_TI = "DUP_INT_TI";
-    public static String RESOLVED_TYPE_DUP_EXT_TI = "DUP_EXT_TI";
-
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
     public SvCluster(final int clusterId)
@@ -315,12 +309,6 @@ public class SvCluster
         if(mResolvedType == RESOLVED_TYPE_SYNTH_DEL || mResolvedType == RESOLVED_TYPE_SYNTH_DUP
         || mResolvedType == RESOLVED_TYPE_RECIPROCAL_INV || mResolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS
         || mResolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR || mResolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_DEL)
-        {
-            return true;
-        }
-
-        if(mResolvedType == RESOLVED_TYPE_DEL_EXT_TI || mResolvedType == RESOLVED_TYPE_DEL_INT_TI
-        || mResolvedType == RESOLVED_TYPE_DUP_INT_TI || mResolvedType == RESOLVED_TYPE_DUP_EXT_TI)
         {
             return true;
         }

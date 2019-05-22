@@ -18,20 +18,12 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_BE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_INT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_INT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_POLY_G_C;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_INV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SIMPLE_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -1066,41 +1058,6 @@ public class SvClusteringMethods {
         }
     }
 
-
-    private boolean tiTraversesComplexSVs(final SvCluster cluster, final SvLinkedPair pair)
-    {
-        // count any non-trivial cluster's SVs crossed by this pair
-        final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
-        final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
-        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-
-        if(lowerIndex >= upperIndex - 1)
-            return false;
-
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(firstBreakend.chromosome());
-
-        for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
-        {
-            final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
-
-            if(otherCluster == cluster)
-                continue;
-
-            if (otherCluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV
-            || otherCluster.getResolvedType() == RESOLVED_TYPE_LINE
-            || otherCluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
-            || isFilteredResolvedType(otherCluster.getResolvedType()))
-            {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
     public boolean validateClustering(final List<SvCluster> clusters)
     {
         // validation that every SV was put into a cluster
@@ -1177,28 +1134,28 @@ public class SvClusteringMethods {
 
     // old synthetic classification methods
 
+    /*
     public void markInversionPairTypes(SvCluster cluster)
     {
         // determine overlap configurations
 
-        /* 4 types of inversion pairs
-        1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
-            - outer breakends face out (the DEL)
-            - TI enclosed
-        2. DEL with external inverted TI
-            - resultant type = DEL
-            - length = other 2 breakends
-        3. DUP with external inverted TI
-            - 2 x TIs, but TI breakends don't overlap
-            - type = DUP
-            - TI and DUP length are interchangable, but choose shorter for TI
-        4. DUP with enclosed inverted TI
-            - no overlapping breakends
-            - TI from the innermost 2
-            - outer breakends face in
-            - resultant type = DUP
-            - length is outside 2 breakends (ie the other 2)
-         */
+        // 4 types of inversion pairs
+//        1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
+//            - outer breakends face out (the DEL)
+//            - TI enclosed
+//        2. DEL with external inverted TI
+//            - resultant type = DEL
+//            - length = other 2 breakends
+//        3. DUP with external inverted TI
+//            - 2 x TIs, but TI breakends don't overlap
+//            - type = DUP
+//            - TI and DUP length are interchangable, but choose shorter for TI
+//        4. DUP with enclosed inverted TI
+//            - no overlapping breakends
+//            - TI from the innermost 2
+//            - outer breakends face in
+//            - resultant type = DUP
+//            - length is outside 2 breakends (ie the other 2)
 
         // first test for a reciprocal inversion, marked by having 2 DBs and the TI > 50% of the length of the synthetic DEL
         if(cluster.getLinkedPairs().isEmpty())
@@ -1297,19 +1254,16 @@ public class SvClusteringMethods {
         final SvVarData var1 = cluster.getSV(0);
         final SvVarData var2 = cluster.getSV(1);
 
-        /* possible configurations:
-            1. Reciprocal Translocation
-            - 2 DBs, no overlappying breakends OR
-            - TIs converted to DBs since too short
-
-            2. One set of breakends facing (the TI) the other facing away (the DEL)
-            - DEL with TI
-
-            3. Two sets of facing breakends so 2 TIs
-            - but rather than a closed loop, one set remain unlinked (the overlap being the DUP)
-
-            Other configurations are nothing
-         */
+        // possible configurations:
+//            1. Reciprocal Translocation
+//            - 2 DBs, no overlappying breakends OR
+//            - TIs converted to DBs since too short
+//
+//            2. One set of breakends facing (the TI) the other facing away (the DEL)
+//            - DEL with TI
+//
+//            3. Two sets of facing breakends so 2 TIs
+//            - but rather than a closed loop, one set remain unlinked (the overlap being the DUP)
 
         // isSpecificCluster(cluster);
 
@@ -1373,6 +1327,42 @@ public class SvClusteringMethods {
 
         return resolveSyntheticDelDupCluster(cluster);
     }
+
+        private boolean tiTraversesComplexSVs(final SvCluster cluster, final SvLinkedPair pair)
+    {
+        // count any non-trivial cluster's SVs crossed by this pair
+        final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
+        final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
+        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
+
+        if(lowerIndex >= upperIndex - 1)
+            return false;
+
+        final List<SvBreakend> breakendList = mChrBreakendMap.get(firstBreakend.chromosome());
+
+        for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
+        {
+            final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
+
+            if(otherCluster == cluster)
+                continue;
+
+            if (otherCluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV
+            || otherCluster.getResolvedType() == RESOLVED_TYPE_LINE
+            || otherCluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
+            || isFilteredResolvedType(otherCluster.getResolvedType()))
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    */
 
 
 }

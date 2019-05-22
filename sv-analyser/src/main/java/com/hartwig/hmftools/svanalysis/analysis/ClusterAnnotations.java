@@ -27,8 +27,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROM
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_CT;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.CLUSTER_ANNONTATION_DM;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DEL_EXT_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_EXT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
