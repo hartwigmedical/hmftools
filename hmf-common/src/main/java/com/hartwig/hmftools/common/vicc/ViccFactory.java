@@ -4,12 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
@@ -25,9 +20,8 @@ public abstract class ViccFactory {
     private ViccFactory() {
     }
 
-    public static void extractAllFileSpecificFields(@NotNull String allJsonPath) throws IOException {
-        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
-        PrintWriter writer = new PrintWriter(new File(csvFileName));
+    public static void extractAllFileSpecificFields(@NotNull String allJsonPath, @NotNull String outputCsvFileName) throws IOException {
+        PrintWriter writer = new PrintWriter(new File(outputCsvFileName));
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
         reader.setLenient(true);
@@ -35,8 +29,7 @@ public abstract class ViccFactory {
         StringBuilder headerCSV = new StringBuilder();
         String headerSource = "source;";
         String headerGenes = "genes;";
-        String header = "Source;Primary Tumor type;Drug full name;"
-                + "Drug family;Alteration;Biomarker;Gene;Evidence level;Association;";
+        String header = "Source;Primary Tumor type;Drug full name;" + "Drug family;Alteration;Biomarker;Gene;Evidence level;Association;";
 
         headerCSV.append(headerSource);
         headerCSV.append(headerGenes);
@@ -64,7 +57,6 @@ public abstract class ViccFactory {
         }
         reader.close();
         writer.close();
-
     }
 
     public static void extractAllFile(@NotNull String allJsonPath) throws IOException {
