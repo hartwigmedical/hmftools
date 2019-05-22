@@ -14,6 +14,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class JsonConverterApplication {
@@ -49,7 +50,7 @@ public class JsonConverterApplication {
     private static void readingAllJsonFile(@NotNull String allJsonFile, @NotNull String knowledgebasePath) throws IOException {
         String allJsonFilePath = knowledgebasePath + File.separator + allJsonFile;
         ViccFactory.extractAllFile(allJsonFilePath);
-        ViccFactory.extractAllFileSpecificFields(allJsonFilePath);
+        ViccFactory.extractAllFileSpecificFields(allJsonFilePath, Strings.EMPTY);
     }
 
     @NotNull
