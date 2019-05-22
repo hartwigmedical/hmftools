@@ -51,11 +51,11 @@ public abstract class ViccFactory {
             StringBuilder stringToCSVSource = source.readObjectSource(object);
             StringBuilder stringToCSVGenes = genes.readObjectGenes(object);
             StringBuilder stringToCSVCGI = cgi.readObjectCGISpecificFields(object);
-            sage.readObjectSageSpecificFields(object);
+            StringBuilder stringToCSVsage = sage.readObjectSageSpecificFields(object);
             stringToCSVAll.append(stringToCSVSource);
             stringToCSVAll.append(stringToCSVGenes);
             stringToCSVAll.append(stringToCSVCGI);
-        //    stringToCSVAll.append(stringToCSVsage);
+            stringToCSVAll.append(stringToCSVsage);
             writer.append(stringToCSVAll);
             writer.append("\n");
             index++;

@@ -33,9 +33,9 @@ public class sage {
         return stringToCSVSage;
     }
 
-    public static void readObjectSageSpecificFields(@NotNull JsonObject object) {
+    public static StringBuilder readObjectSageSpecificFields(@NotNull JsonObject object) {
         //SAGE object
-        StringBuffer stringToCSVSage = new StringBuffer();
+        StringBuilder stringToCSVSage = new StringBuilder();
         List<String> keysOfSage;
         List<String> listSage = Lists.newArrayList();
 
@@ -69,5 +69,6 @@ public class sage {
             }
          //   LOGGER.info(String.join(";" , listSage));
         }
+        return stringToCSVSage;
     }
 }
