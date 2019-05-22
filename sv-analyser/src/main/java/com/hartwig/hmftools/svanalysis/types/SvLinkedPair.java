@@ -35,7 +35,6 @@ public class SvLinkedPair {
     public static final String LINK_TYPE_DB = "DB";
 
     public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
-    public static String ASSEMBLY_MATCH_DIFF = "DIFF";
     public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
     public static String ASSEMBLY_MATCH_NONE = "NONE";
 

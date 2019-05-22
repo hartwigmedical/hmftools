@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEq
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_DIFF;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
@@ -109,9 +108,11 @@ public class LinkFinder
                     if (!haveLinkedAssemblies(var1, var2, v1Start, v2Start))
                         continue;
 
-                    // check a link for these SVs wasn't already created
-                    if(lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink())
-                        continue;
+                    // it's possible for a breakend to already be in an assembled link
+                    // eg the replicated breakend scenario in COLO829's BND from chr 3-6
+
+                    // if(lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink())
+                    //    continue;
 
                     // form a new TI from these 2 BEs
                     SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);

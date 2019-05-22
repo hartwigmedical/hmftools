@@ -6,6 +6,13 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_ISOLATED_BE;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 import static org.junit.Assert.assertEquals;
@@ -103,17 +110,17 @@ public class ChainingActualTests
         assertEquals(cluster.getSvCount(), 8);
 
         // check links
-        assertEquals(var4.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
-        assertEquals(var5.getAssemblyMatchType(true), ASSEMBLY_MATCH_MATCHED);
-        assertEquals(var5.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var4.getAssemblyMatchType(false));
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var5.getAssemblyMatchType(true));
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var5.getAssemblyMatchType(false));
 
         assertEquals(var7.getLinkedPair(false), var8.getLinkedPair(false));
-        assertEquals(var7.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
-        assertEquals(var8.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var7.getAssemblyMatchType(false));
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var8.getAssemblyMatchType(false));
 
         assertEquals(var6.getLinkedPair(false), var8.getLinkedPair(true));
-        assertEquals(var6.getAssemblyMatchType(false), ASSEMBLY_MATCH_MATCHED);
-        assertEquals(var8.getAssemblyMatchType(true), ASSEMBLY_MATCH_MATCHED);
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var6.getAssemblyMatchType(false));
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var8.getAssemblyMatchType(true));
 
         // check foldbacks
         assertEquals(var1.getFoldbackLink(true), var1.id());
@@ -122,11 +129,21 @@ public class ChainingActualTests
         assertEquals(var6.getFoldbackLink(true), var7.id());
         assertEquals(var7.getFoldbackLink(true), var6.id());
 
+        // check local topology
+        final int[] armClusterData = getArmClusterData(cluster);
+
+        assertEquals(8, cluster.getArmClusters().size());
+        assertEquals(3, armClusterData[ARM_CL_ISOLATED_BE]);
+        assertEquals(2, armClusterData[ARM_CL_TI_ONLY]);
+        assertEquals(0, armClusterData[ARM_CL_DSB]);
+        assertEquals(3, armClusterData[ARM_CL_FOLDBACK]);
+        assertEquals(0, armClusterData[ARM_CL_FOLDBACK_DSB]);
+        assertEquals(0, armClusterData[ARM_CL_COMPLEX_FOLDBACK]);
+
         // check chains
         assertEquals(1, cluster.getChains().size());
         final SvChain chain = cluster.getChains().get(0);
         assertEquals(10, chain.getLinkCount());
-
     }
 
     @Test

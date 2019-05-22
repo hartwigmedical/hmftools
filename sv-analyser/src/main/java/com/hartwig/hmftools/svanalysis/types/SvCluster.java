@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_AWAY;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
+import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.INF_SV_TYPE;
@@ -864,8 +865,11 @@ public class SvCluster
         {
             if(pair.isInferred())
             {
-                pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
-                pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
+                if(pair.first().getAssemblyMatchType(pair.firstLinkOnStart()) != ASSEMBLY_MATCH_MATCHED)
+                    pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
+
+                if(pair.second().getAssemblyMatchType(pair.secondLinkOnStart()) != ASSEMBLY_MATCH_MATCHED)
+                    pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
             }
 
             pair.first().setLinkedPair(pair, pair.firstLinkOnStart());
