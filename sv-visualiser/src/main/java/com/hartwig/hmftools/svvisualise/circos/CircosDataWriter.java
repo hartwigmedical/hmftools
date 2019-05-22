@@ -310,18 +310,18 @@ public class CircosDataWriter {
     @NotNull
     private String scatterGlyph(boolean isStart, @NotNull final Segment segment, @NotNull final List<Link> links) {
         long location = isStart ? segment.start() : segment.end();
-        SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
+        final SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
+        if (terminal != SegmentTerminal.NONE) {
+            return "square";
+        }
 
         final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), location);
         final boolean isFoldback =
                 Links.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent() || Links.findEndLink(
                         startPosition,
                         links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
-        String glyph = isFoldback ? "triangle" : "circle";
-        if (terminal != SegmentTerminal.NONE) {
-            glyph = "square";
-        }
-        return glyph;
+
+        return isFoldback ? "triangle" : "circle";
     }
 
     @NotNull
