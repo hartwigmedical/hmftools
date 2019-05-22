@@ -25,6 +25,47 @@ public abstract class ViccFactory {
     private ViccFactory() {
     }
 
+    public static void extractAllFileSpecificFields(@NotNull String allJsonPath) throws IOException {
+        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
+        PrintWriter writer = new PrintWriter(new File(csvFileName));
+        JsonParser parser = new JsonParser();
+        JsonReader reader = new JsonReader(new FileReader(allJsonPath));
+        reader.setLenient(true);
+        int index = 1;
+        StringBuilder headerCSV = new StringBuilder();
+        String headerSource = "source;";
+        String headerGenes = "genes;";
+        String header = "Source;Primary Tumor type;Drug full name;"
+                + "Drug family;Alteration;Biomarker;Gene;Evidence level;Association;";
+
+        headerCSV.append(headerSource);
+        headerCSV.append(headerGenes);
+        headerCSV.append(header);
+        writer.append(headerCSV);
+        writer.append("\n");
+
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+            JsonObject object = parser.parse(reader).getAsJsonObject();
+            StringBuilder stringToCSVAll = new StringBuilder();
+
+            StringBuilder stringToCSVSource = source.readObjectSource(object);
+            StringBuilder stringToCSVGenes = genes.readObjectGenes(object);
+            StringBuilder stringToCSVCGI = cgi.readObjectCGISpecificFields(object);
+            StringBuilder stringToCSVsage = sage.readObjectSageSpecificFields(object);
+
+            stringToCSVAll.append(stringToCSVSource);
+            stringToCSVAll.append(stringToCSVGenes);
+            stringToCSVAll.append(stringToCSVCGI);
+            stringToCSVAll.append(stringToCSVsage);
+            writer.append(stringToCSVAll);
+            writer.append("\n");
+            index++;
+        }
+        reader.close();
+        writer.close();
+
+    }
+
     public static void extractAllFile(@NotNull String allJsonPath) throws IOException {
         final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
         PrintWriter writer = new PrintWriter(new File(csvFileName));
@@ -333,7 +374,8 @@ public abstract class ViccFactory {
             StringBuilder stringToCSVFeatures = features.readObjectFeatures(object); //TODO check fields for every db
             StringBuilder stringToCSVCIVIC = civic.readObjectCIVIC(object); //TODO check fields for every db
             StringBuilder stringToCSVMolecularMatch = molecularMatch.readObjectMolecularMatch(object); //TODO check fields for every db
-            StringBuilder stringToCSVMolecularMatchTrials = molecularMatchTrial.readObjectMolecularMatchTrials(object); //TODO check fields for every db
+            StringBuilder stringToCSVMolecularMatchTrials =
+                    molecularMatchTrial.readObjectMolecularMatchTrials(object); //TODO check fields for every db
 
             stringToCSVAll.append(index).append(";");
             stringToCSVAll.append(stringToCSVSource);

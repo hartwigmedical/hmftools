@@ -49,6 +49,7 @@ public class JsonConverterApplication {
     private static void readingAllJsonFile(@NotNull String allJsonFile, @NotNull String knowledgebasePath) throws IOException {
         String allJsonFilePath = knowledgebasePath + File.separator + allJsonFile;
         ViccFactory.extractAllFile(allJsonFilePath);
+        ViccFactory.extractAllFileSpecificFields(allJsonFilePath);
     }
 
     @NotNull
