@@ -34,6 +34,9 @@ public class sage {
     }
 
     public static StringBuilder readObjectSageSpecificFields(@NotNull JsonObject object) {
+        //removed data fields:
+        //entrez_id;germline_or_somatic
+
         //SAGE object
         StringBuilder stringToCSVSage = new StringBuilder();
         List<String> keysOfSage;
@@ -43,6 +46,7 @@ public class sage {
             keysOfSage = new ArrayList<>(object.getAsJsonObject("sage").keySet());
 
             for (int j = 0; j < keysOfSage.size(); j++) {
+                LOGGER.info(listSage);
                 if (keysOfSage.get(j).equals("publication_url")) {
                     listSage.add(0, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
                 }
@@ -50,16 +54,16 @@ public class sage {
                     listSage.add(0, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
                 }
                 if (keysOfSage.get(j).equals("drug_labels")) {
-                    listSage.add(0, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
+                    listSage.add(2, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
                 }
                 if (keysOfSage.get(j).equals("evidence_label")) {
-                    listSage.add(0, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
+                    listSage.add(2, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
                 }
                 if (keysOfSage.get(j).equals("response_type")) {
-                    listSage.add(0, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
+                    listSage.add(4, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
                 }
                 if (keysOfSage.get(j).equals("gene")) {
-                    listSage.add(0, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
+                    listSage.add(3, object.getAsJsonObject("sage").get(keysOfSage.get(j)).toString());
                 }
             }
                stringToCSVSage.append(String.join(";" , listSage));
