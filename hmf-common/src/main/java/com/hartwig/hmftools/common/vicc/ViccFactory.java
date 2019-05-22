@@ -26,7 +26,7 @@ public abstract class ViccFactory {
     }
 
     public static void extractAllFileSpecificFields(@NotNull String allJsonPath) throws IOException {
-        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
+        final String csvFileName = "all.csv";
         PrintWriter writer = new PrintWriter(new File(csvFileName));
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
@@ -44,19 +44,18 @@ public abstract class ViccFactory {
         writer.append(headerCSV);
         writer.append("\n");
 
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && index < 1100) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
             StringBuilder stringToCSVAll = new StringBuilder();
 
             StringBuilder stringToCSVSource = source.readObjectSource(object);
             StringBuilder stringToCSVGenes = genes.readObjectGenes(object);
             StringBuilder stringToCSVCGI = cgi.readObjectCGISpecificFields(object);
-            StringBuilder stringToCSVsage = sage.readObjectSageSpecificFields(object);
-
+            sage.readObjectSageSpecificFields(object);
             stringToCSVAll.append(stringToCSVSource);
             stringToCSVAll.append(stringToCSVGenes);
             stringToCSVAll.append(stringToCSVCGI);
-            stringToCSVAll.append(stringToCSVsage);
+        //    stringToCSVAll.append(stringToCSVsage);
             writer.append(stringToCSVAll);
             writer.append("\n");
             index++;

@@ -20,6 +20,6 @@ public class ViccFactoryTest {
     @Test
     @Ignore
     public void convertAll() throws IOException {
-        ViccFactory.extractAllFile("all.json");
+        ViccFactory.extractAllFileSpecificFields("all.json");
     }
 }
