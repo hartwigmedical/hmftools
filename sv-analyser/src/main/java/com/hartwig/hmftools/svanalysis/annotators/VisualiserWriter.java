@@ -329,7 +329,6 @@ public class VisualiserWriter
                 mGenesFileWriter = createBufferedWriter(outputFileName, false);
                 mGenesFileWriter.write("SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd");
                 mGenesFileWriter.newLine();
-
             }
 
             // first remove duplicates from amongst the genes
@@ -342,7 +341,6 @@ public class VisualiserWriter
 
                 loggedGenes.add(geneData.GeneId);
 
-                // log relevant exons
                 final List<TranscriptExonData> exonDataLst = mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TranscriptId);
 
                 for (final TranscriptExonData exonData : exonDataLst)

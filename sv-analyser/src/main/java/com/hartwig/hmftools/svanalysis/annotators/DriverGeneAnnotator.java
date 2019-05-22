@@ -211,8 +211,6 @@ public class DriverGeneAnnotator
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
-        checkPseudoGeneAnnotations(clusters);
-
         loadDriverCatalog(sampleId);
 
         if (mDriverCatalog.isEmpty())
@@ -746,60 +744,6 @@ public class DriverGeneAnnotator
 
         closeBufferedWriter(mFileWriter);
         closeBufferedWriter(mGCNFileWriter);
-    }
-
-    private void checkPseudoGeneAnnotations(final List<SvCluster> clusters)
-    {
-        for(final SvCluster cluster : clusters)
-        {
-            // isSpecificCluster(cluster);
-
-            GeneAnnotation pseudoGene = null;
-            String transcriptId = "";
-
-            for(final SvLinkedPair pair : cluster.getLinkedPairs())
-            {
-                if(pair.length() > SHORT_TI_LENGTH * 8)
-                    continue;
-
-                final SvBreakend lower = pair.getBreakend(true);
-                final SvBreakend upper = pair.getBreakend(false);
-
-                // for any TI falling within the same gene, check for an exon boundary match
-                if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
-                    continue;
-
-                for(final GeneAnnotation gene1 : lower.getSV().getGenesList(lower.usesStart()))
-                {
-                    for(final GeneAnnotation gene2 : upper.getSV().getGenesList(upper.usesStart()))
-                    {
-                        if(!gene1.GeneName.equals(gene2.GeneName))
-                            continue;
-
-                        final String exonData[] = mGeneTranscriptCollection.getExonDetailsForPosition(gene1, lower.position(), upper.position());
-
-                        if(exonData[PSEUDO_GENE_DATA_TRANS_ID] != null)
-                        {
-                            pseudoGene = gene1;
-                            transcriptId = exonData[PSEUDO_GENE_DATA_TRANS_ID];
-
-                            String exonMatchData = String.format("%s;%s;%s;%s",
-                                    transcriptId, exonData[PSEUDO_GENE_DATA_EXON_RANK],
-                                    exonData[PSEUDO_GENE_DATA_EXON_MAX], exonData[PSEUDO_GENE_DATA_EXON_LENGTH]);
-
-
-                            pair.setExonMatchData(exonMatchData);
-                        }
-                    }
-                }
-            }
-
-            if(pseudoGene != null)
-            {
-                mVisWriter.addGeneExonData(cluster.id(), pseudoGene.StableId, pseudoGene.GeneName,
-                        transcriptId, pseudoGene.chromosome(), "PSEUDO");
-            }
-        }
     }
 
     private static String GENE_CN_DATA_FILE = "SVA_GENE_COPY_NUMBER.csv";

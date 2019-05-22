@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
+import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_SIMPLE_DUP;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_ISOLATED_BE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.getArmClusterData;
@@ -34,6 +35,11 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_LENGTH;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_MAX;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_RANK;
+import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_TRANS_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -43,6 +49,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
@@ -302,6 +309,65 @@ public class SvSampleAnalyser {
         }
     }
 
+    public void annotateWithGeneData(SvGeneTranscriptCollection geneTransCache)
+    {
+        checkPseudoGeneAnnotations(geneTransCache);
+    }
+
+    private void checkPseudoGeneAnnotations(SvGeneTranscriptCollection geneTransCache)
+    {
+        for(final SvCluster cluster : getClusters())
+        {
+            // isSpecificCluster(cluster);
+
+            GeneAnnotation pseudoGene = null;
+            String transcriptId = "";
+
+            for(final SvLinkedPair pair : cluster.getLinkedPairs())
+            {
+                if(pair.length() > SHORT_TI_LENGTH * 8)
+                    continue;
+
+                final SvBreakend lower = pair.getBreakend(true);
+                final SvBreakend upper = pair.getBreakend(false);
+
+                // for any TI falling within the same gene, check for an exon boundary match
+                if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
+                    continue;
+
+                for(final GeneAnnotation gene1 : lower.getSV().getGenesList(lower.usesStart()))
+                {
+                    for(final GeneAnnotation gene2 : upper.getSV().getGenesList(upper.usesStart()))
+                    {
+                        if(!gene1.GeneName.equals(gene2.GeneName))
+                            continue;
+
+                        final String exonData[] = geneTransCache.getExonDetailsForPosition(gene1, lower.position(), upper.position());
+
+                        if(exonData[PSEUDO_GENE_DATA_TRANS_ID] != null)
+                        {
+                            pseudoGene = gene1;
+                            transcriptId = exonData[PSEUDO_GENE_DATA_TRANS_ID];
+
+                            String exonMatchData = String.format("%s;%s;%s;%s",
+                                    transcriptId, exonData[PSEUDO_GENE_DATA_EXON_RANK],
+                                    exonData[PSEUDO_GENE_DATA_EXON_MAX], exonData[PSEUDO_GENE_DATA_EXON_LENGTH]);
+
+
+                            pair.setExonMatchData(exonMatchData);
+                        }
+                    }
+                }
+            }
+
+            if(pseudoGene != null)
+            {
+                mVisWriter.addGeneExonData(cluster.id(), pseudoGene.StableId, pseudoGene.GeneName,
+                        transcriptId, pseudoGene.chromosome(), "PSEUDO");
+            }
+        }
+    }
+
     private void writeClusterSVOutput()
     {
         try
@@ -511,7 +577,8 @@ public class SvSampleAnalyser {
                 mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
                 mClusterFileWriter.write(",TotalLinks,AssemblyLinks,LongDelDups,UnlinkedRemotes,MinCopyNumber,MaxCopyNumber");
                 mClusterFileWriter.write(",SyntheticLen,SyntheticTILen,Annotations,UnchainedSVs,AlleleValidPerc");
-                mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
+                mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
+                mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
             }
 
@@ -575,10 +642,11 @@ public class SvSampleAnalyser {
                 final int[] armClusterData = getArmClusterData(cluster);
                 int shortTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
                         cluster.getArmClusters().size(), shortTIs, armClusterData[ARM_CL_ISOLATED_BE], armClusterData[ARM_CL_TI_ONLY],
-                        armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB],
-                        armClusterData[ARM_CL_COMPLEX_FOLDBACK], armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
+                        armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP], armClusterData[ARM_CL_FOLDBACK],
+                        armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK], armClusterData[ARM_CL_COMPLEX_LINE],
+                        armClusterData[ARM_CL_COMPLEX_OTHER]));
 
                 writer.newLine();
             }

@@ -574,12 +574,12 @@ public class ClusterAnalyser {
         boolean faceAway = (startBreakend.position() < endBreakend.position()) == (startBreakend.orientation() == 1);
 
         int totalChainLength = 0;
-        boolean hasLongTIs = false;
+        int longTICount = 0;
         for(SvLinkedPair pair : chain.getLinkedPairs())
         {
             if(pair.length() > SHORT_TI_LENGTH)
             {
-                hasLongTIs = true;
+                ++longTICount;
             }
 
             totalChainLength += pair.length();
@@ -590,11 +590,11 @@ public class ClusterAnalyser {
 
         String resolvedType = "";
 
-        if(!hasLongTIs)
+        if(longTICount == 0)
         {
             resolvedType = faceAway ? RESOLVED_TYPE_SYNTH_DEL : RESOLVED_TYPE_SYNTH_DUP;
         }
-        else
+        else if(longTICount == 1)
         {
             // skip DEL-DUP constituents due to likely being false positives
             if(cluster.getSvCount() == 2 && cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2)
@@ -608,11 +608,10 @@ public class ClusterAnalyser {
             {
                 resolvedType = RESOLVED_TYPE_RECIPROCAL_DUP_DEL;
             }
-            else
-            {
-                return;
-            }
         }
+
+        if(resolvedType.isEmpty())
+            return;
 
         LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) synLen({}) marked as {}",
                 cluster.id(), chain.getLinkCount(), totalChainLength, avgTiLength, syntheticLength, resolvedType);

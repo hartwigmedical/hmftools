@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svanalysis.types;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 
 import java.util.List;
@@ -91,12 +93,14 @@ public class SvArmCluster
 
     public static final int ARM_CL_ISOLATED_BE = 0;
     public static final int ARM_CL_TI_ONLY = 1;
-    public static final int ARM_CL_DSB = 2;
+    public static final int ARM_CL_DSB = 2; // includes simple DELs within the arm-cluster window
     public static final int ARM_CL_FOLDBACK = 3;
     public static final int ARM_CL_FOLDBACK_DSB = 4;
     public static final int ARM_CL_COMPLEX_FOLDBACK = 5;
     public static final int ARM_CL_COMPLEX_LINE = 6;
     public static final int ARM_CL_COMPLEX_OTHER = 7;
+    public static final int ARM_CL_SIMPLE_DUP = 8;
+    public static final int ARM_CL_MAX = ARM_CL_SIMPLE_DUP;
 
     public static final String typeToString(int type)
     {
@@ -110,6 +114,7 @@ public class SvArmCluster
             case ARM_CL_COMPLEX_FOLDBACK : return "COMPLEX_FOLDBACK";
             case ARM_CL_COMPLEX_LINE: return "COMPLEX_LINE";
             case ARM_CL_COMPLEX_OTHER : return "COMPLEX_OTHER";
+            case ARM_CL_SIMPLE_DUP: return "SIMPLE_DUP";
         }
 
         return "Unknown";
@@ -135,6 +140,20 @@ public class SvArmCluster
             final SvVarData var1 = be1.getSV();
             final SvBreakend be2 = mBreakends.get(1);
             final SvVarData var2 = be2.getSV();
+
+            if(var1 == var2)
+            {
+                if(var1.type() == DEL)
+                {
+                    mType = ARM_CL_DSB;
+                    return;
+                }
+                else if(var1.type() == DUP)
+                {
+                    mType = ARM_CL_SIMPLE_DUP;
+                    return;
+                }
+            }
 
             if(var1.getFoldbackLink(be1.usesStart()).equals(var2.id()))
             {
@@ -270,7 +289,7 @@ public class SvArmCluster
 
     public static int[] getArmClusterData(final SvCluster cluster)
     {
-        int[] results = new int[ARM_CL_COMPLEX_OTHER+1];
+        int[] results = new int[ARM_CL_MAX+1];
 
         for(final SvArmCluster armCluster : cluster.getArmClusters())
         {
