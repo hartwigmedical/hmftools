@@ -575,12 +575,15 @@ public class ClusterAnalyser {
 
         int totalChainLength = 0;
         int longTICount = 0;
+        long longestTILength = 0;
         for(SvLinkedPair pair : chain.getLinkedPairs())
         {
             if(pair.length() > SHORT_TI_LENGTH)
             {
                 ++longTICount;
             }
+
+            longestTILength = max(pair.length(), longestTILength);
 
             totalChainLength += pair.length();
         }
@@ -613,11 +616,11 @@ public class ClusterAnalyser {
         if(resolvedType.isEmpty())
             return;
 
-        LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) synLen({}) marked as {}",
-                cluster.id(), chain.getLinkCount(), totalChainLength, avgTiLength, syntheticLength, resolvedType);
+        LOGGER.debug("cluster({}) chain(links=({} len={} tiLen(longest={} avg={}) synLen({}) marked as {}",
+                cluster.id(), chain.getLinkCount(), totalChainLength, longestTILength, avgTiLength, syntheticLength, resolvedType);
 
         cluster.setResolved(true, resolvedType);
-        cluster.setSyntheticData(syntheticLength, avgTiLength);
+        cluster.setSyntheticData(syntheticLength, longestTILength);
     }
 
     private void markSyntheticReciprocalInversion(SvCluster cluster)
@@ -627,7 +630,6 @@ public class ClusterAnalyser {
 
         SvChain chain = cluster.getChains().get(0);
 
-        int totalChainLength = 0;
         int totalLinks = 0;
 
         // check chains are both short and have the correct orientations
@@ -648,7 +650,6 @@ public class ClusterAnalyser {
             }
 
 
-            totalChainLength += pair.length();
             ++totalLinks;
         }
 
@@ -689,12 +690,10 @@ public class ClusterAnalyser {
         if (tiPair.length() < 0.5 * syntheticLength)
             return;
 
-        long avgTiLength = round(totalChainLength / (double)totalLinks);
-
         String resolvedType = RESOLVED_TYPE_RECIPROCAL_INV;
 
-        LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) synLen({}) marked as {}",
-                cluster.id(), totalLinks, totalChainLength, avgTiLength, syntheticLength, resolvedType);
+        LOGGER.debug("cluster({}) chain(links=({} longestTI={}) synLen({}) marked as {}",
+                cluster.id(), totalLinks, tiPair.length(), syntheticLength, resolvedType);
 
         cluster.setResolved(true, resolvedType);
         cluster.setSyntheticData(syntheticLength, tiPair.length());
@@ -707,25 +706,12 @@ public class ClusterAnalyser {
         if(cluster.getChains().size() > 2)
             return;
 
-        /*
-        if(cluster.getSvCount() == 2 && cluster.getTypeCount(BND) == 2 && cluster.getLinkedPairs().isEmpty())
-        {
-            final SvVarData var1 = cluster.getSV(0);
-            final SvVarData var2 = cluster.getSV(1);
-
-            if(arePairedDeletionBridges(var1, var2))
-                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
-
-            return;
-        }
-        */
-
         SvBreakend startBe1 = null;
         SvBreakend endBe1 = null;
         SvBreakend startBe2 = null;
         SvBreakend endBe2 = null;
 
-        int totalChainLength = 0;
+        long longestTILength = 0;
         int totalLinks = 0;
 
         if(cluster.getChains().isEmpty())
@@ -755,7 +741,7 @@ public class ClusterAnalyser {
                     if (pair.length() > SHORT_TI_LENGTH)
                         return;
 
-                    totalChainLength += pair.length();
+                    longestTILength = max(pair.length(), longestTILength);
                     ++totalLinks;
                 }
             }
@@ -779,7 +765,7 @@ public class ClusterAnalyser {
                 if (pair.length() > SHORT_TI_LENGTH)
                     return;
 
-                totalChainLength += pair.length();
+                longestTILength = max(pair.length(), longestTILength);
                 ++totalLinks;
             }
 
@@ -826,15 +812,13 @@ public class ClusterAnalyser {
             return;
         }
 
-        long avgTiLength = round(totalChainLength / (double)totalLinks);
-
         String resolvedType = RESOLVED_TYPE_RECIPROCAL_TRANS ;
 
-        LOGGER.debug("cluster({}) chain(links=({} len={} avgTILen={}) marked as {}",
-                cluster.id(), totalLinks, totalChainLength, avgTiLength, resolvedType);
+        LOGGER.debug("cluster({}) chain(links=({} longestTI={}) marked as {}",
+                cluster.id(), totalLinks, longestTILength, resolvedType);
 
         cluster.setResolved(true, resolvedType);
-        cluster.setSyntheticData(0, avgTiLength);
+        cluster.setSyntheticData(0, longestTILength);
     }
 
     private boolean mergePloidyResolvingClusters(List<SvCluster> clusters)

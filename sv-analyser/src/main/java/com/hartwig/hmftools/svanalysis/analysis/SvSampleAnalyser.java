@@ -670,7 +670,7 @@ public class SvSampleAnalyser {
                 mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
                 mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE");
-                mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength,SynDelDupLen");
+                mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength");
                 mLinksFileWriter.write(",NextSvDist,NextClusteredSvDist,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
                 mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
                 mLinksFileWriter.write(",PosStart,PosEnd,GeneStart,GeneEnd,ExonMatch");
@@ -712,8 +712,8 @@ public class SvSampleAnalyser {
                                 chain.id(), chainSvCount, chainConsistent,
                                 beStart.getSV().origId(), beEnd.getSV().origId(), beStart.getChrArm()));
 
-                        writer.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
-                                pair.isAssembled(), pair.length(), cluster.getSyntheticLength(),
+                        writer.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
+                                pair.isAssembled(), pair.length(),
                                 pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
                                 pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
                                 pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));

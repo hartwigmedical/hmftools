@@ -74,7 +74,7 @@ public class SvAnalyser {
         if(cmd.hasOption(STATS_ROUTINES))
         {
             StatisticRoutines statsRoutines = new StatisticRoutines();
-            statsRoutines.loadConfig(cmd);
+            statsRoutines.loadConfig(cmd, svaConfig.OutputCsvPath);
             statsRoutines.runStatistics();
             LOGGER.info("run complete");
             return;

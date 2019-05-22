@@ -77,30 +77,30 @@ public class StatisticRoutines
     private static String DRIVER_GENES_FILE = "driver_genes_file";
     private static String SAMPLE_COUNTS_FILE = "sample_counts_file";
     private static String SAMPLE_GENERIC_FILE = "sample_generic_file";
-    private static String OUTPUT_FILE = "stats_results_file";
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(DRIVER_GENES_FILE, true, "Drive genes file");
         options.addOption(SAMPLE_COUNTS_FILE, true, "Sample counts file");
         options.addOption(SAMPLE_GENERIC_FILE, true, "Sample data with 3 generic categories file");
-        options.addOption(OUTPUT_FILE, true, "Results file");
     }
 
-    public boolean loadConfig(final CommandLine cmd)
+    public boolean loadConfig(final CommandLine cmd, final String outputDir)
     {
         boolean valid = true;
+
+        final String outputFile = outputDir + "SVA_STATS_DATA.csv";
 
         if(cmd.hasOption(DRIVER_GENES_FILE) && cmd.hasOption(SAMPLE_COUNTS_FILE))
         {
             loadDriverGeneData(cmd.getOptionValue(DRIVER_GENES_FILE));
             loadSampleCountsData(cmd.getOptionValue(SAMPLE_COUNTS_FILE));
-            valid = initialiseTwoVariableOutput(cmd.getOptionValue(OUTPUT_FILE));
+            valid = initialiseTwoVariableOutput(outputFile);
         }
         else if(cmd.hasOption(SAMPLE_GENERIC_FILE))
         {
             loadSampleGenericData(cmd.getOptionValue(SAMPLE_GENERIC_FILE));
-            valid = initialiseGenericThreeVariableOutput(cmd.getOptionValue(OUTPUT_FILE));
+            valid = initialiseGenericThreeVariableOutput(outputFile);
         }
 
         return valid;
