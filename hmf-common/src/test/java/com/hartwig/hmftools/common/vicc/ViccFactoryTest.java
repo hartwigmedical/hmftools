@@ -12,6 +12,6 @@ public class ViccFactoryTest {
     @Test
     @Ignore
     public void convertAll() throws IOException {
-        ViccFactory.extractAllFileSpecificFields("all.json");
+        ViccFactory.extractAllFileSpecificFields("/Users/liekeschoenmaker/hmf/tmp/all.json");
     }
 }

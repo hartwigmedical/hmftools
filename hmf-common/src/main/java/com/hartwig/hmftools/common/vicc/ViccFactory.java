@@ -26,7 +26,7 @@ public abstract class ViccFactory {
     }
 
     public static void extractAllFileSpecificFields(@NotNull String allJsonPath) throws IOException {
-        final String csvFileName = "all.csv";
+        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
         PrintWriter writer = new PrintWriter(new File(csvFileName));
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(allJsonPath));
