@@ -291,44 +291,51 @@ public class CircosDataWriter {
             }
 
             final String colorOption = colorPicker.color(segment.clusterId(), segment.chainId());
-
-            final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-            final boolean isStartFoldback =
-                    Links.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent()
-                            || Links.findEndLink(startPosition, links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
-            String startGlyph = isStartFoldback ? "glyph=triangle" : "glyph=circle";
-            if (segment.startTerminal() != SegmentTerminal.NONE) {
-                startGlyph = "glyph=square";
+            final String startGlyph = scatterGlyph(true, segment, links);
+            result.add(scatterEntry(true, segment, colorOption, startGlyph, 20));
+            if (segment.startTerminal() == SegmentTerminal.CENTROMERE) {
+                result.add(scatterEntry(true, segment, "color=white", startGlyph, 14));
             }
 
-            final StringJoiner start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                    .add(String.valueOf(segment.start()))
-                    .add(String.valueOf(segment.start()))
-                    .add(String.valueOf(segment.track()))
-                    .add(colorOption + "," + startGlyph);
-            result.add(start.toString());
-
-            final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            final boolean isEndFoldback =
-                    Links.findStartLink(endPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent() || Links.findEndLink(
-                            endPosition,
-                            links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
-
-            String endGlyph = isEndFoldback ? "glyph=triangle" : "glyph=circle";
-            if (segment.endTerminal() != SegmentTerminal.NONE) {
-                endGlyph = "glyph=square";
+            final String endGlyph = scatterGlyph(false, segment, links);
+            result.add(scatterEntry(false, segment, colorOption, endGlyph, 20));
+            if (segment.endTerminal() == SegmentTerminal.CENTROMERE) {
+                result.add(scatterEntry(false, segment, "color=white", endGlyph, 14));
             }
-
-            final StringJoiner end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                    .add(String.valueOf(segment.end()))
-                    .add(String.valueOf(segment.end()))
-                    .add(String.valueOf(segment.track()))
-                    .add(colorOption + "," + endGlyph);
-            result.add(end.toString());
-
         }
 
         return result;
+    }
+
+    @NotNull
+    private String scatterGlyph(boolean isStart, @NotNull final Segment segment, @NotNull final List<Link> links) {
+        long location = isStart ? segment.start() : segment.end();
+        SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
+
+        final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), location);
+        final boolean isFoldback =
+                Links.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent() || Links.findEndLink(
+                        startPosition,
+                        links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
+        String glyph = isFoldback ? "triangle" : "circle";
+        if (terminal != SegmentTerminal.NONE) {
+            glyph = "square";
+        }
+        return glyph;
+    }
+
+    @NotNull
+    private String scatterEntry(boolean isStart, @NotNull final Segment segment, @NotNull final String color, @NotNull final String glyph,
+            int glyph_size) {
+
+        long location = isStart ? segment.start() : segment.end();
+
+        return new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
+                .add(String.valueOf(location))
+                .add(String.valueOf(location))
+                .add(String.valueOf(segment.track()))
+                .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyph_size)
+                .toString();
     }
 
     @NotNull
