@@ -1205,7 +1205,7 @@ public class ChainFinder
         for(SvLinkedPair pair : mAssemblyLinkedPairs)
         {
             // was requiring exact=true but assembled links can require the same end to be used twice in a replicated SV
-            addPairToChain(pair, false);
+            addPairToChain(pair, true);
         }
 
         if(!mPartialChains.isEmpty())

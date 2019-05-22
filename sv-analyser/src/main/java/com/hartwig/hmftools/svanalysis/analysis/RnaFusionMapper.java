@@ -507,7 +507,7 @@ public class RnaFusionMapper
             }
             else
             {
-                LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.Name, isUpstream ? "up" : "down`");
+                LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.Name, isUpstream ? "up" : "down");
                 rnaFusion.setValid(false);
                 return;
             }
@@ -741,20 +741,23 @@ public class RnaFusionMapper
         if(geneName.equals("AC007092.1"))
             return "LINC01122";
 
-        if(geneName.equals("C10ORF112"))
+        if(geneName.toUpperCase().equals("C10ORF112"))
             return "MALRD1";
 
         if(geneName.equals("C5orf50"))
             return "SMIM23";
 
-        if(geneName.equals("C10orf68") || geneName.equals("C10orf112"))
+        if(geneName.equals("C10orf68"))
             return geneName.toUpperCase();
 
         if(geneName.equals("C17orf76-AS1"))
             return "FAM211A-AS1";
 
-        if(geneName.equals("IGH-@"))
+        if(geneName.equals("IGH@") || geneName.equals("IGH-@"))
             return "IGHJ6";
+
+        if(geneName.equals("IGL@") || geneName.equals("IGL-@"))
+            return "IGLC6";
 
         if(geneName.equals("MKLN1-AS1"))
             return "LINC-PINT";

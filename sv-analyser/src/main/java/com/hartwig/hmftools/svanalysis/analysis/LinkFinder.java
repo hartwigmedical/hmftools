@@ -82,9 +82,9 @@ public class LinkFinder
                 if(lowerBreakend.orientation() != -1)
                     continue;
 
-                final SvVarData var1 = lowerBreakend.getSV();
+                final SvVarData lowerSV = lowerBreakend.getSV();
 
-                if(var1.type() == INS || var1.isNullBreakend())
+                if(lowerSV.type() == INS || lowerSV.isNullBreakend())
                     continue;
 
                 for (int j = i+1; j < breakendList.size(); ++j)
@@ -94,33 +94,42 @@ public class LinkFinder
                     if(upperBreakend.orientation() != 1)
                         continue;
 
-                    final SvVarData var2 = upperBreakend.getSV();
+                    final SvVarData upperSV = upperBreakend.getSV();
 
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
                         continue;
 
-                    if(var2.type() == INS || var2.isNullBreakend())
+                    if(upperSV.type() == INS || upperSV.isNullBreakend())
                         continue;
 
                     boolean v1Start = lowerBreakend.usesStart();
                     boolean v2Start = upperBreakend.usesStart();
 
-                    if (!haveLinkedAssemblies(var1, var2, v1Start, v2Start))
+                    if (!haveLinkedAssemblies(lowerSV, upperSV, v1Start, v2Start))
                         continue;
 
                     // it's possible for a breakend to already be in an assembled link
                     // eg the replicated breakend scenario in COLO829's BND from chr 3-6
+                    // but allow this if its ploidy supports this
 
-                    // if(lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink())
-                    //    continue;
+                    if(lowerBreakend.isAssembledLink())
+                    {
+                        // if(lowerSV.getRoundedCNChange() < 2 * upperSV.getRoundedCNChange())
+                        continue;
+                    }
+                    else if(upperBreakend.isAssembledLink())
+                    {
+                        // if(upperSV.getRoundedCNChange() < 2 * lowerSV.getRoundedCNChange())
+                        continue;
+                    }
 
                     // form a new TI from these 2 BEs
-                    SvLinkedPair newPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, v1Start, v2Start);
+                    SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1Start, v2Start);
                     newPair.setIsAssembled();
-                    var1.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
-                    var2.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
-                    var1.setLinkedPair(newPair, v1Start);
-                    var2.setLinkedPair(newPair, v2Start);
+                    lowerSV.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
+                    upperSV.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
+                    lowerSV.setLinkedPair(newPair, v1Start);
+                    upperSV.setLinkedPair(newPair, v2Start);
 
                     linkedPairs.add(newPair);
 
