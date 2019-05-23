@@ -29,10 +29,18 @@ public abstract class ViccFactory {
         StringBuilder headerCSV = new StringBuilder();
         String headerSource = "source;";
         String headerGenes = "genes;";
+        String headerTags = "tags;";
+        String headerDevTags = "dev_tags;";
+        String headerGeneIdentifiers = "gene_identifiers.Symbol;gene_identifiers.entrez_id;gene_identifiers.ensembl_gene_id;";
+
         String header = "Source;Primary Tumor type;Drug full name;" + "Drug family;Alteration;Biomarker;Gene;Evidence level;Association;";
 
         headerCSV.append(headerSource);
         headerCSV.append(headerGenes);
+        headerCSV.append(headerTags);
+        headerCSV.append(headerDevTags);
+        headerCSV.append(headerGeneIdentifiers);
+
         headerCSV.append(header);
         writer.append(headerCSV);
         writer.append("\n");
@@ -43,11 +51,17 @@ public abstract class ViccFactory {
 
             StringBuilder stringToCSVSource = source.readObjectSource(object);
             StringBuilder stringToCSVGenes = genes.readObjectGenes(object);
+            StringBuilder stringToCSVTags = tags.readObjectTags(object);
+            StringBuilder stringToCSVDevTags = devTags.readObjectDevTags(object);
+            StringBuilder stringToCSVGeneIdentifiers = geneIdentifiers.readObjectGeneIdentifiers(object);
             StringBuilder stringToCSVCGI = cgi.readObjectCGISpecificFields(object);
             StringBuilder stringToCSVsage = sage.readObjectSageSpecificFields(object);
 
             stringToCSVAll.append(stringToCSVSource);
             stringToCSVAll.append(stringToCSVGenes);
+            stringToCSVAll.append(stringToCSVTags);
+            stringToCSVAll.append(stringToCSVDevTags);
+            stringToCSVAll.append(stringToCSVGeneIdentifiers);
             stringToCSVAll.append(stringToCSVCGI);
             stringToCSVAll.append(stringToCSVsage);
 
