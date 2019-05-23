@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_PAIR_OTHER;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_POLY_G_C;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSyntheticSimpleType;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
@@ -508,7 +508,7 @@ public class SvClusteringMethods {
             return;
 
         // skip cluster-2s which resolved to a simple type and not long
-        if(cluster.isResolved() && isSyntheticSimpleType(cluster.getResolvedType()))
+        if(cluster.isResolved() && isSimpleType(cluster.getResolvedType()))
             return;
 
         for (final SvVarData var : cluster.getSVs())
@@ -523,7 +523,7 @@ public class SvClusteringMethods {
     private void markClusterLongDelDups(final SvCluster cluster)
     {
         // find and record any long DEL or DUP for merging, including long synthetic ones
-        if(isSyntheticSimpleType(cluster.getResolvedType()) && !cluster.isResolved()
+        if(cluster.isSyntheticType() && isSimpleType(cluster.getResolvedType()) && !cluster.isResolved()
         && cluster.getSyntheticLength() >= mDelDupCutoffLength)
         {
             for (final SvVarData var : cluster.getSVs())

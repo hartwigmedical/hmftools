@@ -82,10 +82,6 @@ public class SvClassification
         if(isFilteredResolvedType(resolvedType))
             return SUPER_TYPE_ARTIFACT;
 
-        // should just leave synthetic types
-        if(isSyntheticSimpleType(resolvedType))
-            return SUPER_TYPE_SIMPLE;
-
         if(resolvedType == RESOLVED_TYPE_FB_INV_PAIR || resolvedType == RESOLVED_TYPE_RECIPROCAL_INV
         || resolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS || resolvedType == RESOLVED_TYPE_UNBALANCED_TRANS
         || resolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR || resolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_DEL)
@@ -93,18 +89,12 @@ public class SvClassification
             return SUPER_TYPE_BREAK_PAIR;
         }
 
-        if(resolvedType == RESOLVED_TYPE_INV || resolvedType == RESOLVED_TYPE_SGL || resolvedType == RESOLVED_TYPE_INF
-        || resolvedType == RESOLVED_TYPE_PAIR_OTHER)
+        if(isIncompleteType(resolvedType) || resolvedType == RESOLVED_TYPE_PAIR_OTHER)
         {
             return SUPER_TYPE_INCOMPLETE;
         }
 
         return SUPER_TYPE_COMPLEX;
-    }
-
-    public static boolean isSyntheticSimpleType(final String resolvedType)
-    {
-        return isSimpleType(resolvedType);
     }
 
     public static boolean isSimpleSingleSV(final SvCluster cluster)
@@ -114,22 +104,26 @@ public class SvClassification
 
     public static boolean isSimpleType(final String resolvedType)
     {
-        if(resolvedType == RESOLVED_TYPE_DEL || resolvedType == RESOLVED_TYPE_DUP || resolvedType == RESOLVED_TYPE_INS)
-        {
-            return true;
-        }
+        return (resolvedType == RESOLVED_TYPE_DEL || resolvedType == RESOLVED_TYPE_DUP || resolvedType == RESOLVED_TYPE_INS);
+    }
 
-        return false;
+    public static boolean isIncompleteType(final String resolvedType)
+    {
+        return (resolvedType == RESOLVED_TYPE_INV || resolvedType == RESOLVED_TYPE_SGL || resolvedType == RESOLVED_TYPE_INF);
     }
 
     public static boolean isSyntheticType(SvCluster cluster)
     {
-        if(isSyntheticSimpleType(cluster.getResolvedType()))
+        if(isSimpleType(cluster.getResolvedType()) && cluster.getSvCount() > 1)
             return true;
 
         // will be more when look for synthetic INVs, SGLs and translocations
-        if(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_INV || cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS)
-            return cluster.getSvCount() > 2;
+        if((cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_INV || cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS)
+        && cluster.getSvCount() > 2)
+            return true;
+
+        if(isIncompleteType(cluster.getResolvedType()) && cluster.getSvCount() > 1)
+            return true;
 
         return false;
     }
@@ -213,7 +207,13 @@ public class SvClassification
 
                 return;
             }
-            else if(cluster.getSvCount() == 2)
+
+            markSyntheticIncompletes(cluster);
+
+            if(cluster.getResolvedType() != RESOLVED_TYPE_NONE)
+                return;
+
+            if(cluster.getSvCount() == 2)
             {
                 cluster.setResolved(false, RESOLVED_TYPE_PAIR_OTHER);
                 return;
@@ -580,6 +580,64 @@ public class SvClassification
                 cluster.id(), totalLinks, longestTILength, resolvedType);
 
         cluster.setResolved(true, resolvedType);
+        cluster.setSyntheticData(0, longestTILength);
+    }
+
+    public static void markSyntheticIncompletes(SvCluster cluster)
+    {
+        // look for chains of short TIs which when reduced form a SGL, INF INV or unbalanced TRANS (ie a BND)
+        if (cluster.getSvCount() > 5 || !cluster.isFullyChained(false) || cluster.getChains().size() != 1)
+            return;
+
+        SvChain chain = cluster.getChains().get(0);
+
+        // test the chain for short TIs only
+        int totalChainLength = 0;
+        int longTICount = 0;
+        long longestTILength = 0;
+        for (SvLinkedPair pair : chain.getLinkedPairs())
+        {
+            if (pair.length() > SHORT_TI_LENGTH)
+                return;
+
+            longestTILength = max(pair.length(), longestTILength);
+            totalChainLength += pair.length();
+        }
+
+        // first look for chains ending in SGLs or INFs
+        String resolvedType = "";
+
+        if((chain.getLastSV().type() == SGL && chain.getLastSV().isNoneSegment())
+        || (chain.getFirstSV().type() == SGL && chain.getFirstSV().isNoneSegment()))
+        {
+            resolvedType = RESOLVED_TYPE_INF;
+        }
+        else if(chain.getLastSV().type() == SGL || chain.getFirstSV().type() == SGL)
+        {
+            resolvedType = RESOLVED_TYPE_SGL;
+        }
+        else
+        {
+            final SvBreakend startBreakend = chain.getOpenBreakend(true);
+            final SvBreakend endBreakend = chain.getOpenBreakend(false);
+
+            if (!startBreakend.chromosome().equals(endBreakend.chromosome()) || startBreakend.arm() != endBreakend.arm())
+            {
+                resolvedType = RESOLVED_TYPE_UNBALANCED_TRANS;
+            }
+            else
+            {
+                resolvedType = RESOLVED_TYPE_INV;
+            }
+        }
+
+        if (resolvedType.isEmpty())
+            return;
+
+        LOGGER.debug("cluster({}) chain(links=({} len={} tiLen({}) marked as {}",
+                cluster.id(), chain.getLinkCount(), totalChainLength, longestTILength, resolvedType);
+
+        cluster.setResolved(false, resolvedType);
         cluster.setSyntheticData(0, longestTILength);
     }
 
