@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class ViccFactory {
+public final class ViccFactory {
     private static final Logger LOGGER = LogManager.getLogger(ViccFactory.class);
 
     private ViccFactory() {
