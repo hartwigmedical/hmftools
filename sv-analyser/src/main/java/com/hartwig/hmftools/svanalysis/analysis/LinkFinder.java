@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
@@ -17,9 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
@@ -145,9 +142,9 @@ public class LinkFinder
 
     public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
     {
-        for(String assemb1 : var1.getTempInsertionAssemblies(v1Start))
+        for(String assemb1 : var1.getTIAssemblies(v1Start))
         {
-            if(var2.getTempInsertionAssemblies(v2Start).contains(assemb1))
+            if(var2.getTIAssemblies(v2Start).contains(assemb1))
                 return true;
         }
 

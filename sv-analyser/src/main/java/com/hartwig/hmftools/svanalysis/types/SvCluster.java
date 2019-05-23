@@ -465,7 +465,7 @@ public class SvCluster
         if(mSVs.size() == 1)
             return false;
 
-        return SvClassification.isSyntheticType(mResolvedType);
+        return SvClassification.isSyntheticType(this);
     }
 
     public long getSyntheticTILength() { return mSyntheticTILength; }

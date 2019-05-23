@@ -45,9 +45,6 @@ public class SvVarData
     private String mAssemblyStartData;
     private String mAssemblyEndData;
 
-    private boolean mDupBEStart;
-    private boolean mDupBEEnd;
-
     private SvCluster mCluster;
     private String mClusterReason;
 
@@ -66,8 +63,8 @@ public class SvVarData
 
     private SvLinkedPair mDBStart; // deletion bridge formed from this breakend to another
     private SvLinkedPair mDBEnd;
-    private List<String> mStartTempInsertionAssemblies;
-    private List<String> mEndTempInsertionAssemblies;
+    private List<String> mStartTIAssemblies;
+    private List<String> mEndTIAssemblies;
     private String mStartAssemblyMatchType;
     private String mEndAssemblyMatchType;
     private boolean mIsReplicatedSv;
@@ -140,9 +137,6 @@ public class SvVarData
         mReplicatedSv = null;
         mReplicatedCount = 0;
 
-        mDupBEStart = false;
-        mDupBEEnd = false;
-
         mClusterReason = "";
         mCluster = null;
 
@@ -214,8 +208,6 @@ public class SvVarData
 
         mStartAssemblyMatchType = other.getAssemblyMatchType(true);
         mEndAssemblyMatchType = other.getAssemblyMatchType(false);
-        mDupBEStart = other.isDupBreakend(true);
-        mDupBEEnd = other.isDupBreakend(false);
         mIsReplicatedSv = true;
         mReplicatedSv = other;
         mClusterReason = other.getClusterReason();
@@ -448,16 +440,6 @@ public class SvVarData
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
     public final String getLineElement(boolean useStart) { return useStart ? mStartLineElement : mEndLineElement; }
 
-    public boolean isDupBreakend(boolean useStart) { return useStart ? mDupBEStart : mDupBEEnd; }
-
-    public void setIsDupBreakend(boolean toggle, boolean isStart)
-    {
-        if(isStart)
-            mDupBEStart = toggle;
-        else
-            mDupBEEnd = toggle;
-    }
-
     public final SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? mLinkStart : mLinkEnd; }
 
     public void setLinkedPair(final SvLinkedPair link, boolean isStart)
@@ -590,7 +572,10 @@ public class SvVarData
         setAssemblyData(true);
     }
 
-    public final List<String> getTempInsertionAssemblies(boolean useStart) { return useStart ? mStartTempInsertionAssemblies : mEndTempInsertionAssemblies; }
+    public final List<String> getTIAssemblies(boolean useStart)
+    {
+        return useStart ? mStartTIAssemblies : mEndTIAssemblies;
+    }
 
     public final List<GeneAnnotation> getGenesList(boolean useStart) { return useStart ? mGenesStart : mGenesEnd; }
     public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
@@ -640,8 +625,8 @@ public class SvVarData
 
     private void setAssemblyData(boolean useExisting)
     {
-        mStartTempInsertionAssemblies = Lists.newArrayList();
-        mEndTempInsertionAssemblies = Lists.newArrayList();
+        mStartTIAssemblies = Lists.newArrayList();
+        mEndTIAssemblies = Lists.newArrayList();
 
         mStartAssemblyMatchType = ASSEMBLY_MATCH_NONE;
         mEndAssemblyMatchType = ASSEMBLY_MATCH_NONE;
@@ -669,7 +654,7 @@ public class SvVarData
             for(int i = 0; i < assemblyList.length; ++i)
             {
                 if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
-                    mStartTempInsertionAssemblies.add(assemblyList[i]);
+                    mStartTIAssemblies.add(assemblyList[i]);
             }
         }
 
@@ -679,7 +664,7 @@ public class SvVarData
             for(int i = 0; i < assemblyList.length; ++i)
             {
                 if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
-                    mEndTempInsertionAssemblies.add(assemblyList[i]);
+                    mEndTIAssemblies.add(assemblyList[i]);
             }
         }
     }

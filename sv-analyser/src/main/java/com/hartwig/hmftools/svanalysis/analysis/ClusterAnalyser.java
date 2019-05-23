@@ -154,8 +154,8 @@ public class ClusterAnalyser {
         mClusters.clear();
 
         mPcClustering.start();
-        mClusteringMethods.clusterByProximity(mClusters);
         mClusteringMethods.clusterExcludedVariants(mClusters);
+        mClusteringMethods.clusterByProximity(mClusters);
         mPcClustering.pause();
 
         // mark line clusters since these are exluded from most subsequent logic

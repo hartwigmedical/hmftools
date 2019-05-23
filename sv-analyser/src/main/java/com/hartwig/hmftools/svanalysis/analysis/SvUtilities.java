@@ -30,8 +30,6 @@ public class SvUtilities {
     public static String CHROMOSOME_ARM_Q = "Q";
     public static String CHROMOSOME_ARM_CENTROMERE = "C";
 
-    public static int PERMITED_DUP_BE_DISTANCE = 1;
-
     public static final String getChromosomalArm(final String chromosome, final long position)
     {
         final GenomeRegion region = CENTROMERES.get(chromosome);

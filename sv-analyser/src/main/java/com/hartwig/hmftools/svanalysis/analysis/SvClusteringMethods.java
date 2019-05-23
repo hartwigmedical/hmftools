@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP;
@@ -22,7 +21,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSyntheticSimpleType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
@@ -42,7 +40,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
-import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 
@@ -108,14 +105,20 @@ public class SvClusteringMethods {
             SvCluster newCluster = new SvCluster(getNextClusterId());
             newCluster.addVariant(var);
 
-            String sglExcludedReason = getSingleBreakendUnclusteredType(var);
-
-            if(sglExcludedReason == RESOLVED_TYPE_NONE)
+            String exclusionReason = "";
+            if(var.type() != SGL)
             {
-                LOGGER.warn("var({}) unclustered and should have excluded resolved type", var.id());
+                exclusionReason = RESOLVED_TYPE_DUP_BE;
+            }
+            else
+            {
+                exclusionReason = getSingleBreakendUnclusteredType(var);
+
+                if (exclusionReason == RESOLVED_TYPE_NONE)
+                    exclusionReason = RESOLVED_TYPE_DUP_BE;
             }
 
-            newCluster.setResolved(true, sglExcludedReason);
+            newCluster.setResolved(true, exclusionReason);
             clusters.add(newCluster);
         }
     }
@@ -318,7 +321,7 @@ public class SvClusteringMethods {
         // first apply replication rules since this can affect consistency
         for(SvCluster cluster : clusters)
         {
-            if(cluster.hasLinkingLineElements())
+            if(cluster.isResolved())
                 continue;
 
             markClusterLongDelDups(cluster);
@@ -368,7 +371,7 @@ public class SvClusteringMethods {
 
     private String getSingleBreakendUnclusteredType(final SvVarData var)
     {
-        if(var.type() != SGL)
+        if(var.type() != SGL|| var.isNoneSegment())
             return RESOLVED_TYPE_NONE;
 
         if(isEquivSingleBreakend(var))
@@ -384,9 +387,6 @@ public class SvClusteringMethods {
     {
         if(!var.isNullBreakend())
             return false;
-
-        if(var.isDupBreakend(true))
-            return true;
 
         return  (var.getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV));
     }
@@ -950,8 +950,13 @@ public class SvClusteringMethods {
         }
     }
 
+    public static int PERMITED_SGL_DUP_BE_DISTANCE = 1;
+    public static int PERMITED_DUP_BE_DISTANCE = 35;
+
     private void markAndRemoveDuplicationBreakends()
     {
+        List<SvVarData> dupSVs = Lists.newArrayList();
+
         // first find and mark duplicate breakends
         for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
@@ -959,44 +964,108 @@ public class SvClusteringMethods {
 
             int breakendCount = breakendList.size();
 
+            List<SvBreakend> removalList = Lists.newArrayList();
+
             for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
                 SvVarData var = breakend.getSV();
 
-                final SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
+                if(var.isNoneSegment())
+                    continue;
 
-                if(nextBreakend != null && nextBreakend.getSV() != var)
+                // first check for SGLs already marked for removal
+                if(var.type() == SGL && getSingleBreakendUnclusteredType(breakendList.get(i).getSV()) != RESOLVED_TYPE_NONE)
                 {
-                    long distance = nextBreakend.position() - breakend.position();
-
-                    if(distance <= PERMITED_DUP_BE_DISTANCE && breakend.orientation() == nextBreakend.orientation())
+                    if(!mExcludedSVs.contains(var))
                     {
-                        var.setIsDupBreakend(true, breakend.usesStart());
-                        nextBreakend.getSV().setIsDupBreakend(true, nextBreakend.usesStart());
+                        mExcludedSVs.add(var);
+                        removalList.add(breakend);
+                    }
+                    continue;
+                }
+
+                if(i >= breakendCount - 1)
+                    break;
+
+                SvBreakend nextBreakend = breakendList.get(i + 1);
+
+                if(nextBreakend.getSV() == var)
+                    continue;
+
+                SvVarData nextVar = nextBreakend.getSV();
+
+                long distance = nextBreakend.position() - breakend.position();
+
+                if(distance > PERMITED_DUP_BE_DISTANCE || breakend.orientation() != nextBreakend.orientation())
+                    continue;
+
+                if(var.type() == SGL || nextVar.type() == SGL)
+                {
+                    if(distance <= PERMITED_SGL_DUP_BE_DISTANCE)
+                    {
+                        if(var.type() == SGL)
+                        {
+                            mExcludedSVs.add(var);
+                            removalList.add(breakend);
+                        }
+
+                        if(nextVar.type() == SGL)
+                        {
+                            mExcludedSVs.add(nextVar);
+                            removalList.add(nextBreakend);
+
+                        }
+                    }
+                }
+                else if(var.type() == nextVar.type())
+                {
+                    // 2 non-SGL SVs may be duplicates, so check their other ends
+                    SvBreakend otherBe = breakend.getOtherBreakend();
+                    SvBreakend nextOtherBe = nextBreakend.getOtherBreakend();
+
+                    if(otherBe.chromosome().equals(nextOtherBe.chromosome())
+                    && abs(otherBe.position() - nextOtherBe.position()) <= PERMITED_DUP_BE_DISTANCE)
+                    {
+                        // remove both of the duplicates breakends now
+
+                        // select the one with assembly if only has as them
+                        if((var.getTIAssemblies(true).isEmpty() && !nextVar.getTIAssemblies(true).isEmpty())
+                        || (var.getTIAssemblies(false).isEmpty() && !nextVar.getTIAssemblies(false).isEmpty()))
+                        {
+                            mExcludedSVs.add(var);
+                            removalList.add(breakend);
+
+                            if(breakend.chromosome().equals(otherBe.chromosome()))
+                            {
+                                removalList.add(otherBe);
+                            }
+                            else
+                            {
+                                List<SvBreakend> otherList = mChrBreakendMap.get(otherBe.chromosome());
+                                otherList.remove(otherBe);
+                            }
+                        }
+                        else
+                        {
+                            mExcludedSVs.add(nextVar);
+                            removalList.add(nextBreakend);
+
+                            if(nextBreakend.chromosome().equals(nextOtherBe.chromosome()))
+                            {
+                                removalList.add(nextOtherBe);
+                            }
+                            else
+                            {
+                                List<SvBreakend> otherList = mChrBreakendMap.get(nextOtherBe.chromosome());
+                                otherList.remove(nextOtherBe);
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        // now remove any duplicating SGL breakends (including those marked as 'eqv')
-        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            int i = 0;
-            while(i < breakendList.size())
-            {
-                if(getSingleBreakendUnclusteredType(breakendList.get(i).getSV()) != RESOLVED_TYPE_NONE)
-                {
-                    mExcludedSVs.add(breakendList.get(i).getSV());
-                    breakendList.remove(i);
-                }
-                else
-                {
-                    ++i;
-                }
-            }
+            removalList.stream().forEach(x -> breakendList.remove(x));
         }
     }
 
