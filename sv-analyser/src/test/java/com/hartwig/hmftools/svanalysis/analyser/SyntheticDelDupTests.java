@@ -5,15 +5,16 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_COMPLEX;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DEL;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_DUP_DEL;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_INV;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_TRANS;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_TI_ONLY;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_COMPLEX;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_INV;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_RECIPROCAL_TRANS;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SYNTH_DEL;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SYNTH_DUP;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -55,7 +56,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -73,7 +74,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -90,7 +91,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
 
@@ -108,7 +109,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -122,7 +123,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
 
@@ -140,7 +141,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(false) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(true) - var2.position(false));
 
@@ -165,7 +166,7 @@ public class SyntheticDelDupTests
         SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
 
@@ -179,7 +180,7 @@ public class SyntheticDelDupTests
         cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
     }
@@ -202,7 +203,7 @@ public class SyntheticDelDupTests
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(false));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(true));
 
@@ -219,7 +220,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -236,7 +237,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -250,7 +251,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
 
@@ -264,7 +265,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
 
@@ -278,7 +279,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(false));
         assertEquals(cluster.getSyntheticTILength(), var2.position(true) - var1.position(true));
 
@@ -292,7 +293,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
 
@@ -306,7 +307,7 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(false));
         assertEquals(cluster.getSyntheticTILength(), var2.position(true) - var1.position(true));
     }
@@ -330,9 +331,9 @@ public class SyntheticDelDupTests
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DEL);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
         assertEquals(cluster.getSyntheticLength(), var3.position(true) - var1.position(true));
-        assertEquals((200 + 400)/2, cluster.getSyntheticTILength()); // takes average
+        assertEquals(400, cluster.getSyntheticTILength()); // takes the longest
 
         tester.clearClustersAndSVs();
 
@@ -350,9 +351,10 @@ public class SyntheticDelDupTests
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SYNTH_DUP);
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.isSyntheticType());
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var4.position(true));
-        assertEquals((200 + 400 + 600)/3, cluster.getSyntheticTILength()); // takes average
+        assertEquals(600, cluster.getSyntheticTILength()); // takes average
     }
 
     @Test
@@ -389,8 +391,8 @@ public class SyntheticDelDupTests
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
-        assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_COMPLEX);
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_DUP_DEL);
 
         var2 = createBnd(tester.nextVarId(), "1", 2000, -1, "2", 1000, -1);
         var3 = createBnd(tester.nextVarId(), "1", 21000, 1, "2", 5000, -1);
@@ -489,9 +491,7 @@ public class SyntheticDelDupTests
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS);
-        // assertEquals(cluster.getSyntheticLength(), var3.position(true) - var1.position(true));
-        assertEquals((200 + 600)/2, cluster.getSyntheticTILength()); // takes average
-
+        assertEquals(600, cluster.getSyntheticTILength()); // takes average
     }
 
     @Ignore

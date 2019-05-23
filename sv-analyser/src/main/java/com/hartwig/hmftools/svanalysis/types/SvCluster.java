@@ -9,7 +9,9 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_LINE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_NONE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
@@ -33,6 +35,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SUBCLONAL_LOW_C
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.svanalysis.analysis.SvClassification;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +54,9 @@ public class SvCluster
     private String mDesc;
     private int[] mTypeCounts;
 
-    private boolean mRequiresRecalc;
+    private boolean mIsResolved;
+    private String mResolvedType;
+
     private List<String> mAnnotationList;
 
     private List<SvVarData> mSVs;
@@ -65,8 +70,6 @@ public class SvCluster
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<SvVarData> mUnchainedSVs; // includes replicated SVs
     private List<SvLOH> mLohEvents;
-    private boolean mIsResolved;
-    private String mResolvedType;
     private String mClusteringReasons;
 
     // for synthetic DELs and DUPs
@@ -82,6 +85,7 @@ public class SvCluster
     private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
     private int mInferredSvCount;
+    private boolean mRequiresRecalc;
 
     // state for SVs which link different arms or chromosomes
     private boolean mRecalcRemoteSVStatus;
@@ -95,24 +99,6 @@ public class SvCluster
     private int mOriginArms;
     private int mFragmentArms;
 
-    public static String RESOLVED_TYPE_NONE = "NONE";
-    public static String RESOLVED_TYPE_SIMPLE_SV = "SIMPLE";
-    public static String RESOLVED_TYPE_RECIPROCAL_TRANS = "RECIP_TRANS";
-    public static String RESOLVED_TYPE_RECIPROCAL_INV = "RECIP_INV";
-    public static String RESOLVED_TYPE_DUP_BE = "DUP_BE";
-    public static String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
-    public static String RESOLVED_TYPE_LINE = "LINE";
-
-    public static String RESOLVED_TYPE_SYNTH_DEL = "SYNTH_DEL";
-    public static String RESOLVED_TYPE_SYNTH_DUP = "SYNTH_DUP";
-    public static String RESOLVED_TYPE_RECIPROCAL_DUP_PAIR = "RECIP_DUPS";
-    public static String RESOLVED_TYPE_RECIPROCAL_DUP_DEL = "RECIP_DUP_DEL";
-
-    public static String RESOLVED_TYPE_SGL_PAIR_INS = "SGL_PAIR_INS";
-    public static String RESOLVED_TYPE_SGL_PAIR_DEL = "SGL_PAIR_DEL";
-    public static String RESOLVED_TYPE_SGL_PAIR_DUP = "SGL_PAIR_DUP";
-    public static String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
-    public static String RESOLVED_TYPE_COMPLEX = "COMPLEX";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
@@ -302,27 +288,6 @@ public class SvCluster
         mRequiresRecalc = true;
     }
 
-    public boolean isSyntheticSimpleType(boolean checkResolved)
-    {
-        if(checkResolved && !mIsResolved)
-            return false;
-
-        if(mResolvedType == RESOLVED_TYPE_SYNTH_DEL || mResolvedType == RESOLVED_TYPE_SYNTH_DUP
-        || mResolvedType == RESOLVED_TYPE_RECIPROCAL_INV || mResolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS
-        || mResolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR || mResolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_DEL)
-        {
-            return true;
-        }
-
-        if(mResolvedType == RESOLVED_TYPE_SGL_PAIR_DEL || mResolvedType == RESOLVED_TYPE_SGL_PAIR_DEL
-        || mResolvedType == RESOLVED_TYPE_SGL_PAIR_DUP)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
@@ -386,21 +351,6 @@ public class SvCluster
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
-    public boolean isSimpleSingleSV() { return getSvCount() == 1 && isSimpleSVs(); }
-
-    public boolean isSimpleSVs()
-    {
-        if(mSVs.size() > SMALL_CLUSTER_SIZE)
-            return false;
-
-        for(final SvVarData var : mSVs)
-        {
-            if(!var.isSimpleType())
-                return false;
-        }
-
-        return true;
-    }
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
     public final List<SvLinkedPair> getInferredLinkedPairs() { return mInferredLinkedPairs; }
@@ -510,6 +460,14 @@ public class SvCluster
         mSyntheticTILength = tiLength;
     }
 
+    public boolean isSyntheticType()
+    {
+        if(mSVs.size() == 1)
+            return false;
+
+        return SvClassification.isSyntheticType(mResolvedType);
+    }
+
     public long getSyntheticTILength() { return mSyntheticTILength; }
     public long getSyntheticLength() { return mSyntheticLength; }
 
@@ -535,7 +493,7 @@ public class SvCluster
     {
         updateClusterDetails();
 
-        if(isSimpleSVs())
+        if(isSimpleSingleSV(this))
         {
             LOGGER.debug("cluster({}) simple svCount({}) desc({}) armCount({}) consistency({}) ",
                     id(), getSvCount(), getDesc(), getArmCount(), getConsistencyCount());

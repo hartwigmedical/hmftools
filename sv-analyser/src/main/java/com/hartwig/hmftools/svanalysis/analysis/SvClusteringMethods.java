@@ -12,18 +12,19 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.arePairedDeletionBridges;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DEL;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP_BE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_INS;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_NONE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_PAIR_OTHER;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_POLY_G_C;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSyntheticSimpleType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.PERMITED_DUP_BE_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_DUP_BE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_NONE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_POLY_G_C;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DEL;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_DUP;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PAIR_INS;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
 import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -99,11 +100,6 @@ public class SvClusteringMethods {
     public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
     public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
     public int getProximityDistance() { return mProximityDistance; }
-
-    public static boolean isFilteredResolvedType(final String resolvedType)
-    {
-        return resolvedType.equals(RESOLVED_TYPE_POLY_G_C) || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
-    }
 
     public void clusterExcludedVariants(List<SvCluster> clusters)
     {
@@ -508,11 +504,11 @@ public class SvClusteringMethods {
 
     private void markClusterInversions(final SvCluster cluster)
     {
-        if(cluster.getTypeCount(INV) == 0 || cluster.hasLinkingLineElements())
+        if(cluster.getTypeCount(INV) == 0)
             return;
 
-        // skip cluster-2s which resolved to a simple type
-        if(cluster.isSyntheticSimpleType(true))
+        // skip cluster-2s which resolved to a simple type and not long
+        if(cluster.isResolved() && isSyntheticSimpleType(cluster.getResolvedType()))
             return;
 
         for (final SvVarData var : cluster.getSVs())
@@ -526,21 +522,15 @@ public class SvClusteringMethods {
 
     private void markClusterLongDelDups(final SvCluster cluster)
     {
-        if(cluster.hasLinkingLineElements())
-            return;
-
-        if(cluster.isSyntheticSimpleType(true))
-            return;
-
-        /*
-        if(cluster.getSyntheticLength() >= mDelDupCutoffLength)
+        // find and record any long DEL or DUP for merging, including long synthetic ones
+        if(isSyntheticSimpleType(cluster.getResolvedType()) && !cluster.isResolved()
+        && cluster.getSyntheticLength() >= mDelDupCutoffLength)
         {
             for (final SvVarData var : cluster.getSVs())
             {
                 cluster.registerLongDelDup(var);
             }
         }
-        */
 
         if(cluster.getTypeCount(DEL) > 0 || cluster.getTypeCount(DUP) > 0)
         {
@@ -760,11 +750,8 @@ public class SvClusteringMethods {
                 LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({})",
                         soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), resolvedType);
 
-                String syntheticType = resolvedType == RESOLVED_TYPE_SGL_PAIR_INS ? "INS" :
-                        (resolvedType == RESOLVED_TYPE_SGL_PAIR_DUP ? "DUP" : "DEL");
-
-                soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, syntheticType.toString() + "_" + otherVar.id());
-                otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, syntheticType.toString() + "_" + soloSingle.id());
+                soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, resolvedType + "_" + otherVar.id());
+                otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, resolvedType + "_" + soloSingle.id());
 
                 return resolvedType;
             }
@@ -796,7 +783,7 @@ public class SvClusteringMethods {
                 soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, "CnInc_" + otherVar.id());
                 otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, "CnInc_" + soloSingle.id());
 
-                return RESOLVED_TYPE_SGL_PLUS_INCONSISTENT;
+                return RESOLVED_TYPE_PAIR_OTHER;
             }
         }
         else
@@ -834,17 +821,17 @@ public class SvClusteringMethods {
             // a DUP if breakends are further than the anchor distance away, else an INS
             int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
             if(length >= minTiLength)
-                return RESOLVED_TYPE_SGL_PAIR_DUP;
+                return RESOLVED_TYPE_DUP;
             else
-                return RESOLVED_TYPE_SGL_PAIR_INS;
+                return RESOLVED_TYPE_INS;
         }
         else
         {
             // a DEL if the breakends are further than the min DEL length, else an INS
             if(length >= MIN_DEL_LENGTH)
-                return RESOLVED_TYPE_SGL_PAIR_DEL;
+                return RESOLVED_TYPE_DEL;
             else
-                return RESOLVED_TYPE_SGL_PAIR_INS;
+                return RESOLVED_TYPE_INS;
         }
     }
 

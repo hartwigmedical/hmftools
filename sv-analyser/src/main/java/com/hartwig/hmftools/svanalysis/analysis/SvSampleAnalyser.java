@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
@@ -571,7 +572,7 @@ public class SvSampleAnalyser {
 
                 mClusterFileWriter = createBufferedWriter(outputFileName, false);
 
-                mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,Subclonal,FullyChained,ChainCount");
+                mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,Subclonal,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
                 mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
                 mClusterFileWriter.write(",IntTIs,ExtTIs,IntTIsWithGain,ExtTIsWithGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
@@ -590,8 +591,9 @@ public class SvSampleAnalyser {
 
                 // isSpecificCluster(cluster);
 
-                writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%d",
-                        mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
+                writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%s,%d",
+                        mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
+                        getSuperType(cluster), cluster.getResolvedType(), cluster.isSyntheticType(),
                         cluster.isSubclonal(), cluster.isFullyChained(false), cluster.getChains().size()));
 
                 int inferredCount = cluster.getInferredTypeCount();

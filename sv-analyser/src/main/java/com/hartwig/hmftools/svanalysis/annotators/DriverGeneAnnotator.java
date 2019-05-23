@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.Q_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.isFilteredResolvedType;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
