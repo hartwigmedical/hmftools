@@ -36,8 +36,10 @@ public class AmberChecker implements HealthChecker {
             return new NoResult(CheckType.AMBER);
         }
 
-        final HealthCheck bafCheck = new HealthCheck(runContext.tumorSample(), AmberCheck.MEAN_BAF.toString(), String.valueOf(qcCheck.meanBAF()));
-        final HealthCheck contaminationCheck = new HealthCheck(runContext.tumorSample(), AmberCheck.CONTAMINATION.toString(), String.valueOf(qcCheck.contamination()));
+        final HealthCheck bafCheck =
+                new HealthCheck(runContext.tumorSample(), AmberCheck.MEAN_BAF.toString(), String.valueOf(qcCheck.meanBAF()));
+        final HealthCheck contaminationCheck =
+                new HealthCheck(runContext.tumorSample(), AmberCheck.CONTAMINATION.toString(), String.valueOf(qcCheck.contamination()));
         return toMultiValueResult(Lists.newArrayList(bafCheck, contaminationCheck));
     }
 

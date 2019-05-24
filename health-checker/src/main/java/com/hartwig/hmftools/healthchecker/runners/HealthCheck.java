@@ -38,13 +38,13 @@ public class HealthCheck {
         return value;
     }
 
-    void log(@NotNull Logger logger) {
-        logger.info(String.format(LOG_MSG, checkName, sampleId, value));
-    }
-
     static void log(@NotNull final Logger logger, @NotNull final List<HealthCheck> reports) {
         for (final HealthCheck report : reports) {
             report.log(logger);
         }
+    }
+
+    private void log(@NotNull Logger logger) {
+        logger.info(String.format(LOG_MSG, checkName, sampleId, value));
     }
 }

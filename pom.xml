@@ -57,11 +57,11 @@
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
         <hmf-patient-reporter.version>6.1</hmf-patient-reporter.version>
+        <hmf-health-checker.version>3.0</hmf-health-checker.version>
 
         <amber.version>2.3</amber.version>
         <cobalt.version>1.6</cobalt.version>
         <purple.version>2.29</purple.version>
-
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
