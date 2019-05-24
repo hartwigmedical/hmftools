@@ -33,8 +33,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_OVERLAPPING_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_INT_TI_CN_GAIN;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
@@ -211,9 +211,9 @@ public class SvSampleAnalyser {
             if(cnDataPair == null)
                 continue;
 
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
-                if(var.isNullBreakend() && be == SVI_END)
+                if(var.isNullBreakend() && be == SE_END)
                     continue;
 
                 boolean isStart = isStart(be);
@@ -525,9 +525,9 @@ public class SvSampleAnalyser {
                         var.getFoldbackLink(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
                         var.getFoldbackLink(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
-                for(int be = SVI_START; be <= SVI_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
-                    final SvArmCluster armCluster = (be == SVI_START || !var.isNullBreakend()) ?
+                    final SvArmCluster armCluster = (be == SE_START || !var.isNullBreakend()) ?
                             cluster.findArmCluster(var.getBreakend(isStart(be))) : null;
 
                     if(armCluster != null)

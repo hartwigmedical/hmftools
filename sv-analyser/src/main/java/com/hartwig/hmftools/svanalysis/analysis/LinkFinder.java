@@ -5,8 +5,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_DB;
@@ -205,7 +205,7 @@ public class LinkFinder
             if(var1.type() == INS || (var1.isNullBreakend() && !allowSingleBEs))
                 continue;
 
-            for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
+            for(int be1 = SE_START; be1 <= SE_END; ++be1)
             {
                 boolean v1Start = isStart(be1);
 
@@ -226,7 +226,7 @@ public class LinkFinder
                     if(var2.type() == INS || (var2.isNullBreakend() && !allowSingleBEs))
                         continue;
 
-                    for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
+                    for(int be2 = SE_START; be2 <= SE_END; ++be2)
                     {
                         boolean v2Start = isStart(be2);
 

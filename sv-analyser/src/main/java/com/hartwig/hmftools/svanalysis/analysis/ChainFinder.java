@@ -8,8 +8,8 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.util.HashMap;
@@ -421,9 +421,9 @@ public class ChainFinder
                 List<SvLinkedPair> newPairs = Lists.newArrayList();
 
                 // check whether this SV has any possible links with SVs of the same (remaining) rep count
-                for(int be = SVI_START; be <= SVI_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
-                    if(var.isNullBreakend() && be == SVI_END)
+                    if(var.isNullBreakend() && be == SE_END)
                         continue;
 
                     boolean isStart = isStart(be);
@@ -488,7 +488,7 @@ public class ChainFinder
             // collect up possible pairs for this foldback
             List<SvLinkedPair> varPairs = Lists.newArrayList();
 
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
 
@@ -1032,7 +1032,7 @@ public class ChainFinder
             boolean addToStart = false;
             pairToChain[0] = pairToChain[1] = false; // reset for scenario where skipped adding to both ends of chain
 
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
                 final SvVarData chainSV = chain.getChainEndSV(isStart);
@@ -1043,7 +1043,7 @@ public class ChainFinder
 
                     if (chainSV.equals(newPair.first(), true))
                     {
-                        pairToChain[SVI_START] = true;
+                        pairToChain[SE_START] = true;
 
                         if(chainSV != newPair.first())
                         {
@@ -1053,7 +1053,7 @@ public class ChainFinder
                     }
                     else
                     {
-                        pairToChain[SVI_END] = true;
+                        pairToChain[SE_END] = true;
 
                         if (chainSV != newPair.second())
                         {
@@ -1063,12 +1063,12 @@ public class ChainFinder
                 }
             }
 
-            if(!pairToChain[SVI_START] && !pairToChain[SVI_END])
+            if(!pairToChain[SE_START] && !pairToChain[SE_END])
             {
                 continue;
             }
 
-            if(pairToChain[SVI_START] && pairToChain[SVI_END])
+            if(pairToChain[SE_START] && pairToChain[SE_END])
             {
                 // the link can be added to both ends, which would close the chain - so search for an alternative SV on either end
                 // to keep it open while still adding the link
@@ -1076,7 +1076,7 @@ public class ChainFinder
 
                 if(mHasReplication)
                 {
-                    for (int be = SVI_START; be <= SVI_END; ++be)
+                    for (int be = SE_START; be <= SE_END; ++be)
                     {
                         boolean isStart = isStart(be);
 
@@ -1146,8 +1146,8 @@ public class ChainFinder
             SvChain chain = new SvChain(mNextChainId++);
             mPartialChains.add(chain);
             chain.addLink(newPair, true);
-            pairToChain[SVI_START] = true;
-            pairToChain[SVI_END] = true;
+            pairToChain[SE_START] = true;
+            pairToChain[SE_END] = true;
 
             LOGGER.debug("index({}) method({}) adding linked pair({} {}) to new chain({})",
                     mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), chain.id());
@@ -1215,7 +1215,7 @@ public class ChainFinder
 
     private void registerNewLink(final SvLinkedPair newPair, boolean[] pairToChain)
     {
-        for (int be = SVI_START; be <= SVI_END; ++be)
+        for (int be = SE_START; be <= SE_END; ++be)
         {
             boolean isStart = isStart(be);
 
@@ -2057,7 +2057,7 @@ public class ChainFinder
         // make a cache of all unchained breakends in those of replicated SVs
         for(final SvVarData var : mCluster.getSVs(true))
         {
-            for (int be = SVI_START; be <= SVI_END; ++be)
+            for (int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
 
@@ -2123,11 +2123,11 @@ public class ChainFinder
             {
                 SvChain chain2 = mPartialChains.get(index2);
 
-                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
                     boolean c1Start = isStart(be1);
 
-                    for (int be2 = SVI_START; be2 <= SVI_END; ++be2)
+                    for (int be2 = SE_START; be2 <= SE_END; ++be2)
                     {
                         boolean c2Start = isStart(be2);
 

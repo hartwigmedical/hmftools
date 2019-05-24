@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
@@ -35,7 +34,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.markSinglePairResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.findCentromereBreakendIndex;
@@ -46,15 +44,14 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_SV_REPLICATION_MULTIPLE;
-import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
 import java.util.Map;
@@ -627,7 +624,7 @@ public class ClusterAnalyser {
                     continue;
                 }
 
-                for(int be = SVI_START; be <= SVI_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
                     SvBreakend lohBreakend = lohEvent.getBreakend(isStart(be));
 
@@ -889,11 +886,11 @@ public class ClusterAnalyser {
         {
             for (final SvVarData var1 : cluster1Foldbacks)
             {
-                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
                     boolean v1Start = isStart(be1);
 
-                    if (be1 == SVI_END && var1.type() != BND)
+                    if (be1 == SE_END && var1.type() != BND)
                         continue;
 
                     if (var1.getFoldbackLink(v1Start).isEmpty())
@@ -901,11 +898,11 @@ public class ClusterAnalyser {
 
                     for (final SvVarData var2 : cluster2Foldbacks)
                     {
-                        for (int be2 = SVI_START; be2 <= SVI_END; ++be2)
+                        for (int be2 = SE_START; be2 <= SE_END; ++be2)
                         {
                             boolean v2Start = isStart(be2);
 
-                            if (be2 == SVI_END && var2.type() != BND)
+                            if (be2 == SE_END && var2.type() != BND)
                                 continue;
 
                             if (var2.getFoldbackLink(v2Start).isEmpty())

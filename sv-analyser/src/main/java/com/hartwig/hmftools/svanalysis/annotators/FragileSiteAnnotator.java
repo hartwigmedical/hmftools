@@ -13,8 +13,8 @@ import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class FragileSiteAnnotator {
-
+public class FragileSiteAnnotator
+{
     private List<GenomeRegion> mFragileSites;
 
     public static final String KNOWN_FS = "true";
@@ -62,10 +62,10 @@ public class FragileSiteAnnotator {
         }
     }
 
-    public String isFragileSite(final SvVarData svData, final boolean useStart)
+    public boolean isFragileSite(final SvVarData svData, final boolean useStart)
     {
         if(mFragileSites.isEmpty())
-            return NO_FS;
+            return false;
 
         for(final GenomeRegion genomeRegion : mFragileSites)
         {
@@ -74,11 +74,11 @@ public class FragileSiteAnnotator {
             {
                 LOGGER.debug("var({}) found in known fragile site",
                         svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
-                return KNOWN_FS;
+                return true;
             }
         }
 
-        return NO_FS;
+        return false;
     }
 
 }

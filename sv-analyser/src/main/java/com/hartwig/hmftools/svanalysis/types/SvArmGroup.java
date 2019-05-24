@@ -3,12 +3,11 @@ package com.hartwig.hmftools.svanalysis.types;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import com.google.common.collect.Lists;
@@ -73,9 +72,9 @@ public class SvArmGroup {
     {
         mSVs.add(var);
 
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(int be = SE_START; be <= SE_END; ++be)
         {
-            if(var.isNullBreakend() && be == SVI_END)
+            if(var.isNullBreakend() && be == SE_END)
                 continue;
 
             SvBreakend breakend = var.getBreakend(isStart(be));

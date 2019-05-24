@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
@@ -14,7 +10,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ReplicationOriginRegion;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

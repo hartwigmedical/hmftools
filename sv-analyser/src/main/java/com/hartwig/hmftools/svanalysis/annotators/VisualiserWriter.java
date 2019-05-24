@@ -9,10 +9,8 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_TELOMERE;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
@@ -126,7 +124,7 @@ public class VisualiserWriter
                                     mSampleId, var.getCluster().id(), chainId, var.id(),
                                     var.type(), var.getCluster().getResolvedType()));
 
-                    for (int be = SVI_START; be <= SVI_END; ++be)
+                    for (int be = SE_START; be <= SE_END; ++be)
                     {
                         boolean isStart = isStart(be);
 
@@ -260,7 +258,7 @@ public class VisualiserWriter
 
                     int chainId = cluster.getChainId(var);
 
-                    for(int be = SVI_START; be <= SVI_END; ++be)
+                    for(int be = SE_START; be <= SE_END; ++be)
                     {
                         final SvBreakend breakend = var.getBreakend(isStart(be));
 

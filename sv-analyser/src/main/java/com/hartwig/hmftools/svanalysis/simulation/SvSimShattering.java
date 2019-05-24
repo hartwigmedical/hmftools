@@ -4,8 +4,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
@@ -140,7 +140,7 @@ public class SvSimShattering
 
                 if(!segment.fullyLinked())
                 {
-                    for (int be = SVI_START; be <= SVI_END; ++be)
+                    for (int be = SE_START; be <= SE_END; ++be)
                     {
                         boolean isStart = isStart(be);
                         if (!segment.isLinkOpen(isStart))

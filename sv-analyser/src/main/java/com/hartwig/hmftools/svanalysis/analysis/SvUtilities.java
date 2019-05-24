@@ -15,8 +15,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 // common utility methods for clustering logic
@@ -64,9 +64,9 @@ public class SvUtilities {
 
     public static void addSvToChrBreakendMap(final SvVarData var, Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(int be = SE_START; be <= SE_END; ++be)
         {
-            if(be == SVI_END && var.isNullBreakend())
+            if(be == SE_END && var.isNullBreakend())
                 continue;
 
             boolean useStart = isStart(be);
@@ -156,16 +156,16 @@ public class SvUtilities {
         if(v1.id().equals(v2.id()))
             return false;
 
-        for(int be1 = SVI_START; be1 <= SVI_END; ++be1)
+        for(int be1 = SE_START; be1 <= SE_END; ++be1)
         {
-            if(be1 == SVI_END && v1.isNullBreakend())
+            if(be1 == SE_END && v1.isNullBreakend())
                 continue;
 
             boolean v1Start = isStart(be1);
 
-            for(int be2 = SVI_START; be2 <= SVI_END; ++be2)
+            for(int be2 = SE_START; be2 <= SE_END; ++be2)
             {
-                if(be2 == SVI_END && v2.isNullBreakend())
+                if(be2 == SE_END && v2.isNullBreakend())
                     continue;
 
                 boolean v2Start = isStart(be2);
@@ -312,7 +312,7 @@ public class SvUtilities {
     public static int calcConsistency(final SvVarData var)
     {
         int consistencyCount = 0;
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(int be = SE_START; be <= SE_END; ++be)
         {
             boolean useStart = isStart(be);
 

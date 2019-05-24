@@ -10,7 +10,6 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
@@ -20,8 +19,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedReader;
@@ -30,7 +29,6 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
@@ -278,7 +276,7 @@ public class CNAnalyser {
             if (svData.filter().equals(PON_FILTER_PON))
                 continue;
 
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
 
@@ -328,7 +326,7 @@ public class CNAnalyser {
 
                     if(cnDataItems == null)
                     {
-                        cnDataItems = new SvCNData[SVI_END+1];
+                        cnDataItems = new SvCNData[SE_END +1];
                         mSvIdCnDataMap.put(svData.id(), cnDataItems);
                     }
 
@@ -1034,7 +1032,7 @@ public class CNAnalyser {
                 final String svId = entry.getKey();
                 final SvCNData[] cnDataPair = entry.getValue();
 
-                final SvCNData cnStartData = cnDataPair[SVI_START];
+                final SvCNData cnStartData = cnDataPair[SE_START];
 
                 if (cnStartData == null)
                 {
@@ -1051,7 +1049,7 @@ public class CNAnalyser {
 
                 final SvCNData cnStartPrevData = getCNSegment(cnStartData.Chromosome,  cnStartData.getIndex() - 1);
 
-                final SvCNData cnEndNextData = cnDataPair[SVI_END];
+                final SvCNData cnEndNextData = cnDataPair[SE_END];
                 final SvCNData cnEndData = cnEndNextData != null ? getCNSegment(cnEndNextData.Chromosome, cnEndNextData.getIndex() - 1) : null;
 
                 int tumorReadCountStart = svData.startTumorVariantFragmentCount();

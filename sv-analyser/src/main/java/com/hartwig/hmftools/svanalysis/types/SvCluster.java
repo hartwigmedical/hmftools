@@ -26,8 +26,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.INF_SV_TYPE;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_CLUSTER_ID;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
@@ -211,12 +211,12 @@ public class SvCluster
             addSvToChrBreakendMap(var, mChrBreakendMap);
 
             // keep track of all SVs in their respective chromosomal arms
-            for (int be = SVI_START; be <= SVI_END; ++be)
+            for (int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SVI_END && var.isNullBreakend())
+                if (be == SE_END && var.isNullBreakend())
                     continue;
 
-                if (be == SVI_END && var.isLocal())
+                if (be == SE_END && var.isLocal())
                     continue;
 
                 boolean useStart = isStart(be);
@@ -803,7 +803,7 @@ public class SvCluster
 
         for(SvVarData var : mReplicatedSVs)
         {
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 boolean useStart = isStart(be);
 
@@ -980,9 +980,9 @@ public class SvCluster
 
         for(SvVarData var : mSVs)
         {
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SVI_END && var.isNullBreakend())
+                if (be == SE_END && var.isNullBreakend())
                     continue;
 
                 boolean useStart = isStart(be);

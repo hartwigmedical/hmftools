@@ -1,42 +1,22 @@
 package com.hartwig.hmftools.svanalysis.analysis;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.floor;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_5P_PROM;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.svanalysis.types.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.types.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.getExonRankings;
 import static com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser.markNonDisruptiveTranscripts;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.checkFusionLogic;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.couldBeReportable;
 import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.validFusionTranscript;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +25,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -59,8 +38,6 @@ import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svanalysis.types.RnaFusionData;
-import com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
@@ -201,9 +178,9 @@ public class FusionDisruptionAnalyser
             for (final SvVarData var : svList)
             {
                 // isSpecificSV(var);
-                for (int be = SVI_START; be <= SVI_END; ++be)
+                for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    if (be == SVI_END && var.isNullBreakend())
+                    if (be == SE_END && var.isNullBreakend())
                         continue;
 
                     boolean isStart = isStart(be);
@@ -219,9 +196,9 @@ public class FusionDisruptionAnalyser
         {
             // isSpecificSV(var);
 
-            for (int be = SVI_START; be <= SVI_END; ++be)
+            for (int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SVI_END && var.isNullBreakend())
+                if (be == SE_END && var.isNullBreakend())
                     continue;
 
                 boolean isStart = isStart(be);
@@ -1018,7 +995,7 @@ public class FusionDisruptionAnalyser
 
         for(final SvVarData var :svList)
         {
-            for (int be = SVI_START; be <= SVI_END; ++be)
+            for (int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
 

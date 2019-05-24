@@ -30,8 +30,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_END;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.SVI_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
@@ -105,7 +105,7 @@ public class ClusterAnnotations
 
             for(final SvChain chain : cluster.getChains())
             {
-                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
                     final SvBreakend chainEnd = chain.getOpenBreakend(isStart(be1));
                     if (chainEnd == null)
@@ -673,7 +673,7 @@ public class ClusterAnnotations
                     String foldbackInfo = String.format("%s;%s;%d;%.4f",
                             existingInfo, breakend.direction(), foldbackRank, positionPercent);
 
-                    for(int be = SVI_START; be <= SVI_END; ++be)
+                    for(int be = SE_START; be <= SE_END; ++be)
                     {
                         boolean isStart = isStart(be);
 
@@ -1477,7 +1477,7 @@ public class ClusterAnnotations
             return false;
 
         // check ploidy context of remote breakends as well
-        for(int be = SVI_START; be <= SVI_END; ++be)
+        for(int be = SE_START; be <= SE_END; ++be)
         {
             boolean isStart = isStart(be);
             final SvBreakend remoteBreakend = remoteTI.getBreakend(isStart);
@@ -1652,7 +1652,7 @@ public class ClusterAnnotations
 
             final SvVarData var = indexSvList.get(i);
 
-            for(int be = SVI_START; be <= SVI_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 boolean useStart = isStart(be);
 
@@ -1970,7 +1970,7 @@ public class ClusterAnnotations
                     break;
                 }
 
-                for (int be1 = SVI_START; be1 <= SVI_END; ++be1)
+                for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
                     boolean v1Start = isStart(be1);
 
