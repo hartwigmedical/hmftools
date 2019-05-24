@@ -14,6 +14,9 @@ import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser.SMALL_CLU
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.markSinglePairResolvedType;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
@@ -114,16 +117,24 @@ public class SvClassification
 
     public static boolean isSyntheticType(SvCluster cluster)
     {
-        if(isSimpleType(cluster.getResolvedType()) && cluster.getSvCount() > 1)
-            return true;
+        String resolvedType = cluster.getResolvedType();
+
+        if(isSimpleType(resolvedType))
+            return cluster.getSvCount() > 1;
 
         // will be more when look for synthetic INVs, SGLs and translocations
-        if((cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_INV || cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS)
-        && cluster.getSvCount() > 2)
-            return true;
+        if(resolvedType == RESOLVED_TYPE_RECIPROCAL_INV || resolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS
+        || resolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR || resolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_DEL
+        || resolvedType == RESOLVED_TYPE_FB_INV_PAIR)
+        {
+            return cluster.getSvCount() > 2;
+        }
 
-        if(isIncompleteType(cluster.getResolvedType()) && cluster.getSvCount() > 1)
-            return true;
+        if(resolvedType == RESOLVED_TYPE_UNBALANCED_TRANS)
+            return cluster.getSvCount() > 1;
+
+        if(isIncompleteType(resolvedType))
+            return cluster.getSvCount() > 1;
 
         return false;
     }
@@ -344,17 +355,27 @@ public class SvClassification
         cluster.setResolved(setResolved, resolvedType);
         cluster.setSyntheticData(syntheticLength, longestTILength);
 
-        if(resolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR && !longestPair.chromosome().equals(startBreakend.chromosome()))
+        if(resolvedType == RESOLVED_TYPE_RECIPROCAL_DUP_PAIR)
         {
-            LOGGER.debug("cluster({}) spliting reciprocal DUP pair into 2 chains between chrs({} & {})",
-                    cluster.id(), longestPair.chromosome(), startBreakend.chromosome());
+            classifyReciprocalDupPairs(cluster, chain, longestPair);
+        }
+    }
 
-            // remove the long chain link on the assumption that these breakends aren't joined
+    private static void classifyReciprocalDupPairs(SvCluster cluster, SvChain chain, SvLinkedPair longestPair)
+    {
+        SvBreakend startBreakend = chain.getOpenBreakend(true);
+        SvBreakend endBreakend = chain.getOpenBreakend(false);
+
+        long longestTILength = 0;
+        long syntheticLength = 0;
+
+        if(!longestPair.chromosome().equals(startBreakend.chromosome()))
+        {
+            // remove the long chain link on the assumption that these breakends aren't joined,
+            // leaving 2 separate chains or SVs
             cluster.getChains().clear();
 
             SvChain newChain = new SvChain(0);
-
-            longestTILength = 0;
 
             for (SvLinkedPair pair : chain.getLinkedPairs())
             {
@@ -369,7 +390,7 @@ public class SvClassification
                 else
                 {
                     // skip the long TI and cache the chain
-                    if(newChain != null && newChain.getLinkCount() > 0)
+                    if (newChain != null && newChain.getLinkCount() > 0)
                     {
                         cluster.addChain(newChain, false);
                         newChain = null;
@@ -377,12 +398,137 @@ public class SvClassification
                 }
             }
 
-            if(newChain != null && newChain.getLinkCount() > 0)
+            if (newChain != null && newChain.getLinkCount() > 0)
                 cluster.addChain(newChain, false);
 
-            cluster.setResolved(true, resolvedType);
-            cluster.setSyntheticData(0, longestTILength);
+            cluster.cacheLinkedPairs();
+
+            LOGGER.debug("cluster({}) split reciprocal DUP pair into 2 chains between chrs({} & {})",
+                    cluster.id(), longestPair.chromosome(), startBreakend.chromosome());
         }
+        else
+        {
+            SvBreakend chainLowerBe = startBreakend.position() < endBreakend.position() ? startBreakend : endBreakend;
+            SvBreakend chainUpperBe = startBreakend == chainLowerBe ? endBreakend : startBreakend;
+
+            SvBreakend lowerTiBe = longestPair.getBreakend(true);
+            SvBreakend upperTiBe = longestPair.getBreakend(false);
+
+            if(lowerTiBe.position() > chainLowerBe.position() && upperTiBe.position() < chainUpperBe.position())
+            {
+                cluster.setResolved(false, RESOLVED_TYPE_FB_INV_PAIR);
+                return;
+            }
+
+            // change the chaining configuration to make a longer TI between the opposing breakends
+
+            // artificially create the new TI
+            SvLinkedPair newLink = null;
+
+            if(chainLowerBe.orientation() == -1 && upperTiBe.orientation() == 1 && chainLowerBe.position() < upperTiBe.position()
+            && !chainLowerBe.getSV().equals(upperTiBe.getSV(), true))
+            {
+                newLink = SvLinkedPair.from(chainLowerBe, upperTiBe, SvLinkedPair.LINK_TYPE_TI);
+            }
+            else if(chainUpperBe.orientation() == 1 && lowerTiBe.orientation() == -1 && chainUpperBe.position() > lowerTiBe.position()
+            && !chainUpperBe.getSV().equals(lowerTiBe.getSV(), true))
+            {
+                newLink = SvLinkedPair.from(lowerTiBe, chainUpperBe, SvLinkedPair.LINK_TYPE_TI);
+            }
+            else
+            {
+                LOGGER.debug("cluster({}) unresolvable RECIP DUP PAIR", cluster.id());
+                cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
+                cluster.setSyntheticData(0, 0);
+                return;
+            }
+
+            SvChain newChain = new SvChain(0);
+            newChain.addLink(newLink, true);
+
+            longestTILength = newLink.length();
+
+            List<SvLinkedPair> linksToAdd = chain.getLinkedPairs().stream()
+                    .filter(x -> x.length() <= SHORT_TI_LENGTH)
+                    .collect(Collectors.toList());
+
+            int index = 0;
+            int iterations = 0;
+            int linksCount = linksToAdd.size();
+            while(!linksToAdd.isEmpty())
+            {
+                if(index >= linksToAdd.size())
+                    index = 0;
+
+                SvLinkedPair pair = linksToAdd.get(index);
+
+                longestTILength = max(pair.length(), longestTILength);
+
+                if(newChain.canAddLinkedPairToStart(pair))
+                {
+                    newChain.addLink(pair, true);
+                    linksToAdd.remove(index);
+                }
+                else if(newChain.canAddLinkedPairToEnd(pair))
+                {
+                    newChain.addLink(pair, false);
+                    linksToAdd.remove(index);
+                }
+                else
+                {
+                    ++index;
+                }
+
+                ++iterations;
+
+                if(iterations > 2 * linksCount)
+                    break;
+            }
+
+            /*
+            for (SvLinkedPair pair : chain.getLinkedPairs())
+            {
+                if (pair.length() <= SHORT_TI_LENGTH)
+                {
+                    longestTILength = max(pair.length(), longestTILength);
+
+                    if(newChain.canAddLinkedPairToStart(pair))
+                    {
+                        newChain.addLink(pair, true);
+                    }
+                    else if(newChain.canAddLinkedPairToEnd(pair))
+                    {
+                        newChain.addLink(pair, false);
+                    }
+                    else
+                    {
+                        LOGGER.warn("cluster({}) failed to build new RECIP DUP PAIR chain", cluster.id());
+                        return;
+                    }
+                }
+            }
+            */
+
+            if(!linksToAdd.isEmpty())
+            {
+                LOGGER.warn("cluster({}) failed to build new RECIP DUP PAIR chain", cluster.id());
+                return;
+            }
+
+            cluster.getChains().clear();
+
+            if (newChain != null && newChain.getLinkCount() > 0)
+                cluster.addChain(newChain, false);
+
+            cluster.cacheLinkedPairs();
+
+            syntheticLength = abs(newChain.getOpenBreakend(true).position() - newChain.getOpenBreakend(false).position());
+
+            LOGGER.debug("cluster({}) reconfigured reciprocal DUP pair with newLink({})", cluster.id(), newLink.length());
+        }
+
+        cluster.setResolved(false, RESOLVED_TYPE_RECIPROCAL_DUP_PAIR);
+        cluster.setSyntheticData(syntheticLength, longestTILength);
     }
 
     public static void markSyntheticReciprocalInversion(SvCluster cluster, int proximityThreshold)
@@ -457,7 +603,7 @@ public class SvClassification
         LOGGER.debug("cluster({}) chain(links=({} longestTI={}) synLen({}) marked as {}",
                 cluster.id(), totalLinks, tiPair.length(), syntheticLength, resolvedType);
 
-        cluster.setResolved(true, resolvedType);
+        cluster.setResolved(false, resolvedType);
         cluster.setSyntheticData(syntheticLength, tiPair.length());
     }
 

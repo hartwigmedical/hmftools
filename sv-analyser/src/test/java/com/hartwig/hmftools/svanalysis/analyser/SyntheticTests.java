@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_COMPLEX;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_FB_INV_PAIR;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_INF;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_INV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_DUP_DEL;
@@ -382,11 +383,80 @@ public class SyntheticTests
         cluster = tester.getClusters().get(0);
         assertEquals(2, cluster.getChains().size());
 
-        assertTrue(cluster.isResolved());
+        assertTrue(!cluster.isResolved());
         assertEquals(RESOLVED_TYPE_RECIPROCAL_DUP_PAIR, cluster.getResolvedType());
-        assertTrue(!cluster.isSyntheticType());
+        assertTrue(cluster.isSyntheticType());
         assertEquals(0, cluster.getSyntheticLength());
         assertEquals(500, cluster.getSyntheticTILength());
+
+        // test the 2 INV (typically foldbacks) case
+
+        tester.clearClustersAndSVs();
+
+        var1 = createInv(tester.nextVarId(), "1", 1000, 3000, -1);
+        var2 = createInv(tester.nextVarId(), "1", 51000, 53000, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+        assertEquals(1, cluster.getChains().size());
+
+        assertTrue(!cluster.isResolved());
+        assertEquals(RESOLVED_TYPE_FB_INV_PAIR, cluster.getResolvedType());
+        assertTrue(!cluster.isSyntheticType());
+        assertEquals(var2.position(false) - var1.position(true), cluster.getSyntheticLength());
+        assertEquals(var2.position(true) - var1.position(false), cluster.getSyntheticTILength());
+
+        // and finally a local version of the overlapping DUPs scenarios with a reconfigured chain
+        tester.clearClustersAndSVs();
+
+        var1 = createInv(tester.nextVarId(), "1", 1000, 51000, -1);
+        var2 = createInv(tester.nextVarId(), "1", 5000, 53000, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+        assertEquals(1, cluster.getChains().size());
+
+        assertTrue(!cluster.isResolved());
+        assertEquals(RESOLVED_TYPE_RECIPROCAL_DUP_PAIR, cluster.getResolvedType());
+        assertTrue(!cluster.isSyntheticType());
+        assertEquals(var1.position(false) - var2.position(true), cluster.getSyntheticLength());
+        assertEquals(var2.position(false) - var1.position(true), cluster.getSyntheticTILength());
+
+        // and test again with additional short TIs in the mix
+        tester.clearClustersAndSVs();
+
+        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 2000, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 51000, -1, "2", 2500, 1);
+
+        var3 = createBnd(tester.nextVarId(), "1", 5000, 1, "2", 4000, -1);
+        var4 = createBnd(tester.nextVarId(), "1", 53000, 1, "2", 4500, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+        assertEquals(1, cluster.getChains().size());
+
+        assertTrue(!cluster.isResolved());
+        assertEquals(RESOLVED_TYPE_RECIPROCAL_DUP_PAIR, cluster.getResolvedType());
+        assertTrue(cluster.isSyntheticType());
+        assertEquals(var2.position(true) - var3.position(true), cluster.getSyntheticLength());
+        assertEquals(var4.position(true) - var1.position(true), cluster.getSyntheticTILength());
 
     }
 

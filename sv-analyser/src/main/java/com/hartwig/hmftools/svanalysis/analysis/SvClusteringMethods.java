@@ -374,21 +374,13 @@ public class SvClusteringMethods {
         if(var.type() != SGL|| var.isNoneSegment())
             return RESOLVED_TYPE_NONE;
 
-        if(isEquivSingleBreakend(var))
+        if(var.isEquivBreakend(true))
             return RESOLVED_TYPE_DUP_BE;
 
         if(var.getSvData().insertSequence().contains(POLY_C_MOTIF) || var.getSvData().insertSequence().contains(POLY_G_MOTIF))
             return RESOLVED_TYPE_POLY_G_C;
 
         return RESOLVED_TYPE_NONE;
-    }
-
-    private boolean isEquivSingleBreakend(final SvVarData var)
-    {
-        if(!var.isNullBreakend())
-            return false;
-
-        return  (var.getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV));
     }
 
     public void clearLOHBreakendData(final String sampleId)
@@ -1018,7 +1010,7 @@ public class SvClusteringMethods {
                         }
                     }
                 }
-                else if(var.type() == nextVar.type())
+                else if(var.type() == nextVar.type() && var.hasEquivBreakend() && nextVar.hasEquivBreakend())
                 {
                     // 2 non-SGL SVs may be duplicates, so check their other ends
                     SvBreakend otherBe = breakend.getOtherBreakend();

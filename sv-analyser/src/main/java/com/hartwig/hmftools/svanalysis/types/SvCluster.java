@@ -799,10 +799,7 @@ public class SvCluster
         mLinkedPairs.clear();
 
         // add all chained links
-        for (final SvChain chain : mChains)
-        {
-            mLinkedPairs.addAll(chain.getLinkedPairs());
-        }
+        mChains.stream().forEach(x -> mLinkedPairs.addAll(x.getLinkedPairs()));
 
         for(SvVarData var : mReplicatedSVs)
         {

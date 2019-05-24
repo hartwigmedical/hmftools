@@ -577,6 +577,16 @@ public class SvVarData
         return useStart ? mStartTIAssemblies : mEndTIAssemblies;
     }
 
+    public boolean isEquivBreakend(boolean useStart)
+    {
+        return getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV);
+    }
+
+    public boolean hasEquivBreakend()
+    {
+        return isEquivBreakend(true) || isEquivBreakend(false);
+    }
+
     public final List<GeneAnnotation> getGenesList(boolean useStart) { return useStart ? mGenesStart : mGenesEnd; }
     public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
     {
