@@ -25,7 +25,7 @@ data class OncoKnownRecord(private val metadata: RecordMetadata, override val re
 
         private fun readEvents(input: OncoKnownInput): List<SomaticEvent> {
             val events = reader.read(input)
-            return events.filterNot { it is FusionEvent && input.`Mutation Effect`.contains("Loss-of-function") }
+            return events.filter { it is FusionEvent && input.`Mutation Effect`.contains("Loss-of-function") }
         }
     }
 }
