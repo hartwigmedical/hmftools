@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.getSuperType;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
@@ -591,15 +592,26 @@ public class SvSampleAnalyser {
 
                 // isSpecificCluster(cluster);
 
-                writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%s,%d",
-                        mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
-                        getSuperType(cluster), cluster.getResolvedType(), cluster.isSyntheticType(),
-                        cluster.isSubclonal(), cluster.isFullyChained(false), cluster.getChains().size()));
+                String resolvedType = cluster.getResolvedType();
+
+                // TEMP - keep synthetic formed from SGLs separate
 
                 int inferredCount = cluster.getInferredTypeCount();
+                int sglCount = cluster.getTypeCount(SGL);
+
+                if((inferredCount > 0 || sglCount> 0) && isSimpleType(resolvedType))
+                {
+                    resolvedType = "SGL_PAIR_" + resolvedType;
+                }
+
+                writer.write(String.format("%s,%d,%s,%d,%s,%s,%s,%s,%s,%d",
+                        mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
+                        getSuperType(cluster), resolvedType, cluster.isSyntheticType(),
+                        cluster.isSubclonal(), cluster.isFullyChained(false), cluster.getChains().size()));
+
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
                         cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
-                        cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL) - inferredCount, inferredCount));
+                        cluster.getTypeCount(INV), cluster.getTypeCount(BND), sglCount - inferredCount, inferredCount));
 
                 double foldbackCount = 0;
 
@@ -625,13 +637,6 @@ public class SvSampleAnalyser {
                         chainData[CM_INT_TI], chainData[CM_EXT_TI], chainData[CM_INT_TI_CN_GAIN], chainData[CM_EXT_TI_CN_GAIN],
                         chainData[CM_OVERLAPPING_TI], chainData[CM_DB], chainData[CM_SHORT_DB],
                         chainData[CM_CHAIN_ENDS_FACE], chainData[CM_CHAIN_ENDS_AWAY]));
-
-                /*
-                final String chainInfo = cluster.getChains().stream()
-                        .filter(x -> !x.getDetails().isEmpty())
-                        .map(SvChain::getDetails)
-                        .collect (Collectors.joining (";"));
-                */
 
                 writer.write(String.format(",%d,%d,%d,%d,%.2f,%.2f",
                         cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), cluster.getLongDelDups().size(),
@@ -675,7 +680,7 @@ public class SvSampleAnalyser {
                 mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength");
                 mLinksFileWriter.write(",NextSvDist,NextClusteredSvDist,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
                 mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
-                mLinksFileWriter.write(",PosStart,PosEnd,GeneStart,GeneEnd,ExonMatch");
+                mLinksFileWriter.write(",PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
                 mLinksFileWriter.newLine();
             }
 
@@ -708,7 +713,7 @@ public class SvSampleAnalyser {
                             cluster.hasLinkingLineElements()));
 
                         final SvBreakend beStart = pair.getBreakend(true);
-                        final SvBreakend beEnd= pair.getBreakend(false);
+                        final SvBreakend beEnd = pair.getBreakend(false);
 
                         writer.write(String.format(",%d,%d,%s,%s,%s,%s",
                                 chain.id(), chainSvCount, chainConsistent,
@@ -720,9 +725,12 @@ public class SvSampleAnalyser {
                                 pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
                                 pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
 
+                        SvArmCluster acStart = cluster.findArmCluster(beStart);
+                        SvArmCluster acEnd = cluster.findArmCluster(beEnd);
 
-                        writer.write(String.format(",%d,%d,%s,%s,%s",
+                        writer.write(String.format(",%d,%d,%s,%s,%s,%s,%s",
                                 beStart.position(), beEnd.position(),
+                                acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
                                 beStart.getSV().getGeneInBreakend(beStart.usesStart()),
                                 beEnd.getSV().getGeneInBreakend(beEnd.usesStart()), pair.getExonMatchData()));
 

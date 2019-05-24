@@ -52,14 +52,6 @@ public class SvClassification
     public static final String RESOLVED_TYPE_SIMPLE_GRP = "SIMPLE_GRP";
     public static final String RESOLVED_TYPE_FB_INV_PAIR = "FB_INV_PAIR";
 
-    // public static final String RESOLVED_TYPE_SIMPLE_SV = "SIMPLE";
-    // public static final String RESOLVED_TYPE_SYNTH_DEL = "SYNTH_DEL";
-    // public static final String RESOLVED_TYPE_SYNTH_DUP = "SYNTH_DUP";
-    // public static final String RESOLVED_TYPE_SGL_PAIR_INS = "SGL_PAIR_INS";
-    // public static final String RESOLVED_TYPE_SGL_PAIR_DEL = "SGL_PAIR_DEL";
-    // public static final String RESOLVED_TYPE_SGL_PAIR_DUP = "SGL_PAIR_DUP";
-    // public static final String RESOLVED_TYPE_SGL_PLUS_INCONSISTENT = "SGL_BND_INV";
-
     // super category for an SV or cluster
     public static final String SUPER_TYPE_SIMPLE = "SIMPLE";
     public static final String SUPER_TYPE_INSERTION = "INSERTION";
@@ -485,33 +477,11 @@ public class SvClassification
                     break;
             }
 
-            /*
-            for (SvLinkedPair pair : chain.getLinkedPairs())
-            {
-                if (pair.length() <= SHORT_TI_LENGTH)
-                {
-                    longestTILength = max(pair.length(), longestTILength);
-
-                    if(newChain.canAddLinkedPairToStart(pair))
-                    {
-                        newChain.addLink(pair, true);
-                    }
-                    else if(newChain.canAddLinkedPairToEnd(pair))
-                    {
-                        newChain.addLink(pair, false);
-                    }
-                    else
-                    {
-                        LOGGER.warn("cluster({}) failed to build new RECIP DUP PAIR chain", cluster.id());
-                        return;
-                    }
-                }
-            }
-            */
-
             if(!linksToAdd.isEmpty())
             {
-                LOGGER.warn("cluster({}) failed to build new RECIP DUP PAIR chain", cluster.id());
+                LOGGER.warn("cluster({}) failed to build new RECIP DUP PAIR chain from links({})", cluster.id(), linksCount);
+                cluster.setResolved(false, RESOLVED_TYPE_COMPLEX);
+                cluster.setSyntheticData(0, 0);
                 return;
             }
 

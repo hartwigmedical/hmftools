@@ -548,7 +548,7 @@ public class SvCluster
         String typesStr = getSvTypesStr(mTypeCounts);
 
         if(mInferredSvCount > 0)
-            return String.format("%s_%s=%d", typesStr, INF_SV_TYPE, mInferredSvCount);
+            return appendStr(typesStr, String.format("%s=%d", INF_SV_TYPE, mInferredSvCount), '_');
         else
             return typesStr;
     }
