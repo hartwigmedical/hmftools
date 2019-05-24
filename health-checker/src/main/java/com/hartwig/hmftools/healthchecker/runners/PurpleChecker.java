@@ -47,7 +47,7 @@ public class PurpleChecker implements HealthChecker {
     }
 
     @NotNull
-    private BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
+    private static BaseResult toMultiValueResult(@NotNull final List<HealthCheck> checks) {
         HealthCheck.log(LOGGER, checks);
         return new MultiValueResult(CheckType.PURPLE, checks);
     }

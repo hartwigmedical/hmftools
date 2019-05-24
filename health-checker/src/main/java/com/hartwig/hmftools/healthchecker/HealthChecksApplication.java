@@ -1,19 +1,6 @@
 package com.hartwig.hmftools.healthchecker;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Optional;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.common.io.FolderChecker;
-import com.hartwig.hmftools.healthchecker.report.JsonReport;
-import com.hartwig.hmftools.healthchecker.report.Report;
-import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
-import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
-import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,43 +16,59 @@ public final class HealthChecksApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
-    private static final String RUN_DIRECTORY = "run_dir";
-    private static final String REPORT_FILE_PATH = "report_file_path";
+    private static final String REF_SAMPLE = "reference";
+    private static final String TUMOR_SAMPLE = "tumor";
+    private static final String METRICS_DIR = "metrics_dir";
+    private static final String AMBER_DIR = "amber_dir";
+    private static final String PURPLE_DIR = "purple_dir";
+
+    private static final String OUTPUT_DIR = "output_dir";
 
     @NotNull
-    private final RunContext runContext;
+    private final String refSample;
     @NotNull
-    private final String reportFilePath;
+    private final String getMetricsDir;
 
-    private HealthChecksApplication(@NotNull final RunContext runContext, @NotNull final String reportFilePath) {
-        this.runContext = runContext;
-        this.reportFilePath = reportFilePath;
+    private HealthChecksApplication(@NotNull final String refSample, @NotNull final String getMetricsDir) {
+        this.refSample = refSample;
+        this.getMetricsDir = getMetricsDir;
     }
 
     public static void main(final String... args) throws ParseException, IOException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
 
-        String runDirectory = cmd.getOptionValue(RUN_DIRECTORY);
-        final String reportFilePath = cmd.getOptionValue(REPORT_FILE_PATH);
+        final String refSample = cmd.getOptionValue(REF_SAMPLE);
+        final String metricsDir = cmd.getOptionValue(METRICS_DIR);
 
-        if (runDirectory == null || reportFilePath == null) {
+        if (refSample == null || metricsDir == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
         }
 
-        runDirectory = FolderChecker.build().checkFolder(runDirectory);
-        RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
+        HealthChecksApplication app = new HealthChecksApplication(refSample, metricsDir);
+        if (cmd.hasOption(TUMOR_SAMPLE)) {
+            final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
+            final String amberDir = cmd.getOptionValue(AMBER_DIR);
+            final String purpleDir = cmd.getOptionValue(PURPLE_DIR);
 
-        new HealthChecksApplication(runContext, reportFilePath).run();
+            app.runSomatic(tumorSample, amberDir, purpleDir);
+        } else {
+            app.runSingleSample();
+        }
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(RUN_DIRECTORY, true, "The path containing the data for a single run");
-        options.addOption(REPORT_FILE_PATH, true, "The path where the report will be written to.");
+        options.addOption(REF_SAMPLE, true, "The name of the reference sample");
+        options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
+        options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
+        options.addOption(AMBER_DIR, true, "The directory holding the amber output");
+        options.addOption(METRICS_DIR, true, "The directory holding the metrics output");
+
+        options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
         return options;
     }
 
@@ -75,15 +78,27 @@ public final class HealthChecksApplication {
         return parser.parse(options, args);
     }
 
-    private void run() throws IOException {
-        final Report report = new JsonReport();
-        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new PurpleChecker(), new AmberChecker());
+    private void runSingleSample() throws IOException {
+        //        final Report report = new JsonReport();
+        //        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new PurpleChecker(), new AmberChecker());
+        //
+        //        for (final HealthChecker checker : checkers) {
+        //            report.addResult(checker.run(runContext));
+        //        }
+        //
+        //        final Optional<String> reportPath = report.generateReport(reportFilePath);
+        //        reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
+    }
 
-        for (final HealthChecker checker : checkers) {
-            report.addResult(checker.run(runContext));
-        }
-
-        final Optional<String> reportPath = report.generateReport(reportFilePath);
-        reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
+    private void runSomatic(@NotNull String tumorSample, @NotNull String amberDir, @NotNull String purpleDir) throws IOException {
+        //        final Report report = new JsonReport();
+        //        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new PurpleChecker(), new AmberChecker());
+        //
+        //        for (final HealthChecker checker : checkers) {
+        //            report.addResult(checker.run(runContext));
+        //        }
+        //
+        //        final Optional<String> reportPath = report.generateReport(reportFilePath);
+        //        reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
     }
 }
