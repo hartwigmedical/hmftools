@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cosmic
 
-import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
-import com.hartwig.hmftools.knowledgebaseimporter.cosmic.input.CosmicKnownInput
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
 import com.hartwig.hmftools.knowledgebaseimporter.readCSVRecords
