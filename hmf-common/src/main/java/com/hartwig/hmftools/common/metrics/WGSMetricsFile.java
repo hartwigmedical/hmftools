@@ -33,6 +33,18 @@ public final class WGSMetricsFile {
     }
 
     @NotNull
+    public static String generateFilenamePv5(@NotNull final String metricsDir, @NotNull final String sample) throws FileNotFoundException {
+        try {
+            String path = metricsDir + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
+            return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
+        } catch (FileNotFoundException exc) {
+            // If a pipeline is run directly from a bam, the metric file is stored in a directory matching the sample name.
+            String path = metricsDir + File.separator + sample;
+            return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
+        }
+    }
+
+    @NotNull
     public static String generateFilename(@NotNull final String runDir, @NotNull final String sample) throws FileNotFoundException {
         try {
             String path = runDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;

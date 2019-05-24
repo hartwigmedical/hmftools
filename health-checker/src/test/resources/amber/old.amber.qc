@@ -1,2 +1,0 @@
-QCStatus	PASS
-MeanBAF	0.4951

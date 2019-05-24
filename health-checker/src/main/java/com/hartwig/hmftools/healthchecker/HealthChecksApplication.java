@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.healthchecker;
 
 import java.io.IOException;
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.healthchecker.result.QCValue;
+import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
+import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
+import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
+import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -27,11 +35,11 @@ public final class HealthChecksApplication {
     @NotNull
     private final String refSample;
     @NotNull
-    private final String getMetricsDir;
+    private final String metricsDirectory;
 
-    private HealthChecksApplication(@NotNull final String refSample, @NotNull final String getMetricsDir) {
+    private HealthChecksApplication(@NotNull final String refSample, @NotNull final String metricsDirectory) {
         this.refSample = refSample;
-        this.getMetricsDir = getMetricsDir;
+        this.metricsDirectory = metricsDirectory;
     }
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -79,26 +87,33 @@ public final class HealthChecksApplication {
     }
 
     private void runSingleSample() throws IOException {
-        //        final Report report = new JsonReport();
-        //        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new PurpleChecker(), new AmberChecker());
-        //
-        //        for (final HealthChecker checker : checkers) {
-        //            report.addResult(checker.run(runContext));
-        //        }
-        //
-        //        final Optional<String> reportPath = report.generateReport(reportFilePath);
-        //        reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
+        List<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(refSample, null, metricsDirectory));
+
+        List<QCValue> qcValues = Lists.newArrayList();
+        for (final HealthChecker checker : checkers) {
+            qcValues.addAll(checker.run());
+        }
+
+        logQCValues(qcValues);
     }
 
-    private void runSomatic(@NotNull String tumorSample, @NotNull String amberDir, @NotNull String purpleDir) throws IOException {
-        //        final Report report = new JsonReport();
-        //        final Collection<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(), new PurpleChecker(), new AmberChecker());
-        //
-        //        for (final HealthChecker checker : checkers) {
-        //            report.addResult(checker.run(runContext));
-        //        }
-        //
-        //        final Optional<String> reportPath = report.generateReport(reportFilePath);
-        //        reportPath.ifPresent(path -> LOGGER.info(String.format("Report generated -> \n%s", path)));
+    private void runSomatic(@NotNull String tumorSample, @NotNull String amberDirectory, @NotNull String purpleDirectory)
+            throws IOException {
+        List<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(refSample, tumorSample, metricsDirectory),
+                new AmberChecker(tumorSample, amberDirectory),
+                new PurpleChecker(tumorSample, purpleDirectory));
+
+        List<QCValue> qcValues = Lists.newArrayList();
+        for (final HealthChecker checker : checkers) {
+            qcValues.addAll(checker.run());
+        }
+
+        logQCValues(qcValues);
+    }
+
+    private static void logQCValues(@NotNull List<QCValue> qcValues) {
+        for (QCValue qcValue : qcValues) {
+            LOGGER.info("QC " + qcValue.type() + " has value " + qcValue.value());
+        }
     }
 }
