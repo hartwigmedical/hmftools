@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class MutationalBurdenAnalyzer {
+final class MutationalBurdenAnalyzer {
 
     private static final double NUMBER_OF_MB_PER_GENOME = 2859D;
 

@@ -29,9 +29,6 @@ object CsvReader {
     inline fun <reified T : CsvData> readTSV(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
             read(T::class, fileLocation, DEFAULT_TSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
 
-    inline fun <reified T : CsvData> readCSV(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
-            read(T::class, fileLocation, DEFAULT_CSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
-
     /**
      * Reads CsvData records from a file. Builds CsvData objects selecting only the CSV columns that match the primary constructor parameters by name
      *
@@ -56,11 +53,6 @@ object CsvReader {
 
     inline fun <reified T : CsvData> readCSVByName(inputStream: InputStream, nullString: String? = DEFAULT_NULL_STRING): List<T> =
             readByName(T::class, inputStream, DEFAULT_CSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
-
-    fun <T> readRecords(fileLocation: String, format: CSVFormat, recordParser: (CSVRecord) -> T): List<T> {
-        val parser = CSVParser.parse(File(fileLocation), Charset.defaultCharset(), format)
-        return parser.asSequence().map { recordParser(it) }.toList()
-    }
 
     private fun <T : CsvData> KClass<T>.read(csvRecord: CSVRecord): T {
         val recordValues = csvRecord.asIterable().toList()

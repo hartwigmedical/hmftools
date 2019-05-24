@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.geom.Rectangle;
@@ -13,9 +15,6 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Footer {
 

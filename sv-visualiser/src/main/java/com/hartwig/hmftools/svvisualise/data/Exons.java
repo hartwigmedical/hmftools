@@ -8,13 +8,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.svvisualise.circos.Span;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,10 +25,7 @@ public class Exons {
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static List<Exon> exonsInSegments(@NotNull final List<Exon> exons, @NotNull final List<Segment> segments, @NotNull final List<Link> links) {
-        final List<GenomePosition> allPositions = Lists.newArrayList();
-        allPositions.addAll(Span.allPositions(segments));
-        allPositions.addAll(Links.allPositions(links));
+    public static Set<String> genesInSegmentsAndLinks(@NotNull final List<Exon> exons, @NotNull final List<GenomePosition> allPositions) {
 
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
@@ -36,10 +33,10 @@ public class Exons {
         final Predicate<Exon> inSegments = exon -> {
             long min = minPositionPerChromosome.containsKey(exon.chromosome()) ? minPositionPerChromosome.get(exon.chromosome()) : 0;
             long max = maxPositionPerChromosome.containsKey(exon.chromosome()) ? maxPositionPerChromosome.get(exon.chromosome()) : 0;
-            return exon.start() >= min && exon.end() <= max;
+            return exon.start() <= max && exon.end() >= min;
         };
 
-        return exons.stream().filter(inSegments).collect(Collectors.toList());
+        return exons.stream().filter(inSegments).map(Exon::gene).collect(Collectors.toSet());
     }
 
     @NotNull

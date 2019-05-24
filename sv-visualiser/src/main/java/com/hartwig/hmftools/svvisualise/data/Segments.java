@@ -72,13 +72,10 @@ public class Segments {
 
     @NotNull
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links) {
+            @NotNull final List<Link> links,
+            @NotNull final List<GenomePosition> allPositions) {
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
         final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
-
-        final List<GenomePosition> allPositions = Lists.newArrayList();
-        allPositions.addAll(Span.allPositions(segments));
-        allPositions.addAll(Links.allPositions(links));
 
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);

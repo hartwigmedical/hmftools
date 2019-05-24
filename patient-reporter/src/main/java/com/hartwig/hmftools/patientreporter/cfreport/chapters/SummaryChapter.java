@@ -172,7 +172,7 @@ public class SummaryChapter implements ReportChapter {
             table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(valueLabel).addStyle(ReportResources.dataHighlightStyle())));
             table.addCell(createMiddleAlignedCell().add(createInlineBarChart(value, min, max)));
         } else {
-            table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(DataUtil.BELOW_SETECTION_STRING).addStyle(ReportResources.dataHighlightNaStyle())));
+            table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(DataUtil.BELOW_DETECTION_STRING).addStyle(ReportResources.dataHighlightNaStyle())));
         }
     }
 

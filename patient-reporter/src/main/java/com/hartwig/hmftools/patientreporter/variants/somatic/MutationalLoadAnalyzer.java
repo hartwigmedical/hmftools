@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class MutationalLoadAnalyzer {
+final class MutationalLoadAnalyzer {
 
     private MutationalLoadAnalyzer() {
     }

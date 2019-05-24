@@ -20,6 +20,7 @@ data class CgiActionableInput(@get:JvmName("getGene_") private val Gene: String,
             Alteration.contains("BRD4__C15orf55") -> copy(Gene = "NUTM1", Alteration = Alteration.replace("BRD4__C15orf55", "BRD4__NUTM1"))
             Alteration.contains("PDGFRA__FIP1L1") -> copy(Alteration = Alteration.replace("PDGFRA__FIP1L1", "FIP1L1__PDGFRA"))
             Alteration.contains("PDGFB__COL1A1")  -> copy(Alteration = Alteration.replace("PDGFB__COL1A1", "COL1A1__PDGFB"))
+            Alteration.contains("MLL")  -> copy(Alteration = Alteration.replace("MLL", "KMT2A"))
             else                                  -> this
         }
     }

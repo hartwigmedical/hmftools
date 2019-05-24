@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import com.hartwig.hmftools.common.context.RunContext;
-import com.hartwig.hmftools.healthchecker.result.BaseResult;
+import java.io.IOException;
+import java.util.List;
+
+import com.hartwig.hmftools.healthchecker.result.QCValue;
 
 import org.jetbrains.annotations.NotNull;
 
 public interface HealthChecker {
 
     @NotNull
-    BaseResult run(@NotNull RunContext runContext);
+    List<QCValue> run() throws IOException;
 }

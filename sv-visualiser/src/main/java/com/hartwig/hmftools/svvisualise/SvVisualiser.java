@@ -3,8 +3,6 @@ package com.hartwig.hmftools.svvisualise;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import static com.hartwig.hmftools.svvisualise.circos.Span.allPositions;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -179,16 +177,18 @@ public class SvVisualiser implements AutoCloseable {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
+        positionsToCover.addAll(Span.allPositions(filteredSegments));
 
-        // Need to extend terminal segments past any current segments and links
-        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links);
-        positionsToCover.addAll(allPositions(segments));
+        // Limit exons to genes within segments and links
+        final Set<String> genes = Exons.genesInSegmentsAndLinks(filteredExons, positionsToCover);
+        final List<Exon> exons = filteredExons.stream().filter(x -> genes.contains(x.gene())).collect(toList());
+        positionsToCover.addAll(Span.allPositions(exons));
 
-        // Limit exons to within segments and links
-        final List<Exon> exons = Exons.exonsInSegments(filteredExons, segments, links);
-        positionsToCover.addAll(allPositions(exons));
+        // Need to extend terminal segments past any current segments, links and exons
+        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links, positionsToCover);
+        positionsToCover.addAll(Span.allPositions(segments));
 
-        // Limit copy numbers to within segments and links (plus a little extra)
+        // Limit copy numbers to within segments, links and exons (plus a little extra)
         final List<CopyNumberAlteration> alterations =
                 CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
 

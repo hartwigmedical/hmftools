@@ -32,7 +32,7 @@ Custom white and blacklistings can be specified per gene in the XML config by ei
 
 ## Usage
 
-The default mode for Bachelor is to run in a continous mode where all 4 steps are run sequentially.
+The default mode for Bachelor is to run in a continuous mode where all 4 steps are run sequentially.
 
 Alternatively Stage 1 and Stage 2 can be run independently as shown below.
 

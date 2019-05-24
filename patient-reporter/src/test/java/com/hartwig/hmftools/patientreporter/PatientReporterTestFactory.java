@@ -4,8 +4,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -125,21 +123,6 @@ public final class PatientReporterTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false);
-    }
-
-    @NotNull
-    public static ImmutableDriverCatalog.Builder createTestDriverCatalogBuilder() {
-        return ImmutableDriverCatalog.builder()
-                .gene(Strings.EMPTY)
-                .category(DriverCategory.ONCO)
-                .driver(DriverType.NONE)
-                .driverLikelihood(0)
-                .dndsLikelihood(0)
-                .missense(0)
-                .nonsense(0)
-                .splice(0)
-                .inframe(0)
-                .frameshift(0);
     }
 
     @NotNull

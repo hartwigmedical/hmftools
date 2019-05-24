@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class MicrosatelliteAnalyzer {
+final class MicrosatelliteAnalyzer {
 
     private static final double NUMBER_OF_MB_PER_GENOME = 2859D;
 

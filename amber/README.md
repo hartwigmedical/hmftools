@@ -160,4 +160,4 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
 - 2.1
   - Add statistical contamination check.
 - 2.0
-  - Read directly from BAMs without intermidiary pileup step for significant performance improvements. 
+  - Read directly from BAMs without intermediary pileup step for significant performance improvements. 

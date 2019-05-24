@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svanalysis.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
@@ -650,7 +649,7 @@ public class ClusterAnnotations
                     String existingInfo = breakend.getSV().getFoldbackInfo(breakend.usesStart());
 
                     if(existingInfo.isEmpty())
-                        existingInfo = breakend.getSV().getFoldbackInfo(!breakend.usesStart());;
+                        existingInfo = breakend.getSV().getFoldbackInfo(!breakend.usesStart());
 
                     long armLength = SvUtilities.getChromosomalArmLength(breakend.chromosome(), breakend.arm());
                     double positionPercent;
