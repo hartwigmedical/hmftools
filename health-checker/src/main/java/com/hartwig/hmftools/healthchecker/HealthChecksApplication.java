@@ -6,8 +6,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
-import com.hartwig.hmftools.healthchecker.runners.CoverageChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
+import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
@@ -87,7 +87,7 @@ public final class HealthChecksApplication {
     }
 
     private void runSingleSample() throws IOException {
-        List<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(refSample, null, metricsDirectory));
+        List<HealthChecker> checkers = Lists.newArrayList(new MetricsChecker(refSample, null, metricsDirectory));
 
         List<QCValue> qcValues = Lists.newArrayList();
         for (final HealthChecker checker : checkers) {
@@ -99,7 +99,7 @@ public final class HealthChecksApplication {
 
     private void runSomatic(@NotNull String tumorSample, @NotNull String amberDirectory, @NotNull String purpleDirectory)
             throws IOException {
-        List<HealthChecker> checkers = Lists.newArrayList(new CoverageChecker(refSample, tumorSample, metricsDirectory),
+        List<HealthChecker> checkers = Lists.newArrayList(new MetricsChecker(refSample, tumorSample, metricsDirectory),
                 new AmberChecker(tumorSample, amberDirectory),
                 new PurpleChecker(tumorSample, purpleDirectory));
 

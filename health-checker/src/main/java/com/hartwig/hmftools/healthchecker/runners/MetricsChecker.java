@@ -13,7 +13,7 @@ import com.hartwig.hmftools.healthchecker.result.QCValueType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CoverageChecker implements HealthChecker {
+public class MetricsChecker implements HealthChecker {
 
     @NotNull
     private final String refSample;
@@ -22,7 +22,7 @@ public class CoverageChecker implements HealthChecker {
     @NotNull
     private final String metricsDirectory;
 
-    public CoverageChecker(@NotNull final String refSample, @Nullable final String tumorSample, @NotNull final String metricsDirectory) {
+    public MetricsChecker(@NotNull final String refSample, @Nullable final String tumorSample, @NotNull final String metricsDirectory) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
         this.metricsDirectory = metricsDirectory;
