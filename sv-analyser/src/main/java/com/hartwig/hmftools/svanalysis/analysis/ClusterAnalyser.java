@@ -215,9 +215,7 @@ public class ClusterAnalyser {
 
             // isSpecificCluster(cluster);
             cluster.buildArmClusters();
-
-            // if(LOGGER.isDebugEnabled())
-            //     logArmClusterData(cluster);
+            cluster.cacheLinkedPairs();
 
             reportClusterFeatures(cluster);
         }
@@ -242,13 +240,10 @@ public class ClusterAnalyser {
             // more complicated clusters for now
             boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
 
-            // inferred links are used to classify simple resolved types involving 2-3 SVs
-            mLinkFinder.findLinkedPairs(cluster, isSimple);
+            mLinkFinder.findAssembledLinks(cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster, !isSimple);
-
-            cluster.cacheLinkedPairs();
 
             if(isSimple)
             {
@@ -283,13 +278,12 @@ public class ClusterAnalyser {
             cluster.removeReplicatedSvs();
             applyCopyNumberReplication(cluster);
 
-            // first find assembled TIs
-            mLinkFinder.findLinkedPairs(cluster, false);
+            // no need to re-find assembled TIs
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster, false);
 
-            cluster.cacheLinkedPairs();
+            // cluster.cacheLinkedPairs();
             setClusterResolvedState(cluster, true);
             cluster.logDetails();
         }
@@ -309,7 +303,7 @@ public class ClusterAnalyser {
             return;
 
         // int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
-        int maxReplication = MAX_SV_REPLICATION_MULTIPLE;
+        // int maxReplication = MAX_SV_REPLICATION_MULTIPLE;
 
         // first establish the lowest copy number change
         double minCopyNumber = cluster.getMinCNChange();
@@ -350,11 +344,21 @@ public class ClusterAnalyser {
 
             svMultiple = max((int)round(svMultiple * replicationFactor), 1);
 
+            int assemblyLinkMax = max(var.getAssembledLinkedPairs(true).size(), var.getAssembledLinkedPairs(false).size());
+
+            if(svMultiple < assemblyLinkMax)
+            {
+                LOGGER.warn("cluster({}) SV({}) repCount({}) less than assemblyLinks({} & {}), copyNumChg({} vs min={})",
+                        cluster.id(), var.posId(), svMultiple, var.getAssembledLinkedPairs(true).size(),
+                        var.getAssembledLinkedPairs(false).size(), calcCopyNumber, minCopyNumber);
+            }
+
             if(svMultiple <= 1)
                 continue;
 
             LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
                     cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
+
 
             var.setReplicatedCount(svMultiple);
 

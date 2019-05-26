@@ -712,12 +712,6 @@ public class DriverGeneAnnotator
 
                     final SvVarData var = breakend.getSV();
                     refClusterId = var.getCluster().id();
-
-                    // cache info against the SV
-                    var.setDriveGene(String.format("%s;%s;%s",
-                            driverGeneData.DriverGene.driver(), driverGeneData.DriverGene.gene(), svInfo), breakend.usesStart());
-
-                    writer.write(String.format(",%d,%s,%s,%s", var.getCluster().id(), var.origId(), breakend.usesStart(), svInfo));
                 }
 
                 writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",

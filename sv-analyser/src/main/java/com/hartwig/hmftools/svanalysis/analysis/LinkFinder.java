@@ -40,6 +40,12 @@ public class LinkFinder
         mLogVerbose = toggle;
     }
 
+    public void findAssembledLinks(SvCluster cluster)
+    {
+        cluster.setAssemblyLinkedPairs(createAssemblyLinkedPairs(cluster));
+    }
+
+    /*
     public void findLinkedPairs(SvCluster cluster, boolean findInferred)
     {
         List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(cluster);
@@ -51,17 +57,15 @@ public class LinkFinder
             cluster.setInferredLinkedPairs(inferredLinkedPairs);
         }
     }
+    */
 
     public List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
         // find 2 breakends with matching assembly info and form them into a linked pair
-        // if have have multiple assembly info and it doesn't match, don't link them
         if(cluster.getSvCount() < 2)
             return linkedPairs;
-
-        // isSpecificCluster(cluster);
 
         final Map<String,List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 
@@ -109,26 +113,21 @@ public class LinkFinder
                     // eg the replicated breakend scenario in COLO829's BND from chr 3-6
                     // but allow this if its ploidy supports this
 
-                    if(lowerBreakend.isAssembledLink())
-                    {
-                        // if(lowerSV.getRoundedCNChange() < 2 * upperSV.getRoundedCNChange())
-                        continue;
-                    }
-                    else if(upperBreakend.isAssembledLink())
-                    {
-                        // if(upperSV.getRoundedCNChange() < 2 * lowerSV.getRoundedCNChange())
-                        continue;
-                    }
+                    boolean multiBreakendLinks = lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink();
 
                     // form a new TI from these 2 BEs
                     SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1Start, v2Start);
                     newPair.setIsAssembled();
                     lowerSV.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
                     upperSV.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
-                    lowerSV.setLinkedPair(newPair, v1Start);
-                    upperSV.setLinkedPair(newPair, v2Start);
+                    lowerSV.addLinkedPair(newPair, v1Start);
+                    upperSV.addLinkedPair(newPair, v2Start);
 
-                    linkedPairs.add(newPair);
+                    if(!multiBreakendLinks)
+                    {
+                        // for now only take the first of assembled links to the same breakend
+                        linkedPairs.add(newPair);
+                    }
 
                     // to avoid logging unlikely long TIs
                     LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",

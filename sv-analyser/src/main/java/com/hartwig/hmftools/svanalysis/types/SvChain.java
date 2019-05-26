@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEq
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
 
@@ -518,10 +519,13 @@ public class SvChain {
     public static int CM_INT_TI = 2;
     public static int CM_EXT_TI = 3;
     public static int CM_INT_TI_CN_GAIN = 4;
-    public static int CM_EXT_TI_CN_GAIN = 5;
-    public static int CM_OVERLAPPING_TI = 6;
-    public static int CM_CHAIN_ENDS_FACE = 7;
-    public static int CM_CHAIN_ENDS_AWAY = 8;
+    public static int CM_INT_SHORT_TI = 5;
+    public static int CM_EXT_SHORT_TI = 6;
+    public static int CM_EXT_TI_CN_GAIN = 7;
+    public static int CM_OVERLAPPING_TI = 8;
+    public static int CM_CHAIN_ENDS_FACE = 9;
+    public static int CM_CHAIN_ENDS_AWAY = 10;
+    public static int CM_CHAIN_MAX = 11;
 
     public void extractChainMetrics(int[] chainData)
     {
@@ -557,12 +561,18 @@ public class SvChain {
             {
                 ++chainData[CM_INT_TI];
 
+                if(pair.length() <= SHORT_TI_LENGTH)
+                    ++chainData[CM_INT_SHORT_TI];
+
                 if(pair.hasCopyNumberGain())
                     ++chainData[CM_INT_TI_CN_GAIN];
             }
             else if(pair.locationType() == LOCATION_TYPE_REMOTE)
             {
                 ++chainData[CM_EXT_TI];
+
+                if(pair.length() <= SHORT_TI_LENGTH)
+                    ++chainData[CM_EXT_SHORT_TI];
 
                 if(pair.hasCopyNumberGain())
                     ++chainData[CM_EXT_TI_CN_GAIN];

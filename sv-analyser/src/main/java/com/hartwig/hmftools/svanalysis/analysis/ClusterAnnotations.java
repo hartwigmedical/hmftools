@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -121,16 +122,16 @@ public class ClusterAnnotations
                 final SvBreakend chainStart = chain.getOpenBreakend(true);
                 final SvBreakend chainEnd = chain.getOpenBreakend(false);
 
-                SvBreakend lowerBreakend = null;
-                SvBreakend upperBreakend = null;
+                SvBreakend chainLowerBe = null;
+                SvBreakend chainUpperBe = null;
                 boolean startEndSameArm = false;
                 boolean chainEndsCNMatch = false;
                 double chainEndsCN = 0;
 
                 if(chainStart != null && chainEnd != null)
                 {
-                    lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
-                    upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
+                    chainLowerBe = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
+                    chainUpperBe = chainStart == chainLowerBe ? chainEnd : chainStart;
 
                     startEndSameArm = chainEnd.getChrArm().equals(chainStart.getChrArm());
 
@@ -147,9 +148,9 @@ public class ClusterAnnotations
                     if(pair.first().type() == SGL || pair.second().type() == SGL)
                         continue;
 
-                    SvBreakend lowerBE = pair.getBreakend(true);
-                    SvBreakend upperBE = pair.getBreakend(false);
-                    double pairCN = (lowerBE.copyNumber() + upperBE.copyNumber()) * 0.5;
+                    SvBreakend pairLowerBe = pair.getBreakend(true);
+                    SvBreakend pairUpperBe = pair.getBreakend(false);
+                    double pairCN = (pairLowerBe.copyNumber() + pairUpperBe.copyNumber()) * 0.5;
                     boolean pairCNExceedsChainEnds = chainEndsCNMatch && pairCN > chainEndsCN && !copyNumbersEqual(pairCN, chainEndsCN);
 
                     if(pairCNExceedsChainEnds)
@@ -159,9 +160,14 @@ public class ClusterAnnotations
 
                     if(startEndSameArm)
                     {
-                        if(lowerBE.chromosome().equals(lowerBreakend.chromosome()))
+                        if(pairLowerBe.chromosome().equals(chainLowerBe.chromosome()))
                         {
-                            if (lowerBE.position() >= lowerBreakend.position() && upperBE.position() <= upperBreakend.position())
+                            // need to account for DBs
+                            int lowerBuffer = getMinTemplatedInsertionLength(pairLowerBe, chainLowerBe);
+                            int upperBuffer = getMinTemplatedInsertionLength(pairUpperBe, chainUpperBe);
+
+                            if (pairLowerBe.position() >= chainLowerBe.position() - lowerBuffer
+                            && pairUpperBe.position() <= chainUpperBe.position() + upperBuffer)
                             {
                                 pair.setLocationType(LOCATION_TYPE_INTERNAL);
                             }
@@ -177,8 +183,8 @@ public class ClusterAnnotations
                     }
                     else
                     {
-                        if((chainStart != null && lowerBE.getChrArm().equals(chainStart.getChrArm()))
-                        || (chainEnd != null && lowerBE.getChrArm().equals(chainEnd.getChrArm())))
+                        if((chainStart != null && pairLowerBe.getChrArm().equals(chainStart.getChrArm()))
+                        || (chainEnd != null && pairLowerBe.getChrArm().equals(chainEnd.getChrArm())))
                         {
                             pair.setLocationType(LOCATION_TYPE_EXTERNAL);
                         }

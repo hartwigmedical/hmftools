@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvaConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -49,21 +50,16 @@ public class SvVarData
     private long mNearestSvDistance;
     private String mNearestSvRelation;
 
-    private SvLinkedPair mLinkStart; // templated insertion formed from this breakend to another
-    private SvLinkedPair mLinkEnd;
+    private List<List<SvLinkedPair>> mTiLinks; // start and end lists of inferred or assembled TIs
 
     private SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
-    private List<String> mStartTIAssemblies;
-    private List<String> mEndTIAssemblies;
+    private List<List<String>> mTIAssemblies;
     private String[] mAssemblyMatchType;
     private boolean mIsReplicatedSv;
     private SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
-    private List<GeneAnnotation> mGenesStart;
-    private List<GeneAnnotation> mGenesEnd;
-
-    private String[] mDriverGene;
+    private List<List<GeneAnnotation>> mGenes;
 
     private double[] mReplicationOrigin;
 
@@ -112,6 +108,7 @@ public class SvVarData
         mArm = new String[SE_PAIR];
         mFragileSite = new boolean[SE_PAIR];
         mLineElement = new String[] {NO_LINE_ELEMENT, NO_LINE_ELEMENT};
+        mBreakend = new SvBreakend[SE_PAIR];
 
         mNearestSvDistance = -1;
         mNearestSvRelation = "";
@@ -123,25 +120,27 @@ public class SvVarData
         mClusterReason = "";
         mCluster = null;
 
-        mLinkStart = null;
-        mLinkEnd = null;
         mDbLink = new SvLinkedPair[SE_PAIR];
+        mTiLinks = Lists.newArrayListWithExpectedSize(2);
+        mTiLinks.add(Lists.newArrayList());
+        mTiLinks.add(Lists.newArrayList());
 
         mFoldbackBreakends = new SvBreakend[SE_PAIR];
         mFoldbackLength = new int[] {-1, -1};
         mFoldbackInfo = new String[] {"", ""};
 
-        mGenesStart = Lists.newArrayList();
-        mGenesEnd = Lists.newArrayList();
-
-        mDriverGene = new String[] {"", ""};
+        mGenes = Lists.newArrayListWithExpectedSize(2);
+        mGenes.add(Lists.newArrayList());
+        mGenes.add(Lists.newArrayList());
 
         mReplicationOrigin = new double[SE_PAIR];
 
-        mCopyNumber[SE_START] = mSVData.adjustedStartCopyNumber();
-        mCopyNumber[SE_END] = mSVData.adjustedEndCopyNumber();
-        mCopyNumberChange[SE_START] = mSVData.adjustedStartCopyNumberChange();
-        mCopyNumberChange[SE_END] = mSVData.adjustedEndCopyNumberChange();
+        mAssemblyMatchType = new String[SE_PAIR];
+        mAssemblyData = new String[SE_PAIR];
+        mTIAssemblies = Lists.newArrayListWithExpectedSize(2);
+
+        mCopyNumber = new double[] { mSVData.adjustedStartCopyNumber(),  mSVData.adjustedEndCopyNumber() };
+        mCopyNumberChange = new double[] {mSVData.adjustedStartCopyNumberChange(), mSVData.adjustedEndCopyNumberChange() };
         mPloidy = mSVData.ploidy();
 
         mHasCalcPloidy = false;
@@ -392,14 +391,61 @@ public class SvVarData
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
     public final String getLineElement(boolean useStart) { return mLineElement[seIndex(useStart)]; }
 
-    public final SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? mLinkStart : mLinkEnd; }
 
-    public void setLinkedPair(final SvLinkedPair link, boolean isStart)
+    public final List<SvLinkedPair> getLinkedPairs(boolean isStart)
     {
-        if(isStart)
-            mLinkStart = link;
+        return mTiLinks.get(seIndex(isStart));
+    }
+
+    public final List<SvLinkedPair> getAssembledLinkedPairs(boolean isStart)
+    {
+        return mTiLinks.get(seIndex(isStart)).stream().filter(SvLinkedPair::isAssembled).collect(Collectors.toList());
+    }
+
+    public final SvLinkedPair getLinkedPair(boolean isStart)
+    {
+        return mTiLinks.get(seIndex(isStart)).isEmpty() ? null : mTiLinks.get(seIndex(isStart)).get(0);
+    }
+
+    public void clearLinkedPairs(boolean inferredOnly)
+    {
+        if(!inferredOnly)
+        {
+            mTiLinks.get(SE_START).clear();
+            mTiLinks.get(SE_END).clear();
+        }
         else
-            mLinkEnd = link;
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                List<SvLinkedPair> links = mTiLinks.get(se);
+                int index = 0;
+                while(index < links.size())
+                {
+                    if(links.get(index).isInferred())
+                        links.remove(index);
+                    else
+                        ++index;
+                }
+            }
+        }
+
+    }
+    public void addLinkedPair(final SvLinkedPair link, boolean isStart)
+    {
+        // add in order from shortest to longest
+        List<SvLinkedPair> links = mTiLinks.get(seIndex(isStart));
+
+        int index = 0;
+        while(index < links.size())
+        {
+            if(link.length() < links.get(index).length())
+                break;
+
+            ++index;
+        }
+
+        links.add(index, link);
     }
 
     public final SvLinkedPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }
@@ -506,7 +552,7 @@ public class SvVarData
 
     public final List<String> getTIAssemblies(boolean isStart)
     {
-        return isStart ? mStartTIAssemblies : mEndTIAssemblies;
+        return mTIAssemblies.get(seIndex(isStart));
     }
 
     public boolean isEquivBreakend(boolean isStart)
@@ -519,20 +565,11 @@ public class SvVarData
         return isEquivBreakend(true) || isEquivBreakend(false);
     }
 
-    public final List<GeneAnnotation> getGenesList(boolean isStart) { return isStart ? mGenesStart : mGenesEnd; }
+    public final List<GeneAnnotation> getGenesList(boolean isStart) { return mGenes.get(seIndex(isStart)); }
+
     public void setGenesList(final List<GeneAnnotation> genesList, boolean isStart)
     {
-        if(isStart)
-            mGenesStart.addAll(genesList);
-        else
-            mGenesEnd.addAll(genesList);
-    }
-
-    public final String getDriverGene(boolean isStart) { return mDriverGene[seIndex(isStart)]; }
-
-    public void setDriveGene(final String geneInfo, boolean isStart)
-    {
-        mDriverGene[seIndex(isStart)] = geneInfo;
+        mGenes.get(seIndex(isStart)).addAll(genesList);
     }
 
     public final String getGeneInBreakend(boolean isStart)
@@ -558,6 +595,43 @@ public class SvVarData
 
     private void setAssemblyData(boolean useExisting)
     {
+        if(mTIAssemblies.isEmpty())
+        {
+            mTIAssemblies.add(Lists.newArrayList());
+            mTIAssemblies.add(Lists.newArrayList());
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            List<String> tiAssemblies = mTIAssemblies.get(se);
+
+            mAssemblyMatchType[se] = ASSEMBLY_MATCH_NONE;
+
+            if(!useExisting)
+            {
+                mAssemblyData[se] = "";
+
+                final String linkedByData = se == SE_START ? mSVData.startLinkedBy() : mSVData.endLinkedBy();
+
+                if(!linkedByData.isEmpty() && !linkedByData.equals("."))
+                {
+                    mAssemblyData[se] = linkedByData.replaceAll(",", ";");
+                }
+            }
+
+            if(!mAssemblyData[se].isEmpty())
+            {
+                String[] assemblyList = mAssemblyData[se].split(";");
+
+                for(int i = 0; i < assemblyList.length; ++i)
+                {
+                    if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
+                        tiAssemblies.add(assemblyList[i]);
+                }
+            }
+        }
+
+        /*
         mStartTIAssemblies = Lists.newArrayList();
         mEndTIAssemblies = Lists.newArrayList();
 
@@ -600,6 +674,7 @@ public class SvVarData
                     mEndTIAssemblies.add(assemblyList[i]);
             }
         }
+        */
     }
 
     public int getMinTemplatedLength(boolean isStart)

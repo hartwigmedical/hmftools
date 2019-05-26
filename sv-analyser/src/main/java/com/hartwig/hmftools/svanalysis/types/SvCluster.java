@@ -19,12 +19,9 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_AWAY;
+import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_MAX;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_INFER_ONLY;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
-import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.removedLinksWithSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.INF_SV_TYPE;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
@@ -63,11 +60,10 @@ public class SvCluster
     private List<SvVarData> mReplicatedSVs; // combined original and replicated SV
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
-    private List<SvLinkedPair> mInferredLinkedPairs; // forming a templated insertion
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
     private List<SvArmGroup> mArmGroups;
     private List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
-    private Map<String, List<SvBreakend>> mChrBreakendMap;
+    private Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
     private List<SvVarData> mUnchainedSVs; // includes replicated SVs
     private List<SvLOH> mLohEvents;
     private String mClusteringReasons;
@@ -127,7 +123,6 @@ public class SvCluster
         // chain data
         mLinkedPairs = Lists.newArrayList();
         mAssemblyLinkedPairs= Lists.newArrayList();
-        mInferredLinkedPairs = Lists.newArrayList();
         mChains = Lists.newArrayList();
         mUnchainedSVs = Lists.newArrayList();
         mLohEvents = Lists.newArrayList();
@@ -271,11 +266,6 @@ public class SvCluster
         mReplicatedSVs.remove(var);
         mUnchainedSVs.remove(var);
 
-        // remove from any cached links
-        removedLinksWithSV(mAssemblyLinkedPairs, var);
-        removedLinksWithSV(mInferredLinkedPairs, var);
-        removedLinksWithSV(mLinkedPairs, var);
-
         // deregister from the original SV
         if(var.getReplicatedSv() != null)
         {
@@ -338,24 +328,16 @@ public class SvCluster
         mUnchainedSVs.clear();
         mUnchainedSVs.addAll(mReplicatedSVs);
         mChains.clear();
-        mLinkedPairs.clear();
-        mInferredLinkedPairs.clear();
 
-        mAssemblyLinkedPairs.clear();
-        for(final SvVarData var : mSVs)
-        {
-            var.setAssemblyMatchType(ASSEMBLY_MATCH_NONE, true);
-            var.setAssemblyMatchType(ASSEMBLY_MATCH_NONE, false);
-        }
+        // mLinkedPairs.clear();
+        /// mLinkedPairs.addAll(mAssemblyLinkedPairs);
     }
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
-    public final List<SvLinkedPair> getInferredLinkedPairs() { return mInferredLinkedPairs; }
     public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
-    public void setInferredLinkedPairs(final List<SvLinkedPair> pairs) { mInferredLinkedPairs = pairs; }
     public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
 
     public void mergeOtherCluster(final SvCluster other)
@@ -414,7 +396,6 @@ public class SvCluster
         }
 
         mAssemblyLinkedPairs.addAll(other.getAssemblyLinkedPairs());
-        mInferredLinkedPairs.addAll(other.getInferredLinkedPairs());
         mInversions.addAll(other.getInversions());
         mFoldbacks.addAll(other.getFoldbacks());
         mLongDelDups.addAll(other.getLongDelDups());
@@ -795,9 +776,39 @@ public class SvCluster
 
     public void cacheLinkedPairs()
     {
-        // moves assembly and inferred linked pairs which are used in chains to a set of 'final' linked pairs
+        // moves assembly and unique inferred linked pairs which are used in chains to a set of 'final' linked pairs
         mLinkedPairs.clear();
 
+        for (final SvChain chain : mChains)
+        {
+            for (final SvLinkedPair pair : chain.getLinkedPairs())
+            {
+                if(pair.first().isReplicatedSv() && pair.second().isReplicatedSv())
+                    continue;
+
+                boolean isRepeat = false;
+
+                // only log each chain link once, and log how many times the link has been used
+                for (final SvLinkedPair existingPair : mLinkedPairs)
+                {
+                    if (pair.matches(existingPair))
+                    {
+                        isRepeat = true;
+                        break;
+                    }
+                }
+
+                if (isRepeat)
+                    continue;
+
+                mLinkedPairs.add(pair);
+                pair.first().addLinkedPair(pair, pair.firstLinkOnStart());
+                pair.second().addLinkedPair(pair, pair.secondLinkOnStart());
+
+            }
+        }
+
+        /*
         // add all chained links
         mChains.stream().forEach(x -> mLinkedPairs.addAll(x.getLinkedPairs()));
 
@@ -830,6 +841,7 @@ public class SvCluster
             pair.first().setLinkedPair(pair, pair.firstLinkOnStart());
             pair.second().setLinkedPair(pair, pair.secondLinkOnStart());
         }
+        */
     }
 
     public final SvChain findChain(final SvVarData var)
@@ -975,7 +987,7 @@ public class SvCluster
 
     public int[] getLinkMetrics()
     {
-        int[] chainData = new int[CM_CHAIN_ENDS_AWAY +1];
+        int[] chainData = new int[CM_CHAIN_MAX];
         mChains.stream().forEach(x -> x.extractChainMetrics(chainData));
 
         for(SvVarData var : mSVs)

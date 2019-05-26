@@ -393,8 +393,6 @@ public class SvClassification
             if (newChain != null && newChain.getLinkCount() > 0)
                 cluster.addChain(newChain, false);
 
-            cluster.cacheLinkedPairs();
-
             LOGGER.debug("cluster({}) split reciprocal DUP pair into 2 chains between chrs({} & {})",
                     cluster.id(), longestPair.chromosome(), startBreakend.chromosome());
         }
@@ -489,8 +487,6 @@ public class SvClassification
 
             if (newChain != null && newChain.getLinkCount() > 0)
                 cluster.addChain(newChain, false);
-
-            cluster.cacheLinkedPairs();
 
             syntheticLength = abs(newChain.getOpenBreakend(true).position() - newChain.getOpenBreakend(false).position());
 
