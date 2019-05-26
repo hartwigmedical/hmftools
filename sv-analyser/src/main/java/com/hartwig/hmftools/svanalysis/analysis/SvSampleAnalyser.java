@@ -572,10 +572,10 @@ public class SvSampleAnalyser {
 
                 mClusterFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,SuperType,ResolvedType,Synthetic,Subclonal,FullyChained,ChainCount");
                 mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
-                mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,OriginArms,FragmentArms,IsLINE,HasReplicated,Foldbacks");
-                mClusterFileWriter.write(",IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain,ExtTIsCnGain,OverlapTIs,DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
-                mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,LongDelDups,UnlinkedRemotes,MinCopyNumber,MaxCopyNumber");
-                mClusterFileWriter.write(",SyntheticLen,SyntheticTILen,Annotations,UnchainedSVs,AlleleValidPerc");
+                mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,IsLINE,Replication,MinPloidy,MaxPloidy,Foldbacks");
+                mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain,ExtTIsCnGain,OverlapTIs");
+                mClusterFileWriter.write(",DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway,SyntheticLen,SyntheticTILen");
+                mClusterFileWriter.write(",OriginArms,FragmentArms,UnchainedSVs,Annotations,AlleleValidPerc");
                 mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
                 mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
                 mClusterFileWriter.newLine();
@@ -621,12 +621,15 @@ public class SvSampleAnalyser {
                         foldbackCount += 0.5;
                 }
 
-                writer.write(String.format(",%s,%d,%d,%d,%d,%s,%s,%.0f",
-                        cluster.getClusteringReasons(), cluster.getConsistencyCount(),
-                        cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(),
-                        cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), foldbackCount));
+                writer.write(String.format(",%s,%d,%d,%s,%s,%.0f,%.0f,%d",
+                        cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.getArmCount(),
+                        cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), cluster.getMinCNChange(), cluster.getMaxCNChange(),
+                        foldbackCount));
 
-                // isSpecificCluster(cluster);
+                long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
+
+                writer.write(String.format(",%d,%d,%d",
+                        cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs));
 
                 int[] chainData = cluster.getLinkMetrics();
 
@@ -635,15 +638,9 @@ public class SvSampleAnalyser {
                         chainData[CM_INT_TI_CN_GAIN], chainData[CM_EXT_TI_CN_GAIN], chainData[CM_OVERLAPPING_TI],
                         chainData[CM_DB], chainData[CM_SHORT_DB], chainData[CM_CHAIN_ENDS_FACE], chainData[CM_CHAIN_ENDS_AWAY]));
 
-                long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
-
-                writer.write(String.format(",%d,%d,%d,%d,%d,%.2f,%.2f",
-                        cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs, cluster.getLongDelDups().size(),
-                        cluster.getUnlinkedRemoteSVs().size(), cluster.getMinCNChange(), cluster.getMaxCNChange()));
-
-                writer.write(String.format(",%d,%d,%s,%d,%.2f",
-                        cluster.getSyntheticLength(), cluster.getSyntheticTILength(), cluster.getAnnotations(),
-                        cluster.getUnlinkedSVs().size(), cluster.getValidAllelePloidySegmentPerc()));
+                writer.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
+                        cluster.getSyntheticLength(), cluster.getSyntheticTILength(), cluster.getOriginArms(), cluster.getFragmentArms(),
+                        cluster.getUnlinkedSVs().size(), cluster.getAnnotations(), cluster.getValidAllelePloidySegmentPerc()));
 
                 final int[] armClusterData = getArmClusterData(cluster);
                 long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();

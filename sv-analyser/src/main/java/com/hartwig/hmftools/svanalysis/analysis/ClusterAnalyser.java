@@ -348,9 +348,13 @@ public class ClusterAnalyser {
 
             if(svMultiple < assemblyLinkMax)
             {
-                LOGGER.warn("cluster({}) SV({}) repCount({}) less than assemblyLinks({} & {}), copyNumChg({} vs min={})",
+                LOGGER.info("cluster({}) SV({}) increasing repCount({}) to match assemblyLinks({} & {}), copyNumChg({} vs min={})",
                         cluster.id(), var.posId(), svMultiple, var.getAssembledLinkedPairs(true).size(),
                         var.getAssembledLinkedPairs(false).size(), calcCopyNumber, minCopyNumber);
+
+                svMultiple = assemblyLinkMax;
+
+                // TODO: it's possible for the lower ploidy links to also have a replication multiple that needs adjustment
             }
 
             if(svMultiple <= 1)
