@@ -621,7 +621,7 @@ public class SvSampleAnalyser {
                         foldbackCount += 0.5;
                 }
 
-                writer.write(String.format(",%s,%d,%d,%s,%s,%.0f,%.0f,%d",
+                writer.write(String.format(",%s,%d,%d,%s,%s,%.0f,%.0f,%.0f",
                         cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.getArmCount(),
                         cluster.hasLinkingLineElements(), cluster.hasReplicatedSVs(), cluster.getMinCNChange(), cluster.getMaxCNChange(),
                         foldbackCount));

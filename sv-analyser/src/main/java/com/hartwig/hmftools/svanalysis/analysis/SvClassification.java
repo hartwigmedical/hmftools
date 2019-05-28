@@ -49,7 +49,7 @@ public class SvClassification
     public static final String RESOLVED_TYPE_RECIPROCAL_DUP_DEL = "RECIP_DUP_DEL";
     public static final String RESOLVED_TYPE_COMPLEX = "COMPLEX";
     public static final String RESOLVED_TYPE_PAIR_OTHER = "PAIR_OTHER";
-    public static final String RESOLVED_TYPE_SIMPLE_GRP = "SIMPLE_GRP";
+    public static final String RESOLVED_TYPE_SIMPLE_GRP = "SIMPLE_GRP"; // on final resolution, this is dissolved into simple types
     public static final String RESOLVED_TYPE_FB_INV_PAIR = "FB_INV_PAIR";
 
     // super category for an SV or cluster

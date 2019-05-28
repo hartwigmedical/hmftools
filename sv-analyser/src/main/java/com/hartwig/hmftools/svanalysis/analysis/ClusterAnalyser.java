@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplate
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_LINE;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_NONE;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_SIMPLE_GRP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
@@ -190,6 +191,7 @@ public class ClusterAnalyser {
 
         mPcChaining.resume();
         findLinksAndChains();
+        dissolveSimpleGroups();
         mPcChaining.stop();
 
         if(mRunValidationChecks)
@@ -257,7 +259,7 @@ public class ClusterAnalyser {
         }
     }
 
-    public void findLinksAndChains()
+    private void findLinksAndChains()
     {
         for (SvCluster cluster : mClusters)
         {
@@ -283,9 +285,28 @@ public class ClusterAnalyser {
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster, false);
 
-            // cluster.cacheLinkedPairs();
             setClusterResolvedState(cluster, true);
             cluster.logDetails();
+        }
+    }
+
+    private void dissolveSimpleGroups()
+    {
+        List<SvCluster> simpleGroups = mClusters.stream()
+                .filter(x -> x.getResolvedType() == RESOLVED_TYPE_SIMPLE_GRP)
+                .collect(Collectors.toList());
+
+        for(SvCluster cluster : simpleGroups)
+        {
+            mClusters.remove(cluster);
+
+            for(SvVarData var : cluster.getSVs())
+            {
+                SvCluster newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
+                newCluster.addVariant(var);
+                setClusterResolvedState(newCluster, true);
+                mClusters.add(newCluster);
+            }
         }
     }
 
@@ -348,7 +369,7 @@ public class ClusterAnalyser {
 
             if(svMultiple < assemblyLinkMax)
             {
-                LOGGER.info("cluster({}) SV({}) increasing repCount({}) to match assemblyLinks({} & {}), copyNumChg({} vs min={})",
+                LOGGER.debug("cluster({}) SV({}) increasing repCount({}) to match assemblyLinks({} & {}), copyNumChg({} vs min={})",
                         cluster.id(), var.posId(), svMultiple, var.getAssembledLinkedPairs(true).size(),
                         var.getAssembledLinkedPairs(false).size(), calcCopyNumber, minCopyNumber);
 

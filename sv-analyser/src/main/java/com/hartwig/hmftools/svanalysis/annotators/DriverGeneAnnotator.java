@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.svanalysis.annotators;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CENTROMERE_CN;
@@ -126,7 +129,7 @@ public class DriverGeneAnnotator
         return true;
     }
 
-    public void setLohData(final Map<String, List<SvLOH>> lohData) { mSampleLohMap = lohData; }public void writeMatchedGeneCopyNumber() { mWriteMatchedGeneCopyNumber = true; }
+    public void setLohData(final Map<String, List<SvLOH>> lohData) { mSampleLohMap = lohData; }
     public void setChrCopyNumberMap(Map<String, double[]> chrCopyNumberMap) { mChrCopyNumberMap = chrCopyNumberMap; }
     public void setSamplePloidy(double ploidy)
     {
@@ -239,7 +242,7 @@ public class DriverGeneAnnotator
 
             if(geneCN == null)
             {
-                LOGGER.warn("gene({}) copy number data not found", driverGene.gene());
+                LOGGER.warn("sample({}) gene({}) copy number data not found", mSampleId, driverGene.gene());
                 continue;
             }
 
@@ -289,7 +292,6 @@ public class DriverGeneAnnotator
         // and then walk out again until heterozygosity is gained (ie the end of an LOH)
 
         SvBreakend minBreakend = null; // breakend with lowest copy number covering any part of the gene region
-        boolean isStartBreakend = true;
 
         final DriverCatalog driverGene = driverGeneData.DriverGene;
         final GeneCopyNumber geneCN = driverGeneData.GeneCN;
@@ -299,7 +301,56 @@ public class DriverGeneAnnotator
             final SvBreakend breakend = breakendList.get(i);
             final SvBreakend nextBreakend = i < breakendList.size() - 1 ? breakendList.get(i + 1) : null;
 
-            // find the 2 breakends straddling the start of the gene region, and compare their CNs in the -1 / upwards direction
+            if(breakend.orientation() == -1)
+            {
+                if(breakend.position() >= geneCN.minRegionEnd())
+                {
+                    if(minBreakend == null)
+                    {
+                        // first breakend is already past the gene's min copy number region
+                        minBreakend = breakend;
+                    }
+
+                    break;
+                }
+
+                continue;
+            }
+
+            if(breakend.position() >= geneCN.minRegionEnd())
+            {
+                LOGGER.debug("sample({}) gene({}) breakend past min-gene region({} - {})",
+                        mSampleId, geneToStr(driverGene, driverGeneData.Region), geneCN.minRegionStart(), geneCN.minRegionEnd());
+                break;
+            }
+
+            // not at the correct region yet
+            if(breakend.position() < geneCN.minRegionStart() && nextBreakend != null && nextBreakend.position() < geneCN.minRegionStart())
+                continue;
+
+            // find the breakend closest to the min region with positive orientation
+            if(breakend.position() <= geneCN.minRegionStart() && nextBreakend != null && nextBreakend.position() > geneCN.minRegionStart())
+            {
+                minBreakend = breakend;
+            }
+            else if(breakend.position() <= geneCN.minRegionStart() && nextBreakend == null)
+            {
+                minBreakend = breakend;
+            }
+            else if(minBreakend != null && breakend.position() < geneCN.minRegionEnd())
+            {
+                // a tighter breakend to the one allocated
+                minBreakend = breakend;
+            }
+        }
+
+        /*
+        for (int i = 0; i < breakendList.size(); ++i)
+        {
+            final SvBreakend breakend = breakendList.get(i);
+            final SvBreakend nextBreakend = i < breakendList.size() - 1 ? breakendList.get(i + 1) : null;
+
+            // find the 2 breakends straddling the start of the min-gene region, and compare their CNs in the -1 / upwards direction
             if ((breakend.position() < geneCN.minRegionStart() && nextBreakend != null && nextBreakend.position() > geneCN.minRegionStart())
             || (minBreakend == null && breakend.position() > geneCN.minRegionStart() && breakend.position() < geneCN.minRegionEnd()))
             {
@@ -355,6 +406,7 @@ public class DriverGeneAnnotator
                     minBreakend = breakend;
             }
         }
+        */
 
         if(minBreakend == null)
         {
@@ -367,103 +419,117 @@ public class DriverGeneAnnotator
                 driverGene.gene(), minBreakend.toString(), minBreakend.getCopyNumber(false),
                 minBreakend.getSV().copyNumberChange(minBreakend.usesStart())));
 
-        SvBreakend startBreakend = isStartBreakend ? minBreakend : null;
-        SvBreakend endBreakend = !isStartBreakend ? minBreakend : null;
+        SvBreakend startBreakend = minBreakend.orientation() == 1 ? minBreakend : null;
+        SvBreakend endBreakend = null;
 
         if(startBreakend != null)
         {
+            for(int index = startBreakend.getChrPosIndex() + 1; index < breakendList.size(); ++index)
+            {
+                final SvBreakend breakend = breakendList.get(index);
+
+                if(breakend.orientation() == -1 && breakend.getSV().getCluster() == startBreakend.getSV().getCluster())
+                {
+                    endBreakend = breakend;
+                    break;
+                }
+            }
+
             // now walk forwards and backwards to find the next SVs
-            int startIndex = startBreakend.getChrPosIndex();
-            endBreakend = findDeletionBreakend(breakendList, startIndex, true, false);
+            // int startIndex = startBreakend.getChrPosIndex();
+            // endBreakend = findDeletionBreakend(breakendList, startIndex);
 
             driverGeneData.addSvBreakend(startBreakend, "MIN");
+        }
+        else
+        {
+            endBreakend = minBreakend;
         }
 
         if(endBreakend != null)
             driverGeneData.addSvBreakend(endBreakend, "MIN");
 
+        if(startBreakend != null && endBreakend != null)
+            driverGeneData.setFullyMatched(true);
+
         // find straddling LOH for this DEL
-        SvBreakend preStartBreakend = null;
-        SvBreakend postEndBreakend = null;
+        SvBreakend lohStartBreakend = null;
+        SvBreakend lohEndBreakend = null;
 
         SvLOH matchedLohEvent = null;
         if(startBreakend != null && endBreakend != null)
         {
             for (final SvLOH lohEvent : mSampleLOHData)
             {
-                if(lohEvent.Chromosome.equals(startBreakend.chromosome())
-                && lohEvent.PosStart <= startBreakend.position() && lohEvent.PosEnd >= endBreakend.position())
+                if(!lohEvent.Chromosome.equals(startBreakend.chromosome()))
+                    continue;
+
+                // the LOH just needs to straddle one or the other of the min-gene breakends
+                if(lohEvent.PosStart < startBreakend.position() && lohEvent.PosEnd > startBreakend.position())
                 {
-                    matchedLohEvent = lohEvent;
-                    preStartBreakend = lohEvent.getBreakend(true);
-                    postEndBreakend = lohEvent.getBreakend(false);
+                    SvBreakend lohStart = lohEvent.getBreakend(true);
+                    SvBreakend lohEnd = lohEvent.getBreakend(false);
+
+                    if(!lohEvent.IsValid || lohStart == startBreakend || lohEnd == endBreakend)
+                    {
+                        // the LOH event was likely confused by 2 overlapping DELs
+                        if(lohStart == startBreakend && lohEnd != null && lohEnd != endBreakend && lohEnd.getSV().type() == DEL)
+                        {
+                            lohEndBreakend = lohEnd;
+                            lohStartBreakend = lohEnd.getOtherBreakend();
+                        }
+                        else if(lohEnd == endBreakend && lohStart != null && lohStart != startBreakend && lohStart.getSV().type() == DEL)
+                        {
+                            lohEndBreakend = lohStart.getOtherBreakend();
+                            lohStartBreakend = lohStart;
+                        }
+                    }
+                    else
+                    {
+                        matchedLohEvent = lohEvent;
+                        lohStartBreakend = lohStart;
+                        lohEndBreakend = lohEnd;
+                    }
+
                     break;
                 }
+
+                /*
+                if(lohEvent.PosStart <= startBreakend.position() && lohEvent.PosEnd >= endBreakend.position())
+                {
+                    matchedLohEvent = lohEvent;
+                    lohStartBreakend = lohEvent.getBreakend(true);
+                    lohEndBreakend = lohEvent.getBreakend(false);
+                    break;
+                }
+                */
             }
         }
 
         // look to next event
-        if(preStartBreakend != null && postEndBreakend != null)
+        if(lohStartBreakend != null && lohEndBreakend != null)
         {
-            driverGeneData.addSvBreakend(preStartBreakend, "LOH");
-            driverGeneData.addSvBreakend(postEndBreakend, "LOH");
+            driverGeneData.addSvBreakend(lohStartBreakend, "LOH");
+            driverGeneData.addSvBreakend(lohEndBreakend, "LOH");
         }
-        else if(preStartBreakend != null)
+        else if(lohStartBreakend != null)
         {
-            driverGeneData.addSvBreakend(preStartBreakend, "LOH_" + matchedLohEvent.SegEnd);
+            driverGeneData.addSvBreakend(lohStartBreakend, "LOH_" + matchedLohEvent.SegEnd);
         }
-        else if(postEndBreakend != null)
+        else if(lohEndBreakend != null)
         {
-            driverGeneData.addSvBreakend(postEndBreakend, "LOH_" + matchedLohEvent.SegStart);
+            driverGeneData.addSvBreakend(lohEndBreakend, "LOH_" + matchedLohEvent.SegStart);
+        }
+        else if(matchedLohEvent != null)
+        {
+            driverGeneData.addMatchInfo(String.format("%s;%s", matchedLohEvent.SegStart, matchedLohEvent.SegEnd));
         }
         else
         {
-            driverGeneData.setMissedLohSVs(true);
+            driverGeneData.setFullyMatched(false);
         }
 
         writeDriverData(driverGeneData);
-    }
-
-    private SvBreakend findDeletionBreakend(final List<SvBreakend> breakendList, int startIndex, boolean walkForwards, boolean requireGOH)
-    {
-        int index = walkForwards ? startIndex + 1 : startIndex - 1;
-
-        while(index >= 0 && index <= breakendList.size() - 1)
-        {
-            final SvBreakend breakend = breakendList.get(index);
-
-            // this first variant following the DEL region ought to be facing away
-            if ((walkForwards && breakend.orientation() == -1) || (!walkForwards && breakend.orientation() == 1))
-            {
-                if(requireGOH)
-                {
-                    if(isLOHEvent(breakend, !walkForwards))
-                        return breakend;
-                }
-                else
-                {
-                    return breakend;
-                }
-            }
-
-            index = walkForwards ? index + 1 : index - 1;
-        }
-
-        return null;
-    }
-
-    private boolean isLOHEvent(final SvBreakend breakend, boolean checkStart)
-    {
-        for (final SvLOH lohEvent : mSampleLOHData)
-        {
-            if ((checkStart && lohEvent.getBreakend(true) == breakend)
-            || (!checkStart && lohEvent.getBreakend(false) == breakend))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private void annotateBiallelicEvent(DriverGeneData driverGeneData)
@@ -491,7 +557,6 @@ public class DriverGeneAnnotator
                 break;
             }
 
-
             if(startBreakend != null && endBreakend != null)
             {
                 driverGeneData.addSvBreakend(startBreakend, "LOH");
@@ -505,12 +570,18 @@ public class DriverGeneAnnotator
             {
                 driverGeneData.addSvBreakend(endBreakend, "LOH_" + lohEvent.SegStart);
             }
+            else
+            {
+                driverGeneData.addMatchInfo(String.format("%s;%s", lohEvent.SegStart, lohEvent.SegEnd));
+            }
+
+            driverGeneData.setFullyMatched(true);
 
             writeDriverData(driverGeneData);
             return;
         }
 
-        driverGeneData.setMissedLohSVs(true);
+        // driverGeneData.setMissedLohSVs(true);
         writeDriverData(driverGeneData);
     }
 
@@ -546,65 +617,79 @@ public class DriverGeneAnnotator
                 continue; // looking for a foldback as an explanation
             }
 
-            final SvVarData varStart = breakend.getSV();
-
-            if(isFilteredResolvedType(varStart.getCluster().getResolvedType()))
+            if(breakend.orientation() == 1)
                 continue;
+
+            final SvVarData varStart = breakend.getSV();
 
             if(breakend.orientation() == -1 && !varStart.getFoldbackLink(breakend.usesStart()).isEmpty())
                 foldbackBreakend = breakend;
 
-            if(varStart.type() == DUP || varStart.type() == INV)
+            if(varStart.type() == DUP)
             {
-                if(varStart.position(true) <= region.start() && varStart.position(false) >= region.end())
-                {
-                    LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
-                            mSampleId, varStart.getCluster().id(), geneToStr(driverGene, region), varStart.posId(), varStart.type(),
-                            varStart.copyNumber(true), varStart.copyNumberChange(true)));
-
-                    driverGeneData.addSvBreakend(varStart.getBreakend(true), "SV");
-                    driverGeneData.addSvBreakend(varStart.getBreakend(false), "SV");
-
-                    if(varStart.copyNumberChange(true) > maxCopyNumber)
-                    {
-                        maxCopyNumber = varStart.copyNumberChange(true);
-                        maxSvStart = varStart;
-                        maxSvEnd = varStart;
-                    }
-
+                if(varStart.position(true) > region.start() || varStart.position(false) < region.end())
                     continue;
+
+                // require the DUP to no be interupted by any other SV within this cluster within this gene region
+                SvBreakend lowerBreakend = breakend;
+                SvBreakend upperBreakend = varStart.getBreakend(false);
+
+                if(lowerBreakend.getClusterChrPosIndex() != upperBreakend.getClusterChrPosIndex() - 1)
+                    continue;
+
+                LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
+                        mSampleId, varStart.getCluster().id(), geneToStr(driverGene, region), varStart.posId(), varStart.type(),
+                        varStart.copyNumber(true), varStart.copyNumberChange(true)));
+
+                driverGeneData.addSvBreakend(lowerBreakend, "SV");
+                driverGeneData.addSvBreakend(upperBreakend, "SV");
+
+                if(varStart.copyNumberChange(true) > maxCopyNumber)
+                {
+                    maxCopyNumber = varStart.copyNumberChange(true);
+                    maxSvStart = varStart;
+                    maxSvEnd = varStart;
                 }
+
+                continue;
             }
 
-            final SvLinkedPair tiPair = varStart.getLinkedPair(breakend.usesStart());
+            // look for the first TI which overlaps the gene region
+            List<SvLinkedPair> tiPairs = varStart.getLinkedPairs(breakend.usesStart());
 
-            if(tiPair == null)
-                continue;
-
-            if(breakend.position() + tiPair.length() < region.end())
-                continue;
-
-            final SvVarData varEnd = tiPair.getOtherSV(varStart);
-            final SvBreakend beStart = tiPair.getBreakend(true);
-            final SvBreakend beEnd = tiPair.getBreakend(false);
-
-            LOGGER.debug(String.format("sample(%s) cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
-                    mSampleId, varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), geneToStr(driverGene, region),
-                    varStart.posId(), varStart.copyNumber(beStart.usesStart()), varStart.copyNumberChange(beStart.usesStart()),
-                    varEnd.posId(), varEnd.copyNumber(beEnd.usesStart()), varEnd.copyNumberChange(beEnd.usesStart())));
-
-            driverGeneData.addSvBreakend(beStart, "TI");
-            driverGeneData.addSvBreakend(beEnd, "TI");
-
-            if(varStart.copyNumberChange(true) > maxCopyNumber)
+            for(SvLinkedPair tiPair : tiPairs)
             {
-                maxCopyNumber = varStart.copyNumberChange(true);
-                maxSvStart = varStart;
-                maxSvEnd = varEnd;
+                if (breakend.position() + tiPair.length() < region.end())
+                    continue;
+
+                final SvVarData varEnd = tiPair.getOtherSV(varStart);
+                final SvBreakend beStart = tiPair.getBreakend(true).getOrigBreakend();
+                final SvBreakend beEnd = tiPair.getBreakend(false).getOrigBreakend();
+
+                LOGGER.debug(String.format("sample(%s) cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
+                        mSampleId, varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), geneToStr(driverGene, region),
+                        varStart.posId(), varStart.copyNumber(beStart.usesStart()), varStart.copyNumberChange(beStart.usesStart()),
+                        varEnd.posId(), varEnd.copyNumber(beEnd.usesStart()), varEnd.copyNumberChange(beEnd.usesStart())));
+
+                driverGeneData.addSvBreakend(beStart, "TI");
+                driverGeneData.addSvBreakend(beEnd, "TI");
+
+                if (varStart.copyNumberChange(true) > maxCopyNumber)
+                {
+                    maxCopyNumber = varStart.copyNumberChange(true);
+                    maxSvStart = varStart;
+                    maxSvEnd = varEnd;
+                }
+
+                break;
             }
         }
 
-        if(maxSvStart == null || maxSvEnd == null)
+        if(maxSvStart != null && maxSvEnd != null)
+        {
+            driverGeneData.setFullyMatched(true);
+        }
+        else
         {
             if(foldbackBreakend != null)
                 driverGeneData.addSvBreakend(foldbackBreakend, "FB");
@@ -617,21 +702,6 @@ public class DriverGeneAnnotator
     {
         return String.format("%s: %s %s:%d-%d",
                 driverGene.driver(), driverGene.gene(), region.chromosome(), region.start(), region.end());
-    }
-
-    private final SvLOH findLOHEventForRegion(final GeneCopyNumber geneCN)
-    {
-        // check for any LOH not linked to an SV which straddles this region
-        for (final SvLOH lohEvent : mSampleLOHData)
-        {
-            if (lohEvent.Chromosome.equals(geneCN.chromosome())
-            && lohEvent.PosStart <= geneCN.minRegionStart() && lohEvent.PosEnd >= geneCN.minRegionEnd())
-            {
-                return lohEvent;
-            }
-        }
-
-        return null;
     }
 
     private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
@@ -658,7 +728,7 @@ public class DriverGeneAnnotator
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
                 mFileWriter.write("SampleId,Gene,GeneType,DriverType,DriverLikelihood");
-                mFileWriter.write(",ClusterId,SvId,IsStart,MatchInfo");
+                mFileWriter.write(",FullyMatched,ClusterId,SvId,IsStart,MatchInfo");
                 mFileWriter.write(",SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN");
                 mFileWriter.newLine();
             }
@@ -674,45 +744,37 @@ public class DriverGeneAnnotator
 
             final List<SvBreakend> svBreakends = driverGeneData.getSvBreakends();
 
-            int dataCount;
-
-            if(svBreakends.isEmpty())
-            {
-                dataCount = 1;
-            }
-            else
-            {
-                dataCount = svBreakends.size();
-
-                if(driverGeneData.missedLohSVs())
-                    ++dataCount;
-            }
+            int dataCount = max(1, max(svBreakends.size(), driverGeneData.getSvInfoList().size()));
 
             for(int i = 0; i < dataCount; ++i)
             {
                 writer.write(String.format("%s,%s,%s,%s,%.4f",
                         mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.driverLikelihood()));
 
-                if(svBreakends.isEmpty() || i >= svBreakends.size())
-                {
-                    final SvLOH lohEvent = driverGene.driver() != DriverType.AMP ? findLOHEventForRegion(geneCN) : null;
+                int clusterId = -1;
+                String varId = "";
+                boolean svIsStart = false;
+                String matchInfo = "";
 
-                    if (lohEvent != null)
-                        writer.write(String.format(",-1,,,%s;%s", lohEvent.SegStart, lohEvent.SegEnd));
-                    else
-                        writer.write(String.format(",-1,,,"));
-                }
-                else
+                if(i < svBreakends.size())
                 {
+                    // SampleId,Gene,GeneType,DriverType,DriverLikelihood,ClusterId,SvId,IsStart,MatchInfo,SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN
                     final SvBreakend breakend = svBreakends.get(i);
-                    final String svInfo = driverGeneData.getSvInfoList().get(i);
+                    matchInfo = driverGeneData.getSvInfoList().get(i);
 
                     if(breakend == null)
                         break;
 
-                    final SvVarData var = breakend.getSV();
-                    refClusterId = var.getCluster().id();
+                    varId = breakend.getSV().id();
+                    refClusterId = breakend.getSV().getCluster().id();
+                    clusterId = refClusterId;
                 }
+                else if(i < driverGeneData.getSvInfoList().size())
+                {
+                    matchInfo = driverGeneData.getSvInfoList().get(i);
+                }
+
+                writer.write(String.format(",%s,%d,%s,%s,%s", driverGeneData.fullyMatched(), clusterId, varId, svIsStart, matchInfo));
 
                 writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
                         mSamplePloidy, region.chromosome(), arm, geneCN != null ? geneCN.minCopyNumber() : -1,

@@ -408,7 +408,7 @@ public class CNAnalyser {
         int lohSectionCount = 0;
         int lohSVsMatchedCount = 0;
         boolean lohOnStartTelomere = false;
-        boolean totalLoss = false;StructuralVariantData totalLossSv = null;
+        boolean totalLoss = false;
 
         for(Map.Entry<String,List<SvCNData>> entry : mChrCnDataMap.entrySet())
         {
@@ -499,8 +499,7 @@ public class CNAnalyser {
                         if (cnData.matchesSegment(SegmentSupport.DEL, true) && cnData.matchesSegment(SegmentSupport.DEL, false)
                                 && isSingleVariant(cnData))
                         {
-                            LOGGER.debug("total CN loss matches single SV({} : {} -> {})",
-                                    chromosome, cnData.StartPos, cnData.EndPos);
+                            LOGGER.debug("total CN loss matches single SV({} : {} -> {})", chromosome, cnData.StartPos, cnData.EndPos);
                         }
                         else
                         {

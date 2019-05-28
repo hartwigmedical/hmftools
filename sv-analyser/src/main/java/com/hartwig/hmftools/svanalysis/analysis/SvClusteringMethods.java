@@ -413,7 +413,7 @@ public class SvClusteringMethods {
         if(lohList == null)
             return;
 
-        // note that LOH-breakend links are established here and then must be
+        // note that LOH-breakend links are established here and then must be tidied up once the same is complete
 
         lohList = lohList.stream().filter(x -> !x.Skipped).collect(Collectors.toList());
 

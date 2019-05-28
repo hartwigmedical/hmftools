@@ -135,7 +135,7 @@ public class SvAnalyser {
             FusionDisruptionAnalyser fusionAnalyser = null;
             boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
-            boolean isSingleSample = samplesList.size() == 1;
+            boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
 
             SvGeneTranscriptCollection ensemblDataCache = null;
 
@@ -144,7 +144,7 @@ public class SvAnalyser {
                 ensemblDataCache = new SvGeneTranscriptCollection();
                 ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
 
-                if(!ensemblDataCache.loadEnsemblData(isSingleSample))
+                if(!ensemblDataCache.loadEnsemblData(selectiveGeneLoading))
                 {
                     LOGGER.error("Ensembl data cache load failed, exiting");
                     return;
@@ -237,7 +237,7 @@ public class SvAnalyser {
                 {
                     // when matching RNA, allow all transcripts regardless of their viability for fusions
                     boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
-                    setSvGeneData(svVarData, ensemblDataCache, checkFusions, isSingleSample, !keepInvalidTranscripts);
+                    setSvGeneData(svVarData, ensemblDataCache, checkFusions, selectiveGeneLoading, !keepInvalidTranscripts);
 
                     sampleAnalyser.annotateWithGeneData(ensemblDataCache);
                 }
