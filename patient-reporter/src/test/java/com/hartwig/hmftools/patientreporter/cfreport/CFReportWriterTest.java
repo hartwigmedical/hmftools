@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -64,6 +64,11 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
         generateQCFailCPCTReport("60%", null, QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
+    }
+
+    @Test
+    public void canGenerateNotEnoughMaterialReceived() throws IOException {
+        generateQCFailCPCTReport("60%", null, QCFailReason.NOT_ENOUGH_MATERIAL, testReportFilePath("hmf_not_enough_material_report.pdf"));
     }
 
     @Test

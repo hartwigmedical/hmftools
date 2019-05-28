@@ -266,7 +266,7 @@ public class PatientReporterApplication {
         options.addOption(REPORT_DIRECTORY, true, "Path to where the PDF reports have to be saved.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards a directory holding knowledgebase output files.");
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
-        options.addOption(QC_FAIL_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail' or 'shallow_seq'");
+        options.addOption(QC_FAIL_REASON, true, "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'not_enough_material'");
         options.addOption(QC_FAIL_SAMPLE, true, "In case of qc-fail reports, the name of the sample used.");
         options.addOption(FUSION_CSV, true, "Path towards a CSV of fusions of the sample");
         options.addOption(DISRUPTION_CSV, true, "Path towards a CSV of disruptions of the sample");
