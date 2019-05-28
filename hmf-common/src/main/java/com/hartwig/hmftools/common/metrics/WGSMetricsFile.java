@@ -16,14 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricsFile {
 
-    // Pv4 Metrics files stores in ${run}/QCStats/${sample}_dedup/${sample}_dedup_WGSMetrics.txt
-    //  If run from BAM, then the "_dedup" appendix is not added.
-    // Pv5 metrics files stored in ${metrics_dir}/${sample}.wgsmetrics
-
-    private static final String METRICS_BASE_DIRECTORY = "QCStats";
-    private static final String METRICS_SUB_DIRECTORY_SUFFIX = "_dedup";
-    private static final String METRICS_EXTENSION = "_WGSMetrics.txt";
     private static final String METRICS_EXTENSION_PV5 = ".wgsmetrics";
+
     private static final String VALUE_SEPARATOR = "\t";
 
     private static final int MEAN_COVERAGE_INDEX = 1;
@@ -38,18 +32,6 @@ public final class WGSMetricsFile {
     @NotNull
     public static String generateFilename(@NotNull final String metricsDir, @NotNull final String sample) throws FileNotFoundException {
         return PathPrefixSuffixFinder.build().findPath(metricsDir, sample, METRICS_EXTENSION_PV5).toString();
-    }
-
-    @NotNull
-    public static String generateFilenamePv4(@NotNull final String runDir, @NotNull final String sample) throws FileNotFoundException {
-        try {
-            String path = runDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
-            return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
-        } catch (FileNotFoundException exc) {
-            // If a pipeline is run directly from a bam, the metric file is stored in a directory matching the sample name.
-            String path = runDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample;
-            return PathPrefixSuffixFinder.build().findPath(path, sample, METRICS_EXTENSION).toString();
-        }
     }
 
     @NotNull
