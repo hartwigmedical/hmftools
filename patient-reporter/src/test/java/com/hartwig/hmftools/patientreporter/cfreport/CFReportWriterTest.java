@@ -67,8 +67,8 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGenerateNotEnoughMaterialReceived() throws IOException {
-        generateQCFailCPCTReport("60%", null, QCFailReason.NOT_ENOUGH_MATERIAL, testReportFilePath("hmf_not_enough_material_report.pdf"));
+    public void canGenerateInsufficientTissue() throws IOException {
+        generateQCFailCPCTReport("60%", null, QCFailReason.INSUFFICIENT_TISSUE, testReportFilePath("hmf_insufficient_tissue_report.pdf"));
     }
 
     @Test
