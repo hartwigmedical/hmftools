@@ -298,10 +298,8 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatientAll = Maps.newHashMap();
         for (String sampleId : allSampleIDs) {
             LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
-            if (sampleType.equals(LimsSampleType.CPCT) || sampleType.equals(LimsSampleType.DRUP) || sampleType.equals(LimsSampleType.CORE)
-                    || sampleType.equals(LimsSampleType.WIDE)) {
-                LOGGER.info(sampleId.substring(12));
-                if (sampleId.substring(12).equals("T")) {
+            if (sampleType.equals(LimsSampleType.CORE) || sampleType.equals(LimsSampleType.WIDE)) {
+                if (sampleId.substring(12).contains("T")) {
                     String patientIdentifier = sampleId.substring(0, 12);
                     samplesPerPatientAll.put(patientIdentifier, sampleReader.read(Sets.newHashSet(sampleId)));
                 }
