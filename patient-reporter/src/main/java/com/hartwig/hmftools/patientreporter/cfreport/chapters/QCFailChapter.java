@@ -106,6 +106,12 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "For sequencing we require a minimum of 30% tumor cells.";
                 break;
             }
+            case INSUFFICIENT_TISSUE: {
+                title = "Notification tumor sample on hold for sequencing";
+                reason = "Insufficient tissue";
+                explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
+                break;
+            }
             default: {
                 title = "TITLE";
                 reason = "SUB_TITLE";

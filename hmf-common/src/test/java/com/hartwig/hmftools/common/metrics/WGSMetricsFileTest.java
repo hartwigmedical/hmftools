@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class WGSMetricsFileTest {
 
-    private static final String BASE_DIRECTORY = Resources.getResource("metrics").getPath();
+    private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
     private static final double EPSILON = 1.0E-10;
 
     private static final String REF_SAMPLE = "sample1";
@@ -29,13 +29,12 @@ public class WGSMetricsFileTest {
 
     private static final String EMPTY_SAMPLE = "sample3";
     private static final String INCORRECT_SAMPLE = "sample4";
-    private static final String NO_DEDUP_SAMPLE = "sample5";
-    private static final String NON_EXISTING_SAMPLE = "sample6";
+    private static final String NON_EXISTING_SAMPLE = "sample5";
 
     @Test
     public void worksForRefAndTumorInput() throws IOException {
-        String refFile = WGSMetricsFile.generateFilename(BASE_DIRECTORY, REF_SAMPLE);
-        String tumorFile = WGSMetricsFile.generateFilename(BASE_DIRECTORY, TUMOR_SAMPLE);
+        String refFile = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, REF_SAMPLE);
+        String tumorFile = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, TUMOR_SAMPLE);
 
         WGSMetrics metrics = WGSMetricsFile.read(refFile, tumorFile);
 
@@ -58,7 +57,7 @@ public class WGSMetricsFileTest {
 
     @Test
     public void worksForRefInputOnly() throws IOException {
-        String refFile = WGSMetricsFile.generateFilename(BASE_DIRECTORY, REF_SAMPLE);
+        String refFile = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, REF_SAMPLE);
 
         WGSMetrics metrics = WGSMetricsFile.read(refFile);
 
@@ -71,26 +70,21 @@ public class WGSMetricsFileTest {
         assertNull(metrics.tumor60xCoveragePercentage());
     }
 
-    @Test
-    public void worksForNonDedupSamples() throws IOException {
-        String file = WGSMetricsFile.generateFilename(BASE_DIRECTORY, NO_DEDUP_SAMPLE);
-        assertNotNull(WGSMetricsFile.read(file));
-    }
     @Test(expected = EmptyFileException.class)
     public void emptyFileYieldsEmptyFileException() throws IOException {
-        String file = WGSMetricsFile.generateFilename(BASE_DIRECTORY, EMPTY_SAMPLE);
+        String file = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, EMPTY_SAMPLE);
         WGSMetricsFile.read(file);
     }
 
     @Test(expected = IOException.class)
     public void nonExistingFileYieldsIOException() throws IOException {
-        String file = WGSMetricsFile.generateFilename(BASE_DIRECTORY, NON_EXISTING_SAMPLE);
+        String file = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, NON_EXISTING_SAMPLE);
         WGSMetricsFile.read(file);
     }
 
     @Test(expected = MalformedFileException.class)
     public void incorrectRefFileYieldsMalformedFileException() throws IOException {
-        String file = WGSMetricsFile.generateFilename(BASE_DIRECTORY, INCORRECT_SAMPLE);
+        String file = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, INCORRECT_SAMPLE);
         WGSMetricsFile.read(file);
     }
 }

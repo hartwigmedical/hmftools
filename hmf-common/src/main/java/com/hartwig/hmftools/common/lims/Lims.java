@@ -45,6 +45,11 @@ public class Lims {
     }
 
     @NotNull
+    public Set<String> AllSampleIds() {
+        return dataPerSample.keySet();
+    }
+
+    @NotNull
     public String patientId(@NotNull final String sample) {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         return sampleData != null ? sampleData.patientId() : NOT_AVAILABLE_STRING;

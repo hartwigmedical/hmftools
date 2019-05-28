@@ -67,6 +67,11 @@ public class CFReportWriterTest {
     }
 
     @Test
+    public void canGenerateInsufficientTissue() throws IOException {
+        generateQCFailCPCTReport("60%", null, QCFailReason.INSUFFICIENT_TISSUE, testReportFilePath("hmf_insufficient_tissue_report.pdf"));
+    }
+
+    @Test
     public void canGeneratePostDNAIsolationFailReport() throws IOException {
         generateQCFailCPCTReport("60%",
                 null,
