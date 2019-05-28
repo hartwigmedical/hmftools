@@ -49,14 +49,14 @@ public class MetricsCheckerTest {
     }
 
     @Test(expected = IOException.class)
-    public void missingYieldsIOException() throws IOException {
-        final MetricsChecker checker = new MetricsChecker("missing", null, METRICS_DIRECTORY);
+    public void malformedYieldsIOException() throws IOException {
+        final MetricsChecker checker = new MetricsChecker("malformed", null, METRICS_DIRECTORY);
         checker.run();
     }
 
     @Test(expected = IOException.class)
-    public void malformedYieldsIOException() throws IOException {
-        final MetricsChecker checker = new MetricsChecker("malformed", null, METRICS_DIRECTORY);
+    public void missingYieldsIOException() throws IOException {
+        final MetricsChecker checker = new MetricsChecker("missing", null, METRICS_DIRECTORY);
         checker.run();
     }
 }

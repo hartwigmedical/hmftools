@@ -24,13 +24,13 @@ public class PurpleCheckerTest {
     }
 
     @Test (expected = IOException.class)
-    public void testMalformed() throws IOException {
+    public void malformedYieldsIOException() throws IOException {
         final PurpleChecker checker = new PurpleChecker("malformed", PURPLE_DIRECTORY);
         checker.run();
     }
 
     @Test (expected = IOException.class)
-    public void testMissing() throws IOException {
+    public void missingYieldsIOException() throws IOException {
         final PurpleChecker checker = new PurpleChecker("missing", PURPLE_DIRECTORY);
         checker.run();
     }

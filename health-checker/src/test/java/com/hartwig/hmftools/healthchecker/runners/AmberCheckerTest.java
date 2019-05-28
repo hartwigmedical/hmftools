@@ -29,13 +29,13 @@ public class AmberCheckerTest {
     }
 
     @Test(expected = IOException.class)
-    public void testMalformed() throws IOException {
+    public void malformedYieldsIOException() throws IOException {
         final AmberChecker checker = new AmberChecker("malformed", AMBER_DIRECTORY);
         checker.run();
     }
 
     @Test(expected = IOException.class)
-    public void testMissing() throws IOException {
+    public void missingYieldsIOException() throws IOException {
         final AmberChecker checker = new AmberChecker("missing", AMBER_DIRECTORY);
         checker.run();
     }
