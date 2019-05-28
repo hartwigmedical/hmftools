@@ -50,9 +50,9 @@ public class MetricsChecker implements HealthChecker {
 
     @NotNull
     private WGSMetrics extractMetrics() throws IOException {
-        String refFile = WGSMetricsFile.generateFilenamePv5(metricsDirectory, refSample);
+        String refFile = WGSMetricsFile.generateFilename(metricsDirectory, refSample);
         if (tumorSample != null) {
-            String tumorFile = WGSMetricsFile.generateFilenamePv5(metricsDirectory, tumorSample);
+            String tumorFile = WGSMetricsFile.generateFilename(metricsDirectory, tumorSample);
             return WGSMetricsFile.read(refFile, tumorFile);
         } else {
             return WGSMetricsFile.read(refFile);
