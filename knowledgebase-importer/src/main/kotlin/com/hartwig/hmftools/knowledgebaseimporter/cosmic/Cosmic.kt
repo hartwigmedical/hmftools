@@ -38,6 +38,9 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
         if (threeGene.equals("FAM22A")) {
             threeGene = threeGene.replace("FAM22A", "NUTM2A")
         }
+        if (threeGene.equals("ROD1")) {
+            threeGene = threeGene.replace("ROD1", "PTBP3")
+        }
         return FusionPair(fiveGene, threeGene)
     }
 }
