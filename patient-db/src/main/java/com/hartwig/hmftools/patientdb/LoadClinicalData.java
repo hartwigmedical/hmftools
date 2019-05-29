@@ -119,14 +119,14 @@ public final class LoadClinicalData {
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
-        Map<String, Patient> patients = loadAndInterpretAllPatients(samplesPerPatientSequenced,
+        Map<String, Patient> patients = loadAndInterpretPatients(samplesPerPatientSequenced,
                 ecrfModels,
                 tumorLocationCurator,
                 treatmentCurator,
                 biopsySiteCurator);
 
         Map<String, Patient> patientsAll =
-                loadAndInterpretAllPatients(samplesPerPatientAll, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
+                loadAndInterpretPatients(samplesPerPatientAll, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
         DumpClinicalData.writeClinicalDumps(csvOutputDir, patientsAll.values(), tumorLocationSymlink, portalDataLink);
 
@@ -161,7 +161,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, Patient> loadAndInterpretAllPatients(@NotNull Map<String, List<SampleData>> samplesPerPatientSequenced,
+    private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
             @NotNull BiopsySiteCurator biopsySiteCurator) {
         final EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
@@ -171,18 +171,18 @@ public final class LoadClinicalData {
                 biopsySiteCurator,
                 treatmentCurator);
 
-        Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatientSequenced);
+        Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s CPCT patients.", cpctPatients.size()));
 
         final EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
         EcrfPatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
 
-        Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatientSequenced);
+        Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
         LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
 
         LOGGER.info("Interpreting and curating data based off LIMS");
-        Map<String, Patient> patientsFromLims = readLimsPatients(samplesPerPatientSequenced, tumorLocationCurator);
+        Map<String, Patient> patientsFromLims = readLimsPatients(samplesPerPatient, tumorLocationCurator);
         LOGGER.info(String.format("Finished curation of %s patients based off LIMS", patientsFromLims.keySet().size()));
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
@@ -277,7 +277,7 @@ public final class LoadClinicalData {
         List<RunContext> contectsRunExtracted = loadRunContext(cmd);
 
         Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(lims, contectsRunExtracted);
-        LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
+        LOGGER.info(String.format("Loaded sequenced samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
 
         return samplesPerPatientSequenced;
     }
@@ -285,7 +285,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, List<SampleData>> loadSamplesPerPatientAll(@NotNull Lims lims) {
         Map<String, List<SampleData>> samplesPerPatientAll = extractSamplesFromLims(lims);
-        LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatientAll.keySet().size()));
+        LOGGER.info(String.format("Loaded all samples for %s patients from LIMS", samplesPerPatientAll.keySet().size()));
 
         return samplesPerPatientAll;
     }
