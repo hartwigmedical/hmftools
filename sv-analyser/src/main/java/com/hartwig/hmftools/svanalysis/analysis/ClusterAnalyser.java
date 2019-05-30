@@ -34,6 +34,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUST
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
+import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.addClusterReasons;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -52,7 +53,6 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_SV_REPLICATION_MULTIPLE;
 
 import java.util.List;
 import java.util.Map;
@@ -240,9 +240,10 @@ public class ClusterAnalyser {
             }
 
             // more complicated clusters for now
-            boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedCopyNumber();
+            boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedPloidy();
 
             mLinkFinder.findAssembledLinks(cluster);
+            applyCopyNumberReplication(cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster, !isSimple);
@@ -317,23 +318,23 @@ public class ClusterAnalyser {
 
     public void applyCopyNumberReplication(SvCluster cluster)
     {
-        // isSpecificCluster(cluster);
+        if(!cluster.hasVariedPloidy() && !cluster.requiresReplication())
+            return;
 
         // use the relative copy number change to replicate some SVs within a cluster
-        if(!cluster.hasVariedCopyNumber())
-            return;
+        // isSpecificCluster(cluster);
 
         // int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
         // int maxReplication = MAX_SV_REPLICATION_MULTIPLE;
 
         // first establish the lowest copy number change
-        double minCopyNumber = cluster.getMinCNChange();
-        double maxCopyNumber = cluster.getMaxCNChange();
+        double clusterMinPloidy = cluster.getMinPloidy();
+        double clusterMaxPloidy = cluster.getMaxPloidy();
 
-        if(minCopyNumber <= 0)
+        if(clusterMinPloidy <= 0)
         {
-            LOGGER.debug("cluster({}) warning: invalid CN variation(min={} max={})",
-                    cluster.id(), minCopyNumber, maxCopyNumber);
+            LOGGER.debug("cluster({}) warning: invalid ploidy variation(min={} max={})",
+                    cluster.id(), clusterMinPloidy, clusterMaxPloidy);
             return;
         }
 
@@ -343,15 +344,15 @@ public class ClusterAnalyser {
 
         for(SvVarData var : cluster.getSVs())
         {
-            double calcCopyNumber = var.getRoundedCNChange();
-            int svMultiple = (int)max(round(calcCopyNumber / minCopyNumber),1);
+            int svPloidy = var.getImpliedPloidy();
+            int svMultiple = (int)max(round(svPloidy / clusterMinPloidy),1);
             totalReplicationCount += svMultiple;
         }
 
         if(totalReplicationCount > mConfig.ChainingSvLimit)
         {
-            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with CNChg({} vs min={}) will be scaled",
-                    cluster.id(), totalReplicationCount, cluster.getSvCount(), minCopyNumber, maxCopyNumber);
+            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled",
+                    cluster.id(), totalReplicationCount, cluster.getSvCount(), clusterMinPloidy, clusterMaxPloidy);
 
             replicationFactor = mConfig.ChainingSvLimit / (double)totalReplicationCount;
         }
@@ -359,31 +360,21 @@ public class ClusterAnalyser {
         // replicate the SVs which have a higher copy number than their peers
         for(SvVarData var : cluster.getSVs())
         {
-            double calcCopyNumber = var.getRoundedCNChange();
+            int svPloidy = var.getImpliedPloidy();
+            int maxAssemblyBreakends = var.getMaxAssembledBreakend();
 
-            int svMultiple = (int)round(calcCopyNumber / minCopyNumber);
+            int svMultiple = (int)round(svPloidy / clusterMinPloidy);
+
+            if(maxAssemblyBreakends > 1)
+                svMultiple = max(svMultiple, maxAssemblyBreakends * (int)clusterMinPloidy);
 
             svMultiple = max((int)round(svMultiple * replicationFactor), 1);
-
-            int assemblyLinkMax = max(var.getAssembledLinkedPairs(true).size(), var.getAssembledLinkedPairs(false).size());
-
-            if(svMultiple < assemblyLinkMax)
-            {
-                LOGGER.debug("cluster({}) SV({}) increasing repCount({}) to match assemblyLinks({} & {}), copyNumChg({} vs min={})",
-                        cluster.id(), var.posId(), svMultiple, var.getAssembledLinkedPairs(true).size(),
-                        var.getAssembledLinkedPairs(false).size(), calcCopyNumber, minCopyNumber);
-
-                svMultiple = assemblyLinkMax;
-
-                // TODO: it's possible for the lower ploidy links to also have a replication multiple that needs adjustment
-            }
 
             if(svMultiple <= 1)
                 continue;
 
             LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
-                    cluster.id(), var.posId(), svMultiple, calcCopyNumber, minCopyNumber);
-
+                    cluster.id(), var.posId(), svMultiple, svPloidy, clusterMinPloidy);
 
             var.setReplicatedCount(svMultiple);
 
@@ -577,8 +568,7 @@ public class ClusterAnalyser {
                                     cluster.id(), breakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString(),
                                     String.format("%.2f -> %.2f", breakendPloidy, majorAP));
 
-                            breakend.getSV().addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, nextBreakend.getSV().id());
-                            nextBreakend.getSV().addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP, breakend.getSV().id());
+                            addClusterReasons(breakend.getSV(), nextBreakend.getSV(), CLUSTER_REASON_BE_PLOIDY_DROP);
 
                             resolvingCluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP);
                             cluster.addClusterReason(CLUSTER_REASON_BE_PLOIDY_DROP);
@@ -691,8 +681,7 @@ public class ClusterAnalyser {
                             LOGGER.debug("cluster({}) SV({}) resolved prior to LOH by other cluster({}) breakend({})",
                                     lohCluster.id(), lohBreakend.getSV().posId(), resolvingCluster.id(), resolvingBreakend.toString());
 
-                            lohBreakend.getSV().addClusterReason(CLUSTER_REASON_LOH_CHAIN, resolvingBreakend.getSV().id());
-                            resolvingBreakend.getSV().addClusterReason(CLUSTER_REASON_LOH_CHAIN, lohBreakend.getSV().id());
+                            addClusterReasons(lohBreakend.getSV(), resolvingBreakend.getSV(), CLUSTER_REASON_LOH_CHAIN);
 
                             resolvingCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN);
                             lohCluster.addClusterReason(CLUSTER_REASON_LOH_CHAIN);
@@ -846,8 +835,7 @@ public class ClusterAnalyser {
                                         String.format("cluster minPloidy=%.2f map=%.2f arm map=%.2f",
                                                 clusterBoundaryMinPloidy, clusterBoundaryMAP, armEndMAP));
 
-                                clusterBreakend.getSV().addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, nextBreakend.getSV().id());
-                                nextBreakend.getSV().addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY, clusterBreakend.getSV().id());
+                                addClusterReasons(clusterBreakend.getSV(), nextBreakend.getSV(), CLUSTER_REASON_NET_ARM_END_PLOIDY);
 
                                 otherCluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY);
                                 cluster.addClusterReason(CLUSTER_REASON_NET_ARM_END_PLOIDY);
@@ -943,8 +931,7 @@ public class ClusterAnalyser {
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
-                            var1.addClusterReason(CLUSTER_REASON_FOLDBACKS, var2.id());
-                            var2.addClusterReason(CLUSTER_REASON_FOLDBACKS, var1.id());
+                            addClusterReasons(var1, var2, CLUSTER_REASON_FOLDBACKS);
 
                             cluster1.addClusterReason(CLUSTER_REASON_FOLDBACKS);
                             cluster2.addClusterReason(CLUSTER_REASON_FOLDBACKS);
@@ -1001,8 +988,7 @@ public class ClusterAnalyser {
                 LOGGER.debug("cluster({}) foldback breakend({}) faces cluster({}) breakend({})",
                         foldbackCluster.id(), foldbackBreakend.toString(), otherCluster.id(), nextBreakend.toString());
 
-                var.addClusterReason(CLUSTER_REASON_FOLDBACKS, nextBreakend.getSV().id());
-                nextBreakend.getSV().addClusterReason(CLUSTER_REASON_FOLDBACKS, var.id());
+                addClusterReasons(var, nextBreakend.getSV(), CLUSTER_REASON_FOLDBACKS);
 
                 foldbackCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS);
                 otherCluster.addClusterReason(CLUSTER_REASON_FOLDBACKS);
@@ -1096,8 +1082,7 @@ public class ClusterAnalyser {
 
                         // final String commonArms = var1.id() + "_" + var2.id();
 
-                        var1.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var2.id());
-                        var2.addClusterReason(CLUSTER_REASON_COMMON_ARMS, var1.id());
+                        addClusterReasons(var1, var2, CLUSTER_REASON_COMMON_ARMS);
 
                         cluster1.addClusterReason(CLUSTER_REASON_COMMON_ARMS);
                         cluster2.addClusterReason(CLUSTER_REASON_COMMON_ARMS);
@@ -1191,10 +1176,10 @@ public class ClusterAnalyser {
                         LOGGER.debug("cluster({}) breakends({} & {}) overlap cluster({}) breakend({})",
                                 cluster.id(), lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
-                        otherBreakend.getSV().addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, lowerBreakend.getSV().id());
-                        lowerBreakend.getSV().addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP, otherBreakend.getSV().id());
+                        addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), CLUSTER_REASON_LOOSE_OVERLAP);
 
                         otherCluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP);
+                        cluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP);
                         cluster.addClusterReason(CLUSTER_REASON_LOOSE_OVERLAP);
 
                         cluster.mergeOtherCluster(otherCluster);

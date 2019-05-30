@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DEL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.RESOLVED_TYPE_DUP_BE;
@@ -27,6 +28,10 @@ import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
+import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MIN_DEL_LENGTH;
 
@@ -230,6 +235,8 @@ public class SvClusteringMethods {
 
                         if (nextVar.getClusterReason().isEmpty())
                             nextVar.addClusterReason(CLUSTER_REASON_PROXIMITY, var.id());
+
+                        checkClusteringClonalDiscrepancy(var, nextVar, CLUSTER_REASON_PROXIMITY);
                     }
                 }
 
@@ -238,82 +245,67 @@ public class SvClusteringMethods {
             }
         }
 
-        splitDelClusters(clusters);
+        // no longer necessary since is done after all merging and resolving is complete
+        // splitDelClusters(clusters);
     }
 
-    private void splitDelClusters(List<SvCluster> clusters)
+    public static void addClusterReasons(final SvVarData var1, final SvVarData var2, final String clusterReason)
     {
-        // no 2 DELs can overlap, so if the cluster is entirely comprised of DELs, split out any overlapping SVs
-        List<SvCluster> clustersToRemove = Lists.newArrayList();
+        var1.addClusterReason(clusterReason, var2.id());
+        var2.addClusterReason(clusterReason, var1.id());
+        checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
+    }
 
-        int clusterCount = clusters.size();
-        for(int i = 0; i < clusterCount; ++i)
+    public static void checkClusteringClonalDiscrepancy(final SvVarData var1, final SvVarData var2, final String clusterReason)
+    {
+        if(isSpecificSV(var1) || isSpecificSV(var2))
         {
-            SvCluster cluster = clusters.get(i);
-
-            if(cluster.getSvCount() == 1 || cluster.getSvCount() != cluster.getTypeCount(DEL))
-                continue;
-
-            List<SvVarData> delSVs = Lists.newArrayList(cluster.getSVs());
-            List<SvCluster> newClusters = Lists.newArrayList();
-
-            for(SvVarData var : delSVs)
-            {
-                boolean addedToCluster = false;
-                for(final SvCluster newCluster : newClusters)
-                {
-                    boolean hasOverlap = false;
-
-                    for(final SvVarData existingVar : newCluster.getSVs())
-                    {
-                        if(var.position(true) >= existingVar.position(false)
-                        || var.position(false) <= existingVar.position(true))
-                        {
-                            continue;
-                        }
-
-                        // has an overlap
-                        hasOverlap = true;
-                        break;
-                    }
-
-                    if(!hasOverlap)
-                    {
-                        newCluster.addVariant(var);
-                        addedToCluster = true;
-                        break;
-                    }
-                }
-
-                if(!addedToCluster)
-                {
-                    SvCluster newCluster = new SvCluster(getNextClusterId());
-                    newClusters.add(newCluster);
-                    newCluster.addVariant(var);
-                }
-            }
-
-            clustersToRemove.add(cluster);
-
-            for(SvCluster newCluster : newClusters)
-            {
-                if(newCluster.getSvCount() > 1)
-                {
-                    newCluster.addClusterReason(CLUSTER_REASON_PROXIMITY);
-                }
-                else
-                {
-                    newCluster.getSV(0).clearClusterReason();
-                }
-            }
-
-            clusters.addAll(newClusters);
+            LOGGER.debug("spec SV({})", var1.id());
         }
 
-        for(SvCluster cluster : clustersToRemove)
+        boolean varLowCns1 = hasLowCNChangeSupport(var1);
+        boolean varLowCns2 = hasLowCNChangeSupport(var2);
+
+        if(varLowCns1 == varLowCns2)
+            return;
+
+        // skip if SVs are within range of each other given uncertainty or if ploidy is above the low-support level
+        if(var1.ploidyMin() > LOW_CN_CHANGE_SUPPORT && var2.ploidyMin() > LOW_CN_CHANGE_SUPPORT)
+            return;
+
+        if((varLowCns1 && var1.ploidyMax() >= var2.ploidyMin()) || (varLowCns2 && var2.ploidyMax() >= var1.ploidyMin()))
+            return;
+
+        boolean hasAssembledLink = false;
+
+        for(int be1 = SE_START; be1 <= SE_END; ++be1)
         {
-            clusters.remove(cluster);
+            for(int be2 = SE_START; be2 <= SE_END; ++be2)
+            {
+                if (haveLinkedAssemblies(var1, var2, isStart(be1), isStart(be2)))
+                {
+                    hasAssembledLink = true;
+                    break;
+                }
+            }
         }
+
+        // log to CSV for clustering analysis
+
+        // SvId1,SvId2,ClusterReason,HasAssembly,Ploidy1,Ploidy2,PloidyMin1,PloidyMin2,PloidyMax1,PloidyMax2,
+        // CNChgStart1,CNChgStart2,CNChgEnd1,CNChgEnd2,CNStart1,CNStart2,CNEnd1,CNEnd2
+
+        String output = String.format("%s,%s,%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                var1.id(), var2.id(), clusterReason, hasAssembledLink,
+                var1.ploidy(), var2.ploidy(), var1.ploidyMin(), var2.ploidyMin(), var1.ploidyMax(), var2.ploidyMax());
+
+        output += String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                var1.copyNumberChange(true), var2.copyNumberChange(true),
+                var1.copyNumberChange(false), var2.copyNumberChange(false),
+                var1.copyNumber(true), var2.copyNumber(true),
+                var1.copyNumber(false), var2.copyNumber(false));
+
+        LOGGER.info("INCONS_PLOIDY_CLUSTER: {}", output);
     }
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
@@ -485,8 +477,7 @@ public class SvClusteringMethods {
                     lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),
                     lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
 
-            lohSvStart.addClusterReason(CLUSTER_REASON_LOH, lohSvEnd.id());
-            lohSvEnd.addClusterReason(CLUSTER_REASON_LOH, lohSvStart.id());
+            addClusterReasons(lohSvStart, lohSvEnd, CLUSTER_REASON_LOH);
             lohClusterStart.addClusterReason(CLUSTER_REASON_LOH);
 
             lohClusterStart.mergeOtherCluster(lohClusterEnd);
@@ -589,8 +580,7 @@ public class SvClusteringMethods {
                         LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
                                 cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
 
-                        var1.addClusterReason(CLUSTER_REASON_LONG_DEL_DUP_OR_INV, var2.id());
-                        var2.addClusterReason(CLUSTER_REASON_LONG_DEL_DUP_OR_INV, var1.id());
+                        addClusterReasons(var1, var2, CLUSTER_REASON_LONG_DEL_DUP_OR_INV);
 
                         canMergeClusters = true;
                         break;
@@ -742,8 +732,7 @@ public class SvClusteringMethods {
                 LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({})",
                         soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), resolvedType);
 
-                soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, resolvedType + "_" + otherVar.id());
-                otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, resolvedType + "_" + soloSingle.id());
+                addClusterReasons(soloSingle, otherVar, CLUSTER_REASON_SOLO_SINGLE);
 
                 return resolvedType;
             }
@@ -772,8 +761,7 @@ public class SvClusteringMethods {
                         soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(),
                         cnInconsistency, soloSingle.copyNumberChange(true)));
 
-                soloSingle.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, "CnInc_" + otherVar.id());
-                otherVar.addClusterReason(CLUSTER_REASON_SOLO_SINGLE, "CnInc_" + soloSingle.id());
+                addClusterReasons(soloSingle, otherVar, CLUSTER_REASON_SOLO_SINGLE);
 
                 return RESOLVED_TYPE_PAIR_OTHER;
             }

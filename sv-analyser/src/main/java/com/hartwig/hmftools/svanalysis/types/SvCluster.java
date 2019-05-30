@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.addSvToChrBre
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
-import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_ENDS_AWAY;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_CHAIN_MAX;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_DB;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CM_SHORT_DB;
@@ -73,6 +72,7 @@ public class SvCluster
     private long mSyntheticLength;
 
     private boolean mHasReplicatedSVs;
+    private boolean mRequiresReplication;
 
     // cached lists of identified special cases
     private List<SvVarData> mLongDelDups;
@@ -88,8 +88,8 @@ public class SvCluster
     private List<SvVarData> mShortTIRemoteSVs;
     private List<SvVarData> mUnlinkedRemoteSVs;
 
-    private double mMinCNChange;
-    private double mMaxCNChange;
+    private double mMinPloidy;
+    private double mMaxPloidy;
     private double mValidAllelePloidySegmentPerc;
 
     private int mOriginArms;
@@ -137,9 +137,10 @@ public class SvCluster
         mIsSubclonal = false;
 
         mHasReplicatedSVs = false;
+        mRequiresReplication = false;
 
-        mMinCNChange = 0;
-        mMaxCNChange = 0;
+        mMinPloidy = 0;
+        mMaxPloidy = 0;
         mValidAllelePloidySegmentPerc = 1.0;
         mClusteringReasons = "";
 
@@ -282,6 +283,8 @@ public class SvCluster
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
     public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }
+    public boolean requiresReplication() { return mRequiresReplication; }
+    public void setRequiresReplication(boolean toggle) { mRequiresReplication = toggle; }
 
     public void addLohEvent(final SvLOH lohEvent)
     {
@@ -396,6 +399,10 @@ public class SvCluster
         }
 
         mAssemblyLinkedPairs.addAll(other.getAssemblyLinkedPairs());
+
+        if(other.requiresReplication())
+            mRequiresReplication = true;
+
         mInversions.addAll(other.getInversions());
         mFoldbacks.addAll(other.getFoldbacks());
         mLongDelDups.addAll(other.getLongDelDups());
@@ -634,13 +641,13 @@ public class SvCluster
     {
         if(mSVs.size() == 1)
         {
-            mMinCNChange = mMaxCNChange = mSVs.get(0).getRoundedCNChange();
+            mMinPloidy = mMaxPloidy = mSVs.get(0).getImpliedPloidy();
             return;
         }
 
         // establish the lowest copy number change, using calculated ploidy if present
-        mMinCNChange = -1;
-        mMaxCNChange = 0;
+        mMinPloidy = -1;
+        mMaxPloidy = 0;
 
         int svCalcPloidyCount = 0;
         Map<Integer,Integer> ploidyFrequency = new HashMap();
@@ -650,12 +657,17 @@ public class SvCluster
         double tightestMinPloidy = 0;
         double tightestMaxPloidy = -1;
         int countHalfToOnePloidy = 0;
-        double minCopyNumberChange = -1;
+        double minSvPloidy = -1;
+        int maxAssembledMultiple = 1; // the highest multiple of a breakend linked to other assembled breakends
 
         for (final SvVarData var : mSVs)
         {
-            double calcCNChange = var.getRoundedCNChange();
+            int svPloidy = var.getImpliedPloidy();
+            maxAssembledMultiple = max(maxAssembledMultiple, var.getMaxAssembledBreakend());
 
+            // double calcCNChange = var.getRoundedCNChange();
+
+            /*
             if(calcCNChange <= 0)
             {
                 LOGGER.debug("cluster({}) has SV({}) with zero effective CN change: {}",
@@ -663,14 +675,15 @@ public class SvCluster
                                 var.copyNumberChange(true), var.copyNumberChange(false),
                                 var.getSvData().ploidy(), var.ploidyMax(), var.ploidyMin()));
             }
+            */
 
-            if (mMinCNChange < 0 || calcCNChange < mMinCNChange)
+            if (mMinPloidy < 0 || svPloidy < mMinPloidy)
             {
-                mMinCNChange = calcCNChange;
-                minCopyNumberChange = calcCNChange;
+                mMinPloidy = svPloidy;
+                minSvPloidy = svPloidy;
             }
 
-            mMaxCNChange = max(mMaxCNChange, calcCNChange);
+            mMaxPloidy = max(mMaxPloidy, svPloidy);
 
             if(var.hasCalculatedPloidy())
             {
@@ -701,8 +714,8 @@ public class SvCluster
 
         if(svCalcPloidyCount > 0)
         {
-            mMinCNChange = -1;
-            mMaxCNChange = 0;
+            mMinPloidy = -1;
+            mMaxPloidy = 0;
 
             for (Map.Entry<Integer, Integer> entry : ploidyFrequency.entrySet())
             {
@@ -712,41 +725,45 @@ public class SvCluster
                 if (svCount == svCalcPloidyCount)
                 {
                     // all SVs can settle on the same ploidy value, so take this
-                    mMaxCNChange = ploidy;
-                    mMinCNChange = ploidy;
+                    mMaxPloidy = ploidy;
+                    mMinPloidy = ploidy;
                     break;
                 }
 
-                if (ploidy > 0 && (mMinCNChange < 0 || ploidy < mMinCNChange))
-                     mMinCNChange = ploidy;
+                if (ploidy > 0 && (mMinPloidy < 0 || ploidy < mMinPloidy))
+                     mMinPloidy = ploidy;
 
-                mMinCNChange = max(mMinCNChange, minCopyNumberChange);
-
-                mMaxCNChange = max(mMaxCNChange, ploidy);
+                mMinPloidy = max(mMinPloidy, minSvPloidy);
+                mMaxPloidy = max(mMaxPloidy, ploidy);
             }
 
-            if(mMinCNChange < mMaxCNChange)
+            if(mMinPloidy < mMaxPloidy && maxAssembledMultiple == 1)
             {
                 if (tightestMaxPloidy > tightestMinPloidy && tightestMaxPloidy - tightestMinPloidy < 1)
                 {
                     // if all SVs cover the same value but it's not an integer, still consider them uniform
-                    mMinCNChange = 1;
-                    mMaxCNChange = 1;
+                    mMinPloidy = 1;
+                    mMaxPloidy = 1;
                 }
                 else if (countHalfToOnePloidy == svCalcPloidyCount)
                 {
-                    mMinCNChange = 1;
-                    mMaxCNChange = 1;
+                    mMinPloidy = 1;
+                    mMaxPloidy = 1;
                 }
             }
+        }
 
+        // correct for the ploidy ratios implied from the assembled links
+        if(maxAssembledMultiple > 1)
+        {
+            mMaxPloidy = max(mMaxPloidy, maxAssembledMultiple * mMinPloidy);
         }
     }
 
-    public double getMaxCNChange() { return mMaxCNChange; }
-    public double getMinCNChange() { return mMinCNChange; }
+    public double getMaxPloidy() { return mMaxPloidy; }
+    public double getMinPloidy() { return mMinPloidy; }
 
-    public boolean hasVariedCopyNumber()
+    public boolean hasVariedPloidy()
     {
         if(mRequiresRecalc)
             updateClusterDetails();
@@ -754,7 +771,7 @@ public class SvCluster
         if(mSVs.size() == 1)
             return false;
 
-        return (mMaxCNChange > mMinCNChange && mMinCNChange >= 0);
+        return (mMaxPloidy > mMinPloidy && mMinPloidy >= 0);
     }
 
     public double getValidAllelePloidySegmentPerc() { return mValidAllelePloidySegmentPerc; }
@@ -807,41 +824,6 @@ public class SvCluster
 
             }
         }
-
-        /*
-        // add all chained links
-        mChains.stream().forEach(x -> mLinkedPairs.addAll(x.getLinkedPairs()));
-
-        for(SvVarData var : mReplicatedSVs)
-        {
-            for(int be = SE_START; be <= SE_END; ++be)
-            {
-                boolean useStart = isStart(be);
-
-                if(var.isNullBreakend() && !useStart)
-                    continue;
-
-                if (var.getLinkedPair(useStart) != null && var.getLinkedPair(useStart).isInferred())
-                    var.setLinkedPair(null, useStart);
-            }
-        }
-
-        // mark the resultant set of inferred links - the assembly links will have already been marked
-        for (SvLinkedPair pair : mLinkedPairs)
-        {
-            if(pair.isInferred())
-            {
-                if(pair.first().getAssemblyMatchType(pair.firstLinkOnStart()) != ASSEMBLY_MATCH_MATCHED)
-                    pair.first().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.firstLinkOnStart());
-
-                if(pair.second().getAssemblyMatchType(pair.secondLinkOnStart()) != ASSEMBLY_MATCH_MATCHED)
-                    pair.second().setAssemblyMatchType(ASSEMBLY_MATCH_INFER_ONLY, pair.secondLinkOnStart());
-            }
-
-            pair.first().setLinkedPair(pair, pair.firstLinkOnStart());
-            pair.second().setLinkedPair(pair, pair.secondLinkOnStart());
-        }
-        */
     }
 
     public final SvChain findChain(final SvVarData var)

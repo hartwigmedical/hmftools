@@ -50,9 +50,9 @@ public class CopyNumberTests
         cluster1.addVariant(var2);
         cluster1.addVariant(var3);
 
-        assertFalse(cluster1.hasVariedCopyNumber());
-        assertEquals(1.0, cluster1.getMinCNChange(), 0.001);
-        assertEquals(1.0, cluster1.getMaxCNChange(), 0.001);
+        assertFalse(cluster1.hasVariedPloidy());
+        assertEquals(1.0, cluster1.getMinPloidy(), 0.001);
+        assertEquals(1.0, cluster1.getMaxPloidy(), 0.001);
 
         // now check alignment to a common but non-integer ploidy
         SvVarData var4 = createDel(tester.nextVarId(), "1", 700, 800);
@@ -61,9 +61,9 @@ public class CopyNumberTests
         var4.setPloidyRecalcData(1.1, 1.5);
         cluster1.addVariant(var4);
 
-        assertFalse(cluster1.hasVariedCopyNumber());
-        assertEquals(1.0, cluster1.getMinCNChange(), 0.001);
-        assertEquals(1.0, cluster1.getMaxCNChange(), 0.001);
+        assertFalse(cluster1.hasVariedPloidy());
+        assertEquals(1.0, cluster1.getMinPloidy(), 0.001);
+        assertEquals(1.0, cluster1.getMaxPloidy(), 0.001);
 
 
     }

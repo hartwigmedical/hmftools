@@ -1728,7 +1728,7 @@ public class ClusterAnnotations
     public static void reportClusterRepRepairSegments(final String sampleId, final SvCluster cluster)
     {
         // looking for replication before repair
-        if (cluster.isResolved() || !cluster.getFoldbacks().isEmpty() || cluster.hasVariedCopyNumber())
+        if (cluster.isResolved() || !cluster.getFoldbacks().isEmpty() || cluster.hasVariedPloidy())
             return;
 
         // isSpecificCluster(cluster);

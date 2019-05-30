@@ -114,7 +114,7 @@ public class ChainingActualTests
         assertEquals(ASSEMBLY_MATCH_MATCHED, var5.getAssemblyMatchType(true));
 
         // should be assembled when assembles from the same breakend are support again
-        // assertEquals(ASSEMBLY_MATCH_MATCHED, var5.getAssemblyMatchType(false));
+        assertEquals(ASSEMBLY_MATCH_MATCHED, var5.getAssemblyMatchType(false));
 
         assertEquals(var7.getLinkedPair(false), var8.getLinkedPair(false));
         assertEquals(ASSEMBLY_MATCH_MATCHED, var7.getAssemblyMatchType(false));
