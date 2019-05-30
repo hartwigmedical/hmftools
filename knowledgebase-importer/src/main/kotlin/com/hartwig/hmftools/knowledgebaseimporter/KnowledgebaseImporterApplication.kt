@@ -112,18 +112,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 
     logger.info("Writing known variants to $outputDir")
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
-
-    val fusionPairLocation = "$outputDir${File.separator}knownFusionPairs.csv"
-    logger.info("Writing known fusion genes to $fusionPairLocation")
-    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), fusionPairLocation)
-
-    val promiscuousFiveGeneLocation = "$outputDir${File.separator}knownPromiscuousFive.csv"
-    logger.info("Writing known promiscuous 5' genes to $promiscuousFiveGeneLocation")
-    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), promiscuousFiveGeneLocation)
-
-    val promiscuousThreeGeneLocation = "$outputDir${File.separator}knownPromiscuousThree.csv"
-    logger.info("Writing known promiscuous 3' genes to $promiscuousThreeGeneLocation")
-    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), promiscuousThreeGeneLocation)
+    knowledgebases.filter { it.source.equals("iclusion") }.map { writeFusionsFiles(knowledgebases, outputDir) }
 
     logger.info("Writing actionability files to $outputDir")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
@@ -136,6 +125,20 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
     val cancerTypeDOIDMappingLocation = "$outputDir${File.separator}knowledgebaseCancerTypes.tsv"
     logger.info("Writing cancer type DOID mapping to $cancerTypeDOIDMappingLocation")
     CsvWriter.writeTSV(cancerTypesDoids, cancerTypeDOIDMappingLocation)
+}
+
+private fun writeFusionsFiles(knowledgebases: List<Knowledgebase>, outputDir: String) {
+    val fusionPairLocation = "$outputDir${File.separator}knownFusionPairs.csv"
+    logger.info("Writing known fusion genes to $fusionPairLocation")
+    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), fusionPairLocation)
+
+    val promiscuousFiveGeneLocation = "$outputDir${File.separator}knownPromiscuousFive.csv"
+    logger.info("Writing known promiscuous 5' genes to $promiscuousFiveGeneLocation")
+    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), promiscuousFiveGeneLocation)
+
+    val promiscuousThreeGeneLocation = "$outputDir${File.separator}knownPromiscuousThree.csv"
+    logger.info("Writing known promiscuous 3' genes to $promiscuousThreeGeneLocation")
+    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), promiscuousThreeGeneLocation)
 }
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
@@ -165,5 +168,5 @@ private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
-    CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
+        CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
 }
