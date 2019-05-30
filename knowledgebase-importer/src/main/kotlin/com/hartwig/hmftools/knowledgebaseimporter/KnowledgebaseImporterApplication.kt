@@ -112,7 +112,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 
     logger.info("Writing known variants to $outputDir")
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
-    knowledgebases.filter { it.source.equals("iclusion") }.map { writeFusionsFiles(knowledgebases, outputDir) }
+    knowledgebases.filterNot { it.source.equals("iclusion") }.map { writeFusionsFiles(knowledgebases, outputDir) }
 
     logger.info("Writing actionability files to $outputDir")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
