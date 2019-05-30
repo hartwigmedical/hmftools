@@ -30,15 +30,14 @@ public final class ViccFactory {
 
         while (reader.peek() != JsonToken.END_DOCUMENT && index < 5) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
-            StringBuilder stringToCSVSource = source.readObjectSource(object);
-            StringBuilder stringToCSVAll = new StringBuilder();
-            StringBuilder stringToCSVGenes = genes.readObjectGenes(object);
-            StringBuilder stringToCSVTags = tags.readObjectTags(object);
-            StringBuilder stringToCSVDevTags = devTags.readObjectDevTags(object);
-            StringBuilder stringToCSVGeneIdentifiers = geneIdentifiers.readObjectGeneIdentifiers(object);
-            StringBuilder stringToCSVFeaturesNames = featuresNames.readObjectFeaturesNames(object);
+            source.readObjectSource(object);
+            genes.readObjectGenes(object);
+            tags.readObjectTags(object);
+            devTags.readObjectDevTags(object);
+            geneIdentifiers.readObjectGeneIdentifiers(object);
+            featuresNames.readObjectFeaturesNames(object);
 
-            StringBuilder stringToCSVSage = sage.readObjectSage(object);
+            sage.readObjectSage(object);
             StringBuilder stringToCSVPmkb = pmkb.readObjectPmkb(object);
             StringBuilder stringToCSVBrca = brca.readObjectBRCA(object);
             StringBuilder stringToCSVCGI = cgi.readObjectCGI(object);
