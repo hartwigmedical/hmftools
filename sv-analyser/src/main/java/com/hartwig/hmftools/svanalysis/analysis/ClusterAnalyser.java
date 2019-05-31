@@ -216,8 +216,8 @@ public class ClusterAnalyser {
             }
 
             // isSpecificCluster(cluster);
-            cluster.buildArmClusters();
             cluster.cacheLinkedPairs();
+            cluster.buildArmClusters();
 
             reportClusterFeatures(cluster);
         }
@@ -366,7 +366,7 @@ public class ClusterAnalyser {
             int svMultiple = (int)round(svPloidy / clusterMinPloidy);
 
             if(maxAssemblyBreakends > 1)
-                svMultiple = max(svMultiple, maxAssemblyBreakends * (int)clusterMinPloidy);
+                svMultiple = max(svMultiple, maxAssemblyBreakends);
 
             svMultiple = max((int)round(svMultiple * replicationFactor), 1);
 
@@ -1325,28 +1325,25 @@ public class ClusterAnalyser {
 
         // isSpecificSV(varStart);
 
-        // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
-        final SvCluster cluster1 = varEnd.getCluster();
-
-        if(cluster1.isResolved() && cluster1.getTypeCount(INV) == 0)
-            return false;
+        final SvCluster cluster = varEnd.getCluster();
 
         boolean singleSV = varEnd.equals(varStart);
 
-        SvCluster cluster2 = null;
-
         if(singleSV)
         {
-            cluster2 = cluster1;
+            if(varStart.type() != INV)
+                return false;
         }
         else
         {
-            cluster2 = varStart.getCluster();
-
             // must be same cluster
-            if(cluster1 != cluster2)
+            if(varStart.getCluster() != cluster)
                 return false;
         }
+
+        // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
+        if(cluster.isResolved())
+            return false;
 
         boolean beEndUsesStart = beEnd.usesStart();
         boolean beStartUsesStart = beStart.usesStart();
@@ -1356,7 +1353,7 @@ public class ClusterAnalyser {
         if(singleSV)
         {
             // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
-            final SvChain chain = cluster1.findChain(varEnd);
+            final SvChain chain = cluster.findChain(varEnd);
 
             if(chain != null)
             {
@@ -1375,15 +1372,11 @@ public class ClusterAnalyser {
         }
         else
         {
-            // must be same cluster and part of the same chain
-            if(cluster1 != cluster2)
-                return false;
-
             if(varEnd.getReplicatedCount() != varStart.getReplicatedCount())
                 return false;
 
-            final SvChain chain1 = cluster1.findChain(varEnd);
-            final SvChain chain2 = cluster2.findChain(varStart);
+            final SvChain chain1 = cluster.findChain(varEnd);
+            final SvChain chain2 = cluster.findChain(varStart);
 
             if(chain1 == null || chain2 == null || chain1 != chain2)
                 return false;
@@ -1447,13 +1440,11 @@ public class ClusterAnalyser {
 
         if(varEnd.equals(varStart))
         {
-            LOGGER.debug("cluster({}) foldback inversion SV({}) length({})",
-                    cluster1.id(), varEnd.posId(), length);
+            LOGGER.debug("cluster({}) foldback inversion SV({}) length({})", cluster.id(), varEnd.posId(), length);
         }
         else
         {
-            LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})",
-                    cluster1.id(), beEnd.toString(), beStart.toString(), length);
+            LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})", cluster.id(), beEnd.toString(), beStart.toString(), length);
         }
 
         return true;

@@ -248,14 +248,14 @@ public class FusionTests
         // pre-gene
         SvVarData var1 = createDel("0", chromosome, 300,400);
 
-        // intronic del
-        SvVarData var2 = createDel("1", chromosome, 1150,1250);
+        // pre-gene (just to keep the cluster big enough to not resolve into simple SVs
+        SvVarData var2 = createDel("1", chromosome, 500,600);
 
         // fusing del
         SvVarData var3 = createDel("2", chromosome, 1550,11200);
 
         // intronic del which then runs out remainder of transcript
-        SvVarData var4 = createDel("3", chromosome, 11800,11900);
+        SvVarData var4 = createDel("3", chromosome, 15000,16000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -317,6 +317,7 @@ public class FusionTests
         assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
         assertTrue(validateFusionAnnotations(fusion, true, true));
 
+        /*
         // test 3: single-SV fusion from the 3rd SV, with the other ones simple SVs within introns leaving a valid traversal
         tester.clearClustersAndSVs();
 
@@ -361,6 +362,7 @@ public class FusionTests
         assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
 
         assertTrue(validateFusionAnnotations(fusion, true, false));
+        */
 
 
         // test 4: invalid fusion, with a TI beyond the fusion ending in an exon upstream and skipping an exon downstream

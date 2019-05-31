@@ -236,7 +236,7 @@ public class SvClusteringMethods {
                         if (nextVar.getClusterReason().isEmpty())
                             nextVar.addClusterReason(CLUSTER_REASON_PROXIMITY, var.id());
 
-                        checkClusteringClonalDiscrepancy(var, nextVar, CLUSTER_REASON_PROXIMITY);
+                        // checkClusteringClonalDiscrepancy(var, nextVar, CLUSTER_REASON_PROXIMITY);
                     }
                 }
 
@@ -253,16 +253,11 @@ public class SvClusteringMethods {
     {
         var1.addClusterReason(clusterReason, var2.id());
         var2.addClusterReason(clusterReason, var1.id());
-        checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
+        // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
     }
 
     public static void checkClusteringClonalDiscrepancy(final SvVarData var1, final SvVarData var2, final String clusterReason)
     {
-        if(isSpecificSV(var1) || isSpecificSV(var2))
-        {
-            LOGGER.debug("spec SV({})", var1.id());
-        }
-
         boolean varLowCns1 = hasLowCNChangeSupport(var1);
         boolean varLowCns2 = hasLowCNChangeSupport(var2);
 

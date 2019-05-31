@@ -855,49 +855,6 @@ public class FusionDisruptionAnalyser
             break;
 
             // no longer check that subsequent links within the same transcript are valid
-
-            /*
-            int[] nextBreakendExons = getExonRankings(exonDataList, nextBreakend.position());
-
-            if(nextBreakendExons[EXON_RANK_MIN] == nextBreakendExons[EXON_RANK_MAX])
-            {
-                // TI ends in an exon which is not permitted
-                disruptedExons += max(transcript.ExonMax - nextBreakendExons[EXON_RANK_MAX], 0);
-                transcriptTerminated = true;
-                break;
-            }
-
-            if(nextBreakend.getSV().isNullBreakend())
-                break;
-
-            // for now only allow simple SVs that aren't disruptive
-            if(!nextBreakend.getSV().isSimpleType())
-            {
-                disruptedExons += max(transcript.ExonMax - nextBreakendExons[EXON_RANK_MAX], 0);
-                transcriptTerminated = true;
-                break;
-            }
-
-            // otherwise check where this next SV goes
-            SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
-
-            // it must remain within the same intronic section to be valid
-            int[] nextOtherBreakendExons = getExonRankings(exonDataList, nextOtherBreakend.position());
-
-            if(nextOtherBreakendExons[EXON_RANK_MIN] != nextBreakendExons[EXON_RANK_MIN]
-            || nextOtherBreakendExons[EXON_RANK_MAX] != nextBreakendExons[EXON_RANK_MAX])
-            {
-                disruptedExons += max(nextOtherBreakendExons[EXON_RANK_MIN] - nextBreakendExons[EXON_RANK_MIN],
-                    nextOtherBreakendExons[EXON_RANK_MAX] - nextBreakendExons[EXON_RANK_MAX]);
-
-                transcriptTerminated = true;
-                break;
-            }
-
-            ++totalBreakends;
-
-            linkIndex += traverseUp ? 1 : -1;
-            */
         }
 
         if(facingBreakends > 0)

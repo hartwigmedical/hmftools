@@ -80,16 +80,16 @@ public class MergeRuleTests
         tester.AllVariants.add(var13);
 
         tester.preClusteringInit();
-
-        tester.mergeOnProximity();
+        tester.Analyser.clusterAndAnalyse();
+        // tester.mergeOnProximity();
 
         assertEquals(tester.getClusters().size(), 4);
-        assertEquals(tester.getClusters().get(0).getSvCount(), 10);
-        assertTrue(tester.getClusters().get(1).getSVs().contains(var7));
-        assertTrue(tester.getClusters().get(2).getSVs().contains(var8));
-        assertTrue(tester.getClusters().get(3).getSVs().contains(var9));
+        assertTrue(tester.getClusters().get(0).getSVs().contains(var7));
+        assertTrue(tester.getClusters().get(1).getSVs().contains(var8));
+        assertTrue(tester.getClusters().get(2).getSVs().contains(var9)); // DUP BE
+        assertEquals(10, tester.getClusters().get(3).getSvCount());
 
-        // non-overlapping DELs can merge, whereas overlapping DELs are split out
+        // simple clustered SVs are split out in the final routine
         tester.clearClustersAndSVs();
 
         SvVarData del1 = createDel(tester.nextVarId(), "2", 1000, 3000);
@@ -101,18 +101,10 @@ public class MergeRuleTests
         SvVarData del3 = createDel(tester.nextVarId(), "2", 3500, 8000);
         tester.AllVariants.add(del3);
 
-        SvVarData del4 = createDel(tester.nextVarId(), "2", 6000, 10000);
-        tester.AllVariants.add(del4);
-
         tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
 
-        tester.mergeOnProximity();
-
-        assertEquals(tester.getClusters().size(), 2);
-        assertTrue(tester.getClusters().get(0).getSVs().contains(del1));
-        assertTrue(tester.getClusters().get(0).getSVs().contains(del3));
-        assertTrue(tester.getClusters().get(1).getSVs().contains(del2));
-        assertTrue(tester.getClusters().get(1).getSVs().contains(del4));
+        assertEquals(3, tester.getClusters().size());
     }
 
     @Test
@@ -289,6 +281,7 @@ public class MergeRuleTests
         SvVarData var3 = createDel(tester.nextVarId(), "1", 60000, 60100);
         allVariants.add(var3);
 
+        // eqv breakend will be ignored
         SvVarData var4 = createSgl(tester.nextVarId(), "1", 80000, -1, false);
         var4.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
         allVariants.add(var4);
@@ -299,8 +292,6 @@ public class MergeRuleTests
 
         SvVarData overlap2 = createSgl(tester.nextVarId(), "1", 40000, -1, false);
         allVariants.add(overlap2);
-
-        allVariants.addAll(allVariants);
 
         tester.AllVariants.addAll(allVariants);
         tester.preClusteringInit();
