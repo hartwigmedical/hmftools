@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cosmic
 
+import com.google.common.annotations.VisibleForTesting
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
@@ -18,23 +19,27 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
     override val actionableRanges: List<ActionableGenomicRangeOutput> = listOf()
     override val cancerTypes: Map<String, Set<Doid>> = mapOf()
 
-    private fun readAndCorrectFusion(csvRecord: CSVRecord): FusionPair {
+    @VisibleForTesting
+    fun readAndCorrectFusion(csvRecord: CSVRecord): FusionPair {
         val fiveGene = csvRecord["5' Partner"].split("_").first()
-        val threeGene = csvRecord["3' Partner"].split("_").first()
+        var threeGene = csvRecord["3' Partner"].split("_").first()
         if (threeGene.equals("DUX4L1")) {
-            threeGene.replace("DUX4L1", "DUX4")
+            threeGene = threeGene.replace("DUX4L1", "DUX4")
         }
         if (threeGene.equals("SIP1")) {
-            threeGene.replace("SIP1", "GEMIN2")
+            threeGene = threeGene.replace("SIP1", "GEMIN2")
         }
         if (threeGene.equals("KIAA0284")) {
-            threeGene.replace("KIAA0284", "CEP170B")
+            threeGene = threeGene.replace("KIAA0284", "CEP170B")
         }
         if (threeGene.equals("ACCN1")) {
-            threeGene.replace("ACCN1", "ASIC2")
+            threeGene = threeGene.replace("ACCN1", "ASIC2")
         }
         if (threeGene.equals("FAM22A")) {
-            threeGene.replace("FAM22A", "NUTM2A")
+            threeGene = threeGene.replace("FAM22A", "NUTM2A")
+        }
+        if (threeGene.equals("ROD1")) {
+            threeGene = threeGene.replace("ROD1", "PTBP3")
         }
         return FusionPair(fiveGene, threeGene)
     }

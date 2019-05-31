@@ -20,7 +20,7 @@ data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_")
             Alteration.contains("FGFR1OP1-FGFR1")               -> copy(Alteration = Alteration.replace("FGFR1OP-FGFR1", "FGFR1OP1-FGFR1"))
             Alteration.contains("EP300-MOZ")                    -> copy(Alteration = Alteration.replace("EP300-MOZ", "KAT6A-EP300"))
             Alteration.contains("EP300-MLL")                    -> copy(Alteration = Alteration.replace("EP300-MLL", "KMT2A-EP300"))
-            Alteration.contains("BRD4-NUT")                     -> copy(Alteration = Alteration.replace("BRD4-NUT", "BRD4-NUT1"))
+            Alteration.contains("BRD4-NUT")                     -> copy(Alteration = Alteration.replace("BRD4-NUT", "BRD4-NUTM1"))
             Alteration.contains("CEP110-FGFR1")                 -> copy(Alteration = Alteration.replace("CEP110-FGFR1", "CNTRL-FGFR1"))
             Alteration.contains("FGFR2-KIAA1967")               -> copy(Alteration = Alteration.replace("FGFR2-KIAA1967", "FGFR2-CCAR2"))
             Alteration.contains("FIG-ROS1")                     -> copy(Alteration = Alteration.replace("FIG-ROS1", "GOPC-ROS1"))
@@ -33,8 +33,11 @@ data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_")
             Alteration.contains("SEC16A1-NOTCH1")               -> copy(Alteration = Alteration.replace("SEC16A1-NOTCH1", "SEC16A-NOTCH1"))
             Alteration.contains("TEL-JAK2")                     -> copy(Alteration = Alteration.replace("TEL-JAK2", "ETV6-JAK2"))
             Alteration.contains("TRA-NKX2-1")                   -> copy(Alteration = Alteration.replace("TRA-NKX2-1", "TRAC-NKX2-1"))
+            Alteration.contains("FGFR1OP1-FGFR1")               -> copy(Alteration = Alteration.replace("FGFR1OP1-FGFR1", "FGFR1OP-FGFR1"))
+            Alteration.contains("ZNF198-FGFR1")                 -> copy(Alteration = Alteration.replace("ZNF198-FGFR1", "ZMYM2-FGFR1"))
             Alteration == "p61BRAF-V600E"                       -> copy(Alteration = "V600E/V600K")
-            Alteration == "Delta-NTRK1"                         -> null
+            Alteration == "Delta"                               -> null
+            Alteration == "RARA"                                -> null
             else                                                -> this
         }
     }

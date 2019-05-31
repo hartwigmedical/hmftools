@@ -21,9 +21,7 @@ public class ViccFactoryTest {
     public void convertAll() throws IOException {
         final String baseDir = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
         final String inputFile = baseDir + File.separator + "all.json";
-        final String outputCsvFileName = baseDir + File.separator + "all.csv";
-
-        ViccFactory.extractAllFileSpecificFields(inputFile, outputCsvFileName);
+        ViccFactory.extractAllFile(inputFile);
     }
 
     @Test

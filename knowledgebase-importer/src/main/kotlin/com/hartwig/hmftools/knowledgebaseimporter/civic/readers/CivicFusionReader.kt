@@ -9,6 +9,7 @@ object CivicFusionReader : SomaticEventReader<CivicVariantInput, FusionEvent> {
     private val fusionReader = FusionReader(separators = setOf("-"))
 
     private fun matches(event: CivicVariantInput) = event.variantTypes.isNotEmpty() && event.variantTypes.all { it.contains("fusion") }
+            || event.variant.all { it.toString().contains("fusion")  }
 
     override fun read(event: CivicVariantInput): List<FusionEvent> {
         if (matches(event)) return listOfNotNull(fusionReader.read(event.gene, event.variant))

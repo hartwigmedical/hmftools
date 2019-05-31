@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.common.vicc;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import org.jetbrains.annotations.NotNull;
 
 public class source {
 
-    public static StringBuilder readObjectSource(@NotNull JsonObject object) {
+    public static void readObjectSource(@NotNull JsonObject object) {
         //Source object
-        StringBuilder stringToCSVSource = new StringBuilder();
-        stringToCSVSource.append(object.getAsJsonPrimitive("source")).append(";"); // source data
-        return stringToCSVSource;
+        JsonPrimitive source = object.getAsJsonPrimitive("source"); // source data
+        // TODO: add sql
     }
 }

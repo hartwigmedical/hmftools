@@ -7,13 +7,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class tags {
 
-    public static StringBuilder readObjectTags(@NotNull JsonObject object) {
+    public static void readObjectTags(@NotNull JsonObject object) {
         //Tags object
         StringBuilder stringToCSVTags = new StringBuilder();
         JsonArray arrayTags = object.getAsJsonArray("tags");
         String tags = arrayTags.toString();
         tags = tags.substring(1, tags.length() - 1);
-        stringToCSVTags.append(tags).append(";"); // tags data
-        return stringToCSVTags;
+        // TODO: add to sql
     }
 }
