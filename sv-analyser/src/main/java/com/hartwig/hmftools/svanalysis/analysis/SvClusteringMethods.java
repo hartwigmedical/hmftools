@@ -409,8 +409,7 @@ public class SvClusteringMethods {
 
         for(final SvLOH lohEvent : lohList)
         {
-            if((lohEvent.StartSV.isEmpty() && lohEvent.EndSV.isEmpty())
-            || (lohEvent.StartSV.equals(LOH_NO_SV) && lohEvent.EndSV.equals(LOH_NO_SV)))
+            if(lohEvent.StartSV == LOH_NO_SV && lohEvent.EndSV == LOH_NO_SV)
                 continue;
 
             SvCluster lohClusterStart = null;
@@ -430,7 +429,7 @@ public class SvClusteringMethods {
 
             for(final SvBreakend breakend : breakendList)
             {
-                if(breakend.orientation() == 1 && breakend.getSV().id().equals(lohEvent.StartSV))
+                if(breakend.orientation() == 1 && breakend.getSV().dbId() == lohEvent.StartSV)
                 {
                     lohClusterStart = breakend.getSV().getCluster();
                     lohSvStart = breakend.getSV();
@@ -438,7 +437,7 @@ public class SvClusteringMethods {
                     lohEvent.setBreakend(breakend, true);
                 }
 
-                if(breakend.orientation() == -1 && breakend.getSV().id().equals(lohEvent.EndSV))
+                if(breakend.orientation() == -1 && breakend.getSV().dbId() == lohEvent.EndSV)
                 {
                     lohClusterEnd = breakend.getSV().getCluster();
 

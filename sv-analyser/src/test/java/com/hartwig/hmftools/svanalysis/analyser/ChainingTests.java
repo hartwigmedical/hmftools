@@ -232,10 +232,10 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV,  3);
-        final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV,  1);
-        final SvVarData varC = createTestSv("C", "1", "1", 5000,6000, 1, 1, INV, 1);
-        final SvVarData varR = createTestSv("R", "1", "1", 1000,8000, 1, 1, INV, 1);
+        final SvVarData varA = createTestSv("0", "1", "1", 2000,3000, -1, -1, INV,  3);
+        final SvVarData varB = createTestSv("1", "1", "1", 9000,10000, 1, 1, INV,  1);
+        final SvVarData varC = createTestSv("2", "1", "1", 5000,6000, 1, 1, INV, 1);
+        final SvVarData varR = createTestSv("3", "1", "1", 1000,8000, 1, 1, INV, 1);
 
         tester.AllVariants.add(varA);
         tester.AllVariants.add(varB);
@@ -267,11 +267,11 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData varA = createTestSv("A", "1", "1", 2000,3000, -1, -1, INV, 5);
-        final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 3);
-        final SvVarData varC = createTestSv("C", "1", "1", 5000,6000, 1, 1, INV, 2);
-        final SvVarData varD = createTestSv("D", "1", "1", 7000,8000, -1, 1, DUP, 1);
-        final SvVarData varR = createTestSv("R", "1", "1", 1000,4000, 1, -1, DEL, 1);
+        final SvVarData varA = createTestSv("0", "1", "1", 2000,3000, -1, -1, INV, 5);
+        final SvVarData varB = createTestSv("1", "1", "1", 9000,10000, 1, 1, INV, 3);
+        final SvVarData varC = createTestSv("2", "1", "1", 5000,6000, 1, 1, INV, 2);
+        final SvVarData varD = createTestSv("3", "1", "1", 7000,8000, -1, 1, DUP, 1);
+        final SvVarData varR = createTestSv("4", "1", "1", 1000,4000, 1, -1, DEL, 1);
 
         // CN profile:
         // T - 2 - 1 - 6 - 11 - 12 - 10 - 8 - 9 - 8 - 5 - 2 - C
@@ -307,12 +307,12 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData varA = createTestSv("A", "1", "1", 1000,5000, 1, 1, INV, 1);
-        final SvVarData varB = createTestSv("B", "1", "1", 4000,9000, -1, 1, DUP, 2);
-        final SvVarData varC = createTestSv("C", "1", "1", 7000,8000, 1, -1, DEL, 2);
-        final SvVarData varD = createTestSv("D", "1", "1", 3000,6000, 1, -1, DEL, 2);
-        final SvVarData varE = createTestSv("E", "1", "1", 2000,10000, -1, -1, INV, 1);
-        final SvVarData varDup = createTestSv("DUP", "1", "1", 2500,4500, -1, 1, DUP, 1);
+        final SvVarData varA = createTestSv("1", "1", "1", 1000,5000, 1, 1, INV, 1);
+        final SvVarData varB = createTestSv("2", "1", "1", 4000,9000, -1, 1, DUP, 2);
+        final SvVarData varC = createTestSv("3", "1", "1", 7000,8000, 1, -1, DEL, 2);
+        final SvVarData varD = createTestSv("4", "1", "1", 3000,6000, 1, -1, DEL, 2);
+        final SvVarData varE = createTestSv("5", "1", "1", 2000,10000, -1, -1, INV, 1);
+        final SvVarData varDup = createTestSv("6", "1", "1", 2500,4500, -1, 1, DUP, 1);
 
         // CN profile:
         // T - 2 - 1 - 2 - 3 - 1 - 3 - 2 - 1 - 3 - 1 - 3 - 1 - 2  - C
@@ -346,17 +346,17 @@ public class ChainingTests
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData varA1 = createTestSv("A1", "1", "1", 2000,5500, -1, -1, INV, 4);
-        final SvVarData varA2 = createTestSv("A2", "1", "1", 3000,5600, -1, 1, DUP, 4);
+        final SvVarData varA1 = createTestSv("0", "1", "1", 2000,5500, -1, -1, INV, 4);
+        final SvVarData varA2 = createTestSv("1", "1", "1", 3000,5600, -1, 1, DUP, 4);
 
         varA1.setAssemblyData(false, "asmb_A1_A2");
         varA2.setAssemblyData(false, "asmb_A1_A2");
 
-        final SvVarData varB = createTestSv("B", "1", "1", 9000,10000, 1, 1, INV, 2);
+        final SvVarData varB = createTestSv("2", "1", "1", 9000,10000, 1, 1, INV, 2);
 
         // functions as a foldback but interrupted by the assembled TI A1-A2
-        final SvVarData varC = createTestSv("C", "1", "1", 5000,6000, 1, 1, INV, 1);
-        final SvVarData varR = createTestSv("R", "1", "1", 1000,8000, 1, 1, INV, 1);
+        final SvVarData varC = createTestSv("3", "1", "1", 5000,6000, 1, 1, INV, 1);
+        final SvVarData varR = createTestSv("4", "1", "1", 1000,8000, 1, 1, INV, 1);
 
         // CN profile
         // T - 2 - 1 - 5 - 9 - 8 - 12 - 8 - 7 - 6 - 4 - 2 - C

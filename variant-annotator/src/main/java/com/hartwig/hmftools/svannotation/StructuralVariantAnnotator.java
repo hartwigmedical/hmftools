@@ -188,17 +188,25 @@ public class StructuralVariantAnnotator
         {
             List<EnrichedStructuralVariant> enrichedVariants = loadSVsFromVCF();
 
-            // svDataList = enrichedVariants.stream().map(x -> convertSvData(x)).collect(Collectors.toList());
-
             if(mDbAccess != null)
             {
                 LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svDataList.size());
                 mDbAccess.writeStructuralVariants(sampleId, enrichedVariants);
-            }
 
-            // Re-read the data to get primaryId field as a foreign key for disruptions and fusions
-            // enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
-            svDataList = mDbAccess.readStructuralVariantData(sampleId);
+                // Re-read the data to get primaryId field as a foreign key for disruptions and fusions
+                // enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
+                svDataList = mDbAccess.readStructuralVariantData(sampleId);
+            }
+            else
+            {
+                // generate a unique ID for each record
+                int svId = 0;
+
+                for(EnrichedStructuralVariant var : enrichedVariants)
+                {
+                    svDataList.add(convertSvData(var, svId++));
+                }
+            }
 
             // write data to file
             try
@@ -302,23 +310,13 @@ public class StructuralVariantAnnotator
         {
             StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
-            int primaryKey = Integer.parseInt(var.id());
-
-            List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(primaryKey,
-                    true,
-                    var.startChromosome(),
-                    var.startPosition(),
-                    var.startOrientation(),
-                    PRE_GENE_PROMOTOR_DISTANCE);
+            List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
+                    var.id(), true, var.startChromosome(), var.startPosition(), var.startOrientation(), PRE_GENE_PROMOTOR_DISTANCE);
 
             if (var.type() != SGL)
             {
-                genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(primaryKey,
-                        false,
-                        var.endChromosome(),
-                        var.endPosition(),
-                        var.endOrientation(),
-                        PRE_GENE_PROMOTOR_DISTANCE));
+                genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(
+                        var.id(), false, var.endChromosome(), var.endPosition(), var.endOrientation(), PRE_GENE_PROMOTOR_DISTANCE));
             }
 
             if (genesList == null)
@@ -429,10 +427,10 @@ public class StructuralVariantAnnotator
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
-    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var)
+    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var, int svId)
     {
         return ImmutableStructuralVariantData.builder()
-                .id("")
+                .id(svId)
                 .startChromosome(var.chromosome(true))
                 .endChromosome(var.end() == null ? "0" : var.chromosome(false))
                 .startPosition(var.position(true))

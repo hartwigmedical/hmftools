@@ -94,7 +94,7 @@ public class SvVarData
 
     public SvVarData(final StructuralVariantData svData)
     {
-        mIdStr = svData.id();
+        mIdStr = String.valueOf(svData.id());
 
         mSVData = svData;
 
@@ -194,7 +194,7 @@ public class SvVarData
 
     public final int dbId()
     {
-        return Integer.parseInt(mSVData.id());
+        return mSVData.id();
     }
 
     public final StructuralVariantData getSvData() { return mSVData; }

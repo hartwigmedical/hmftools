@@ -187,8 +187,8 @@ public class SvSampleAnalyser {
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
 
-    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<String,double[]> svPloidyCalcDataMap,
-            final Map<String,SvCNData[]> svIdCnDataMap, final Map<String,List<SvCNData>> chrCnDataMap)
+    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer,double[]> svPloidyCalcDataMap,
+            final Map<Integer,SvCNData[]> svIdCnDataMap, final Map<String,List<SvCNData>> chrCnDataMap)
     {
         if((svPloidyCalcDataMap == null || svPloidyCalcDataMap.isEmpty()) && svIdCnDataMap.isEmpty())
             return;
@@ -199,7 +199,7 @@ public class SvSampleAnalyser {
         {
             if(svPloidyCalcDataMap != null)
             {
-                final double[] ploidyData = svPloidyCalcDataMap.get(var.id());
+                final double[] ploidyData = svPloidyCalcDataMap.get(var.dbId());
                 if (ploidyData != null)
                 {
                     double estPloidy = ploidyData[0];
@@ -208,7 +208,7 @@ public class SvSampleAnalyser {
                 }
             }
 
-            final SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
+            final SvCNData[] cnDataPair = svIdCnDataMap.get(var.dbId());
 
             if(cnDataPair == null)
                 continue;
@@ -447,8 +447,8 @@ public class SvSampleAnalyser {
 
                 ++svCount;
 
-                writer.write(String.format("%s,%s,%s,%d,%d",
-                        mSampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
+                writer.write(String.format("%s,%d,%s,%d,%d",
+                        mSampleId, var.dbId(), var.typeStr(), cluster.id(), cluster.getSvCount()));
 
                 writer.write(String.format(",%s,%d,%d,%s,%s,%d,%d,%s",
                         var.chromosome(true), var.position(true), var.orientation(true), var.arm(true),
@@ -711,9 +711,9 @@ public class SvSampleAnalyser {
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd = pair.getBreakend(false);
 
-                        writer.write(String.format(",%d,%d,%s,%s,%s,%s",
+                        writer.write(String.format(",%d,%d,%s,%d,%d,%s",
                                 chain.id(), chainSvCount, chainConsistent,
-                                beStart.getSV().origId(), beEnd.getSV().origId(), beStart.getChrArm()));
+                                beStart.getSV().dbId(), beEnd.getSV().dbId(), beStart.getChrArm()));
 
                         writer.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
                                 pair.isAssembled(), pair.length(),

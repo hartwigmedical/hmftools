@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.svanalysis.types.SvLOH.LOH_NO_SV;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -61,7 +63,6 @@ public class CNAnalyser {
 
     private List<String> mSampleIds;
     private int mRecordId;
-    private int mNoneSvId;
 
     private boolean mWriteAdjustedPloidyToFile;
     private boolean mWriteVerbosePloidyData;
@@ -73,11 +74,11 @@ public class CNAnalyser {
     private List<StructuralVariantData> mSvDataList;
     private List<PurpleCopyNumber> mCnRecords;
     private Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
-    private Map<String,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
+    private Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private PurityContext mPurityContext;
 
     private Map<String, List<SvLOH>> mSampleLohData;
-    private Map<String, Map<String,double[]>> mSampleSvPloidyCalcMap;
+    private Map<String, Map<Integer,double[]>> mSampleSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
     private Map<String, double[]> mChrEndsCNMap; // telemore and centromere CN values
 
     public static final String PURPLE_DATA_DIRECTORY = "purple";
@@ -102,28 +103,27 @@ public class CNAnalyser {
         mFileWriter = null;
         mRecalcPloidyFileWriter = null;
         mDbAccess = dbAccess;
-        mChrCnDataMap = new HashMap();
+        mChrCnDataMap = Maps.newHashMap();
         mSvDataList = Lists.newArrayList();
         mCnRecords = Lists.newArrayList();
-        mChrEndsCNMap = new HashMap();
-        mSvIdCnDataMap = new HashMap();
-        mSampleSvPloidyCalcMap = new HashMap();
+        mChrEndsCNMap = Maps.newHashMap();
+        mSvIdCnDataMap = Maps.newHashMap();
+        mSampleSvPloidyCalcMap = Maps.newHashMap();
         mPurityContext = null;
-        mSampleLohData = new HashMap();
+        mSampleLohData = Maps.newHashMap();
 
         mWriteLohData = false;
         mWriteAdjustedPloidyToFile = false;
         mWriteVerbosePloidyData = false;
 
         mRecordId = 0;
-        mNoneSvId = 0;
     }
 
-    public final Map<String,Map<String,double[]>> getSampleSvPloidyCalcMap() { return mSampleSvPloidyCalcMap; }
+    public final Map<String,Map<Integer,double[]>> getSampleSvPloidyCalcMap() { return mSampleSvPloidyCalcMap; }
     public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChrEndsCNMap; }
     public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
-    public final Map<String,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
+    public final Map<Integer,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
     public final PurityContext getPurityContext() { return mPurityContext; }
 
     public static void addCmdLineArgs(Options options)
@@ -343,11 +343,11 @@ public class CNAnalyser {
         }
     }
 
-    private StructuralVariantData getSvDataById(final String svId)
+    private StructuralVariantData getSvDataById(int svId)
     {
         for (final StructuralVariantData svData : mSvDataList)
         {
-            if(svData.id().equals(svId))
+            if(svData.id() == svId)
                 return svData;
         }
 
@@ -646,7 +646,7 @@ public class CNAnalyser {
 
             if (startSvData != null && endSvData != null)
             {
-                if (startSvData.id().equals(endSvData.id()))
+                if (startSvData.id() == endSvData.id())
                 {
                     LOGGER.debug("sample({}) cnID({} -> {}) matches singleSV({} - {})",
                             sampleId, startData.asString(), endData.asString(), startSvData.id(), startSvData.type());
@@ -691,8 +691,8 @@ public class CNAnalyser {
                     startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart,
                     lastMinCN, startData.minorAllelePloidy(), endData.minorAllelePloidy(),
                     lohMinCN, segCount, lohLength,
-                    startSvData != null ? startSvData.id() : "0",
-                    endSvData != null ? endSvData.id() : "0",
+                    startSvData != null ? startSvData.id() : LOH_NO_SV,
+                    endSvData != null ? endSvData.id() : LOH_NO_SV,
                     skipped, isValid);
 
             lohDataList.add(lohData);
@@ -780,8 +780,8 @@ public class CNAnalyser {
                         Double.parseDouble(items[11]),
                         Integer.parseInt(items[12]),
                         Long.parseLong(items[13]),
-                        items[14],
-                        items[15],
+                        Integer.parseInt(items[14]),
+                        Integer.parseInt(items[15]),
                         Boolean.parseBoolean(items[16]),
                         Boolean.parseBoolean(items[17]));
 
@@ -912,16 +912,16 @@ public class CNAnalyser {
 
         mSampleSvPloidyCalcMap.clear();
 
-        Map<String,double[]> svDataMap = new HashMap();
+        Map<Integer,double[]> svDataMap = Maps.newHashMap();
         mSampleSvPloidyCalcMap.put(sampleId, svDataMap);
 
         try
         {
             BufferedWriter writer = mRecalcPloidyFileWriter;
 
-            for (Map.Entry<String, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
+            for (Map.Entry<Integer, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
             {
-                final String svId = entry.getKey();
+                final int svId = entry.getKey();
                 final SvCNData[] cnDataPair = entry.getValue();
 
                 final SvCNData cnStartData = cnDataPair[SE_START];
@@ -934,7 +934,7 @@ public class CNAnalyser {
 
                 StructuralVariantData svData = cnStartData.getStructuralVariantData();
 
-                if(!svData.id().equals(svId))
+                if(svData.id() != svId)
                 {
                     svData = getSvDataById(svId);
                 }
@@ -1002,13 +1002,13 @@ public class CNAnalyser {
                 {
                     if (!mWriteVerbosePloidyData)
                     {
-                        writer.write(String.format("%s,%s,%.4f,%.4f",
+                        writer.write(String.format("%s,%d,%.4f,%.4f",
                                 sampleId, svData.id(),
                                 ploidyEstimate, ploidyUncertainty));
                     }
                     else
                     {
-                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.4f,%d,%d",
+                        writer.write(String.format("%s,%d,%s,%.4f,%.4f,%.4f,%d,%d",
                                 sampleId, svData.id(), svData.type(), svData.ploidy(), adjVafStart, adjVafEnd,
                                 tumorReadCountStart, tumorReadCountEnd));
 
@@ -1286,7 +1286,7 @@ public class CNAnalyser {
             }
 
             String currentSample = "";
-            Map<String,double[]> svDataMap = null;
+            Map<Integer,double[]> svDataMap = null;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -1300,11 +1300,11 @@ public class CNAnalyser {
                 if(currentSample.isEmpty() || !currentSample.equals(sampleId))
                 {
                     currentSample = sampleId;
-                    svDataMap = new HashMap();
+                    svDataMap = Maps.newHashMap();
                     mSampleSvPloidyCalcMap.put(currentSample, svDataMap);
                 }
 
-                final String svId = items[1];
+                final int svId = Integer.parseInt(items[1]);
                 double[] ploidyCalcs = {Double.parseDouble(items[2]), Double.parseDouble(items[3])};
 
                 svDataMap.put(svId, ploidyCalcs);

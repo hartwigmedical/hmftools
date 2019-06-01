@@ -57,7 +57,7 @@ class StructuralVariantDAO {
             }
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
-                    .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
+                    .id(record.getValue(STRUCTURALVARIANT.ID))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(isSingleBreakend ? "0" : record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))

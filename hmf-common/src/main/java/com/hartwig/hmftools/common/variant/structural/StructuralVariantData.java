@@ -6,8 +6,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 public abstract class StructuralVariantData {
 
-    @Nullable
-    public abstract String id();
+    public abstract int id();
     public abstract String startChromosome();
     public abstract String endChromosome();
     public abstract long startPosition();

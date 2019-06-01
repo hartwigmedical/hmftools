@@ -190,7 +190,7 @@ public class SvTestHelper
     {
         StructuralVariantData svData =
                 ImmutableStructuralVariantData.builder()
-                        .id(varId)
+                        .id(Integer.parseInt(varId))
                         .startChromosome(chrStart)
                         .endChromosome(chrEnd)
                         .startPosition(posStart)
@@ -282,7 +282,7 @@ public class SvTestHelper
         // NOTE: positions adjusted for orientation are not done correctly
         Map<String, List<SvCNData>> chrCnDataMap = CopyNumberAnalyser.getChrCnDataMap();
         final Map<String, List<SvBreakend>> chrBreakendMap = ClusteringMethods.getChrBreakendMap();
-        Map<String,SvCNData[]> svIdCnDataMap = CopyNumberAnalyser.getSvIdCnDataMap();
+        Map<Integer,SvCNData[]> svIdCnDataMap = CopyNumberAnalyser.getSvIdCnDataMap();
 
         chrCnDataMap.clear();
         svIdCnDataMap.clear();
@@ -438,7 +438,7 @@ public class SvTestHelper
                 if(cnDataPair == null)
                 {
                     cnDataPair = new SvCNData[2];
-                    svIdCnDataMap.put(var.id(), cnDataPair);
+                    svIdCnDataMap.put(var.dbId(), cnDataPair);
                 }
 
                 cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;

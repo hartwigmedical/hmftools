@@ -120,8 +120,8 @@ public class VisualiserWriter
                     int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
 
                     writer.write(
-                            String.format("%s,%d,%d,%s,%s,%s",
-                                    mSampleId, var.getCluster().id(), chainId, var.id(),
+                            String.format("%s,%d,%d,%d,%s,%s",
+                                    mSampleId, var.getCluster().id(), chainId, var.dbId(),
                                     var.type(), var.getCluster().getResolvedType()));
 
                     for (int be = SE_START; be <= SE_END; ++be)

@@ -142,6 +142,7 @@ public class AnnotationTests
         assertEquals(1, tester.Analyser.getClusters().size());
     }
 
+    @Ignore
     @Test
     public void testPotentialDoubleMinutes()
     {

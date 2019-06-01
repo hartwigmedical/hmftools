@@ -177,7 +177,7 @@ public class StructuralVariantFile
         int index = 0;
 
         final ImmutableStructuralVariantData.Builder builder = ImmutableStructuralVariantData.builder()
-                .id(values[index++])
+                .id(Integer.valueOf(values[index++]))
                 .startChromosome(values[index++])
                 .endChromosome(values[index++])
                 .startPosition(Long.valueOf(values[index++]))

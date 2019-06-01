@@ -223,19 +223,19 @@ public class MergeRuleTests
 
         lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 10000, 20000,
                 "DEL", "DUP", 1, 1, 1, 0, 1, 10000,
-                var1.id(), var2.id(), false, true));
+                var1.dbId(), var2.dbId(), false, true));
 
         lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 50000, 60000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 19000,
-                var2.id(), var1.id(), false, true));
+                var2.dbId(), var1.dbId(), false, true));
 
         lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 110000, 120000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 10000,
-                var6.id(), var5.id(), false, true));
+                var6.dbId(), var5.dbId(), false, true));
 
         lohData.add(new SvLOH(tester.SampleId, "2", 1, 2, 20000, 30000,
                 "BND", "DUP", 1, 1, 1, 0, 1, 10000,
-                var4.id(), var9.id(), false, true));
+                var4.dbId(), var9.dbId(), false, true));
 
         lohDataMap.put(tester.SampleId, lohData);
 
