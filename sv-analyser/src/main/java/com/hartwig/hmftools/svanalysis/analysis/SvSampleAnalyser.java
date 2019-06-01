@@ -166,7 +166,7 @@ public class SvSampleAnalyser {
         mAllVariants.clear();
     }
 
-    public void loadFromDatabase(final String sampleId, final List<SvVarData> variants)
+    public void setSampleSVs(final String sampleId, final List<SvVarData> variants)
     {
         clearState();
 
@@ -466,7 +466,7 @@ public class SvSampleAnalyser {
                 final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
                 writer.write(String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s,%s",
-                        dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.homology() : "",
+                        dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.startHomologySequence() : "",
                         dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
                         dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
                         dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments,

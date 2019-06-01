@@ -25,10 +25,13 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
@@ -53,13 +56,13 @@ public class CNAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(CNAnalyser.class);
 
+    private final String mSampleDataPath;
     private final String mOutputPath;
 
     private List<String> mSampleIds;
     private int mRecordId;
     private int mNoneSvId;
 
-    private boolean mRuntimeMode; // will retrieve all CN data as part of the standard SVA routine
     private boolean mWriteAdjustedPloidyToFile;
     private boolean mWriteVerbosePloidyData;
     private boolean mWriteLohData;
@@ -77,19 +80,24 @@ public class CNAnalyser {
     private Map<String, Map<String,double[]>> mSampleSvPloidyCalcMap;
     private Map<String, double[]> mChrEndsCNMap; // telemore and centromere CN values
 
+    public static final String PURPLE_DATA_DIRECTORY = "purple";
+
     public static final String CN_ANALYSIS_ONLY = "run_cn_analysis";
-    public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
-    private static final String LOH_DATA_FILE = "loh_file";
+    // public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
     private static final String WRITE_VERBOSE_PLOIDY_DATA = "verbose_ploidy_data";
 
     public static double MIN_LOH_CN = 0.5;
     public static double TOTAL_CN_LOSS = 0.5;
 
-    public CNAnalyser(final String outputPath, DatabaseAccess dbAccess)
+    public CNAnalyser(final String sampleDataPath, final String outputPath, DatabaseAccess dbAccess)
     {
+        if(sampleDataPath.endsWith(File.separator))
+            mSampleDataPath = sampleDataPath + PURPLE_DATA_DIRECTORY;
+        else
+            mSampleDataPath = sampleDataPath + File.separator + PURPLE_DATA_DIRECTORY;
+
         mOutputPath = outputPath;
-        mRuntimeMode = true;
         mSampleIds = Lists.newArrayList();
         mFileWriter = null;
         mRecalcPloidyFileWriter = null;
@@ -121,8 +129,6 @@ public class CNAnalyser {
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(CN_ANALYSIS_ONLY, false, "Run copy number analysis");
-        options.addOption(LOH_DATA_FILE, true, "Copy Number LOH data file");
-        options.addOption(SV_PLOIDY_CALC_FILE, true, "SV_PLOIDY_CALC_FILE");
         options.addOption(WRITE_PLOIDY_TO_FILE, false, "Write adjusted ploidy to CSV");
         options.addOption(WRITE_VERBOSE_PLOIDY_DATA, false, "Write all ploidy calc working data");
     }
@@ -133,25 +139,14 @@ public class CNAnalyser {
 
         if(!cmd.hasOption(CN_ANALYSIS_ONLY))
         {
-            if (cmd.hasOption(LOH_DATA_FILE))
-            {
-                mRuntimeMode = false;
-                final String lohDataFile = cmd.getOptionValue(LOH_DATA_FILE);
-                loadLOHFromCSV(lohDataFile);
-            }
-
+            /*
             if (cmd.hasOption(SV_PLOIDY_CALC_FILE))
             {
                 mRuntimeMode = false;
                 final String ploidyCalcFile = cmd.getOptionValue(SV_PLOIDY_CALC_FILE);
                 loadPloidyCalcData(ploidyCalcFile);
             }
-
-            if (mRuntimeMode)
-            {
-                LOGGER.info("CN analyser running in real time");
-                mRuntimeMode = true;
-            }
+            */
         }
         else
         {
@@ -163,10 +158,14 @@ public class CNAnalyser {
         return true;
     }
 
-    public void runSamplesList()
+    public void runAnalysis()
     {
+        // mode for CN analyis in isolation from SV analysis
         if(mDbAccess == null)
+        {
+            LOGGER.warn("batch mode requires DB connection");
             return;
+        }
 
         int sampleCount = 0;
 
@@ -176,31 +175,19 @@ public class CNAnalyser {
 
             loadSVData(sampleId);
 
-            loadCopyNumberData(sampleId, Lists.newArrayList());
+            loadCopyNumberData(sampleId);
 
             processSampleData(sampleId);
             ++sampleCount;
         }
     }
 
-    public void loadSampleData(final String sampleId, List<StructuralVariantData> svRecords, boolean requireNoneSegments)
+    public void loadSampleData(final String sampleId, List<StructuralVariantData> svRecords)
     {
         mSvDataList.clear();
         mSvDataList.addAll(svRecords);
 
-        List<SegmentSupport> cnSegmentTypes = Lists.newArrayList();
-
-        if(!mRuntimeMode)
-        {
-            // only retrieve a subset of CN records
-            cnSegmentTypes.add(SegmentSupport.CENTROMERE);
-            cnSegmentTypes.add(SegmentSupport.TELOMERE);
-
-            if (requireNoneSegments)
-                cnSegmentTypes.add(SegmentSupport.NONE);
-        }
-
-        loadCopyNumberData(sampleId, cnSegmentTypes);
+        loadCopyNumberData(sampleId);
 
         createChrCopyNumberMap();
 
@@ -211,27 +198,36 @@ public class CNAnalyser {
     {
         linkCopyNumberAndSvData(sampleId);
 
-        mPurityContext = mDbAccess.readPurityContext(sampleId);
-
         findLohEvents(sampleId);
 
-        if(mWriteAdjustedPloidyToFile || mRuntimeMode)
+        if(mWriteAdjustedPloidyToFile)
             reaclcAdjustedPloidy(sampleId);
     }
 
-    private void loadCopyNumberData(final String sampleId, List<SegmentSupport> cnSegmentTypes)
+    private void loadCopyNumberData(final String sampleId)
     {
         mChrCnDataMap.clear();
         mCnRecords.clear();
 
-        if(cnSegmentTypes.isEmpty())
+        if(mDbAccess == null)
         {
-            mCnRecords = mDbAccess.readCopynumbers(sampleId);
-            LOGGER.debug("sample({}) retrievd {} CN entries", sampleId, mCnRecords.size());
+            try
+            {
+                mCnRecords = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(mSampleDataPath, sampleId));
+                mPurityContext = FittedPurityFile.read(mSampleDataPath, sampleId);
+            }
+            catch(IOException e)
+            {
+                LOGGER.error("failed to load purity context: {}", e.toString());
+                return;
+            }
+
         }
         else
         {
-            mCnRecords = mDbAccess.readCopyNumberSegmentsByType(sampleId, cnSegmentTypes);
+            mCnRecords = mDbAccess.readCopynumbers(sampleId);
+            LOGGER.debug("sample({}) retrievd {} CN entries", sampleId, mCnRecords.size());
+            mPurityContext = mDbAccess.readPurityContext(sampleId);
         }
 
         String currentChromosome = "";
@@ -254,9 +250,6 @@ public class CNAnalyser {
 
     private void loadSVData(final String sampleId)
     {
-        if(mDbAccess == null)
-            return;
-
         mSvDataList = mDbAccess.readStructuralVariantData(sampleId);
 
         if(mSvDataList.isEmpty())
@@ -873,106 +866,6 @@ public class CNAnalyser {
         }
 
         return results;
-    }
-
-    public final List<StructuralVariantData> createNoneSegments()
-    {
-        List<StructuralVariantData> svList = Lists.newArrayList();
-
-        for(int i = 0; i < mCnRecords.size(); ++i)
-        {
-            if(i + 1 >= mCnRecords.size())
-                break;
-
-            final PurpleCopyNumber prevCnRecord = mCnRecords.get(i);
-            final PurpleCopyNumber noneCnRecord = mCnRecords.get(i+1);
-
-            if(prevCnRecord.segmentEndSupport() != NONE || noneCnRecord.segmentStartSupport() != NONE)
-                continue;
-
-            double segmentCopyNumber = noneCnRecord.averageTumorCopyNumber();
-            double copyNumberDiff = segmentCopyNumber - prevCnRecord.averageTumorCopyNumber();
-            double copyNumberChange = abs(copyNumberDiff);
-
-            double copyNumber = 0;
-
-            if(copyNumberDiff > 0)
-            {
-                if(i < mCnRecords.size() - 1)
-                {
-                    final PurpleCopyNumber nextCnRecord = mCnRecords.get(i+1);
-                    copyNumber = nextCnRecord.averageTumorCopyNumber();
-                }
-            }
-            else
-            {
-                copyNumber = prevCnRecord.averageTumorCopyNumber();
-            }
-
-            // negative CN change means sequence has come in from left (a lower position) and dropped at the breakend
-            byte orientation = copyNumberDiff > 0 ? (byte)-1 : 1;
-
-            long position = orientation == -1 ? noneCnRecord.start() : noneCnRecord.start() - 1;
-
-            int varId = mNoneSvId++;
-
-            svList.add(
-                    ImmutableStructuralVariantData.builder()
-                            .id(Integer.toString(varId))
-                            .vcfId("")
-                            .type(SGL)
-                            .ploidy(copyNumberChange)
-                            .startPosition(position)
-                            .startChromosome(noneCnRecord.chromosome())
-                            .startOrientation(orientation)
-                            .startAF(0.0)
-                            .adjustedStartAF(0.0)
-                            .adjustedStartCopyNumber(copyNumber)
-                            .adjustedStartCopyNumberChange(copyNumberChange)
-                            .homology("")
-                            .inexactHomologyOffsetStart(0)
-                            .insertSequence("")
-                            .imprecise(false)
-                            .qualityScore(0.0)
-                            .filter(NONE_SEGMENT_INFERRED)
-                            .endPosition(-1)
-                            .endChromosome("0")
-                            .endOrientation((byte)1)
-                            .endAF(0.0)
-                            .adjustedEndAF(0.0)
-                            .adjustedEndCopyNumber(0.0)
-                            .adjustedEndCopyNumberChange(0.0)
-                            .event("")
-                            .startTumorVariantFragmentCount(0)
-                            .startTumorReferenceFragmentCount(0)
-                            .startNormalVariantFragmentCount(0)
-                            .startNormalReferenceFragmentCount(0)
-                            .endTumorVariantFragmentCount(0)
-                            .endTumorReferenceFragmentCount(0)
-                            .endNormalVariantFragmentCount(0)
-                            .endNormalReferenceFragmentCount(0)
-                            .startIntervalOffsetStart(0)
-                            .startIntervalOffsetEnd(0)
-                            .endIntervalOffsetStart(0)
-                            .endIntervalOffsetEnd(0)
-                            .inexactHomologyOffsetStart(0)
-                            .inexactHomologyOffsetEnd(0)
-                            .startLinkedBy("")
-                            .endLinkedBy("")
-                            .startRefContext("")
-                            .endRefContext("")
-                            .insertSequenceAlignments("")
-                            .insertSequenceRepeatClass("")
-                            .insertSequenceRepeatCoverage(0.0)
-                            .insertSequenceRepeatOrientation((byte)0)
-                            .insertSequenceRepeatType("")
-                            .startAnchoringSupportDistance(0)
-                            .endAnchoringSupportDistance(0)
-                            .recovered(false)
-                            .build());
-        }
-
-        return svList;
     }
 
     private void initialisePloidyWriter()

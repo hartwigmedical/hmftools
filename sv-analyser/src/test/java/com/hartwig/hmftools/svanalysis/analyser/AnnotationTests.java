@@ -149,8 +149,6 @@ public class AnnotationTests
         // tester.logVerbose(true);
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
-        CNAnalyser cnAnalyser = new CNAnalyser("", null);
-
         // first a simple DUP
         final SvVarData var1 = createTestSv("0","1","1",500,600,-1,1, DUP,3);
 

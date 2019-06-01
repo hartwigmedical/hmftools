@@ -2,20 +2,24 @@ package com.hartwig.hmftools.svannotation;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
@@ -44,35 +48,38 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantAnnotator
 {
-    private SvDisruptionAnalyser mDisruptionAnalyser;
-    private SvFusionAnalyser mFusionAnalyser;
+    /* SV Annotator can run in either a single-sample or a batch mode:
+        - When in batch mode it sources SVs from the database and runs fusions logic (soon to be replaced by this function in Linx)
+        - Otherwise it reads SVs from a VCF, enriches them with purple data and writes the results to file and/or DB
+    */
 
     private String mSampleId;
     private String mOutputDir;
     private String mEnsemblDataDir;
-
     private final CommandLine mCmdLineArgs;
     private DatabaseAccess mDbAccess;
-    private boolean mSourceSvFromDB;
+    private boolean mBatchMode; // for bulk fusion analysis
+
+    private boolean mRunFusions;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
+    private SvDisruptionAnalyser mDisruptionAnalyser;
+    private SvFusionAnalyser mFusionAnalyser;
     private boolean mUploadAnnotations;
-    private boolean mWriteBreakends;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
 
     private StructuralVariantAnnotator(final CommandLine cmd)
     {
-        mDisruptionAnalyser = null;
-        mFusionAnalyser = null;
-
         mSampleId = "";
         mOutputDir = "";
         mEnsemblDataDir = "";
         mDbAccess = null;
-        mSourceSvFromDB = false;
         mCmdLineArgs = cmd;
-        mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
-        mWriteBreakends = false;
+        mBatchMode = false;
+        mRunFusions = false;
+        mDisruptionAnalyser = null;
+        mFusionAnalyser = null;
+        mSvGeneTranscriptCollection = null;
     }
 
     private boolean initialise()
@@ -85,29 +92,38 @@ public class StructuralVariantAnnotator
 
         mSampleId = mCmdLineArgs.getOptionValue(SAMPLE);
 
-        try
+        if(mCmdLineArgs.hasOption(DB_URL))
         {
-            mDbAccess = databaseAccess(mCmdLineArgs);
+            try
+            {
+                mDbAccess = databaseAccess(mCmdLineArgs);
+            }
+            catch (SQLException e)
+            {
+                LOGGER.error("Database connection failed: {}", e.toString());
+                return false;
+            }
         }
-        catch (SQLException e)
-        {
-            LOGGER.error("Database connection failed: {}", e.toString());
-            return false;
-        }
-
-        mSourceSvFromDB = mCmdLineArgs.hasOption(SOURCE_SVS_FROM_DB);
 
         mOutputDir = mCmdLineArgs.getOptionValue(DATA_OUTPUT_DIR, "");
 
         if (!mOutputDir.endsWith(File.separator))
             mOutputDir += File.separator;
 
-        mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
-        mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
-        mWriteBreakends = mCmdLineArgs.hasOption(WRITE_BREAKENDS);
+        if(mCmdLineArgs.hasOption(ENSEMBL_DATA_DIR))
+        {
+            mRunFusions = true;
+            mSvGeneTranscriptCollection = new SvGeneTranscriptCollection();
+            mEnsemblDataDir = mCmdLineArgs.getOptionValue(ENSEMBL_DATA_DIR, "");
 
-        mDisruptionAnalyser = new SvDisruptionAnalyser(mOutputDir);
-        mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection, mOutputDir);
+            mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
+            mSvGeneTranscriptCollection.loadEnsemblData(false);
+
+            mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
+
+            mDisruptionAnalyser = new SvDisruptionAnalyser(mOutputDir);
+            mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection, mOutputDir);
+        }
 
         return true;
     }
@@ -116,27 +132,22 @@ public class StructuralVariantAnnotator
     {
         List<String> samplesList = Lists.newArrayList();
 
-        if (mEnsemblDataDir.isEmpty())
+        if (mSampleId.equals("*"))
         {
-            LOGGER.error("Ensembl data cache directory missing");
-            return false;
+            if(mDbAccess == null)
+            {
+                LOGGER.warn("DB connection required for batch mode");
+                return false;
+            }
+
+            mBatchMode = true;
+            samplesList = mDbAccess.structuralVariantSampleList("");
+
+            LOGGER.info("batch mode: loaded {} samples from database", samplesList.size());
         }
-
-        mSvGeneTranscriptCollection.setDataPath(mEnsemblDataDir);
-        mSvGeneTranscriptCollection.loadEnsemblData(false);
-
-        if (samplesList.isEmpty())
+        else
         {
-            if (mSampleId.equals("*"))
-            {
-                samplesList = mDbAccess.structuralVariantSampleList("");
-
-                LOGGER.info("batch mode: loaded {} samples from database", samplesList.size());
-            }
-            else
-            {
-                samplesList.add(mSampleId);
-            }
+            samplesList.add(mSampleId);
         }
 
         for (String sampleId : samplesList)
@@ -144,9 +155,12 @@ public class StructuralVariantAnnotator
             runSample(sampleId, samplesList.size() > 1);
         }
 
-        mFusionAnalyser.onCompleted();
-        mDisruptionAnalyser.onCompleted();
-        mSvGeneTranscriptCollection.close();
+        if(mRunFusions)
+        {
+            mFusionAnalyser.onCompleted();
+            mDisruptionAnalyser.onCompleted();
+            mSvGeneTranscriptCollection.close();
+        }
 
         return true;
     }
@@ -155,38 +169,54 @@ public class StructuralVariantAnnotator
     {
         LOGGER.info("annotating variants for sample({})", sampleId);
 
-        List<EnrichedStructuralVariant> enrichedVariants;
+        List<StructuralVariantData> svDataList = null;
 
-        if (mSourceSvFromDB)
+        if (mBatchMode)
         {
-            // Optionally load existing SVs from the database rather than from VCF
-            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
+            // load existing SVs from the database rather than from VCF
+            svDataList = mDbAccess.readStructuralVariantData(sampleId);
 
-            if (enrichedVariants.isEmpty())
+            if (svDataList.isEmpty())
             {
-                LOGGER.debug("Sample({}) no SVs loaded from DB", sampleId);
+                LOGGER.debug("sample({}) no SVs loaded from DB", sampleId);
                 return;
             }
 
-            LOGGER.debug("Sample({}) loaded {} SVs from DB", sampleId, enrichedVariants.size());
+            LOGGER.debug("Sample({}) loaded {} SVs from DB", sampleId, svDataList.size());
         }
         else
         {
-            List<EnrichedStructuralVariant> svList = loadSVsFromVCF();
+            List<EnrichedStructuralVariant> enrichedVariants = loadSVsFromVCF();
 
-            LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svList.size());
+            // svDataList = enrichedVariants.stream().map(x -> convertSvData(x)).collect(Collectors.toList());
 
-            mDbAccess.writeStructuralVariants(sampleId, svList);
+            if(mDbAccess != null)
+            {
+                LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svDataList.size());
+                mDbAccess.writeStructuralVariants(sampleId, enrichedVariants);
+            }
 
             // Re-read the data to get primaryId field as a foreign key for disruptions and fusions
-            enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
+            // enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
+            svDataList = mDbAccess.readStructuralVariantData(sampleId);
+
+            // write data to file
+            try
+            {
+                final String svFilename = StructuralVariantFile.generateFilename(mOutputDir, sampleId);
+                StructuralVariantFile.write(svFilename, svDataList);
+            }
+            catch(IOException e)
+            {
+                LOGGER.error("failed to write SV data: {}", e.toString());
+            }
         }
 
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
         if (mSvGeneTranscriptCollection.hasCachedEnsemblData())
         {
-            annotations = createAnnotations(enrichedVariants);
+            annotations = addGeneAnnotations(svDataList);
 
             LOGGER.debug("Loaded {} Ensembl annotations from file", annotations.size());
         }
@@ -200,11 +230,6 @@ public class StructuralVariantAnnotator
         {
             mFusionAnalyser.writeFusions(fusions, sampleId, hasMultipleSamples);
             mDisruptionAnalyser.writeDisruptions(disruptions, sampleId, hasMultipleSamples);
-
-            if (mWriteBreakends)
-            {
-                mSvGeneTranscriptCollection.writeBreakendData(sampleId, annotations);
-            }
         }
 
         if (mUploadAnnotations)
@@ -269,30 +294,30 @@ public class StructuralVariantAnnotator
         return new EnrichedStructuralVariantFactory(indexedFastaSequenceFile).enrich(variants);
     }
 
-    private List<StructuralVariantAnnotation> createAnnotations(List<EnrichedStructuralVariant> enrichedVariants)
+    private List<StructuralVariantAnnotation> addGeneAnnotations(List<StructuralVariantData> svDataList)
     {
         List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
-        for (final EnrichedStructuralVariant var : enrichedVariants)
+        for (final StructuralVariantData var : svDataList)
         {
             StructuralVariantAnnotation annotation = new StructuralVariantAnnotation(var);
 
-            Integer primaryKey = var.primaryKey();
+            int primaryKey = Integer.parseInt(var.id());
 
             List<GeneAnnotation> genesList = mSvGeneTranscriptCollection.findGeneAnnotationsBySv(primaryKey,
                     true,
-                    var.chromosome(true),
-                    var.position(true),
-                    var.orientation(true),
+                    var.startChromosome(),
+                    var.startPosition(),
+                    var.startOrientation(),
                     PRE_GENE_PROMOTOR_DISTANCE);
 
-            if (var.end() != null)
+            if (var.type() != SGL)
             {
                 genesList.addAll(mSvGeneTranscriptCollection.findGeneAnnotationsBySv(primaryKey,
                         false,
-                        var.chromosome(false),
-                        var.position(false),
-                        var.orientation(false),
+                        var.endChromosome(),
+                        var.endPosition(),
+                        var.endOrientation(),
                         PRE_GENE_PROMOTOR_DISTANCE));
             }
 
@@ -347,10 +372,6 @@ public class StructuralVariantAnnotator
         LOGGER.info("run complete");
     }
 
-    private static final String SOURCE_SVS_FROM_DB = "source_svs_from_db";
-    private static final String LOAD_ANNOTATIONS_FROM_FILE = "load_annotations";
-    private static final String WRITE_BREAKENDS = "write_breakends";
-
     private static final String SKIP_DB_UPLOAD = "skip_db_upload";
 
     // configuration
@@ -371,24 +392,21 @@ public class StructuralVariantAnnotator
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(VCF_FILE, true, "Path to the vcf file.");
-        options.addOption(SAMPLE, true, "Tumor sample.");
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        options.addOption(VCF_FILE, true, "Path to the vcf file");
+        options.addOption(SAMPLE, true, "Tumor sample");
+        options.addOption(DB_USER, true, "Database user name");
+        options.addOption(DB_PASS, true, "Database password");
+        options.addOption(DB_URL, true, "Database url");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
-        options.addOption(DATA_OUTPUT_DIR, true, "Path to persist annotations to file");
+        options.addOption(DATA_OUTPUT_DIR, true, "Sample data directory");
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(WRITE_ENSEMBL_CACHE, false, "Write Ensembl cached data files and exit");
 
         SvFusionAnalyser.addCmdLineArgs(options);
         EnsemblDAO.addCmdLineArgs(options);
 
         // testing options
-        options.addOption(SOURCE_SVS_FROM_DB, false, "Skip annotations, including Ensemble DB data sync, for testing only)");
-        options.addOption(LOAD_ANNOTATIONS_FROM_FILE, false, "Load existing annotations previously written to file");
-        options.addOption(WRITE_BREAKENDS, false, "Write breakend data to file");
         options.addOption(SKIP_DB_UPLOAD, false, "Skip uploading fusions and disruptions to database, off by default");
 
         return options;
@@ -409,5 +427,64 @@ public class StructuralVariantAnnotator
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
+    }
+
+    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var)
+    {
+        return ImmutableStructuralVariantData.builder()
+                .id("")
+                .startChromosome(var.chromosome(true))
+                .endChromosome(var.end() == null ? "0" : var.chromosome(false))
+                .startPosition(var.position(true))
+                .endPosition(var.end() == null ? -1 : var.position(false))
+                .startOrientation(var.orientation(true))
+                .endOrientation(var.end() == null ? (byte)0 : var.orientation(false))
+                .startHomologySequence(var.start().homology())
+                .endHomologySequence(var.end() == null ? "" : var.end().homology())
+                .ploidy(var.ploidy())
+                .startAF(var.start().alleleFrequency())
+                .endAF(var.end() == null ? 0 : var.end().alleleFrequency())
+                .adjustedStartAF(var.start().adjustedAlleleFrequency())
+                .adjustedEndAF(var.end() == null ? 0 : var.end().adjustedAlleleFrequency())
+                .adjustedStartCopyNumber(var.start().adjustedCopyNumber())
+                .adjustedEndCopyNumber(var.end() == null ? 0 : var.end().adjustedCopyNumber())
+                .adjustedStartCopyNumberChange(var.start().adjustedCopyNumberChange())
+                .adjustedEndCopyNumberChange(var.end() == null ? 0 : var.end().adjustedCopyNumberChange())
+                .insertSequence(var.insertSequence())
+                .type(var.type())
+                .filter(var.filter())
+                .imprecise(var.imprecise())
+                .qualityScore(var.qualityScore())
+                .event(var.event())
+                .startTumorVariantFragmentCount(var.start().tumorVariantFragmentCount())
+                .startTumorReferenceFragmentCount(var.start().tumorReferenceFragmentCount())
+                .startNormalVariantFragmentCount(var.start().normalVariantFragmentCount())
+                .startNormalReferenceFragmentCount(var.start().normalReferenceFragmentCount())
+                .endTumorVariantFragmentCount(var.end() == null ? 0 : var.end().tumorVariantFragmentCount())
+                .endTumorReferenceFragmentCount(var.end() == null ? 0 : var.end().tumorReferenceFragmentCount())
+                .endNormalVariantFragmentCount(var.end() == null ? 0 : var.end().normalVariantFragmentCount())
+                .endNormalReferenceFragmentCount(var.end() == null ? 0 : var.end().normalReferenceFragmentCount())
+                .startIntervalOffsetStart(var.start().startOffset())
+                .startIntervalOffsetEnd(var.start().endOffset())
+                .endIntervalOffsetStart(var.end() == null ? 0 : var.end().startOffset())
+                .endIntervalOffsetEnd(var.end() == null ? 0 : var.end().endOffset())
+                .inexactHomologyOffsetStart(var.start().inexactHomologyOffsetStart())
+                .inexactHomologyOffsetEnd(var.start().inexactHomologyOffsetEnd())
+                .startLinkedBy(var.startLinkedBy())
+                .endLinkedBy(var.endLinkedBy())
+                .vcfId(var.id())
+                .startRefContext(var.start().refGenomeContext())
+                .endRefContext(var.end() == null ? "" : var.end().refGenomeContext())
+                .recovered(var.recovered())
+                .recoveryMethod(var.recoveryMethod())
+                .recoveryFilter(var.recoveryFilter())
+                .insertSequenceAlignments(var.insertSequenceAlignments())
+                .insertSequenceRepeatClass(var.insertSequenceRepeatClass())
+                .insertSequenceRepeatType(var.insertSequenceRepeatType())
+                .insertSequenceRepeatOrientation(var.insertSequenceRepeatOrientation())
+                .insertSequenceRepeatCoverage(var.insertSequenceRepeatCoverage())
+                .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
+                .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
+                .build();
     }
 }

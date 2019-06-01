@@ -60,7 +60,7 @@ public class SvTestHelper
 
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
-        CopyNumberAnalyser = new CNAnalyser("", null);
+        CopyNumberAnalyser = new CNAnalyser("", "", null);
         Analyser.setCopyNumberAnalyser(CopyNumberAnalyser);
 
         Analyser.setRunValidationChecks(true);
@@ -197,20 +197,19 @@ public class SvTestHelper
                         .endPosition(posEnd)
                         .startOrientation((byte)orientStart)
                         .endOrientation((byte)orientEnd)
+                        .startHomologySequence("")
+                        .endHomologySequence("")
                         .startAF(1.0)
-                        .adjustedStartAF(1.0)
-                        .adjustedStartCopyNumber(cnStart)
-                        .adjustedStartCopyNumberChange(cnChgStart)
                         .endAF(1.0)
-                        .adjustedEndAF(1.0)
-                        .adjustedEndCopyNumber(cnEnd)
-                        .adjustedEndCopyNumberChange(cnChgEnd)
                         .ploidy(ploidy)
-                        .type(type)
-                        .homology("")
-                        .vcfId("")
+                        .adjustedStartAF(1.0)
+                        .adjustedEndAF(1.0)
+                        .adjustedStartCopyNumber(cnStart)
+                        .adjustedEndCopyNumber(cnEnd)
+                        .adjustedStartCopyNumberChange(cnChgStart)
+                        .adjustedEndCopyNumberChange(cnChgEnd)
                         .insertSequence(insertSeq)
-                        .insertSequenceAlignments("")
+                        .type(type)
                         .filter("PASS")
                         .imprecise(false)
                         .qualityScore(0.0)
@@ -231,9 +230,13 @@ public class SvTestHelper
                         .inexactHomologyOffsetEnd(0)
                         .startLinkedBy("")
                         .endLinkedBy("")
+                        .vcfId("")
                         .startRefContext("")
                         .endRefContext("")
                         .recovered(false)
+                        .recoveryMethod("")
+                        .recoveryFilter("")
+                        .insertSequenceAlignments("")
                         .insertSequenceRepeatClass("")
                         .insertSequenceRepeatType("")
                         .insertSequenceRepeatOrientation((byte)0)

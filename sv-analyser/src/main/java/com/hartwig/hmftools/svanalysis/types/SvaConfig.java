@@ -20,9 +20,9 @@ import org.apache.logging.log4j.Logger;
 
 public class SvaConfig
 {
-
     final public int ProximityDistance;
-    final public String OutputCsvPath;
+    final public String SampleDataPath;
+    final public String OutputCsvPath; // only used in batch mode, otherwise will be set to sample_dir/linx/
     final public String FragileSiteFile;
     final public String LineElementFile;
     final public String ReplicationOriginsFile;
@@ -35,7 +35,10 @@ public class SvaConfig
 
     private List<String> mSampleIds;
 
+    public static final String LINX_DATA_DIRECTORY = "linx";
+
     // config options
+    public static final String SAMPLE_DATA_PATH = "sample_data_path";
     public static final String DATA_OUTPUT_PATH = "data_output_path";
     public static final String SAMPLE = "sample";
 
@@ -88,11 +91,20 @@ public class SvaConfig
             }
         }
 
-        String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
-        if(!dataOutputDir.endsWith(File.separator))
-            dataOutputDir += File.separator;
+        SampleDataPath = cmd.getOptionValue(SAMPLE_DATA_PATH, "");
 
-        OutputCsvPath = dataOutputDir;
+        if(cmd.hasOption(DATA_OUTPUT_PATH))
+        {
+            String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
+            if (!dataOutputDir.endsWith(File.separator))
+                dataOutputDir += File.separator;
+
+            OutputCsvPath = dataOutputDir;
+        }
+        else
+        {
+            OutputCsvPath = SampleDataPath + File.separator + LINX_DATA_DIRECTORY + File.separator;
+        }
 
         ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
                 : DEFAULT_PROXIMITY_DISTANCE;
@@ -118,6 +130,7 @@ public class SvaConfig
     public SvaConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
+        SampleDataPath= "";
         OutputCsvPath = "";
         FragileSiteFile = "";
         LineElementFile = "";
@@ -132,6 +145,7 @@ public class SvaConfig
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(SAMPLE_DATA_PATH, true, "Sample data directory");
         options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");

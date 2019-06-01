@@ -58,27 +58,25 @@ class StructuralVariantDAO {
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
                     .id(String.valueOf(record.getValue(STRUCTURALVARIANT.ID)))
-                    .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(isSingleBreakend ? "0" : record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
                     .endPosition(isSingleBreakend ? -1 : record.getValue(STRUCTURALVARIANT.ENDPOSITION))
                     .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
                     .endOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDORIENTATION)))
+                    .startHomologySequence(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
+                    .endHomologySequence(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE))
                     .startAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTAF)))
-                    .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF)))
-                    .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER)))
-                    .adjustedStartCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE)))
                     .endAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDAF)))
-                    .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF)))
-                    .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
-                    .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
                     .ploidy(getValueNotNull(ploidy))
-                    .type(isSingleBreakend
-                            ? StructuralVariantType.SGL
-                            : StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
-                    .homology(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
+                    .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF)))
+                    .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF)))
+                    .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER)))
+                    .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
+                    .adjustedStartCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE)))
+                    .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
+                    .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .filter(filterStr)
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
@@ -99,6 +97,10 @@ class StructuralVariantDAO {
                     .inexactHomologyOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
                     .startLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY)))
                     .endLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
+                    .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
+                    .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
+                    .recoveryMethod(record.getValue(STRUCTURALVARIANT.RECOVERYMETHOD))
+                    .recoveryFilter(record.getValue(STRUCTURALVARIANT.RECOVERYFILTER))
                     .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
                     .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
                     .insertSequenceAlignments(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
@@ -106,7 +108,6 @@ class StructuralVariantDAO {
                     .insertSequenceRepeatType(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE)))
                     .insertSequenceRepeatOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION)))
                     .insertSequenceRepeatCoverage(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
-                    .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
                     .startAnchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE)))
                     .endAnchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE)))
                     .build());
@@ -341,34 +342,6 @@ class StructuralVariantDAO {
                 variant.end() == null ? 0 : variant.end().anchoringSupportDistance(),
                 timestamp);
     }
-
-    /*
-    public void updateCalculatedPloidy(final List<StructuralVariantData> svDataList)
-    {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-
-        List<StructuralvariantRecord> updates = Lists.newArrayList();
-
-        try
-        {
-            for (final StructuralVariantData svData : svDataList)
-            {
-                StructuralvariantRecord update = new StructuralvariantRecord();
-                update.setId(Integer.parseInt(svData.id()));
-                update.setModified(timestamp);
-                update.setPloidymin(DatabaseUtil.decimal(svData.ploidyMin()));
-                update.setPloidymax(DatabaseUtil.decimal(svData.ploidyMax()));
-
-                updates.add(update);
-            }
-
-            context.batchUpdate(updates).execute();
-        }
-        catch(Exception e)
-        {
-        }
-    }
-    */
 
     public void deleteStructuralVariantsForSample(@NotNull String sample) {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();

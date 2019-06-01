@@ -25,6 +25,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
@@ -849,13 +850,13 @@ public class SvGeneTranscriptCollection
                 {
                     for(final Transcript transcript : geneAnnotation.transcripts())
                     {
-                        final StructuralVariant var = annotation.variant();
+                        final StructuralVariantData var = annotation.variant();
 
                         boolean isStart = geneAnnotation.isStart();
 
-                        writer.write(String.format("%s,%d,%s,%s,%d,%d,%s",
-                                sampleId, var.primaryKey(), isStart, var.chromosome(isStart), var.position(isStart),
-                                var.orientation(isStart), var.type()));
+                        writer.write(String.format("%s,%s,%s,%s,%d,%d,%s",
+                                sampleId, var.id(), isStart, var.startChromosome(), var.startPosition(),
+                                var.startOrientation(), var.type()));
 
                         // Gene info: geneName, geneStableId, geneStrand, transcriptId
                         writer.write(

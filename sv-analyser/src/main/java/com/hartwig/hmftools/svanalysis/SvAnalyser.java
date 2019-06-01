@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFER
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.DATA_OUTPUT_PATH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
@@ -44,13 +46,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvAnalyser {
 
-    private static final Logger LOGGER = LogManager.getLogger(SvAnalyser.class);
-
-
     private static final String RUN_SVA = "run_sv_analysis";
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
-    private static final String INCLUDE_NONE_SEGMENTS = "incl_none_segments";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     private static final String STATS_ROUTINES = "stats_routines";
     private static final String MULT_BIOPSY_ANALYSIS = "mult_biopsy_analysis";
@@ -59,6 +57,8 @@ public class SvAnalyser {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
+
+    private static final Logger LOGGER = LogManager.getLogger(SvAnalyser.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
@@ -104,19 +104,27 @@ public class SvAnalyser {
 
         List<String> samplesList = svaConfig.getSampleIds();
 
+        if(dbAccess == null && (svaConfig.hasMultipleSamples() || samplesList.isEmpty()))
+        {
+            LOGGER.warn("batch mode requires a DB connection");
+            return;
+        }
+
+        boolean sampleDataFromFile = (dbAccess == null);
+
         if (samplesList.isEmpty())
         {
             samplesList = getStructuralVariantSamplesList(dbAccess);
             svaConfig.setSampleIds(samplesList);
         }
 
-        CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.OutputCsvPath, dbAccess);
+        CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.SampleDataPath, svaConfig.OutputCsvPath, dbAccess);
         cnAnalyser.loadConfig(cmd, samplesList);
 
         if(cmd.hasOption(CN_ANALYSIS_ONLY))
         {
             // run CN analysis, which will write a bunch of cohort-wide sample data, then exit
-            cnAnalyser.runSamplesList();
+            cnAnalyser.runAnalysis();
             cnAnalyser.close();
 
             LOGGER.info("CN analysis complete");
@@ -167,9 +175,6 @@ public class SvAnalyser {
 
                         LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
                     }
-
-                    // fusionAnalyser.writeGeneProbabilityData();
-
                 }
 
                 if(checkDrivers)
@@ -179,8 +184,6 @@ public class SvAnalyser {
                     driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
                 }
             }
-
-            boolean createNoneSvsFromCNData = cmd.hasOption(INCLUDE_NONE_SEGMENTS);
 
             if(driverGeneAnnotator != null)
             {
@@ -197,9 +200,10 @@ public class SvAnalyser {
 
                 prefCounter.start();
 
-                List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
+                List<StructuralVariantData> svRecords = sampleDataFromFile ?
+                        loadSampleSvData(svaConfig.SampleDataPath) : dbAccess.readStructuralVariantData(sampleId);
 
-                List<SvVarData> svVarData = createSvData(svRecords, !createNoneSvsFromCNData);
+                List<SvVarData> svVarData = createSvData(svRecords);
 
                 if(svVarData.isEmpty())
                 {
@@ -209,21 +213,9 @@ public class SvAnalyser {
 
                 LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count);
 
-                cnAnalyser.loadSampleData(sampleId, svRecords, createNoneSvsFromCNData);
+                cnAnalyser.loadSampleData(sampleId, svRecords);
 
-                if (createNoneSvsFromCNData)
-                {
-                    List<StructuralVariantData> noneSegmentSVs = cnAnalyser.createNoneSegments();
-
-                    LOGGER.debug("sample({}) including {} none copy number segments", sampleId, noneSegmentSVs.size());
-
-                    for (final StructuralVariantData svData : noneSegmentSVs)
-                    {
-                        svVarData.add(new SvVarData(svData));
-                    }
-                }
-
-                sampleAnalyser.loadFromDatabase(sampleId, svVarData);
+                sampleAnalyser.setSampleSVs(sampleId, svVarData);
 
                 sampleAnalyser.analyse();
 
@@ -284,15 +276,26 @@ public class SvAnalyser {
         LOGGER.info("run complete");
     }
 
-    private static List<SvVarData> createSvData(List<StructuralVariantData> svRecords, boolean includeNoneSegments)
+    private static List<StructuralVariantData> loadSampleSvData(final String samplePath)
+    {
+        try
+        {
+            return StructuralVariantFile.read(samplePath);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load SV data: {}", e.toString());
+            return Lists.newArrayList();
+        }
+    }
+
+    private static List<SvVarData> createSvData(List<StructuralVariantData> svRecords)
     {
         List<SvVarData> svVarDataItems = Lists.newArrayList();
 
         for (final StructuralVariantData svRecord : svRecords) {
 
             if(svRecord.filter().equals(PON_FILTER_PON))
-                continue;
-            else if(svRecord.filter().equals(NONE_SEGMENT_INFERRED) && !includeNoneSegments)
                 continue;
 
             // all others (currently PASS or blank) are accepted
@@ -322,7 +325,6 @@ public class SvAnalyser {
         options.addOption(RUN_SVA, false, "Whether to run clustering logic");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
-        options.addOption(INCLUDE_NONE_SEGMENTS, false, "Include copy number NONE segments in SV analysis");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
         options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
         options.addOption(SIM_ROUTINES, false, "Optional: simulation routines");
@@ -348,7 +350,8 @@ public class SvAnalyser {
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
+    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    {
         final String userName = cmd.getOptionValue(DB_USER);
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);

@@ -81,19 +81,6 @@ public class GeneAnnotation {
         mInsertSequence = var.insertSequence();
     }
 
-    public void setSvData(final EnrichedStructuralVariant var)
-    {
-        if(var.end() == null && !mIsStart)
-            return;
-
-        mOrientation = var.orientation(mIsStart);
-        mPloidy = var.ploidy() != null ? var.ploidy() : 0;
-        mPosition = var.position(mIsStart);
-        mChromosome = var.chromosome(mIsStart);
-        mSvType = var.type();
-        mInsertSequence = var.insertSequence();
-    }
-
     public int id() { return mVarId; }
     public byte orientation() { return mOrientation; }
     public long position() { return mPosition; }
