@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -28,7 +27,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStruct
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.StructuralVariantAnnotationDAO;
+import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser;
 import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
 
@@ -243,7 +242,7 @@ public class StructuralVariantAnnotator
         if (mUploadAnnotations)
         {
             LOGGER.debug("persisting annotations to database");
-            final StructuralVariantAnnotationDAO annotationDAO = new StructuralVariantAnnotationDAO(mDbAccess.context());
+            final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(mDbAccess.context());
 
             annotationDAO.deleteAnnotationsForSample(sampleId);
 

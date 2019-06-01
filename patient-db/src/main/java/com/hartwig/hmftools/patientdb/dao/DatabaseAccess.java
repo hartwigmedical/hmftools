@@ -25,6 +25,9 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -64,9 +67,11 @@ public class DatabaseAccess {
     @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
-    private final StructuralVariantAnnotationDAO structuralVariantAnnotationDAO;
-    @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
+    @NotNull
+    private final StructuralVariantClusterDAO structuralVariantClusterDAO;
+    @NotNull
+    private final StructuralVariantFusionDAO structuralVariantFusionDAO;
     @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
@@ -89,8 +94,9 @@ public class DatabaseAccess {
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
-        structuralVariantAnnotationDAO = new StructuralVariantAnnotationDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
+        structuralVariantClusterDAO = new StructuralVariantClusterDAO(context);
+        structuralVariantFusionDAO = new StructuralVariantFusionDAO(context);
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
@@ -169,11 +175,6 @@ public class DatabaseAccess {
     }
 
     @NotNull
-    public List<EnrichedStructuralVariant> readStructuralVariants(@NotNull final String sample) {
-        return structuralVariantDAO.readEnrichedData(sample);
-    }
-
-    @NotNull
     public List<String> structuralVariantSampleList(@NotNull final String sampleSearch) {
         return structuralVariantDAO.getSamplesList(sampleSearch);
     }
@@ -184,6 +185,18 @@ public class DatabaseAccess {
 
     public void writeCopynumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
         copyNumberDAO.writeCopyNumberRegions(sample, regions);
+    }
+
+    public void writeSvClusters(@NotNull final String sample, @NotNull List<LinxCluster> clusters) {
+        structuralVariantClusterDAO.writeClusters(sample, clusters);
+    }
+
+    public void writeSvLinxData(@NotNull final String sample, @NotNull List<LinxSvData> svData) {
+        structuralVariantClusterDAO.writeSvData(sample, svData);
+    }
+
+    public void writeSvLinks(@NotNull final String sample, @NotNull List<LinxLink> links) {
+        structuralVariantClusterDAO.writeLinks(sample, links);
     }
 
     @NotNull
@@ -198,7 +211,7 @@ public class DatabaseAccess {
 
     @NotNull
     public List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
-        return structuralVariantAnnotationDAO.readGeneFusions(sample);
+        return structuralVariantFusionDAO.readGeneFusions(sample);
     }
 
     @NotNull
@@ -307,7 +320,7 @@ public class DatabaseAccess {
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
         LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
-        structuralVariantAnnotationDAO.deleteAnnotationsForSample(sample);
+        structuralVariantFusionDAO.deleteAnnotationsForSample(sample);
 
         LOGGER.info("Deleting structural variants for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);

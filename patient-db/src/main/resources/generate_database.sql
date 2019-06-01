@@ -526,6 +526,79 @@ CREATE TABLE structuralVariant
 );
 
 
+DROP TABLE IF EXISTS svLinxData;
+CREATE TABLE svLinxData
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    svId INT NOT NULL,
+    clusterId INT NOT NULL,
+    clusterReason VARCHAR(255) NULL,
+    fragileSiteStart BOOLEAN NOT NULL,
+    fragileSiteEnd BOOLEAN NOT NULL,
+    isFoldback BOOLEAN NOT NULL,
+    lineTypeStart VARCHAR(20),
+    lineTypeEnd VARCHAR(20),
+    ploidyMin DOUBLE PRECISION,
+    ploidyMax DOUBLE PRECISION,
+    geneStart VARCHAR(20),
+    geneEnd varchar(20),
+    replicationTimingStart DOUBLE PRECISION,
+    replicationTimingEnd DOUBLE PRECISION,
+    localTopologyIdStart INT,
+    localTopologyIdEnd INT,
+    localTopologyStart varchar(20),
+    localTopologyEnd VARCHAR(20),
+    localTICountStart INT,
+    localTICountEnd INT,
+    nearestTypeStart VARCHAR(10),
+    nearestTypeEnd VARCHAR(10),
+    nearestLengthStart INT,
+    nearestLengthEnd INT,
+    dbLengthStart INT,
+    dbLengthEnd INT,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS cluster;
+CREATE TABLE cluster
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    clusterId INT NOT NULL,
+    resolvedType VARCHAR(20),
+    synthetic BOOLEAN NOT NULL,
+    subType VARCHAR(20),
+    clusterCount INT,
+    clusterDesc VARCHAR(50),
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS svLink;
+CREATE TABLE svLink
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    clusterId INT NOT NULL,
+    chainId INT NOT NULL,
+    chainIndex INT NOT NULL,
+    chainLinkCount INT NOT NULL,
+    lowerBreakendId INT NOT NULL,
+    upperBreakendId INT NOT NULL,
+    lowerBreakendIsStart BOOLEAN NOT NULL,
+    upperBreakendIsStart BOOLEAN NOT NULL,
+    arm VARCHAR(2),
+    assembled BOOLEAN NOT NULL,
+    traversedSVCount INT,
+    linkLength INT,
+    ploidy DOUBLE PRECISION,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+
 DROP TABLE IF EXISTS structuralVariantBreakend;
 CREATE TABLE structuralVariantBreakend
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,

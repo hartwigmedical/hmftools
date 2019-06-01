@@ -10,8 +10,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -39,14 +37,15 @@ import org.jooq.Record2;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
 
-public class StructuralVariantAnnotationDAO {
+public class StructuralVariantFusionDAO
+{
 
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotationDAO.class);
+    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantFusionDAO.class);
 
     @NotNull
     private final DSLContext context;
 
-    public StructuralVariantAnnotationDAO(@NotNull final DSLContext context) {
+    public StructuralVariantFusionDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 
@@ -57,7 +56,8 @@ public class StructuralVariantAnnotationDAO {
     }
 
     @NotNull
-    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
+    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample)
+    {
         Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
 
         Structuralvariantbreakend five = STRUCTURALVARIANTBREAKEND.as("five");
