@@ -276,11 +276,6 @@
                 <version>${apache.dbcp2.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jvnet.jaxb2.maven2</groupId>
-                <artifactId>maven-jaxb2-plugin</artifactId>
-                <version>${jaxb2.plugin.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.reactivex.rxjava2</groupId>
                 <artifactId>rxjava</artifactId>
                 <version>${rxjava2.version}</version>
