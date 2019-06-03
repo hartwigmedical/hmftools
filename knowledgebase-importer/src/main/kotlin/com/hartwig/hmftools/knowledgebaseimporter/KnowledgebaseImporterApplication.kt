@@ -128,7 +128,6 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 }
 
 private fun writeFusionsFiles(knowledgebases: Knowledgebase, outputDir: String) {
-    knowledgebases.javaClass;
     val fusionPairLocation = "$outputDir${File.separator}knownFusionPairs.csv"
     logger.info("Writing known fusion genes to $fusionPairLocation")
     CsvWriter.writeCSV(knownFusionPairs(knowledgebases), fusionPairLocation)
