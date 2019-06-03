@@ -45,7 +45,8 @@ public final class WGSMetricsFile {
             String path_P4 = metricsDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
             Path pathWGSFile_P4 = PathPrefixSuffixFinder.build().findPath(path_P4, sample, METRICS_EXTENSION);
             Path metricFileSymLink = Paths.get(metricsDir + File.separator + sample + METRICS_EXTENSION_PV5);
-            return Files.createSymbolicLink(metricFileSymLink, pathWGSFile_P4).toString();
+            Files.createSymbolicLink(metricFileSymLink, pathWGSFile_P4);
+            return metricFileSymLink.toString();
         }
     }
 
