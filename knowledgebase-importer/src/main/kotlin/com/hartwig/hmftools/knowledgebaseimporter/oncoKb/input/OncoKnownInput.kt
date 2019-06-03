@@ -35,8 +35,7 @@ data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_")
             Alteration.contains("FGFR1OP1-FGFR1")               -> copy(Alteration = Alteration.replace("FGFR1OP1-FGFR1", "FGFR1OP-FGFR1"))
             Alteration.contains("ZNF198-FGFR1")                 -> copy(Alteration = Alteration.replace("ZNF198-FGFR1", "ZMYM2-FGFR1"))
             Alteration == "p61BRAF-V600E"                       -> copy(Alteration = "V600E/V600K")
-            Gene.contains("Delta")                              -> null
-            gene.contains("GTF2I")                              -> null
+            gene.contains("Delta")                              -> null
             else                                                -> this
         }
     }
