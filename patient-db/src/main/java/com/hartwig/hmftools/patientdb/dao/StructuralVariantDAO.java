@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
@@ -134,14 +136,16 @@ class StructuralVariantDAO {
         return samplesList;
     }
 
-    void write(@NotNull final String sample, @NotNull final List<EnrichedStructuralVariant> variants) {
+    void write(@NotNull final String sample, @NotNull final List<StructuralVariantData> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         deleteStructuralVariantsForSample(sample);
 
-        for (List<EnrichedStructuralVariant> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
+        for (List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
+                    STRUCTURALVARIANT.SVID,
                     STRUCTURALVARIANT.STARTCHROMOSOME,
                     STRUCTURALVARIANT.ENDCHROMOSOME,
                     STRUCTURALVARIANT.STARTPOSITION,
@@ -201,85 +205,69 @@ class StructuralVariantDAO {
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull EnrichedStructuralVariant variant)
+            @NotNull StructuralVariantData variant)
     {
+        boolean isSingle = variant.type() == SGL;
+
         inserter.values(sample,
-                variant.start().chromosome(),
-                variant.end() == null ? null : variant.end().chromosome(),
-                variant.start().position(),
-                variant.end() == null ? null : variant.end().position(),
-                variant.start().orientation(),
-                variant.end() == null ? null : variant.end().orientation(),
-                DatabaseUtil.checkStringLength(variant.start().homology(), STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE),
-                variant.end() == null
-                        ? null
-                        : DatabaseUtil.checkStringLength(variant.end().homology(), STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE),
+                variant.id(),
+                variant.startChromosome(),
+                isSingle ? null : variant.endChromosome(),
+                variant.startPosition(),
+                isSingle ? null : variant.endPosition(),
+                variant.startOrientation(),
+                isSingle ? null : variant.endOrientation(),
+                DatabaseUtil.checkStringLength(variant.startHomologySequence(), STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE),
+                isSingle ? null : DatabaseUtil.checkStringLength(variant.endHomologySequence(), STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE),
                 DatabaseUtil.checkStringLength(variant.insertSequence(), STRUCTURALVARIANT.INSERTSEQUENCE),
                 variant.type(),
-                DatabaseUtil.decimal(variant.start().alleleFrequency()),
-                DatabaseUtil.decimal(variant.start().adjustedAlleleFrequency()),
-                DatabaseUtil.decimal(variant.start().adjustedCopyNumber()),
-                DatabaseUtil.decimal(variant.start().adjustedCopyNumberChange()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().alleleFrequency()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().adjustedAlleleFrequency()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().adjustedCopyNumber()),
-                variant.end() == null ? null : DatabaseUtil.decimal(variant.end().adjustedCopyNumberChange()),
+                DatabaseUtil.decimal(variant.startAF()),
+                DatabaseUtil.decimal(variant.adjustedStartAF()),
+                DatabaseUtil.decimal(variant.adjustedStartCopyNumber()),
+                DatabaseUtil.decimal(variant.adjustedStartCopyNumberChange()),
+                isSingle ? null : DatabaseUtil.decimal(variant.endAF()),
+                isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndAF()),
+                isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndCopyNumber()),
+                isSingle ? null : DatabaseUtil.decimal(variant.adjustedEndCopyNumberChange()),
                 variant.ploidy(),
                 variant.filter(),
                 variant.imprecise(),
                 DatabaseUtil.decimal(variant.qualityScore()),
                 variant.event(),
-                variant.start().tumorVariantFragmentCount(),
-                variant.start().tumorReferenceFragmentCount(),
-                variant.start().normalVariantFragmentCount(),
-                variant.start().normalReferenceFragmentCount(),
-                variant.end() == null ? null : variant.end().tumorVariantFragmentCount(),
-                variant.end() == null ? null : variant.end().tumorReferenceFragmentCount(),
-                variant.end() == null ? null : variant.end().normalVariantFragmentCount(),
-                variant.end() == null ? null : variant.end().normalReferenceFragmentCount(),
-                variant.start().startOffset(),
-                variant.start().endOffset(),
-                variant.end() == null ? null : variant.end().startOffset(),
-                variant.end() == null ? null : variant.end().endOffset(),
-                variant.start().inexactHomologyOffsetStart(),
-                variant.start().inexactHomologyOffsetEnd(),
+                variant.startTumorVariantFragmentCount(),
+                variant.startTumorReferenceFragmentCount(),
+                variant.startNormalVariantFragmentCount(),
+                variant.startNormalReferenceFragmentCount(),
+                isSingle ? null : variant.endTumorVariantFragmentCount(),
+                isSingle ? null : variant.endTumorReferenceFragmentCount(),
+                isSingle ? null : variant.endNormalVariantFragmentCount(),
+                isSingle ? null : variant.endNormalReferenceFragmentCount(),
+                variant.startIntervalOffsetStart(),
+                variant.startIntervalOffsetStart(),
+                isSingle ? null : variant.endIntervalOffsetStart(),
+                isSingle ? null : variant.endIntervalOffsetEnd(),
+                variant.inexactHomologyOffsetStart(),
+                variant.inexactHomologyOffsetEnd(),
                 variant.id(),
                 variant.startLinkedBy(),
                 variant.endLinkedBy(),
                 variant.recovered(),
                 variant.recoveryMethod(),
                 variant.recoveryFilter(),
-                variant.start().refGenomeContext(),
-                variant.end() == null ? null : variant.end().refGenomeContext(),
+                variant.startRefContext(),
+                isSingle ? null : variant.endRefContext(),
                 DatabaseUtil.checkStringLength(variant.insertSequenceAlignments(), STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS),
                 variant.insertSequenceRepeatClass(),
                 variant.insertSequenceRepeatType(),
                 variant.insertSequenceRepeatOrientation(),
                 variant.insertSequenceRepeatCoverage(),
-                variant.start().anchoringSupportDistance(),
-                variant.end() == null ? 0 : variant.end().anchoringSupportDistance(),
+                variant.startAnchoringSupportDistance(),
+                isSingle ? 0 : variant.endAnchoringSupportDistance(),
                 timestamp);
     }
 
     public void deleteStructuralVariantsForSample(@NotNull String sample) {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
-    }
-
-    private static double getValueNotNull(@Nullable Double value) {
-        return value != null ? value : 0D;
-    }
-
-    private static int getValueNotNull(@Nullable Integer value) {
-        return value != null ? value : 0;
-    }
-
-    private static byte getValueNotNull(@Nullable Byte value) {
-        return value != null ? value : 0;
-    }
-
-    @NotNull
-    private static String getValueNotNull(@Nullable String value) {
-        return value != null ? value : Strings.EMPTY;
     }
 
     private static boolean byteToBoolean(@NotNull Byte b) {

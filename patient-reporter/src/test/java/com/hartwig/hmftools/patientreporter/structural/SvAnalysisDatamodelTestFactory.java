@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -9,7 +12,34 @@ final class SvAnalysisDatamodelTestFactory {
     }
 
     @NotNull
-    static ImmutableDisruption.Builder createTestDisruptionBuilder() {
+    static ImmutableReportableGeneFusion.Builder createTestFusionBuilder() {
+        return ImmutableReportableGeneFusion.builder()
+                .geneContextStart(Strings.EMPTY)
+                .geneContextEnd(Strings.EMPTY)
+                .geneTranscriptStart(Strings.EMPTY)
+                .geneTranscriptEnd(Strings.EMPTY)
+                .ploidy(1D)
+                .source(Strings.EMPTY);
+    }
+
+    @NotNull
+    static ImmutableReportableDisruption.Builder createTestDisruptionBuilder() {
+        return ImmutableReportableDisruption.builder()
+                .svId(0)
+                .chromosome(Strings.EMPTY)
+                .orientation(1)
+                .type(Strings.EMPTY)
+                .ploidy(1D)
+                .gene(Strings.EMPTY)
+                .chrBand(Strings.EMPTY)
+                .strand(1)
+                .canonical(false)
+                .exonUp(0)
+                .exonDown(0);
+    }
+
+    @NotNull
+    static ImmutableDisruption.Builder createTestDisruptionBuilderOld() {
         return ImmutableDisruption.builder()
                 .reportable(false)
                 .svId(Strings.EMPTY)
@@ -32,7 +62,7 @@ final class SvAnalysisDatamodelTestFactory {
     }
 
     @NotNull
-    static ImmutableFusion.Builder createTestFusionBuilder() {
+    static ImmutableFusion.Builder createTestFusionBuilderOld() {
         return ImmutableFusion.builder()
                 .reportable(true)
                 .knownType(Strings.EMPTY)

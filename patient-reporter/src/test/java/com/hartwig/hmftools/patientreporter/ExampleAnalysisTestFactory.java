@@ -30,10 +30,10 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
@@ -607,10 +607,10 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableGeneFusion> createTestFusions() {
         ReportableGeneFusion fusion1 = ImmutableReportableGeneFusion.builder()
                 .geneStart("TMPRSS2")
-                .geneStartTranscript("ENST00000398585")
+                .geneTranscriptStart("ENST00000398585")
                 .geneContextStart("Intron 5")
                 .geneEnd("PNPLA7")
-                .geneEndTranscript("ENST00000406427")
+                .geneTranscriptEnd("ENST00000406427")
                 .geneContextEnd("Intron 3")
                 .ploidy(0.4)
                 .source(KnownFusionsModel.CIVIC)
@@ -618,10 +618,10 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
                 .geneStart("CLCN6")
-                .geneStartTranscript("ENST00000346436")
+                .geneTranscriptStart("ENST00000346436")
                 .geneContextStart("Intron 1")
                 .geneEnd("BRAF")
-                .geneEndTranscript("ENST00000288602")
+                .geneTranscriptEnd("ENST00000288602")
                 .geneContextEnd("Intron 8")
                 .ploidy(1D)
                 .source(KnownFusionsModel.ONCOKB)

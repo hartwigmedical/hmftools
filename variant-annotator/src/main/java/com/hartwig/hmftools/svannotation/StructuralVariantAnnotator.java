@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svannotation;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants.convertSvData;
 import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.File;
@@ -191,10 +192,19 @@ public class StructuralVariantAnnotator
         {
             List<EnrichedStructuralVariant> enrichedVariants = loadSVsFromVCF();
 
+            // generate a unique ID for each record
+            int svId = 0;
+            svDataList = Lists.newArrayList();
+
+            for(EnrichedStructuralVariant var : enrichedVariants)
+            {
+                svDataList.add(convertSvData(var, svId++));
+            }
+
             if(mDbAccess != null)
             {
-                LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, enrichedVariants.size());
-                mDbAccess.writeStructuralVariants(sampleId, enrichedVariants);
+                LOGGER.info("sample({}) persisting {} SVs to database", sampleId, enrichedVariants.size());
+                mDbAccess.writeStructuralVariants(sampleId, svDataList);
 
                 // Re-read the data to get primaryId field as a foreign key for disruptions and fusions
                 // enrichedVariants = mDbAccess.readStructuralVariants(sampleId);
@@ -202,13 +212,6 @@ public class StructuralVariantAnnotator
             }
             else
             {
-                // generate a unique ID for each record
-                int svId = 0;
-
-                for(EnrichedStructuralVariant var : enrichedVariants)
-                {
-                    svDataList.add(convertSvData(var, svId++));
-                }
             }
 
             // write data to file
@@ -442,62 +445,5 @@ public class StructuralVariantAnnotator
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
-    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var, int svId)
-    {
-        return ImmutableStructuralVariantData.builder()
-                .id(svId)
-                .startChromosome(var.chromosome(true))
-                .endChromosome(var.end() == null ? "0" : var.chromosome(false))
-                .startPosition(var.position(true))
-                .endPosition(var.end() == null ? -1 : var.position(false))
-                .startOrientation(var.orientation(true))
-                .endOrientation(var.end() == null ? (byte)0 : var.orientation(false))
-                .startHomologySequence(var.start().homology())
-                .endHomologySequence(var.end() == null ? "" : var.end().homology())
-                .ploidy(var.ploidy())
-                .startAF(var.start().alleleFrequency())
-                .endAF(var.end() == null ? 0 : var.end().alleleFrequency())
-                .adjustedStartAF(var.start().adjustedAlleleFrequency())
-                .adjustedEndAF(var.end() == null ? 0 : var.end().adjustedAlleleFrequency())
-                .adjustedStartCopyNumber(var.start().adjustedCopyNumber())
-                .adjustedEndCopyNumber(var.end() == null ? 0 : var.end().adjustedCopyNumber())
-                .adjustedStartCopyNumberChange(var.start().adjustedCopyNumberChange())
-                .adjustedEndCopyNumberChange(var.end() == null ? 0 : var.end().adjustedCopyNumberChange())
-                .insertSequence(var.insertSequence())
-                .type(var.type())
-                .filter(var.filter())
-                .imprecise(var.imprecise())
-                .qualityScore(var.qualityScore())
-                .event(var.event())
-                .startTumorVariantFragmentCount(var.start().tumorVariantFragmentCount())
-                .startTumorReferenceFragmentCount(var.start().tumorReferenceFragmentCount())
-                .startNormalVariantFragmentCount(var.start().normalVariantFragmentCount())
-                .startNormalReferenceFragmentCount(var.start().normalReferenceFragmentCount())
-                .endTumorVariantFragmentCount(var.end() == null ? 0 : var.end().tumorVariantFragmentCount())
-                .endTumorReferenceFragmentCount(var.end() == null ? 0 : var.end().tumorReferenceFragmentCount())
-                .endNormalVariantFragmentCount(var.end() == null ? 0 : var.end().normalVariantFragmentCount())
-                .endNormalReferenceFragmentCount(var.end() == null ? 0 : var.end().normalReferenceFragmentCount())
-                .startIntervalOffsetStart(var.start().startOffset())
-                .startIntervalOffsetEnd(var.start().endOffset())
-                .endIntervalOffsetStart(var.end() == null ? 0 : var.end().startOffset())
-                .endIntervalOffsetEnd(var.end() == null ? 0 : var.end().endOffset())
-                .inexactHomologyOffsetStart(var.start().inexactHomologyOffsetStart())
-                .inexactHomologyOffsetEnd(var.start().inexactHomologyOffsetEnd())
-                .startLinkedBy(var.startLinkedBy())
-                .endLinkedBy(var.endLinkedBy())
-                .vcfId(var.id())
-                .startRefContext(var.start().refGenomeContext())
-                .endRefContext(var.end() == null ? "" : var.end().refGenomeContext())
-                .recovered(var.recovered())
-                .recoveryMethod(var.recoveryMethod())
-                .recoveryFilter(var.recoveryFilter())
-                .insertSequenceAlignments(var.insertSequenceAlignments())
-                .insertSequenceRepeatClass(var.insertSequenceRepeatClass())
-                .insertSequenceRepeatType(var.insertSequenceRepeatType())
-                .insertSequenceRepeatOrientation(var.insertSequenceRepeatOrientation())
-                .insertSequenceRepeatCoverage(var.insertSequenceRepeatCoverage())
-                .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
-                .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
-                .build();
-    }
+
 }

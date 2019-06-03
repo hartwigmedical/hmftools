@@ -2,10 +2,12 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DELIMITER;
+import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.HEADER_PREFIX;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -15,9 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LinxLinkFile
 {
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final String DELIMITER = "\t";
-    private static final String FILE_EXTENSION = ".linx_ti.csv";
+    private static final String FILE_EXTENSION = ".linx.links.csv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -48,12 +48,12 @@ public class LinxLinkFile
     @NotNull
     static List<LinxLink> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().map(LinxLinkFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(LinxLinkFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
                 .add("clusterId")
                 .add("chainId")
                 .add("chainIndex")

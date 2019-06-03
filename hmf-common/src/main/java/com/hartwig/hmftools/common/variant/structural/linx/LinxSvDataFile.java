@@ -2,10 +2,13 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DELIMITER;
+import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.HEADER_PREFIX;
+import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DECIMAL_FORMAT;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -15,9 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LinxSvDataFile
 {
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final String DELIMITER = "\t";
-    private static final String FILE_EXTENSION = ".linx_sv.csv";
+    private static final String FILE_EXTENSION = ".linx.svs.csv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -48,12 +49,12 @@ public class LinxSvDataFile
     @NotNull
     static List<LinxSvData> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().map(LinxSvDataFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(LinxSvDataFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
                 .add("svId")
                 .add("clusterId")
                 .add("clusterReason")
@@ -88,12 +89,12 @@ public class LinxSvDataFile
                 .add(String.valueOf(svData.isFoldback()))
                 .add(String.valueOf(svData.lineTypeStart()))
                 .add(String.valueOf(svData.lineTypeEnd()))
-                .add(FORMAT.format(svData.ploidyMin()))
-                .add(FORMAT.format(svData.ploidyMax()))
+                .add(DECIMAL_FORMAT.format(svData.ploidyMin()))
+                .add(DECIMAL_FORMAT.format(svData.ploidyMax()))
                 .add(String.valueOf(svData.geneStart()))
                 .add(String.valueOf(svData.geneEnd()))
-                .add(FORMAT.format(svData.replicationTimingStart()))
-                .add(FORMAT.format(svData.replicationTimingEnd()))
+                .add(DECIMAL_FORMAT.format(svData.replicationTimingStart()))
+                .add(DECIMAL_FORMAT.format(svData.replicationTimingEnd()))
                 .add(String.valueOf(svData.localTopologyIdStart()))
                 .add(String.valueOf(svData.localTopologyIdEnd()))
                 .add(String.valueOf(svData.localTopologyStart()))

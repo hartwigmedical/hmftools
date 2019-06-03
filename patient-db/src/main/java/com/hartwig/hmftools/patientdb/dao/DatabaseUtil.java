@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.TableField;
@@ -25,4 +26,22 @@ final public class DatabaseUtil {
         int maxLength = field.getDataType().length();
         return str.length() > maxLength ? str.substring(0, maxLength) : str;
     }
+
+    public static double getValueNotNull(@Nullable Double value) {
+        return value != null ? value : 0D;
+    }
+
+    public static int getValueNotNull(@Nullable Integer value) {
+        return value != null ? value : 0;
+    }
+
+    public static byte getValueNotNull(@Nullable Byte value) {
+        return value != null ? value : 0;
+    }
+
+    @NotNull
+    public static String getValueNotNull(@Nullable String value) {
+        return value != null ? value : Strings.EMPTY;
+    }
+
 }

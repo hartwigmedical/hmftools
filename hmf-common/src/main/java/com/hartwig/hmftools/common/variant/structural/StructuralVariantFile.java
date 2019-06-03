@@ -18,6 +18,7 @@ public class StructuralVariantFile
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     private static final String FILE_EXTENSION = ".sv_data.csv";
+    private static final String HEADER_PREFIX = "#";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -48,12 +49,13 @@ public class StructuralVariantFile
     @NotNull
     static List<StructuralVariantData> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().map(StructuralVariantFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(StructuralVariantFile::fromString).collect(toList());
     }
 
     @NotNull
-    private static String header() {
-        return new StringJoiner(DELIMITER)
+    private static String header()
+    {
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
                 .add("id")
                 .add("startChromosome")
                 .add("endChromosome")

@@ -36,10 +36,8 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +56,7 @@ public class CNAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(CNAnalyser.class);
 
-    private final String mSampleDataPath;
+    private final String mPurpleDataPath;
     private final String mOutputPath;
 
     private List<String> mSampleIds;
@@ -81,8 +79,6 @@ public class CNAnalyser {
     private Map<String, Map<Integer,double[]>> mSampleSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
     private Map<String, double[]> mChrEndsCNMap; // telemore and centromere CN values
 
-    public static final String PURPLE_DATA_DIRECTORY = "purple";
-
     public static final String CN_ANALYSIS_ONLY = "run_cn_analysis";
     // public static final String SV_PLOIDY_CALC_FILE = "sv_ploidy_file";
     private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
@@ -91,12 +87,12 @@ public class CNAnalyser {
     public static double MIN_LOH_CN = 0.5;
     public static double TOTAL_CN_LOSS = 0.5;
 
-    public CNAnalyser(final String sampleDataPath, final String outputPath, DatabaseAccess dbAccess)
+    public CNAnalyser(final String purpleDataPath, final String outputPath, DatabaseAccess dbAccess)
     {
-        if(sampleDataPath.endsWith(File.separator))
-            mSampleDataPath = sampleDataPath + PURPLE_DATA_DIRECTORY;
+        if(purpleDataPath.endsWith(File.separator))
+            mPurpleDataPath = purpleDataPath;
         else
-            mSampleDataPath = sampleDataPath + File.separator + PURPLE_DATA_DIRECTORY;
+            mPurpleDataPath = purpleDataPath + File.separator;
 
         mOutputPath = outputPath;
         mSampleIds = Lists.newArrayList();
@@ -213,8 +209,8 @@ public class CNAnalyser {
         {
             try
             {
-                mCnRecords = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(mSampleDataPath, sampleId));
-                mPurityContext = FittedPurityFile.read(mSampleDataPath, sampleId);
+                mCnRecords = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(mPurpleDataPath, sampleId));
+                mPurityContext = FittedPurityFile.read(mPurpleDataPath, sampleId);
             }
             catch(IOException e)
             {

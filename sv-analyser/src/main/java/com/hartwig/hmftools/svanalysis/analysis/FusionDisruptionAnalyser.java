@@ -30,6 +30,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -65,14 +67,12 @@ public class FusionDisruptionAnalyser
     private VisualiserWriter mVisWriter;
 
     private List<String> mRestrictedGenes;
-    private boolean mRequirePhaseMatching;
     private boolean mReportKnownFusionData;
 
     public static final String SAMPLE_RNA_FILE = "sample_rna_file";
     public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
-    public static final String NO_PHASE_MATCH_REQD = "no_fusion_phase_match";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusion";
     public static final String LOG_KNOWN_FUSION_DATA = "log_known_fusion_data";
 
@@ -94,7 +94,6 @@ public class FusionDisruptionAnalyser
         mChrBreakendMap = null;
         mKnownFusionGenes = Lists.newArrayList();
         mRestrictedGenes = Lists.newArrayList();
-        mRequirePhaseMatching = true;
         mReportKnownFusionData = false;
     }
 
@@ -104,7 +103,6 @@ public class FusionDisruptionAnalyser
         options.addOption(SKIP_FUSION_OUTPUT, false, "No fusion search or output");
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
-        options.addOption(NO_PHASE_MATCH_REQD, false, "Check fusion without requiring phase-matching");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_KNOWN_FUSION_DATA, false, "Only write out reportable fusions");
     }
@@ -150,9 +148,6 @@ public class FusionDisruptionAnalyser
 
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
             mReportKnownFusionData = cmdLineArgs.hasOption(LOG_KNOWN_FUSION_DATA);
-
-            if(cmdLineArgs.hasOption(NO_PHASE_MATCH_REQD))
-                mRequirePhaseMatching = false;
         }
     }
 
@@ -241,7 +236,8 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    public void run(final String sampleId, final List<SvVarData> svList, final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
+    public void run(final String sampleId, final List<SvVarData> svList, boolean writeSampleData, final DatabaseAccess dbAccess,
+            final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         mPerfCounter.start();
 
@@ -250,6 +246,11 @@ public class FusionDisruptionAnalyser
 
         if(!mSkipFusionCheck)
             findFusions(svList, clusters);
+
+        if(writeSampleData)
+        {
+            writeSampleFusionData(svList, dbAccess);
+        }
 
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.assessRnaFusions(sampleId, chrBreakendMap);
@@ -284,6 +285,34 @@ public class FusionDisruptionAnalyser
         {
             findUnclusteredKnownFusions(svList);
         }
+    }
+
+    private void writeSampleFusionData(final List<SvVarData> svList, final DatabaseAccess dbAccess)
+    {
+        if(dbAccess != null)
+        {
+            LOGGER.debug("persisting breakends and {} fusions to database", mFusions.size());
+
+            final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
+
+            annotationDAO.deleteAnnotationsForSample(mSampleId);
+
+            List<Transcript> allTranscripts = Lists.newArrayList();
+
+            for (SvVarData var : svList)
+            {
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
+                    {
+                        allTranscripts.addAll(geneAnnotation.transcripts());
+                    }
+                }
+            }
+
+            annotationDAO.writeBreakendsAndFusions(mSampleId, allTranscripts, mFusions);
+        }
+
     }
 
     private void finalSingleSVFusions(final List<SvVarData> svList)

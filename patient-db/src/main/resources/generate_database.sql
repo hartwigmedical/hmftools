@@ -468,6 +468,7 @@ DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
+    svId INT NOT NULL,
     sampleId varchar(255) NOT NULL,
     startChromosome varchar(255) NOT NULL,
     endChromosome varchar(255),

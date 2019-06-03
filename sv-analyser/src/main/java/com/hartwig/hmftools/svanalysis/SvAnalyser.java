@@ -4,18 +4,13 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_ANALYSIS_ONLY;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
-import static com.hartwig.hmftools.svanalysis.types.SvVarData.NONE_SEGMENT_INFERRED;
-import static com.hartwig.hmftools.svanalysis.types.SvaConfig.DATA_OUTPUT_PATH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
@@ -74,7 +69,7 @@ public class SvAnalyser {
         if(cmd.hasOption(STATS_ROUTINES))
         {
             StatisticRoutines statsRoutines = new StatisticRoutines();
-            statsRoutines.loadConfig(cmd, svaConfig.OutputCsvPath);
+            statsRoutines.loadConfig(cmd, svaConfig.OutputDataPath);
             statsRoutines.runStatistics();
             LOGGER.info("run complete");
             return;
@@ -83,7 +78,7 @@ public class SvAnalyser {
         if(cmd.hasOption(SIM_ROUTINES))
         {
             SvSimulator simulator = new SvSimulator();
-            simulator.loadConfig(cmd, svaConfig.OutputCsvPath);
+            simulator.loadConfig(cmd, svaConfig.OutputDataPath);
             simulator.run();
             return;
         }
@@ -92,7 +87,7 @@ public class SvAnalyser {
         {
             MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
 
-            if(mbAnalyser.loadData(cmd, svaConfig.OutputCsvPath))
+            if(mbAnalyser.loadData(cmd, svaConfig.OutputDataPath))
             {
                 mbAnalyser.runAnalysis();
             }
@@ -111,6 +106,7 @@ public class SvAnalyser {
         }
 
         boolean sampleDataFromFile = (dbAccess == null);
+        boolean singleSample = samplesList.size() == 1;
 
         if (samplesList.isEmpty())
         {
@@ -118,7 +114,7 @@ public class SvAnalyser {
             svaConfig.setSampleIds(samplesList);
         }
 
-        CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.SampleDataPath, svaConfig.OutputCsvPath, dbAccess);
+        CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.PurpleDataPath, svaConfig.OutputDataPath, dbAccess);
         cnAnalyser.loadConfig(cmd, samplesList);
 
         if(cmd.hasOption(CN_ANALYSIS_ONLY))
@@ -165,7 +161,7 @@ public class SvAnalyser {
                 {
                     fusionAnalyser = new FusionDisruptionAnalyser();
 
-                    fusionAnalyser.initialise(cmd, svaConfig.OutputCsvPath, ensemblDataCache);
+                    fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, ensemblDataCache);
                     fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
                     if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
@@ -179,7 +175,7 @@ public class SvAnalyser {
 
                 if(checkDrivers)
                 {
-                    driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig.OutputCsvPath);
+                    driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig.OutputDataPath);
                     driverGeneAnnotator.loadConfig(cmd);
                     driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
                 }
@@ -201,7 +197,7 @@ public class SvAnalyser {
                 prefCounter.start();
 
                 List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                        loadSampleSvData(svaConfig.SampleDataPath) : dbAccess.readStructuralVariantData(sampleId);
+                        loadSampleSvData(svaConfig.SvDataPath, sampleId) : dbAccess.readStructuralVariantData(sampleId);
 
                 List<SvVarData> svVarData = createSvData(svRecords);
 
@@ -241,10 +237,11 @@ public class SvAnalyser {
 
                 if(checkFusions)
                 {
-                    fusionAnalyser.run(sampleId, svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                    fusionAnalyser.run(sampleId, svVarData, singleSample, dbAccess,
+                            sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                sampleAnalyser.writeOutput(dbAccess);
+                sampleAnalyser.writeOutput(singleSample, dbAccess);
 
                 prefCounter.stop();
 
@@ -271,11 +268,12 @@ public class SvAnalyser {
         LOGGER.info("run complete");
     }
 
-    private static List<StructuralVariantData> loadSampleSvData(final String samplePath)
+    private static List<StructuralVariantData> loadSampleSvData(final String samplePath, final String sampleId)
     {
         try
         {
-            return StructuralVariantFile.read(samplePath);
+            final String svDataFile = StructuralVariantFile.generateFilename(samplePath, sampleId);
+            return StructuralVariantFile.read(svDataFile);
         }
         catch(IOException e)
         {

@@ -10,6 +10,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
 import org.junit.Test;
 
@@ -19,12 +21,14 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void canConvertPairedDisruption() {
-        ImmutableDisruption.Builder pairedDisruptionBuilder =
-                createTestDisruptionBuilder().svId("1").gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
+        ImmutableReportableDisruption.Builder pairedDisruptionBuilder =
+                createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
 
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ROPN1B").minCopyNumber(1).maxCopyNumber(2).build());
-        List<Disruption> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
+
+        List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(
+                pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
                 pairedDisruptionBuilder.exonUp(8).exonDown(9).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions, copyNumbers);
@@ -47,12 +51,14 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
-        ImmutableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId("1");
+
+        ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
         List<GeneCopyNumber> copyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().gene("ROPN1B").minCopyNumber(1).maxCopyNumber(1).build(),
                         createTestCopyNumberBuilder().gene("SETD2").minCopyNumber(1).maxCopyNumber(1).build());
-        List<Disruption> pairedDisruptions =
+
+        List<ReportableDisruption> pairedDisruptions =
                 Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").build(), pairedDisruptionBuilder.gene("SETD2").build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions, copyNumbers);
