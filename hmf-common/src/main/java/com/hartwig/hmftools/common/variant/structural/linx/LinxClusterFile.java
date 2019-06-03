@@ -26,27 +26,27 @@ public class LinxClusterFile
     }
 
     @NotNull
-    public static List<LinxSvData> read(final String filePath) throws IOException
+    public static List<LinxCluster> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<LinxSvData> svDataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<LinxCluster> clusters) throws IOException
     {
-        Files.write(new File(filename).toPath(), toLines(svDataList));
+        Files.write(new File(filename).toPath(), toLines(clusters));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxSvData> svDataList)
+    static List<String> toLines(@NotNull final List<LinxCluster> clusters)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        svDataList.stream().map(LinxClusterFile::toString).forEach(lines::add);
+        clusters.stream().map(LinxClusterFile::toString).forEach(lines::add);
         return lines;
     }
 
     @NotNull
-    static List<LinxSvData> fromLines(@NotNull List<String> lines)
+    static List<LinxCluster> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().map(LinxClusterFile::fromString).collect(toList());
     }
@@ -54,101 +54,45 @@ public class LinxClusterFile
     @NotNull
     private static String header() {
         return new StringJoiner(DELIMITER)
-                .add("svId")
                 .add("clusterId")
-                .add("clusterReason")
-                .add("fragileSiteStart")
-                .add("fragileSiteEnd")
-                .add("isFoldback")
-                .add("lineTypeStart")
-                .add("lineTypeEnd")
-                .add("ploidyMin")
-                .add("ploidyMax")
-                .add("geneStart")
-                .add("geneEnd")
-                .add("replicationTimingStart")
-                .add("replicationTimingEnd")
-                .add("localTopologyIdStart")
-                .add("localTopologyIdEnd")
-                .add("localTopologyStart")
-                .add("localTopologyEnd")
-                .add("localTICountStart")
-                .add("localTICountEnd")
-                .add("nearestTypeStart")
-                .add("nearestTypeEnd")
-                .add("nearestLengthStart")
-                .add("nearestLengthEnd")
-                .add("dbLengthStart")
-                .add("dbLengthEnd")
+                .add("resolvedType")
+                .add("synthetic")
+                .add("subClonal")
+                .add("subType")
+                .add("clusterCount")
+                .add("clusterDesc")
                 .toString();
     }
 
     @NotNull
-    private static String toString(@NotNull final LinxSvData svData) {
+    private static String toString(@NotNull final LinxCluster cluster)
+    {
         return new StringJoiner(DELIMITER)
-                .add(String.valueOf(svData.svId()))
-                .add(String.valueOf(svData.clusterId()))
-                .add(String.valueOf(svData.clusterReason()))
-                .add(String.valueOf(svData.fragileSiteStart()))
-                .add(String.valueOf(svData.fragileSiteEnd()))
-                .add(String.valueOf(svData.isFoldback()))
-                .add(String.valueOf(svData.lineTypeStart()))
-                .add(String.valueOf(svData.lineTypeEnd()))
-                .add(FORMAT.format(svData.ploidyMin()))
-                .add(FORMAT.format(svData.ploidyMax()))
-                .add(String.valueOf(svData.geneStart()))
-                .add(String.valueOf(svData.geneEnd()))
-                .add(FORMAT.format(svData.replicationTimingStart()))
-                .add(FORMAT.format(svData.replicationTimingEnd()))
-                .add(String.valueOf(svData.localTopologyIdStart()))
-                .add(String.valueOf(svData.localTopologyIdEnd()))
-                .add(String.valueOf(svData.localTopologyStart()))
-                .add(String.valueOf(svData.localTopologyEnd()))
-                .add(String.valueOf(svData.localTICountStart()))
-                .add(String.valueOf(svData.localTICountEnd()))
-                .add(String.valueOf(svData.nearestTypeStart()))
-                .add(String.valueOf(svData.nearestTypeEnd()))
-                .add(String.valueOf(svData.nearestLengthStart()))
-                .add(String.valueOf(svData.nearestLengthEnd()))
-                .add(String.valueOf(svData.dbLengthStart()))
-                .add(String.valueOf(svData.dbLengthEnd()))
+                .add(String.valueOf(cluster.clusterId()))
+                .add(String.valueOf(cluster.resolvedType()))
+                .add(String.valueOf(cluster.synthetic()))
+                .add(String.valueOf(cluster.subClonal()))
+                .add(String.valueOf(cluster.subType()))
+                .add(String.valueOf(cluster.clusterCount()))
+                .add(String.valueOf(cluster.clusterDesc()))
                 .toString();
     }
 
     @NotNull
-    private static LinxSvData fromString(@NotNull final String clusterData)
+    private static LinxCluster fromString(@NotNull final String clusterData)
     {
         String[] values = clusterData.split(DELIMITER);
 
         int index = 0;
 
-        return ImmutableLinxSvData.builder()
-                .svId(Integer.valueOf(values[index++]))
+        return ImmutableLinxCluster.builder()
                 .clusterId(Integer.valueOf(values[index++]))
-                .clusterReason(values[index++])
-                .fragileSiteStart(Boolean.valueOf(values[index++]))
-                .fragileSiteEnd(Boolean.valueOf(values[index++]))
-                .isFoldback(Boolean.valueOf(values[index++]))
-                .lineTypeStart(values[index++])
-                .lineTypeEnd(values[index++])
-                .ploidyMin(Double.valueOf(values[index++]))
-                .ploidyMax(Double.valueOf(values[index++]))
-                .geneStart(values[index++])
-                .geneEnd(values[index++])
-                .replicationTimingStart(Double.valueOf(values[index++]))
-                .replicationTimingEnd(Double.valueOf(values[index++]))
-                .localTopologyIdStart(Integer.valueOf(values[index++]))
-                .localTopologyIdEnd(Integer.valueOf(values[index++]))
-                .localTopologyStart(values[index++])
-                .localTopologyEnd(values[index++])
-                .localTICountStart(Integer.valueOf(values[index++]))
-                .localTICountEnd(Integer.valueOf(values[index++]))
-                .nearestTypeStart(values[index++])
-                .nearestTypeEnd(values[index++])
-                .nearestLengthStart(Long.valueOf(values[index++]))
-                .nearestLengthEnd(Long.valueOf(values[index++]))
-                .dbLengthStart(Long.valueOf(values[index++]))
-                .dbLengthEnd(Long.valueOf(values[index++]))
+                .resolvedType(values[index++])
+                .synthetic(Boolean.valueOf(values[index++]))
+                .subClonal(Boolean.valueOf(values[index++]))
+                .subType(values[index++])
+                .clusterCount(Integer.valueOf(values[index++]))
+                .clusterDesc(values[index++])
                 .build();
     }
 }

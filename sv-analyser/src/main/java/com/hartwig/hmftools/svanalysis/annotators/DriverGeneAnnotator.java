@@ -41,6 +41,7 @@ import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -209,7 +210,18 @@ public class DriverGeneAnnotator
 
     public void annotateSVs(final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        if(mDbAccess == null)
+        {
+            LOGGER.error("driver analysis requires DB connection");
+            return;
+        }
+
         mPerfCounter.start();
+
+        final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
+
+        if(purityContext != null)
+            setSamplePloidy(purityContext.bestFit().ploidy());
 
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;

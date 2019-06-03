@@ -18,4 +18,5 @@ public abstract class LinxLink
     public abstract int traversedSVCount();
     public abstract long length();
     public abstract double ploidy();
+    public abstract String pseudogeneInfo();
 }

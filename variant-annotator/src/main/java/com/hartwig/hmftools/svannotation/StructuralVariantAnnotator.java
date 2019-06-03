@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser;
@@ -51,6 +52,9 @@ public class StructuralVariantAnnotator
         - When in batch mode it sources SVs from the database and runs fusions logic (soon to be replaced by this function in Linx)
         - Otherwise it reads SVs from a VCF, enriches them with purple data and writes the results to file and/or DB
     */
+
+    // sub-directory of sample data path for all SV-related data
+    public static final String SV_OUTPUT_DIRECTORY = "sv";
 
     private String mSampleId;
     private String mOutputDir;
@@ -189,7 +193,7 @@ public class StructuralVariantAnnotator
 
             if(mDbAccess != null)
             {
-                LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, svDataList.size());
+                LOGGER.info("Sample({}) persisting {} SVs to database", sampleId, enrichedVariants.size());
                 mDbAccess.writeStructuralVariants(sampleId, enrichedVariants);
 
                 // Re-read the data to get primaryId field as a foreign key for disruptions and fusions
@@ -219,35 +223,47 @@ public class StructuralVariantAnnotator
             }
         }
 
-        List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
-
-        if (mSvGeneTranscriptCollection.hasCachedEnsemblData())
+        if(mRunFusions)
         {
-            annotations = addGeneAnnotations(svDataList);
+            List<StructuralVariantAnnotation> annotations = Lists.newArrayList();
 
-            LOGGER.debug("Loaded {} Ensembl annotations from file", annotations.size());
-        }
+            if (mSvGeneTranscriptCollection.hasCachedEnsemblData())
+            {
+                annotations = addGeneAnnotations(svDataList);
 
-        List<GeneDisruption> disruptions = mDisruptionAnalyser.findDisruptions(annotations);
-        List<GeneFusion> fusions = mFusionAnalyser.findFusions(annotations);
+                LOGGER.debug("Loaded {} Ensembl annotations from file", annotations.size());
+            }
 
-        LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
+            List<GeneDisruption> disruptions = mDisruptionAnalyser.findDisruptions(annotations);
+            List<GeneFusion> fusions = mFusionAnalyser.findFusions(annotations);
 
-        if (!mOutputDir.isEmpty())
-        {
-            mFusionAnalyser.writeFusions(fusions, sampleId, hasMultipleSamples);
-            mDisruptionAnalyser.writeDisruptions(disruptions, sampleId, hasMultipleSamples);
-        }
+            LOGGER.debug("sample({}) found {} disruptions and {} fusions", sampleId, disruptions.size(), fusions.size());
 
-        if (mUploadAnnotations)
-        {
-            LOGGER.debug("persisting annotations to database");
-            final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(mDbAccess.context());
+            if (!mOutputDir.isEmpty())
+            {
+                mFusionAnalyser.writeFusions(fusions, sampleId, hasMultipleSamples);
+                mDisruptionAnalyser.writeDisruptions(disruptions, sampleId, hasMultipleSamples);
+            }
 
-            annotationDAO.deleteAnnotationsForSample(sampleId);
+            if (mUploadAnnotations)
+            {
+                LOGGER.debug("persisting annotations to database");
+                final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(mDbAccess.context());
 
-            final StructuralVariantAnalysis analysis = ImmutableStructuralVariantAnalysis.of(annotations, fusions, disruptions);
-            annotationDAO.write(analysis, sampleId);
+                annotationDAO.deleteAnnotationsForSample(sampleId);
+
+                List<Transcript> allTranscripts = Lists.newArrayList();
+
+                for (StructuralVariantAnnotation annotation : annotations)
+                {
+                    for (GeneAnnotation geneAnnotation : annotation.annotations())
+                    {
+                        allTranscripts.addAll(geneAnnotation.transcripts());
+                    }
+                }
+
+                annotationDAO.writeBreakendsAndFusions(sampleId, allTranscripts, fusions);
+            }
         }
     }
 

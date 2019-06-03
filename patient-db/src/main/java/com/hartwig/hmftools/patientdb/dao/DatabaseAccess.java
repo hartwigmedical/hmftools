@@ -24,7 +24,9 @@ import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
@@ -199,6 +201,10 @@ public class DatabaseAccess {
         structuralVariantClusterDAO.writeLinks(sample, links);
     }
 
+    public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions) {
+        structuralVariantFusionDAO.writeBreakendsAndFusions(sample, transcripts, fusions);
+    }
+
     @NotNull
     public List<FittedRegion> readCopyNumberRegions(@NotNull final String sample) {
         return copyNumberDAO.readCopyNumberRegions(sample);
@@ -235,12 +241,6 @@ public class DatabaseAccess {
     @NotNull
     public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
         return copyNumberDAO.read(sample);
-    }
-
-    @NotNull
-    public List<PurpleCopyNumber> readCopyNumberSegmentsByType(@NotNull final String sample,
-            @NotNull final List<SegmentSupport> segmentTypes) {
-        return copyNumberDAO.readSegmentsByType(sample, segmentTypes);
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
@@ -321,6 +321,9 @@ public class DatabaseAccess {
 
         LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
         structuralVariantFusionDAO.deleteAnnotationsForSample(sample);
+
+        LOGGER.info("Deleting structural variant cluster data for sample: " + sample);
+        structuralVariantClusterDAO.deleteClusterDataForSample(sample);
 
         LOGGER.info("Deleting structural variants for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);

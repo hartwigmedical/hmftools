@@ -17,7 +17,10 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep15;
+import org.jooq.InsertValuesStep16;
+import org.jooq.InsertValuesStep22;
 import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep9;
 import org.jooq.InsertValuesStepN;
 
 public class StructuralVariantClusterDAO
@@ -36,12 +39,13 @@ public class StructuralVariantClusterDAO
 
         context.delete(CLUSTER).where(CLUSTER.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep8 inserter = context.insertInto(CLUSTER,
+        InsertValuesStep9 inserter = context.insertInto(CLUSTER,
                 CLUSTER.SAMPLEID,
                 CLUSTER.MODIFIED,
                 CLUSTER.CLUSTERID,
                 CLUSTER.RESOLVEDTYPE,
                 CLUSTER.SYNTHETIC,
+                CLUSTER.SUBCLONAL,
                 CLUSTER.SUBTYPE,
                 CLUSTER.CLUSTERCOUNT,
                 CLUSTER.CLUSTERDESC);
@@ -53,13 +57,14 @@ public class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep8 inserter, final String sample, final LinxCluster cluster)
+    private static void addRecord(Timestamp timestamp, InsertValuesStep9 inserter, final String sample, final LinxCluster cluster)
     {
         inserter.values(sample,
                 timestamp,
                 cluster.clusterId(),
                 cluster.resolvedType(),
                 cluster.synthetic(),
+                cluster.subClonal(),
                 cluster.subType(),
                 cluster.clusterCount(),
                 cluster.clusterDesc());
@@ -71,7 +76,7 @@ public class StructuralVariantClusterDAO
 
         context.delete(SVLINXDATA).where(SVLINXDATA.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStepN inserter = context.insertInto(SVLINXDATA,
+        InsertValuesStep22 inserter = context.insertInto(SVLINXDATA,
                 SVLINXDATA.SAMPLEID,
                 SVLINXDATA.MODIFIED,
                 SVLINXDATA.SVID,
@@ -93,13 +98,7 @@ public class StructuralVariantClusterDAO
                 SVLINXDATA.LOCALTOPOLOGYSTART,
                 SVLINXDATA.LOCALTOPOLOGYEND,
                 SVLINXDATA.LOCALTICOUNTSTART,
-                SVLINXDATA.LOCALTICOUNTEND,
-                SVLINXDATA.NEARESTTYPESTART,
-                SVLINXDATA.NEARESTTYPEEND,
-                SVLINXDATA.NEARESTLENGTHSTART,
-                SVLINXDATA.NEARESTLENGTHEND,
-                SVLINXDATA.DBLENGTHSTART,
-                SVLINXDATA.DBLENGTHEND);
+                SVLINXDATA.LOCALTICOUNTEND);
 
 
         for (List<LinxSvData> batch : Iterables.partition(svData, DB_BATCH_INSERT_SIZE))
@@ -109,10 +108,11 @@ public class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, final String sample, final LinxSvData svData)
+    private static void addRecord(Timestamp timestamp, InsertValuesStep22 inserter, final String sample, final LinxSvData svData)
     {
         inserter.values(sample,
                 timestamp,
+                svData.svId(),
                 svData.clusterId(),
                 svData.clusterReason(),
                 svData.fragileSiteStart(),
@@ -131,13 +131,7 @@ public class StructuralVariantClusterDAO
                 svData.localTopologyStart(),
                 svData.localTopologyEnd(),
                 svData.localTICountStart(),
-                svData.localTICountEnd(),
-                svData.nearestTypeStart(),
-                svData.nearestTypeEnd(),
-                svData.nearestLengthStart(),
-                svData.nearestLengthEnd(),
-                svData.dbLengthStart(),
-                svData.dbLengthEnd());
+                svData.localTICountEnd());
     }
 
     public void writeLinks(final String sample, final List<LinxLink> links)
@@ -146,7 +140,7 @@ public class StructuralVariantClusterDAO
 
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
 
-        InsertValuesStep15 inserter = context.insertInto(SVLINK,
+        InsertValuesStep16 inserter = context.insertInto(SVLINK,
                 SVLINK.SAMPLEID,
                 SVLINK.MODIFIED,
                 SVLINK.CLUSTERID,
@@ -161,7 +155,8 @@ public class StructuralVariantClusterDAO
                 SVLINK.ASSEMBLED,
                 SVLINK.TRAVERSEDSVCOUNT,
                 SVLINK.LINKLENGTH,
-                SVLINK.PLOIDY);
+                SVLINK.PLOIDY,
+                SVLINK.PSEUDOGENEINFO);
 
         for (List<LinxLink> batch : Iterables.partition(links, DB_BATCH_INSERT_SIZE))
         {
@@ -170,7 +165,7 @@ public class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep15 inserter, final String sample, final LinxLink link)
+    private static void addRecord(Timestamp timestamp, InsertValuesStep16 inserter, final String sample, final LinxLink link)
     {
         inserter.values(sample,
                 timestamp,
@@ -186,7 +181,8 @@ public class StructuralVariantClusterDAO
                 link.assembled(),
                 link.traversedSVCount(),
                 link.length(),
-                link.ploidy());
+                link.ploidy(),
+                link.pseudogeneInfo());
     }
 
     public void deleteClusterDataForSample(@NotNull String sample)

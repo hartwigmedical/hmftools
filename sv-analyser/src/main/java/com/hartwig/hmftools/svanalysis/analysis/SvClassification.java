@@ -112,7 +112,12 @@ public class SvClassification
         String resolvedType = cluster.getResolvedType();
 
         if(isSimpleType(resolvedType))
-            return cluster.getSvCount() > 1;
+        {
+            if(cluster.getTypeCount(SGL) == 2)
+                return false;
+            else
+                return cluster.getSvCount() > 1;
+        }
 
         // will be more when look for synthetic INVs, SGLs and translocations
         if(resolvedType == RESOLVED_TYPE_RECIPROCAL_INV || resolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS

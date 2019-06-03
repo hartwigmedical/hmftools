@@ -236,11 +236,6 @@ public class SvAnalyser {
 
                 if(checkDrivers)
                 {
-                    final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
-
-                    if(purityContext != null)
-                        driverGeneAnnotator.setSamplePloidy(purityContext.bestFit().ploidy());
-
                     driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
@@ -249,7 +244,7 @@ public class SvAnalyser {
                     fusionAnalyser.run(sampleId, svVarData, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                sampleAnalyser.writeOutput();
+                sampleAnalyser.writeOutput(dbAccess);
 
                 prefCounter.stop();
 

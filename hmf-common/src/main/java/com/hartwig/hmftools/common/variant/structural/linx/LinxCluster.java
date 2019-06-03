@@ -8,6 +8,7 @@ public abstract class LinxCluster
     public abstract int clusterId();
     public abstract String resolvedType();
     public abstract boolean synthetic();
+    public abstract boolean subClonal();
     public abstract String subType();
     public abstract int clusterCount();
     public abstract String clusterDesc();

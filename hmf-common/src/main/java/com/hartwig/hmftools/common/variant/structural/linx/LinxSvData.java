@@ -25,11 +25,5 @@ public abstract class LinxSvData
     public abstract String localTopologyEnd();
     public abstract int localTICountStart();
     public abstract int localTICountEnd();
-    public abstract String nearestTypeStart();
-    public abstract String nearestTypeEnd();
-    public abstract long nearestLengthStart();
-    public abstract long nearestLengthEnd();
-    public abstract long dbLengthStart();
-    public abstract long dbLengthEnd();
 
 }

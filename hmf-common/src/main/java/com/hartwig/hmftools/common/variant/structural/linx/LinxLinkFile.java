@@ -67,6 +67,7 @@ public class LinxLinkFile
                 .add("traversedSVCount")
                 .add("length")
                 .add("ploidy")
+                .add("pseudogeneInfo")
                 .toString();
     }
 
@@ -86,6 +87,7 @@ public class LinxLinkFile
                 .add(String.valueOf(svData.traversedSVCount()))
                 .add(String.valueOf(svData.length()))
                 .add(String.valueOf(svData.ploidy()))
+                .add(String.valueOf(svData.pseudogeneInfo()))
                 .toString();
     }
 
@@ -110,6 +112,7 @@ public class LinxLinkFile
                 .traversedSVCount(Integer.valueOf(values[index++]))
                 .length(Long.valueOf(values[index++]))
                 .ploidy(Integer.valueOf(values[index++]))
+                .pseudogeneInfo(values[index++])
                 .build();
     }
 }

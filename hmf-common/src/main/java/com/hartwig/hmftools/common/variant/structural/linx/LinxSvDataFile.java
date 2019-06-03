@@ -74,12 +74,6 @@ public class LinxSvDataFile
                 .add("localTopologyEnd")
                 .add("localTICountStart")
                 .add("localTICountEnd")
-                .add("nearestTypeStart")
-                .add("nearestTypeEnd")
-                .add("nearestLengthStart")
-                .add("nearestLengthEnd")
-                .add("dbLengthStart")
-                .add("dbLengthEnd")
                 .toString();
     }
 
@@ -106,12 +100,6 @@ public class LinxSvDataFile
                 .add(String.valueOf(svData.localTopologyEnd()))
                 .add(String.valueOf(svData.localTICountStart()))
                 .add(String.valueOf(svData.localTICountEnd()))
-                .add(String.valueOf(svData.nearestTypeStart()))
-                .add(String.valueOf(svData.nearestTypeEnd()))
-                .add(String.valueOf(svData.nearestLengthStart()))
-                .add(String.valueOf(svData.nearestLengthEnd()))
-                .add(String.valueOf(svData.dbLengthStart()))
-                .add(String.valueOf(svData.dbLengthEnd()))
                 .toString();
     }
 
@@ -143,12 +131,6 @@ public class LinxSvDataFile
                 .localTopologyEnd(values[index++])
                 .localTICountStart(Integer.valueOf(values[index++]))
                 .localTICountEnd(Integer.valueOf(values[index++]))
-                .nearestTypeStart(values[index++])
-                .nearestTypeEnd(values[index++])
-                .nearestLengthStart(Long.valueOf(values[index++]))
-                .nearestLengthEnd(Long.valueOf(values[index++]))
-                .dbLengthStart(Long.valueOf(values[index++]))
-                .dbLengthEnd(Long.valueOf(values[index++]))
                 .build();
     }
 }
