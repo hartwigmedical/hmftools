@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -12,11 +14,17 @@ import com.hartwig.hmftools.common.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricsFile {
+    private static final Logger LOGGER = LogManager.getLogger(WGSMetricsFile.class);
 
     private static final String METRICS_EXTENSION_PV5 = ".wgsmetrics";
+    private static final String METRICS_BASE_DIRECTORY = "QCStats";
+    private static final String METRICS_SUB_DIRECTORY_SUFFIX = "_dedup";
+    private static final String METRICS_EXTENSION = "_dedup_WGSMetrics.txt";
 
     private static final String VALUE_SEPARATOR = "\t";
 
@@ -30,8 +38,15 @@ public final class WGSMetricsFile {
     }
 
     @NotNull
-    public static String generateFilename(@NotNull final String metricsDir, @NotNull final String sample) throws FileNotFoundException {
-        return PathPrefixSuffixFinder.build().findPath(metricsDir, sample, METRICS_EXTENSION_PV5).toString();
+    public static String generateFilename(@NotNull final String metricsDir, @NotNull final String sample) throws IOException {
+        try { //P5 metric file
+            return PathPrefixSuffixFinder.build().findPath(metricsDir, sample, METRICS_EXTENSION_PV5).toString();
+        } catch (FileNotFoundException exc) { //P4 metric file create symlink
+            String path_P4 = metricsDir + File.separator + METRICS_BASE_DIRECTORY + File.separator + sample + METRICS_SUB_DIRECTORY_SUFFIX;
+            Path pathWGSFile_P4 = PathPrefixSuffixFinder.build().findPath(path_P4, sample, METRICS_EXTENSION);
+            Path metricFileSymLink = Paths.get(metricsDir + File.separator + sample + METRICS_EXTENSION_PV5);
+            return Files.createSymbolicLink(metricFileSymLink, pathWGSFile_P4).toString();
+        }
     }
 
     @NotNull

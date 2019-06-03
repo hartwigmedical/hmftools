@@ -70,6 +70,7 @@ public final class LoadMetricsData {
     private static WGSMetrics generateMetricsForRun(@NotNull RunContext context) throws IOException {
         assert context.isSomaticRun();
         String refFile = WGSMetricsFile.generateFilename(context.runDirectory(), context.refSample());
+        LOGGER.info(refFile);
         String tumorFile = WGSMetricsFile.generateFilename(context.runDirectory(), context.tumorSample());
         return WGSMetricsFile.read(refFile, tumorFile);
     }
