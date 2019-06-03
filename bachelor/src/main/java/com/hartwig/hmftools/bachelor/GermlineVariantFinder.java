@@ -19,6 +19,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.bachelor.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.bachelor.datamodel.Program;
+import com.hartwig.hmftools.bachelor.datamodel.ProgramPanel;
+import com.hartwig.hmftools.bachelor.datamodel.SnpEffect;
+import com.hartwig.hmftools.bachelor.datamodel.VariantException;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.VariantFilter;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
@@ -26,12 +31,6 @@ import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
-
-import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
-import nl.hartwigmedicalfoundation.bachelor.Program;
-import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
-import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
-import nl.hartwigmedicalfoundation.bachelor.VariantException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

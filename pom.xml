@@ -43,7 +43,7 @@
 
         <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
-        <maven.shade.plugin.version>3.1.0</maven.shade.plugin.version>
+        <maven.jaxb2.plugin.version>0.14.0</maven.jaxb2.plugin.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
 
@@ -76,7 +76,6 @@
         <jooq.version>3.9.5</jooq.version>
         <mysqlconnector.version>8.0.11</mysqlconnector.version>
         <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
-        <jaxb2.plugin.version>0.13.1</jaxb2.plugin.version>
         <rxjava2.version>2.1.2</rxjava2.version>
         <retrofit.version>2.4.0</retrofit.version>
         <moshi.version>1.6.0</moshi.version>
@@ -125,7 +124,7 @@
                 <plugin>
                     <groupId>org.jvnet.jaxb2.maven2</groupId>
                     <artifactId>maven-jaxb2-plugin</artifactId>
-                    <version>${jaxb2.plugin.version}</version>
+                    <version>${maven.jaxb2.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>

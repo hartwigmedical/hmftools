@@ -89,6 +89,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <generatePackage>com.hartwig.hmftools.bachelor.datamodel</generatePackage>
+                </configuration>
             </plugin>
         </plugins>
     </build>
