@@ -14,12 +14,9 @@ import com.hartwig.hmftools.common.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricsFile {
-    private static final Logger LOGGER = LogManager.getLogger(WGSMetricsFile.class);
 
     private static final String METRICS_EXTENSION_PV5 = ".wgsmetrics";
     private static final String METRICS_BASE_DIRECTORY = "QCStats";
