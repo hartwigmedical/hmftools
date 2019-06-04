@@ -45,19 +45,6 @@ public class AnnotationTests
         // tester.logVerbose(true);
 
         // create a set of SVs which exhibit the various types of local topology
-
-        /*
-            public static final int ARM_CL_ISOLATED_BE = 0;
-    public static final int ARM_CL_TI_ONLY = 1;
-    public static final int ARM_CL_DSB = 2;
-    public static final int ARM_CL_FOLDBACK = 3;
-    public static final int ARM_CL_FOLDBACK_DSB = 4;
-    public static final int ARM_CL_COMPLEX_FOLDBACK = 5;
-    public static final int ARM_CL_COMPLEX_LINE = 6;
-    public static final int ARM_CL_COMPLEX_OTHER = 7;
-         */
-
-
         final SvVarData var1 = createInv("1", "1", 101000, 107000, 1);
 
         // remote TI from BND, with other ends forming a DB and an isolated BE
@@ -155,14 +142,13 @@ public class AnnotationTests
         assertEquals(1, tester.Analyser.getClusters().size());
     }
 
+    @Ignore
     @Test
     public void testPotentialDoubleMinutes()
     {
         SvTestHelper tester = new SvTestHelper();
         // tester.logVerbose(true);
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
-
-        CNAnalyser cnAnalyser = new CNAnalyser("", null);
 
         // first a simple DUP
         final SvVarData var1 = createTestSv("0","1","1",500,600,-1,1, DUP,3);

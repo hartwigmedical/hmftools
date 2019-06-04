@@ -18,15 +18,15 @@ public class SvLOH
     public final double MinCN;
     public final int SegCount;
     public final long Length;
-    public final String StartSV;
-    public final String EndSV;
+    public final int StartSV; // the SV data's ID
+    public final int EndSV;
     public final boolean Skipped;
     public final boolean IsValid;
 
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
 
-    public static String LOH_NO_SV = "0";
+    public final static int LOH_NO_SV = -1;
 
     public SvLOH(
             final String sampleId,
@@ -43,8 +43,8 @@ public class SvLOH
             final double minCN,
             final int segCount,
             final long length,
-            final String startSV,
-            final String endSV,
+            final int startSV,
+            final int endSV,
             boolean skipped,
             boolean isValid)
     {

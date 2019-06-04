@@ -112,7 +112,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 
     logger.info("Writing known variants to $outputDir")
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
-    knowledgebases.filterNot { it.source.toLowerCase().equals("iclusion") }.map { writeFusionsFiles(it, outputDir) }
+    knowledgebases.filterNot { it.source.toLowerCase().equals("iclusion") }.map { writeFusionsFiles(listOf(it), outputDir) }
 
     logger.info("Writing actionability files to $outputDir")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
@@ -127,7 +127,7 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
     CsvWriter.writeTSV(cancerTypesDoids, cancerTypeDOIDMappingLocation)
 }
 
-private fun writeFusionsFiles(knowledgebases: Knowledgebase, outputDir: String) {
+private fun writeFusionsFiles(knowledgebases: List<Knowledgebase>, outputDir: String) {
     val fusionPairLocation = "$outputDir${File.separator}knownFusionPairs.csv"
     logger.info("Writing known fusion genes to $fusionPairLocation")
     CsvWriter.writeCSV(knownFusionPairs(knowledgebases), fusionPairLocation)

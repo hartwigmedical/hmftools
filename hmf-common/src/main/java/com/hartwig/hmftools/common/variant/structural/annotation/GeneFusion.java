@@ -16,6 +16,7 @@ public class GeneFusion
     private String mKnownFusionType;
 
     private String mAnnotations;
+    private long mChainLength;
 
     public static String REPORTABLE_TYPE_NONE = "";
     public static String REPORTABLE_TYPE_KNOWN = "Known";
@@ -34,6 +35,7 @@ public class GeneFusion
         mViable = viable;
         mExonsSkippedUp = 0;
         mExonsSkippedDown = 0;
+        mChainLength = 0;
     }
 
     public Transcript upstreamTrans() { return mUpstreamTrans; }
@@ -65,4 +67,9 @@ public class GeneFusion
 
     public final String getAnnotations() { return mAnnotations; }
     public void setAnnotations(final String annotations) { mAnnotations = annotations; }
+
+    public long getChainLength() { return mChainLength; }
+    public void setChainLength(final long chainLength) { mChainLength = chainLength; }
+
+
 }

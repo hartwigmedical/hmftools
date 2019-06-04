@@ -116,30 +116,6 @@ public class SvDisruptionAnalyser
         return sameTranscript && bothIntronic && sameExonUpstream;
     }
 
-    public static void markNonDisruptiveTranscripts(List<GeneAnnotation> genesStart, List<GeneAnnotation> genesEnd)
-    {
-        if(genesStart.isEmpty() || genesEnd.isEmpty())
-            return;
-
-        for(final GeneAnnotation startGene : genesStart)
-        {
-            for (final Transcript trans1 : startGene.transcripts())
-            {
-                for (final GeneAnnotation endGene : genesEnd)
-                {
-                    for (final Transcript trans2 : endGene.transcripts())
-                    {
-                        if(!areDisruptivePair(trans1, trans2))
-                        {
-                            trans1.setIsDisruptive(false);
-                            trans2.setIsDisruptive(false);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public static void setBreakendDisruptive(final List<StructuralVariantAnnotation> annotations)
     {
         // A breakend is not disruptive in a transcript if there exists another breakend where:

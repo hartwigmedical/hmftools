@@ -69,7 +69,7 @@ public class GraphAnalyser {
         }
 
         for (final String sample : samplesList) {
-            List<EnrichedStructuralVariant> svRecords = dbAccess.readStructuralVariants(sample);
+            List<EnrichedStructuralVariant> svRecords = Lists.newArrayList(); // dbAccess.readStructuralVariants(sample);
             List<PurpleCopyNumber> cnRecords = dbAccess.readCopynumbers(sample);
             svRecords = hackFixPurpleOffByOne(svRecords, cnRecords);
             svRecords = svRecords.stream().filter(sv -> sv.filter().equals("") || sv.filter().equals("PASS")).collect(Collectors.toList());

@@ -8,6 +8,8 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
 import org.junit.Test;
 
@@ -17,9 +19,8 @@ public class ReportableGeneFusionFactoryTest {
 
     @Test
     public void canConvertGeneFusions() {
-        Fusion fusion = createTestFusionBuilder().geneUp("PRKAR2B").geneDown("MET").ploidyUp(1.65).ploidyDown(1.65).build();
-        List<ReportableGeneFusion> reportableFusions =
-                ReportableGeneFusionFactory.convert(Lists.newArrayList(fusion));
+        List<ReportableGeneFusion> reportableFusions = Lists.newArrayList(
+                createTestFusionBuilder().geneStart("PRKAR2B").geneEnd("MET").ploidy(1.65).build());
 
         assertEquals(1, reportableFusions.size());
 

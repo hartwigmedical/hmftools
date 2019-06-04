@@ -14,33 +14,38 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
+import com.hartwig.hmftools.svanalysis.types.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
+import com.hartwig.hmftools.svanalysis.types.VisCopyNumberFile;
 import com.hartwig.hmftools.svanalysis.types.VisGeneData;
+import com.hartwig.hmftools.svanalysis.types.VisGeneExonFile;
+import com.hartwig.hmftools.svanalysis.types.VisSegmentFile;
+import com.hartwig.hmftools.svanalysis.types.VisSvDataFile;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class VisualiserWriter
 {
-    private BufferedWriter mSvsFileWriter;
-    private BufferedWriter mSegmentsFileWriter;
-    private BufferedWriter mGenesFileWriter;
-
     // references only
     SvGeneTranscriptCollection mGeneTranscriptCollection;
 
     private List<VisGeneData> mGeneData;
 
+    private boolean mBatchOutput;
     private boolean mEnabled;
     private final String mOutputDir;
     private String mSampleId;
@@ -48,17 +53,15 @@ public class VisualiserWriter
     private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
 
 
-    public VisualiserWriter(final String outputDir, boolean enabled)
+    public VisualiserWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
     {
         mEnabled = enabled;
         mOutputDir = outputDir;
         mSampleId = "";
+        mBatchOutput = isBatchOutput;
 
         mGeneTranscriptCollection = null;
 
-        mSvsFileWriter = null;
-        mSegmentsFileWriter = null;
-        mGenesFileWriter = null;
         mGeneData = Lists.newArrayList();
     }
 
@@ -73,7 +76,7 @@ public class VisualiserWriter
         mGeneData.clear();
     }
 
-    public void writeOutput(final List<SvCluster> clusters, final List<SvVarData> variants)
+    public void writeOutput(final List<SvCluster> clusters, final List<SvVarData> variants, final Map<String,List<SvCNData>> chrCnDataMap)
     {
         if(!mEnabled)
             return;
@@ -81,201 +84,148 @@ public class VisualiserWriter
         writeVisualSvData(variants);
         writeVisualSegmentData(clusters);
         writeGeneExonData();
+        writeCopyNumberData(chrCnDataMap);
     }
 
     private void writeVisualSvData(final List<SvVarData> variants)
     {
-        try
+        List<VisSvDataFile> svDataList = Lists.newArrayList();
+
+        for(final SvVarData var : variants)
         {
-            if (mSvsFileWriter == null)
+            final List<SvChain> chains = var.getCluster().findChains(var);
+
+            // repeat an SV for every time it appears in a chain
+            int chainCount = chains.isEmpty() ? 1 : chains.size();
+            int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
+
+            int repeatCount = max((int)var.getRoundedCNChange(),1);
+
+            for(int i = 0; i < chainCount; ++i)
             {
-                String outputFileName = mOutputDir;
+                int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
 
-                outputFileName += "SVA_VIS_SVS.csv";
+                final SvBreakend beStart = var.getBreakend(true);
+                final SvBreakend beEnd = var.getBreakend(false);
 
-                mSvsFileWriter = createBufferedWriter(outputFileName, false);
-
-                // definitional fields
-                mSvsFileWriter.write("SampleId,ClusterId,ChainId,SvId,Type,ResolvedType");
-                mSvsFileWriter.write(",ChrStart,PosStart,OrientStart,InfoStart,ChrEnd,PosEnd,OrientEnd,InfoEnd,TraverseCount");
-
-                mSvsFileWriter.newLine();
-            }
-
-            BufferedWriter writer = mSvsFileWriter;
-
-            for(final SvVarData var : variants)
-            {
-                final List<SvChain> chains = var.getCluster().findChains(var);
-
-                // repeat an SV for every time it appears in a chain
-                int chainCount = chains.isEmpty() ? 1 : chains.size();
-                int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
-
-                // int repeatCount = !chains.isEmpty() ? max(var.getReplicatedCount(), 1) : 1;
-                int repeatCount = max((int)var.getRoundedCNChange(),1);
-
-                for(int i = 0; i < chainCount; ++i)
-                {
-                    int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
-
-                    writer.write(
-                            String.format("%s,%d,%d,%s,%s,%s",
-                                    mSampleId, var.getCluster().id(), chainId, var.id(),
-                                    var.type(), var.getCluster().getResolvedType()));
-
-                    for (int be = SE_START; be <= SE_END; ++be)
-                    {
-                        boolean isStart = isStart(be);
-
-                        if (!isStart && var.isNullBreakend())
-                        {
-                            writer.write(",-1,0,0,NULL");
-                            continue;
-                        }
-
-                        final SvBreakend breakend = var.getBreakend(isStart);
-
-                        writer.write(
-                                String.format(",%s,%d,%d,%s",
-                                        breakend.chromosome(), breakend.position(), breakend.orientation(),
-                                        breakend.getSV().getFoldbackLink(isStart).isEmpty() ? "NORMAL" : "FOLDBACK"));
-                    }
-
-                    writer.write(String.format(",%d", repeatCount));
-
-                    writer.newLine();
-                }
+                svDataList.add(new VisSvDataFile(mSampleId, var.getCluster().id(), chainId, var.dbId(),
+                        var.type(), var.getCluster().getResolvedType(),
+                        beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
+                        beStart.position(),beEnd != null ? beEnd.position() : 0,
+                        beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
+                        repeatCount));
             }
         }
-        catch (final IOException e)
+
+        final String outputFile = mBatchOutput ? mOutputDir + "SVA_VIS_SVS.csv" : VisSvDataFile.generateFilename(mOutputDir, mSampleId);
+
+        try
         {
-            LOGGER.error("error writing to visual SVs file: {}", e.toString());
+            VisSvDataFile.write(outputFile, svDataList);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("filed to write VIS copy number output");
         }
     }
 
     private void writeVisualSegmentData(final List<SvCluster> clusters)
     {
-        try
+        List<VisSegmentFile> segments = Lists.newArrayList();
+
+        for(final SvCluster cluster : clusters)
         {
-            if (mSegmentsFileWriter == null)
+            if (cluster.isResolved() && (cluster.getChains().isEmpty() || isFilteredResolvedType(cluster.getResolvedType())))
             {
-                String outputFileName = mOutputDir;
-
-                outputFileName += "SVA_VIS_SEGMENTS.csv";
-
-                mSegmentsFileWriter = createBufferedWriter(outputFileName, false);
-                mSegmentsFileWriter.write("SampleId,ClusterId,ChainId,Chr,PosStart,PosEnd,TraverseCount,Reason");
-                mSegmentsFileWriter.newLine();
+                continue;
             }
 
-            BufferedWriter writer = mSegmentsFileWriter;
+            // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
+            List<SvLinkedPair> uniquePairs = Lists.newArrayList();
 
-            for(final SvCluster cluster : clusters)
+            for (final SvChain chain : cluster.getChains())
             {
-                if(cluster.isResolved()
-                && (cluster.getChains().isEmpty() || isFilteredResolvedType(cluster.getResolvedType())))
+                // log the start of the chain
+                SvBreakend breakend = chain.getOpenBreakend(true);
+                boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
+
+                if (breakend != null)
                 {
-                    continue;
+                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
+                            getPositionValue(breakend, true), getPositionValue(breakend, false),
+                            startsOnEnd ? 2 : 1));
                 }
 
-                // isSpecificCluster(cluster);
-
-                // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
-                List<SvLinkedPair> uniquePairs = Lists.newArrayList();
-
-                for (final SvChain chain : cluster.getChains())
+                for (final SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    // log the start of the chain
-                    SvBreakend breakend = chain.getOpenBreakend(true);
-                    boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
+                    boolean isRepeat = false;
 
-                    if(breakend != null)
+                    // only log each chain link once, and log how many times the link has been used
+                    for (final SvLinkedPair existingPair : uniquePairs)
                     {
-                        writer.write(String.format("%s,%d,%d,%s,%s,%s,%d",
-                                mSampleId, cluster.id(), chain.id(), breakend.chromosome(), getPositionValue(breakend, true),
-                                getPositionValue(breakend, false), startsOnEnd ? 2 : 1));
-
-                        writer.newLine();
-                    }
-
-                    for (final SvLinkedPair pair : chain.getLinkedPairs())
-                    {
-                        boolean isRepeat = false;
-
-                        // only log each chain link once, and log how many times the link has been used
-                        for (final SvLinkedPair existingPair : uniquePairs)
+                        if (pair.matches(existingPair))
                         {
-                            if(pair.matches(existingPair))
-                            {
-                                isRepeat = true;
-                                break;
-                            }
+                            isRepeat = true;
+                            break;
                         }
-
-                        if(isRepeat)
-                            continue;
-
-                        uniquePairs.add(pair);
-
-                        writer.write(String.format("%s,%d,%d",
-                                mSampleId, cluster.id(), chain.id()));
-
-                        int pairRepeatCount = 0;
-
-                        for (final SvChain otherChain : cluster.getChains())
-                        {
-                            pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
-                        }
-
-                        final SvBreakend beStart = pair.getBreakend(true);
-                        final SvBreakend beEnd= pair.getBreakend(false);
-
-                        writer.write(String.format(",%s,%d,%d,%d,%s",
-                                beStart.chromosome(), beStart.position(), beEnd.position(), pairRepeatCount, pair.getLinkReason()));
-
-                        writer.newLine();
                     }
 
-                    // log the end of the chain out to centromere or telomere
-                    breakend = chain.getOpenBreakend(false);
-
-                    if(breakend != null && !startsOnEnd)
-                    {
-                        writer.write(String.format("%s,%d,%d,%s,%s,%s,%d",
-                                mSampleId, cluster.id(), chain.id(), breakend.chromosome(), getPositionValue(breakend, true),
-                                getPositionValue(breakend, false), 1));
-
-                        writer.newLine();
-                    }
-                }
-
-                // finally write out all unchained SVs
-                for(final SvVarData var : cluster.getUnlinkedSVs())
-                {
-                    if(var.isReplicatedSv())
+                    if (isRepeat)
                         continue;
 
-                    int chainId = cluster.getChainId(var);
+                    uniquePairs.add(pair);
 
-                    for(int be = SE_START; be <= SE_END; ++be)
+                    int pairRepeatCount = 0;
+
+                    for (final SvChain otherChain : cluster.getChains())
                     {
-                        final SvBreakend breakend = var.getBreakend(isStart(be));
-
-                        if(breakend == null)
-                            continue;
-
-                        writer.write(String.format("%s,%d,%d",
-                                mSampleId, cluster.id(), chainId));
-
-                        writer.write(String.format(",%s,%s,%s,%d",
-                                breakend.chromosome(), getPositionValue(breakend, true),
-                                getPositionValue(breakend, false), 1));
-
-                        writer.newLine();
+                        pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
                     }
+
+                    final SvBreakend beStart = pair.getBreakend(true);
+                    final SvBreakend beEnd = pair.getBreakend(false);
+
+                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(),
+                            beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), pairRepeatCount));
+                }
+
+                // log the end of the chain out to centromere or telomere
+                breakend = chain.getOpenBreakend(false);
+
+                if (breakend != null && !startsOnEnd)
+                {
+                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
+                            getPositionValue(breakend, true), getPositionValue(breakend, false), 1));
                 }
             }
+
+            // finally write out all unchained SVs
+            for (final SvVarData var : cluster.getUnlinkedSVs())
+            {
+                if (var.isReplicatedSv())
+                    continue;
+
+                int chainId = cluster.getChainId(var);
+
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    final SvBreakend breakend = var.getBreakend(isStart(be));
+
+                    if (breakend == null)
+                        continue;
+
+                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chainId, breakend.chromosome(),
+                            getPositionValue(breakend, true), getPositionValue(breakend, false), 1));
+                }
+            }
+        }
+
+        try
+        {
+            String outputFileName = mBatchOutput ? mOutputDir + "SVA_VIS_SEGMENTS.csv" :
+                    VisSegmentFile.generateFilename(mOutputDir, mSampleId);
+
+            VisSegmentFile.write(outputFileName, segments);
         }
         catch (final IOException e)
         {
@@ -315,41 +265,37 @@ public class VisualiserWriter
         if(!mEnabled)
             return;
 
+        List<VisGeneExonFile> geneExonList = Lists.newArrayList();
+
+        // SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd
+
+        // first remove duplicates from amongst the genes
+        List<String> loggedGenes = Lists.newArrayList();
+
+        for(final VisGeneData geneData : mGeneData)
+        {
+            if (loggedGenes.contains(geneData.GeneId))
+                continue;
+
+            loggedGenes.add(geneData.GeneId);
+
+            final List<TranscriptExonData> exonDataLst =
+                    mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TranscriptId);
+
+            for (final TranscriptExonData exonData : exonDataLst)
+            {
+                geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, exonData.TransName,
+                        geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+            }
+        }
+
         try
         {
-            if (mGenesFileWriter == null)
-            {
-                String outputFileName = mOutputDir;
+            String outputFileName = mBatchOutput ? mOutputDir + "SVA_VIS_GENE_EXONS.csv" :
+                    VisGeneExonFile.generateFilename(mOutputDir, mSampleId);
 
-                outputFileName += "SVA_VIS_GENE_EXONS.csv";
+            VisGeneExonFile.write(outputFileName, geneExonList);
 
-                mGenesFileWriter = createBufferedWriter(outputFileName, false);
-                mGenesFileWriter.write("SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd");
-                mGenesFileWriter.newLine();
-            }
-
-            // first remove duplicates from amongst the genes
-            List<String> loggedGenes = Lists.newArrayList();
-
-            for(final VisGeneData geneData : mGeneData)
-            {
-                if(loggedGenes.contains(geneData.GeneId))
-                    continue;
-
-                loggedGenes.add(geneData.GeneId);
-
-                final List<TranscriptExonData> exonDataLst = mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TranscriptId);
-
-                for (final TranscriptExonData exonData : exonDataLst)
-                {
-                    mGenesFileWriter.write(String.format("%s,%d,%s,%s,%s,%s",
-                            mSampleId, geneData.ClusterId, geneData.GeneName, exonData.TransName, geneData.Chromosome, geneData.AnnotationType));
-
-                    mGenesFileWriter.write(String.format(",%d,%d,%d", exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
-
-                    mGenesFileWriter.newLine();
-                }
-            }
         }
         catch (final IOException e)
         {
@@ -357,12 +303,30 @@ public class VisualiserWriter
         }
     }
 
-    public void close()
+    private void writeCopyNumberData(final Map<String,List<SvCNData>> chrCNDataMap)
     {
-        closeBufferedWriter(mSvsFileWriter);
-        closeBufferedWriter(mSegmentsFileWriter);
-        closeBufferedWriter(mGenesFileWriter);
+        List<VisCopyNumberFile> cnDataList = Lists.newArrayList();
 
+        for(Map.Entry<String,List<SvCNData>> entry : chrCNDataMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            for(SvCNData cnData : entry.getValue())
+            {
+                cnDataList.add(new VisCopyNumberFile(
+                        mSampleId, chromosome, cnData.StartPos, cnData.EndPos, cnData.CopyNumber, cnData.ActualBaf));
+            }
+        }
+
+        final String outputFile = mBatchOutput ? mOutputDir + "SVA_VIS_COPY_NUMBER.csv" : VisCopyNumberFile.generateFilename(mOutputDir, mSampleId);
+
+        try
+        {
+            VisCopyNumberFile.write(outputFile, cnDataList);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("filed to write VIS copy number output");
+        }
     }
-
 }

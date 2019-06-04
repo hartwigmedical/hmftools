@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.immutables.value.Value;

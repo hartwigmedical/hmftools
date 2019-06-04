@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.structural;
+package com.hartwig.hmftools.common.variant.structural.annotation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +16,7 @@ public abstract class ReportableGeneFusion {
     public abstract String geneContextStart();
 
     @NotNull
-    public abstract String geneStartTranscript();
+    public abstract String geneTranscriptStart();
 
     @NotNull
     public abstract String geneEnd();
@@ -25,7 +25,7 @@ public abstract class ReportableGeneFusion {
     public abstract String geneContextEnd();
 
     @NotNull
-    public abstract String geneEndTranscript();
+    public abstract String geneTranscriptEnd();
 
     @Nullable
     public abstract Double ploidy();

@@ -1728,7 +1728,7 @@ public class ClusterAnnotations
     public static void reportClusterRepRepairSegments(final String sampleId, final SvCluster cluster)
     {
         // looking for replication before repair
-        if (cluster.isResolved() || !cluster.getFoldbacks().isEmpty() || cluster.hasVariedCopyNumber())
+        if (cluster.isResolved() || !cluster.getFoldbacks().isEmpty() || cluster.hasVariedPloidy())
             return;
 
         // isSpecificCluster(cluster);
@@ -1962,10 +1962,10 @@ public class ClusterAnnotations
                 final SvBreakend breakend = breakendList.get(i);
                 final SvVarData var = breakend.getSV();
 
-                if(!lohEvent.StartSV.equals(var.id()))
+                if(lohEvent.StartSV != var.dbId())
                     continue;
 
-                if(lohEvent.StartSV.equals(var.id()) && lohEvent.EndSV.equals(var.id()))
+                if(lohEvent.StartSV == var.dbId() && lohEvent.EndSV== var.dbId())
                 {
                     LOGGER.debug("var({} {}) matches skipped LOH: chr({}) breaks({} -> {}, len={})",
                             var.id(), var.type(), lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohLength);
@@ -1982,7 +1982,7 @@ public class ClusterAnnotations
 
                     final SvLinkedPair dbPair = var.getDBLink(v1Start);
 
-                    if (dbPair != null && dbPair.getOtherSV(var).id().equals(lohEvent.EndSV)
+                    if (dbPair != null && dbPair.getOtherSV(var).dbId() == lohEvent.EndSV
                             && dbPair.getBreakend(true).position() == lohEvent.PosStart
                             && dbPair.getBreakend(false).position() == lohEvent.PosEnd - 1)
                     {
@@ -1995,7 +1995,7 @@ public class ClusterAnnotations
 
                     final SvLinkedPair tiPair = var.getLinkedPair(v1Start);
 
-                    if (tiPair != null && tiPair.getOtherSV(var).id().equals(lohEvent.EndSV)
+                    if (tiPair != null && tiPair.getOtherSV(var).dbId() == lohEvent.EndSV
                             && tiPair.getBreakend(true).position() == lohEvent.PosStart
                             && tiPair.getBreakend(false).position() == lohEvent.PosEnd - 1)
                     {

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -19,12 +19,16 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -64,9 +68,11 @@ public class DatabaseAccess {
     @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
-    private final StructuralVariantAnnotationDAO structuralVariantAnnotationDAO;
-    @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
+    @NotNull
+    private final StructuralVariantClusterDAO structuralVariantClusterDAO;
+    @NotNull
+    private final StructuralVariantFusionDAO structuralVariantFusionDAO;
     @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
@@ -89,8 +95,9 @@ public class DatabaseAccess {
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
-        structuralVariantAnnotationDAO = new StructuralVariantAnnotationDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
+        structuralVariantClusterDAO = new StructuralVariantClusterDAO(context);
+        structuralVariantFusionDAO = new StructuralVariantFusionDAO(context);
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
@@ -155,7 +162,7 @@ public class DatabaseAccess {
         return somaticVariantDAO.getSamplesList();
     }
 
-    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<EnrichedStructuralVariant> variants) {
+    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariantData> variants) {
         structuralVariantDAO.write(sampleId, variants);
     }
 
@@ -166,11 +173,6 @@ public class DatabaseAccess {
     @NotNull
     public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
         return structuralVariantDAO.read(sample);
-    }
-
-    @NotNull
-    public List<EnrichedStructuralVariant> readStructuralVariants(@NotNull final String sample) {
-        return structuralVariantDAO.readEnrichedData(sample);
     }
 
     @NotNull
@@ -186,6 +188,26 @@ public class DatabaseAccess {
         copyNumberDAO.writeCopyNumberRegions(sample, regions);
     }
 
+    public void writeSvClusters(@NotNull final String sample, @NotNull List<LinxCluster> clusters) {
+        structuralVariantClusterDAO.writeClusters(sample, clusters);
+    }
+
+    public void writeSvLinxData(@NotNull final String sample, @NotNull List<LinxSvData> svData) {
+        structuralVariantClusterDAO.writeSvData(sample, svData);
+    }
+
+    public void writeSvLinks(@NotNull final String sample, @NotNull List<LinxLink> links) {
+        structuralVariantClusterDAO.writeLinks(sample, links);
+    }
+
+    public void writeSvViralInserts(@NotNull final String sample, @NotNull List<LinxViralInsertFile> inserts) {
+        structuralVariantClusterDAO.writeViralInserts(sample, inserts);
+    }
+
+    public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions) {
+        structuralVariantFusionDAO.writeBreakendsAndFusions(sample, transcripts, fusions);
+    }
+
     @NotNull
     public List<FittedRegion> readCopyNumberRegions(@NotNull final String sample) {
         return copyNumberDAO.readCopyNumberRegions(sample);
@@ -198,7 +220,7 @@ public class DatabaseAccess {
 
     @NotNull
     public List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
-        return structuralVariantAnnotationDAO.readGeneFusions(sample);
+        return structuralVariantFusionDAO.readGeneFusions(sample);
     }
 
     @NotNull
@@ -222,12 +244,6 @@ public class DatabaseAccess {
     @NotNull
     public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
         return copyNumberDAO.read(sample);
-    }
-
-    @NotNull
-    public List<PurpleCopyNumber> readCopyNumberSegmentsByType(@NotNull final String sample,
-            @NotNull final List<SegmentSupport> segmentTypes) {
-        return copyNumberDAO.readSegmentsByType(sample, segmentTypes);
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
@@ -307,7 +323,10 @@ public class DatabaseAccess {
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
         LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
-        structuralVariantAnnotationDAO.deleteAnnotationsForSample(sample);
+        structuralVariantFusionDAO.deleteAnnotationsForSample(sample);
+
+        LOGGER.info("Deleting structural variant cluster data for sample: " + sample);
+        structuralVariantClusterDAO.deleteClusterDataForSample(sample);
 
         LOGGER.info("Deleting structural variants for sample: " + sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);

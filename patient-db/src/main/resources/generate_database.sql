@@ -468,6 +468,7 @@ DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
+    svId INT NOT NULL,
     sampleId varchar(255) NOT NULL,
     startChromosome varchar(255) NOT NULL,
     endChromosome varchar(255),
@@ -480,12 +481,12 @@ CREATE TABLE structuralVariant
     startAF DOUBLE PRECISION,
     endAF DOUBLE PRECISION,
     ploidy DOUBLE PRECISION,
-    adjustedStartAF DOUBLE PRECISION,
-    adjustedEndAF DOUBLE PRECISION,
-    adjustedStartCopyNumber DOUBLE PRECISION,
-    adjustedEndCopyNumber DOUBLE PRECISION,
-    adjustedStartCopyNumberChange DOUBLE PRECISION,
-    adjustedEndCopyNumberChange DOUBLE PRECISION,
+    adjustedAFStart DOUBLE PRECISION,
+    adjustedAFEnd DOUBLE PRECISION,
+    adjustedCopyNumberStart DOUBLE PRECISION,
+    adjustedCopyNumberEnd DOUBLE PRECISION,
+    adjustedCopyNumberChangeStart DOUBLE PRECISION,
+    adjustedCopyNumberChangeEnd DOUBLE PRECISION,
     insertSequence varchar(2048) not null,
     type varchar(255) NOT NULL,
     filter varchar(255) NOT NULL,
@@ -526,23 +527,101 @@ CREATE TABLE structuralVariant
 );
 
 
+DROP TABLE IF EXISTS svLinxData;
+CREATE TABLE svLinxData
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    svId INT NOT NULL,
+    clusterId INT NOT NULL,
+    clusterReason VARCHAR(255) NULL,
+    fragileSiteStart BOOLEAN NOT NULL,
+    fragileSiteEnd BOOLEAN NOT NULL,
+    isFoldback BOOLEAN NOT NULL,
+    lineTypeStart VARCHAR(20),
+    lineTypeEnd VARCHAR(20),
+    ploidyMin DOUBLE PRECISION,
+    ploidyMax DOUBLE PRECISION,
+    geneStart VARCHAR(20),
+    geneEnd varchar(20),
+    replicationTimingStart DOUBLE PRECISION,
+    replicationTimingEnd DOUBLE PRECISION,
+    localTopologyIdStart INT,
+    localTopologyIdEnd INT,
+    localTopologyStart varchar(20),
+    localTopologyEnd VARCHAR(20),
+    localTICountStart INT,
+    localTICountEnd INT,
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(clusterId),
+    INDEX(svId)
+);
+
+DROP TABLE IF EXISTS cluster;
+CREATE TABLE cluster
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    clusterId INT NOT NULL,
+    resolvedType VARCHAR(20),
+    synthetic BOOLEAN NOT NULL,
+    subClonal BOOLEAN NOT NULL,
+    subType VARCHAR(20),
+    clusterCount INT,
+    clusterDesc VARCHAR(50),
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(clusterId)
+);
+
+DROP TABLE IF EXISTS svLink;
+CREATE TABLE svLink
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    clusterId INT NOT NULL,
+    chainId INT NOT NULL,
+    chainIndex INT NOT NULL,
+    chainLinkCount INT NOT NULL,
+    lowerBreakendId INT NOT NULL,
+    upperBreakendId INT NOT NULL,
+    lowerBreakendIsStart BOOLEAN NOT NULL,
+    upperBreakendIsStart BOOLEAN NOT NULL,
+    arm VARCHAR(2),
+    assembled BOOLEAN NOT NULL,
+    traversedSVCount INT,
+    linkLength INT,
+    ploidy DOUBLE PRECISION,
+    pseudogeneInfo varchar(255),
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(clusterId)
+);
+
+
 DROP TABLE IF EXISTS structuralVariantBreakend;
 CREATE TABLE structuralVariantBreakend
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     structuralVariantId INT NOT NULL,
-    isStartEnd BOOLEAN NOT NULL,
+    startBreakend BOOLEAN NOT NULL,
     gene VARCHAR(512) NOT NULL, # length here comes from ensembl db schema
     geneId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
     transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
-    isCanonicalTranscript BOOLEAN NOT NULL,
-    strand TINYINT NOT NULL,
-    exonRankUpstream TINYINT UNSIGNED,
-    exonRankDownstream TINYINT UNSIGNED,
-    exonPhaseUpstream TINYINT,
-    exonPhaseDownstream TINYINT,
-    exonMax SMALLINT NOT NULL,
+    canonicalTranscript BOOLEAN NOT NULL,
+    geneOrientation VARCHAR(20) NOT NULL,
+    disruptive BOOLEAN NOT NULL,
+    reportedDisruption BOOLEAN NOT NULL,
+    regionType VARCHAR(20) NOT NULL,
+    codingContext VARCHAR(20),
+    biotype VARCHAR(255),
+    exactBasePhase TINYINT,
+    nextSpliceExonRank TINYINT UNSIGNED,
+    nextSpliceExonPhase TINYINT,
+    nextSpliceDistance INT,
+    totalExonCount SMALLINT NOT NULL,
     PRIMARY KEY (id),
     INDEX(structuralVariantId),
     INDEX(sampleId),
@@ -570,11 +649,27 @@ CREATE TABLE structuralVariantFusion
     sampleId varchar(255) NOT NULL,
     fivePrimeBreakendId INT UNSIGNED NOT NULL,
     threePrimeBreakendId INT UNSIGNED NOT NULL,
-    isReported BOOLEAN NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    reported BOOLEAN NOT NULL,
+    reportedType varchar(255) NULL,
+    chainLength INT,
+    skippedExons INT,
     PRIMARY KEY (id),
     INDEX(fivePrimeBreakendId),
     INDEX(threePrimeBreakendId),
     INDEX(sampleId)
+);
+
+CREATE TABLE viralInsertion
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    svId INT NOT NULL,
+    virusId VARCHAR(50) NOT NULL,
+    virusName VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(svId)
 );
 
 DROP TABLE IF EXISTS canonicalTranscript;

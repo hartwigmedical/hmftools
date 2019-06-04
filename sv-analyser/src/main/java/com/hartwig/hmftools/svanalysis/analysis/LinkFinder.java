@@ -45,20 +45,6 @@ public class LinkFinder
         cluster.setAssemblyLinkedPairs(createAssemblyLinkedPairs(cluster));
     }
 
-    /*
-    public void findLinkedPairs(SvCluster cluster, boolean findInferred)
-    {
-        List<SvLinkedPair> assemblyLinkedPairs = createAssemblyLinkedPairs(cluster);
-        cluster.setAssemblyLinkedPairs(assemblyLinkedPairs);
-
-        if(findInferred)
-        {
-            List<SvLinkedPair> inferredLinkedPairs = createInferredLinkedPairs(cluster, cluster.getSVs(true), false);
-            cluster.setInferredLinkedPairs(inferredLinkedPairs);
-        }
-    }
-    */
-
     public List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
@@ -67,6 +53,7 @@ public class LinkFinder
         if(cluster.getSvCount() < 2)
             return linkedPairs;
 
+        boolean hasMultiBreakendLinks = false;
         final Map<String,List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
@@ -113,7 +100,8 @@ public class LinkFinder
                     // eg the replicated breakend scenario in COLO829's BND from chr 3-6
                     // but allow this if its ploidy supports this
 
-                    boolean multiBreakendLinks = lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink();
+                    if(lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink())
+                        hasMultiBreakendLinks = true;
 
                     // form a new TI from these 2 BEs
                     SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1Start, v2Start);
@@ -123,11 +111,7 @@ public class LinkFinder
                     lowerSV.addLinkedPair(newPair, v1Start);
                     upperSV.addLinkedPair(newPair, v2Start);
 
-                    if(!multiBreakendLinks)
-                    {
-                        // for now only take the first of assembled links to the same breakend
-                        linkedPairs.add(newPair);
-                    }
+                    linkedPairs.add(newPair);
 
                     // to avoid logging unlikely long TIs
                     LOGGER.debug("cluster({}) adding assembly linked {} pair({}) length({})",
@@ -135,6 +119,8 @@ public class LinkFinder
                 }
             }
         }
+
+        cluster.setRequiresReplication(hasMultiBreakendLinks);
 
         return linkedPairs;
     }

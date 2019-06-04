@@ -51,6 +51,7 @@ public class SvClassification
     public static final String RESOLVED_TYPE_PAIR_OTHER = "PAIR_OTHER";
     public static final String RESOLVED_TYPE_SIMPLE_GRP = "SIMPLE_GRP"; // on final resolution, this is dissolved into simple types
     public static final String RESOLVED_TYPE_FB_INV_PAIR = "FB_INV_PAIR";
+    public static final String RESOLVED_TYPE_SGL_PAIR = "SGL_PAIR";
 
     // super category for an SV or cluster
     public static final String SUPER_TYPE_SIMPLE = "SIMPLE";
@@ -99,7 +100,8 @@ public class SvClassification
 
     public static boolean isSimpleType(final String resolvedType)
     {
-        return (resolvedType == RESOLVED_TYPE_DEL || resolvedType == RESOLVED_TYPE_DUP || resolvedType == RESOLVED_TYPE_INS);
+        return (resolvedType == RESOLVED_TYPE_DEL || resolvedType == RESOLVED_TYPE_DUP || resolvedType == RESOLVED_TYPE_INS
+            || resolvedType.contains(RESOLVED_TYPE_SGL_PAIR));
     }
 
     public static boolean isIncompleteType(final String resolvedType)
@@ -112,7 +114,12 @@ public class SvClassification
         String resolvedType = cluster.getResolvedType();
 
         if(isSimpleType(resolvedType))
-            return cluster.getSvCount() > 1;
+        {
+            if(cluster.getTypeCount(SGL) == 2)
+                return false;
+            else
+                return cluster.getSvCount() > 1;
+        }
 
         // will be more when look for synthetic INVs, SGLs and translocations
         if(resolvedType == RESOLVED_TYPE_RECIPROCAL_INV || resolvedType == RESOLVED_TYPE_RECIPROCAL_TRANS
@@ -264,6 +271,9 @@ public class SvClassification
 
             if(resolvedType != RESOLVED_TYPE_NONE)
             {
+                // mark these differently from those formed from normal SVs
+                resolvedType = RESOLVED_TYPE_SGL_PAIR + "_" + resolvedType;
+
                 long length = abs(sgl1.position(true) - sgl2.position(true));
                 cluster.setResolved(true, resolvedType);
                 cluster.setSyntheticData(length, 0);

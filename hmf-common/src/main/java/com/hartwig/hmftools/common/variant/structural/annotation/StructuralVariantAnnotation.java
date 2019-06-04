@@ -6,22 +6,24 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
 import org.jetbrains.annotations.NotNull;
 
 public class StructuralVariantAnnotation {
 
     @NotNull
-    private final EnrichedStructuralVariant variant;
+    private final StructuralVariantData variant;
     @NotNull
     private final List<GeneAnnotation> annotations = Lists.newArrayList();
 
-    public StructuralVariantAnnotation(@NotNull final EnrichedStructuralVariant variant) {
+    public StructuralVariantAnnotation(@NotNull final StructuralVariantData variant)
+    {
         this.variant = variant;
     }
 
     @NotNull
-    public StructuralVariant variant() {
+    public StructuralVariantData variant() {
         return variant;
     }
 

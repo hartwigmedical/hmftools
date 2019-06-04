@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientreporter.structural;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,10 +21,10 @@ final class ReportableGeneFusionFactory {
             reportableFusions.add(ImmutableReportableGeneFusion.builder()
                     .geneStart(fusion.geneUp())
                     .geneContextStart(context(fusion.regionTypeUp(), fusion.exonUp(), false))
-                    .geneStartTranscript(fusion.transcriptUp())
+                    .geneTranscriptStart(fusion.transcriptUp())
                     .geneEnd(fusion.geneDown())
                     .geneContextEnd(context(fusion.regionTypeDown(), fusion.exonDown(), true))
-                    .geneEndTranscript(fusion.transcriptDown())
+                    .geneTranscriptEnd(fusion.transcriptDown())
                     .ploidy(fusionPloidy(fusion.ploidyDown(), fusion.ploidyUp()))
                     .source(fusion.primarySource())
                     .build());

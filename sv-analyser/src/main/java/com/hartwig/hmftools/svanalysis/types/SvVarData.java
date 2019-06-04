@@ -94,7 +94,7 @@ public class SvVarData
 
     public SvVarData(final StructuralVariantData svData)
     {
-        mIdStr = svData.id();
+        mIdStr = String.valueOf(svData.id());
 
         mSVData = svData;
 
@@ -194,7 +194,7 @@ public class SvVarData
 
     public final int dbId()
     {
-        return Integer.parseInt(mSVData.id());
+        return mSVData.id();
     }
 
     public final StructuralVariantData getSvData() { return mSVData; }
@@ -325,6 +325,47 @@ public class SvVarData
     public static double SUSPECT_CN_CHANGE = 0.2;
     private static double CN_ROUND_SIZE = 0.5;
 
+    public double getRoundedPloidy(boolean enforceClonal)
+    {
+        double ploidyEstimate = mHasCalcPloidy ? (mPloidyMin + mPloidyMax) * 0.5 : mPloidy;
+        double roundedPloidy = round(ploidyEstimate);
+        return enforceClonal ? max(roundedPloidy,1) : roundedPloidy;
+    }
+
+    public int getMaxAssembledBreakend()
+    {
+        return max(getAssembledLinkedPairs(true).size(), getAssembledLinkedPairs(false).size());
+    }
+
+    /*
+    public int getImpliedAssemblyPloidy()
+    {
+        if(mTiLinks.isEmpty())
+            return 1;
+
+        // imply a ploidy from the assembled links
+        int maxPloidy = 1;
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            List<SvLinkedPair> tiLinks = getAssembledLinkedPairs(isStart(se));
+            int breakendPloidy = 0;
+
+            for(SvLinkedPair link : tiLinks)
+            {
+                SvVarData otherVar = link.getOtherSV(this);
+                int otherPloidy = (int)otherVar.getRoundedPloidy(true);
+
+                breakendPloidy += otherPloidy;
+            }
+        }
+    }
+    */
+
+    public int getImpliedPloidy()
+    {
+        return max(getMaxAssembledBreakend(), (int)getRoundedPloidy(true));
+    }
+
     public double getRoundedCNChange()
     {
         double cnChgStart = copyNumberChange(true);
@@ -429,8 +470,8 @@ public class SvVarData
                 }
             }
         }
-
     }
+
     public void addLinkedPair(final SvLinkedPair link, boolean isStart)
     {
         // add in order from shortest to longest
@@ -630,51 +671,6 @@ public class SvVarData
                 }
             }
         }
-
-        /*
-        mStartTIAssemblies = Lists.newArrayList();
-        mEndTIAssemblies = Lists.newArrayList();
-
-        mAssemblyMatchType[SE_START] = ASSEMBLY_MATCH_NONE;
-        mAssemblyMatchType[SE_END] = ASSEMBLY_MATCH_NONE;
-
-        if(!useExisting)
-        {
-            mAssemblyData[SE_START] = "";
-            mAssemblyData[SE_END] = "";
-
-            if(!mSVData.startLinkedBy().isEmpty() && !mSVData.startLinkedBy().equals("."))
-            {
-                mAssemblyData[SE_START] = mSVData.startLinkedBy().replaceAll(",", ";");
-            }
-
-            if(!mSVData.endLinkedBy().isEmpty() && !mSVData.endLinkedBy().equals("."))
-            {
-                mAssemblyData[SE_END] = mSVData.endLinkedBy().replaceAll(",", ";");
-            }
-        }
-
-        if(!mAssemblyData[SE_START].isEmpty())
-        {
-            String[] assemblyList = mAssemblyData[SE_START].split(";");
-
-            for(int i = 0; i < assemblyList.length; ++i)
-            {
-                if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
-                    mStartTIAssemblies.add(assemblyList[i]);
-            }
-        }
-
-        if(!mAssemblyData[SE_END].isEmpty())
-        {
-            String[] assemblyList = mAssemblyData[SE_END].split(";");
-            for(int i = 0; i < assemblyList.length; ++i)
-            {
-                if(assemblyList[i].contains(ASSEMBLY_TYPE_TI))
-                    mEndTIAssemblies.add(assemblyList[i]);
-            }
-        }
-        */
     }
 
     public int getMinTemplatedLength(boolean isStart)

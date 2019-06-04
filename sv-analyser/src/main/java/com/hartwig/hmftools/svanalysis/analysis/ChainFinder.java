@@ -78,7 +78,6 @@ public class ChainFinder
     private boolean mHasReplication;
 
     // chaining state
-    private List<SvLinkedPair> mAssemblyLinkedPairs;
     private List<SvLinkedPair> mSkippedPairs;
     private List<SvVarData> mFoldbacks;
     private List<SvVarData> mComplexDupCandidates;
@@ -111,7 +110,6 @@ public class ChainFinder
     public ChainFinder()
     {
         mAdjacentMatchingPairs = Lists.newArrayList();
-        mAssemblyLinkedPairs = null;
         mBreakendLastLinkIndexMap = Maps.newHashMap();
         mChrAllelePloidies = Maps.newHashMap();
         mComplexDupCandidates = Lists.newArrayList();
@@ -148,7 +146,6 @@ public class ChainFinder
 
         // critical that all state is cleared before the next run
         mAdjacentMatchingPairs.clear();
-        mAssemblyLinkedPairs = Lists.newArrayList(cluster.getAssemblyLinkedPairs());
         mBreakendLastLinkIndexMap.clear();
         mChrAllelePloidies.clear();
         mComplexDupCandidates.clear();
@@ -193,7 +190,7 @@ public class ChainFinder
         if (mCluster.getSvCount() >= 4)
         {
             LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({} rep={})",
-                    mCluster.id(), mAssemblyLinkedPairs.size(), mCluster.getSvCount(), mCluster.getSvCount(true));
+                    mCluster.id(), mCluster.getAssemblyLinkedPairs().size(), mCluster.getSvCount(), mCluster.getSvCount(true));
         }
 
         // mLogWorking = isSpecificCluster(mCluster);
@@ -483,7 +480,7 @@ public class ChainFinder
 
         for(SvVarData var : replicatingSVs)
         {
-            double varPloidy = var.getRoundedCNChange();
+            int varPloidy = var.getImpliedPloidy();
 
             // collect up possible pairs for this foldback
             List<SvLinkedPair> varPairs = Lists.newArrayList();
@@ -510,9 +507,9 @@ public class ChainFinder
             for(SvLinkedPair pair : varPairs)
             {
                 SvVarData otherSV = pair.getOtherSV(var); // the SV with equal or higher ploidy
-                double otherVarPloidy = otherSV.getRoundedCNChange();
+                int otherVarPloidy = otherSV.getImpliedPloidy();
 
-                if(varPloidy > otherVarPloidy) // || varPloidy * 2 > otherVarPloidy
+                if(varPloidy > otherVarPloidy)
                     continue;
 
                 if(otherSVs.contains(otherSV))
@@ -563,7 +560,7 @@ public class ChainFinder
                 if(endsMatchedOnOtherVarStart < 2 && endsMatchedOnOtherVarEnd < 2)
                     continue;
 
-                log(LOG_LEVEL_VERBOSE, String.format("SV(%s) ploidy(%.2f) foldback dual links: start(links=%d maxLinks=%d matched=%d) start(links=%d maxLinks=%d matched=%d)",
+                log(LOG_LEVEL_VERBOSE, String.format("SV(%s) ploidy(%d) foldback dual links: start(links=%d maxLinks=%d matched=%d) start(links=%d maxLinks=%d matched=%d)",
                         var.id(), varPloidy, startLinks.size(), maxLinkOnOtherVarStart, endsMatchedOnOtherVarStart,
                         endLinks.size(), maxLinkOnOtherVarEnd, endsMatchedOnOtherVarEnd));
 
@@ -925,7 +922,7 @@ public class ChainFinder
 
             for(int i = 0; i < pairRepeatCount; ++i)
             {
-                linkAdded |= addPairToChain(shortestPair, false);
+                linkAdded |= addPairToChain(shortestPair);
             }
 
             if(!mIsValid)
@@ -958,7 +955,7 @@ public class ChainFinder
                     if (mHasReplication)
                     {
                         if (findUnlinkedMatchingBreakend(pair.getBreakend(true)) == null
-                                || findUnlinkedMatchingBreakend(pair.getBreakend(false)) == null)
+                        || findUnlinkedMatchingBreakend(pair.getBreakend(false)) == null)
                         {
                             // replicated instances exhausted
                             possiblePairs.remove(index);
@@ -985,7 +982,7 @@ public class ChainFinder
     private static int SPEC_LINK_INDEX = -1;
     // private static int SPEC_LINK_INDEX = 26;
 
-    private boolean addPairToChain(final SvLinkedPair pair, boolean isExact)
+    private boolean addPairToChain(final SvLinkedPair pair)
     {
         if(mLinkIndex == SPEC_LINK_INDEX)
         {
@@ -1000,7 +997,7 @@ public class ChainFinder
         SvBreakend unlinkedBeSecond = null;
         final SvLinkedPair newPair;
 
-        if(isExact || !mHasReplication)
+        if(!mHasReplication) //  && !mCluster.requiresReplication()
         {
             newPair = pair;
         }
@@ -1012,6 +1009,13 @@ public class ChainFinder
 
             if(unlinkedBeFirst == null || unlinkedBeSecond == null)
             {
+                // tolerate missed assembly links while a more robust approach is determined for ploidy discrepancies
+                if(pair.isAssembled())
+                {
+                    LOGGER.warn("cluster({}) missed assembly link", mCluster.id());
+                    return false;
+                }
+
                 mIsValid = false;
                 LOGGER.error("new pair breakendStart({} valid={}) and breakendEnd({} valid={}) no unlinked match found",
                         pair.getBreakend(true).toString(), unlinkedBeFirst != null,
@@ -1022,6 +1026,9 @@ public class ChainFinder
 
             newPair = new SvLinkedPair(unlinkedBeFirst.getSV(), unlinkedBeSecond.getSV(), LINK_TYPE_TI,
                     unlinkedBeFirst.usesStart(), unlinkedBeSecond.usesStart());
+
+            if(pair.isAssembled())
+                newPair.setIsAssembled();
         }
 
         boolean linkClosesChain = false;
@@ -1196,20 +1203,21 @@ public class ChainFinder
 
     private void addAssemblyLinksToChains()
     {
-        if(mAssemblyLinkedPairs.isEmpty())
+        List<SvLinkedPair> assemblyLinkedPairs = mCluster.getAssemblyLinkedPairs();
+
+        if(assemblyLinkedPairs.isEmpty())
             return;
 
         mLinkReason = "ASMB";
 
-        for(SvLinkedPair pair : mAssemblyLinkedPairs)
+        for(SvLinkedPair pair : assemblyLinkedPairs)
         {
-            // was requiring exact=true but assembled links can require the same end to be used twice in a replicated SV
-            addPairToChain(pair, true);
+            addPairToChain(pair);
         }
 
         if(!mPartialChains.isEmpty())
         {
-            LOGGER.debug("created {} partial chains from {} assembly links", mPartialChains.size(), mAssemblyLinkedPairs.size());
+            LOGGER.debug("created {} partial chains from {} assembly links", mPartialChains.size(), assemblyLinkedPairs.size());
         }
     }
 

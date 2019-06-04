@@ -7,6 +7,7 @@ import java.util.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -21,16 +22,16 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<Disruption> disruptions,
+    public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions,
             @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         LOGGER.debug("Generating reportable disruptions based on {} disruptions", disruptions.size());
 
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
-        Map<SvAndGeneKey, Pair<Disruption, Disruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
+        Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
-        for (Pair<Disruption, Disruption> pairedDisruption : pairedMap.values()) {
-            Disruption primaryDisruption = pairedDisruption.getLeft();
+        for (Pair<ReportableDisruption, ReportableDisruption> pairedDisruption : pairedMap.values()) {
+            ReportableDisruption primaryDisruption = pairedDisruption.getLeft();
 
             GeneCopyNumber copyNumber = copyNumberPerGene.get(primaryDisruption.gene());
             reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
@@ -58,12 +59,12 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static Map<SvAndGeneKey, Pair<Disruption, Disruption>> mapDisruptionsPerStructuralVariant(
-            @NotNull List<Disruption> disruptions) {
-        Map<SvAndGeneKey, List<Disruption>> disruptionsPerSvAndGene = Maps.newHashMap();
-        for (Disruption disruption : disruptions) {
+    private static Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> mapDisruptionsPerStructuralVariant(
+            @NotNull List<ReportableDisruption> disruptions) {
+        Map<SvAndGeneKey, List<ReportableDisruption>> disruptionsPerSvAndGene = Maps.newHashMap();
+        for (ReportableDisruption disruption : disruptions) {
             SvAndGeneKey key = new SvAndGeneKey(disruption.svId(), disruption.gene());
-            List<Disruption> currentDisruptions = disruptionsPerSvAndGene.get(key);
+            List<ReportableDisruption> currentDisruptions = disruptionsPerSvAndGene.get(key);
             if (currentDisruptions == null) {
                 currentDisruptions = Lists.newArrayList();
             }
@@ -75,20 +76,20 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static Map<SvAndGeneKey, Pair<Disruption, Disruption>> toPairedMap(
-            @NotNull Map<SvAndGeneKey, List<Disruption>> disruptionsPerVariant) {
-        Map<SvAndGeneKey, Pair<Disruption, Disruption>> pairedMap = Maps.newHashMap();
+    private static Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> toPairedMap(
+            @NotNull Map<SvAndGeneKey, List<ReportableDisruption>> disruptionsPerVariant) {
+        Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = Maps.newHashMap();
 
-        for (Map.Entry<SvAndGeneKey, List<Disruption>> entry : disruptionsPerVariant.entrySet()) {
-            List<Disruption> disruptions = entry.getValue();
+        for (Map.Entry<SvAndGeneKey, List<ReportableDisruption>> entry : disruptionsPerVariant.entrySet()) {
+            List<ReportableDisruption> disruptions = entry.getValue();
 
             if (disruptions.size() != 1 && disruptions.size() != 2) {
                 LOGGER.warn("Found unusual number of disruptions on single event: " + disruptions.size());
                 continue;
             }
 
-            Disruption left;
-            Disruption right;
+            ReportableDisruption left;
+            ReportableDisruption right;
             if (disruptions.size() == 1) {
                 left = disruptions.get(0);
                 right = null;
@@ -105,9 +106,9 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    private static String rangeField(@NotNull Pair<Disruption, Disruption> pairedDisruption) {
-        Disruption primary = pairedDisruption.getLeft();
-        Disruption secondary = pairedDisruption.getRight();
+    private static String rangeField(@NotNull Pair<ReportableDisruption, ReportableDisruption> pairedDisruption) {
+        ReportableDisruption primary = pairedDisruption.getLeft();
+        ReportableDisruption secondary = pairedDisruption.getRight();
 
         if (secondary == null) {
             return exonDescription(primary.exonUp(), primary.exonDown()) + (isUpstream(primary) ? " Upstream" : " Downstream");
@@ -132,17 +133,17 @@ final class ReportableGeneDisruptionFactory {
         return String.format("ERROR up=%d, down=%d", exonUp, exonDown);
     }
 
-    private static boolean isUpstream(@NotNull Disruption disruption) {
+    private static boolean isUpstream(@NotNull ReportableDisruption disruption) {
         return disruption.orientation() * disruption.strand() < 0;
     }
 
     private static class SvAndGeneKey {
         @NotNull
-        private final String variantId;
+        private final int variantId;
         @NotNull
         private final String gene;
 
-        private SvAndGeneKey(@NotNull final String variantId, @NotNull final String gene) {
+        private SvAndGeneKey(@NotNull final int variantId, @NotNull final String gene) {
             this.variantId = variantId;
             this.gene = gene;
         }

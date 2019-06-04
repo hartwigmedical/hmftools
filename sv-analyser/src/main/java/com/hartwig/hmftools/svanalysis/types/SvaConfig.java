@@ -20,12 +20,15 @@ import org.apache.logging.log4j.Logger;
 
 public class SvaConfig
 {
-
     final public int ProximityDistance;
-    final public String OutputCsvPath;
+    final public String OutputDataPath;
+    final public String PurpleDataPath;
+    final public String SvDataPath;
+    final public boolean UploadToDB;
     final public String FragileSiteFile;
     final public String LineElementFile;
     final public String ReplicationOriginsFile;
+    final public String ViralHostsFile;
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
     final public int ChainingSvLimit; // for analysis and chaining
@@ -36,8 +39,12 @@ public class SvaConfig
     private List<String> mSampleIds;
 
     // config options
-    public static final String DATA_OUTPUT_PATH = "data_output_path";
+    public static final String PURPLE_DATA_DIR = "purple_dir";
+    public static final String DATA_OUTPUT_PATH = "output_dir";
+    public static final String DATA_OUTPUT_DIR = "data_output_path"; // old config name support
+    public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
+    public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
@@ -47,6 +54,7 @@ public class SvaConfig
     // reference files
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
+    private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
 
     // logging options
@@ -88,17 +96,36 @@ public class SvaConfig
             }
         }
 
-        String dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
-        if(!dataOutputDir.endsWith(File.separator))
+        if(mSampleIds.size() == 1)
+        {
+            UploadToDB = true;
+        }
+        else
+        {
+            UploadToDB = cmd.hasOption(UPLOAD_TO_DB);
+        }
+
+        PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
+
+        String dataOutputDir = "";
+        if(cmd.hasOption(DATA_OUTPUT_DIR))
+            dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
+        else if(cmd.hasOption(DATA_OUTPUT_PATH))
+            dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
+
+        if (!dataOutputDir.endsWith(File.separator))
             dataOutputDir += File.separator;
 
-        OutputCsvPath = dataOutputDir;
+        OutputDataPath = dataOutputDir;
+
+        SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
         ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
                 : DEFAULT_PROXIMITY_DISTANCE;
 
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
+        ViralHostsFile = cmd.getOptionValue(VIRAL_HOSTS_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
@@ -114,13 +141,18 @@ public class SvaConfig
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
+    public boolean isSingleSample() { return mSampleIds.size() == 1; }
 
     public SvaConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
-        OutputCsvPath = "";
+        PurpleDataPath = "";
+        OutputDataPath = "";
+        SvDataPath = "";
+        UploadToDB = false;
         FragileSiteFile = "";
         LineElementFile = "";
+        ViralHostsFile = "";
         ReplicationOriginsFile = "";
         RequiredAnnotations = "";
         mSampleIds = Lists.newArrayList();
@@ -132,10 +164,15 @@ public class SvaConfig
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(DATA_OUTPUT_PATH, true, "CSV output directory");
+        options.addOption(PURPLE_DATA_DIR, true, "Sample purple data directory");
+        options.addOption(DATA_OUTPUT_PATH, true, "Linx output directory");
+        options.addOption(DATA_OUTPUT_DIR, true, "Linx output directory");
+        options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
+        options.addOption(UPLOAD_TO_DB, false, "Upload all LINX data to DB when in batch mode");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
+        options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
