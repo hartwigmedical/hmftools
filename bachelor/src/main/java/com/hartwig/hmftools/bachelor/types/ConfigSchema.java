@@ -10,8 +10,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import com.google.common.io.Resources;
-
-import nl.hartwigmedicalfoundation.bachelor.Program;
+import com.hartwig.hmftools.bachelor.datamodel.Program;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

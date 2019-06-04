@@ -9,10 +9,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
-
-import nl.hartwigmedicalfoundation.bachelor.Program;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

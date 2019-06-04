@@ -53,8 +53,8 @@ public final class LoadClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
-    private static final String RUNS_DIR_CPCT_DRUP = "runs_dir_cpct_drup";
-    private static final String RUNS_DIR_CORE = "runs_dir_core";
+    private static final String RUNS_DIR_DATABASE = "runs_dir_db";
+    private static final String RUNS_DIR_NON_DATABASE = "runs_dir_non_db";
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
@@ -119,11 +119,8 @@ public final class LoadClinicalData {
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
-        Map<String, Patient> patients = loadAndInterpretPatients(samplesPerPatientSequenced,
-                ecrfModels,
-                tumorLocationCurator,
-                treatmentCurator,
-                biopsySiteCurator);
+        Map<String, Patient> patients =
+                loadAndInterpretPatients(samplesPerPatientSequenced, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
         Map<String, Patient> patientsAll =
                 loadAndInterpretPatients(samplesPerPatientAll, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
@@ -254,18 +251,18 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<RunContext> loadRunContext(@NotNull CommandLine cmd) throws IOException {
-        final String runsFolderPathCPCTAndDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
-        final List<RunContext> runContextsCPCTAndDRUP = RunsFolderReader.getRunContexts(new File(runsFolderPathCPCTAndDRUP));
-        LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathCPCTAndDRUP, runContextsCPCTAndDRUP.size()));
+    private static List<RunContext> loadRunContexts(@NotNull CommandLine cmd) throws IOException {
+        final String runsFolderPathDb = cmd.getOptionValue(RUNS_DIR_DATABASE);
+        final List<RunContext> runContextsDb = RunsFolderReader.getRunContexts(new File(runsFolderPathDb));
+        LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathDb, runContextsDb.size()));
 
-        final String runsFolderPathCORE = cmd.getOptionValue(RUNS_DIR_CORE);
-        final List<RunContext> runContextsCORE = RunsFolderReader.getRunContexts(new File(runsFolderPathCORE));
-        LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathCORE, runContextsCORE.size()));
+        final String runsFolderPathNonDb = cmd.getOptionValue(RUNS_DIR_NON_DATABASE);
+        final List<RunContext> runContextsNonDb = RunsFolderReader.getRunContexts(new File(runsFolderPathNonDb));
+        LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathNonDb, runContextsNonDb.size()));
 
         List<RunContext> runContextsAll = Lists.newArrayList();
-        runContextsAll.addAll(runContextsCPCTAndDRUP);
-        runContextsAll.addAll(runContextsCORE);
+        runContextsAll.addAll(runContextsDb);
+        runContextsAll.addAll(runContextsNonDb);
 
         LOGGER.info(String.format("Finished loading %s run contexts.", runContextsAll.size()));
         return runContextsAll;
@@ -274,9 +271,9 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, List<SampleData>> loadSamplesPerPatientSequenced(@NotNull CommandLine cmd, @NotNull Lims lims)
             throws IOException {
-        List<RunContext> contectsRunExtracted = loadRunContext(cmd);
+        List<RunContext> contextsRunExtracted = loadRunContexts(cmd);
 
-        Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(lims, contectsRunExtracted);
+        Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(lims, contextsRunExtracted);
         LOGGER.info(String.format("Loaded sequenced samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
 
         return samplesPerPatientSequenced;
@@ -293,7 +290,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, List<SampleData>> extractSamplesFromLims(@NotNull Lims lims) {
         LimsSampleReader sampleReader = new LimsSampleReader(lims);
-        Set<String> allSampleIDs = lims.AllSampleIds();
+        Set<String> allSampleIDs = lims.allSampleIds();
 
         Map<String, List<SampleData>> samplesPerPatientAll = Maps.newHashMap();
         for (String sampleId : allSampleIDs) {
@@ -360,11 +357,11 @@ public final class LoadClinicalData {
     }
 
     private static boolean checkInputs(@NotNull CommandLine cmd) {
-        final String runsFolderPathCPCTAndDRUP = cmd.getOptionValue(RUNS_DIR_CPCT_DRUP);
-        final String runsFolderPathCore = cmd.getOptionValue(RUNS_DIR_CORE);
+        final String runsFolderPathDb = cmd.getOptionValue(RUNS_DIR_DATABASE);
+        final String runsFolderPathNonDb = cmd.getOptionValue(RUNS_DIR_NON_DATABASE);
 
-        boolean allParamsPresent = !Utils.anyNull(runsFolderPathCPCTAndDRUP,
-                runsFolderPathCore,
+        boolean allParamsPresent = !Utils.anyNull(runsFolderPathDb,
+                runsFolderPathNonDb,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
                 cmd.getOptionValue(DB_URL),
@@ -376,17 +373,17 @@ public final class LoadClinicalData {
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
-            final File runDirectoryCPCTAndDRUP = new File(runsFolderPathCPCTAndDRUP);
+            final File runDirectoryDb = new File(runsFolderPathDb);
 
-            if (!runDirectoryCPCTAndDRUP.exists() || !runDirectoryCPCTAndDRUP.isDirectory()) {
+            if (!runDirectoryDb.exists() || !runDirectoryDb.isDirectory()) {
                 validRunDirectories = false;
-                LOGGER.warn("CPCT and DRUP run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
+                LOGGER.warn("HMF database run directory " + runDirectoryDb + " does not exist or is not a directory.");
             }
 
-            final File runDirectoryCORE = new File(runsFolderPathCore);
-            if (!runDirectoryCORE.exists() || !runDirectoryCORE.isDirectory()) {
+            final File runDirectoryNonDb = new File(runsFolderPathNonDb);
+            if (!runDirectoryNonDb.exists() || !runDirectoryNonDb.isDirectory()) {
                 validRunDirectories = false;
-                LOGGER.warn("CORE run directory " + runDirectoryCPCTAndDRUP + " does not exist or is not a directory.");
+                LOGGER.warn("Non-database run directory " + runDirectoryDb + " does not exist or is not a directory.");
             }
         }
 
@@ -396,8 +393,13 @@ public final class LoadClinicalData {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(RUNS_DIR_CPCT_DRUP, true, "Path towards the folder containing cpct and drup patient runs.");
-        options.addOption(RUNS_DIR_CORE, true, "Path towards the folder containing core patient runs.");
+        options.addOption(RUNS_DIR_DATABASE,
+                true,
+                "Path towards the folder containing patient runs that are considered part of HMF database.");
+
+        options.addOption(RUNS_DIR_NON_DATABASE,
+                true,
+                "Path towards the folder containing patient runs that are not considered part of HMF database.");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
@@ -408,11 +410,12 @@ public final class LoadClinicalData {
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
 
+        options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
+
         options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
         options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of cancer type csv symlink.");
         options.addOption(PORTAL_DATA_LINK, true, "Name of portal data csv symlink.");
 
-        options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
         return options;
     }
 

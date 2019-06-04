@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import org.jetbrains.annotations.Nullable;
-
 public class RunDirectory {
 
     private final Path mSampleDir;

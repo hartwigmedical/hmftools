@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

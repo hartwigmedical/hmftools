@@ -16,16 +16,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bachelor.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.bachelor.datamodel.Program;
+import com.hartwig.hmftools.bachelor.datamodel.ProgramPanel;
+import com.hartwig.hmftools.bachelor.datamodel.SnpEffect;
 import com.hartwig.hmftools.bachelor.types.VariantFilter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
-
-import nl.hartwigmedicalfoundation.bachelor.GeneIdentifier;
-import nl.hartwigmedicalfoundation.bachelor.Program;
-import nl.hartwigmedicalfoundation.bachelor.ProgramPanel;
-import nl.hartwigmedicalfoundation.bachelor.SnpEffect;
-import nl.hartwigmedicalfoundation.bachelor.VariantException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

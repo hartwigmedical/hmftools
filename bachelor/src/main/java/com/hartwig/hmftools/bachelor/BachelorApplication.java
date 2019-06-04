@@ -16,12 +16,11 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.types.ConfigSchema;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.common.context.RunContext;
-
-import nl.hartwigmedicalfoundation.bachelor.Program;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
