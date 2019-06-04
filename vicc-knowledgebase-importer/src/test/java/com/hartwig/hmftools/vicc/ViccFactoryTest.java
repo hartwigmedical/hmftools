@@ -27,7 +27,8 @@ public class ViccFactoryTest {
     @Test
     @Ignore
     public void testMe() throws IOException {
-        final String baseDir = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
+        final String baseDir =
+                System.getProperty("user.home") + File.separator + "hmf" + File.separator + "projects" + File.separator + "vicc";
         final String inputFile = baseDir + File.separator + "all.json";
 
         JsonParser parser = new JsonParser();
