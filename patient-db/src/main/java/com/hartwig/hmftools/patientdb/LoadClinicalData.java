@@ -111,7 +111,6 @@ public final class LoadClinicalData {
 
         Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(contextsRunExtracted, samplesPerPatientAll);
         LOGGER.info(String.format("Using sequenced samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
-
         return samplesPerPatientSequenced;
     }
 
@@ -127,7 +126,6 @@ public final class LoadClinicalData {
             if (filteredSequencedSamples) {
                 String sampleId = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
                 samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(sampleId));
-                LOGGER.info(samplesPerPatientSequenced);
             }
         }
         return samplesPerPatientSequenced;
