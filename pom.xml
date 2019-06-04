@@ -30,7 +30,6 @@
         <module>portal-data-converter</module>
         <module>sv-analyser</module>
         <module>sv-visualiser</module>
-        <module>sv-graphs</module>
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
         <module>vicc-knowledgebase-importer</module>
@@ -155,11 +154,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>sv-analyser</artifactId>
                 <version>${hmf-sv-analyser.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>sv-graphs</artifactId>
-                <version>${hmf-sv-graphs.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
