@@ -16,7 +16,7 @@ import com.hartwig.hmftools.svanalysis.simulation.SvSimShattering;
 
 import org.junit.Test;
 
-public class SimulationTests
+public class SimulationTest
 {
     @Test
     public void testShatteringSim()
