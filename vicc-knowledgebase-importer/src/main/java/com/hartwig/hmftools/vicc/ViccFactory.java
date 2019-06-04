@@ -82,7 +82,6 @@ public final class ViccFactory {
         List<String> values = Lists.newArrayList();
         for (JsonElement element : array) {
             values.add(element.getAsString());
-
         }
         return values;
     }

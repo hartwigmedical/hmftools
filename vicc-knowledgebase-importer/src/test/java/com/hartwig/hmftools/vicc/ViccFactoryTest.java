@@ -68,6 +68,7 @@ public class ViccFactoryTest {
         Set<Integer> sortedCounts = Sets.newTreeSet(Comparator.reverseOrder());
         sortedCounts.addAll(countsPerKey.values());
 
+        LOGGER.info(" Unique keys found: " + countsPerKey.keySet().size());
         for (Integer count : sortedCounts) {
             for (Map.Entry<String, Integer> entry : countsPerKey.entrySet()) {
                 if (entry.getValue().equals(count)) {
