@@ -789,4 +789,21 @@ CREATE TABLE clinicalEvidence
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS sampleMapping;
+CREATE TABLE sampleMapping
+(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    sampleId varchar(50),
+    hmfId varchar(50),
+    PRIMARY KEY (sampleId)
+);
+
+DROP TABLE IF EXISTS patientMapping;
+CREATE TABLE patientMapping
+(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    sourceId varchar(50),
+    targetId varchar(50),
+    PRIMARY KEY (sourceId, targetId)
+);
+
+
 SET FOREIGN_KEY_CHECKS = 1;
