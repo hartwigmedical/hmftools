@@ -6,6 +6,7 @@ import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredInputFileOption
 import com.hartwig.hmftools.extensions.cli.options.flags.RequiredFlagOption
 import com.hartwig.hmftools.extensions.cli.options.strings.InputOption
+import com.hartwig.hmftools.extensions.cli.options.strings.OutputOption
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
 import com.hartwig.hmftools.extensions.csv.CsvReader
@@ -94,6 +95,7 @@ private fun anonymizeIdsModeOptions(): HmfOptions {
     hmfOptions.add(RequiredInputOption(PASSWORD, "password"))
     hmfOptions.add(RequiredInputFileOption(SAMPLE_IDS_FILE, "file containing a list of samples, one per line"))
     hmfOptions.add(RequiredInputFileOption(PATIENT_MAPPING_FILE, "csv containing the patient mapping, a patient pair per line"))
+    hmfOptions.add(OutputOption(ANONYMIZE_OUT, "anonymized output file location"))
     return hmfOptions
 }
 
@@ -141,10 +143,16 @@ private fun runAnonymizeIds(cmd: CommandLine) {
             .map { it.toHmfSampleId() }
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
     val anonymizedSamples = AnonymizedSamples(cmd.getOptionValue(PASSWORD), currentIds, samplesInput)
-    println("OriginalId,AnonymousId")
-    samplesInput.samples.sortedWith(Comparator.comparing<SampleId, String> { it.id }).forEach { sample ->
-        anonymizedSamples[sample]
-        println("${sample.id},${anonymizedSamples[sample]?.plaintext ?: "Unknown"}")
+
+    if (cmd.hasOption(ANONYMIZE_OUT)) {
+        val anonymizedRecords = samplesInput.samples.map { AnonymizedRecord.invoke(anonymizedSamples, it) }
+        CsvWriter.writeCSV(anonymizedRecords, cmd.getOptionValue(ANONYMIZE_OUT))
+    } else {
+        println("OriginalId,AnonymousId")
+        samplesInput.samples.sortedWith(Comparator.comparing<SampleId, String> { it.id }).forEach { sample ->
+            anonymizedSamples[sample]
+            println("${sample.id},${anonymizedSamples[sample]?.plaintext ?: "Unknown"}")
+        }
     }
 }
 
