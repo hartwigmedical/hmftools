@@ -27,6 +27,7 @@ public class SvaConfig
     final public String FragileSiteFile;
     final public String LineElementFile;
     final public String ReplicationOriginsFile;
+    final public String ViralHostsFile;
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
     final public int ChainingSvLimit; // for analysis and chaining
@@ -51,6 +52,7 @@ public class SvaConfig
     // reference files
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
+    private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
 
     // logging options
@@ -112,6 +114,7 @@ public class SvaConfig
 
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
+        ViralHostsFile = cmd.getOptionValue(VIRAL_HOSTS_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
@@ -136,6 +139,7 @@ public class SvaConfig
         SvDataPath = "";
         FragileSiteFile = "";
         LineElementFile = "";
+        ViralHostsFile = "";
         ReplicationOriginsFile = "";
         RequiredAnnotations = "";
         mSampleIds = Lists.newArrayList();
@@ -154,6 +158,7 @@ public class SvaConfig
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
+        options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");

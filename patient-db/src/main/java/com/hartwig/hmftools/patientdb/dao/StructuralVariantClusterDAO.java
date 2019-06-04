@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLUSTER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVLINK;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVLINXDATA;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -13,15 +14,14 @@ import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStep22;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep5;
 import org.jooq.InsertValuesStep9;
-import org.jooq.InsertValuesStepN;
 
 public class StructuralVariantClusterDAO
 {
@@ -185,11 +185,41 @@ public class StructuralVariantClusterDAO
                 link.pseudogeneInfo());
     }
 
+    public void writeViralInserts(final String sample, final List<LinxViralInsertFile> inserts)
+    {
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        context.delete(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).execute();
+
+        InsertValuesStep5 inserter = context.insertInto(VIRALINSERTION,
+                VIRALINSERTION.SAMPLEID,
+                VIRALINSERTION.MODIFIED,
+                VIRALINSERTION.SVID,
+                VIRALINSERTION.VIRUSID,
+                VIRALINSERTION.VIRUSNAME);
+
+        for (List<LinxViralInsertFile> batch : Iterables.partition(inserts, DB_BATCH_INSERT_SIZE))
+        {
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            inserter.execute();
+        }
+    }
+
+    private static void addRecord(Timestamp timestamp, InsertValuesStep5 inserter, final String sample, final LinxViralInsertFile insert)
+    {
+        inserter.values(sample,
+                timestamp,
+                insert.SvId,
+                insert.VirusId,
+                insert.VirusName);
+    }
+
     public void deleteClusterDataForSample(@NotNull String sample)
     {
         context.delete(CLUSTER).where(CLUSTER.SAMPLEID.eq(sample)).execute();
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
         context.delete(SVLINXDATA).where(SVLINXDATA.SAMPLEID.eq(sample)).execute();
+        context.delete(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).execute();
     }
 
 

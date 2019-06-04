@@ -52,7 +52,7 @@ class StructuralVariantDAO {
             Double ploidy = record.getValue(STRUCTURALVARIANT.PLOIDY);
             if(isSingleBreakend && ploidy == null && filterStr.equals(INFERRED))
             {
-                ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE));
+                ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
@@ -68,12 +68,12 @@ class StructuralVariantDAO {
                     .startAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTAF)))
                     .endAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDAF)))
                     .ploidy(getValueNotNull(ploidy))
-                    .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTAF)))
-                    .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDAF)))
-                    .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER)))
-                    .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER)))
-                    .adjustedStartCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE)))
-                    .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE)))
+                    .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFSTART)))
+                    .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFEND)))
+                    .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERSTART)))
+                    .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBEREND)))
+                    .adjustedStartCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART)))
+                    .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND)))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
                     .filter(filterStr)
@@ -157,13 +157,13 @@ class StructuralVariantDAO {
                     STRUCTURALVARIANT.INSERTSEQUENCE,
                     STRUCTURALVARIANT.TYPE,
                     STRUCTURALVARIANT.STARTAF,
-                    STRUCTURALVARIANT.ADJUSTEDSTARTAF,
-                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBER,
-                    STRUCTURALVARIANT.ADJUSTEDSTARTCOPYNUMBERCHANGE,
+                    STRUCTURALVARIANT.ADJUSTEDAFSTART,
+                    STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERSTART,
+                    STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART,
                     STRUCTURALVARIANT.ENDAF,
-                    STRUCTURALVARIANT.ADJUSTEDENDAF,
-                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBER,
-                    STRUCTURALVARIANT.ADJUSTEDENDCOPYNUMBERCHANGE,
+                    STRUCTURALVARIANT.ADJUSTEDAFEND,
+                    STRUCTURALVARIANT.ADJUSTEDCOPYNUMBEREND,
+                    STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND,
                     STRUCTURALVARIANT.PLOIDY,
                     STRUCTURALVARIANT.FILTER,
                     STRUCTURALVARIANT.IMPRECISE,

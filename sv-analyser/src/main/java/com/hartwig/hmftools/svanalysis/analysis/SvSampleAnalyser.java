@@ -11,9 +11,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.getSuperType;
-import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getChromosomalArm;
+import static com.hartwig.hmftools.svanalysis.annotators.ViralInsertAnnotator.VH_ID;
+import static com.hartwig.hmftools.svanalysis.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
@@ -63,10 +64,12 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvDataFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
+import com.hartwig.hmftools.svanalysis.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
@@ -99,6 +102,7 @@ public class SvSampleAnalyser {
     private FragileSiteAnnotator mFragileSiteAnnotator;
     private LineElementAnnotator mLineElementAnnotator;
     private ReplicationOriginAnnotator mReplicationOriginAnnotator;
+    private ViralInsertAnnotator mViralInsertAnnotator;
     private SvClusteringMethods mClusteringMethods;
     private CNAnalyser mCopyNumberAnalyser;
 
@@ -138,6 +142,9 @@ public class SvSampleAnalyser {
 
         mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
         mReplicationOriginAnnotator.loadReplicationOrigins(mConfig.ReplicationOriginsFile);
+
+        mViralInsertAnnotator = new ViralInsertAnnotator();
+        mViralInsertAnnotator.loadViralHostData(mConfig.ViralHostsFile);
 
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
@@ -297,12 +304,15 @@ public class SvSampleAnalyser {
 
         if(writeSampleData)
         {
+            List<LinxViralInsertFile> viralInserts = generateViralInserts();
+
             try
             {
                 // write per-sample DB-style output
                 LinxSvDataFile.write(LinxSvDataFile.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
                 LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
                 LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
+                LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
 
             }
             catch (IOException e)
@@ -315,6 +325,7 @@ public class SvSampleAnalyser {
                 dbAccess.writeSvLinxData(mSampleId, linxSvData);
                 dbAccess.writeSvClusters(mSampleId, clusterData);
                 dbAccess.writeSvLinks(mSampleId, linksData);
+                dbAccess.writeSvViralInserts(mSampleId, viralInserts);
             }
         }
 
@@ -855,6 +866,23 @@ public class SvSampleAnalyser {
         {
             LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
+    }
+
+    private List<LinxViralInsertFile> generateViralInserts()
+    {
+        List<LinxViralInsertFile> viralInserts = Lists.newArrayList();
+
+        for(final SvVarData var : mAllVariants)
+        {
+            final String[] viralInsertData = mViralInsertAnnotator.matchesViralInsert(var);
+
+            if(viralInsertData != null)
+            {
+                viralInserts.add(new LinxViralInsertFile(mSampleId, var.dbId(), viralInsertData[VH_ID], viralInsertData[VH_NAME]));
+            }
+        }
+
+        return viralInserts;
     }
 
     public void close()

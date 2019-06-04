@@ -481,12 +481,12 @@ CREATE TABLE structuralVariant
     startAF DOUBLE PRECISION,
     endAF DOUBLE PRECISION,
     ploidy DOUBLE PRECISION,
-    adjustedStartAF DOUBLE PRECISION,
-    adjustedEndAF DOUBLE PRECISION,
-    adjustedStartCopyNumber DOUBLE PRECISION,
-    adjustedEndCopyNumber DOUBLE PRECISION,
-    adjustedStartCopyNumberChange DOUBLE PRECISION,
-    adjustedEndCopyNumberChange DOUBLE PRECISION,
+    adjustedAFStart DOUBLE PRECISION,
+    adjustedAFEnd DOUBLE PRECISION,
+    adjustedCopyNumberStart DOUBLE PRECISION,
+    adjustedCopyNumberEnd DOUBLE PRECISION,
+    adjustedCopyNumberChangeStart DOUBLE PRECISION,
+    adjustedCopyNumberChangeEnd DOUBLE PRECISION,
     insertSequence varchar(2048) not null,
     type varchar(255) NOT NULL,
     filter varchar(255) NOT NULL,
@@ -553,7 +553,9 @@ CREATE TABLE svLinxData
     localTICountStart INT,
     localTICountEnd INT,
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(clusterId),
+    INDEX(svId)
 );
 
 DROP TABLE IF EXISTS cluster;
@@ -569,7 +571,8 @@ CREATE TABLE cluster
     clusterCount INT,
     clusterDesc VARCHAR(50),
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(clusterId)
 );
 
 DROP TABLE IF EXISTS svLink;
@@ -592,7 +595,8 @@ CREATE TABLE svLink
     ploidy DOUBLE PRECISION,
     pseudogeneInfo varchar(255),
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(clusterId)
 );
 
 
@@ -654,6 +658,18 @@ CREATE TABLE structuralVariantFusion
     INDEX(fivePrimeBreakendId),
     INDEX(threePrimeBreakendId),
     INDEX(sampleId)
+);
+
+CREATE TABLE viralInsertion
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    svId INT NOT NULL,
+    virusId VARCHAR(50) NOT NULL,
+    virusName VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(svId)
 );
 
 DROP TABLE IF EXISTS canonicalTranscript;

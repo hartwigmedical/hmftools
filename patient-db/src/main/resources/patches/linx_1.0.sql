@@ -1,13 +1,16 @@
 
 ALTER TABLE structuralVariant
     ADD COLUMN svId INT NOT NULL AFTER modified,
-    CHANGE adjustedStartAF adjustedAFStart DOUBLE PRECISION NOT NULL,
-    CHANGE adjustedEndAF adjustedAFEnd DOUBLE PRECISION NOT NULL,
+    CHANGE adjustedStartAF adjustedAFStart DOUBLE PRECISION,
+    CHANGE adjustedEndAF adjustedAFEnd DOUBLE PRECISION,
     CHANGE adjustedStartCopyNumber adjustedCopyNumberStart DOUBLE PRECISION,
     CHANGE adjustedEndCopyNumber adjustedCopyNumberEnd DOUBLE PRECISION,
     CHANGE adjustedStartCopyNumberChange adjustedCopyNumberChangeStart DOUBLE PRECISION,
     CHANGE adjustedEndCopyNumberChange adjustedCopyNumberChangeEnd DOUBLE PRECISION,
     ADD INDEX (svId);
+
+UPDATE structuralVariant
+SET svId = id;
 
 CREATE TABLE svLinxData
 (   id int NOT NULL AUTO_INCREMENT,
@@ -34,7 +37,9 @@ CREATE TABLE svLinxData
     localTICountStart INT,
     localTICountEnd INT,
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(clusterId),
+    INDEX(svId)
 );
 
 CREATE TABLE cluster
@@ -49,7 +54,8 @@ CREATE TABLE cluster
     clusterCount INT,
     clusterDesc VARCHAR(50),
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(clusterId)
 );
 
 CREATE TABLE svLink
@@ -71,19 +77,19 @@ CREATE TABLE svLink
     ploidy DOUBLE PRECISION,
     pseudogeneInfo varchar(255),
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId),
+    INDEX(clusterId)
 );
 
 
 ALTER TABLE structuralVariantBreakend
-    CHANGE isStartEnd startBreakend BOOLEAN NOT NULL,
-    CHANGE isCanonicalTranscript canonicalTranscript BOOLEAN NOT NULL,
+    CHANGE isStartEnd startBreakend BOOLEAN,
+    CHANGE isCanonicalTranscript canonicalTranscript BOOLEAN,
     DROP COLUMN strand
     DROP COLUMN exonRankUpstream
     DROP COLUMN exonRankDownstream
     DROP COLUMN exonPhaseUpstream
     DROP COLUMN exonPhaseDownstream
-    CHANGE 
     ADD geneOrientation VARCHAR(20) NOT NULL,
     ADD disruptive BOOLEAN NOT NULL,
     ADD reportedDisruption BOOLEAN NOT NULL,
@@ -94,12 +100,26 @@ ALTER TABLE structuralVariantBreakend
     ADD nextSpliceExonRank TINYINT UNSIGNED,
     ADD nextSpliceExonPhase TINYINT,
     ADD nextSpliceDistance INT,
-    CHANGE exonMax totalExonCount SMALLINT NOT NULL;
+    CHANGE exonMax totalExonCount SMALLINT;
 
 ALTER TABLE structuralVariantFusion
 	ADD name VARCHAR(50) NOT NULL,
-    CHANGE isReported reported BOOLEAN NOT NULL,
+    CHANGE isReported reported BOOLEAN,
     ADD reportedType varchar(255) NULL,
     ADD chainLength INT,
     ADD skippedExons INT;
+
+
+CREATE TABLE viralInsertion
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    svId INT NOT NULL,
+    virusId VARCHAR(50) NOT NULL,
+    virusName VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(svId)
+);
+
 

@@ -19,10 +19,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
@@ -30,6 +28,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -199,6 +198,10 @@ public class DatabaseAccess {
 
     public void writeSvLinks(@NotNull final String sample, @NotNull List<LinxLink> links) {
         structuralVariantClusterDAO.writeLinks(sample, links);
+    }
+
+    public void writeSvViralInserts(@NotNull final String sample, @NotNull List<LinxViralInsertFile> inserts) {
+        structuralVariantClusterDAO.writeViralInserts(sample, inserts);
     }
 
     public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions) {
