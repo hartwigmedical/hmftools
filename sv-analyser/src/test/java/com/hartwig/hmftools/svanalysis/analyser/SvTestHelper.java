@@ -79,7 +79,7 @@ public class SvTestHelper
     public void initialiseFusions(SvGeneTranscriptCollection geneTranscriptCollection)
     {
         FusionAnalyser = new FusionDisruptionAnalyser();
-        FusionAnalyser.initialise(null, "", geneTranscriptCollection);
+        FusionAnalyser.initialise(null, "", Config, geneTranscriptCollection);
         FusionAnalyser.setHasValidConfigData(true);
     }
 

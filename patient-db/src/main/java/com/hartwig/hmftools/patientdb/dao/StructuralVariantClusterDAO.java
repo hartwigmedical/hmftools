@@ -67,7 +67,7 @@ public class StructuralVariantClusterDAO
                 cluster.subClonal(),
                 cluster.subType(),
                 cluster.clusterCount(),
-                cluster.clusterDesc());
+                DatabaseUtil.checkStringLength(cluster.clusterDesc(), CLUSTER.CLUSTERDESC));
     }
 
     public void writeSvData(final String sample, final List<LinxSvData> svData)
@@ -124,8 +124,8 @@ public class StructuralVariantClusterDAO
                 svData.ploidyMax(),
                 DatabaseUtil.checkStringLength(svData.geneStart(), SVLINXDATA.GENESTART),
                 DatabaseUtil.checkStringLength(svData.geneEnd(), SVLINXDATA.GENEEND),
-                svData.replicationTimingStart(),
-                svData.replicationTimingEnd(),
+                DatabaseUtil.decimal(svData.replicationTimingStart()),
+                DatabaseUtil.decimal(svData.replicationTimingEnd()),
                 svData.localTopologyIdStart(),
                 svData.localTopologyIdEnd(),
                 svData.localTopologyStart(),

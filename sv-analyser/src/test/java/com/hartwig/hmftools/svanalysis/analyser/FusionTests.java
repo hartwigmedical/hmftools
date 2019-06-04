@@ -271,7 +271,7 @@ public class FusionTests
         assertEquals(1, cluster.getChains().size());
 
         tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false, true);
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, false, null,
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
@@ -309,7 +309,7 @@ public class FusionTests
         assertEquals(1, cluster.getChains().size());
 
         tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false, true);
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, false, null,
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
@@ -318,54 +318,6 @@ public class FusionTests
         assertEquals(var1.dbId(), fusion.upstreamTrans().parent().id());
         assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
         assertTrue(validateFusionAnnotations(fusion, true, true));
-
-        /*
-        // test 3: single-SV fusion from the 3rd SV, with the other ones simple SVs within introns leaving a valid traversal
-        tester.clearClustersAndSVs();
-
-        // intronic del
-        var1 = createDel("0", chromosome, 1150,1250);
-
-        // intronic dup
-        var2 = createDup("1", chromosome, 1525,1575);
-
-        // fusion the 2 genes
-        var3 = createDel("2", chromosome, 1750,11550);
-
-        // intronic del
-        var4 = createDel("3", chromosome, 11725, 11775);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
-
-        assertEquals(1, cluster.getChains().size());
-
-        tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false, true);
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
-
-        assertEquals(2, tester.FusionAnalyser.getFusions().size());
-
-        fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
-        assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
-
-        assertTrue(validateFusionAnnotations(fusion, true, true));
-
-        fusion = tester.FusionAnalyser.getFusions().get(1);
-        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
-        assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
-
-        assertTrue(validateFusionAnnotations(fusion, true, false));
-        */
-
 
         // test 4: invalid fusion, with a TI beyond the fusion ending in an exon upstream and skipping an exon downstream
         tester.clearClustersAndSVs();
@@ -396,7 +348,7 @@ public class FusionTests
         assertEquals(1, cluster.getChains().size());
 
         tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false, true);
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, false, null,
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.ClusteringMethods.getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());

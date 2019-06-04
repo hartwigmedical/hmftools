@@ -24,6 +24,7 @@ public class SvaConfig
     final public String OutputDataPath;
     final public String PurpleDataPath;
     final public String SvDataPath;
+    final public boolean UploadToDB;
     final public String FragileSiteFile;
     final public String LineElementFile;
     final public String ReplicationOriginsFile;
@@ -43,6 +44,7 @@ public class SvaConfig
     public static final String DATA_OUTPUT_DIR = "data_output_path"; // old config name support
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
+    public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
@@ -94,6 +96,15 @@ public class SvaConfig
             }
         }
 
+        if(mSampleIds.size() == 1)
+        {
+            UploadToDB = true;
+        }
+        else
+        {
+            UploadToDB = cmd.hasOption(UPLOAD_TO_DB);
+        }
+
         PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
 
         String dataOutputDir = "";
@@ -130,6 +141,7 @@ public class SvaConfig
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
+    public boolean isSingleSample() { return mSampleIds.size() == 1; }
 
     public SvaConfig(int proximityDistance)
     {
@@ -137,6 +149,7 @@ public class SvaConfig
         PurpleDataPath = "";
         OutputDataPath = "";
         SvDataPath = "";
+        UploadToDB = false;
         FragileSiteFile = "";
         LineElementFile = "";
         ViralHostsFile = "";
@@ -156,6 +169,7 @@ public class SvaConfig
         options.addOption(DATA_OUTPUT_DIR, true, "Linx output directory");
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
+        options.addOption(UPLOAD_TO_DB, false, "Upload all LINX data to DB when in batch mode");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");

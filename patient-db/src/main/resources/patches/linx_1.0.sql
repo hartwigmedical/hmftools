@@ -85,11 +85,11 @@ CREATE TABLE svLink
 ALTER TABLE structuralVariantBreakend
     CHANGE isStartEnd startBreakend BOOLEAN,
     CHANGE isCanonicalTranscript canonicalTranscript BOOLEAN,
-    DROP COLUMN strand
-    DROP COLUMN exonRankUpstream
-    DROP COLUMN exonRankDownstream
-    DROP COLUMN exonPhaseUpstream
-    DROP COLUMN exonPhaseDownstream
+    DROP COLUMN strand,
+    DROP COLUMN exonRankUpstream,
+    DROP COLUMN exonRankDownstream,
+    DROP COLUMN exonPhaseUpstream,
+    DROP COLUMN exonPhaseDownstream,
     ADD geneOrientation VARCHAR(20) NOT NULL,
     ADD disruptive BOOLEAN NOT NULL,
     ADD reportedDisruption BOOLEAN NOT NULL,

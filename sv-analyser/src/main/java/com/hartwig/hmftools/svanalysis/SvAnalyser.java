@@ -106,7 +106,6 @@ public class SvAnalyser {
         }
 
         boolean sampleDataFromFile = (dbAccess == null);
-        boolean singleSample = samplesList.size() == 1;
 
         if (samplesList.isEmpty())
         {
@@ -161,7 +160,7 @@ public class SvAnalyser {
                 {
                     fusionAnalyser = new FusionDisruptionAnalyser();
 
-                    fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, ensemblDataCache);
+                    fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache);
                     fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
                     if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
@@ -237,11 +236,11 @@ public class SvAnalyser {
 
                 if(checkFusions)
                 {
-                    fusionAnalyser.run(sampleId, svVarData, singleSample, dbAccess,
+                    fusionAnalyser.run(sampleId, svVarData, dbAccess,
                             sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
                 }
 
-                sampleAnalyser.writeOutput(singleSample, dbAccess);
+                sampleAnalyser.writeOutput(dbAccess);
 
                 prefCounter.stop();
 

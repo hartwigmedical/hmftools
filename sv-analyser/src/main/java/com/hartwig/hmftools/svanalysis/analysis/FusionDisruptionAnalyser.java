@@ -45,6 +45,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonD
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
@@ -69,6 +70,7 @@ public class FusionDisruptionAnalyser
     private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<String> mKnownFusionGenes;
+    private SvaConfig mConfig;
 
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
@@ -125,10 +127,11 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_KNOWN_FUSION_DATA, false, "Only write out reportable fusions");
     }
 
-    public void initialise(final CommandLine cmdLineArgs, final String outputDir, SvGeneTranscriptCollection ensemblDataCache)
+    public void initialise(final CommandLine cmdLineArgs, final String outputDir, final SvaConfig config, SvGeneTranscriptCollection ensemblDataCache)
     {
         mOutputDir = outputDir;
 
+        mConfig = config;
         mGeneTransCollection = ensemblDataCache;
         mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
         populateKnownFusionGenes();
@@ -137,7 +140,7 @@ public class FusionDisruptionAnalyser
         {
             mSkipFusionCheck = cmdLineArgs.hasOption(SKIP_FUSION_OUTPUT);
 
-            if (!mSkipFusionCheck)
+            if (!mSkipFusionCheck && mConfig.hasMultipleSamples())
             {
                 String annotationHeaders = "PhaseMatched,ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo";
                 String fusionFileName = "SVA_FUSIONS.csv";
@@ -254,7 +257,7 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    public void run(final String sampleId, final List<SvVarData> svList, boolean writeSampleData, final DatabaseAccess dbAccess,
+    public void run(final String sampleId, final List<SvVarData> svList, final DatabaseAccess dbAccess,
             final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         mPerfCounter.start();
@@ -268,9 +271,14 @@ public class FusionDisruptionAnalyser
             findDisruptions(svList);
         }
 
-        if(writeSampleData)
+        if(mConfig.isSingleSample())
         {
-            writeSampleData(svList, dbAccess);
+            writeSampleData();
+        }
+
+        if(dbAccess != null && mConfig.UploadToDB)
+        {
+            uploadData(svList, dbAccess);
         }
 
         if(mRnaFusionMapper != null)
@@ -308,9 +316,9 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void writeSampleData(final List<SvVarData> svList, final DatabaseAccess dbAccess)
+    private void uploadData(final List<SvVarData> svList, final DatabaseAccess dbAccess)
     {
-        if(dbAccess != null)
+        if (dbAccess != null)
         {
             LOGGER.debug("persisting breakends and {} fusions to database", mFusions.size());
 
@@ -333,7 +341,10 @@ public class FusionDisruptionAnalyser
 
             annotationDAO.writeBreakendsAndFusions(mSampleId, allTranscripts, mFusions);
         }
+    }
 
+    private void writeSampleData()
+    {
         // write sample files for patient reporter
         List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
         List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
@@ -1255,9 +1266,13 @@ public class FusionDisruptionAnalyser
     {
         mFusions.add(fusion);
 
-        if (fusion.reportable() || !mLogReportableOnly)
+        if(mConfig.hasMultipleSamples())
         {
-            mFusionFinder.writeFusionData(fusion, mSampleId);
+            // write fusions in detail
+            if (fusion.reportable() || !mLogReportableOnly)
+            {
+                mFusionFinder.writeFusionData(fusion, mSampleId);
+            }
         }
 
         if(fusion.reportable() && mVisWriter != null)

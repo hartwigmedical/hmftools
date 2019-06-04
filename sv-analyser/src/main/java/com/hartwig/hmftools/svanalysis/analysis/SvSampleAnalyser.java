@@ -283,7 +283,7 @@ public class SvSampleAnalyser {
         mPcClusterAnalyse.stop();
     }
 
-    public void writeOutput(boolean writeSampleData, final DatabaseAccess dbAccess)
+    public void writeOutput(final DatabaseAccess dbAccess)
     {
         // if processing a single sample, write flat-files and optionally load the same data to the DB
         // if running in batch mode, skip flat-file generation and DB load, and instead write verbose batch output files
@@ -292,9 +292,12 @@ public class SvSampleAnalyser {
 
         mPcWrite.start();
 
-        List<LinxSvData> linxSvData = writeSampleData ? Lists.newArrayList() : null;
-        List<LinxCluster> clusterData = writeSampleData ? Lists.newArrayList() : null;
-        List<LinxLink> linksData = writeSampleData ? Lists.newArrayList() : null;
+        boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
+
+        List<LinxSvData> linxSvData = prepareSampleData ? Lists.newArrayList() : null;
+        List<LinxCluster> clusterData = prepareSampleData ? Lists.newArrayList() : null;
+        List<LinxLink> linksData = prepareSampleData ? Lists.newArrayList() : null;
+        List<LinxViralInsertFile> viralInserts = prepareSampleData ? generateViralInserts() : null;
 
         generateSvDataOutput(linxSvData);
         generateClusterOutput(clusterData);
@@ -302,10 +305,8 @@ public class SvSampleAnalyser {
 
         mVisWriter.writeOutput(mAnalyser.getClusters(), mAllVariants, mCopyNumberAnalyser.getChrCnDataMap());
 
-        if(writeSampleData)
+        if(mConfig.isSingleSample())
         {
-            List<LinxViralInsertFile> viralInserts = generateViralInserts();
-
             try
             {
                 // write per-sample DB-style output
@@ -314,19 +315,19 @@ public class SvSampleAnalyser {
                 LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
                 LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
 
-            }
-            catch (IOException e)
+            } catch (IOException e)
             {
                 LOGGER.error("failed to write sample SV data: {}", e.toString());
             }
+        }
 
-            if (dbAccess != null)
-            {
-                dbAccess.writeSvLinxData(mSampleId, linxSvData);
-                dbAccess.writeSvClusters(mSampleId, clusterData);
-                dbAccess.writeSvLinks(mSampleId, linksData);
-                dbAccess.writeSvViralInserts(mSampleId, viralInserts);
-            }
+
+        if(mConfig.UploadToDB && dbAccess != null)
+        {
+            dbAccess.writeSvLinxData(mSampleId, linxSvData);
+            dbAccess.writeSvClusters(mSampleId, clusterData);
+            dbAccess.writeSvLinks(mSampleId, linksData);
+            dbAccess.writeSvViralInserts(mSampleId, viralInserts);
         }
 
         mPcWrite.stop();
