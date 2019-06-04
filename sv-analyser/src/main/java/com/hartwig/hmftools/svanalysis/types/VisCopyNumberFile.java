@@ -110,6 +110,4 @@ public class VisCopyNumberFile
                 Double.valueOf(values[index++]),
                 Double.valueOf(values[index++]));
     }
-
-
 }

@@ -665,15 +665,8 @@ public class SvSampleAnalyser {
 
                 String resolvedType = cluster.getResolvedType();
 
-                // TEMP - keep synthetic formed from SGLs separate
-
                 int inferredCount = cluster.getInferredTypeCount();
                 int sglCount = cluster.getTypeCount(SGL);
-
-                if((inferredCount > 0 || sglCount> 0) && isSimpleType(resolvedType))
-                {
-                    resolvedType = "SGL_PAIR_" + resolvedType;
-                }
 
                 final String superType = getSuperType(cluster);
 
@@ -869,7 +862,6 @@ public class SvSampleAnalyser {
         closeBufferedWriter(mSvFileWriter);
         closeBufferedWriter(mClusterFileWriter);
         closeBufferedWriter(mLinksFileWriter);
-        mVisWriter.close();
 
         // log perf stats
         mPcPrep.logStats();
