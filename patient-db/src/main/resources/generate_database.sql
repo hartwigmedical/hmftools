@@ -660,6 +660,7 @@ CREATE TABLE structuralVariantFusion
     INDEX(sampleId)
 );
 
+DROP TABLE IF EXISTS viralInsertion;
 CREATE TABLE viralInsertion
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
