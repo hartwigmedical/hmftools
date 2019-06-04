@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visualisation;
+package com.hartwig.hmftools.svanalysis;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -43,15 +43,19 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SvVisualiser implements AutoCloseable {
+public class SvVisualiser implements AutoCloseable
+{
 
     private static final Logger LOGGER = LogManager.getLogger(SvVisualiser.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, SQLException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, SQLException
+    {
         final Options options = SvVisualiserConfig.createOptions();
-        try (final SvVisualiser application = new SvVisualiser(options, args)) {
+        try (final SvVisualiser application = new SvVisualiser(options, args))
+        {
             application.run();
-        } catch (ParseException e) {
+        } catch (ParseException e)
+        {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SvVisualiser", options);
@@ -62,48 +66,60 @@ public class SvVisualiser implements AutoCloseable {
     private final SvVisualiserConfig config;
     private final ExecutorService executorService;
 
-    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException, SQLException {
+    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException, SQLException
+    {
         final CommandLine cmd = createCommandLine(args, options);
         LOGGER.info("Loading data");
         config = SvVisualiserConfig.createConfig(cmd);
         executorService = Executors.newFixedThreadPool(config.threads());
     }
 
-    private void run() throws InterruptedException, ExecutionException {
+    private void run() throws InterruptedException, ExecutionException
+    {
 
         final List<Future<Object>> futures = Lists.newArrayList();
-        if (config.singleCluster() != null || config.singleChromosome() != null) {
+        if (config.singleCluster() != null || config.singleChromosome() != null)
+        {
 
-            if (config.singleCluster() != null) {
+            if (config.singleCluster() != null)
+            {
                 futures.add(executorService.submit(() -> runCluster(config.singleCluster(), false)));
             }
 
-            if (config.singleChromosome() != null) {
+            if (config.singleChromosome() != null)
+            {
                 futures.add(executorService.submit(() -> runChromosome(config.singleChromosome())));
             }
 
-        } else {
+        }
+        else
+        {
             final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
-            for (Integer clusterId : clusterIds) {
+            for (Integer clusterId : clusterIds)
+            {
                 futures.add(executorService.submit(() -> runCluster(clusterId, true)));
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
             config.links().stream().map(Link::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
             config.links().stream().map(Link::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            for (final String chromosome : chromosomes) {
+            for (final String chromosome : chromosomes)
+            {
                 futures.add(executorService.submit(() -> runChromosome(chromosome)));
             }
         }
 
-        for (Future<Object> future : futures) {
+        for (Future<Object> future : futures)
+        {
             future.get();
         }
     }
 
     @Nullable
-    private Object runChromosome(@NotNull final String chromosome) throws IOException, InterruptedException {
-        if (!HumanChromosome.contains(chromosome)) {
+    private Object runChromosome(@NotNull final String chromosome) throws IOException, InterruptedException
+    {
+        if (!HumanChromosome.contains(chromosome))
+        {
             LOGGER.warn("Chromosome {} not permitted", chromosome);
             return null;
         }
@@ -116,7 +132,8 @@ public class SvVisualiser implements AutoCloseable {
                 .collect(toSet());
 
         final List<Link> chromosomeLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        if (chromosomeLinks.isEmpty()) {
+        if (chromosomeLinks.isEmpty())
+        {
             LOGGER.warn("Chromosome {} not present in file", chromosome);
             return null;
         }
@@ -126,7 +143,8 @@ public class SvVisualiser implements AutoCloseable {
         chromosomeSegments.add(Segments.entireChromosome(config.sample(), chromosome));
 
         final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosome);
-        chromosomeLinks.forEach(x -> {
+        chromosomeLinks.forEach(x ->
+        {
             chromosomesOfInterest.add(x.startChromosome());
             chromosomesOfInterest.add(x.endChromosome());
         });
@@ -139,16 +157,19 @@ public class SvVisualiser implements AutoCloseable {
     }
 
     @Nullable
-    private Object runCluster(int clusterId, boolean skipSingles) throws IOException, InterruptedException {
+    private Object runCluster(int clusterId, boolean skipSingles) throws IOException, InterruptedException
+    {
         final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
 
-        if (clusterLinks.isEmpty()) {
+        if (clusterLinks.isEmpty())
+        {
             LOGGER.warn("Cluster {} not present in file", clusterId);
             return null;
         }
 
-        if (clusterLinks.size() == 1 && skipSingles) {
+        if (clusterLinks.size() == 1 && skipSingles)
+        {
             LOGGER.info("Skipping simple cluster {}", clusterId);
             return null;
         }
@@ -156,7 +177,8 @@ public class SvVisualiser implements AutoCloseable {
         final Set<Integer> linkChainIds = clusterLinks.stream().map(Link::chainId).collect(Collectors.toSet());
         final Set<Integer> segmentChainIds = clusterSegments.stream().map(Segment::chainId).collect(Collectors.toSet());
         segmentChainIds.removeAll(linkChainIds);
-        if (!segmentChainIds.isEmpty()) {
+        if (!segmentChainIds.isEmpty())
+        {
             LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterId, segmentChainIds);
             return null;
         }
@@ -173,7 +195,8 @@ public class SvVisualiser implements AutoCloseable {
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
             @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException
+    {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
@@ -211,18 +234,21 @@ public class SvVisualiser implements AutoCloseable {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         executorService.shutdown();
         LOGGER.info("Complete");
     }
 
-    private interface ColorPickerFactory {
+    private interface ColorPickerFactory
+    {
         @NotNull
         ColorPicker create(@NotNull final List<Link> links);
     }
