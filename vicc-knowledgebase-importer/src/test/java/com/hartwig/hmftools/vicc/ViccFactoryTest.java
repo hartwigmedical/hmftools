@@ -45,14 +45,14 @@ public class ViccFactoryTest {
         LOGGER.info("Analyzing entries per SOURCE");
         countPerCategory(viccEntries, entry -> Lists.newArrayList(entry.source()));
 
-        LOGGER.info("Analyzing entries per GENE");
-        countPerCategory(viccEntries, ViccEntry::genes);
-
         LOGGER.info("Analyzing entries per TAG");
         countPerCategory(viccEntries, ViccEntry::tags);
 
         LOGGER.info("Analyzing entries per DEVTAG");
         countPerCategory(viccEntries, ViccEntry::devTags);
+
+        LOGGER.info("Analyzing entries per GENE");
+        countPerCategory(viccEntries, ViccEntry::genes);
     }
 
     private static void countPerCategory(@NotNull List<ViccEntry> viccEntries,
