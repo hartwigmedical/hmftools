@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.types;
+package com.hartwig.hmftools.svanalysis.cn;
 
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;

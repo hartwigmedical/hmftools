@@ -59,7 +59,7 @@ public class LoadPurpleStructuralVariants {
         LOGGER.info("Enriching variants");
         final List<EnrichedStructuralVariant> enrichedVariants = factory.enrich(variants);
 
-        // generate a unique ID for each record
+        // generate a unique ID for each SV record
         int svId = 0;
 
         List<StructuralVariantData> svDataList = Lists.newArrayList();

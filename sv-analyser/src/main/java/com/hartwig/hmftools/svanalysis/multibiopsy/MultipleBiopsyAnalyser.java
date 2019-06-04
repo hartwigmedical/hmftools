@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.stats;
+package com.hartwig.hmftools.svanalysis.multibiopsy;
 
 import static java.lang.Math.abs;
 
@@ -6,9 +6,12 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_PARTIAL;
-import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_PRIVATE;
-import static com.hartwig.hmftools.svanalysis.types.MultiBiopsyData.MATCH_TYPE_SHARED;
+import static com.hartwig.hmftools.svanalysis.multibiopsy.MultiBiopsyData.MATCH_TYPE_PARTIAL;
+import static com.hartwig.hmftools.svanalysis.multibiopsy.MultiBiopsyData.MATCH_TYPE_PRIVATE;
+import static com.hartwig.hmftools.svanalysis.multibiopsy.MultiBiopsyData.MATCH_TYPE_SHARED;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.formOutputPath;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,13 +24,17 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
-import com.hartwig.hmftools.svanalysis.types.MultiBiopsyData;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 
 public class MultipleBiopsyAnalyser
 {
@@ -41,6 +48,44 @@ public class MultipleBiopsyAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(MultipleBiopsyAnalyser.class);
 
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        final Options options = createBasicOptions();
+        final CommandLine cmd = createCommandLine(args, options);
+
+        if (cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
+        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+
+        MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
+
+        if(!mbAnalyser.loadData(cmd, outputDir))
+            return;
+
+        mbAnalyser.runAnalysis();
+
+        LOGGER.info("multiple-biopsy analysis complete");
+    }
+
+    private static Options createBasicOptions()
+    {
+        final Options options = new Options();
+        options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
+        options.addOption(SVA_INPUT_FILE, true, "SVA SVs file");
+        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        return options;
+    }
+
+    @NotNull
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    {
+        final CommandLineParser parser = new DefaultParser();
+        return parser.parse(options, args);
+    }
+
     public MultipleBiopsyAnalyser()
     {
         mPatientSampleIdsMap = Maps.newHashMap();
@@ -53,12 +98,6 @@ public class MultipleBiopsyAnalyser
 
     private static String PATIENT_SAMPLE_IDS_FILE = "patient_ids_file";
     private static String SVA_INPUT_FILE = "sva_svs_file";
-
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
-        options.addOption(SVA_INPUT_FILE, true, "SVA SVs file");
-    }
 
     public boolean loadData(final CommandLine cmd, final String outputDir)
     {

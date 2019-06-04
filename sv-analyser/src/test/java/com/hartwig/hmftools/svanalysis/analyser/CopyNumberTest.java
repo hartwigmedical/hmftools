@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.svanalysis.analyser;
 
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.calcAdjustedPloidyValues;
+import static com.hartwig.hmftools.svanalysis.cn.CnDataLoader.calcAdjustedPloidyValues;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

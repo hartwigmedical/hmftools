@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.types;
+package com.hartwig.hmftools.svanalysis.visual;
 
 import static java.util.stream.Collectors.toList;
 

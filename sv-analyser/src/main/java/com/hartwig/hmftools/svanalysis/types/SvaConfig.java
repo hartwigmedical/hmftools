@@ -40,8 +40,8 @@ public class SvaConfig
 
     // config options
     public static final String PURPLE_DATA_DIR = "purple_dir";
-    public static final String DATA_OUTPUT_PATH = "output_dir";
-    public static final String DATA_OUTPUT_DIR = "data_output_path"; // old config name support
+    public static final String DATA_OUTPUT_DIR = "output_dir";
+    public static final String DATA_OUTPUT_PATH = "data_output_path"; // old config name support
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode
@@ -113,10 +113,7 @@ public class SvaConfig
         else if(cmd.hasOption(DATA_OUTPUT_PATH))
             dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
 
-        if (!dataOutputDir.endsWith(File.separator))
-            dataOutputDir += File.separator;
-
-        OutputDataPath = dataOutputDir;
+        OutputDataPath = formOutputPath(dataOutputDir);
 
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
@@ -136,6 +133,11 @@ public class SvaConfig
 
         SPECIFIC_CLUSTER_ID = Integer.parseInt(cmd.getOptionValue(LOG_CLUSTER_ID, "-1"));
         SPECIFIC_SV_ID = cmd.getOptionValue(LOG_SV_ID, "");
+    }
+
+    public static final String formOutputPath(final String dir)
+    {
+        return dir.endsWith(File.separator) ? dir : dir + File.separator;
     }
 
     public final List<String> getSampleIds() { return mSampleIds; }

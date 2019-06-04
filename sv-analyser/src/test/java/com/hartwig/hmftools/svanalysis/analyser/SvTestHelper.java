@@ -26,14 +26,14 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
-import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.LinkFinder;
 import com.hartwig.hmftools.svanalysis.analysis.SvClusteringMethods;
 import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
+import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.cn.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
@@ -49,7 +49,7 @@ public class SvTestHelper
     public SvaConfig Config;
     public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
-    public CNAnalyser CopyNumberAnalyser;
+    public CnDataLoader CnDataLoader;
     public FusionDisruptionAnalyser FusionAnalyser;
 
     private int mNextVarId;
@@ -60,8 +60,8 @@ public class SvTestHelper
 
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
-        CopyNumberAnalyser = new CNAnalyser("", "", null);
-        Analyser.setCopyNumberAnalyser(CopyNumberAnalyser);
+        CnDataLoader = new CnDataLoader("", "", null);
+        Analyser.setCnDataLoader(CnDataLoader);
 
         Analyser.setRunValidationChecks(true);
 
@@ -280,9 +280,9 @@ public class SvTestHelper
         // assume CN is 2 at the telomere and by default Actual BAF = 0.5
 
         // NOTE: positions adjusted for orientation are not done correctly
-        Map<String, List<SvCNData>> chrCnDataMap = CopyNumberAnalyser.getChrCnDataMap();
+        Map<String, List<SvCNData>> chrCnDataMap = CnDataLoader.getChrCnDataMap();
         final Map<String, List<SvBreakend>> chrBreakendMap = ClusteringMethods.getChrBreakendMap();
-        Map<Integer,SvCNData[]> svIdCnDataMap = CopyNumberAnalyser.getSvIdCnDataMap();
+        Map<Integer,SvCNData[]> svIdCnDataMap = CnDataLoader.getSvIdCnDataMap();
 
         chrCnDataMap.clear();
         svIdCnDataMap.clear();
@@ -451,9 +451,9 @@ public class SvTestHelper
 
         setSvCopyNumberData(
                 AllVariants,
-                CopyNumberAnalyser.getSampleSvPloidyCalcMap().get(SampleId),
-                CopyNumberAnalyser.getSvIdCnDataMap(),
-                CopyNumberAnalyser.getChrCnDataMap());
+                CnDataLoader.getSampleSvPloidyCalcMap().get(SampleId),
+                CnDataLoader.getSvIdCnDataMap(),
+                CnDataLoader.getChrCnDataMap());
 
     }
 

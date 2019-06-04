@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.svanalysis.analysis.ClusterAnnotations.REPLICATION_REPAIR;
@@ -40,6 +39,7 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_AR
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator.markLineCluster;
+import static com.hartwig.hmftools.svanalysis.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
@@ -60,9 +60,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.cn.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
@@ -78,11 +79,10 @@ public class ClusterAnalyser {
 
     private final SvaConfig mConfig;
     private SvClusteringMethods mClusteringMethods;
-    private CNAnalyser mCopyNumberAnalyser;
+    private CnDataLoader mCnDataLoader;
     private SvGeneTranscriptCollection mGeneCollection;
 
     String mSampleId;
-    private List<SvVarData> mAllVariants;
     List<SvCluster> mClusters;
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
@@ -102,10 +102,9 @@ public class ClusterAnalyser {
     {
         mConfig = config;
         mClusteringMethods = clusteringMethods;
-        mCopyNumberAnalyser = null;
+        mCnDataLoader = null;
         mGeneCollection = null;
         mClusters = Lists.newArrayList();
-        mAllVariants = Lists.newArrayList();
         mSampleId = "";
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
@@ -120,9 +119,9 @@ public class ClusterAnalyser {
         mPcAnnotation = new PerformanceCounter("Annotation");
     }
 
-    public void setCopyNumberAnalyser(CNAnalyser cnAnalyser)
+    public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
-        mCopyNumberAnalyser = cnAnalyser;
+        mCnDataLoader = cnAnalyser;
     }
     public void setGeneCollection(final SvGeneTranscriptCollection geneCollection) { mGeneCollection = geneCollection; }
     public void setUseAllelePloidies(boolean toggle)
@@ -141,7 +140,6 @@ public class ClusterAnalyser {
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
         mSampleId = sampleId;
-        mAllVariants = allVariants;
         mClusters.clear();
     }
 
@@ -761,7 +759,7 @@ public class ClusterAnalyser {
             {
                 final String chromosome = entry.getKey();
                 List<SvBreakend> breakendList = entry.getValue();
-                List<SvCNData> cnDataList = mCopyNumberAnalyser.getChrCnDataMap().get(chromosome);
+                List<SvCNData> cnDataList = mCnDataLoader.getChrCnDataMap().get(chromosome);
 
                 if(cnDataList == null || cnDataList.isEmpty())
                     continue;
@@ -786,7 +784,7 @@ public class ClusterAnalyser {
                     double telomereMinFacingPloidy = boundaryCNData[0];
                     double centromereMinFacingPloidy = boundaryCNData[1];
 
-                    double[] centromereCNData = mCopyNumberAnalyser.getCentromereCopyNumberData(chromosome, arm.equals(CHROMOSOME_ARM_P));
+                    double[] centromereCNData = mCnDataLoader.getCentromereCopyNumberData(chromosome, arm.equals(CHROMOSOME_ARM_P));
 
                     SvCNData telemoreData = arm == CHROMOSOME_ARM_P ? cnDataList.get(0) : cnDataList.get(cnDataList.size() - 1);
                     double telomereMAP = telemoreData.majorAllelePloidy();
@@ -1518,7 +1516,7 @@ public class ClusterAnalyser {
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
         {
-            findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser, mGeneCollection);
+            findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCnDataLoader, mGeneCollection);
         }
     }
 
@@ -1530,7 +1528,7 @@ public class ClusterAnalyser {
 
         if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
         {
-            findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCopyNumberAnalyser);
+            findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCnDataLoader);
         }
 
         if(runAnnotation(mConfig.RequiredAnnotations, REPLICATION_REPAIR))

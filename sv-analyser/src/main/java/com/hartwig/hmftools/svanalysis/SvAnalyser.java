@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_ANALYSIS_ONLY;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
 
@@ -15,11 +14,8 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.analysis.CNAnalyser;
 import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.svanalysis.simulation.SvSimulator;
-import com.hartwig.hmftools.svanalysis.stats.MultipleBiopsyAnalyser;
-import com.hartwig.hmftools.svanalysis.stats.StatisticRoutines;
+import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
@@ -41,13 +37,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvAnalyser {
 
-    private static final String RUN_SVA = "run_sv_analysis";
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
     private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
-    private static final String STATS_ROUTINES = "stats_routines";
-    private static final String MULT_BIOPSY_ANALYSIS = "mult_biopsy_analysis";
-    private static final String SIM_ROUTINES = "sim_routines";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -65,35 +57,6 @@ public class SvAnalyser {
         }
 
         SvaConfig svaConfig = new SvaConfig(cmd);
-
-        if(cmd.hasOption(STATS_ROUTINES))
-        {
-            StatisticRoutines statsRoutines = new StatisticRoutines();
-            statsRoutines.loadConfig(cmd, svaConfig.OutputDataPath);
-            statsRoutines.runStatistics();
-            LOGGER.info("run complete");
-            return;
-        }
-
-        if(cmd.hasOption(SIM_ROUTINES))
-        {
-            SvSimulator simulator = new SvSimulator();
-            simulator.loadConfig(cmd, svaConfig.OutputDataPath);
-            simulator.run();
-            return;
-        }
-
-        if(cmd.hasOption(MULT_BIOPSY_ANALYSIS))
-        {
-            MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
-
-            if(mbAnalyser.loadData(cmd, svaConfig.OutputDataPath))
-            {
-                mbAnalyser.runAnalysis();
-            }
-
-            return;
-        }
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
@@ -113,158 +76,142 @@ public class SvAnalyser {
             svaConfig.setSampleIds(samplesList);
         }
 
-        CNAnalyser cnAnalyser = new CNAnalyser(svaConfig.PurpleDataPath, svaConfig.OutputDataPath, dbAccess);
-        cnAnalyser.loadConfig(cmd, samplesList);
+        CnDataLoader cnDataLoader = new CnDataLoader(svaConfig.PurpleDataPath, svaConfig.OutputDataPath, dbAccess);
 
-        if(cmd.hasOption(CN_ANALYSIS_ONLY))
+        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
+
+        sampleAnalyser.setCnDataLoader(cnDataLoader);
+
+        DriverGeneAnnotator driverGeneAnnotator = null;
+        boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
+
+        FusionDisruptionAnalyser fusionAnalyser = null;
+        boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
+
+        boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
+
+        SvGeneTranscriptCollection ensemblDataCache = null;
+
+        if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
-            // run CN analysis, which will write a bunch of cohort-wide sample data, then exit
-            cnAnalyser.runAnalysis();
-            cnAnalyser.close();
+            ensemblDataCache = new SvGeneTranscriptCollection();
+            ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
 
-            LOGGER.info("CN analysis complete");
-            return;
+            if(!ensemblDataCache.loadEnsemblData(selectiveGeneLoading))
+            {
+                LOGGER.error("Ensembl data cache load failed, exiting");
+                return;
+            }
+
+            sampleAnalyser.setGeneCollection(ensemblDataCache);
+            sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
+
+            if(checkFusions)
+            {
+                fusionAnalyser = new FusionDisruptionAnalyser();
+
+                fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache);
+                fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
+
+                if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
+                {
+                    samplesList.clear();
+                    samplesList.addAll(fusionAnalyser.getRnaSampleIds());
+
+                    LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
+                }
+            }
+
+            if(checkDrivers)
+            {
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig.OutputDataPath);
+                driverGeneAnnotator.loadConfig(cmd);
+                driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
+            }
         }
 
-        if(cmd.hasOption(RUN_SVA))
+        if(driverGeneAnnotator != null)
         {
-            SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
-
-            sampleAnalyser.setCopyNumberAnalyser(cnAnalyser);
-
-            DriverGeneAnnotator driverGeneAnnotator = null;
-            boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
-
-            FusionDisruptionAnalyser fusionAnalyser = null;
-            boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
-
-            boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
-
-            SvGeneTranscriptCollection ensemblDataCache = null;
-
-            if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
-            {
-                ensemblDataCache = new SvGeneTranscriptCollection();
-                ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-
-                if(!ensemblDataCache.loadEnsemblData(selectiveGeneLoading))
-                {
-                    LOGGER.error("Ensembl data cache load failed, exiting");
-                    return;
-                }
-
-                sampleAnalyser.setGeneCollection(ensemblDataCache);
-                sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
-
-                if(checkFusions)
-                {
-                    fusionAnalyser = new FusionDisruptionAnalyser();
-
-                    fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache);
-                    fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
-
-                    if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
-                    {
-                        samplesList.clear();
-                        samplesList.addAll(fusionAnalyser.getRnaSampleIds());
-
-                        LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
-                    }
-                }
-
-                if(checkDrivers)
-                {
-                    driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig.OutputDataPath);
-                    driverGeneAnnotator.loadConfig(cmd);
-                    driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
-                }
-            }
-
-            if(driverGeneAnnotator != null)
-            {
-                driverGeneAnnotator.setLohData(cnAnalyser.getSampleLohData());
-                driverGeneAnnotator.setChrCopyNumberMap(cnAnalyser.getChrCopyNumberMap());
-            }
-
-            PerformanceCounter prefCounter = new PerformanceCounter("SVA Total");
-
-            int count = 0;
-            for (final String sampleId : samplesList)
-            {
-                ++count;
-
-                prefCounter.start();
-
-                List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                        loadSampleSvData(svaConfig.SvDataPath, sampleId) : dbAccess.readStructuralVariantData(sampleId);
-
-                List<SvVarData> svVarData = createSvData(svRecords);
-
-                if(svVarData.isEmpty())
-                {
-                    LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sampleId, count);
-                    continue;
-                }
-
-                LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count);
-
-                cnAnalyser.loadSampleData(sampleId, svRecords);
-
-                sampleAnalyser.setSampleSVs(sampleId, svVarData);
-
-                sampleAnalyser.analyse();
-
-                if(!sampleAnalyser.inValidState())
-                {
-                    LOGGER.info("exiting after sample({}), in invalid state", sampleId);
-                    break;
-                }
-
-                if(ensemblDataCache != null)
-                {
-                    // when matching RNA, allow all transcripts regardless of their viability for fusions
-                    boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
-                    setSvGeneData(svVarData, ensemblDataCache, checkFusions, selectiveGeneLoading, !keepInvalidTranscripts);
-
-                    sampleAnalyser.annotateWithGeneData(ensemblDataCache);
-                }
-
-                if(checkDrivers)
-                {
-                    driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
-                }
-
-                if(checkFusions)
-                {
-                    fusionAnalyser.run(sampleId, svVarData, dbAccess,
-                            sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
-                }
-
-                sampleAnalyser.writeOutput(dbAccess);
-
-                prefCounter.stop();
-
-                if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
-                {
-                    LOGGER.info("exiting after max sample count {} reached", count);
-                    break;
-                }
-            }
-
-            prefCounter.logStats();
-
-            sampleAnalyser.close();
-
-            if(fusionAnalyser != null)
-                fusionAnalyser.close();
-
-            if(driverGeneAnnotator != null)
-                driverGeneAnnotator.close();
-
-            LOGGER.info("SV analysis complete");
+            driverGeneAnnotator.setLohData(cnDataLoader.getSampleLohData());
+            driverGeneAnnotator.setChrCopyNumberMap(cnDataLoader.getChrCopyNumberMap());
         }
 
-        LOGGER.info("run complete");
+        PerformanceCounter prefCounter = new PerformanceCounter("SVA Total");
+
+        int count = 0;
+        for (final String sampleId : samplesList)
+        {
+            ++count;
+
+            prefCounter.start();
+
+            List<StructuralVariantData> svRecords = sampleDataFromFile ?
+                    loadSampleSvData(svaConfig.SvDataPath, sampleId) : dbAccess.readStructuralVariantData(sampleId);
+
+            List<SvVarData> svVarData = createSvData(svRecords);
+
+            if(svVarData.isEmpty())
+            {
+                LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sampleId, count);
+                continue;
+            }
+
+            LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count);
+
+            cnDataLoader.loadSampleData(sampleId, svRecords);
+
+            sampleAnalyser.setSampleSVs(sampleId, svVarData);
+
+            sampleAnalyser.analyse();
+
+            if(!sampleAnalyser.inValidState())
+            {
+                LOGGER.info("exiting after sample({}), in invalid state", sampleId);
+                break;
+            }
+
+            if(ensemblDataCache != null)
+            {
+                // when matching RNA, allow all transcripts regardless of their viability for fusions
+                boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
+                setSvGeneData(svVarData, ensemblDataCache, checkFusions, selectiveGeneLoading, !keepInvalidTranscripts);
+
+                sampleAnalyser.annotateWithGeneData(ensemblDataCache);
+            }
+
+            if(checkDrivers)
+            {
+                driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+            }
+
+            if(checkFusions)
+            {
+                fusionAnalyser.run(sampleId, svVarData, dbAccess,
+                        sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+            }
+
+            sampleAnalyser.writeOutput(dbAccess);
+
+            prefCounter.stop();
+
+            if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
+            {
+                LOGGER.info("exiting after max sample count {} reached", count);
+                break;
+            }
+        }
+
+        prefCounter.logStats();
+
+        sampleAnalyser.close();
+
+        if(fusionAnalyser != null)
+            fusionAnalyser.close();
+
+        if(driverGeneAnnotator != null)
+            driverGeneAnnotator.close();
+
+        LOGGER.info("SV analysis complete");
     }
 
     private static List<StructuralVariantData> loadSampleSvData(final String samplePath, final String sampleId)
@@ -314,23 +261,15 @@ public class SvAnalyser {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(RUN_SVA, false, "Whether to run clustering logic");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
-        options.addOption(STATS_ROUTINES, false, "Optional: calc stats routines");
-        options.addOption(SIM_ROUTINES, false, "Optional: simulation routines");
-        options.addOption(MULT_BIOPSY_ANALYSIS, false, "Optional: run multiple biopsy analysis");
 
         // allow sub-components to add their specific config
-        SvSimulator.addCmdLineArgs(options);
         SvaConfig.addCmdLineArgs(options);
-        CNAnalyser.addCmdLineArgs(options);
         SvFusionAnalyser.addCmdLineArgs(options);
-        StatisticRoutines.addCmdLineArgs(options);
         DriverGeneAnnotator.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
-        MultipleBiopsyAnalyser.addCmdLineArgs(options);
 
         return options;
     }

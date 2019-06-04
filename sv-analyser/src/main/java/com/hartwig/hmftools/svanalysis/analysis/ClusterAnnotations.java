@@ -10,10 +10,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_AFTER;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_CN_BEFORE;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_AFTER;
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -22,6 +18,10 @@ import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.svanalysis.cn.CnDataLoader.CN_SEG_DATA_CN_AFTER;
+import static com.hartwig.hmftools.svanalysis.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
+import static com.hartwig.hmftools.svanalysis.cn.CnDataLoader.CN_SEG_DATA_MAP_AFTER;
+import static com.hartwig.hmftools.svanalysis.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.svanalysis.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.getRepeatedSvSequence;
@@ -47,10 +47,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
 import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvArmGroup;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.cn.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
@@ -694,7 +695,7 @@ public class ClusterAnnotations
     }
 
     public static void findIncompleteFoldbackCandidates(final String sampleId, final SvCluster cluster,
-            final Map<String, List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser)
+            final Map<String, List<SvBreakend>> chrBreakendMap, final CnDataLoader cnAnalyser)
     {
         // for each cluster with incomplete foldbacks, search for candidate clusters which could resolve it
 
@@ -1106,7 +1107,7 @@ public class ClusterAnnotations
     private static int DM_MAX_SV_COUNT = 16;
 
     public static void findPotentialDoubleMinuteClusters(final String sampleId, final Map<String,
-            List<SvBreakend>> chrBreakendMap, final CNAnalyser cnAnalyser, final SvGeneTranscriptCollection geneCollection)
+            List<SvBreakend>> chrBreakendMap, final CnDataLoader cnAnalyser, final SvGeneTranscriptCollection geneCollection)
     {
         /* Identify potential DM clusters if:
             - each of their breakends is X times the major allele ploidy of the near CN segment
@@ -1375,7 +1376,7 @@ public class ClusterAnnotations
     }
 
     private static void reportPotentialDoubleMinuteGroup(final String sampleId, List<SvVarData> dmSVList, boolean isComplete,
-            int overlappedCount, final CNAnalyser cnAnalyser, final SvGeneTranscriptCollection geneCollection)
+            int overlappedCount, final CnDataLoader cnAnalyser, final SvGeneTranscriptCollection geneCollection)
     {
         String clusterInfo = "";
         String svInfo = "";

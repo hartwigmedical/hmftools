@@ -1,19 +1,17 @@
-package com.hartwig.hmftools.svanalysis.types;
+package com.hartwig.hmftools.svanalysis.visual;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.svanalysis.types.VisCopyNumberFile.DELIMITER;
-import static com.hartwig.hmftools.svanalysis.types.VisCopyNumberFile.HEADER_PREFIX;
+import static com.hartwig.hmftools.svanalysis.visual.VisCopyNumberFile.DELIMITER;
+import static com.hartwig.hmftools.svanalysis.visual.VisCopyNumberFile.HEADER_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 

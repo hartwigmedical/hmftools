@@ -70,10 +70,11 @@ import com.hartwig.hmftools.svanalysis.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ViralInsertAnnotator;
-import com.hartwig.hmftools.svanalysis.annotators.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
+import com.hartwig.hmftools.svanalysis.visual.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
-import com.hartwig.hmftools.svanalysis.types.SvCNData;
+import com.hartwig.hmftools.svanalysis.cn.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
@@ -104,7 +105,7 @@ public class SvSampleAnalyser {
     private ReplicationOriginAnnotator mReplicationOriginAnnotator;
     private ViralInsertAnnotator mViralInsertAnnotator;
     private SvClusteringMethods mClusteringMethods;
-    private CNAnalyser mCopyNumberAnalyser;
+    private CnDataLoader mCnDataLoader;
 
     private boolean mIsValid;
 
@@ -126,7 +127,7 @@ public class SvSampleAnalyser {
         mAnalyser.setUseAllelePloidies(true);
 
         mAllVariants = Lists.newArrayList();
-        mCopyNumberAnalyser = null;
+        mCnDataLoader = null;
 
         mIsValid = true;
 
@@ -158,12 +159,12 @@ public class SvSampleAnalyser {
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
-    public void setCopyNumberAnalyser(CNAnalyser cnAnalyser)
+    public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
-        mCopyNumberAnalyser = cnAnalyser;
-        mAnalyser.setCopyNumberAnalyser(cnAnalyser);
-        mClusteringMethods.setSampleLohData(mCopyNumberAnalyser.getSampleLohData());
-        mClusteringMethods.setChrCopyNumberMap(mCopyNumberAnalyser.getChrCopyNumberMap());
+        mCnDataLoader = cnAnalyser;
+        mAnalyser.setCnDataLoader(cnAnalyser);
+        mClusteringMethods.setSampleLohData(mCnDataLoader.getSampleLohData());
+        mClusteringMethods.setChrCopyNumberMap(mCnDataLoader.getChrCopyNumberMap());
     }
 
     public void setGeneCollection(SvGeneTranscriptCollection geneCollection) { mAnalyser.setGeneCollection(geneCollection); }
@@ -175,8 +176,8 @@ public class SvSampleAnalyser {
         // reduce maps with already processed sample data for the larger data sources
         if(!mSampleId.isEmpty())
         {
-            if (mCopyNumberAnalyser.getSampleSvPloidyCalcMap() != null)
-                mCopyNumberAnalyser.getSampleSvPloidyCalcMap().remove(mSampleId); // shrink the data source to make future look-ups faster
+            if (mCnDataLoader.getSampleSvPloidyCalcMap() != null)
+                mCnDataLoader.getSampleSvPloidyCalcMap().remove(mSampleId); // shrink the data source to make future look-ups faster
 
             if (mClusteringMethods.getSampleLohData() != null)
                 mClusteringMethods.getSampleLohData().remove(mSampleId);
@@ -200,9 +201,9 @@ public class SvSampleAnalyser {
         // look-up and cache relevant CN data into each SV
         setSvCopyNumberData(
                 mAllVariants,
-                mCopyNumberAnalyser.getSampleSvPloidyCalcMap().get(mSampleId),
-                mCopyNumberAnalyser.getSvIdCnDataMap(),
-                mCopyNumberAnalyser.getChrCnDataMap());
+                mCnDataLoader.getSampleSvPloidyCalcMap().get(mSampleId),
+                mCnDataLoader.getSvIdCnDataMap(),
+                mCnDataLoader.getChrCnDataMap());
 
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
@@ -303,7 +304,7 @@ public class SvSampleAnalyser {
         generateClusterOutput(clusterData);
         generateLinksOutput(linksData);
 
-        mVisWriter.writeOutput(mAnalyser.getClusters(), mAllVariants, mCopyNumberAnalyser.getChrCnDataMap());
+        mVisWriter.writeOutput(mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
 
         if(mConfig.isSingleSample())
         {

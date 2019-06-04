@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.svanalysis.types;
+package com.hartwig.hmftools.svanalysis.visual;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.svanalysis.types.VisCopyNumberFile.DELIMITER;
-import static com.hartwig.hmftools.svanalysis.types.VisCopyNumberFile.HEADER_PREFIX;
+import static com.hartwig.hmftools.svanalysis.visual.VisCopyNumberFile.DELIMITER;
+import static com.hartwig.hmftools.svanalysis.visual.VisCopyNumberFile.HEADER_PREFIX;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.svanalysis.types;
 
-import static com.hartwig.hmftools.svanalysis.analysis.CNAnalyser.MIN_LOH_CN;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
+
+import com.hartwig.hmftools.svanalysis.cn.SvCNData;
 
 public class SvBreakend {
 
