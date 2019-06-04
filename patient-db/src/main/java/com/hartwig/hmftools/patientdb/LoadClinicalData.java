@@ -47,6 +47,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class LoadClinicalData {
@@ -124,8 +125,8 @@ public final class LoadClinicalData {
         for (String patientIdentifier : sequencedPatientIdentifiers) {
             boolean filteredSequencedSamples = samplesPerPatientAll.keySet().contains(patientIdentifier);
             if (filteredSequencedSamples) {
-                Set<String> sampleIds = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
-                samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(patientIdentifier));
+                String sampleId = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
+                samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(sampleId));
                 LOGGER.info(samplesPerPatientSequenced);
             }
         }
@@ -324,15 +325,15 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Set<String> extractTumorSampleIdsForPatient(@NotNull final String patientIdentifier,
+    private static String extractTumorSampleIdsForPatient(@NotNull final String patientIdentifier,
             @NotNull final List<RunContext> runContexts) {
-        final Set<String> sampleIdsForPatient = Sets.newHashSet();
-        runContexts.forEach(runContext -> {
+        String sampleIdsForPatient = Strings.EMPTY;
+        for (RunContext runContext: runContexts) {
             final String sampleId = runContext.tumorSample();
             if (sampleId.startsWith(patientIdentifier)) {
-                sampleIdsForPatient.add(sampleId);
+                sampleIdsForPatient = sampleId;
             }
-        });
+        }
         return sampleIdsForPatient;
     }
 
