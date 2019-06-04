@@ -47,6 +47,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class LoadClinicalData {
@@ -82,17 +83,16 @@ public final class LoadClinicalData {
 
             final Lims lims = buildLims(cmd);
 
-            final Map<String, List<SampleData>> samplesPerPatientSequenced = loadSamplesPerPatientSequenced(cmd, lims);
             final Map<String, List<SampleData>> samplesPerPatientAll = loadSamplesPerPatientAll(lims);
-
+            final Map<String, List<SampleData>> samplesPerPatientFilteredToOnlySequenced = filterPatients(cmd, samplesPerPatientAll);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
-                writeRawEcrf(dbWriter, samplesPerPatientSequenced.keySet(), ecrfModels);
+                writeRawEcrf(dbWriter, samplesPerPatientFilteredToOnlySequenced.keySet(), ecrfModels);
             }
 
             writeClinicalData(dbWriter,
-                    samplesPerPatientSequenced,
+                    samplesPerPatientFilteredToOnlySequenced,
                     samplesPerPatientAll,
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
@@ -102,6 +102,35 @@ public final class LoadClinicalData {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
         }
+    }
+
+    @NotNull
+    private static Map<String, List<SampleData>> filterPatients(@NotNull CommandLine cmd,
+            @NotNull Map<String, List<SampleData>> samplesPerPatientAll) throws IOException {
+        List<RunContext> contextsRunExtracted = loadRunContexts(cmd);
+
+        Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(contextsRunExtracted, samplesPerPatientAll);
+        LOGGER.info(String.format("Using sequenced samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
+
+        return samplesPerPatientSequenced;
+    }
+
+    @NotNull
+    private static Map<String, List<SampleData>> extractSamplesFromRunContexts(@NotNull List<RunContext> runContexts,
+            Map<String, List<SampleData>> samplesPerPatientAll) {
+
+        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
+
+        Map<String, List<SampleData>> samplesPerPatientSequenced = Maps.newHashMap();
+        for (String patientIdentifier : sequencedPatientIdentifiers) {
+            boolean filteredSequencedSamples = samplesPerPatientAll.keySet().contains(patientIdentifier);
+            if (filteredSequencedSamples) {
+                String sampleId = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
+                samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(sampleId));
+                LOGGER.info(samplesPerPatientSequenced);
+            }
+        }
+        return samplesPerPatientSequenced;
     }
 
     @NotNull
@@ -269,17 +298,6 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> loadSamplesPerPatientSequenced(@NotNull CommandLine cmd, @NotNull Lims lims)
-            throws IOException {
-        List<RunContext> contextsRunExtracted = loadRunContexts(cmd);
-
-        Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(lims, contextsRunExtracted);
-        LOGGER.info(String.format("Loaded sequenced samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
-
-        return samplesPerPatientSequenced;
-    }
-
-    @NotNull
     private static Map<String, List<SampleData>> loadSamplesPerPatientAll(@NotNull Lims lims) {
         Map<String, List<SampleData>> samplesPerPatientAll = extractSamplesFromLims(lims);
         LOGGER.info(String.format("Loaded all samples for %s patients from LIMS", samplesPerPatientAll.keySet().size()));
@@ -295,7 +313,8 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatientAll = Maps.newHashMap();
         for (String sampleId : allSampleIDs) {
             LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
-            if (sampleType.equals(LimsSampleType.CORE) || sampleType.equals(LimsSampleType.WIDE)) {
+            if (sampleType.equals(LimsSampleType.CORE) || sampleType.equals(LimsSampleType.WIDE) || sampleType.equals(LimsSampleType.DRUP)
+                    || sampleType.equals(LimsSampleType.CPCT)) {
                 if (sampleId.substring(12).contains("T")) {
                     String patientIdentifier = sampleId.substring(0, 12);
                     samplesPerPatientAll.put(patientIdentifier, sampleReader.read(Sets.newHashSet(sampleId)));
@@ -306,30 +325,15 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> extractSamplesFromRunContexts(@NotNull Lims lims, @NotNull List<RunContext> runContexts) {
-        LimsSampleReader sampleReader = new LimsSampleReader(lims);
-
-        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
-
-        Map<String, List<SampleData>> samplesPerPatientSequenced = Maps.newHashMap();
-        for (String patientIdentifier : sequencedPatientIdentifiers) {
-            Set<String> sampleIds = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
-            samplesPerPatientSequenced.put(patientIdentifier, sampleReader.read(sampleIds));
-        }
-
-        return samplesPerPatientSequenced;
-    }
-
-    @NotNull
-    private static Set<String> extractTumorSampleIdsForPatient(@NotNull final String patientIdentifier,
+    private static String extractTumorSampleIdsForPatient(@NotNull final String patientIdentifier,
             @NotNull final List<RunContext> runContexts) {
-        final Set<String> sampleIdsForPatient = Sets.newHashSet();
-        runContexts.forEach(runContext -> {
+        String sampleIdsForPatient = Strings.EMPTY;
+        for (RunContext runContext: runContexts) {
             final String sampleId = runContext.tumorSample();
             if (sampleId.startsWith(patientIdentifier)) {
-                sampleIdsForPatient.add(sampleId);
+                sampleIdsForPatient = sampleId;
             }
-        });
+        }
         return sampleIdsForPatient;
     }
 

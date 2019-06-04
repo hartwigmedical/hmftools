@@ -103,7 +103,7 @@ public class QCFailChapter implements ReportChapter {
             case SHALLOW_SEQ_LOW_PURITY: {
                 title = "Notification of inadequate tumor sample";
                 reason = "Not enough tumor DNA detected based on molecular estimate.";
-                explanation = "For sequencing we require a minimum of 30% tumor cells.";
+                explanation = "For sequencing we require a minimum of 20% tumor cells.";
                 break;
             }
             case INSUFFICIENT_TISSUE: {
