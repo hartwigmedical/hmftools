@@ -50,6 +50,7 @@ public class Transcript {
     private Map<Integer,Integer> mAlternativePhasing;
 
     private boolean mIsDisruptive;
+    private boolean mReportableDisruption;
 
     private String mProteinFeaturesKept;
     private String mProteinFeaturesLost;
@@ -121,6 +122,8 @@ public class Transcript {
             mIsDisruptive = false;
         else
             mIsDisruptive = true;
+
+        mReportableDisruption = false;
 
         mProteinFeaturesKept = "";
         mProteinFeaturesLost = "";
@@ -247,6 +250,10 @@ public class Transcript {
 
     public boolean isDisruptive() { return mIsDisruptive; }
     public void setIsDisruptive(boolean toggle) { mIsDisruptive = toggle; }
+
+    public boolean reportableDisruption() { return mReportableDisruption; }
+    public void setReportableDisruption(boolean toggle) { mReportableDisruption = toggle; }
+
 
     public long codingStart() { return CodingStart != null ? CodingStart : 0; }
     public long codingEnd() { return CodingEnd != null ? CodingEnd : 0; }

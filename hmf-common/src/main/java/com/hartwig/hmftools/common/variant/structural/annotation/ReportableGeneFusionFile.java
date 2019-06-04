@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ReportableGeneFusionFile
 {
@@ -99,5 +100,24 @@ public class ReportableGeneFusionFile
                 .ploidy(Double.valueOf(values[index++]))
                 .source(values[index++])
                 .build();
+    }
+
+    public static String context(final String regionType, int exon, boolean isEnd)
+    {
+        switch (regionType) {
+            case "Upstream":
+                return "Promoter Region";
+            case "Exonic":
+                return String.format("Exon %d", exon);
+            case "Intronic":
+                return String.format("Intron %d", isEnd ? exon - 1 : exon);
+        }
+
+        return String.format("ERROR: %s", regionType);
+    }
+
+    public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy)
+    {
+        return (upstreamPloidy + downstreamPloidy) * 0.5;
     }
 }

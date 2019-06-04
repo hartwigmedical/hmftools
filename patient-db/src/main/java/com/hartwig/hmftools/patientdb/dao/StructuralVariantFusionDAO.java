@@ -103,16 +103,16 @@ public class StructuralVariantFusionDAO
                     geneAnnotation.StableId,
                     transcript.StableId,
                     transcript.isCanonical(),
-                    isUpstream ? "UPSTREAM" : "DOWNSTREAM",
+                    isUpstream ? "Upstream" : "Downstream",
                     transcript.isDisruptive(),
-                    false,
+                    transcript.reportableDisruption(),
                     transcript.regionType(),
                     transcript.codingType(),
                     transcript.bioType(),
-                    0,
+                    transcript.exactCodingBase(),
                     isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream,
                     isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase,
-                    transcript.getDistanceUpstream(),
+                    isUpstream ? transcript.exonDistanceUp() : transcript.exonDistanceDown(),
                     transcript.ExonMax);
 
             transcriptsList.add(transcript);
@@ -159,7 +159,7 @@ public class StructuralVariantFusionDAO
                     fusion.upstreamTrans().geneName() + "_" + fusion.downstreamTrans().geneName(),
                     fusion.reportable(),
                     fusion.getKnownFusionType(),
-                    0,
+                    fusion.getChainLength(),
                     fusion.getExonsSkipped(true) + fusion.getExonsSkipped(false)));
 
             fusionInserter.execute();
