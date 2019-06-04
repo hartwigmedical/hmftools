@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.vicc;
+package com.hartwig.hmftools.vicc;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

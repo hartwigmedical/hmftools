@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.vicc;
+package com.hartwig.hmftools.vicc;
 
 import static org.junit.Assert.assertNotNull;
 
