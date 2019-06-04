@@ -11,7 +11,7 @@ import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Test;
 
-public class CopyNumberTests
+public class CopyNumberTest
 {
     @Test
     public void testPloidyRecalcs()

@@ -34,7 +34,7 @@ import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class FusionTests
+public class FusionTest
 {
 
     @Test

@@ -25,7 +25,7 @@ import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Test;
 
-public class MiscTests
+public class MiscTest
 {
 
     @Test

@@ -31,7 +31,7 @@ import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class ChainingActualTests
+public class ChainingActualTest
 {
 
     @Test

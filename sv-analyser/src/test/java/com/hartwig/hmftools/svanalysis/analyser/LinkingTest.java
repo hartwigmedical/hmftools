@@ -13,7 +13,7 @@ import com.hartwig.hmftools.svanalysis.types.SvVarData;
 
 import org.junit.Test;
 
-public class LinkingTests
+public class LinkingTest
 {
     @Test
     public void testLinkedPairs()
