@@ -1,17 +1,25 @@
 package com.hartwig.hmftools.vicc;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.vicc.datamodel.Association;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.Phenotype;
+import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccFactory {
@@ -20,41 +28,63 @@ public final class ViccFactory {
     private ViccFactory() {
     }
 
-    public static void extractAllFile(@NotNull String allJsonPath) throws IOException {
-        final String csvFileName = "/Users/liekeschoenmaker/hmf/tmp/all.csv";
-        PrintWriter writer = new PrintWriter(new File(csvFileName));
+    public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {
         JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(allJsonPath));
+        JsonReader reader = new JsonReader(new FileReader(jsonPath));
         reader.setLenient(true);
-        int index = 1;
 
-        while (reader.peek() != JsonToken.END_DOCUMENT && index < 5) {
+        List<ViccEntry> entries = Lists.newArrayList();
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject object = parser.parse(reader).getAsJsonObject();
-            source.readObjectSource(object);
-            genes.readObjectGenes(object);
-            tags.readObjectTags(object);
-            devTags.readObjectDevTags(object);
-            geneIdentifiers.readObjectGeneIdentifiers(object);
-            featuresNames.readObjectFeaturesNames(object);
 
-            sage.readObjectSage(object);
-            StringBuilder stringToCSVPmkb = pmkb.readObjectPmkb(object);
-            StringBuilder stringToCSVBrca = brca.readObjectBRCA(object);
-            StringBuilder stringToCSVCGI = cgi.readObjectCGI(object);
-            StringBuilder stringToCSVOncokb = oncokb.readObjectOncokb(object);
-            StringBuilder stringToCSVJax = jax.readObjectJax(object);
-            StringBuilder stringToCSVJaxTrials = jaxTrials.readObjectJaxTrials(object);
+            LOGGER.info("Found " + object.size() + " elements");
 
-            StringBuilder stringToCSVAssociation = association.readObjectAssociation(object); //TODO check fields for every db
-            StringBuilder stringToCSVFeatures = features.readObjectFeatures(object); //TODO check fields for every db
-            StringBuilder stringToCSVCIVIC = civic.readObjectCIVIC(object); //TODO check fields for every db
-            StringBuilder stringToCSVMolecularMatch = molecularMatch.readObjectMolecularMatch(object); //TODO check fields for every db
-            StringBuilder stringToCSVMolecularMatchTrials =
-                    molecularMatchTrial.readObjectMolecularMatchTrials(object); //TODO check fields for every db
-            index++;
-
+            ImmutableViccEntry.Builder viccEntryBuilder = createPreGeneratedBuilder();
+            viccEntryBuilder.source(object.getAsJsonPrimitive("source").getAsString());
+            entries.add(viccEntryBuilder.build());
         }
         reader.close();
-        writer.close();
+
+        return entries;
+    }
+
+    @NotNull
+    private static ImmutableViccEntry.Builder createPreGeneratedBuilder() {
+        ImmutableViccEntry.Builder viccEntryBuilder = ImmutableViccEntry.builder();
+        viccEntryBuilder.source(Strings.EMPTY);
+        viccEntryBuilder.genes(Lists.newArrayList());
+        viccEntryBuilder.geneIdentifiers(Lists.newArrayList());
+        viccEntryBuilder.featureNames(Lists.newArrayList());
+        viccEntryBuilder.features(Lists.newArrayList());
+        viccEntryBuilder.association(createAssociation());
+        viccEntryBuilder.tags(Lists.newArrayList());
+        viccEntryBuilder.devTags(Lists.newArrayList());
+        return viccEntryBuilder;
+    }
+
+    @NotNull
+    private static Association createAssociation() {
+        return ImmutableAssociation.builder()
+                .variantName(Strings.EMPTY)
+                .evidence(Lists.newArrayList())
+                .evidenceLevel(Strings.EMPTY)
+                .evidenceLabel(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+                .drugLabels(Strings.EMPTY)
+                .sourceLink(Strings.EMPTY)
+                .publicationUrls(Lists.newArrayList())
+                .phenotype(createPhenotype())
+                .description(Strings.EMPTY)
+                .environmentalContexts(Lists.newArrayList())
+                .build();
+    }
+
+    private static Phenotype createPhenotype() {
+        return ImmutablePhenotype.builder()
+                .type(ImmutablePhenotypeType.builder().source(Strings.EMPTY).term(Strings.EMPTY).id(Strings.EMPTY).build())
+                .description(Strings.EMPTY)
+                .family(Strings.EMPTY)
+                .id(Strings.EMPTY)
+                .build();
     }
 }

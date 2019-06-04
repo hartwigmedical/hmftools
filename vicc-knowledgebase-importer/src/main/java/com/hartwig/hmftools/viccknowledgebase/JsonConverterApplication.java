@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.viccknowledgebase;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-
-import com.hartwig.hmftools.vicc.ViccFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,7 +29,7 @@ public class JsonConverterApplication {
     private static final String SAGE_JSON_FILE = "sageFile";
     private static final String PATH_KNOWLEDGEBASE_FILES = "knowledgebase";
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(final String... args) throws ParseException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         if (!validInputForBaseReportData(cmd)) {
@@ -41,14 +38,7 @@ public class JsonConverterApplication {
 
         LOGGER.info("Running json converter to csv");
 
-        String knowledgebasePath = cmd.getOptionValue(PATH_KNOWLEDGEBASE_FILES);
-
-        readingAllJsonFile(cmd.getOptionValue(ALL_JSON_FILE), knowledgebasePath);
-    }
-
-    private static void readingAllJsonFile(@NotNull String allJsonFile, @NotNull String knowledgebasePath) throws IOException {
-        String allJsonFilePath = knowledgebasePath + File.separator + allJsonFile;
-        ViccFactory.extractAllFile(allJsonFilePath);
+        cmd.getOptionValue(PATH_KNOWLEDGEBASE_FILES);
     }
 
     @NotNull
