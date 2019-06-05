@@ -13,8 +13,8 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportableDisruptionFile
-{
+public final class ReportableDisruptionFile {
+
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "#";
@@ -22,25 +22,21 @@ public class ReportableDisruptionFile
     public static final String FILE_EXTENSION = ".linx.disruptions.csv";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
-    {
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
     @NotNull
-    public static List<ReportableDisruption> read(final String filePath) throws IOException
-    {
+    public static List<ReportableDisruption> read(final String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<ReportableDisruption> disruptions) throws IOException
-    {
+    public static void write(@NotNull final String filename, @NotNull List<ReportableDisruption> disruptions) throws IOException {
         Files.write(new File(filename).toPath(), toLines(disruptions));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<ReportableDisruption> disruptions)
-    {
+    private static List<String> toLines(@NotNull final List<ReportableDisruption> disruptions) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         disruptions.stream().map(ReportableDisruptionFile::toString).forEach(lines::add);
@@ -48,15 +44,13 @@ public class ReportableDisruptionFile
     }
 
     @NotNull
-    static List<ReportableDisruption> fromLines(@NotNull List<String> lines)
-    {
+    private static List<ReportableDisruption> fromLines(@NotNull List<String> lines) {
         return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(ReportableDisruptionFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
-                .add("svId")
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("svId")
                 .add("chromosome")
                 .add("orientation")
                 .add("strand")
@@ -71,10 +65,8 @@ public class ReportableDisruptionFile
     }
 
     @NotNull
-    private static String toString(@NotNull final ReportableDisruption disruption)
-    {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(disruption.svId()))
+    private static String toString(@NotNull final ReportableDisruption disruption) {
+        return new StringJoiner(DELIMITER).add(String.valueOf(disruption.svId()))
                 .add(String.valueOf(disruption.chromosome()))
                 .add(String.valueOf(disruption.orientation()))
                 .add(String.valueOf(disruption.strand()))
@@ -89,9 +81,8 @@ public class ReportableDisruptionFile
     }
 
     @NotNull
-    private static ReportableDisruption fromString(@NotNull final String clusterData)
-    {
-        String[] values = clusterData.split(DELIMITER);
+    private static ReportableDisruption fromString(@NotNull final String line) {
+        String[] values = line.split(DELIMITER);
 
         int index = 0;
 
@@ -99,7 +90,7 @@ public class ReportableDisruptionFile
                 .svId(Integer.valueOf(values[index++]))
                 .chromosome(values[index++])
                 .orientation(Byte.valueOf(values[index++]))
-                .orientation(Integer.valueOf(values[index++]))
+                .strand(Integer.valueOf(values[index++]))
                 .chrBand(values[index++])
                 .gene(values[index++])
                 .type(values[index++])

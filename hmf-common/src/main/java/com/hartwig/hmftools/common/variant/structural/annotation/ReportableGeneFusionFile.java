@@ -12,10 +12,9 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class ReportableGeneFusionFile
-{
+public final class ReportableGeneFusionFile {
+
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "#";
@@ -23,25 +22,21 @@ public class ReportableGeneFusionFile
     public static final String FILE_EXTENSION = ".linx.fusions.csv";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
-    {
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> read(final String filePath) throws IOException
-    {
+    public static List<ReportableGeneFusion> read(final String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<ReportableGeneFusion> fusions) throws IOException
-    {
+    public static void write(@NotNull final String filename, @NotNull List<ReportableGeneFusion> fusions) throws IOException {
         Files.write(new File(filename).toPath(), toLines(fusions));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<ReportableGeneFusion> fusions)
-    {
+    private static List<String> toLines(@NotNull final List<ReportableGeneFusion> fusions) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         fusions.stream().map(ReportableGeneFusionFile::toString).forEach(lines::add);
@@ -49,15 +44,13 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines)
-    {
+    private static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines) {
         return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(ReportableGeneFusionFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
-                .add("geneStart")
+        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("geneStart")
                 .add("geneContextStart")
                 .add("geneTranscriptStart")
                 .add("geneEnd")
@@ -69,10 +62,8 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    private static String toString(@NotNull final ReportableGeneFusion fusion)
-    {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(fusion.geneStart()))
+    private static String toString(@NotNull final ReportableGeneFusion fusion) {
+        return new StringJoiner(DELIMITER).add(String.valueOf(fusion.geneStart()))
                 .add(String.valueOf(fusion.geneContextStart()))
                 .add(String.valueOf(fusion.geneTranscriptStart()))
                 .add(String.valueOf(fusion.geneEnd()))
@@ -84,8 +75,7 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    private static ReportableGeneFusion fromString(@NotNull final String clusterData)
-    {
+    private static ReportableGeneFusion fromString(@NotNull final String clusterData) {
         String[] values = clusterData.split(DELIMITER);
 
         int index = 0;
@@ -102,8 +92,7 @@ public class ReportableGeneFusionFile
                 .build();
     }
 
-    public static String context(final String regionType, int exon, boolean isEnd)
-    {
+    public static String context(final String regionType, int exon, boolean isEnd) {
         switch (regionType) {
             case "Upstream":
                 return "Promoter Region";
@@ -116,8 +105,7 @@ public class ReportableGeneFusionFile
         return String.format("ERROR: %s", regionType);
     }
 
-    public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy)
-    {
+    public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy) {
         return (upstreamPloidy + downstreamPloidy) * 0.5;
     }
 }

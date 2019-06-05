@@ -5,18 +5,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ReportableDisruption
 {
-    @NotNull
     public abstract int svId();
 
     @NotNull
     public abstract String chromosome();
 
-    @NotNull
     public abstract int orientation();
 
-    @NotNull
     public abstract int strand();
 
     @NotNull
@@ -25,7 +24,6 @@ public abstract class ReportableDisruption
     @NotNull
     public abstract String gene();
 
-    @NotNull
     public abstract boolean canonical();
 
     @NotNull
