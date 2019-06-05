@@ -13,6 +13,7 @@ const val SAMPLE_IDS_FILE = "sample_ids_file"
 const val PATIENT_MAPPING_FILE = "patient_mapping_file"
 const val OUTPUT_FILE = "out"
 const val SAMPLE_MAPPING_OUTPUT_FILE = "mapping_out"
+const val ANONYMIZE_OUT = "anonymize_out"
 
 // Resource locations
 const val CURRENT_IDS_FILE = "/sample_hashes.csv"
