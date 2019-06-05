@@ -1,13 +1,12 @@
-# SV Lynx
+# LINX
 
 A collection of components for analysing and annotating structural variants. 
 
 The key routines are:
 - LINE element annotation
 - clustering and chaining of variants
+- fusion and disruption detection
 - driver-gene annotation
-- fusion detection
-- multiple biopsy SV comparison 
 
 Data is loaded from the HMF patients data and other reference files, and each analysis routine writes out applicable annotation results.
 
@@ -27,6 +26,8 @@ Data is loaded from the HMF patients data and other reference files, and each an
 Required DB tables:
 * copyNumber
 * structuralVariant
+* svLinxData, cluster and svLinks
+* structuralVariantBreakend and structuralVariantFusion
 * purity - can be empty but needs to exist (but see note about QC below)
 * geneCopyNumber - can be empty but needs to exist 
 * driverCatalog - can be empty but needs to exist
@@ -38,19 +39,14 @@ All values are optional unless otherwise specified.
 Argument  | Description
 ---|---
 sample  | Either a specific sample, list of samples separated by ';' or blank or '*' to process all samples passing QC from the database
-data_output_path | Required, directory where all output files are written
+output_dir | Required, directory where all output files are written
 database connectivity | db_user, db_pass and db_url
 
 #### Modes and Routines
 Argument  | Description
 ---|---
-run_sv_analysis | default
 check_drivers | run driver annotation logic
 check_fusions | discover and annotate gene fusions
-stats_routines | run statistical co-occurence routines
-mult_biopsy_analysis | load and analyse multiple biopsy samples for shared vs private overlaps
-sim_routines | run simulations of shattering
-incl_none_segments | deprecated, create SVs for NONE copy number segments, but now drawn directly from SV table as Inferred SGLs
 
 #### Reference files
 Argument  | Description
@@ -58,22 +54,17 @@ Argument  | Description
 fragile_site_file | list of known fragile sites
 line_element_file | list of known LINE elements
 replication_origins_file | replication timing input
+viral_hosts_file | list of known viral hosts
 gene_transcripts_dir | directory for Ensembl reference files
+sv_data_dir | directory for SV flat-file when not using database
+purple_dir | directory for purple and purity data files when not using database
 
 #### Clustering
 Argument  | Description
 ---|---
 proximity_distance | (default = 5000), minimum distance to cluster SVs 
-max_cluster_size | threshold for # SVs in clusters to skip chaining routine
+chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 2000)
 annotations | list of additional annotations on clusters, links and SVs separated by ';', use 'ALL', (default is none)
-
-#### Copy Number Analysis
-Argument  | Description
----|---
-run_cn_analysis | required to run the following routines
-sv_ploidy_file | load calculated ploidy per SV from file
-loh_file | load LOH event data from file
-write_ploidy_data | calculate and write calcualated ploidy data to file, with optional config 'verbose_ploidy_data' to show intermediary calc values
 
 #### Driver Gene Annotation
 Argument  | Description
@@ -92,11 +83,6 @@ no_fusion_phase_match | find fusions without requiring a up & down stream phase 
 log_reportable_fusion | only log reportabl fusions
 fusion_pairs_csv, promiscuous_five_csv, promiscuous_three_csv | reference files for known fusions andand promiscuous genes
 
-#### Multiple Biopsy Analysis
-Argument  | Description
----|---
-patient_ids_file | linking SampleIds by PatientId
-sva_svs_file | SVs data (from SV Lynx output) for each SampleId specified in the patient_ids_file
 
 #### Logging
 Argument  | Description
@@ -325,8 +311,26 @@ If this exceeds the telomeric / centromeric major allele ploidy then search for 
 ## Driver Gene Analysis
 
 
+## Other SV Analysis routines
 
+Linx has routines for other SV-related analyses:
+* statistical co-occurence routines, eg gene to bucket
+* analyse multiple biopsy samples for shared vs private overlaps
+* run simulations of shattering
 
+#### Copy Number Analysis
+Argument  | Description
+---|---
+run_cn_analysis | required to run the following routines
+sv_ploidy_file | load calculated ploidy per SV from file
+loh_file | load LOH event data from file
+write_ploidy_data | calculate and write calcualated ploidy data to file, with optional config 'verbose_ploidy_data' to show intermediary calc values
+
+#### Multiple Biopsy Analysis
+Argument  | Description
+---|---
+patient_ids_file | linking SampleIds by PatientId
+sva_svs_file | SVs data (from SV Lynx output) for each SampleId specified in the patient_ids_file
 
 
 ## Version History

@@ -15,8 +15,8 @@ public class GeneFusion
     private int mExonsSkippedDown;
     private String mKnownFusionType;
 
-    private String mAnnotations;
-    private long mChainLength;
+    // private String mAnnotations;
+    private FusionAnnotations mAnnotations;
 
     public static String REPORTABLE_TYPE_NONE = "";
     public static String REPORTABLE_TYPE_KNOWN = "Known";
@@ -35,7 +35,7 @@ public class GeneFusion
         mViable = viable;
         mExonsSkippedUp = 0;
         mExonsSkippedDown = 0;
-        mChainLength = 0;
+        mAnnotations = null;
     }
 
     public Transcript upstreamTrans() { return mUpstreamTrans; }
@@ -65,11 +65,19 @@ public class GeneFusion
         return mUpstreamTrans.isExonic() &&mDownstreamTrans.isExonic();
     }
 
-    public final String getAnnotations() { return mAnnotations; }
-    public void setAnnotations(final String annotations) { mAnnotations = annotations; }
+    public final FusionAnnotations getAnnotations() { return mAnnotations; }
+    public void setAnnotations(final FusionAnnotations annotations) { mAnnotations = annotations; }
 
-    public long getChainLength() { return mChainLength; }
-    public void setChainLength(final long chainLength) { mChainLength = chainLength; }
+    public boolean isTerminated()
+    {
+        if(mAnnotations == null || mAnnotations.disruptionDown() == null || mAnnotations.disruptionUp() == null)
+            return false;
 
+        return mAnnotations.disruptionUp().transcriptTerminated() || mAnnotations.disruptionDown().transcriptTerminated();
+    }
+
+    // convenience functions
+    public long getChainLength() { return mAnnotations != null && mAnnotations.chainInfo() != null ?
+            mAnnotations.chainInfo().chainLength() : 0; }
 
 }

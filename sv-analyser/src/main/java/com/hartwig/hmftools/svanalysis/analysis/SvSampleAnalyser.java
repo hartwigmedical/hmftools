@@ -403,9 +403,8 @@ public class SvSampleAnalyser {
                             pseudoGene = gene1;
                             transcriptId = exonData[PSEUDO_GENE_DATA_TRANS_ID];
 
-                            String exonMatchData = String.format("%s;%s;%s;%s",
-                                    transcriptId, exonData[PSEUDO_GENE_DATA_EXON_RANK],
-                                    exonData[PSEUDO_GENE_DATA_EXON_MAX], exonData[PSEUDO_GENE_DATA_EXON_LENGTH]);
+                            String exonMatchData = String.format("%s:%s;%s",
+                                    gene1.GeneName, transcriptId, exonData[PSEUDO_GENE_DATA_EXON_RANK]);
 
 
                             pair.setExonMatchData(exonMatchData);
@@ -843,16 +842,19 @@ public class SvSampleAnalyser {
 
                         if(linksData != null)
                         {
+                            final String linkArm = beStart.arm() == beEnd.arm() ? beStart.arm() : beStart.arm() + "_" + beEnd.arm();
+
                             linksData.add(ImmutableLinxLink.builder()
                                     .clusterId(cluster.id())
                                     .chainId(chain.id())
                                     .chainCount(chainSvCount)
                                     .chainIndex(chainIndex)
-                                    .lowerBreakendId(beStart.getOrigSV().dbId())
-                                    .upperBreakendId(beEnd.getOrigSV().dbId())
+                                    .lowerSvId(beStart.getOrigSV().dbId())
+                                    .upperSvId(beEnd.getOrigSV().dbId())
                                     .lowerBreakendIsStart(beStart.usesStart())
                                     .upperBreakendIsStart(beEnd.usesStart())
-                                    .arm(beStart.arm())
+                                    .chromosome(beStart.chromosome())
+                                    .arm(linkArm)
                                     .assembled(pair.isAssembled())
                                     .traversedSVCount(pair.getTraversedSVCount())
                                     .length(pair.length())

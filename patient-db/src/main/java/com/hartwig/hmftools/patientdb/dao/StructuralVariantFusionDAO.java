@@ -2,8 +2,8 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTBREAKEND;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTFUSION;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVBREAKEND;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -21,11 +21,13 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableSimple
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Structuralvariantbreakend;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
@@ -47,45 +49,44 @@ public class StructuralVariantFusionDAO
 
     public void deleteAnnotationsForSample(@NotNull String sampleId)
     {
-        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sampleId)).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sampleId)).execute();
+        context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
+        context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
     }
 
-    private InsertValuesStep19 createBreakendInserter()
+    private InsertValuesStep18 createBreakendInserter()
     {
-        return context.insertInto(STRUCTURALVARIANTBREAKEND,
-            STRUCTURALVARIANTBREAKEND.MODIFIED,
-            STRUCTURALVARIANTBREAKEND.SAMPLEID,
-            STRUCTURALVARIANTBREAKEND.STRUCTURALVARIANTID,
-            STRUCTURALVARIANTBREAKEND.STARTBREAKEND,
-            STRUCTURALVARIANTBREAKEND.GENE,
-            STRUCTURALVARIANTBREAKEND.GENEID,
-            STRUCTURALVARIANTBREAKEND.TRANSCRIPTID,
-            STRUCTURALVARIANTBREAKEND.CANONICALTRANSCRIPT,
-            STRUCTURALVARIANTBREAKEND.GENEORIENTATION,
-            STRUCTURALVARIANTBREAKEND.DISRUPTIVE,
-            STRUCTURALVARIANTBREAKEND.REPORTEDDISRUPTION,
-            STRUCTURALVARIANTBREAKEND.REGIONTYPE,
-            STRUCTURALVARIANTBREAKEND.CODINGCONTEXT,
-            STRUCTURALVARIANTBREAKEND.BIOTYPE,
-            STRUCTURALVARIANTBREAKEND.EXACTBASEPHASE,
-            STRUCTURALVARIANTBREAKEND.NEXTSPLICEEXONRANK,
-            STRUCTURALVARIANTBREAKEND.NEXTSPLICEEXONPHASE,
-            STRUCTURALVARIANTBREAKEND.NEXTSPLICEDISTANCE,
-            STRUCTURALVARIANTBREAKEND.TOTALEXONCOUNT);
+        return context.insertInto(SVBREAKEND,
+            SVBREAKEND.MODIFIED,
+            SVBREAKEND.SAMPLEID,
+            SVBREAKEND.SVID,
+            SVBREAKEND.STARTBREAKEND,
+            SVBREAKEND.GENE,
+            SVBREAKEND.TRANSCRIPTID,
+            SVBREAKEND.CANONICALTRANSCRIPT,
+            SVBREAKEND.GENEORIENTATION,
+            SVBREAKEND.DISRUPTIVE,
+            SVBREAKEND.REPORTEDDISRUPTION,
+            SVBREAKEND.REGIONTYPE,
+            SVBREAKEND.CODINGCONTEXT,
+            SVBREAKEND.BIOTYPE,
+            SVBREAKEND.EXONICBASEPHASE,
+            SVBREAKEND.NEXTSPLICEEXONRANK,
+            SVBREAKEND.NEXTSPLICEEXONPHASE,
+            SVBREAKEND.NEXTSPLICEDISTANCE,
+            SVBREAKEND.TOTALEXONCOUNT);
     }
 
     public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions)
     {
-        context.delete(STRUCTURALVARIANTFUSION).where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sampleId)).execute();
-        context.delete(STRUCTURALVARIANTBREAKEND).where(STRUCTURALVARIANTBREAKEND.SAMPLEID.eq(sampleId)).execute();
+        context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
+        context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
 
         final Timestamp timestamp = new Timestamp(new Date().getTime());
 
         // a map of breakend DB Ids to transcripts for the fusion DB record foreign key to the breakend table
         final Map<Transcript, Integer> transcriptToDatabaseIdMap = Maps.newHashMap();
 
-        InsertValuesStep19 inserter = createBreakendInserter();
+        InsertValuesStep18 inserter = createBreakendInserter();
         List<Transcript> transcriptsList = Lists.newArrayList();
 
         for (int i = 0; i < transcripts.size(); ++i)
@@ -99,7 +100,6 @@ public class StructuralVariantFusionDAO
                     transcript.parent().id(),
                     geneAnnotation.isStart(),
                     geneAnnotation.GeneName,
-                    geneAnnotation.StableId,
                     transcript.StableId,
                     transcript.isCanonical(),
                     isUpstream ? "Upstream" : "Downstream",
@@ -119,7 +119,7 @@ public class StructuralVariantFusionDAO
             // batch-insert transcripts since there can be many more than the batch size per sample
             if(transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1)
             {
-                final List<UInteger> ids = inserter.returning(STRUCTURALVARIANTBREAKEND.ID).fetch().getValues(0, UInteger.class);
+                final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
                 if (ids.size() != transcriptsList.size())
                 {
@@ -140,16 +140,16 @@ public class StructuralVariantFusionDAO
 
         for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
-            final InsertValuesStep9 fusionInserter = context.insertInto(STRUCTURALVARIANTFUSION,
-                    STRUCTURALVARIANTFUSION.MODIFIED,
-                    STRUCTURALVARIANTFUSION.SAMPLEID,
-                    STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID,
-                    STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID,
-                    STRUCTURALVARIANTFUSION.NAME,
-                    STRUCTURALVARIANTFUSION.REPORTED,
-                    STRUCTURALVARIANTFUSION.REPORTEDTYPE,
-                    STRUCTURALVARIANTFUSION.CHAINLENGTH,
-                    STRUCTURALVARIANTFUSION.SKIPPEDEXONS);
+            final InsertValuesStep9 fusionInserter = context.insertInto(SVFUSION,
+                    SVFUSION.MODIFIED,
+                    SVFUSION.SAMPLEID,
+                    SVFUSION.FIVEPRIMEBREAKENDID,
+                    SVFUSION.THREEPRIMEBREAKENDID,
+                    SVFUSION.NAME,
+                    SVFUSION.REPORTED,
+                    SVFUSION.REPORTEDTYPE,
+                    SVFUSION.CHAINLENGTH,
+                    SVFUSION.SKIPPEDEXONS);
 
             batch.forEach(fusion -> fusionInserter.values(timestamp,
                     sampleId,
@@ -170,15 +170,15 @@ public class StructuralVariantFusionDAO
     {
         Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
 
-        Structuralvariantbreakend five = STRUCTURALVARIANTBREAKEND.as("five");
-        Structuralvariantbreakend three = STRUCTURALVARIANTBREAKEND.as("three");
+        Svbreakend five = SVBREAKEND.as("five");
+        Svbreakend three = SVBREAKEND.as("three");
         final Result<Record2<String, String>> resultFiveGene = context.select(five.GENE, three.GENE)
-                .from(STRUCTURALVARIANTFUSION)
+                .from(SVFUSION)
                 .innerJoin(five)
-                .on(five.ID.eq(STRUCTURALVARIANTFUSION.FIVEPRIMEBREAKENDID))
+                .on(five.ID.eq(SVFUSION.FIVEPRIMEBREAKENDID))
                 .innerJoin(three)
-                .on(three.ID.eq(STRUCTURALVARIANTFUSION.THREEPRIMEBREAKENDID))
-                .where(STRUCTURALVARIANTFUSION.SAMPLEID.eq(sample))
+                .on(three.ID.eq(SVFUSION.THREEPRIMEBREAKENDID))
+                .where(SVFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
         for (Record record : resultFiveGene) {

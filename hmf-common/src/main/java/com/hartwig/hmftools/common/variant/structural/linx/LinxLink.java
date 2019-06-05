@@ -9,10 +9,11 @@ public abstract class LinxLink
     public abstract int chainId();
     public abstract int chainIndex();
     public abstract int chainCount();
-    public abstract int lowerBreakendId();
-    public abstract int upperBreakendId();
+    public abstract int lowerSvId();
+    public abstract int upperSvId();
     public abstract boolean lowerBreakendIsStart();
     public abstract boolean upperBreakendIsStart();
+    public abstract String chromosome();
     public abstract String arm();
     public abstract boolean assembled();
     public abstract int traversedSVCount();

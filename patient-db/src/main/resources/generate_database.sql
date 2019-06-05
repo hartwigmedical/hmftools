@@ -527,8 +527,8 @@ CREATE TABLE structuralVariant
 );
 
 
-DROP TABLE IF EXISTS svLinxData;
-CREATE TABLE svLinxData
+DROP TABLE IF EXISTS svAnnotation;
+CREATE TABLE svAnnotation
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
@@ -558,8 +558,8 @@ CREATE TABLE svLinxData
     INDEX(svId)
 );
 
-DROP TABLE IF EXISTS cluster;
-CREATE TABLE cluster
+DROP TABLE IF EXISTS svCluster;
+CREATE TABLE svCluster
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
@@ -584,11 +584,12 @@ CREATE TABLE svLink
     chainId INT NOT NULL,
     chainIndex INT NOT NULL,
     chainLinkCount INT NOT NULL,
-    lowerBreakendId INT NOT NULL,
-    upperBreakendId INT NOT NULL,
+    lowerSvId INT NOT NULL,
+    upperSvId INT NOT NULL,
     lowerBreakendIsStart BOOLEAN NOT NULL,
     upperBreakendIsStart BOOLEAN NOT NULL,
-    arm VARCHAR(2),
+    chromosome VARCHAR(3),
+    arm VARCHAR(3),
     assembled BOOLEAN NOT NULL,
     traversedSVCount INT,
     linkLength INT,
@@ -600,15 +601,14 @@ CREATE TABLE svLink
 );
 
 
-DROP TABLE IF EXISTS structuralVariantBreakend;
-CREATE TABLE structuralVariantBreakend
+DROP TABLE IF EXISTS svBreakend;
+CREATE TABLE svBreakend
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    structuralVariantId INT NOT NULL,
+    svId INT NOT NULL,
     startBreakend BOOLEAN NOT NULL,
-    gene VARCHAR(512) NOT NULL, # length here comes from ensembl db schema
-    geneId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
+    gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
     transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
     canonicalTranscript BOOLEAN NOT NULL,
     geneOrientation VARCHAR(20) NOT NULL,
@@ -617,16 +617,15 @@ CREATE TABLE structuralVariantBreakend
     regionType VARCHAR(20) NOT NULL,
     codingContext VARCHAR(20),
     biotype VARCHAR(255),
-    exactBasePhase TINYINT,
+    exonicBasePhase TINYINT,
     nextSpliceExonRank TINYINT UNSIGNED,
     nextSpliceExonPhase TINYINT,
     nextSpliceDistance INT,
     totalExonCount SMALLINT NOT NULL,
     PRIMARY KEY (id),
-    INDEX(structuralVariantId),
+    INDEX(svId),
     INDEX(sampleId),
     INDEX(gene),
-    INDEX(geneId),
     INDEX(transcriptId)
 );
 
@@ -642,8 +641,8 @@ CREATE TABLE structuralVariantDisruption
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS structuralVariantFusion;
-CREATE TABLE structuralVariantFusion
+DROP TABLE IF EXISTS svFusion;
+CREATE TABLE svFusion
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,

@@ -44,7 +44,7 @@ public class SvGeneTranscriptCollection
 
     private BufferedWriter mBreakendWriter;
 
-    // to get a wider range of candidate genes and filter by promotor distance later on
+    // the distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);

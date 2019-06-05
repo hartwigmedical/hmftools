@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
+import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
@@ -546,7 +547,8 @@ public class SvFusionAnalyser
     public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
     public static String TRANSCRIPT_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
 
-    private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
+    private static int MAX_UPSTREAM_DISTANCE_KNOWN = 500000;
+    private static int MAX_UPSTREAM_DISTANCE_PROMISCUOUS = 50000;
     private static int MAX_UPSTREAM_DISTANCE_UNKNOWN = 10000;
 
     public static boolean couldBeReportable(GeneFusion fusion)
@@ -559,7 +561,14 @@ public class SvFusionAnalyser
             return false;
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN ? MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_UNKNOWN;
+        int maxUpstreamDistance;
+
+        if(fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN)
+            maxUpstreamDistance = MAX_UPSTREAM_DISTANCE_KNOWN;
+        else if(fusion.getKnownFusionType() != REPORTABLE_TYPE_NONE)
+            maxUpstreamDistance = MAX_UPSTREAM_DISTANCE_PROMISCUOUS;
+        else
+            maxUpstreamDistance = MAX_UPSTREAM_DISTANCE_UNKNOWN;
 
         final Transcript upTrans = fusion.upstreamTrans();
         final Transcript downTrans = fusion.downstreamTrans();
@@ -739,11 +748,9 @@ public class SvFusionAnalyser
         String fusionFileName = hasMultipleSamples ? "FUSIONS.csv" : sampleId + "_fusions.csv";
 
         initialiseOutputFile(fusionFileName, "");
-        String noClusterInfo = ",,";
 
         for (final GeneFusion fusion : fusions)
         {
-            fusion.setAnnotations(noClusterInfo);
             writeFusionData(fusion, sampleId);
         }
     }
@@ -763,8 +770,54 @@ public class SvFusionAnalyser
             final GeneAnnotation startVar = upTrans.parent();
             final GeneAnnotation endVar = downTrans.parent();
 
+            final FusionAnnotations annotations = fusion.getAnnotations();
+            String annotationsStr = ",,";
+
+            if(annotations != null)
+            {
+                // PhaseMatched,ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
+                annotationsStr = String.format("%s,%d,%d,%s",
+                        fusion.phaseMatched(), annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType());
+
+                if(annotations.disruptionUp() != null)
+                {
+                    annotationsStr += String.format(",%d;%s;%d;%d;%d;%s",
+                            annotations.disruptionUp().facingBreakends(), annotations.disruptionUp().allLinksAssembled(),
+                            annotations.disruptionUp().totalBreakends(), annotations.disruptionUp().minDistance(),
+                            annotations.disruptionUp().disruptedExons(), annotations.disruptionUp().transcriptTerminated());
+                }
+                else
+                {
+                    annotationsStr += ",";
+
+                }
+
+                if(annotations.disruptionDown() != null)
+                {
+                    annotationsStr += String.format(",%d;%s;%d;%d;%d;%s",
+                            annotations.disruptionDown().facingBreakends(), annotations.disruptionDown().allLinksAssembled(),
+                            annotations.disruptionDown().totalBreakends(), annotations.disruptionDown().minDistance(),
+                            annotations.disruptionDown().disruptedExons(), annotations.disruptionDown().transcriptTerminated());
+                }
+                else
+                {
+                    annotationsStr += ",";
+                }
+
+                if(annotations.chainInfo() != null)
+                {
+                    annotationsStr += String.format(",%d;%d;%d;%s;%s",
+                            annotations.chainInfo().chainId(), annotations.chainInfo().chainLinks(), annotations.chainInfo().chainLength(),
+                            annotations.chainInfo().validTraversal(), annotations.chainInfo().traversalAssembled());
+                }
+                else
+                {
+                    annotationsStr += ",";
+                }
+            }
+
             writer.write(String.format("%s,%s,%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), fusion.getAnnotations()));
+                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), annotationsStr));
 
             // write upstream SV, transcript and exon info
             writer.write(

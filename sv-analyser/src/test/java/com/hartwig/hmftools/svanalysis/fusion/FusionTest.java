@@ -6,9 +6,6 @@ import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svan
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.FCI_TRAV_ASSEMBLY;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.FCI_VALID_TRAVERSAL;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.isDisrupted;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
@@ -18,6 +15,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
+import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
@@ -355,30 +354,24 @@ public class FusionTest
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)
     {
-        String[] fields = fusion.getAnnotations().split(",");
-
-        // PhaseMatched,ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
-        if(fields.length != 7)
+        final FusionAnnotations annotations = fusion.getAnnotations();
+        if(annotations == null)
             return false;
 
-        String[] chainInfo = fields[6].split(";");
+        final FusionChainInfo chainInfo = annotations.chainInfo();
 
-        int fieldLength = FCI_TRAV_ASSEMBLY+1;
-        if(chainInfo.length != fieldLength)
+        if(chainInfo == null)
             return false;
 
-        if(validTraversal != (chainInfo[FCI_VALID_TRAVERSAL].equals("true")))
+        if(validTraversal != chainInfo.validTraversal())
             return false;
-
-        String disruptionsUp = fields[4];
-        String disruptionsDown = fields[5];
 
         // test the exons disrupted and terminated fields
-        boolean validUp = !isDisrupted(disruptionsUp);
-        boolean validDown = !isDisrupted(disruptionsDown);
+        boolean validUp = annotations.disruptionUp() != null && !annotations.disruptionUp().transcriptTerminated();
+        boolean validDown = annotations.disruptionDown() != null && !annotations.disruptionDown().transcriptTerminated();
 
         if(validEnds)
-            return validUp && validDown;
+            return !fusion.isTerminated();
         else
             return !validUp || !validDown;
     }

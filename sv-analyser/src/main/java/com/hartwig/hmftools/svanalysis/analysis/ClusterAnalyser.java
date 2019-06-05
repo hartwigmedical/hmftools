@@ -45,6 +45,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
@@ -320,7 +321,7 @@ public class ClusterAnalyser {
             return;
 
         // use the relative copy number change to replicate some SVs within a cluster
-        // isSpecificCluster(cluster);
+        isSpecificCluster(cluster);
 
         // int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
         // int maxReplication = MAX_SV_REPLICATION_MULTIPLE;
@@ -347,7 +348,7 @@ public class ClusterAnalyser {
             totalReplicationCount += svMultiple;
         }
 
-        if(totalReplicationCount > mConfig.ChainingSvLimit)
+        if(mConfig.ChainingSvLimit > 0 && totalReplicationCount > mConfig.ChainingSvLimit)
         {
             LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled",
                     cluster.id(), totalReplicationCount, cluster.getSvCount(), clusterMinPloidy, clusterMaxPloidy);

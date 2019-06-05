@@ -70,7 +70,8 @@ CREATE TABLE svLink
     upperBreakendId INT NOT NULL,
     lowerBreakendIsStart BOOLEAN NOT NULL,
     upperBreakendIsStart BOOLEAN NOT NULL,
-    arm VARCHAR(2),
+    chromosome VARCHAR(3),
+    arm VARCHAR(3),
     assembled BOOLEAN NOT NULL,
     traversedSVCount INT,
     linkLength INT,
@@ -82,9 +83,13 @@ CREATE TABLE svLink
 );
 
 
-ALTER TABLE structuralVariantBreakend
+RENAME TABLE structuralVariantBreakend TO svBreakend;
+
+ALTER TABLE svBreakend
     CHANGE isStartEnd startBreakend BOOLEAN,
     CHANGE isCanonicalTranscript canonicalTranscript BOOLEAN,
+    CHANGE structuralVariantId svId INT,
+    DROP COLUMN geneId,
     DROP COLUMN strand,
     DROP COLUMN exonRankUpstream,
     DROP COLUMN exonRankDownstream,
@@ -96,13 +101,15 @@ ALTER TABLE structuralVariantBreakend
     ADD regionType VARCHAR(20) NOT NULL,
     ADD codingContext VARCHAR(20),
     ADD biotype VARCHAR(255),
-    ADD exactBasePhase TINYINT,
+    ADD exonicBasePhase TINYINT,
     ADD nextSpliceExonRank TINYINT UNSIGNED,
     ADD nextSpliceExonPhase TINYINT,
     ADD nextSpliceDistance INT,
     CHANGE exonMax totalExonCount SMALLINT;
 
-ALTER TABLE structuralVariantFusion
+RENAME TABLE structuralVariantFusion TO svFusion;
+
+ALTER TABLE svFusion
 	ADD name VARCHAR(50) NOT NULL,
     CHANGE isReported reported BOOLEAN,
     ADD reportedType varchar(255) NULL,

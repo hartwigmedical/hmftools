@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
@@ -33,8 +32,14 @@ import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
+import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
+import com.hartwig.hmftools.common.variant.structural.annotation.FusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionAnnotations;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
@@ -343,60 +348,6 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void writeSampleData()
-    {
-        // write sample files for patient reporter
-        List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
-        List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
-        for(final GeneFusion fusion : mFusions)
-        {
-            if(fusion.reportable())
-            {
-                reportedFusions.add(ImmutableReportableGeneFusion.builder()
-                        .geneStart(fusion.upstreamTrans().geneName())
-                        .geneTranscriptStart(fusion.upstreamTrans().StableId)
-                        .geneContextStart(context(fusion.upstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, false))
-                        .geneEnd(fusion.downstreamTrans().geneName())
-                        .geneTranscriptEnd(fusion.downstreamTrans().StableId)
-                        .geneContextEnd(context(fusion.downstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, true))
-                        .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
-                        .source(fusion.primarySource()).build());
-            }
-        }
-
-        for(final Transcript transcript : mDisruptions)
-        {
-            final GeneAnnotation gene = transcript.parent();
-
-            reportedDisruptions.add(ImmutableReportableDisruption.builder()
-                    .svId(gene.id())
-                    .chromosome(gene.chromosome())
-                    .orientation(gene.orientation())
-                    .strand(gene.Strand)
-                    .chrBand(gene.karyotypeBand())
-                    .gene(transcript.geneName())
-                    .canonical(true)
-                    .type(gene.type().toString())
-                    .ploidy(gene.ploidy())
-                    .exonUp(transcript.ExonUpstream)
-                    .exonDown(transcript.ExonDownstream)
-                    .build());
-        }
-
-        try
-        {
-            final String fusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, mSampleId);
-            ReportableGeneFusionFile.write(fusionsFile, reportedFusions);
-
-            final String disruptionsFile = ReportableDisruptionFile.generateFilename(mOutputDir, mSampleId);
-            ReportableDisruptionFile.write(disruptionsFile, reportedDisruptions);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write fusions file: {}", e.toString());
-        }
-    }
-
     private void finalSingleSVFusions(final List<SvVarData> svList)
     {
         // always report SVs by themselves
@@ -436,7 +387,7 @@ public class FusionDisruptionAnalyser
             // check transcript disruptions
             for (final GeneFusion fusion : fusions)
             {
-                String[] disruptedTranscriptsStr = {"", ""};
+                FusionTermination[] terminationInfo = {null, null};
 
                 for(int i = 0; i <=1; ++i)
                 {
@@ -448,14 +399,19 @@ public class FusionDisruptionAnalyser
 
                     SvBreakend breakend = var.getBreakend(gene.isStart());
 
-                    disruptedTranscriptsStr[i] = checkTranscriptDisruptionInfo(breakend, transcript);
+                    terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript);
                 }
 
-                String clusterInfo = String.format("%s,%d,%d,%s,%s,%s,%s",
-                        fusion.phaseMatched(), cluster.id(), cluster.getSvCount(), cluster.getResolvedType(),
-                        disruptedTranscriptsStr[0], disruptedTranscriptsStr[1], NO_CHAIN_INFO);
+                FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
+                        .clusterId(cluster.id())
+                        .clusterCount(cluster.getSvCount())
+                        .resolvedType(cluster.getResolvedType())
+                        .chainInfo(null)
+                        .disruptionUp(terminationInfo[0])
+                        .disruptionDown(terminationInfo[1])
+                        .build();
 
-                fusion.setAnnotations(clusterInfo);
+                fusion.setAnnotations(annotations);
                 writeFusionData(fusion, cluster);
             }
 
@@ -704,7 +660,7 @@ public class FusionDisruptionAnalyser
                             validTraversal = false;
                     }
 
-                    String[] disruptedTranscriptsStr = { "", "" };
+                    FusionTermination[] terminationInfo = {null, null};
 
                     for (int i = 0; i <= 1; ++i)
                     {
@@ -721,32 +677,43 @@ public class FusionDisruptionAnalyser
 
                         if (isChainEnd)
                         {
-                            disruptedTranscriptsStr[i] = checkTranscriptDisruptionInfo(breakend, transcript);
+                            terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript);
                         }
                         else
                         {
                             // looks within and beyond the chain to check for disruptions
                             int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
-                            disruptedTranscriptsStr[i] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                            terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
                         }
                     }
 
                     int linksCount = lpIndex2 - lpIndex1;
 
-                    String chainInfo = String.format("%d;%d;%d;%s;%s",
-                            chain.id(), linksCount, totalLinkLength, validTraversal, allTraversalAssembled);
+                    FusionChainInfo chainInfo = ImmutableFusionChainInfo.builder()
+                            .chainId(chain.id())
+                            .chainLinks(linksCount)
+                            .chainLength(totalLinkLength)
+                            .traversalAssembled(allTraversalAssembled)
+                            .validTraversal(validTraversal)
+                            .build();
 
-                    String clusterChainInfo = String.format("%s,%d,%d,%s,%s,%s,%s",
-                            fusion.phaseMatched(), cluster.id(), cluster.getSvCount(), cluster.getResolvedType(),
-                            disruptedTranscriptsStr[0], disruptedTranscriptsStr[1], chainInfo);
+                    FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
+                            .clusterId(cluster.id())
+                            .clusterCount(cluster.getSvCount())
+                            .resolvedType(cluster.getResolvedType())
+                            .chainInfo(chainInfo)
+                            .disruptionUp(terminationInfo[0])
+                            .disruptionDown(terminationInfo[1])
+                            .build();
 
-                    fusion.setAnnotations(clusterChainInfo);
-                    fusion.setChainLength(totalLinkLength);
+                    fusion.setAnnotations(annotations);
 
-                    boolean chainLengthOk = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN || totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
-                    boolean notDisrupted = !isDisrupted(disruptedTranscriptsStr[0]) && !isDisrupted(disruptedTranscriptsStr[1]);
+                    // accept invalidated chains and transcripts for known fusions
+                    boolean isKnown = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN;
+                    boolean chainLengthOk =  totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
+                    boolean notDisrupted = !fusion.isTerminated();
 
-                    if(validTraversal && chainLengthOk && notDisrupted)
+                    if(validTraversal && ((chainLengthOk && notDisrupted) || isKnown))
                     {
                         if(!hasIdenticalFusion(fusion, validFusions))
                         {
@@ -782,14 +749,6 @@ public class FusionDisruptionAnalyser
         return false;
     }
 
-    // ChainId,ChainLinks,ChainLength,ValidTraversal,TraversalAssembled
-    private static String NO_CHAIN_INFO = "-1;0;0;true;false";
-    public static int FCI_CHAIN_ID = 0;
-    public static int FCI_CHAIN_LINKS = 1;
-    public static int FCI_CHAIN_LENGTH = 2;
-    public static int FCI_VALID_TRAVERSAL = 3;
-    public static int FCI_TRAV_ASSEMBLY = 4;
-
     private void applyGeneRestrictions(List<GeneAnnotation> genesList)
     {
         if(mRestrictedGenes.isEmpty())
@@ -807,28 +766,7 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    // FacingBreakends,HasAssembledLink,ClusterFacingBreakends,TotalBreakends,MinDistance,DisruptedExons,Terminated
-    private static String NO_DISRUPTION_INFO = "0;false;0;0;0;0;0";
-    public static int FDI_FACING_BES = 0;
-    public static int FDI_HAS_ASSEMBLY = 1;
-    public static int FDI_FACING_CL_BES = 2;
-    public static int FDI_TOTLAL_BES = 3;
-    public static int FDI_MIN_DISTANCE = 4;
-    public static int FDI_DIS_EXONS = 5;
-    public static int FDI_TERMINATED = 6;
-
-    public static boolean isDisrupted(final String disruptionInfo)
-    {
-        String[] disruptionData = disruptionInfo.split(";");
-
-        if(disruptionData.length != FDI_TERMINATED+1)
-            return true;
-
-        // test the exons disrupted and terminated fields
-        return !disruptionData[FDI_DIS_EXONS].equals("0") || !disruptionData[FDI_TERMINATED].equals("0");
-    }
-
-    private String checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript)
+    private FusionTermination checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript)
     {
         // check all breakends which fall within the bounds of this transcript, including any which are exonic
         List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
@@ -836,10 +774,9 @@ public class FusionDisruptionAnalyser
         List<TranscriptExonData> exonDataList = mGeneTransCollection.getTranscriptExons(transcript.parent().StableId, transcript.StableId);
 
         if(exonDataList == null || exonDataList.isEmpty())
-            return "";
+            return null;
 
         int totalBreakends = 0;
-        int clusterFacingBreakends = 0;
         int facingBreakends = 0;
         int disruptedExons = 0;
         long minDistance = -1;
@@ -879,9 +816,6 @@ public class FusionDisruptionAnalyser
                     minDistance = breakendDistance;
 
                 ++facingBreakends;
-
-                if (nextBreakend.getSV().getCluster() == cluster)
-                    ++clusterFacingBreakends;
             }
         }
 
@@ -891,16 +825,22 @@ public class FusionDisruptionAnalyser
             final SvLinkedPair tiLink = breakend.getSV().getLinkedPair(breakend.usesStart());
             boolean hasAssembledLink = tiLink != null && tiLink.isAssembled();
 
-            return String.format("%d;%s;%d;%d;%d;%d;%d",
-                facingBreakends, hasAssembledLink, clusterFacingBreakends, totalBreakends, minDistance, disruptedExons, 0);
+            return ImmutableFusionTermination.builder()
+                    .allLinksAssembled(hasAssembledLink)
+                    .facingBreakends(facingBreakends)
+                    .disruptedExons(disruptedExons)
+                    .totalBreakends(totalBreakends)
+                    .minDistance(minDistance)
+                    .transcriptTerminated(false)
+                    .build();
         }
         else
         {
-            return NO_DISRUPTION_INFO;
+            return null;
         }
     }
 
-    private String checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
+    private FusionTermination checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
     {
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         // this includes subsequent links within the same chain and transcript
@@ -910,7 +850,7 @@ public class FusionDisruptionAnalyser
         List<TranscriptExonData> exonDataList = mGeneTransCollection.getTranscriptExons(transcript.parent().StableId, transcript.StableId);
 
         if(exonDataList == null || exonDataList.isEmpty())
-            return "";
+            return null;
 
         int totalBreakends = 0;
         int facingBreakends = 0;
@@ -960,13 +900,18 @@ public class FusionDisruptionAnalyser
 
         if(facingBreakends > 0)
         {
-            return String.format("%d;%s;%d;%d;%d;%d;%d",
-                    facingBreakends, allLinksAssembled, facingBreakends, totalBreakends,
-                    minDistance, disruptedExons, transcriptTerminated ? 1 : 0);
+            return ImmutableFusionTermination.builder()
+                    .allLinksAssembled(allLinksAssembled)
+                    .facingBreakends(facingBreakends)
+                    .disruptedExons(disruptedExons)
+                    .totalBreakends(totalBreakends)
+                    .minDistance(minDistance)
+                    .transcriptTerminated(transcriptTerminated)
+                    .build();
         }
         else
         {
-            return NO_DISRUPTION_INFO;
+            return null;
         }
     }
 
@@ -1116,7 +1061,7 @@ public class FusionDisruptionAnalyser
                 // check transcript disruptions
                 for (final GeneFusion fusion : fusions)
                 {
-                    String[] disruptedTranscriptsStr = {"", ""};
+                    FusionTermination[] terminationInfo = {null, null};
 
                     for(int i = 0; i <=1; ++i)
                     {
@@ -1128,7 +1073,7 @@ public class FusionDisruptionAnalyser
 
                         SvBreakend breakend = gene.GeneName.equals(gene1.GeneName) ? be1 : be2;
 
-                        disruptedTranscriptsStr[i] = checkTranscriptDisruptionInfo(breakend, transcript);
+                        terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript);
                     }
 
                     final SvCluster cluster1 = be1.getSV().getCluster();
@@ -1137,12 +1082,16 @@ public class FusionDisruptionAnalyser
                     String combinedClusterInfo = String.format("Unclustered;%d;%s;%d;%s",
                             cluster1.getSvCount(), cluster1.getResolvedType(), cluster2.getSvCount(), cluster2.getResolvedType());
 
-                    // PhaseMatched,ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo
-                    String clusterInfo = String.format("%s,%d,%d,%s,%s,%s,%s",
-                            fusion.phaseMatched(), cluster1.id(), cluster2.id(), combinedClusterInfo,
-                            disruptedTranscriptsStr[0], disruptedTranscriptsStr[1], NO_CHAIN_INFO);
+                    FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
+                            .clusterId(cluster1.id())
+                            .clusterCount(cluster1.getSvCount())
+                            .resolvedType(combinedClusterInfo)
+                            .chainInfo(null)
+                            .disruptionUp(terminationInfo[0])
+                            .disruptionDown(terminationInfo[1])
+                            .build();
 
-                    fusion.setAnnotations(clusterInfo);
+                    fusion.setAnnotations(annotations);
                     writeFusionData(fusion, cluster1);
                 }
 
@@ -1260,6 +1209,60 @@ public class FusionDisruptionAnalyser
         }
 
         return false;
+    }
+
+    private void writeSampleData()
+    {
+        // write sample files for patient reporter
+        List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
+        List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
+        for(final GeneFusion fusion : mFusions)
+        {
+            if(fusion.reportable())
+            {
+                reportedFusions.add(ImmutableReportableGeneFusion.builder()
+                        .geneStart(fusion.upstreamTrans().geneName())
+                        .geneTranscriptStart(fusion.upstreamTrans().StableId)
+                        .geneContextStart(context(fusion.upstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, false))
+                        .geneEnd(fusion.downstreamTrans().geneName())
+                        .geneTranscriptEnd(fusion.downstreamTrans().StableId)
+                        .geneContextEnd(context(fusion.downstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, true))
+                        .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
+                        .source(fusion.primarySource()).build());
+            }
+        }
+
+        for(final Transcript transcript : mDisruptions)
+        {
+            final GeneAnnotation gene = transcript.parent();
+
+            reportedDisruptions.add(ImmutableReportableDisruption.builder()
+                    .svId(gene.id())
+                    .chromosome(gene.chromosome())
+                    .orientation(gene.orientation())
+                    .strand(gene.Strand)
+                    .chrBand(gene.karyotypeBand())
+                    .gene(transcript.geneName())
+                    .canonical(true)
+                    .type(gene.type().toString())
+                    .ploidy(gene.ploidy())
+                    .exonUp(transcript.ExonUpstream)
+                    .exonDown(transcript.ExonDownstream)
+                    .build());
+        }
+
+        try
+        {
+            final String fusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, mSampleId);
+            ReportableGeneFusionFile.write(fusionsFile, reportedFusions);
+
+            final String disruptionsFile = ReportableDisruptionFile.generateFilename(mOutputDir, mSampleId);
+            ReportableDisruptionFile.write(disruptionsFile, reportedDisruptions);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write fusions file: {}", e.toString());
+        }
     }
 
     private void writeFusionData(GeneFusion fusion, final SvCluster cluster)
