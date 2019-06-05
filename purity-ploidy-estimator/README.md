@@ -721,7 +721,7 @@ The tables correspond to the file output described above.
 It is possible to load the PURPLE enriched structural variants into the database with the following command:
 
 ```
-java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants \ 
+java -cp purple.jar com.hartwig.hmftools.patientdb.LoadStructuralVariants \ 
     -tumor COLO829T \
     -purple_dir /path/to/COLO829/purple \
     -structural_vcf /path/to/COLO829/COLO829T.purple.sv.vcf.gz \
@@ -729,6 +729,8 @@ java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants 
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
+
+If the optional argument 'sv_data_dir' is provided, then SV records are written to a TSV file in the directory specfied for downstream processes to use instead of downloading SVs from the database.
 
 The structural variant VCF produced by PURPLE is only an intermediary step in the HMF pipeline, thus there are a couple of caveats to be aware of when loading this file:
 1. Patch scripts will be named variant_annotatorx_to_y_migration.sql and may not correspond to a PURPLE version.

@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -15,6 +14,7 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantF
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -29,9 +29,9 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class LoadPurpleStructuralVariants {
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadPurpleStructuralVariants.class);
+public class LoadStructuralVariants
+{
+    private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
     private static final String TUMOR_SAMPLE = "tumor";
     private static final String VCF = "structural_vcf";
@@ -40,6 +40,7 @@ public class LoadPurpleStructuralVariants {
     private static final String DB_URL = "db_url";
     private static final String REF_GENOME = "ref_genome";
     private static final String ALIAS = "alias";
+    private static final String SV_DATA_DIRECTORY = "sv_data_dir";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
@@ -48,6 +49,7 @@ public class LoadPurpleStructuralVariants {
 
         final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
         final String vcfPath = cmd.getOptionValue(VCF);
+        final String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
 
         LOGGER.info("Reading data from {}", vcfPath);
         final IndexedFastaSequenceFile sequenceFile =
@@ -69,8 +71,22 @@ public class LoadPurpleStructuralVariants {
             svDataList.add(convertSvData(var, svId++));
         }
 
-        LOGGER.info("Persisting to db");
+        LOGGER.info("Persisting {} SVs to db", svDataList.size());
         dbAccess.writeStructuralVariants(cmd.getOptionValue(ALIAS, tumorSample), svDataList);
+
+        if(svDataOutputDir != null)
+        {
+            // write data to file
+            try
+            {
+                final String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
+                StructuralVariantFile.write(svFilename, svDataList);
+            }
+            catch (IOException e)
+            {
+                LOGGER.error("failed to write SV data: {}", e.toString());
+            }
+        }
 
         LOGGER.info("Complete");
     }
@@ -144,6 +160,7 @@ public class LoadPurpleStructuralVariants {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(REF_GENOME, true, "Path to the (indexed) ref genome fasta file.");
         options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
+        options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
 
         return options;
     }

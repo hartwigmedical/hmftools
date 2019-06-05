@@ -3,7 +3,7 @@ package com.hartwig.hmftools.svannotation;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants.convertSvData;
+import static com.hartwig.hmftools.patientdb.LoadStructuralVariants.convertSvData;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.File;
