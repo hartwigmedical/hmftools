@@ -2,9 +2,7 @@ package com.hartwig.hmftools.vicc;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -14,13 +12,23 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.vicc.datamodel.Association;
+import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
+import com.hartwig.hmftools.vicc.datamodel.Evidence;
+import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
+import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
+import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +41,6 @@ public final class ViccFactory {
 
     // SAGE records hold 8 field (no "feature names") while all other knowledgebases hold 9 records.
     private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
-
 
     private ViccFactory() {
     }
@@ -70,7 +77,7 @@ public final class ViccFactory {
             }
 
             viccEntryBuilder.features(Lists.newArrayList());
-            viccEntryBuilder.association(createAssociation());
+            viccEntryBuilder.association(createAssociation(viccEntryElement));
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("dev_tags")));
@@ -106,15 +113,17 @@ public final class ViccFactory {
     @NotNull
     private static GeneIdentifier toGeneIdentifier(@NotNull JsonElement elementGeneIdentifier) {
         return ImmutableGeneIdentifier.builder()
-                .symbol(elementGeneIdentifier.getAsJsonObject().get("symbol").toString())
-                .entrezId(elementGeneIdentifier.getAsJsonObject().get("entrez_id").toString())
-                .ensemblGeneId(elementGeneIdentifier.getAsJsonObject().get("ensembl_gene_id").toString())
+                .symbol(elementGeneIdentifier.getAsJsonObject().getAsJsonPrimitive("symbol").toString())
+                .entrezId(elementGeneIdentifier.getAsJsonObject().getAsJsonPrimitive("entrez_id").toString())
+                .ensemblGeneId(elementGeneIdentifier.getAsJsonObject().getAsJsonPrimitive("ensembl_gene_id").toString())
                 .build();
     }
 
     @NotNull
-    private static Association createAssociation() {
-        return ImmutableAssociation.builder()
+    private static Association createAssociation(JsonObject viccEntryElement) {
+        JsonElement elementAssociation = viccEntryElement.get("association");
+        LOGGER.info(elementAssociation.getAsJsonObject().keySet());
+        Association associationBuilder = ImmutableAssociation.builder()
                 .variantName(Strings.EMPTY)
                 .evidence(Lists.newArrayList())
                 .evidenceLevel(Strings.EMPTY)
@@ -123,16 +132,90 @@ public final class ViccFactory {
                 .drugLabels(Strings.EMPTY)
                 .sourceLink(Strings.EMPTY)
                 .publicationUrls(Lists.newArrayList())
-                .phenotype(createPhenotype())
+                .phenotype(ImmutablePhenotype.builder()
+                        .type(ImmutablePhenotypeType.builder().source(Strings.EMPTY).term(Strings.EMPTY).id(Strings.EMPTY).build())
+                        .description(Strings.EMPTY)
+                        .family(Strings.EMPTY)
+                        .id(Strings.EMPTY)
+                        .build())
                 .description(Strings.EMPTY)
                 .environmentalContexts(Lists.newArrayList())
                 .build();
+
+        for (String keysAssociation : elementAssociation.getAsJsonObject().keySet()) {
+            LOGGER.info(elementAssociation.getAsJsonObject().keySet());
+            associationBuilder = ImmutableAssociation.builder()
+                    .variantName(Strings.EMPTY)
+                    .evidence(Lists.newArrayList())
+                    .evidenceLevel(elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence_level").toString())
+                    .evidenceLabel(elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence_label").toString())
+                    .responseType(elementAssociation.getAsJsonObject().getAsJsonPrimitive("response_type").toString())
+                    .drugLabels(elementAssociation.getAsJsonObject().getAsJsonPrimitive("drug_labels").toString())
+                    .sourceLink(Strings.EMPTY)
+                    .publicationUrls(Lists.newArrayList(elementAssociation.getAsJsonObject()
+                            .getAsJsonPrimitive("publication_url")
+                            .toString()))
+                    .phenotype(createPhenotype(elementAssociation))
+                    .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
+                    .environmentalContexts(Lists.newArrayList(createEnvironmentalContexts(elementAssociation)))
+                    .build();
+        }
+
+        return associationBuilder;
     }
 
-    private static Phenotype createPhenotype() {
+    private static EnvironmentalContext createEnvironmentalContexts(JsonElement elementAssociation) {
+        return ImmutableEnvironmentalContext.builder()
+                .term(Strings.EMPTY)
+                .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
+                .taxonomy(createTaxonomy(elementAssociation))
+                .source(Strings.EMPTY)
+                .usanStem(Strings.EMPTY)
+                .approvedCountries(Lists.newArrayList())
+                .id(Strings.EMPTY)
+                .build();
+    }
+
+    private static Taxonomy createTaxonomy(JsonElement elementAssociation) {
+        return ImmutableTaxonomy.builder()
+                .kingdom(Strings.EMPTY)
+                .directParent(Strings.EMPTY)
+                .classs(Strings.EMPTY)
+                .subClass(Strings.EMPTY)
+                .superClass(Strings.EMPTY)
+                .build();
+    }
+
+    private static Evidence createEvidence(JsonElement elementAssociation) {
+        LOGGER.info(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString());
+        return ImmutableEvidence.builder()
+                .info(createEvidenceInfo(elementAssociation))
+                .evidenceType(createEvidenceType(elementAssociation))
+                .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
+                .build();
+    }
+
+    private static EvidenceType createEvidenceType(JsonElement elementAssociation) {
+        return ImmutableEvidenceType.builder()
+                .sourceName(elementAssociation.getAsJsonObject().getAsJsonPrimitive("sourceName").toString())
+                .id(elementAssociation.getAsJsonObject().getAsJsonPrimitive("id").toString())
+                .build();
+    }
+
+    private static EvidenceInfo createEvidenceInfo(JsonElement elementAssociation) {
+        return ImmutableEvidenceInfo.builder()
+                .publications(Lists.newArrayList(elementAssociation.getAsJsonObject().getAsJsonPrimitive("publications").toString()))
+                .build();
+    }
+
+    private static Phenotype createPhenotype(JsonElement elementAssociation) {
         return ImmutablePhenotype.builder()
-                .type(ImmutablePhenotypeType.builder().source(Strings.EMPTY).term(Strings.EMPTY).id(Strings.EMPTY).build())
-                .description(Strings.EMPTY)
+                .type(ImmutablePhenotypeType.builder()
+                        .source(Strings.EMPTY)
+                        .term(Strings.EMPTY)
+                        .id(Strings.EMPTY)
+                        .build())
+                .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
                 .family(Strings.EMPTY)
                 .id(Strings.EMPTY)
                 .build();
