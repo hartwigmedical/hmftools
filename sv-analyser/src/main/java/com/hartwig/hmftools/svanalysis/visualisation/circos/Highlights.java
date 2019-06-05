@@ -13,7 +13,8 @@ import com.hartwig.hmftools.svanalysis.visualisation.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Highlights {
+public class Highlights
+{
 
     private static final String HEADER = "SampleId";
     private static final String COMMENT = "#";
@@ -21,17 +22,21 @@ public class Highlights {
 
     @NotNull
     public static List<GenomeRegion> limitHighlightsToSegments(@NotNull final List<GenomeRegion> highlights,
-            @NotNull final List<Segment> segments) {
+            @NotNull final List<Segment> segments)
+    {
         final List<GenomeRegion> result = Lists.newArrayList();
 
-        for (final GenomeRegion highlight : highlights) {
+        for (final GenomeRegion highlight : highlights)
+        {
             final String contig = highlight.chromosome();
             final List<Segment> chromosomeSegments =
                     segments.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
-            if (!chromosomeSegments.isEmpty()) {
+            if (!chromosomeSegments.isEmpty())
+            {
                 long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0);
                 long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0);
-                if (highlight.end() >= minTrackPosition && highlight.start() <= maxTrackPosition) {
+                if (highlight.end() >= minTrackPosition && highlight.start() <= maxTrackPosition)
+                {
 
                     result.add(GenomeRegionFactory.create(contig,
                             Math.max(minTrackPosition, highlight.start()),
@@ -46,28 +51,34 @@ public class Highlights {
     }
 
     @NotNull
-    public static List<GenomeRegion> fragileSites() {
+    public static List<GenomeRegion> fragileSites()
+    {
         return fromResource("fragile_sites.csv");
     }
 
     @NotNull
-    public static List<GenomeRegion> lineElements() {
+    public static List<GenomeRegion> lineElements()
+    {
         return fromResource("line_elements.csv");
     }
 
     @NotNull
-    private static List<GenomeRegion> fromResource(@NotNull final String resource) {
+    private static List<GenomeRegion> fromResource(@NotNull final String resource)
+    {
         final InputStream inputStream = Highlights.class.getResourceAsStream("/visualisation/" + resource);
         return fromString(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static List<GenomeRegion> fromString(@NotNull final List<String> lines) {
+    private static List<GenomeRegion> fromString(@NotNull final List<String> lines)
+    {
         final List<GenomeRegion> result = Lists.newArrayList();
 
-        for (final String line : lines) {
+        for (final String line : lines)
+        {
 
-            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER)) {
+            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER))
+            {
                 final String[] values = line.split(DELIMITER);
                 result.add(GenomeRegionFactory.create(values[0], Long.valueOf(values[1]), Long.valueOf(values[2])));
 

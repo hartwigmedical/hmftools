@@ -12,7 +12,8 @@ import java.nio.file.Files;
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
-public class CircosConfigWriter {
+public class CircosConfigWriter
+{
 
     static final double PIXELS = 1500;
 
@@ -34,23 +35,28 @@ public class CircosConfigWriter {
     private final String sample;
     private final String configPath;
 
-    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir) {
+    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir)
+    {
         this.sample = sample;
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
     }
 
-    public String configPath() {
+    public String configPath()
+    {
         return configPath;
     }
 
-    public static double svTrackRelative(int maxTracks, int track) {
+    public static double svTrackRelative(int maxTracks, int track)
+    {
         double difference = SEGMENT_OUTER_RADIUS - SEGMENT_INNER_RADIUS;
         double singleTrack = difference / maxTracks;
 
         return SEGMENT_INNER_RADIUS + track * singleTrack;
     }
 
-    public void writeConfig(int chromosomeCount, int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy) throws IOException {
+    public void writeConfig(int chromosomeCount, int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy)
+            throws IOException
+    {
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
         double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);
@@ -67,7 +73,6 @@ public class CircosConfigWriter {
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(EXON_OUTER_RADIUS))
                         .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(GENE_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(GENE_OUTER_RADIUS))
-
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(SEGMENT_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(SEGMENT_OUTER_RADIUS))
@@ -93,7 +98,8 @@ public class CircosConfigWriter {
     }
 
     @NotNull
-    private String readResource(@NotNull final String resource) throws IOException {
+    private String readResource(@NotNull final String resource) throws IOException
+    {
         InputStream in = getClass().getResourceAsStream(resource);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         return IOUtils.toString(reader);

@@ -9,7 +9,8 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class ScalePositionTest {
+public class ScalePositionTest
+{
 
     private static final int SCALE_1 = 1;
     private static final int SCALE_10 = 2;
@@ -17,7 +18,8 @@ public class ScalePositionTest {
     private static final int SCALE_1000 = 28;
 
     @Test
-    public void testFirstPositionIsAtStart() {
+    public void testFirstPositionIsAtStart()
+    {
         int start = new Random().nextInt(1000);
         long firstPosition = new Random().nextInt(1000000) + 1;
 
@@ -25,7 +27,8 @@ public class ScalePositionTest {
     }
 
     @Test
-    public void testScalePosition() {
+    public void testScalePosition()
+    {
         int start = new Random().nextInt(1000);
         long firstPosition = new Random().nextInt(1000000) + 1;
         final Map<Long, Integer> map =
@@ -38,7 +41,8 @@ public class ScalePositionTest {
     }
 
     @Test
-    public void testLogDistance() {
+    public void testLogDistance()
+    {
         assertEquals(SCALE_1, ScalePosition.logDistance(1));
         assertEquals(SCALE_10, ScalePosition.logDistance(10));
         assertEquals(SCALE_100, ScalePosition.logDistance(100));
@@ -46,7 +50,8 @@ public class ScalePositionTest {
     }
 
     @Test
-    public void testInterpolate() {
+    public void testInterpolate()
+    {
         final Map<Long, Integer> map = Maps.newHashMap();
         map.put(1000L, 10);
 

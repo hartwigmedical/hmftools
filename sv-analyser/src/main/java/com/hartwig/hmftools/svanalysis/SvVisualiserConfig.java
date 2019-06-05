@@ -2,11 +2,11 @@ package com.hartwig.hmftools.svanalysis;
 
 import static java.util.stream.Collectors.toList;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.svanalysis.visualisation.ImmutableSvVisualiserConfig;
 import com.hartwig.hmftools.svanalysis.visualisation.data.CopyNumberAlteration;
 import com.hartwig.hmftools.svanalysis.visualisation.data.CopyNumberAlterations;
 import com.hartwig.hmftools.svanalysis.visualisation.data.Exon;
@@ -132,6 +132,18 @@ public interface SvVisualiserConfig
         if (cna.isEmpty())
         {
             LOGGER.warn("No copy number alterations found for sample {}", sample);
+        }
+
+        File outputDir = new File(plotOutputDir);
+        if (!outputDir.exists() && !outputDir.mkdirs())
+        {
+            throw new IOException("Unable to write to plot directory " + plotOutputDir);
+        }
+
+        outputDir = new File(dataOutputDir);
+        if (!outputDir.exists() && !outputDir.mkdirs())
+        {
+            throw new IOException("Unable to write to data directory " + plotOutputDir);
         }
 
         return ImmutableSvVisualiserConfig.builder()

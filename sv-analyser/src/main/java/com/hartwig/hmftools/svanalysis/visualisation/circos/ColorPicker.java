@@ -14,7 +14,8 @@ import com.hartwig.hmftools.svanalysis.visualisation.data.Link;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ColorPicker {
+public class ColorPicker
+{
 
     private static final Color BLACK = new Color(1, 1, 1);
 
@@ -31,7 +32,7 @@ public class ColorPicker {
     private static final Color DEL = new Color(251, 154, 153);
     private static final Color DUP = new Color(178, 223, 138);
     private static final Color INS = new Color(255, 255, 153);
-    private static final Color LINE = new Color(166,206,227);
+    private static final Color LINE = new Color(166, 206, 227);
 
     private static final Color[] COLOURS = new Color[] { COLOR1, COLOR2, COLOR3, COLOR4, COLOR5, COLOR6, COLOR7, COLOR8 };
 
@@ -39,32 +40,37 @@ public class ColorPicker {
     private final Map<Integer, String> colorMap;
     private final double connectorTransparency;
 
-
     @NotNull
-    public static ColorPicker clusterColors(@NotNull final List<Link> links) {
+    public static ColorPicker clusterColors(@NotNull final List<Link> links)
+    {
         return new ColorPicker(colorsByCluster(links), true, connectorTransparency(links.size()));
     }
 
     @NotNull
-    public static ColorPicker chainColors(@NotNull final List<Link> links) {
+    public static ColorPicker chainColors(@NotNull final List<Link> links)
+    {
         return new ColorPicker(colorsByChain(links), false, connectorTransparency(links.size()));
     }
 
-    private ColorPicker(@NotNull final Map<Integer, String> colorMap, final boolean clusterMode, final double connectorTransparency) {
+    private ColorPicker(@NotNull final Map<Integer, String> colorMap, final boolean clusterMode, final double connectorTransparency)
+    {
         this.clusterMode = clusterMode;
         this.colorMap = colorMap;
         this.connectorTransparency = connectorTransparency;
     }
 
     @NotNull
-    public String transparentColor(final int clusterId, final int chainId) {
+    public String transparentColor(final int clusterId, final int chainId)
+    {
         String opaqueColor = color(clusterId, chainId);
         return opaqueColor.replace(")", "," + connectorTransparency + ")");
     }
 
     @NotNull
-    public String color(final int clusterId, final int chainId) {
-        if (clusterId == -1 || chainId == -1) {
+    public String color(final int clusterId, final int chainId)
+    {
+        if (clusterId == -1 || chainId == -1)
+        {
             return toString(BLACK);
         }
 
@@ -72,13 +78,16 @@ public class ColorPicker {
     }
 
     @NotNull
-    private static String toString(@NotNull final Color color) {
+    private static String toString(@NotNull final Color color)
+    {
         return "color=(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ")";
     }
 
     @NotNull
-    private static String simpleSvColor(@NotNull final String type) {
-        switch (type) {
+    private static String simpleSvColor(@NotNull final String type)
+    {
+        switch (type)
+        {
             case "DEL":
                 return toString(DEL);
             case "DUP":
@@ -88,19 +97,22 @@ public class ColorPicker {
         return toString(INS);
     }
 
-    private static class ClusterSize {
+    private static class ClusterSize
+    {
 
         final int clusterId;
         final long count;
 
-        ClusterSize(final int clusterId, final long count) {
+        ClusterSize(final int clusterId, final long count)
+        {
             this.clusterId = clusterId;
             this.count = count;
         }
     }
 
     @NotNull
-    private static Map<Integer, String> colorsByCluster(@NotNull final List<Link> links) {
+    private static Map<Integer, String> colorsByCluster(@NotNull final List<Link> links)
+    {
         final Map<Integer, String> result = Maps.newHashMap();
 
         final Comparator<ClusterSize> longComparator = Comparator.<ClusterSize>comparingLong(x -> x.count).reversed();
@@ -113,15 +125,20 @@ public class ColorPicker {
 
         clusterSizeList.sort(longComparator);
 
-        for (int i = 0; i < clusterSizeList.size(); i++) {
+        for (int i = 0; i < clusterSizeList.size(); i++)
+        {
             String color = i < COLOURS.length ? ColorPicker.toString(COLOURS[i]) : "color=black";
             result.put(clusterSizeList.get(i).clusterId, color);
         }
 
-        for (Link link : links) {
-            if (link.isSimpleSV()) {
+        for (Link link : links)
+        {
+            if (link.isSimpleSV())
+            {
                 result.put(link.clusterId(), simpleSvColor(link.type()));
-            } else if (link.isLineElement()) {
+            }
+            else if (link.isLineElement())
+            {
                 result.put(link.clusterId(), toString(LINE));
             }
         }
@@ -130,20 +147,27 @@ public class ColorPicker {
     }
 
     @NotNull
-    private static Map<Integer, String> colorsByChain(@NotNull final List<Link> links) {
+    private static Map<Integer, String> colorsByChain(@NotNull final List<Link> links)
+    {
         final Map<Integer, String> result = Maps.newHashMap();
 
-        if (!links.isEmpty()) {
+        if (!links.isEmpty())
+        {
             final Link firstLink = links.get(0);
-            if (firstLink.isSimpleSV()) {
+            if (firstLink.isSimpleSV())
+            {
                 final String color = simpleSvColor(firstLink.type());
                 links.forEach(x -> result.put(x.chainId(), color));
-            } else if(firstLink.isLineElement()) {
+            }
+            else if (firstLink.isLineElement())
+            {
                 links.forEach(x -> result.put(x.chainId(), toString(LINE)));
             }
-            else {
+            else
+            {
                 final List<Integer> chainIds = links.stream().map(Link::chainId).distinct().collect(Collectors.toList());
-                for (int i = 0; i < chainIds.size(); i++) {
+                for (int i = 0; i < chainIds.size(); i++)
+                {
                     final String color = i < COLOURS.length ? toString(COLOURS[i]) : toString(BLACK);
                     result.put(chainIds.get(i), color);
                 }
@@ -155,24 +179,30 @@ public class ColorPicker {
         return result;
     }
 
-    private static double connectorTransparency(int links) {
-        if (links < 10) {
+    private static double connectorTransparency(int links)
+    {
+        if (links < 10)
+        {
             return 0.7;
         }
 
-        if (links < 50) {
+        if (links < 50)
+        {
             return 0.6;
         }
 
-        if (links < 100) {
+        if (links < 100)
+        {
             return 0.5;
         }
 
-        if (links < 200) {
+        if (links < 200)
+        {
             return 0.4;
         }
 
-        if (links < 400) {
+        if (links < 400)
+        {
             return 0.3;
         }
 

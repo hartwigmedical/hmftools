@@ -15,24 +15,29 @@ import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Span {
+public class Span
+{
 
     @NotNull
-    public static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
+    public static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks)
+    {
         return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::max));
     }
 
     @NotNull
-    public static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks) {
+    public static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks)
+    {
         return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::min));
     }
 
     @NotNull
-    public static List<GenomeRegion> span(@NotNull final List<GenomePosition> positions) {
+    public static List<GenomeRegion> span(@NotNull final List<GenomePosition> positions)
+    {
         final List<GenomeRegion> result = Lists.newArrayList();
 
         final List<String> chromosomes = positions.stream().map(GenomePosition::chromosome).distinct().collect(Collectors.toList());
-        for (final String chromosome : chromosomes) {
+        for (final String chromosome : chromosomes)
+        {
             long min =
                     positions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomePosition::position).min().orElse(0);
             long max =
@@ -46,11 +51,13 @@ public class Span {
     }
 
     @NotNull
-    public static List<GenomeRegion> spanRegions(@NotNull final List<? extends GenomeRegion> regions) {
+    public static List<GenomeRegion> spanRegions(@NotNull final List<? extends GenomeRegion> regions)
+    {
         final List<GenomeRegion> result = Lists.newArrayList();
 
         final Set<String> chromosomes = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
-        for (final String chromosome : chromosomes) {
+        for (final String chromosome : chromosomes)
+        {
             long min = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::start).min().orElse(0);
             long max = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::end).max().orElse(0);
 
@@ -62,11 +69,14 @@ public class Span {
     }
 
     @NotNull
-    public static List<GenomePosition> allPositions(@NotNull final List<? extends GenomeRegion> segments) {
+    public static List<GenomePosition> allPositions(@NotNull final List<? extends GenomeRegion> segments)
+    {
         final List<GenomePosition> results = Lists.newArrayList();
 
-        for (final GenomeRegion segment : segments) {
-            if (HumanChromosome.contains(segment.chromosome())) {
+        for (final GenomeRegion segment : segments)
+        {
+            if (HumanChromosome.contains(segment.chromosome()))
+            {
                 results.add(GenomePositions.create(segment.chromosome(), segment.start()));
                 results.add(GenomePositions.create(segment.chromosome(), segment.end()));
             }

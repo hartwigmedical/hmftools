@@ -5,18 +5,17 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.svanalysis.visualisation.circos.SegmentTerminal;
 
 import org.junit.Test;
 
-public class SegmentsTest {
-
+public class SegmentsTest
+{
     @Test
-    public void testTrackStrategies() {
-        final String first = "sample,1,1,1,1,1000,1";
-        final String second = "sample,1,1,2,1,1000,1";
-        final String third = "sample,1,1,1,1,1000,1";
+    public void testTrackStrategies()
+    {
 
-        final List<Segment> segments = Segments.fromString(Lists.newArrayList(first, second, third));
+        final List<Segment> segments = Lists.newArrayList(createSegment("1"), createSegment("2"), createSegment("1"));
 
         final List<Segment> alwaysIncrement = Segments.alwaysIncrement(segments);
         assertEquals(3, alwaysIncrement.size());
@@ -29,6 +28,22 @@ public class SegmentsTest {
         assertEquals(1, incrementOnChromosome.get(0).track());
         assertEquals(1, incrementOnChromosome.get(1).track());
         assertEquals(2, incrementOnChromosome.get(2).track());
+    }
+
+    private static Segment createSegment(String chromosome)
+    {
+        return ImmutableSegment.builder()
+                .sampleId("sampleId")
+                .clusterId(1)
+                .chainId(1)
+                .chromosome(chromosome)
+                .start(1)
+                .end(1000)
+                .track(1)
+                .startTerminal(SegmentTerminal.NONE)
+                .endTerminal(SegmentTerminal.NONE)
+                .traverseCount(0)
+                .build();
     }
 
 }

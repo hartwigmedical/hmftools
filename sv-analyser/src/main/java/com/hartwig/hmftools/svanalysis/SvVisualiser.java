@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -48,7 +47,7 @@ public class SvVisualiser implements AutoCloseable
 
     private static final Logger LOGGER = LogManager.getLogger(SvVisualiser.class);
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, SQLException
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException
     {
         final Options options = SvVisualiserConfig.createOptions();
         try (final SvVisualiser application = new SvVisualiser(options, args))
@@ -66,7 +65,7 @@ public class SvVisualiser implements AutoCloseable
     private final SvVisualiserConfig config;
     private final ExecutorService executorService;
 
-    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException, SQLException
+    private SvVisualiser(final Options options, final String... args) throws ParseException, IOException
     {
         final CommandLine cmd = createCommandLine(args, options);
         LOGGER.info("Loading data");

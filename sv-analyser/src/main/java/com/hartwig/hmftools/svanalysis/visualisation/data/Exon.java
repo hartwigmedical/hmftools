@@ -8,7 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Exon implements GenomeRegion {
+public abstract class Exon implements GenomeRegion
+{
 
     public abstract String sampleId();
 

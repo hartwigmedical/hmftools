@@ -8,7 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Link {
+public abstract class Link
+{
 
     public abstract String sampleId();
 
@@ -40,23 +41,28 @@ public abstract class Link {
 
     public abstract int traverseCount();
 
-    public boolean connectorsOnly() {
+    public boolean connectorsOnly()
+    {
         return isSimpleSV() || isLineElement();
     }
 
-    public boolean isSimpleSV() {
+    public boolean isSimpleSV()
+    {
         return resolvedType().equals("SimpleSV");
     }
 
-    public boolean isLineElement() {
+    public boolean isLineElement()
+    {
         return resolvedType().equals("Line");
     }
 
-    public boolean isValidStart() {
+    public boolean isValidStart()
+    {
         return HumanChromosome.contains(startChromosome());
     }
 
-    public boolean isValidEnd() {
+    public boolean isValidEnd()
+    {
         return HumanChromosome.contains(endChromosome());
     }
 

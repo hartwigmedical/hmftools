@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class CircosDataWriterTest {
+public class CircosDataWriterTest
+{
 
     @Test
-    public void testShorthand() {
+    public void testShorthand()
+    {
         assertEquals("1", CircosDataWriter.shorthand(1));
         assertEquals("99", CircosDataWriter.shorthand(99));
         assertEquals("0.1k", CircosDataWriter.shorthand(100));

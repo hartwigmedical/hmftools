@@ -3,9 +3,7 @@ package com.hartwig.hmftools.svanalysis.visualisation.data;
 import static com.hartwig.hmftools.svanalysis.visualisation.circos.Span.maxPositionPerChromosome;
 import static com.hartwig.hmftools.svanalysis.visualisation.circos.Span.minPositionPerChromosome;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +18,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.svanalysis.visual.VisSegmentFile;
 import com.hartwig.hmftools.svanalysis.visualisation.circos.SegmentTerminal;
 import com.hartwig.hmftools.svanalysis.visualisation.circos.Span;
 
@@ -67,7 +66,7 @@ public class Segments {
 
     @NotNull
     public static List<Segment> readTracks(@NotNull final String fileName) throws IOException {
-        return fromString(Files.readAllLines(new File(fileName).toPath()));
+        return VisSegmentFile.read(fileName).stream().map(Segments::fromFile).collect(Collectors.toList());
     }
 
     @NotNull
@@ -139,37 +138,20 @@ public class Segments {
         return result;
     }
 
-    @VisibleForTesting
     @NotNull
-    static List<Segment> fromString(@NotNull final List<String> lines) {
-        final List<Segment> result = Lists.newArrayList();
-
-        for (final String line : lines) {
-
-            if (!line.startsWith(COMMENT) && !line.startsWith(HEADER)) {
-                String[] values = line.split(DELIMITER);
-                final String start = values[4];
-                final String end = values[5];
-
-                Segment newSegment = ImmutableSegment.builder()
-                        .sampleId(values[0])
-                        .clusterId(Integer.valueOf(values[1]))
-                        .chainId(Integer.valueOf(values[2]))
-                        .chromosome(values[3])
-                        .start(SegmentTerminal.fromString(start) == SegmentTerminal.NONE ? Long.valueOf(start) : Long.valueOf(end))
-                        .end(SegmentTerminal.fromString(end) == SegmentTerminal.NONE ? Long.valueOf(end) : Long.valueOf(start))
-                        .track(0)
-                        .startTerminal(SegmentTerminal.fromString(start))
-                        .endTerminal(SegmentTerminal.fromString(end))
-                        .traverseCount(Integer.valueOf(values[6]))
-                        .build();
-
-                result.add(newSegment);
-
-            }
-        }
-
-        return result;
+    private static Segment fromFile(@NotNull final VisSegmentFile file) {
+        return  ImmutableSegment.builder()
+                .sampleId(file.SampleId)
+                .clusterId(file.ClusterId)
+                .chainId(file.ChainId)
+                .chromosome(file.Chromosome)
+                .start(SegmentTerminal.fromString(file.PosStart) == SegmentTerminal.NONE ? Long.valueOf(file.PosStart) : Long.valueOf(file.PosEnd))
+                .end(SegmentTerminal.fromString(file.PosEnd) == SegmentTerminal.NONE ? Long.valueOf(file.PosEnd) : Long.valueOf(file.PosStart))
+                .track(0)
+                .startTerminal(SegmentTerminal.fromString(file.PosStart))
+                .endTerminal(SegmentTerminal.fromString(file.PosEnd))
+                .traverseCount(file.TraverseCount)
+                .build();
     }
 
     @VisibleForTesting
