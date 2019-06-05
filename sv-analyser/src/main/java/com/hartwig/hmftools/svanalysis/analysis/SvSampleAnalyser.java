@@ -41,10 +41,10 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_LENGTH;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_MAX;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_RANK;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_TRANS_ID;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_LENGTH;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_MAX;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_RANK;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_TRANS_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -80,7 +80,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,9 +1,8 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_5P_UTR;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.setGenePhasingCounts;
-import static com.hartwig.hmftools.svannotation.analysis.SvAnnotatorTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.svannotation.analysis.SvAnnotatorTestUtils.initLogger;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.setGenePhasingCounts;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,13 +14,11 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonD
 
 import org.junit.Test;
 
-public class FusionCalcTests
+public class FusionCalcTest
 {
     @Test
     public void testGeneRegionCounts()
     {
-        initLogger();
-
         String geneId  = "G001";
         byte strand = 1;
         EnsemblGeneData geneData = createEnsemblGeneData(geneId, "GEN1", "1", strand, 10, 100);

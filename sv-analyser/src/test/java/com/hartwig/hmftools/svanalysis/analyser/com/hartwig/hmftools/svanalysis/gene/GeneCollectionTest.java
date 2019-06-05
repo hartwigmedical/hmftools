@@ -1,30 +1,29 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene;
 
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.extractTranscriptExonData;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.setAlternativeTranscriptPhasings;
-import static com.hartwig.hmftools.svannotation.analysis.SvAnnotatorTestUtils.addGeneData;
-import static com.hartwig.hmftools.svannotation.analysis.SvAnnotatorTestUtils.addTransExonData;
-import static com.hartwig.hmftools.svannotation.analysis.SvAnnotatorTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.svannotation.analysis.SvAnnotatorTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.extractTranscriptExonData;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.setAlternativeTranscriptPhasings;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
 
-public class GeneCollectionTests
+public class GeneCollectionTest
 {
     @Test
     public void testExonDataExtraction()

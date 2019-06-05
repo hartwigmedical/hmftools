@@ -37,7 +37,7 @@ import com.hartwig.hmftools.svanalysis.cn.SvCNData;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -457,45 +457,4 @@ public class SvTestHelper
 
     }
 
-    public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
-            final String chromosome, long position, int orientation)
-    {
-        List<String> synonyms = Lists.newArrayList();
-        List<Integer> entrezIds = Lists.newArrayList();
-        String karyotypeBand = "";
-
-        GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, synonyms, entrezIds, karyotypeBand);
-        gene.setPositionalData(chromosome, position, (byte)orientation);
-
-        return gene;
-    }
-
-    // Ensembl data types
-    public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, long geneStart, long geneEnd)
-    {
-        return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd, "", "", "");
-    }
-
-    public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptExonData> transExonList)
-    {
-        geneTransCache.getGeneExonDataMap().put(geneId, transExonList);
-    }
-
-    public static void addGeneData(SvGeneTranscriptCollection geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
-    {
-        geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
-
-        // for now only support non-overlapping genes, which keeps the lists and their indices the same
-
-        List<EnsemblGeneData> reverseGeneDataList = Lists.newArrayList(geneDataList);
-
-        for(int i = 0; i < geneDataList.size(); ++i)
-        {
-            EnsemblGeneData geneData = geneDataList.get(i);
-            geneData.setListIndex(i);
-            geneData.setReverseListIndex(i);
-        }
-
-        geneTransCache.getChrReverseGeneDataMap().put(chromosome, reverseGeneDataList);
-    }
 }

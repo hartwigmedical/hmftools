@@ -20,8 +20,8 @@ import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -263,7 +263,7 @@ public class SvAnalyser {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: file with sample gene transcript data");
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
 
         // allow sub-components to add their specific config
         SvaConfig.addCmdLineArgs(options);

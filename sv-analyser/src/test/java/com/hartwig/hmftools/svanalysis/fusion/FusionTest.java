@@ -1,20 +1,15 @@
-package com.hartwig.hmftools.svanalysis.analyser;
+package com.hartwig.hmftools.svanalysis.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.addGeneData;
-import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.addTransExonData;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createEnsemblGeneData;
-import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createGeneAnnotation;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_TRAV_ASSEMBLY;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_VALID_TRAVERSAL;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FDI_DIS_EXONS;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FDI_TERMINATED;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.PRE_GENE_BREAKEND_DISTANCE;
 import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.isDisrupted;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,18 +20,16 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.svanalysis.analyser.SvTestHelper;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class FusionTest
 {
-
     @Test
     public void testReportableFusionComparison()
     {

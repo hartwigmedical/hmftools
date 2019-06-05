@@ -1,24 +1,15 @@
-package com.hartwig.hmftools.svannotation.analysis;
+package com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-
-public class SvAnnotatorTestUtils
+public class GeneTestUtils
 {
-    public static void initLogger()
-    {
-        Configurator.setRootLevel(Level.DEBUG);
-    }
-
     public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
             final String chromosome, long position, int orientation)
     {
@@ -47,7 +38,5 @@ public class SvAnnotatorTestUtils
     {
         geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
     }
-
-
 
 }

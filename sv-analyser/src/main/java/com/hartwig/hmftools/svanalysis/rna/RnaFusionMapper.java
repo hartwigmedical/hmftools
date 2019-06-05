@@ -12,10 +12,10 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.svanalysis.rna.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
 import static com.hartwig.hmftools.svanalysis.rna.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MAX;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.EXON_RANK_MIN;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser.checkFusionLogic;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.checkFusionLogic;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,8 +37,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;

@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.LoadPurpleStructuralVariants.convertSvData;
-import static com.hartwig.hmftools.svannotation.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
@@ -24,14 +23,14 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoade
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableStructuralVariantAnalysis;
-import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
-import com.hartwig.hmftools.svannotation.analysis.SvDisruptionAnalyser;
-import com.hartwig.hmftools.svannotation.analysis.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser;
+import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.gene.EnsemblDAO;
+import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -354,12 +353,6 @@ public class StructuralVariantAnnotator
         return annotations;
     }
 
-    public static void writeEnsemblDataFiles(final CommandLine cmd)
-    {
-        EnsemblDAO ensemblData = new EnsemblDAO(cmd);
-        ensemblData.writeDataCacheFiles(cmd.getOptionValue(DATA_OUTPUT_DIR));
-    }
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -368,12 +361,6 @@ public class StructuralVariantAnnotator
         if (cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
-        }
-
-        if (cmd.hasOption(WRITE_ENSEMBL_CACHE))
-        {
-            writeEnsemblDataFiles(cmd);
-            return;
         }
 
         StructuralVariantAnnotator svAnnotator = new StructuralVariantAnnotator(cmd);
@@ -394,11 +381,10 @@ public class StructuralVariantAnnotator
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String REF_GENOME = "ref_genome";
-    private static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     private static final String DATA_OUTPUT_DIR = "data_output_dir";
+    public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
 
     private static final String LOG_DEBUG = "log_debug";
-    private static final String WRITE_ENSEMBL_CACHE = "write_ensembl_cache";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -417,7 +403,6 @@ public class StructuralVariantAnnotator
         options.addOption(DATA_OUTPUT_DIR, true, "Sample data directory");
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
-        options.addOption(WRITE_ENSEMBL_CACHE, false, "Write Ensembl cached data files and exit");
 
         SvFusionAnalyser.addCmdLineArgs(options);
         EnsemblDAO.addCmdLineArgs(options);

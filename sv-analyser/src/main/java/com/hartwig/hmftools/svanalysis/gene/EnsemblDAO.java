@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svannotation;
+package com.hartwig.hmftools.svanalysis.gene;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 
