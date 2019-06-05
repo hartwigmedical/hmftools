@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.svanalysis.visualisation.data.Link;
 
 import org.jetbrains.annotations.NotNull;
@@ -84,13 +85,13 @@ public class ColorPicker
     }
 
     @NotNull
-    private static String simpleSvColor(@NotNull final String type)
+    private static String simpleSvColor(@NotNull final StructuralVariantType type)
     {
         switch (type)
         {
-            case "DEL":
+            case DEL:
                 return toString(DEL);
-            case "DUP":
+            case DUP:
                 return toString(DUP);
         }
 

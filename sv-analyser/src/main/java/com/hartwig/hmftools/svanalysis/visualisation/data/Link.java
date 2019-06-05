@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svanalysis.visualisation.data;
 
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,7 @@ public abstract class Link
 
     public abstract int svId();
 
-    public abstract String type();
+    public abstract StructuralVariantType type();
 
     public abstract String resolvedType();
 

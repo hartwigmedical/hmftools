@@ -69,16 +69,16 @@ public class Links
                 .clusterId(file.ClusterId)
                 .chainId(file.ChainId)
                 .svId(file.SvId)
-                .type(file.Type.toString()) // TODO: USE ACTUAL ENUMS
+                .type(file.Type)
                 .resolvedType(file.ResolvedType)
                 .startChromosome(file.ChrStart)
                 .startPosition(file.PosStart)
                 .startOrientation(file.OrientStart)
-                .startInfo("") // TODO: FIX
+                .startInfo(file.InfoStart)
                 .endChromosome(file.ChrEnd)
                 .endPosition(file.PosEnd)
                 .endOrientation(file.OrientEnd)
-                .endInfo("") // TODO: FIX
+                .endInfo(file.InfoEnd)
                 .traverseCount(file.TraverseCount)
                 .build();
     }
