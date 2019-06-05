@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visual;
+package com.hartwig.hmftools.svanalysis.visualiser;
 
 import static java.lang.Math.max;
 
@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_TELOMER
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
-import static com.hartwig.hmftools.svanalysis.visual.VisSvDataFile.INFO_TYPE_FOLDBACK;
-import static com.hartwig.hmftools.svanalysis.visual.VisSvDataFile.INFO_TYPE_NORMAL;
+import static com.hartwig.hmftools.svanalysis.visualiser.VisSvDataFile.INFO_TYPE_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.visualiser.VisSvDataFile.INFO_TYPE_NORMAL;
 
 import java.io.IOException;
 import java.util.List;
@@ -223,7 +223,7 @@ public class VisualiserWriter
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to visual segments file: {}", e.toString());
+            LOGGER.error("error writing to visualiser segments file: {}", e.toString());
         }
     }
 
@@ -293,7 +293,7 @@ public class VisualiserWriter
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to visual gene-exons file: {}", e.toString());
+            LOGGER.error("error writing to visualiser gene-exons file: {}", e.toString());
         }
     }
 

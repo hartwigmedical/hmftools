@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.visual;
+package com.hartwig.hmftools.svanalysis.visualiser;
 
 public class VisGeneData
 {

@@ -71,7 +71,7 @@ import com.hartwig.hmftools.svanalysis.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.svanalysis.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
-import com.hartwig.hmftools.svanalysis.visual.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.visualiser.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.types.SvArmCluster;
 import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.cn.SvCNData;

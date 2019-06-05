@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.svanalysis.visual.VisSvDataFile;
+import com.hartwig.hmftools.svanalysis.visualiser.VisSvDataFile;
 
 import org.jetbrains.annotations.NotNull;
 

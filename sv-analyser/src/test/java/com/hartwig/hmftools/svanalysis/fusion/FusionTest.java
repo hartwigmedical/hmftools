@@ -6,9 +6,9 @@ import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svan
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.svanalysis.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_TRAV_ASSEMBLY;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.FCI_VALID_TRAVERSAL;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.isDisrupted;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.FCI_TRAV_ASSEMBLY;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.FCI_VALID_TRAVERSAL;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.isDisrupted;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;

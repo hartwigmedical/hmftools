@@ -45,7 +45,7 @@ import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLOH;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svanalysis.visual.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.visualiser.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;

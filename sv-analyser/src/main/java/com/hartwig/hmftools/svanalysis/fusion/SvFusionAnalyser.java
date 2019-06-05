@@ -39,7 +39,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class SvFusionAnalyser
 {
-
     public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
     public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";

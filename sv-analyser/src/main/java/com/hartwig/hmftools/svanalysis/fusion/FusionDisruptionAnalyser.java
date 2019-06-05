@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svanalysis.analysis;
+package com.hartwig.hmftools.svanalysis.fusion;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -45,7 +45,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonD
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import com.hartwig.hmftools.svanalysis.rna.RnaFusionMapper;
-import com.hartwig.hmftools.svanalysis.visual.VisualiserWriter;
+import com.hartwig.hmftools.svanalysis.visualiser.VisualiserWriter;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -54,7 +54,6 @@ import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvCluster;
 import com.hartwig.hmftools.svanalysis.types.SvLinkedPair;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
-import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.svanalysis.visual.VisCopyNumberFile;
+import com.hartwig.hmftools.svanalysis.visualiser.VisCopyNumberFile;
 
 import org.jetbrains.annotations.NotNull;
 

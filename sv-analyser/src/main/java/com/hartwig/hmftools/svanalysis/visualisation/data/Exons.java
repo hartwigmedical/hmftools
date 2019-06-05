@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.svanalysis.visual.VisGeneExonFile;
+import com.hartwig.hmftools.svanalysis.visualiser.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
 

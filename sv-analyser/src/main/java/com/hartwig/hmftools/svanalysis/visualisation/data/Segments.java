@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.svanalysis.visual.VisSegmentFile;
+import com.hartwig.hmftools.svanalysis.visualiser.VisSegmentFile;
 import com.hartwig.hmftools.svanalysis.visualisation.circos.SegmentTerminal;
 import com.hartwig.hmftools.svanalysis.visualisation.circos.Span;
 

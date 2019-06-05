@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svanalysis;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser.setSvGeneData;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.svanalysis.analysis.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.svanalysis.cn.CnDataLoader;
 import com.hartwig.hmftools.svanalysis.types.SvaConfig;
 import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
