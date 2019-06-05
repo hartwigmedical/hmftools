@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.svanalysis.types.SvBreakend.DIRECTION_TELOMER
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.visual.VisSvDataFile.INFO_TYPE_FOLDBACK;
+import static com.hartwig.hmftools.svanalysis.visual.VisSvDataFile.INFO_TYPE_NORMAL;
 
 import java.io.IOException;
 import java.util.List;
@@ -103,6 +105,8 @@ public class VisualiserWriter
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(),beEnd != null ? beEnd.position() : 0,
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
+                        beStart.getSV().getFoldbackLink(beStart.usesStart()).isEmpty() ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
+                        beEnd!= null ? (beEnd.getSV().getFoldbackLink(beEnd.usesStart()).isEmpty() ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
                         repeatCount));
             }
         }

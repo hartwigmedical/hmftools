@@ -25,17 +25,21 @@ public class VisSvDataFile
     public final StructuralVariantType Type;
     public final String ResolvedType;
     public final String ChrStart;
+    public final String InfoStart;
     public final String ChrEnd;
+    public final String InfoEnd;
     public final long PosStart;
     public final long PosEnd;
     public final byte OrientStart;
     public final byte OrientEnd;
     public final int TraverseCount;
 
+    public static final String INFO_TYPE_NORMAL = "NORMAL";
+    public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
 
     public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
             StructuralVariantType type, final String resolvedType, final String chrStart, final String chrEnd, long posStart, long posEnd,
-            byte orientStart, byte orientEnd, int traverseCount)
+            byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, int traverseCount)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -49,6 +53,8 @@ public class VisSvDataFile
         PosEnd = posEnd;
         OrientStart = orientStart;
         OrientEnd = orientEnd;
+        InfoStart = infoStart;
+        InfoEnd = infoEnd;
         TraverseCount = traverseCount;
     }
 
@@ -102,6 +108,8 @@ public class VisSvDataFile
                 .add("PosEnd")
                 .add("OrientStart")
                 .add("OrientEnd")
+                .add("InfoStart")
+                .add("InfoEnd")
                 .add("TraverseCount")
                 .toString();
     }
@@ -122,6 +130,8 @@ public class VisSvDataFile
                 .add(String.valueOf(svData.PosEnd))
                 .add(String.valueOf(svData.OrientStart))
                 .add(String.valueOf(svData.OrientEnd))
+                .add(String.valueOf(svData.InfoStart))
+                .add(String.valueOf(svData.InfoEnd))
                 .add(String.valueOf(svData.TraverseCount))
                 .toString();
     }
@@ -146,6 +156,8 @@ public class VisSvDataFile
                 Long.valueOf(values[index++]),
                 Byte.valueOf(values[index++]),
                 Byte.valueOf(values[index++]),
+                values[index++],
+                values[index++],
                 Integer.valueOf(values[index++]));
     }
 
