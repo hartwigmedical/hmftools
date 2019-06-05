@@ -2,7 +2,9 @@ package com.hartwig.hmftools.vicc;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -12,7 +14,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.vicc.datamodel.Association;
+import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
@@ -29,6 +33,7 @@ public final class ViccFactory {
 
     // SAGE records hold 8 field (no "feature names") while all other knowledgebases hold 9 records.
     private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
+
 
     private ViccFactory() {
     }
@@ -53,7 +58,7 @@ public final class ViccFactory {
             viccEntryBuilder.source(viccEntryElement.getAsJsonPrimitive("source").getAsString());
             viccEntryBuilder.genes(jsonArrayToStringList(viccEntryElement.getAsJsonArray("genes")));
 
-            viccEntryBuilder.geneIdentifiers(Lists.newArrayList());
+            viccEntryBuilder.geneIdentifiers(createGeneIdentifiers(viccEntryElement));
 
             if (viccEntryElement.has("feature_names")) {
                 JsonElement featureNames = viccEntryElement.get("feature_names");
@@ -84,6 +89,27 @@ public final class ViccFactory {
             values.add(element.getAsString());
         }
         return values;
+    }
+
+    @NotNull
+    private static List<GeneIdentifier> createGeneIdentifiers(JsonObject viccEntryElement) {
+        JsonElement geneIdentifiers = viccEntryElement.get("gene_identifiers");
+        List<GeneIdentifier> listGeneIdentifiers = Lists.newArrayList();
+
+        for (JsonElement elementGeneIdentifier : geneIdentifiers.getAsJsonArray()) {
+            listGeneIdentifiers.add(toGeneIdentifier(elementGeneIdentifier));
+
+        }
+        return listGeneIdentifiers;
+    }
+
+    @NotNull
+    private static GeneIdentifier toGeneIdentifier(@NotNull JsonElement elementGeneIdentifier) {
+        return ImmutableGeneIdentifier.builder()
+                .symbol(elementGeneIdentifier.getAsJsonObject().get("symbol").toString())
+                .entrezId(elementGeneIdentifier.getAsJsonObject().get("entrez_id").toString())
+                .ensemblGeneId(elementGeneIdentifier.getAsJsonObject().get("ensembl_gene_id").toString())
+                .build();
     }
 
     @NotNull
