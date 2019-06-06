@@ -114,22 +114,22 @@ public final class ViccFactory {
 
     @NotNull
     private static List<GeneIdentifier> createGeneIdentifiers(JsonObject viccEntryElement) {
-        JsonElement geneIdentifiers = viccEntryElement.get("gene_identifiers");
+        JsonArray geneIdentifiers = viccEntryElement.getAsJsonArray("gene_identifiers");
         List<GeneIdentifier> listGeneIdentifiers = Lists.newArrayList();
 
-        for (JsonElement elementGeneIdentifier : geneIdentifiers.getAsJsonArray()) {
-            listGeneIdentifiers.add(toGeneIdentifier(elementGeneIdentifier));
+        for (JsonElement elementGeneIdentifier : geneIdentifiers) {
+            listGeneIdentifiers.add(toGeneIdentifier(elementGeneIdentifier.getAsJsonObject()));
 
         }
         return listGeneIdentifiers;
     }
 
     @NotNull
-    private static GeneIdentifier toGeneIdentifier(@NotNull JsonElement elementGeneIdentifier) {
+    private static GeneIdentifier toGeneIdentifier(@NotNull JsonObject objectGeneIdentifier) {
         return ImmutableGeneIdentifier.builder()
-                .symbol(elementGeneIdentifier.getAsJsonObject().getAsJsonPrimitive("symbol").toString())
-                .entrezId(elementGeneIdentifier.getAsJsonObject().getAsJsonPrimitive("entrez_id").toString())
-                .ensemblGeneId(elementGeneIdentifier.getAsJsonObject().getAsJsonPrimitive("ensembl_gene_id").toString())
+                .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").toString())
+                .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").toString())
+                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").toString())
                 .build();
     }
 
