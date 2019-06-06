@@ -16,6 +16,9 @@ class CivicFusionReaderTest : StringSpec() {
         val fusionVariant = CivicVariantInput("NTRK1", "ENST00000368300.4", "", "LMNA-NTRK1", "1",
                                               "156084498", "156108548", "", "", "", "transcript_fusion")
 
+        val fusionVariantWithoutVariantType = CivicVariantInput("NTRK1", "ENST00000368300.4", "", "LMNA-NTRK1 Fusion", "1",
+                "156084498", "156108548", "", "", "", "")
+
         val promiscuousGene = CivicVariantInput("FGFR1", "ENST00000425967.3", "", "FGFR1 FUSIONS", "8",
                                                 "38268656", "38325363", "", "", "", "transcript_fusion")
     }
@@ -25,13 +28,12 @@ class CivicFusionReaderTest : StringSpec() {
             CivicFusionReader.read(fusionVariant) shouldBe listOf(FusionPair("LMNA", "NTRK1"))
         }
 
-        "can read promiscuous gene" {
-            CivicFusionReader.read(promiscuousGene) shouldBe listOf(PromiscuousGene("FGFR1"))
+        "can read fusion pair without variant type" {
+            CivicFusionReader.read(fusionVariantWithoutVariantType) shouldBe listOf(FusionPair("LMNA", "NTRK1"))
         }
 
-        "does not read fusions from input without variant types" {
-            CivicFusionReader.read(fusionVariant.copy(variant_types = "")) shouldBe emptyList<SomaticEvent>()
-            CivicFusionReader.read(promiscuousGene.copy(variant_types = "")) shouldBe emptyList<SomaticEvent>()
+        "can read promiscuous gene" {
+            CivicFusionReader.read(promiscuousGene) shouldBe listOf(PromiscuousGene("FGFR1"))
         }
 
         "does not extract fusion from complex variant" {
