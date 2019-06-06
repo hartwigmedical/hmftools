@@ -232,7 +232,9 @@ public final class ViccFactory {
                 .kingdom(elementEnvironmentContext.getAsJsonObject().get("kingdom").getAsString())
                 .directParent(elementEnvironmentContext.getAsJsonObject().get("direct-parent").getAsString())
                 .classs(elementEnvironmentContext.getAsJsonObject().get("class").getAsString())
-                .subClass(elementEnvironmentContext.getAsJsonObject().has("subclass") ? elementEnvironmentContext.getAsJsonObject().get("subclass").getAsString() : null)
+                .subClass(elementEnvironmentContext.getAsJsonObject().has("subclass") ? elementEnvironmentContext.getAsJsonObject()
+                        .get("subclass")
+                        .getAsString() : null)
                 .superClass(elementEnvironmentContext.getAsJsonObject().get("superclass").getAsString())
                 .build();
     }
