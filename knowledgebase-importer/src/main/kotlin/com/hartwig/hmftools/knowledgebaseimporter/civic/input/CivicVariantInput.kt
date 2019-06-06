@@ -22,8 +22,8 @@ data class CivicVariantInput(override val gene: String, private val representati
         variant.contains(Regex("MLL-MLLT3")) && gene == "KMT2A" -> copy(variant = variant.replace("MLL-MLLT3", "KMT2A-MLLT3"))
         variant.contains("ZNF198-FGFR1")                        -> copy(variant = variant.replace("ZNF198-FGFR1", "ZMYM2-FGFR1"))
         variant.contains("NPM-ALK")                             -> copy(variant = variant.replace("NPM-ALK", "NPM1-ALK"))
-        transcript == "ENST0000023170.2"                        -> copy(representative_transcript = "ENST00000231790.2")
-        transcript == "ENST000002564742"                        -> copy(representative_transcript = "ENST00000256474.2")
+        representative_transcript == "ENST0000023170.2"         -> copy(representative_transcript = "ENST00000231790.2")
+        representative_transcript == "ENST000002564742"         -> copy(representative_transcript = "ENST00000256474.2")
         else                                                    -> this
     }
 }
