@@ -145,13 +145,18 @@ public final class ViccFactory {
         for (String keysAssociation : elementAssociation.getAsJsonObject().keySet()) {
             LOGGER.info(elementAssociation.getAsJsonObject().keySet());
             associationBuilder = ImmutableAssociation.builder()
-                    .variantName(Strings.EMPTY)
+                    .variantName(elementAssociation.getAsJsonObject().has("variant_name") ? elementAssociation.getAsJsonObject()
+                            .getAsJsonPrimitive("variant_name")
+                            .toString() : null)
+
                     .evidence(Lists.newArrayList())
                     .evidenceLevel(elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence_level").toString())
                     .evidenceLabel(elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence_label").toString())
                     .responseType(elementAssociation.getAsJsonObject().getAsJsonPrimitive("response_type").toString())
                     .drugLabels(elementAssociation.getAsJsonObject().getAsJsonPrimitive("drug_labels").toString())
-                    .sourceLink(Strings.EMPTY)
+                    .sourceLink(elementAssociation.getAsJsonObject().has("source_link") ? elementAssociation.getAsJsonObject()
+                            .getAsJsonPrimitive("source_link")
+                            .toString() : null)
                     .publicationUrls(Lists.newArrayList(elementAssociation.getAsJsonObject()
                             .getAsJsonPrimitive("publication_url")
                             .toString()))
@@ -210,11 +215,7 @@ public final class ViccFactory {
 
     private static Phenotype createPhenotype(JsonElement elementAssociation) {
         return ImmutablePhenotype.builder()
-                .type(ImmutablePhenotypeType.builder()
-                        .source(Strings.EMPTY)
-                        .term(Strings.EMPTY)
-                        .id(Strings.EMPTY)
-                        .build())
+                .type(ImmutablePhenotypeType.builder().source(Strings.EMPTY).term(Strings.EMPTY).id(Strings.EMPTY).build())
                 .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
                 .family(Strings.EMPTY)
                 .id(Strings.EMPTY)
