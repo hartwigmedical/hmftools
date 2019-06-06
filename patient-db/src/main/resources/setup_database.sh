@@ -3,11 +3,11 @@
 db_generate_script=$1
 
 OS=$(uname)
-if [ ${OS} = "Darwin" ];
+if [[ ${OS} = "Darwin" ]];
 then
     script_epoch=$(stat -t '%s' ${db_generate_script} | cut -d\" -f4)
 else
-    # HEKE: Assume Linux with GNU date syntax
+    # Assume Linux with GNU date syntax
     script_epoch=$(date -r ${db_generate_script} '+%s')
 fi
 
@@ -19,7 +19,7 @@ HERE
 echo "[INFO]: Script Epoch: ${script_epoch}"
 echo "[INFO]: DB Epoch: ${db_epoch}"
 
-if [ "$db_epoch" = "NULL" ] || [ ${script_epoch} -gt ${db_epoch} ];
+if [[ "$db_epoch" = "NULL" || ${script_epoch} -gt ${db_epoch} ]];
 then
     echo "[INFO] Rebuilding test database based on ${db_generate_script}"
     mysql --defaults-file=~/mysql.login < ${db_generate_script}
