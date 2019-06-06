@@ -3,6 +3,7 @@ package com.hartwig.hmftools.vicc;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -42,6 +43,9 @@ public final class ViccFactory {
     // SAGE records hold 8 field (no "feature names") while all other knowledgebases hold 9 records.
     private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
 
+    private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(9, 10);
+
+
     private ViccFactory() {
     }
 
@@ -77,7 +81,17 @@ public final class ViccFactory {
             }
 
             viccEntryBuilder.features(Lists.newArrayList());
-            viccEntryBuilder.association(createAssociation(viccEntryElement));
+
+            JsonElement elementAssociation = viccEntryElement.get("association");
+            Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
+
+            if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
+                LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
+                LOGGER.warn(keysAssociation);
+            } else {
+                viccEntryBuilder.association(createAssociation(viccEntryElement));
+            }
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("dev_tags")));
@@ -140,6 +154,7 @@ public final class ViccFactory {
                         .build())
                 .description(Strings.EMPTY)
                 .environmentalContexts(Lists.newArrayList())
+                .oncogenic(Strings.EMPTY)
                 .build();
 
         for (String keysAssociation : elementAssociation.getAsJsonObject().keySet()) {
@@ -163,6 +178,9 @@ public final class ViccFactory {
                     .phenotype(createPhenotype(elementAssociation))
                     .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
                     .environmentalContexts(Lists.newArrayList(createEnvironmentalContexts(elementAssociation)))
+                    .oncogenic(elementAssociation.getAsJsonObject().has("oncogenic") ? elementAssociation.getAsJsonObject()
+                            .getAsJsonPrimitive("oncogenic")
+                            .toString() : null)
                     .build();
         }
 

@@ -42,4 +42,7 @@ public abstract class Association {
 
     @NotNull
     public abstract List<EnvironmentalContext> environmentalContexts();
+
+    @Nullable
+    public abstract String oncogenic();
 }
