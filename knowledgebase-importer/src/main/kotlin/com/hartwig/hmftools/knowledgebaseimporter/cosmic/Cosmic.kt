@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.knowledgebaseimporter.cosmic
 
-import com.google.common.annotations.VisibleForTesting
 import com.hartwig.hmftools.knowledgebaseimporter.Knowledgebase
 import com.hartwig.hmftools.knowledgebaseimporter.diseaseOntology.Doid
 import com.hartwig.hmftools.knowledgebaseimporter.output.*
@@ -10,7 +9,7 @@ import org.apache.commons.csv.CSVRecord
 class Cosmic(fusionsLocation: String) : Knowledgebase {
     override val source = "cosmic"
     override val knownVariants: List<KnownVariantOutput> = listOf()
-    override val knownFusionPairs by lazy { readCSVRecords(fusionsLocation) { readAndCorrectFusion(it) }.distinct() }
+    override val knownFusionPairs by lazy { readCSVRecords(fusionsLocation) { readAndCorrectFusion(it) }.filterNotNull().distinct() }
     override val promiscuousGenes: List<PromiscuousGene> = listOf()
     override val actionableVariants: List<ActionableVariantOutput> = listOf()
     override val actionableCNVs: List<ActionableCNVOutput> = listOf()
@@ -19,28 +18,51 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
     override val actionableRanges: List<ActionableGenomicRangeOutput> = listOf()
     override val cancerTypes: Map<String, Set<Doid>> = mapOf()
 
-    @VisibleForTesting
-    fun readAndCorrectFusion(csvRecord: CSVRecord): FusionPair {
-        val fiveGene = csvRecord["5' Partner"].split("_").first()
-        var threeGene = csvRecord["3' Partner"].split("_").first()
-        if (threeGene.equals("DUX4L1")) {
-            threeGene = threeGene.replace("DUX4L1", "DUX4")
+    private fun readAndCorrectFusion(csvRecord: CSVRecord): FusionPair? {
+        val fiveGene = curateGene(csvRecord["5' Partner"].split("_").first())
+        val threeGene = curateGene(csvRecord["3' Partner"].split("_").first())
+
+        if (!isBlackListed(fiveGene, threeGene)) {
+            return FusionPair(fiveGene, threeGene)
         }
-        if (threeGene.equals("SIP1")) {
-            threeGene = threeGene.replace("SIP1", "GEMIN2")
+
+        return null
+    }
+
+    private fun curateGene(gene: String): String {
+        if (gene == "DUX4L1") {
+            return "DUX4"
+        } else if (gene == "SIP1") {
+            return "GEMIN2"
+        } else if (gene == "KIAA0284") {
+            return "CEP170B"
+        } else if (gene == "ACCN1") {
+            return "ASIC2"
+        } else if (gene == "FAM22A") {
+            return "NUTM2A"
+        } else if (gene == "ROD1") {
+            return "PTBP3"
         }
-        if (threeGene.equals("KIAA0284")) {
-            threeGene = threeGene.replace("KIAA0284", "CEP170B")
+
+        return gene
+    }
+
+    private fun isBlackListed(fiveGene: String, threeGene: String) : Boolean {
+        // The below 6 fusions all entered COSMIC based on a single publication: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3398135/
+        if (fiveGene == "INTS4" && threeGene == "GAB2") {
+            return true
+        } else if (fiveGene == "PLA2R1" && threeGene == "RBMS1") {
+            return true
+        } else if (fiveGene == "FBXL18" && threeGene == "RNF216") {
+            return true
+        } else if (fiveGene == "PLXND1" && threeGene == "TMCC1") {
+            return true
+        } else if (fiveGene == "SEPT8" && threeGene == "AFF4") {
+            return true
+        } else if (fiveGene == "IL6R" && threeGene == "ATP8B2") {
+            return true
         }
-        if (threeGene.equals("ACCN1")) {
-            threeGene = threeGene.replace("ACCN1", "ASIC2")
-        }
-        if (threeGene.equals("FAM22A")) {
-            threeGene = threeGene.replace("FAM22A", "NUTM2A")
-        }
-        if (threeGene.equals("ROD1")) {
-            threeGene = threeGene.replace("ROD1", "PTBP3")
-        }
-        return FusionPair(fiveGene, threeGene)
+
+        return false
     }
 }

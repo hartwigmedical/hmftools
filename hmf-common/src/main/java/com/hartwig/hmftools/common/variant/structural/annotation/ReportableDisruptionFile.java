@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportableDisruptionFile
+public final class ReportableDisruptionFile
 {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
@@ -27,18 +27,16 @@ public class ReportableDisruptionFile
     }
 
     @NotNull
-    public static List<ReportableDisruption> read(final String filePath) throws IOException
-    {
+    public static List<ReportableDisruption> read(final String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<ReportableDisruption> disruptions) throws IOException
-    {
+    public static void write(@NotNull final String filename, @NotNull List<ReportableDisruption> disruptions) throws IOException {
         Files.write(new File(filename).toPath(), toLines(disruptions));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<ReportableDisruption> disruptions)
+    private static List<String> toLines(@NotNull final List<ReportableDisruption> disruptions)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -72,8 +70,7 @@ public class ReportableDisruptionFile
     @NotNull
     private static String toString(@NotNull final ReportableDisruption disruption)
     {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(disruption.svId()))
+        return new StringJoiner(DELIMITER).add(String.valueOf(disruption.svId()))
                 .add(String.valueOf(disruption.chromosome()))
                 .add(String.valueOf(disruption.orientation()))
                 .add(String.valueOf(disruption.strand()))
@@ -88,9 +85,9 @@ public class ReportableDisruptionFile
     }
 
     @NotNull
-    private static ReportableDisruption fromString(@NotNull final String clusterData)
+    private static ReportableDisruption fromString(@NotNull final String line)
     {
-        String[] values = clusterData.split(DELIMITER);
+        String[] values = line.split(DELIMITER);
 
         int index = 0;
 
@@ -98,7 +95,7 @@ public class ReportableDisruptionFile
                 .svId(Integer.valueOf(values[index++]))
                 .chromosome(values[index++])
                 .orientation(Byte.valueOf(values[index++]))
-                .orientation(Integer.valueOf(values[index++]))
+                .strand(Integer.valueOf(values[index++]))
                 .chrBand(values[index++])
                 .gene(values[index++])
                 .type(values[index++])

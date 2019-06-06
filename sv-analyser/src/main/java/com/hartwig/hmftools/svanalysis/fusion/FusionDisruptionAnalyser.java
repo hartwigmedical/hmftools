@@ -1196,7 +1196,10 @@ public class FusionDisruptionAnalyser
 
     public void close()
     {
-        mPerfCounter.logStats();
+        if(mConfig.hasMultipleSamples() || LOGGER.isDebugEnabled())
+        {
+            mPerfCounter.logStats();
+        }
 
         if(mFusionFinder != null)
             mFusionFinder.onCompleted();

@@ -110,9 +110,9 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
     val dir = File(outputDir)
     if (!dir.exists()) dir.mkdirs()
 
-    logger.info("Writing known variants to $outputDir")
+    logger.info("Writing known variants and fusions to $outputDir")
     knowledgebases.filterNot { it.knownVariants.isEmpty() }.map { writeKnownVariants(it, outputDir) }
-    knowledgebases.filterNot { it.source.toLowerCase().equals("iclusion") }.map { writeFusionsFiles(listOf(it), outputDir) }
+    writeFusionsFiles(knowledgebases, outputDir)
 
     logger.info("Writing actionability files to $outputDir")
     CsvWriter.writeTSV(knowledgebases.flatMap { it.actionableVariants }, "$outputDir${File.separator}actionableVariants.tsv")
@@ -147,7 +147,7 @@ private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontolo
     logger.info("Printing information gathered from knowledgebase cancer types")
     allCancerTypeDoids.forEach { t, u -> logger.info(" " + t + " doids count: " + u.size) }
 
-    val extraCancerTypeDoids = readExtraCancerTypeDoids().map {
+    val extraCancerTypeDoids = readExtraCancerTypeDoids().map { it ->
         Pair(it.key, it.value.flatMap { doid -> ontology.findDoids(doid) }.toSet().sortedBy { it.value })
     }.toMap()
 
@@ -162,11 +162,11 @@ private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontolo
 }
 
 private fun readExtraCancerTypeDoids(): Map<String, Set<Doid>> {
-    return readCSVRecords(object {}.javaClass.getResourceAsStream("/knowledgebase_disease_doids.csv")) {
+    return readCSVRecords(object {}.javaClass.getResourceAsStream("/knowledgebase_disease_doids.csv")) { it ->
         Pair(it["cancerType"], it["doids"].orEmpty().split(";").filterNot { it.isBlank() }.map { Doid(it.trim()) }.toSet())
     }.toMap()
 }
 
 private fun writeKnownVariants(knowledgebase: Knowledgebase, outputDirectory: String) {
-        CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
+    CsvWriter.writeTSV(knowledgebase.knownVariants.distinct(), "$outputDirectory${File.separator}${knowledgebase.source}KnownVariants.tsv")
 }

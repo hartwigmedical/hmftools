@@ -11,6 +11,6 @@ public abstract class EvidenceType {
     @NotNull
     public abstract String sourceName();
 
-    @NotNull
+    @Nullable
     public abstract String id();
 }

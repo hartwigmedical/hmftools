@@ -38,23 +38,18 @@ public class SvAnalyzer {
     private final List<Disruption> disruptionsOld;
 
     @NotNull
-    public static SvAnalyzer fromFiles(@NotNull String fusionFile, @NotNull String disruptionFile) throws IOException
-    {
-
+    public static SvAnalyzer fromFiles(@NotNull String fusionFile, @NotNull String disruptionFile) throws IOException {
         List<ReportableGeneFusion> fusions = Lists.newArrayList();
         List<ReportableDisruption> disruptions = Lists.newArrayList();
 
         List<Fusion> fusionsOld = Lists.newArrayList();
         List<Disruption> disruptionsOld = Lists.newArrayList();
 
-        if(fusionFile.endsWith(ReportableGeneFusionFile.FILE_EXTENSION) && disruptionFile.endsWith(ReportableDisruptionFile.FILE_EXTENSION))
-        {
+        if (fusionFile.endsWith(ReportableGeneFusionFile.FILE_EXTENSION)
+                && disruptionFile.endsWith(ReportableDisruptionFile.FILE_EXTENSION)) {
             fusions = ReportableGeneFusionFile.read(fusionFile);
             disruptions = ReportableDisruptionFile.read(disruptionFile);
-
-        }
-        else
-        {
+        } else {
             fusionsOld = FusionFileReader.fromFusionFile(fusionFile);
             disruptionsOld = DisruptionFileReader.fromDisruptionFile(disruptionFile);
         }
@@ -74,13 +69,13 @@ public class SvAnalyzer {
     @NotNull
     public SvAnalysis run(@NotNull GeneModel geneModel, @NotNull List<GeneCopyNumber> geneCopyNumbers,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
-
-        List<ReportableGeneFusion> reportableFusions = !this.fusions.isEmpty()
-                ? this.fusions : ReportableGeneFusionFactory.convert(reportableFusions());
+        List<ReportableGeneFusion> reportableFusions =
+                !this.fusions.isEmpty() ? this.fusions : ReportableGeneFusionFactory.convert(reportableFusions());
 
         List<ReportableDisruption> reportableDisruptions = getReportableDisruptions(geneModel);
 
-        List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(reportableDisruptions, geneCopyNumbers);
+        List<ReportableGeneDisruption> reportableGeneDisruptions =
+                ReportableGeneDisruptionFactory.convert(reportableDisruptions, geneCopyNumbers);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
 
@@ -107,27 +102,20 @@ public class SvAnalyzer {
         return reportableFusions;
     }
 
-
     @NotNull
-    private List<ReportableDisruption> getReportableDisruptions(@NotNull GeneModel geneModel)
-    {
+    private List<ReportableDisruption> getReportableDisruptions(@NotNull GeneModel geneModel) {
         Set<String> reportableGenes = geneModel.disruptionGenes();
 
-        if(!disruptions.isEmpty())
-        {
+        if (!disruptions.isEmpty()) {
             return disruptions.stream()
                     .filter(x -> geneModel.disruptionGenes().contains(x.gene()))
                     .filter(ReportableDisruption::canonical)
                     .collect(Collectors.toList());
-        }
-        else
-        {
+        } else {
             List<ReportableDisruption> disruptions = Lists.newArrayList();
 
-            for (Disruption disruption : disruptionsOld)
-            {
-                if (reportableGenes.contains(disruption.gene()) && disruption.canonical() && disruption.isDisruptive())
-                {
+            for (Disruption disruption : disruptionsOld) {
+                if (reportableGenes.contains(disruption.gene()) && disruption.canonical() && disruption.isDisruptive()) {
                     disruptions.add(ImmutableReportableDisruption.builder()
                             .svId(Integer.valueOf(disruption.svId()))
                             .chromosome(disruption.chromosome())

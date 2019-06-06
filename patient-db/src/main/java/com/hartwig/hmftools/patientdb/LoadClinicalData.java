@@ -84,6 +84,7 @@ public final class LoadClinicalData {
             final Lims lims = buildLims(cmd);
 
             final Map<String, List<SampleData>> samplesPerPatientAll = loadSamplesPerPatientAll(lims);
+            LOGGER.info(samplesPerPatientAll);
             final Map<String, List<SampleData>> samplesPerPatientFilteredToOnlySequenced = filterPatients(cmd, samplesPerPatientAll);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
@@ -118,6 +119,7 @@ public final class LoadClinicalData {
     private static Map<String, List<SampleData>> extractSamplesFromRunContexts(@NotNull List<RunContext> runContexts,
             Map<String, List<SampleData>> samplesPerPatientAll) {
 
+
         final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
 
         Map<String, List<SampleData>> samplesPerPatientSequenced = Maps.newHashMap();
@@ -125,7 +127,7 @@ public final class LoadClinicalData {
             boolean filteredSequencedSamples = samplesPerPatientAll.keySet().contains(patientIdentifier);
             if (filteredSequencedSamples) {
                 String sampleId = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
-                samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(sampleId));
+                samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(patientIdentifier));
             }
         }
         return samplesPerPatientSequenced;

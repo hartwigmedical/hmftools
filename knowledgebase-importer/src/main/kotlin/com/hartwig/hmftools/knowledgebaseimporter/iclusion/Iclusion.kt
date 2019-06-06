@@ -14,13 +14,14 @@ class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: Dis
     override val source: String = "iclusion"
 
     private val geneModel = GeneModel()
-    private val geneToTranscriptMap = iclusionStudies.flatMap { it.mutations.map { it.geneName } }.distinct().map {
+    private val geneToTranscriptMap = iclusionStudies.flatMap { it -> it.mutations.map { it.geneName } }.distinct().map {
         Pair(it, geneModel.hmfTranscriptForGene(it))
     }.toMap()
 
-    override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
-    override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
-    override val promiscuousGenes by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
+    override val knownVariants: List<KnownVariantOutput> = listOf()
+    override val knownFusionPairs: List<FusionPair> = listOf()
+    override val promiscuousGenes: List<PromiscuousGene> = listOf()
+
     override val actionableVariants by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
     override val actionableCNVs by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
     override val actionableFusionPairs by lazy { actionableKbItems.filterIsInstance<ActionableFusionPairOutput>() }
@@ -28,7 +29,7 @@ class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: Dis
     override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.doids.entries }
-                .associateBy({ it.key }, { it.value.flatMap { diseaseOntology.findDoids(it) }.toSet() })
+                .associateBy({ it.key }, { it -> it.value.flatMap { diseaseOntology.findDoids(it) }.toSet() })
     }
 
     override val knownKbRecords: List<IclusionRecord> by lazy { iclusionStudies.flatMap { IclusionRecord(it, geneToTranscriptMap) } }

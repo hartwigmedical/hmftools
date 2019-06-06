@@ -12,10 +12,9 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class ReportableGeneFusionFile
-{
+public final class ReportableGeneFusionFile {
+
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
 
@@ -39,7 +38,7 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<ReportableGeneFusion> fusions)
+    private static List<String> toLines(@NotNull final List<ReportableGeneFusion> fusions)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -54,7 +53,8 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER)
                 .add("geneStart")
                 .add("geneContextStart")
@@ -68,10 +68,8 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    private static String toString(@NotNull final ReportableGeneFusion fusion)
-    {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(fusion.geneStart()))
+    private static String toString(@NotNull final ReportableGeneFusion fusion) {
+        return new StringJoiner(DELIMITER).add(String.valueOf(fusion.geneStart()))
                 .add(String.valueOf(fusion.geneContextStart()))
                 .add(String.valueOf(fusion.geneTranscriptStart()))
                 .add(String.valueOf(fusion.geneEnd()))
@@ -83,8 +81,7 @@ public class ReportableGeneFusionFile
     }
 
     @NotNull
-    private static ReportableGeneFusion fromString(@NotNull final String clusterData)
-    {
+    private static ReportableGeneFusion fromString(@NotNull final String clusterData) {
         String[] values = clusterData.split(DELIMITER);
 
         int index = 0;
@@ -103,7 +100,8 @@ public class ReportableGeneFusionFile
 
     public static String context(final String regionType, int exon, boolean isEnd)
     {
-        switch (regionType) {
+        switch (regionType)
+        {
             case "Upstream":
                 return "Promoter Region";
             case "Exonic":

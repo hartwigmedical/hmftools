@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Association {
 
-    @NotNull
+    @Nullable
     public abstract String variantName();
 
     @NotNull
@@ -28,7 +28,7 @@ public abstract class Association {
     @NotNull
     public abstract String drugLabels();
 
-    @NotNull
+    @Nullable
     public abstract String sourceLink();
 
     @NotNull
@@ -42,4 +42,7 @@ public abstract class Association {
 
     @NotNull
     public abstract List<EnvironmentalContext> environmentalContexts();
+
+    @Nullable
+    public abstract String oncogenic();
 }
