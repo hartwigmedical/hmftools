@@ -173,26 +173,31 @@ public final class ViccFactory {
 
             environmentalContexts.add(ImmutableEnvironmentalContext.builder()
                     .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.get("term").getAsString() : null)
-                    .description(objectEnvironmentContext.get("description").getAsString())
-                    .taxonomy(objectEnvironmentContext.has("taxonomy") ? createTaxonomy(objectEnvironmentContext.get("taxonomy")) : null)
-                    .source(objectEnvironmentContext.has("source") ? objectEnvironmentContext.get("source").getAsString() : null)
-                    .usanStem(objectEnvironmentContext.has("usan_stem") ? objectEnvironmentContext.get("usan_stem").getAsString() : null)
+                    .description(objectEnvironmentContext.getAsJsonPrimitive("description").getAsString())
+                    .taxonomy(objectEnvironmentContext.has("taxonomy")
+                            ? createTaxonomy(objectEnvironmentContext.getAsJsonObject("taxonomy"))
+                            : null)
+                    .source(objectEnvironmentContext.has("source")
+                            ? objectEnvironmentContext.getAsJsonPrimitive("source").getAsString()
+                            : null)
+                    .usanStem(objectEnvironmentContext.has("usan_stem") ? objectEnvironmentContext.getAsJsonPrimitive("usan_stem")
+                            .getAsString() : null)
                     .approvedCountries(approvedCountries)
-                    .id(objectEnvironmentContext.has("id") ? objectEnvironmentContext.get("id").getAsString() : null)
+                    .id(objectEnvironmentContext.has("id") ? objectEnvironmentContext.getAsJsonPrimitive("id").getAsString() : null)
                     .build());
         }
         return environmentalContexts;
     }
 
-    private static Taxonomy createTaxonomy(JsonElement elementEnvironmentContext) {
+    private static Taxonomy createTaxonomy(JsonObject elementEnvironmentContext) {
         return ImmutableTaxonomy.builder()
-                .kingdom(elementEnvironmentContext.getAsJsonObject().get("kingdom").getAsString())
-                .directParent(elementEnvironmentContext.getAsJsonObject().get("direct-parent").getAsString())
-                .classs(elementEnvironmentContext.getAsJsonObject().get("class").getAsString())
-                .subClass(elementEnvironmentContext.getAsJsonObject().has("subclass") ? elementEnvironmentContext.getAsJsonObject()
-                        .get("subclass")
-                        .getAsString() : null)
-                .superClass(elementEnvironmentContext.getAsJsonObject().get("superclass").getAsString())
+                .kingdom(elementEnvironmentContext.getAsJsonPrimitive("kingdom").getAsString())
+                .directParent(elementEnvironmentContext.getAsJsonPrimitive("direct-parent").getAsString())
+                .classs(elementEnvironmentContext.getAsJsonPrimitive("class").getAsString())
+                .subClass(elementEnvironmentContext.has("subclass")
+                        ? elementEnvironmentContext.getAsJsonPrimitive("subclass").getAsString()
+                        : null)
+                .superClass(elementEnvironmentContext.getAsJsonPrimitive("superclass").getAsString())
                 .build();
     }
 
