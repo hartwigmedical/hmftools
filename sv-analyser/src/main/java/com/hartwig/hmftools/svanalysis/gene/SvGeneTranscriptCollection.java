@@ -183,6 +183,11 @@ public class SvGeneTranscriptCollection
             Transcript transcript, final EnsemblGeneData geneData, long position,
             final List<EnsemblGeneData> geneRegions, final List<EnsemblGeneData> geneRegionsReversed)
     {
+        if(position == 40111449)
+        {
+            LOGGER.debug("here");
+        }
+
         // annotate with preceding gene info if the up distance isn't set
         long precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(geneData, geneData.Strand == 1 ? geneRegionsReversed : geneRegions);
 

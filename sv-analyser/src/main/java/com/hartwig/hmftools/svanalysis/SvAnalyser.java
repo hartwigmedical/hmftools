@@ -156,7 +156,10 @@ public class SvAnalyser {
                 continue;
             }
 
-            LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count);
+            if(svaConfig.hasMultipleSamples())
+            {
+                LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count);
+            }
 
             cnDataLoader.loadSampleData(sampleId, svRecords);
 
@@ -201,7 +204,10 @@ public class SvAnalyser {
             }
         }
 
-        prefCounter.logStats();
+        if(LOGGER.isDebugEnabled() || svaConfig.hasMultipleSamples())
+        {
+            prefCounter.logStats();
+        }
 
         sampleAnalyser.close();
 

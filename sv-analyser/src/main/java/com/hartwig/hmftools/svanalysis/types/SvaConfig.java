@@ -44,7 +44,7 @@ public class SvaConfig
     public static final String DATA_OUTPUT_PATH = "data_output_path"; // old config name support
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
-    public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode
+    public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
@@ -96,13 +96,13 @@ public class SvaConfig
             }
         }
 
-        if(mSampleIds.size() == 1)
+        if(cmd.hasOption(UPLOAD_TO_DB))
         {
-            UploadToDB = true;
+            UploadToDB = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB));
         }
         else
         {
-            UploadToDB = cmd.hasOption(UPLOAD_TO_DB);
+            UploadToDB = mSampleIds.size() == 1;
         }
 
         PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
@@ -171,7 +171,7 @@ public class SvaConfig
         options.addOption(DATA_OUTPUT_DIR, true, "Linx output directory");
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
-        options.addOption(UPLOAD_TO_DB, false, "Upload all LINX data to DB when in batch mode");
+        options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");

@@ -38,6 +38,8 @@ public class GeneFusion
         mAnnotations = null;
     }
 
+    public String name() { return mUpstreamTrans.geneName() + "_" + mDownstreamTrans.geneName(); }
+
     public Transcript upstreamTrans() { return mUpstreamTrans; }
     public Transcript downstreamTrans() { return mDownstreamTrans; }
 
@@ -70,10 +72,16 @@ public class GeneFusion
 
     public boolean isTerminated()
     {
-        if(mAnnotations == null || mAnnotations.disruptionDown() == null || mAnnotations.disruptionUp() == null)
+        if(mAnnotations == null)
             return false;
 
-        return mAnnotations.disruptionUp().transcriptTerminated() || mAnnotations.disruptionDown().transcriptTerminated();
+        if((mAnnotations.disruptionUp() != null && mAnnotations.disruptionUp().transcriptTerminated())
+        || (mAnnotations.disruptionDown() != null && mAnnotations.disruptionDown().transcriptTerminated()))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     // convenience functions

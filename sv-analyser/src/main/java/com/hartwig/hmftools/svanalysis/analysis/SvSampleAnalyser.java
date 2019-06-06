@@ -895,12 +895,15 @@ public class SvSampleAnalyser {
         closeBufferedWriter(mClusterFileWriter);
         closeBufferedWriter(mLinksFileWriter);
 
-        // log perf stats
-        mPcPrep.logStats();
-        mPcClusterAnalyse.logStats();
-        mPcWrite.logStats();
+        if(mConfig.hasMultipleSamples() || LOGGER.isDebugEnabled())
+        {
+            // log perf stats
+            mPcPrep.logStats();
+            mPcClusterAnalyse.logStats();
+            mPcWrite.logStats();
 
-        mAnalyser.logStats();
+            mAnalyser.logStats();
+        }
     }
 
 }

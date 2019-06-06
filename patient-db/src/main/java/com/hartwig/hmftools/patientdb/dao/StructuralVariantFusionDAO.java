@@ -136,8 +136,6 @@ public class StructuralVariantFusionDAO
             }
         }
 
-        LOGGER.debug("uploading {} fusions to DB", fusions.size());
-
         for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
             final InsertValuesStep9 fusionInserter = context.insertInto(SVFUSION,
@@ -155,7 +153,7 @@ public class StructuralVariantFusionDAO
                     sampleId,
                     transcriptToDatabaseIdMap.get(fusion.upstreamTrans()),
                     transcriptToDatabaseIdMap.get(fusion.downstreamTrans()),
-                    fusion.upstreamTrans().geneName() + "_" + fusion.downstreamTrans().geneName(),
+                    fusion.name(),
                     fusion.reportable(),
                     fusion.getKnownFusionType(),
                     fusion.getChainLength(),

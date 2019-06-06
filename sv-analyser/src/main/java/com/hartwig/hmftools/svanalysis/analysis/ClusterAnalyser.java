@@ -52,6 +52,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
+import static com.hartwig.hmftools.svanalysis.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.svanalysis.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
 
@@ -323,9 +324,6 @@ public class ClusterAnalyser {
         // use the relative copy number change to replicate some SVs within a cluster
         isSpecificCluster(cluster);
 
-        // int maxReplication = cluster.getSvCount() > MAX_CLUSTER_COUNT_REPLICATION ? 8 : MAX_SV_REPLICATION_MULTIPLE;
-        // int maxReplication = MAX_SV_REPLICATION_MULTIPLE;
-
         // first establish the lowest copy number change
         double clusterMinPloidy = cluster.getMinPloidy();
         double clusterMaxPloidy = cluster.getMaxPloidy();
@@ -337,7 +335,7 @@ public class ClusterAnalyser {
             return;
         }
 
-        // check for samples with a broad range of ploidies, not just concerntrated in a few SVs
+        // check for samples with a broad range of ploidies, not just concentrated in a few SVs
         int totalReplicationCount = 0;
         double replicationFactor = 1;
 
@@ -348,12 +346,13 @@ public class ClusterAnalyser {
             totalReplicationCount += svMultiple;
         }
 
-        if(mConfig.ChainingSvLimit > 0 && totalReplicationCount > mConfig.ChainingSvLimit)
+        int replicationCap = mConfig.ChainingSvLimit > 0 ? min(mConfig.ChainingSvLimit, DEFAULT_CHAINING_SV_LIMIT) : DEFAULT_CHAINING_SV_LIMIT;
+        if(totalReplicationCount > replicationCap)
         {
-            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled",
-                    cluster.id(), totalReplicationCount, cluster.getSvCount(), clusterMinPloidy, clusterMaxPloidy);
+            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
+                    cluster.id(), totalReplicationCount, cluster.getSvCount(), clusterMinPloidy, clusterMaxPloidy, replicationCap);
 
-            replicationFactor = mConfig.ChainingSvLimit / (double)totalReplicationCount;
+            replicationFactor = replicationCap / (double)totalReplicationCount;
         }
 
         // replicate the SVs which have a higher copy number than their peers

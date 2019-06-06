@@ -469,7 +469,7 @@ public class SvFusionAnalyser
         if(fusions.isEmpty())
             return;
 
-        GeneFusion reportableFusion = determineReportableFusion(fusions);
+        GeneFusion reportableFusion = determineReportableFusion(fusions, true);
 
         if(reportableFusion == null)
             return;
@@ -547,9 +547,8 @@ public class SvFusionAnalyser
     public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
     public static String TRANSCRIPT_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
 
-    private static int MAX_UPSTREAM_DISTANCE_KNOWN = 500000;
-    private static int MAX_UPSTREAM_DISTANCE_PROMISCUOUS = 50000;
-    private static int MAX_UPSTREAM_DISTANCE_UNKNOWN = 10000;
+    private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
+    private static int MAX_UPSTREAM_DISTANCE_OTHER = 10000;
 
     public static boolean couldBeReportable(GeneFusion fusion)
     {
@@ -561,14 +560,8 @@ public class SvFusionAnalyser
             return false;
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance;
-
-        if(fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN)
-            maxUpstreamDistance = MAX_UPSTREAM_DISTANCE_KNOWN;
-        else if(fusion.getKnownFusionType() != REPORTABLE_TYPE_NONE)
-            maxUpstreamDistance = MAX_UPSTREAM_DISTANCE_PROMISCUOUS;
-        else
-            maxUpstreamDistance = MAX_UPSTREAM_DISTANCE_UNKNOWN;
+        int maxUpstreamDistance = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN ?
+                MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
         final Transcript upTrans = fusion.upstreamTrans();
         final Transcript downTrans = fusion.downstreamTrans();
@@ -589,7 +582,7 @@ public class SvFusionAnalyser
         return true;
     }
 
-    private GeneFusion determineReportableFusion(final List<GeneFusion> fusions)
+    public static GeneFusion determineReportableFusion(final List<GeneFusion> fusions, boolean requireReportable)
     {
         GeneFusion reportableFusion = null;
 
@@ -598,7 +591,7 @@ public class SvFusionAnalyser
 
         for(final GeneFusion fusion : fusions)
         {
-            if(!couldBeReportable(fusion))
+            if(requireReportable && !couldBeReportable(fusion))
                 continue;
 
             // first check whether a fusion is known or not - a key requirement of it being potentially reportable
@@ -779,6 +772,7 @@ public class SvFusionAnalyser
                 annotationsStr = String.format("%s,%d,%d,%s",
                         fusion.phaseMatched(), annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType());
 
+                String defaultValues = ",0:false;0;0;0;false";
                 if(annotations.disruptionUp() != null)
                 {
                     annotationsStr += String.format(",%d;%s;%d;%d;%d;%s",
@@ -788,7 +782,7 @@ public class SvFusionAnalyser
                 }
                 else
                 {
-                    annotationsStr += ",";
+                    annotationsStr += defaultValues;
 
                 }
 
@@ -801,7 +795,7 @@ public class SvFusionAnalyser
                 }
                 else
                 {
-                    annotationsStr += ",";
+                    annotationsStr += defaultValues;
                 }
 
                 if(annotations.chainInfo() != null)
@@ -812,7 +806,7 @@ public class SvFusionAnalyser
                 }
                 else
                 {
-                    annotationsStr += ",";
+                    annotationsStr += ",-1;0;0;true;false";
                 }
             }
 
