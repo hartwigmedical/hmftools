@@ -18,7 +18,7 @@ public abstract class Taxonomy {
     @NotNull
     public abstract String classs();
 
-    @NotNull
+    @Nullable
     public abstract String subClass();
 
     @NotNull
