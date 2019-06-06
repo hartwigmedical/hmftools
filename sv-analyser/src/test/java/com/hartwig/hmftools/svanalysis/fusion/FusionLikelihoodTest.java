@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData.GENE_PHASING_REGION_5P_UTR;
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.setGenePhasingCounts;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.GENE_PHASING_REGION_5P_UTR;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.getGenePhasingCounts;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonD
 
 import org.junit.Test;
 
-public class FusionCalcTest
+public class FusionLikelihoodTest
 {
     @Test
     public void testGeneRegionCounts()
@@ -47,9 +47,7 @@ public class FusionCalcTest
         transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
                 90, 100, 1, -1, -1, codingStart, codingEnd, ""));
 
-        setGenePhasingCounts(geneData, transExonDataList);
-
-        int[] regionTotals = geneData.getRegionTotals();
+        int[] regionTotals = getGenePhasingCounts(geneData, transExonDataList);
 
         assertEquals(regionTotals[GENE_PHASING_REGION_5P_UTR], 26);
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_0], 7);
@@ -86,9 +84,7 @@ public class FusionCalcTest
         transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
                 90, 100, 1, -1, -1, codingStart, codingEnd, ""));
 
-        setGenePhasingCounts(geneData2, transExonDataList);
-
-        regionTotals = geneData2.getRegionTotals();
+        regionTotals = getGenePhasingCounts(geneData2, transExonDataList);
 
         // assertEquals(regionTotals[GENE_PHASING_REGION_5P_UTR], 26);
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_0], 7);

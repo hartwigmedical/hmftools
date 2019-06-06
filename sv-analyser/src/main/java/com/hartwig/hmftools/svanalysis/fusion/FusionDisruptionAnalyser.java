@@ -92,14 +92,12 @@ public class FusionDisruptionAnalyser
     private VisualiserWriter mVisWriter;
 
     private List<String> mRestrictedGenes;
-    private boolean mReportKnownFusionData;
 
     public static final String SAMPLE_RNA_FILE = "sample_rna_file";
     public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusion";
-    public static final String LOG_KNOWN_FUSION_DATA = "log_known_fusion_data";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -121,7 +119,6 @@ public class FusionDisruptionAnalyser
         mKnownFusionGenes = Lists.newArrayList();
         mRestrictedGenes = Lists.newArrayList();
         loadTsgDriverGeneIDs();
-        mReportKnownFusionData = false;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -131,7 +128,6 @@ public class FusionDisruptionAnalyser
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
-        options.addOption(LOG_KNOWN_FUSION_DATA, false, "Only write out reportable fusions");
     }
 
     public void initialise(final CommandLine cmdLineArgs, final String outputDir, final SvaConfig config, SvGeneTranscriptCollection ensemblDataCache)
@@ -175,7 +171,6 @@ public class FusionDisruptionAnalyser
             }
 
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
-            mReportKnownFusionData = cmdLineArgs.hasOption(LOG_KNOWN_FUSION_DATA);
         }
     }
 
@@ -1209,7 +1204,9 @@ public class FusionDisruptionAnalyser
     }
 
     // currently unused logic:
+
     /*
+    public static final String LOG_KNOWN_FUSION_DATA = "log_known_fusion_data";
     public static final String INVALID_REASON_UNCLUSTERED = "Unclustered";
     public static final String INVALID_REASON_UNCHAINED = "Unchained";
 

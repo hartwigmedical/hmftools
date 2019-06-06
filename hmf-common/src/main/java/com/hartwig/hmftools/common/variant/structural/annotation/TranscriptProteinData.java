@@ -9,7 +9,8 @@ public class TranscriptProteinData
     public final int SeqEnd;
     public final String HitDescription;
 
-    public TranscriptProteinData(int transcriptId, int translationId, int proteinFeatureId, int seqStart, int seqEnd, final String hitDescription)
+    public TranscriptProteinData(int transcriptId, int translationId, int proteinFeatureId,
+            int seqStart, int seqEnd, final String hitDescription)
     {
         TranscriptId = transcriptId;
         TranslationId = translationId;
