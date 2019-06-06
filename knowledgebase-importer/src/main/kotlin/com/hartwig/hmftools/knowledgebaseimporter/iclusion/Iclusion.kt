@@ -18,9 +18,10 @@ class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: Dis
         Pair(it, geneModel.hmfTranscriptForGene(it))
     }.toMap()
 
-    override val knownVariants by lazy { recordAnalyzer.knownVariants(listOf(this)).distinct() }
-    override val knownFusionPairs by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<FusionPair>().distinct() }
-    override val promiscuousGenes by lazy { knownKbRecords.flatMap { it.events }.filterIsInstance<PromiscuousGene>().distinct() }
+    override val knownVariants: List<KnownVariantOutput> = listOf()
+    override val knownFusionPairs: List<FusionPair> = listOf()
+    override val promiscuousGenes: List<PromiscuousGene> = listOf()
+
     override val actionableVariants by lazy { actionableKbItems.filterIsInstance<ActionableVariantOutput>() }
     override val actionableCNVs by lazy { actionableKbItems.filterIsInstance<ActionableCNVOutput>() }
     override val actionableFusionPairs by lazy { actionableKbItems.filterIsInstance<ActionableFusionPairOutput>() }

@@ -128,19 +128,17 @@ private fun writeOutput(outputDir: String, knowledgebases: List<Knowledgebase>, 
 }
 
 private fun writeFusionsFiles(knowledgebases: List<Knowledgebase>, outputDir: String) {
-    val fusionKnowledgebases = knowledgebases.filter { it.source != "iclusion" }
-
     val fusionPairLocation = "$outputDir${File.separator}knownFusionPairs.csv"
     logger.info("Writing known fusion genes to $fusionPairLocation")
-    CsvWriter.writeCSV(knownFusionPairs(fusionKnowledgebases), fusionPairLocation)
+    CsvWriter.writeCSV(knownFusionPairs(knowledgebases), fusionPairLocation)
 
     val promiscuousFiveGeneLocation = "$outputDir${File.separator}knownPromiscuousFive.csv"
     logger.info("Writing known promiscuous 5' genes to $promiscuousFiveGeneLocation")
-    CsvWriter.writeCSV(knownPromiscuousFive(fusionKnowledgebases), promiscuousFiveGeneLocation)
+    CsvWriter.writeCSV(knownPromiscuousFive(knowledgebases), promiscuousFiveGeneLocation)
 
     val promiscuousThreeGeneLocation = "$outputDir${File.separator}knownPromiscuousThree.csv"
     logger.info("Writing known promiscuous 3' genes to $promiscuousThreeGeneLocation")
-    CsvWriter.writeCSV(knownPromiscuousThree(fusionKnowledgebases), promiscuousThreeGeneLocation)
+    CsvWriter.writeCSV(knownPromiscuousThree(knowledgebases), promiscuousThreeGeneLocation)
 }
 
 private fun knowledgebaseCancerDoids(knowledgebases: List<Knowledgebase>, ontology: DiseaseOntology): List<CancerTypeDoidOutput> {
