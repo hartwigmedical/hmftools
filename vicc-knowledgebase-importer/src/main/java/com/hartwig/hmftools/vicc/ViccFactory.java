@@ -46,7 +46,6 @@ public final class ViccFactory {
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(9, 10);
 
-
     private ViccFactory() {
     }
 
@@ -188,24 +187,53 @@ public final class ViccFactory {
     }
 
     private static EnvironmentalContext createEnvironmentalContexts(JsonElement elementAssociation) {
-        return ImmutableEnvironmentalContext.builder()
+        ImmutableEnvironmentalContext builderEnvironmentalContext = ImmutableEnvironmentalContext.builder()
                 .term(Strings.EMPTY)
-                .description(elementAssociation.getAsJsonObject().getAsJsonPrimitive("description").toString())
-                .taxonomy(createTaxonomy(elementAssociation))
+                .description(Strings.EMPTY)
+                .taxonomy(ImmutableTaxonomy.builder()
+                        .kingdom(Strings.EMPTY)
+                        .directParent(Strings.EMPTY)
+                        .classs(Strings.EMPTY)
+                        .subClass(Strings.EMPTY)
+                        .superClass(Strings.EMPTY)
+                        .build())
                 .source(Strings.EMPTY)
                 .usanStem(Strings.EMPTY)
                 .approvedCountries(Lists.newArrayList())
                 .id(Strings.EMPTY)
                 .build();
+
+        for (JsonElement elementEnvironmentContext : elementAssociation.getAsJsonObject().get("environmentalContexts").getAsJsonArray()) {
+            builderEnvironmentalContext = ImmutableEnvironmentalContext.builder()
+                    .term(elementEnvironmentContext.getAsJsonObject().has("term") ? elementEnvironmentContext.getAsJsonObject()
+                            .get("term")
+                            .getAsString() : null)
+                    .description(elementEnvironmentContext.getAsJsonObject().get("description").getAsString())
+                    .taxonomy(elementEnvironmentContext.getAsJsonObject().has("taxonomy")
+                            ? createTaxonomy(elementEnvironmentContext.getAsJsonObject().get("taxonomy"))
+                            : null)
+                    .source(elementEnvironmentContext.getAsJsonObject().has("source") ? elementEnvironmentContext.getAsJsonObject()
+                            .get("source")
+                            .getAsString() : null)
+                    .usanStem(elementEnvironmentContext.getAsJsonObject().has("usan_stem") ? elementEnvironmentContext.getAsJsonObject()
+                            .get("usan_stem")
+                            .getAsString() : null)
+                    .approvedCountries(Lists.newArrayList())
+                    .id(elementEnvironmentContext.getAsJsonObject().has("id") ? elementEnvironmentContext.getAsJsonObject()
+                            .get("id")
+                            .getAsString() : null)
+                    .build();
+        }
+        return builderEnvironmentalContext;
     }
 
-    private static Taxonomy createTaxonomy(JsonElement elementAssociation) {
+    private static Taxonomy createTaxonomy(JsonElement elementEnvironmentContext) {
         return ImmutableTaxonomy.builder()
-                .kingdom(Strings.EMPTY)
-                .directParent(Strings.EMPTY)
-                .classs(Strings.EMPTY)
-                .subClass(Strings.EMPTY)
-                .superClass(Strings.EMPTY)
+                .kingdom(elementEnvironmentContext.getAsJsonObject().get("kingdom").getAsString())
+                .directParent(elementEnvironmentContext.getAsJsonObject().get("direct-parent").getAsString())
+                .classs(elementEnvironmentContext.getAsJsonObject().get("class").getAsString())
+                .subClass(elementEnvironmentContext.getAsJsonObject().has("subclass") ? elementEnvironmentContext.getAsJsonObject().get("subclass").getAsString() : null)
+                .superClass(elementEnvironmentContext.getAsJsonObject().get("superclass").getAsString())
                 .build();
     }
 
@@ -216,8 +244,8 @@ public final class ViccFactory {
                 .description(Strings.EMPTY)
                 .build();
 
-        for (JsonElement elementEvidence: elementAssociation.getAsJsonObject().get("evidence").getAsJsonArray()) {
-            builderEvidence =  ImmutableEvidence.builder()
+        for (JsonElement elementEvidence : elementAssociation.getAsJsonObject().get("evidence").getAsJsonArray()) {
+            builderEvidence = ImmutableEvidence.builder()
                     .info(createEvidenceInfo(elementEvidence.getAsJsonObject().get("info")))
                     .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().get("evidenceType")))
                     .description(elementEvidence.getAsJsonObject().get("description").getAsString())

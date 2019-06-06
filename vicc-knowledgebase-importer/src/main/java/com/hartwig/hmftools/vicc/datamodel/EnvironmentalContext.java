@@ -10,25 +10,25 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class EnvironmentalContext {
 
-    @NotNull
+    @Nullable
     public abstract String term();
 
     @NotNull
     public abstract String description();
 
-    @NotNull
+    @Nullable
     public abstract Taxonomy taxonomy();
 
-    @NotNull
+    @Nullable
     public abstract String source();
 
-    @NotNull
+    @Nullable
     public abstract String usanStem();
 
-    @NotNull
+    @Nullable
     public abstract List<String> approvedCountries();
 
-    @NotNull
+    @Nullable
     public abstract String id();
 
 }
