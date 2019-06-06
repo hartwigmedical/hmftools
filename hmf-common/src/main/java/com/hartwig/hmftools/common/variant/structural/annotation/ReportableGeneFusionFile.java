@@ -18,9 +18,8 @@ public class ReportableGeneFusionFile
 {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "#";
 
-    public static final String FILE_EXTENSION = ".linx.fusions.csv";
+    public static final String FILE_EXTENSION = ".linx.fusions.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -51,12 +50,12 @@ public class ReportableGeneFusionFile
     @NotNull
     static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(ReportableGeneFusionFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("geneStart")).map(ReportableGeneFusionFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
+        return new StringJoiner(DELIMITER)
                 .add("geneStart")
                 .add("geneContextStart")
                 .add("geneTranscriptStart")

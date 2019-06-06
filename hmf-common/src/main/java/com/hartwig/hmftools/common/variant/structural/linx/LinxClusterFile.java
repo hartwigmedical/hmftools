@@ -17,9 +17,8 @@ public class LinxClusterFile
 {
     public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     public static final String DELIMITER = "\t";
-    public static final String HEADER_PREFIX = "#";
 
-    private static final String FILE_EXTENSION = ".linx.clusters.csv";
+    private static final String FILE_EXTENSION = ".linx.clusters.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -50,12 +49,12 @@ public class LinxClusterFile
     @NotNull
     static List<LinxCluster> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(LinxClusterFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxClusterFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
+        return new StringJoiner(DELIMITER)
                 .add("clusterId")
                 .add("resolvedType")
                 .add("synthetic")

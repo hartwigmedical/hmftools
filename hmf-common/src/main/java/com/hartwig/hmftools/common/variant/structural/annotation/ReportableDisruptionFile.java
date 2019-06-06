@@ -17,9 +17,8 @@ public class ReportableDisruptionFile
 {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "#";
 
-    public static final String FILE_EXTENSION = ".linx.disruptions.csv";
+    public static final String FILE_EXTENSION = ".linx.disruptions.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -50,12 +49,12 @@ public class ReportableDisruptionFile
     @NotNull
     static List<ReportableDisruption> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(ReportableDisruptionFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("svId")).map(ReportableDisruptionFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
+        return new StringJoiner(DELIMITER)
                 .add("svId")
                 .add("chromosome")
                 .add("orientation")

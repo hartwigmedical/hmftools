@@ -32,10 +32,9 @@ public class VisCopyNumberFile
         BAF = baf;
     }
 
-    public static final String HEADER_PREFIX = "#";
     public static final String DELIMITER = "\t";
     public static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final String FILE_EXTENSION = ".linx.vis_copy_number.csv";
+    private static final String FILE_EXTENSION = ".linx.vis_copy_number.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -66,13 +65,13 @@ public class VisCopyNumberFile
     @NotNull
     static List<VisCopyNumberFile> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(VisCopyNumberFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisCopyNumberFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX,"")
+        return new StringJoiner(DELIMITER)
                 .add("SampleId")
                 .add("Chromosome")
                 .add("Start")

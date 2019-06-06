@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svanalysis.visualiser;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.svanalysis.visualiser.VisCopyNumberFile.DELIMITER;
-import static com.hartwig.hmftools.svanalysis.visualiser.VisCopyNumberFile.HEADER_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +57,7 @@ public class VisSvDataFile
         TraverseCount = traverseCount;
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_sv_data.csv";
+    private static final String FILE_EXTENSION = ".linx.vis_sv_data.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -89,13 +88,13 @@ public class VisSvDataFile
     @NotNull
     static List<VisSvDataFile> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(VisSvDataFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSvDataFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX,"")
+        return new StringJoiner(DELIMITER)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("ChainId")

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DELIMITER;
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.HEADER_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class LinxViralInsertFile
         VirusName = virusName;
     }
 
-    private static final String FILE_EXTENSION = ".linx.viral_inserts.csv";
+    private static final String FILE_EXTENSION = ".linx.viral_inserts.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -62,13 +61,13 @@ public class LinxViralInsertFile
     @NotNull
     static List<LinxViralInsertFile> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(LinxViralInsertFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(LinxViralInsertFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX,"")
+        return new StringJoiner(DELIMITER)
                 .add("SampleId")
                 .add("SvId")
                 .add("VirusId")

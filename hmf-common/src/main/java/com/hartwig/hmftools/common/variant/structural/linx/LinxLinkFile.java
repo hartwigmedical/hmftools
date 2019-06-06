@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DELIMITER;
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.HEADER_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LinxLinkFile
 {
-    private static final String FILE_EXTENSION = ".linx.links.csv";
+    private static final String FILE_EXTENSION = ".linx.links.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -48,12 +47,12 @@ public class LinxLinkFile
     @NotNull
     static List<LinxLink> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(LinxLinkFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxLinkFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "")
+        return new StringJoiner(DELIMITER)
                 .add("clusterId")
                 .add("chainId")
                 .add("chainIndex")

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svanalysis.visualiser;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.svanalysis.visualiser.VisCopyNumberFile.DELIMITER;
-import static com.hartwig.hmftools.svanalysis.visualiser.VisCopyNumberFile.HEADER_PREFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +42,7 @@ public class VisGeneExonFile
         ExonEnd = exonEnd;
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_gene_exon.csv";
+    private static final String FILE_EXTENSION = ".linx.vis_gene_exon.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -74,13 +73,13 @@ public class VisGeneExonFile
     @NotNull
     static List<VisGeneExonFile> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(VisGeneExonFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisGeneExonFile::fromString).collect(toList());
     }
 
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX,"")
+        return new StringJoiner(DELIMITER)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("Gene")
