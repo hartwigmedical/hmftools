@@ -14,7 +14,7 @@ class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: Dis
     override val source: String = "iclusion"
 
     private val geneModel = GeneModel()
-    private val geneToTranscriptMap = iclusionStudies.flatMap { it.mutations.map { it.geneName } }.distinct().map {
+    private val geneToTranscriptMap = iclusionStudies.flatMap { it -> it.mutations.map { it.geneName } }.distinct().map {
         Pair(it, geneModel.hmfTranscriptForGene(it))
     }.toMap()
 
@@ -28,7 +28,7 @@ class Iclusion(iclusionStudies: List<IclusionStudyDetails>, diseaseOntology: Dis
     override val actionableRanges by lazy { actionableKbItems.filterIsInstance<ActionableGenomicRangeOutput>() }
     override val cancerTypes by lazy {
         actionableKbRecords.flatMap { it.doids.entries }
-                .associateBy({ it.key }, { it.value.flatMap { diseaseOntology.findDoids(it) }.toSet() })
+                .associateBy({ it.key }, { it -> it.value.flatMap { diseaseOntology.findDoids(it) }.toSet() })
     }
 
     override val knownKbRecords: List<IclusionRecord> by lazy { iclusionStudies.flatMap { IclusionRecord(it, geneToTranscriptMap) } }
