@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.sun.deploy.util.StringUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -204,6 +206,17 @@ public final class ViccFactory {
                 .build();
 
         for (JsonElement elementEnvironmentContext : elementAssociation.getAsJsonObject().get("environmentalContexts").getAsJsonArray()) {
+            StringBuilder approvedCountriesElementString = new StringBuilder();
+            String approvedCountriesAdding = Strings.EMPTY;
+            if (elementEnvironmentContext.getAsJsonObject().has("approved_countries")) {
+                for (JsonElement approvedCountriesElement : elementEnvironmentContext.getAsJsonObject()
+                        .get("approved_countries")
+                        .getAsJsonArray()) {
+                    approvedCountriesElementString.append(approvedCountriesElement).append(",");
+                    approvedCountriesAdding = approvedCountriesElementString.substring(0, approvedCountriesElementString.length()-1);
+                }
+            }
+
             builderEnvironmentalContext = ImmutableEnvironmentalContext.builder()
                     .term(elementEnvironmentContext.getAsJsonObject().has("term") ? elementEnvironmentContext.getAsJsonObject()
                             .get("term")
@@ -218,13 +231,13 @@ public final class ViccFactory {
                     .usanStem(elementEnvironmentContext.getAsJsonObject().has("usan_stem") ? elementEnvironmentContext.getAsJsonObject()
                             .get("usan_stem")
                             .getAsString() : null)
-                    .approvedCountries(Lists.newArrayList())
+                    .approvedCountries(elementEnvironmentContext.getAsJsonObject().has("approved_countries") ? Lists.newArrayList(
+                            approvedCountriesAdding) : null)
                     .id(elementEnvironmentContext.getAsJsonObject().has("id") ? elementEnvironmentContext.getAsJsonObject()
                             .get("id")
                             .getAsString() : null)
                     .build();
-        }
-        return builderEnvironmentalContext;
+        } return builderEnvironmentalContext;
     }
 
     private static Taxonomy createTaxonomy(JsonElement elementEnvironmentContext) {
