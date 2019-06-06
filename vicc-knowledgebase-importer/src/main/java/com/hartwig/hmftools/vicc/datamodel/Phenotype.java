@@ -16,7 +16,4 @@ public abstract class Phenotype {
 
     @NotNull
     public abstract String family();
-
-    @NotNull
-    public abstract String id();
 }
