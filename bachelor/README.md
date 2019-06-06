@@ -120,3 +120,15 @@ This very basic example has a single criteria: missense variants in BRCA2.
     </Panel>
 </Program>
 ```
+
+
+## Clinvar Filter Creation
+
+Create a set of files from CLINVAR variant classification with this command:
+
+```bash
+java -cp bachelor.jar com.hartwig.hmftools.bachelor.ExternalDBFilters
+    -xml_config bachelor.xml 
+    -create_filter_file /path_to/clinvar_snp.vcf.gz 
+    -output_dir path_to_log
+```

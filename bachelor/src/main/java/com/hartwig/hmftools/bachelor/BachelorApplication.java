@@ -39,7 +39,6 @@ public class BachelorApplication {
 
     GermlineVcfParser mGermlineVcfParser;
     BachelorPostProcess mPostProcessor;
-    ExternalDBFilters mFilterFileBuilder;
 
     private Map<String, Program> mConfigMap;
     private String mSampleDataDir;
@@ -50,14 +49,14 @@ public class BachelorApplication {
     private int mMaxBatchDirectories;
 
     // config options
-    private static final String CONFIG_XML = "xml_config";
+    public static final String CONFIG_XML = "xml_config";
+    public static final String BATCH_OUTPUT_DIR = "batch_output_dir";
+    public static final String LOG_DEBUG = "log_debug";
+
     private static final String RUN_MODE = "run_mode";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    private static final String BATCH_OUTPUT_DIR = "batch_output_dir";
     private static final String SAMPLE = "sample";
-    private static final String LOG_DEBUG = "log_debug";
     private static final String SAMPLE_LIST_FILE = "sample_list_file";
-    private static final String CREATE_FILTER_FILE = "create_filter_file";
     private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
     private static final String RUN_MODE_BOTH = "Both";
@@ -72,7 +71,6 @@ public class BachelorApplication {
     {
         mGermlineVcfParser = null;
         mPostProcessor = null;
-        mFilterFileBuilder = null;
         mSampleDataDir = "";
         mSingleSampleId = "";
         mSampleDataDirectories = Lists.newArrayList();
@@ -83,17 +81,17 @@ public class BachelorApplication {
 
     public boolean loadConfig(final CommandLine cmd)
     {
-        if (cmd.hasOption(CONFIG_XML))
+        if (!cmd.hasOption(CONFIG_XML))
+            return false;
+
+        try
         {
-            try
-            {
-                mConfigMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
-            }
-            catch(Exception e)
-            {
-                LOGGER.error("error loading XML: {}", e.toString());
-                return false;
-            }
+            mConfigMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("error loading XML: {}", e.toString());
+            return false;
         }
 
         String runMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
@@ -101,14 +99,6 @@ public class BachelorApplication {
         LOGGER.info("run mode: {}", runMode);
 
         String batchOutputDir = cmd.getOptionValue(BATCH_OUTPUT_DIR, "");
-
-        if(cmd.hasOption(CREATE_FILTER_FILE))
-        {
-            LOGGER.info("building Clinvar filter files");
-            final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
-            mFilterFileBuilder = new ExternalDBFilters(filterInputFile, batchOutputDir);
-            return true;
-        }
 
         mSingleSampleId = cmd.getOptionValue(SAMPLE, "");
 
@@ -151,15 +141,6 @@ public class BachelorApplication {
 
     public void run()
     {
-        if(mFilterFileBuilder != null)
-        {
-            final Program program = mConfigMap.values().iterator().next();
-
-            mFilterFileBuilder.createFilterFile(program);
-            LOGGER.info("run complete");
-            return;
-        }
-
         for (int i = 0; i < mSampleDataDirectories.size(); ++i)
         {
             final RunDirectory runDir = mSampleDataDirectories.get(i);
@@ -275,7 +256,7 @@ public class BachelorApplication {
         return sampleIds;
     }
 
-    private static Map<String, Program> loadXML(final Path path) throws IOException, SAXException
+    public static Map<String, Program> loadXML(final Path path) throws IOException, SAXException
     {
         final ConfigSchema schema = ConfigSchema.make();
 
@@ -309,12 +290,11 @@ public class BachelorApplication {
         final Options options = new Options();
 
         options.addOption(RUN_MODE, true, "VcfParse, PostProcess or Both (default)");
-        options.addOption(CONFIG_XML, true, "single config XML to run");
+        options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
         options.addOption(BATCH_OUTPUT_DIR, true, "Optional: when in batch mode, all output written to single file");
         options.addOption(SAMPLE_DATA_DIR, true, "the run directory to look for inputs");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
-        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
         options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
@@ -326,7 +306,7 @@ public class BachelorApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
+    public static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);

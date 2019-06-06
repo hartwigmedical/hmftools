@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.BachelorApplication.BATCH_OUTPUT_DIR;
+import static com.hartwig.hmftools.bachelor.BachelorApplication.CONFIG_XML;
+import static com.hartwig.hmftools.bachelor.BachelorApplication.LOG_DEBUG;
+import static com.hartwig.hmftools.bachelor.BachelorApplication.createCommandLine;
+import static com.hartwig.hmftools.bachelor.BachelorApplication.loadXML;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
@@ -13,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -25,8 +31,13 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -34,18 +45,69 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class ExternalDBFilters
 {
-    private String mOutputDir;
     private String mInputFilterFile;
     private List<String> mRequiredEffects;
     private List<String> mPanelTranscripts;
 
     private BufferedWriter mFilterWriter;
 
+    private static final String OUTPUT_DIR = "output_dir";
+    private static final String CREATE_FILTER_FILE = "create_filter_file";
+
     private static final Logger LOGGER = LogManager.getLogger(ExternalDBFilters.class);
 
-    public ExternalDBFilters(final String filterInputFile, final String outputDir)
+    public static void main(final String... args)
     {
-        mOutputDir = outputDir;
+        final Options options = new Options();
+        options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
+        options.addOption(OUTPUT_DIR, true, "Optional: when in batch mode, all output written to single file");
+        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
+        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+
+        try
+        {
+            final CommandLine cmd = createCommandLine(options, args);
+
+            if (cmd.hasOption(LOG_DEBUG))
+                Configurator.setRootLevel(Level.DEBUG);
+
+            LOGGER.info("building Clinvar filter files");
+            final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
+
+            String outputDir = cmd.getOptionValue(OUTPUT_DIR, "");
+
+            if (!cmd.hasOption(CONFIG_XML))
+                return;
+
+            Map<String, Program> configMap = null;
+
+            try
+            {
+                configMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
+            }
+            catch(Exception e)
+            {
+                LOGGER.error("error loading XML: {}", e.toString());
+                return;
+            }
+
+            final Program program = configMap.values().iterator().next();
+
+            ExternalDBFilters filterFileBuilder = new ExternalDBFilters(filterInputFile);
+            filterFileBuilder.createFilterFile(program, outputDir);
+
+            LOGGER.info("filter file creation complete");
+        }
+        catch(ParseException e)
+        {
+            LOGGER.error("config error: {}", e.toString());
+            return;
+        }
+    }
+
+
+    public ExternalDBFilters(final String filterInputFile)
+    {
         mInputFilterFile = filterInputFile;
         mRequiredEffects = Lists.newArrayList();
         mPanelTranscripts = Lists.newArrayList();
@@ -116,7 +178,7 @@ public class ExternalDBFilters
         return filters;
     }
 
-    public boolean createFilterFile(final Program program)
+    public boolean createFilterFile(final Program program, final String outputDir)
     {
         if (!Files.exists(Paths.get(mInputFilterFile)))
         {
@@ -124,7 +186,7 @@ public class ExternalDBFilters
             return false;
         }
 
-        if(!initialiseFilterWriter())
+        if(!initialiseFilterWriter(outputDir))
             return false;
 
         ProgramPanel programConfig = program.getPanel().get(0);
@@ -313,16 +375,16 @@ public class ExternalDBFilters
         }
     }
 
-    private boolean initialiseFilterWriter()
+    private boolean initialiseFilterWriter(final String outputDir)
     {
         try
         {
-            String outputDir = mOutputDir;
+            String filterFileName = outputDir;
 
-            if (!outputDir.endsWith(File.separator))
-                outputDir += File.separator;
+            if (!filterFileName.endsWith(File.separator))
+                filterFileName += File.separator;
 
-            String filterFileName = outputDir + "BACHELOR_CLINVAR_FILTERS.csv";
+            filterFileName += "BACHELOR_CLINVAR_FILTERS.csv";
 
             mFilterWriter = createBufferedWriter(filterFileName, false);
 
