@@ -85,9 +85,9 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
-                <groupId>org.codehaus.mojo</groupId>
                 <executions>
                     <execution>
                         <id>Create development patient DB</id>
@@ -131,7 +131,6 @@
             <plugin>
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
-                <version>${jooq.version}</version>
                 <executions>
                     <execution>
                         <goals>
