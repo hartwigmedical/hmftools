@@ -20,7 +20,6 @@ import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
@@ -93,9 +92,9 @@ public final class ViccFactory {
                 LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
                         + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
                 LOGGER.warn(keysAssociation);
-            } else {
-                viccEntryBuilder.association(createAssociation(viccEntryElement));
             }
+
+            viccEntryBuilder.association(createAssociation(viccEntryElement));
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("dev_tags")));
@@ -168,7 +167,8 @@ public final class ViccFactory {
         return ImmutableGeneIdentifier.builder()
                 .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").getAsString())
                 .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").getAsString())
-                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").getAsString())
+//                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").getAsString())
+                .ensemblGeneId(Strings.EMPTY)
                 .build();
     }
 
@@ -176,19 +176,24 @@ public final class ViccFactory {
     private static Association createAssociation(JsonObject viccEntryElement) {
         JsonObject objectAssociation = viccEntryElement.getAsJsonObject("association");
         return ImmutableAssociation.builder()
-                .variantName(objectAssociation.has("variant_name") ? objectAssociation.getAsJsonObject()
-                        .getAsJsonPrimitive("variant_name")
-                        .getAsString() : null)
+//                .variantName(objectAssociation.has("variant_name") ? objectAssociation.getAsJsonObject()
+//                        .getAsJsonPrimitive("variant_name")
+//                        .getAsString() : null)
 
                 .evidence(Lists.newArrayList(createEvidence(objectAssociation)))
-                .evidenceLevel(objectAssociation.getAsJsonPrimitive("evidence_level").getAsString())
-                .evidenceLabel(objectAssociation.getAsJsonPrimitive("evidence_label").getAsString())
-                .responseType(objectAssociation.getAsJsonPrimitive("response_type").getAsString())
-                .drugLabels(objectAssociation.getAsJsonPrimitive("drug_labels").getAsString())
+                .evidenceLevel(Strings.EMPTY)
+                //                .evidenceLevel(objectAssociation.getAsJsonPrimitive("evidence_level").getAsString())
+//                .evidenceLabel(objectAssociation.getAsJsonPrimitive("evidence_label").getAsString())
+                .evidenceLabel(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+//                .responseType(objectAssociation.getAsJsonPrimitive("response_type").getAsString()).
+                .drugLabels(Strings.EMPTY)
+//                .drugLabels(objectAssociation.getAsJsonPrimitive("drug_labels").getAsString())
                 .sourceLink(objectAssociation.has("source_link") ? objectAssociation.getAsJsonPrimitive("source_link").getAsString() : null)
-                .publicationUrls(Lists.newArrayList(objectAssociation.getAsJsonObject()
-                        .getAsJsonPrimitive("publication_url")
-                        .getAsString()))
+                .publicationUrls(Lists.newArrayList())
+//                .publicationUrls(Lists.newArrayList(objectAssociation.getAsJsonObject()
+//                        .getAsJsonPrimitive("publication_url")
+//                        .getAsString()))
                 .phenotype(createPhenotype(objectAssociation))
                 .description(objectAssociation.getAsJsonPrimitive("description").getAsString())
                 .environmentalContexts(createEnvironmentalContexts(objectAssociation))
@@ -200,31 +205,31 @@ public final class ViccFactory {
     private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonObject objectAssociation) {
         List<EnvironmentalContext> environmentalContexts = Lists.newArrayList();
 
-        for (JsonElement elementEnvironmentContext : objectAssociation.getAsJsonArray("environmentalContexts")) {
-            JsonObject objectEnvironmentContext = elementEnvironmentContext.getAsJsonObject();
-
-            List<String> approvedCountries = Lists.newArrayList();
-            if (objectEnvironmentContext.has("approved_countries")) {
-                for (JsonElement approvedCountriesElement : objectEnvironmentContext.getAsJsonArray("approved_countries")) {
-                    approvedCountries.add(approvedCountriesElement.getAsString());
-                }
-            }
-
-            environmentalContexts.add(ImmutableEnvironmentalContext.builder()
-                    .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.getAsJsonPrimitive("term").getAsString() : null)
-                    .description(objectEnvironmentContext.getAsJsonPrimitive("description").getAsString())
-                    .taxonomy(objectEnvironmentContext.has("taxonomy")
-                            ? createTaxonomy(objectEnvironmentContext.getAsJsonObject("taxonomy"))
-                            : null)
-                    .source(objectEnvironmentContext.has("source")
-                            ? objectEnvironmentContext.getAsJsonPrimitive("source").getAsString()
-                            : null)
-                    .usanStem(objectEnvironmentContext.has("usan_stem") ? objectEnvironmentContext.getAsJsonPrimitive("usan_stem")
-                            .getAsString() : null)
-                    .approvedCountries(approvedCountries)
-                    .id(objectEnvironmentContext.has("id") ? objectEnvironmentContext.getAsJsonPrimitive("id").getAsString() : null)
-                    .build());
-        }
+//        for (JsonElement elementEnvironmentContext : objectAssociation.getAsJsonArray("environmentalContexts")) {
+//            JsonObject objectEnvironmentContext = elementEnvironmentContext.getAsJsonObject();
+//
+//            List<String> approvedCountries = Lists.newArrayList();
+//            if (objectEnvironmentContext.has("approved_countries")) {
+//                for (JsonElement approvedCountriesElement : objectEnvironmentContext.getAsJsonArray("approved_countries")) {
+//                    approvedCountries.add(approvedCountriesElement.getAsString());
+//                }
+//            }
+//
+//            environmentalContexts.add(ImmutableEnvironmentalContext.builder()
+//                    .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.getAsJsonPrimitive("term").getAsString() : null)
+//                    .description(objectEnvironmentContext.getAsJsonPrimitive("description").getAsString())
+//                    .taxonomy(objectEnvironmentContext.has("taxonomy")
+//                            ? createTaxonomy(objectEnvironmentContext.getAsJsonObject("taxonomy"))
+//                            : null)
+//                    .source(objectEnvironmentContext.has("source")
+//                            ? objectEnvironmentContext.getAsJsonPrimitive("source").getAsString()
+//                            : null)
+//                    .usanStem(objectEnvironmentContext.has("usan_stem") ? objectEnvironmentContext.getAsJsonPrimitive("usan_stem")
+//                            .getAsString() : null)
+//                    .approvedCountries(approvedCountries)
+////                    .id(objectEnvironmentContext.has("id") ? objectEnvironmentContext.getAsJsonPrimitive("id").getAsString() : null)
+//                    .build());
+//        }
         return environmentalContexts;
     }
 
@@ -246,15 +251,16 @@ public final class ViccFactory {
                 .evidenceType(ImmutableEvidenceType.builder().id(Strings.EMPTY).sourceName(Strings.EMPTY).build())
                 .description(Strings.EMPTY)
                 .build();
-
-        for (JsonElement elementEvidence : elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence").getAsJsonArray()) {
-            builderEvidence = ImmutableEvidence.builder()
-                    .info(createEvidenceInfo(elementEvidence.getAsJsonObject().getAsJsonPrimitive("info")))
-                    .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().getAsJsonPrimitive("evidenceType")))
-                    .description(elementEvidence.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .build();
-        }
         return builderEvidence;
+
+//        for (JsonElement elementEvidence : elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence").getAsJsonArray()) {
+//            builderEvidence = ImmutableEvidence.builder()
+//                    .info(createEvidenceInfo(elementEvidence.getAsJsonObject().getAsJsonPrimitive("info")))
+//                    .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().getAsJsonPrimitive("evidenceType")))
+//                    .description(elementEvidence.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+//                    .build();
+//        }
+//        return builderEvidence;
     }
 
     private static EvidenceType createEvidenceType(JsonElement elementAssociation) {
@@ -282,12 +288,15 @@ public final class ViccFactory {
 
     private static Phenotype createPhenotype(JsonElement elementAssociation) {
         return ImmutablePhenotype.builder()
-                .type(createPhenotypeType(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("type")))
-                .description(elementAssociation.getAsJsonObject()
-                        .getAsJsonObject("phenotype")
-                        .getAsJsonPrimitive("description")
-                        .getAsString())
-                .family(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("family").getAsString())
+//                .type(createPhenotypeType(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonObject("type")))
+                .type(ImmutablePhenotypeType.builder().id(Strings.EMPTY).term(Strings.EMPTY).source(Strings.EMPTY).build())
+//                .description(elementAssociation.getAsJsonObject()
+//                        .getAsJsonObject("phenotype")
+//                        .getAsJsonPrimitive("description")
+//                        .getAsString())
+                .description(Strings.EMPTY)
+//                .family(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("family").getAsString())
+                .family(Strings.EMPTY)
                 .build();
     }
 }
