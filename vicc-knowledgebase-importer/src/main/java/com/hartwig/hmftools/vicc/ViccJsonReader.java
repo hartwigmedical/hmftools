@@ -89,13 +89,13 @@ public final class ViccJsonReader {
             JsonElement elementAssociation = viccEntryElement.get("association");
             Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
 
-            if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
-                LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
-                LOGGER.warn(keysAssociation);
-            }
+//            if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
+//                LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
+//                        + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
+//                LOGGER.warn(keysAssociation);
+//            }
 
-            viccEntryBuilder.association(createAssociation(viccEntryElement.getAsJsonObject("association")));
+            viccEntryBuilder.association(createAssociationEmpty());
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("dev_tags")));
@@ -168,8 +168,34 @@ public final class ViccJsonReader {
         return ImmutableGeneIdentifier.builder()
                 .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").getAsString())
                 .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").getAsString())
-                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").getAsString())
                 .ensemblGeneId(Strings.EMPTY)
+                .ensemblGeneId(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static Association createAssociationEmpty() {
+        return ImmutableAssociation.builder()
+                .variantName(Strings.EMPTY)
+                .evidence(Lists.newArrayList())
+                .evidenceLevel(Strings.EMPTY)
+                .evidenceLabel(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+                .drugLabels(Strings.EMPTY)
+                .sourceLink(Strings.EMPTY)
+                .publicationUrls(Lists.newArrayList())
+                .phenotype(ImmutablePhenotype.builder()
+                                .type(ImmutablePhenotypeType.builder()
+                                        .source(Strings.EMPTY)
+                                        .term(Strings.EMPTY)
+                                        .id(Strings.EMPTY)
+                                        .build())
+                                .description(Strings.EMPTY)
+                                .family(Strings.EMPTY)
+                                .build())
+                .description(Strings.EMPTY)
+                .environmentalContexts(Lists.newArrayList())
+                .oncogenic(Strings.EMPTY)
                 .build();
     }
 
