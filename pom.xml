@@ -52,7 +52,6 @@
 
         <hmf-patient-db.version>3.20</hmf-patient-db.version>
         <hmf-variant-annotation.version>2.15</hmf-variant-annotation.version>
-        <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
         <hmf-linx.version>1.0</hmf-linx.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
         <hmf-patient-reporter.version>6.1</hmf-patient-reporter.version>
