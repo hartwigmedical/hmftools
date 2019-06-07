@@ -28,7 +28,7 @@
         <module>bachelor</module>
         <module>hmf-id-generator</module>
         <module>portal-data-converter</module>
-        <module>sv-analyser</module>
+        <module>linx</module>
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
         <module>vicc-knowledgebase-importer</module>
@@ -53,6 +53,7 @@
         <hmf-patient-db.version>3.20</hmf-patient-db.version>
         <hmf-variant-annotation.version>2.15</hmf-variant-annotation.version>
         <hmf-sv-analyser.version>1.0</hmf-sv-analyser.version>
+        <hmf-linx.version>1.0</hmf-linx.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
         <hmf-patient-reporter.version>6.1</hmf-patient-reporter.version>
         <hmf-health-checker.version>3.0</hmf-health-checker.version>
@@ -156,8 +157,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sv-analyser</artifactId>
-                <version>${hmf-sv-analyser.version}</version>
+                <artifactId>linx</artifactId>
+                <version>${hmf-linx.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
