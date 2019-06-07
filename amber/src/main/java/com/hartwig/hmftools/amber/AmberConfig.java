@@ -34,6 +34,7 @@ public interface AmberConfig {
     String THREADS = "threads";
     String REFERENCE = "reference";
     String TUMOR_BAM = "tumor_bam";
+    String SNP_BED_FILE = "snp_bed";
     String REF_GENOME = "ref_genome";
     String OUTPUT_DIR = "output_dir";
     String REFERENCE_BAM = "reference_bam";
@@ -63,6 +64,7 @@ public interface AmberConfig {
         options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MAX_HET_AF_PERCENTAGE + "]");
         options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
         options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
+        options.addOption(SNP_BED_FILE, true, "Optional bed file to report on germline SNPs");
         return options;
     }
 
@@ -81,6 +83,8 @@ public interface AmberConfig {
     double maxHetAfPercent();
 
     String bedFilePath();
+
+    String snpBedFilePath();
 
     String tumorBamPath();
 
@@ -115,6 +119,7 @@ public interface AmberConfig {
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String bedFilePath = parameter(cmd, BED_FILE, missingJoiner);
+        final String snpBedFilePath =  cmd.getOptionValue(SNP_BED_FILE, "");
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
         final String referenceBamPath = parameter(cmd, REFERENCE_BAM, missingJoiner);
         final String refGenomePath = parameter(cmd, REF_GENOME, missingJoiner);
@@ -140,6 +145,7 @@ public interface AmberConfig {
                 .referenceBamPath(referenceBamPath)
                 .refGenomePath(refGenomePath)
                 .outputDirectory(outputDirectory)
+                .snpBedFilePath(snpBedFilePath)
                 .normal(normal)
                 .tumor(tumor)
                 .build();

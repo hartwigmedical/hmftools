@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.AmberVCF;
+import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.amber.TumorContamination;
 import com.hartwig.hmftools.common.amber.TumorContaminationFile;
@@ -15,6 +18,7 @@ import com.hartwig.hmftools.common.amber.TumorContaminationModel;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
@@ -67,4 +71,11 @@ class AmberPersistence {
         TumorContaminationFile.write(filename, contaminationList);
     }
 
+    void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths) {
+        if (baseDepths.size() > 0) {
+            final String outputVcf = config.outputDirectory() + File.separator + config.normal() + ".amber.snp.vcf.gz";
+            LOGGER.info("Writing {} snp check records to {}", baseDepths.size(), outputVcf);
+            new AmberVCF(config.normal()).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
+        }
+    }
 }
