@@ -17,19 +17,23 @@ import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -80,7 +84,7 @@ public final class ViccFactory {
                 }
             }
 
-            viccEntryBuilder.features(Lists.newArrayList());
+            viccEntryBuilder.features(createFeatures());
 
             JsonElement elementAssociation = viccEntryElement.get("association");
             Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
@@ -101,6 +105,41 @@ public final class ViccFactory {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static List<Feature> createFeatures() {
+        List<Feature> featureList = Lists.newArrayList();
+        featureList.add(ImmutableFeature.builder()
+                .name(Strings.EMPTY)
+                .biomarkerType(Strings.EMPTY)
+                .referenceName(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .start(Strings.EMPTY)
+                .end(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .provenance(Lists.newArrayList())
+                .provenanceRule(Strings.EMPTY)
+                .geneSymbol(Strings.EMPTY)
+                .synonyms(Lists.newArrayList())
+                .entrezId(Strings.EMPTY)
+                .sequenceOntology(createSequenceOntology())
+                .links(Lists.newArrayList())
+                .description(Strings.EMPTY)
+                .build());
+        return featureList;
+    }
+
+    @NotNull
+    private static SequenceOntology createSequenceOntology() {
+        return ImmutableSequenceOntology.builder()
+                .hierarchy(Lists.newArrayList())
+                .soid(Strings.EMPTY)
+                .parentSoid(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .parentName(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
@@ -127,9 +166,9 @@ public final class ViccFactory {
     @NotNull
     private static GeneIdentifier toGeneIdentifier(@NotNull JsonObject objectGeneIdentifier) {
         return ImmutableGeneIdentifier.builder()
-                .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").toString())
-                .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").toString())
-                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").toString())
+                .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").getAsString())
+                .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").getAsString())
+                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").getAsString())
                 .build();
     }
 
@@ -139,7 +178,7 @@ public final class ViccFactory {
         return ImmutableAssociation.builder()
                 .variantName(objectAssociation.has("variant_name") ? objectAssociation.getAsJsonObject()
                         .getAsJsonPrimitive("variant_name")
-                        .toString() : null)
+                        .getAsString() : null)
 
                 .evidence(Lists.newArrayList(createEvidence(objectAssociation)))
                 .evidenceLevel(objectAssociation.getAsJsonPrimitive("evidence_level").getAsString())
@@ -172,7 +211,7 @@ public final class ViccFactory {
             }
 
             environmentalContexts.add(ImmutableEnvironmentalContext.builder()
-                    .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.get("term").getAsString() : null)
+                    .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.getAsJsonPrimitive("term").getAsString() : null)
                     .description(objectEnvironmentContext.getAsJsonPrimitive("description").getAsString())
                     .taxonomy(objectEnvironmentContext.has("taxonomy")
                             ? createTaxonomy(objectEnvironmentContext.getAsJsonObject("taxonomy"))
@@ -220,14 +259,16 @@ public final class ViccFactory {
 
     private static EvidenceType createEvidenceType(JsonElement elementAssociation) {
         return ImmutableEvidenceType.builder()
-                .sourceName(elementAssociation.getAsJsonObject().getAsJsonPrimitive("sourceName").toString())
-                .id(elementAssociation.getAsJsonObject().has("id") ? elementAssociation.getAsJsonObject().getAsJsonPrimitive("id").toString() : null)
+                .sourceName(elementAssociation.getAsJsonObject().getAsJsonPrimitive("sourceName").getAsString())
+                .id(elementAssociation.getAsJsonObject().has("id") ? elementAssociation.getAsJsonObject()
+                        .getAsJsonPrimitive("id")
+                        .getAsString() : null)
                 .build();
     }
 
     private static EvidenceInfo createEvidenceInfo(JsonElement elementAssociation) {
         return ImmutableEvidenceInfo.builder()
-                .publications(Lists.newArrayList(elementAssociation.getAsJsonObject().getAsJsonPrimitive("publications").toString()))
+                .publications(Lists.newArrayList(elementAssociation.getAsJsonObject().getAsJsonPrimitive("publications").getAsString()))
                 .build();
     }
 
@@ -242,8 +283,11 @@ public final class ViccFactory {
     private static Phenotype createPhenotype(JsonElement elementAssociation) {
         return ImmutablePhenotype.builder()
                 .type(createPhenotypeType(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("type")))
-                .description(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("description").toString())
-                .family(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("family").toString())
+                .description(elementAssociation.getAsJsonObject()
+                        .getAsJsonObject("phenotype")
+                        .getAsJsonPrimitive("description")
+                        .getAsString())
+                .family(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("family").getAsString())
                 .build();
     }
 }
