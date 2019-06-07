@@ -264,41 +264,4 @@ class CopyNumberDAO {
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
         context.delete(COPYNUMBERREGION).where(COPYNUMBERREGION.SAMPLEID.eq(sample)).execute();
     }
-
-    @NotNull
-    public List<PurpleCopyNumber> readSegmentsByType(@NotNull final String sample, final List<SegmentSupport> segmentTypes)
-    {
-        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
-
-        if(segmentTypes.isEmpty())
-            return copyNumbers;
-
-        Result<Record> result = context.select().from(COPYNUMBER)
-                .where(COPYNUMBER.SAMPLEID.eq(sample))
-                .and(COPYNUMBER.SEGMENTSTARTSUPPORT.in(segmentTypes).or(COPYNUMBER.SEGMENTENDSUPPORT.in(segmentTypes)))
-                .fetch();
-
-        for (Record record : result) {
-            copyNumbers.add(ImmutablePurpleCopyNumber.builder()
-                    .chromosome(record.getValue(COPYNUMBER.CHROMOSOME))
-                    .start(record.getValue(COPYNUMBER.START))
-                    .end(record.getValue(COPYNUMBER.END))
-                    .bafCount(record.getValue(COPYNUMBER.BAFCOUNT))
-                    .method(CopyNumberMethod.valueOf(record.getValue(COPYNUMBER.COPYNUMBERMETHOD)))
-                    .segmentStartSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTSTARTSUPPORT)))
-                    .segmentEndSupport(SegmentSupport.valueOf(record.getValue(COPYNUMBER.SEGMENTENDSUPPORT)))
-                    .averageActualBAF(record.getValue(COPYNUMBER.BAF))
-                    .averageObservedBAF(record.getValue(COPYNUMBER.OBSERVEDBAF))
-                    .averageTumorCopyNumber(record.getValue(COPYNUMBER.COPYNUMBER_))
-                    .depthWindowCount(record.getValue(COPYNUMBER.DEPTHWINDOWCOUNT))
-                    .gcContent(record.getValue(COPYNUMBER.GCCONTENT))
-                    .minStart(record.getValue(COPYNUMBER.MINSTART))
-                    .maxStart(record.getValue(COPYNUMBER.MAXSTART))
-                    .build());
-        }
-
-        Collections.sort(copyNumbers);
-        return copyNumbers;
-    }
-
 }
