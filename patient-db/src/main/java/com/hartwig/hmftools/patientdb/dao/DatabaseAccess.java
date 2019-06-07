@@ -337,6 +337,9 @@ public class DatabaseAccess {
         LOGGER.info("Deleting evidence data for sample: " + sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
 
+        LOGGER.info("Deleting driver catalog for sample: " + sample);
+        driverCatalogDAO.deleteForSample(sample);
+
         LOGGER.info("All data for sample: " + sample + " has been deleted");
     }
 }
