@@ -15,6 +15,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
 import com.google.common.primitives.Doubles;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -53,10 +54,12 @@ public class AmberApplication implements AutoCloseable {
 
     private final AmberConfig config;
     private final ExecutorService executorService;
+    private final Predicate<BaseDepth> snpCheckFilter;
     private final Predicate<BaseDepth> homozygousFilter;
     private final Predicate<BaseDepth> heterozygousFilter;
     private final AmberPersistence persistence;
     private final VersionInfo versionInfo;
+    private final SortedSetMultimap<String, GenomeRegion> bedRegions;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
@@ -78,6 +81,7 @@ public class AmberApplication implements AutoCloseable {
         config = AmberConfig.createConfig(cmd);
         homozygousFilter = new NormalHomozygousFilter();
         heterozygousFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
+
         persistence = new AmberPersistence(config);
 
         final File outputDir = new File(config.outputDirectory());
@@ -87,6 +91,10 @@ public class AmberApplication implements AutoCloseable {
 
         if (!new File(config.bedFilePath()).exists()) {
             throw new IOException("Unable to locate bed file " + config.bedFilePath());
+        }
+
+        if (!config.snpBedFilePath().isEmpty() && !new File(config.snpBedFilePath()).exists()) {
+            throw new IOException("Unable to locate snp bed file " + config.snpBedFilePath());
         }
 
         if (!new File(config.tumorBamPath()).exists()) {
@@ -99,15 +107,32 @@ public class AmberApplication implements AutoCloseable {
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
+
+        LOGGER.info("Loading bed file {}", config.bedFilePath());
+        bedRegions = BEDFileLoader.fromBedFile(config.bedFilePath());
+
+        final SortedSetMultimap<String, GenomeRegion> snpBedRegionsSortedSet;
+        if (!config.snpBedFilePath().isEmpty()) {
+            LOGGER.info("Loading snp bed file {}", config.snpBedFilePath());
+            snpBedRegionsSortedSet = BEDFileLoader.fromBedFile(config.snpBedFilePath());
+        } else {
+            snpBedRegionsSortedSet = TreeMultimap.create();
+        }
+
+        bedRegions.putAll(snpBedRegionsSortedSet);
+        snpCheckFilter = new SnpCheckFilter(bedRegions);
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
+
         final SamReaderFactory readerFactory =
                 SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
 
-        final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory);
+        final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory, bedRegions);
         final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
         final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
+        final ListMultimap<Chromosome, BaseDepth> snpCheck = Multimaps.filterEntries(allNormal, snpCheckFilter);
+
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, hetNormal);
 
         final List<TumorBAF> tumorBAFList = tumorBAFMap.values().stream().sorted().collect(Collectors.toList());
@@ -122,13 +147,14 @@ public class AmberApplication implements AutoCloseable {
         persistence.persistContamination(contaminationList);
         persistence.persistTumorBAF(tumorBAFList);
         persistence.persistAmberBAF(amberBAFList);
+        persistence.persistSnpCheck(snpCheck);
     }
 
     @NotNull
-    private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory)
+    private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory,
+            final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet)
             throws IOException, InterruptedException, ExecutionException {
-        LOGGER.info("Loading bed file {}", config.bedFilePath());
-        final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet = BEDFileLoader.fromBedFile(config.bedFilePath());
+
         final int partitionSize = Math.max(config.minPartition(), bedRegionsSortedSet.size() / config.threadCount());
 
         LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), config.referenceBamPath());
@@ -152,17 +178,16 @@ public class AmberApplication implements AutoCloseable {
 
         final ListMultimap<Chromosome, ModifiableBaseDepth> normalEvidence = ArrayListMultimap.create();
         getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
-
-        final ListMultimap<Chromosome, BaseDepth> normalBafs = ArrayListMultimap.create();
         final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
+        final ListMultimap<Chromosome, BaseDepth> normalBafs = ArrayListMultimap.create();
         try (final RefEnricher refEnricher = new RefEnricher(config.refGenomePath())) {
             for (final Chromosome chromosome : normalEvidence.keySet()) {
                 final List<BaseDepth> normalHetLocations = normalEvidence.get(chromosome)
                         .stream()
                         .filter(x -> x.indelCount() == 0)
-                        .filter(depthFilter)
+                        .filter(depthFilter.or(snpCheckFilter))
                         .map(refEnricher::enrich)
-                        .filter(x -> heterozygousFilter.test(x) || homozygousFilter.test(x))
+                        .filter(heterozygousFilter.or(homozygousFilter).or(snpCheckFilter)::test)
                         .collect(Collectors.toList());
 
                 normalBafs.putAll(chromosome, normalHetLocations);

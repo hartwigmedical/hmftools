@@ -138,7 +138,7 @@ public class DatabaseAccess {
         purityDAO.write(sampleId, bestFitPerPurity);
     }
 
-    public static double MIN_SAMPLE_PURITY = 0.195;
+    public static final double MIN_SAMPLE_PURITY = 0.195;
 
     public final List<String> getSamplesPassingQC(double minPurity) {
         return purityDAO.getSamplesPassingQC(minPurity);
@@ -310,6 +310,9 @@ public class DatabaseAccess {
         LOGGER.info("Deleting chord data for sample: " + sample);
         chordDAO.deleteChordForSample(sample);
 
+        LOGGER.info("Deleting amber data for sample: " + sample);
+        amberDAO.deleteAmberRecordsForSample(sample);
+
         LOGGER.info("Deleting purity data for sample: " + sample);
         purityDAO.deletePurityForSample(sample);
 
@@ -333,6 +336,9 @@ public class DatabaseAccess {
 
         LOGGER.info("Deleting evidence data for sample: " + sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
+
+        LOGGER.info("Deleting driver catalog for sample: " + sample);
+        driverCatalogDAO.deleteForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");
     }

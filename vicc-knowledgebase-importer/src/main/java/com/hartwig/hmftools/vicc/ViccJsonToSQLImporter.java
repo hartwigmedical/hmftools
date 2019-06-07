@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.vicc;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -13,30 +12,32 @@ import java.util.function.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.dao.ViccDAO;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
-import org.junit.Test;
 
-public class ViccFactoryTest {
+public class ViccJsonToSQLImporter {
+    private static final Logger LOGGER = LogManager.getLogger(ViccJsonToSQLImporter.class);
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccFactoryTest.class);
+    public static void main(final String... args) throws IOException, SQLException {
+        LOGGER.info("Attempting to load up the VICC json all file into a sql database");
 
-    @Test
-    @Ignore
-    public void canReadJsonKnowledgeBaseFile() throws IOException {
         final String baseDir =
                 System.getProperty("user.home") + File.separator + "hmf" + File.separator + "projects" + File.separator + "vicc";
         final String inputFile = baseDir + File.separator + "all.json";
 
-        List<ViccEntry> viccEntries = ViccFactory.readViccKnowledgebaseJsonFile(inputFile);
-
-        assertNotNull(viccEntries);
-
+        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
+
+        ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
+
+        viccDAO.deleteAll();
+        for (ViccEntry viccEntry : viccEntries) {
+            viccDAO.writeViccEntry(viccEntry);
+        }
     }
 
     private static void analyzeViccEntries(@NotNull List<ViccEntry> viccEntries) {

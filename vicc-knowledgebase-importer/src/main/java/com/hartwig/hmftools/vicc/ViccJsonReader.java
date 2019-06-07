@@ -17,19 +17,23 @@ import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -38,15 +42,15 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class ViccFactory {
-    private static final Logger LOGGER = LogManager.getLogger(ViccFactory.class);
+public final class ViccJsonReader {
+    private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
     // SAGE records hold 8 field (no "feature names") while all other knowledgebases hold 9 records.
     private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(9, 10);
 
-    private ViccFactory() {
+    private ViccJsonReader() {
     }
 
     public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {
@@ -80,18 +84,18 @@ public final class ViccFactory {
                 }
             }
 
-            viccEntryBuilder.features(Lists.newArrayList());
+            viccEntryBuilder.features(createFeatures());
 
             JsonElement elementAssociation = viccEntryElement.get("association");
             Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
 
-            if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
-                LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
-                LOGGER.warn(keysAssociation);
-            } else {
-                viccEntryBuilder.association(createAssociation(viccEntryElement));
-            }
+//            if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
+//                LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
+//                        + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
+//                LOGGER.warn(keysAssociation);
+//            }
+
+            viccEntryBuilder.association(createAssociationEmpty());
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryElement.getAsJsonArray("dev_tags")));
@@ -101,6 +105,41 @@ public final class ViccFactory {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static List<Feature> createFeatures() {
+        List<Feature> featureList = Lists.newArrayList();
+        featureList.add(ImmutableFeature.builder()
+                .name(Strings.EMPTY)
+                .biomarkerType(Strings.EMPTY)
+                .referenceName(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .start(Strings.EMPTY)
+                .end(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .provenance(Lists.newArrayList())
+                .provenanceRule(Strings.EMPTY)
+                .geneSymbol(Strings.EMPTY)
+                .synonyms(Lists.newArrayList())
+                .entrezId(Strings.EMPTY)
+                .sequenceOntology(createSequenceOntology())
+                .links(Lists.newArrayList())
+                .description(Strings.EMPTY)
+                .build());
+        return featureList;
+    }
+
+    @NotNull
+    private static SequenceOntology createSequenceOntology() {
+        return ImmutableSequenceOntology.builder()
+                .hierarchy(Lists.newArrayList())
+                .soid(Strings.EMPTY)
+                .parentSoid(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .parentName(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
@@ -127,41 +166,64 @@ public final class ViccFactory {
     @NotNull
     private static GeneIdentifier toGeneIdentifier(@NotNull JsonObject objectGeneIdentifier) {
         return ImmutableGeneIdentifier.builder()
-                .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").toString())
-                .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").toString())
-                .ensemblGeneId(objectGeneIdentifier.getAsJsonPrimitive("ensembl_gene_id").toString())
+                .symbol(objectGeneIdentifier.getAsJsonPrimitive("symbol").getAsString())
+                .entrezId(objectGeneIdentifier.getAsJsonPrimitive("entrez_id").getAsString())
+                .ensemblGeneId(Strings.EMPTY)
+                .ensemblGeneId(Strings.EMPTY)
                 .build();
     }
 
     @NotNull
-    private static Association createAssociation(JsonObject viccEntryElement) {
-        JsonObject objectAssociation = viccEntryElement.getAsJsonObject("association");
+    private static Association createAssociationEmpty() {
         return ImmutableAssociation.builder()
-                .variantName(objectAssociation.has("variant_name") ? objectAssociation.getAsJsonObject()
-                        .getAsJsonPrimitive("variant_name")
-                        .toString() : null)
+                .variantName(Strings.EMPTY)
+                .evidence(Lists.newArrayList())
+                .evidenceLevel(Strings.EMPTY)
+                .evidenceLabel(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+                .drugLabels(Strings.EMPTY)
+                .sourceLink(Strings.EMPTY)
+                .publicationUrls(Lists.newArrayList())
+                .phenotype(ImmutablePhenotype.builder()
+                                .type(ImmutablePhenotypeType.builder()
+                                        .source(Strings.EMPTY)
+                                        .term(Strings.EMPTY)
+                                        .id(Strings.EMPTY)
+                                        .build())
+                                .description(Strings.EMPTY)
+                                .family(Strings.EMPTY)
+                                .build())
+                .description(Strings.EMPTY)
+                .environmentalContexts(Lists.newArrayList())
+                .oncogenic(Strings.EMPTY)
+                .build();
+    }
 
-                .evidence(Lists.newArrayList(createEvidence(objectAssociation)))
+    @NotNull
+    private static Association createAssociation(JsonObject objectAssociation) {
+        return ImmutableAssociation.builder()
+                .variantName(objectAssociation.has("variant_name")
+                        ? objectAssociation.getAsJsonPrimitive("variant_name").getAsString()
+                        : null)
+                .evidence(createEvidence(objectAssociation.getAsJsonArray("evidence")))
                 .evidenceLevel(objectAssociation.getAsJsonPrimitive("evidence_level").getAsString())
                 .evidenceLabel(objectAssociation.getAsJsonPrimitive("evidence_label").getAsString())
                 .responseType(objectAssociation.getAsJsonPrimitive("response_type").getAsString())
                 .drugLabels(objectAssociation.getAsJsonPrimitive("drug_labels").getAsString())
                 .sourceLink(objectAssociation.has("source_link") ? objectAssociation.getAsJsonPrimitive("source_link").getAsString() : null)
-                .publicationUrls(Lists.newArrayList(objectAssociation.getAsJsonObject()
-                        .getAsJsonPrimitive("publication_url")
-                        .getAsString()))
-                .phenotype(createPhenotype(objectAssociation))
+                .publicationUrls(Lists.newArrayList(objectAssociation.getAsJsonPrimitive("publication_url").getAsString()))
+                .phenotype(createPhenotype(objectAssociation.getAsJsonObject("phenotype")))
                 .description(objectAssociation.getAsJsonPrimitive("description").getAsString())
-                .environmentalContexts(createEnvironmentalContexts(objectAssociation))
+                .environmentalContexts(createEnvironmentalContexts(objectAssociation.getAsJsonArray("environmentalContexts")))
                 .oncogenic(objectAssociation.has("oncogenic") ? objectAssociation.getAsJsonPrimitive("oncogenic").getAsString() : null)
                 .build();
     }
 
     @NotNull
-    private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonObject objectAssociation) {
+    private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonArray arrayEnvironmentalContexts) {
         List<EnvironmentalContext> environmentalContexts = Lists.newArrayList();
 
-        for (JsonElement elementEnvironmentContext : objectAssociation.getAsJsonArray("environmentalContexts")) {
+        for (JsonElement elementEnvironmentContext : arrayEnvironmentalContexts) {
             JsonObject objectEnvironmentContext = elementEnvironmentContext.getAsJsonObject();
 
             List<String> approvedCountries = Lists.newArrayList();
@@ -172,7 +234,7 @@ public final class ViccFactory {
             }
 
             environmentalContexts.add(ImmutableEnvironmentalContext.builder()
-                    .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.get("term").getAsString() : null)
+                    .term(objectEnvironmentContext.has("term") ? objectEnvironmentContext.getAsJsonPrimitive("term").getAsString() : null)
                     .description(objectEnvironmentContext.getAsJsonPrimitive("description").getAsString())
                     .taxonomy(objectEnvironmentContext.has("taxonomy")
                             ? createTaxonomy(objectEnvironmentContext.getAsJsonObject("taxonomy"))
@@ -185,6 +247,7 @@ public final class ViccFactory {
                     .approvedCountries(approvedCountries)
                     .id(objectEnvironmentContext.has("id") ? objectEnvironmentContext.getAsJsonPrimitive("id").getAsString() : null)
                     .build());
+
         }
         return environmentalContexts;
     }
@@ -201,49 +264,48 @@ public final class ViccFactory {
                 .build();
     }
 
-    private static Evidence createEvidence(JsonElement elementAssociation) {
-        ImmutableEvidence builderEvidence = ImmutableEvidence.builder()
-                .info(ImmutableEvidenceInfo.builder().publications(Lists.newArrayList()).build())
-                .evidenceType(ImmutableEvidenceType.builder().id(Strings.EMPTY).sourceName(Strings.EMPTY).build())
-                .description(Strings.EMPTY)
-                .build();
+    private static List<Evidence> createEvidence(JsonArray arrayEvidence) {
+        List<Evidence> listEvidence = Lists.newArrayList();
 
-        for (JsonElement elementEvidence : elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence").getAsJsonArray()) {
-            builderEvidence = ImmutableEvidence.builder()
-                    .info(createEvidenceInfo(elementEvidence.getAsJsonObject().getAsJsonPrimitive("info")))
-                    .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().getAsJsonPrimitive("evidenceType")))
+        for (JsonElement elementEvidence : arrayEvidence) {
+            listEvidence.add(ImmutableEvidence.builder()
+                    .info(createEvidenceInfo(elementEvidence.getAsJsonObject().getAsJsonObject("info")))
+                    .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().getAsJsonObject("evidenceType")))
                     .description(elementEvidence.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .build();
+                    .build());
         }
-        return builderEvidence;
+        return listEvidence;
     }
 
-    private static EvidenceType createEvidenceType(JsonElement elementAssociation) {
+    private static EvidenceType createEvidenceType(JsonObject objectEvidenceType) {
         return ImmutableEvidenceType.builder()
-                .sourceName(elementAssociation.getAsJsonObject().getAsJsonPrimitive("sourceName").toString())
-                .id(elementAssociation.getAsJsonObject().has("id") ? elementAssociation.getAsJsonObject().getAsJsonPrimitive("id").toString() : null)
+                .sourceName(objectEvidenceType.getAsJsonPrimitive("sourceName").getAsString())
+                .id(objectEvidenceType.has("id") ? objectEvidenceType.getAsJsonPrimitive("id").getAsString() : null)
                 .build();
     }
 
-    private static EvidenceInfo createEvidenceInfo(JsonElement elementAssociation) {
-        return ImmutableEvidenceInfo.builder()
-                .publications(Lists.newArrayList(elementAssociation.getAsJsonObject().getAsJsonPrimitive("publications").toString()))
-                .build();
+    private static EvidenceInfo createEvidenceInfo(JsonObject objectEvidenceInfo) {
+        List<String> publications = Lists.newArrayList();
+        for (JsonElement publicationElements : objectEvidenceInfo.getAsJsonArray("publications")) {
+            publications.add(publicationElements.getAsString());
+        }
+
+        return ImmutableEvidenceInfo.builder().publications(Lists.newArrayList(publications)).build();
     }
 
-    private static PhenotypeType createPhenotypeType(JsonElement elementAssociation) {
+    private static PhenotypeType createPhenotypeType(JsonObject objectphenotypetype) {
         return ImmutablePhenotypeType.builder()
-                .source(elementAssociation.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
-                .term(elementAssociation.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
-                .id(elementAssociation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                .source(objectphenotypetype.getAsJsonPrimitive("source").getAsString())
+                .term(objectphenotypetype.getAsJsonPrimitive("term").getAsString())
+                .id(objectphenotypetype.getAsJsonPrimitive("id").getAsString())
                 .build();
     }
 
-    private static Phenotype createPhenotype(JsonElement elementAssociation) {
+    private static Phenotype createPhenotype(JsonObject objectPehnotype) {
         return ImmutablePhenotype.builder()
-                .type(createPhenotypeType(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("type")))
-                .description(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("description").toString())
-                .family(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("family").toString())
+                .type(createPhenotypeType(objectPehnotype.getAsJsonObject("type")))
+                .description(objectPehnotype.getAsJsonPrimitive("description").getAsString())
+                .family(objectPehnotype.getAsJsonPrimitive("family").getAsString())
                 .build();
     }
 }
