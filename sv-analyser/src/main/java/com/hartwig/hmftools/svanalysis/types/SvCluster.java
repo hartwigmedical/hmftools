@@ -948,7 +948,7 @@ public class SvCluster
             }
         }
 
-        isSpecificCluster(this);
+        // isSpecificCluster(this);
         mArmClusters.forEach(x -> x.setFeatures());
     }
 

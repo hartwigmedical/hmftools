@@ -324,72 +324,6 @@ public class FusionDisruptionAnalyser
         */
     }
 
-    private void uploadData(final List<SvVarData> svList, final DatabaseAccess dbAccess)
-    {
-        if (dbAccess == null)
-            return;
-
-        // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
-        // upload every breakend in a fusion to be uploaded, and any other disrupted canonical transcript
-
-        List<GeneFusion> fusionsToUpload = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
-
-        List<String> genePairs = Lists.newArrayList();
-        fusionsToUpload.stream().forEach(x -> genePairs.add(x.name()));
-
-        for(GeneFusion fusion : mFusions)
-        {
-            if(fusion.reportable() || genePairs.contains(fusion.name()))
-                continue;
-
-            // gather up all other candidate fusions for this pairing and take the highest priority
-            List<GeneFusion> similarFusions = mFusions.stream()
-                    .filter(x -> !x.reportable())
-                    .filter(x -> x != fusion)
-                    .filter(x -> x.name().equals(fusion.name()))
-                    .collect(Collectors.toList());
-
-            genePairs.add(fusion.name());
-
-            GeneFusion topFusion = determineReportableFusion(similarFusions, false);
-
-            if(topFusion != null)
-            {
-                fusionsToUpload.add(topFusion);
-            }
-        }
-
-        List<Transcript> transcriptsToUpload = Lists.newArrayList();
-
-        for (SvVarData var : svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
-                {
-                    transcriptsToUpload.addAll(geneAnnotation.transcripts().stream()
-                            .filter(x -> x.isCanonical() && x.isDisruptive())
-                            .collect(Collectors.toList()));
-                }
-            }
-        }
-
-        for(GeneFusion fusion : fusionsToUpload)
-        {
-            if(!transcriptsToUpload.contains(fusion.upstreamTrans()))
-                transcriptsToUpload.add(fusion.upstreamTrans());
-
-            if(!transcriptsToUpload.contains(fusion.downstreamTrans()))
-                transcriptsToUpload.add(fusion.downstreamTrans());
-        }
-
-
-        LOGGER.debug("persisting {} breakends and {} fusions to database", transcriptsToUpload.size(), fusionsToUpload.size());
-
-        final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-        annotationDAO.writeBreakendsAndFusions(mSampleId, transcriptsToUpload, fusionsToUpload);
-    }
-
     private void finalSingleSVFusions(final List<SvVarData> svList)
     {
         // always report SVs by themselves
@@ -473,7 +407,7 @@ public class FusionDisruptionAnalyser
             if (cluster.getChains().isEmpty())
                 continue;
 
-            isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             List<GeneFusion> chainFusions = Lists.newArrayList();
             List<GeneFusion> validFusions = Lists.newArrayList();
@@ -1019,6 +953,77 @@ public class FusionDisruptionAnalyser
             if(!mKnownFusionGenes.contains(genePair.getSecond()))
                 mKnownFusionGenes.add(genePair.getSecond());
         }
+    }
+
+    private void uploadData(final List<SvVarData> svList, final DatabaseAccess dbAccess)
+    {
+        if (dbAccess == null)
+            return;
+
+        // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
+        // upload every breakend in a fusion to be uploaded, and any other disrupted canonical transcript
+
+        List<GeneFusion> fusionsToUpload = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
+
+        List<String> genePairs = Lists.newArrayList();
+        fusionsToUpload.stream().forEach(x -> genePairs.add(x.name()));
+
+        for(GeneFusion fusion : mFusions)
+        {
+            if(fusion.reportable() || genePairs.contains(fusion.name()))
+                continue;
+
+            // only add viable fusions for upload
+            if(!fusion.isViable())
+                continue;
+
+                // gather up all other candidate fusions for this pairing and take the highest priority
+            List<GeneFusion> similarFusions = mFusions.stream()
+                    .filter(x -> !x.reportable())
+                    .filter(x -> x.isViable())
+                    .filter(x -> x != fusion)
+                    .filter(x -> x.name().equals(fusion.name()))
+                    .collect(Collectors.toList());
+
+            genePairs.add(fusion.name());
+
+            GeneFusion topFusion = determineReportableFusion(similarFusions, false);
+
+            if(topFusion != null)
+            {
+                fusionsToUpload.add(topFusion);
+            }
+        }
+
+        List<Transcript> transcriptsToUpload = Lists.newArrayList();
+
+        for (SvVarData var : svList)
+        {
+            for (int be = SE_START; be <= SE_END; ++be)
+            {
+                for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
+                {
+                    transcriptsToUpload.addAll(geneAnnotation.transcripts().stream()
+                            .filter(x -> x.isCanonical() && x.isDisruptive())
+                            .collect(Collectors.toList()));
+                }
+            }
+        }
+
+        for(GeneFusion fusion : fusionsToUpload)
+        {
+            if(!transcriptsToUpload.contains(fusion.upstreamTrans()))
+                transcriptsToUpload.add(fusion.upstreamTrans());
+
+            if(!transcriptsToUpload.contains(fusion.downstreamTrans()))
+                transcriptsToUpload.add(fusion.downstreamTrans());
+        }
+
+
+        LOGGER.debug("persisting {} breakends and {} fusions to database", transcriptsToUpload.size(), fusionsToUpload.size());
+
+        final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
+        annotationDAO.writeBreakendsAndFusions(mSampleId, transcriptsToUpload, fusionsToUpload);
     }
 
     private void writeSampleData()

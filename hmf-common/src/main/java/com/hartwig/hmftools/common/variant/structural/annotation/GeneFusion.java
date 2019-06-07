@@ -95,4 +95,17 @@ public class GeneFusion
         return mAnnotations != null && mAnnotations.chainInfo() != null ? mAnnotations.chainInfo().chainLinks() : 0;
     }
 
+    public boolean validChainTraversal()
+    {
+        if(mAnnotations != null && mAnnotations.chainInfo() != null)
+            return mAnnotations.chainInfo().validTraversal();
+        else
+            return true;
+    }
+
+    public boolean isViable()
+    {
+        return mPhaseMatched && mExonsSkippedUp == 0 && mExonsSkippedDown == 0 && validChainTraversal() && !isTerminated();
+    }
+
 }

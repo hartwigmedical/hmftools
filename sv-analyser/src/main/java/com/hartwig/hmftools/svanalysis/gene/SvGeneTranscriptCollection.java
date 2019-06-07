@@ -32,8 +32,8 @@ public class SvGeneTranscriptCollection
     private String mDataPath;
 
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;// keyed by GeneId (aka StableId)
-    private Map<String, List<EnsemblGeneData>> mChromosomeGeneDataMap;
-    private Map<String, List<EnsemblGeneData>> mChromosomeReverseGeneDataMap; // order by gene end not start
+    private Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
+    private Map<String, List<EnsemblGeneData>> mChrReverseGeneDataMap; // order by gene end not start, for traversal in the reverse direction
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
 
     private BufferedWriter mBreakendWriter;
@@ -46,8 +46,8 @@ public class SvGeneTranscriptCollection
     public SvGeneTranscriptCollection()
     {
         mGeneTransExonDataMap = Maps.newHashMap();
-        mChromosomeGeneDataMap = Maps.newHashMap();
-        mChromosomeReverseGeneDataMap = Maps.newHashMap();
+        mChrGeneDataMap = Maps.newHashMap();
+        mChrReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
         mBreakendWriter = null;
     }
@@ -62,12 +62,12 @@ public class SvGeneTranscriptCollection
 
     public boolean hasCachedEnsemblData()
     {
-        return !mChromosomeGeneDataMap.isEmpty() && !mGeneTransExonDataMap.isEmpty();
+        return !mChrGeneDataMap.isEmpty() && !mGeneTransExonDataMap.isEmpty();
     }
 
     public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
-    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChromosomeGeneDataMap; }
-    public final Map<String, List<EnsemblGeneData>> getChrReverseGeneDataMap() { return mChromosomeReverseGeneDataMap; }
+    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
+    public final Map<String, List<EnsemblGeneData>> getChrReverseGeneDataMap() { return mChrReverseGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
 
     public final EnsemblGeneData getGeneDataByName(final String geneName)
@@ -82,7 +82,7 @@ public class SvGeneTranscriptCollection
 
     private final EnsemblGeneData getGeneData(final String gene, boolean byName)
     {
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChromosomeGeneDataMap.entrySet())
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
         {
             for(final EnsemblGeneData geneData : entry.getValue())
             {
@@ -102,7 +102,7 @@ public class SvGeneTranscriptCollection
     public void populateGeneIdList(Map<String,Boolean> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
     {
         // find the unique set of geneIds
-        final List<EnsemblGeneData> geneRegions = mChromosomeGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
 
         if (geneRegions == null)
             return;
@@ -120,8 +120,8 @@ public class SvGeneTranscriptCollection
     {
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
-        final List<EnsemblGeneData> geneRegions = mChromosomeGeneDataMap.get(chromosome);
-        final List<EnsemblGeneData> geneRegionsReversed = mChromosomeReverseGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneRegionsReversed = mChrReverseGeneDataMap.get(chromosome);
 
         if(geneRegions == null)
             return geneAnnotations;
@@ -245,7 +245,7 @@ public class SvGeneTranscriptCollection
     {
         List<EnsemblGeneData> genesList = Lists.newArrayList();
 
-        final List<EnsemblGeneData> geneDataList = mChromosomeGeneDataMap.get(chromosome);
+        final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
 
         for(final EnsemblGeneData geneData : geneDataList)
         {
@@ -780,7 +780,7 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblData(boolean delayTranscriptLoading)
     {
-        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChromosomeGeneDataMap, mChromosomeReverseGeneDataMap))
+        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChrGeneDataMap, mChrReverseGeneDataMap))
             return false;
 
         if(!delayTranscriptLoading)

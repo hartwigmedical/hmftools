@@ -95,14 +95,13 @@ public class FusionLikelihood
             }
         }
 
+
     }
 
 
     public void generateGenePhasingCounts()
     {
-        final Map<String, List<EnsemblGeneData>> chrGeneDataMap = mGeneTransCache.getChrGeneDataMap();
-
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
         {
             final String chromosome = entry.getKey();
 
@@ -120,6 +119,26 @@ public class FusionLikelihood
             }
 
             mChrForwardGeneDataMap.put(chromosome, geneList);
+        }
+
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mGeneTransCache.getChrReverseGeneDataMap().entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            List<GeneRangeData> geneList = Lists.newArrayList();
+
+            for(final EnsemblGeneData geneData :entry.getValue())
+            {
+                final List<TranscriptExonData> transExonDataList = mGeneTransCache.getTransExonData(geneData.GeneId);
+
+                final int[] phasingCounts = getGenePhasingCounts(geneData, transExonDataList);
+
+                GeneRangeData geneRangeData = new GeneRangeData(geneData);
+                geneRangeData.setPhasingCounts(phasingCounts);
+                geneList.add(geneRangeData);
+            }
+
+            mChrReverseGeneDataMap.put(chromosome, geneList);
         }
     }
 
