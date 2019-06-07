@@ -41,15 +41,15 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class ViccFactory {
-    private static final Logger LOGGER = LogManager.getLogger(ViccFactory.class);
+public final class ViccJsonReader {
+    private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
     // SAGE records hold 8 field (no "feature names") while all other knowledgebases hold 9 records.
     private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(9, 10);
 
-    private ViccFactory() {
+    private ViccJsonReader() {
     }
 
     public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {

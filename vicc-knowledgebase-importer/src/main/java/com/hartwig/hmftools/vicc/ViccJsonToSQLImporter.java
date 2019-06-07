@@ -29,7 +29,7 @@ public class ViccJsonToSQLImporter {
                 System.getProperty("user.home") + File.separator + "hmf" + File.separator + "projects" + File.separator + "vicc";
         final String inputFile = baseDir + File.separator + "all.json";
 
-        List<ViccEntry> viccEntries = ViccFactory.readViccKnowledgebaseJsonFile(inputFile);
+        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
 
         ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
