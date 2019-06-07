@@ -114,6 +114,10 @@ ALTER TABLE svFusion
     CHANGE isReported reported BOOLEAN,
     ADD reportedType varchar(255) NULL,
     ADD chainLength INT,
+    ADD chainLinks INT,
+    ADD chainTerminated BOOLEAN,
+    ADD domainsKept VARCHAR(255),
+    ADD domainsLost VARCHAR(255),
     ADD skippedExons INT;
 
 

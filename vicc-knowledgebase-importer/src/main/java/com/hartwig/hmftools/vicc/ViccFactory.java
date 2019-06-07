@@ -208,11 +208,11 @@ public final class ViccFactory {
                 .description(Strings.EMPTY)
                 .build();
 
-        for (JsonElement elementEvidence : elementAssociation.getAsJsonObject().get("evidence").getAsJsonArray()) {
+        for (JsonElement elementEvidence : elementAssociation.getAsJsonObject().getAsJsonPrimitive("evidence").getAsJsonArray()) {
             builderEvidence = ImmutableEvidence.builder()
-                    .info(createEvidenceInfo(elementEvidence.getAsJsonObject().get("info")))
-                    .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().get("evidenceType")))
-                    .description(elementEvidence.getAsJsonObject().get("description").getAsString())
+                    .info(createEvidenceInfo(elementEvidence.getAsJsonObject().getAsJsonPrimitive("info")))
+                    .evidenceType(createEvidenceType(elementEvidence.getAsJsonObject().getAsJsonPrimitive("evidenceType")))
+                    .description(elementEvidence.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .build();
         }
         return builderEvidence;
@@ -220,30 +220,30 @@ public final class ViccFactory {
 
     private static EvidenceType createEvidenceType(JsonElement elementAssociation) {
         return ImmutableEvidenceType.builder()
-                .sourceName(elementAssociation.getAsJsonObject().get("sourceName").toString())
-                .id(elementAssociation.getAsJsonObject().has("id") ? elementAssociation.getAsJsonObject().get("id").toString() : null)
+                .sourceName(elementAssociation.getAsJsonObject().getAsJsonPrimitive("sourceName").toString())
+                .id(elementAssociation.getAsJsonObject().has("id") ? elementAssociation.getAsJsonObject().getAsJsonPrimitive("id").toString() : null)
                 .build();
     }
 
     private static EvidenceInfo createEvidenceInfo(JsonElement elementAssociation) {
         return ImmutableEvidenceInfo.builder()
-                .publications(Lists.newArrayList(elementAssociation.getAsJsonObject().get("publications").toString()))
+                .publications(Lists.newArrayList(elementAssociation.getAsJsonObject().getAsJsonPrimitive("publications").toString()))
                 .build();
     }
 
     private static PhenotypeType createPhenotypeType(JsonElement elementAssociation) {
         return ImmutablePhenotypeType.builder()
-                .source(elementAssociation.getAsJsonObject().get("source").getAsString())
-                .term(elementAssociation.getAsJsonObject().get("term").getAsString())
-                .id(elementAssociation.getAsJsonObject().get("id").getAsString())
+                .source(elementAssociation.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
+                .term(elementAssociation.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
+                .id(elementAssociation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                 .build();
     }
 
     private static Phenotype createPhenotype(JsonElement elementAssociation) {
         return ImmutablePhenotype.builder()
-                .type(createPhenotypeType(elementAssociation.getAsJsonObject().get("phenotype").getAsJsonObject().get("type")))
-                .description(elementAssociation.getAsJsonObject().get("phenotype").getAsJsonObject().get("description").toString())
-                .family(elementAssociation.getAsJsonObject().get("phenotype").getAsJsonObject().get("family").toString())
+                .type(createPhenotypeType(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("type")))
+                .description(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("description").toString())
+                .family(elementAssociation.getAsJsonObject().getAsJsonObject("phenotype").getAsJsonPrimitive("family").toString())
                 .build();
     }
 }

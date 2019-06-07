@@ -36,6 +36,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SvFusionAnalyser
@@ -59,9 +60,9 @@ public class SvFusionAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
 
-    public SvFusionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTranscriptCollection, final String outputDir)
+    public SvFusionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache, final String outputDir)
     {
-        mGeneTranscriptCollection = geneTranscriptCollection;
+        mGeneTranscriptCollection = geneTransCache;
         mOutputDir = outputDir;
 
         mKnownFusionsModel = null;
@@ -72,15 +73,16 @@ public class SvFusionAnalyser
         mProteinsRequiredKept = Lists.newArrayList();
         mProteinsRequiredLost = Lists.newArrayList();
         setRequiredProteins();
-        mLogInvalidReasons = false;
 
         if(cmd != null)
         {
-            loadConfig(cmd);
+            initialise(cmd);
         }
+
+        mLogInvalidReasons = false;
     }
 
-    private void loadConfig(final CommandLine cmd)
+    private void initialise(@NotNull final CommandLine cmd)
     {
         if(cmd.hasOption(FUSION_PAIRS_CSV) && cmd.hasOption(PROMISCUOUS_FIVE_CSV) && cmd.hasOption(PROMISCUOUS_THREE_CSV))
         {

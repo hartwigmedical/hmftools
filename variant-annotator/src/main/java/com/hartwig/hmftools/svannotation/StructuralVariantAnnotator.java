@@ -53,9 +53,6 @@ public class StructuralVariantAnnotator
         - Otherwise it reads SVs from a VCF, enriches them with purple data and writes the results to file and/or DB
     */
 
-    // sub-directory of sample data path for all SV-related data
-    public static final String SV_OUTPUT_DIRECTORY = "sv";
-
     private String mSampleId;
     private String mOutputDir;
     private String mEnsemblDataDir;
@@ -124,8 +121,10 @@ public class StructuralVariantAnnotator
 
             mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
 
-            mDisruptionAnalyser = new SvDisruptionAnalyser(mOutputDir);
             mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection, mOutputDir);
+
+            mDisruptionAnalyser = new SvDisruptionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection);
+            mDisruptionAnalyser.setOutputDir(mOutputDir);
         }
 
         return true;
