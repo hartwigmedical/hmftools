@@ -310,6 +310,9 @@ public class DatabaseAccess {
         LOGGER.info("Deleting chord data for sample: " + sample);
         chordDAO.deleteChordForSample(sample);
 
+        LOGGER.info("Deleting amber data for sample: " + sample);
+        amberDAO.deleteAmberRecordsForSample(sample);
+
         LOGGER.info("Deleting purity data for sample: " + sample);
         purityDAO.deletePurityForSample(sample);
 
