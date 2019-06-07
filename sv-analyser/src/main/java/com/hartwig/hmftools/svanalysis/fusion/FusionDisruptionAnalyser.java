@@ -8,13 +8,14 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.Reportab
 import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.fusionPloidy;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser.DRUP_TSG_GENES_FILE;
+import static com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser.markNonDisruptiveTranscripts;
 import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.determineReportableFusion;
 import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser.areDisruptivePair;
 import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.couldBeReportable;
 import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.validFusionTranscript;
 
@@ -71,6 +72,7 @@ import org.ensembl.database.homo_sapiens_core.tables.Gene;
 public class FusionDisruptionAnalyser
 {
     private SvFusionAnalyser mFusionFinder;
+    private SvDisruptionAnalyser mDisruptionFinder;
 
     private String mSampleId;
     private String mOutputDir;
@@ -84,7 +86,6 @@ public class FusionDisruptionAnalyser
     private List<GeneFusion> mFusions;
 
     private List<Transcript> mDisruptions;
-    private Set<String> mDisruptionGeneIDPanel;
 
     private PerformanceCounter mPerfCounter;
 
@@ -104,6 +105,7 @@ public class FusionDisruptionAnalyser
     public FusionDisruptionAnalyser()
     {
         mFusionFinder = null;
+        mDisruptionFinder = null;
         mGeneTransCollection = new SvGeneTranscriptCollection();
         mOutputDir = "";
         mFusions = Lists.newArrayList();
@@ -118,7 +120,6 @@ public class FusionDisruptionAnalyser
         mChrBreakendMap = null;
         mKnownFusionGenes = Lists.newArrayList();
         mRestrictedGenes = Lists.newArrayList();
-        loadTsgDriverGeneIDs();
     }
 
     public static void addCmdLineArgs(Options options)
@@ -128,6 +129,7 @@ public class FusionDisruptionAnalyser
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
+        options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
     }
 
     public void initialise(final CommandLine cmdLineArgs, final String outputDir, final SvaConfig config, SvGeneTranscriptCollection ensemblDataCache)
@@ -137,6 +139,8 @@ public class FusionDisruptionAnalyser
         mConfig = config;
         mGeneTransCollection = ensemblDataCache;
         mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
+        mDisruptionFinder = new SvDisruptionAnalyser(cmdLineArgs, ensemblDataCache);
+
         populateKnownFusionGenes();
 
         if(cmdLineArgs != null)
@@ -1017,34 +1021,6 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private boolean hasFusionGenePair(final GeneAnnotation geneUp, final GeneAnnotation geneDown)
-    {
-        for(final GeneFusion fusion : mFusions)
-        {
-            final GeneAnnotation upGene = fusion.upstreamTrans().parent();
-            final GeneAnnotation downGene = fusion.downstreamTrans().parent();
-
-            if(upGene.GeneName.equals(geneUp.GeneName) && downGene.GeneName.equals(geneDown.GeneName))
-                return true;
-        }
-
-        return false;
-    }
-
-    private boolean areKnownFusionGenes(final String geneUp, final String geneDown)
-    {
-        if(mFusionFinder.getKnownFusionsModel() == null)
-            return false;
-
-        for(Pair<String,String> genePair : mFusionFinder.getKnownFusionsModel().fusions().keySet())
-        {
-            if(genePair.getFirst().equals(geneUp) && genePair.getSecond().equals(geneDown))
-                return true;
-        }
-
-        return false;
-    }
-
     private void writeSampleData()
     {
         // write sample files for patient reporter
@@ -1131,7 +1107,7 @@ public class FusionDisruptionAnalyser
                     continue;
 
                 final List<GeneAnnotation> tsgGenesList = var.getGenesList(isStart(be)).stream()
-                        .filter(x -> matchesDisruptionGene(x)).collect(Collectors.toList());
+                        .filter(x -> mDisruptionFinder.matchesDisruptionGene(x)).collect(Collectors.toList());
 
                 for(GeneAnnotation gene : tsgGenesList)
                 {
@@ -1142,46 +1118,6 @@ public class FusionDisruptionAnalyser
                             LOGGER.debug("TSG gene({}) transcript({}) is disrupted", gene.GeneName, transcript.StableId);
                             transcript.setReportableDisruption(true);
                             mDisruptions.add(transcript);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void loadTsgDriverGeneIDs()
-    {
-        mDisruptionGeneIDPanel = Sets.newHashSet();
-        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap37();
-
-        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
-        {
-            mDisruptionGeneIDPanel.add(allGenes.get(gene).geneID());
-        }
-    }
-
-    private boolean matchesDisruptionGene(final GeneAnnotation gene)
-    {
-        return mDisruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID));
-    }
-
-    public static void markNonDisruptiveTranscripts(List<GeneAnnotation> genesStart, List<GeneAnnotation> genesEnd)
-    {
-        if(genesStart.isEmpty() || genesEnd.isEmpty())
-            return;
-
-        for(final GeneAnnotation startGene : genesStart)
-        {
-            for (final Transcript trans1 : startGene.transcripts())
-            {
-                for (final GeneAnnotation endGene : genesEnd)
-                {
-                    for (final Transcript trans2 : endGene.transcripts())
-                    {
-                        if(!areDisruptivePair(trans1, trans2))
-                        {
-                            trans1.setIsDisruptive(false);
-                            trans2.setIsDisruptive(false);
                         }
                     }
                 }
@@ -1203,9 +1139,38 @@ public class FusionDisruptionAnalyser
             mRnaFusionMapper.close();
     }
 
-    // currently unused logic:
+    // currently unused logic for finding unclustered or chained fusions:
 
     /*
+
+    private boolean hasFusionGenePair(final GeneAnnotation geneUp, final GeneAnnotation geneDown)
+    {
+        for(final GeneFusion fusion : mFusions)
+        {
+            final GeneAnnotation upGene = fusion.upstreamTrans().parent();
+            final GeneAnnotation downGene = fusion.downstreamTrans().parent();
+
+            if(upGene.GeneName.equals(geneUp.GeneName) && downGene.GeneName.equals(geneDown.GeneName))
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean areKnownFusionGenes(final String geneUp, final String geneDown)
+    {
+        if(mFusionFinder.getKnownFusionsModel() == null)
+            return false;
+
+        for(Pair<String,String> genePair : mFusionFinder.getKnownFusionsModel().fusions().keySet())
+        {
+            if(genePair.getFirst().equals(geneUp) && genePair.getSecond().equals(geneDown))
+                return true;
+        }
+
+        return false;
+    }
+
     public static final String LOG_KNOWN_FUSION_DATA = "log_known_fusion_data";
     public static final String INVALID_REASON_UNCLUSTERED = "Unclustered";
     public static final String INVALID_REASON_UNCHAINED = "Unchained";

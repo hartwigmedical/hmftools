@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.GENE_PHASING_REGION_5P_UTR;
 import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.getGenePhasingCounts;
+import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_5P_UTR;
 
 import static org.junit.Assert.assertEquals;
 
