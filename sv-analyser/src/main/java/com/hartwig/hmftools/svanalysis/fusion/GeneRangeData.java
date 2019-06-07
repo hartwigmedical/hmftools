@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.svanalysis.analysis.SvUtilities;
 
@@ -16,15 +19,20 @@ public class GeneRangeData
     public final String Arm;
     private int[] mFivePrimePhaseCounts;
     private int[] mThreePrimePhaseCounts;
+    private List<GenePhaseRegion> mPhaseRegions;
 
     public GeneRangeData(final EnsemblGeneData geneData)
     {
         GeneData = geneData;
+        mPhaseRegions = Lists.newArrayList();
         mFivePrimePhaseCounts = new int[GENE_PHASING_REGION_MAX];
         mThreePrimePhaseCounts = new int[GENE_PHASING_REGION_MAX];
 
         Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
     }
+
+    public List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
+    public void addPhaseRegions(List<GenePhaseRegion> regions) { mPhaseRegions.addAll(regions); }
 
     public int[] getPhaseCounts(boolean useFive) { return useFive ? mFivePrimePhaseCounts : mThreePrimePhaseCounts; }
 

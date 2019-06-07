@@ -36,8 +36,6 @@ public class SvGeneTranscriptCollection
     private Map<String, List<EnsemblGeneData>> mChrReverseGeneDataMap; // order by gene end not start, for traversal in the reverse direction
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
 
-    private BufferedWriter mBreakendWriter;
-
     // the distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
@@ -49,7 +47,6 @@ public class SvGeneTranscriptCollection
         mChrGeneDataMap = Maps.newHashMap();
         mChrReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
-        mBreakendWriter = null;
     }
 
     public void setDataPath(final String dataPath)
@@ -99,7 +96,7 @@ public class SvGeneTranscriptCollection
         return mGeneTransExonDataMap.get(geneId);
     }
 
-    public void populateGeneIdList(Map<String,Boolean> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
+    public void populateGeneIdList(List<String> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
     {
         // find the unique set of geneIds
         final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
@@ -111,7 +108,8 @@ public class SvGeneTranscriptCollection
 
         for (final EnsemblGeneData geneData : matchedGenes)
         {
-            uniqueGeneIds.put(geneData.GeneId,true);
+            if(!uniqueGeneIds.contains(geneData.GeneId))
+                uniqueGeneIds.add(geneData.GeneId);
         }
     }
 
@@ -177,11 +175,6 @@ public class SvGeneTranscriptCollection
             Transcript transcript, final EnsemblGeneData geneData, long position,
             final List<EnsemblGeneData> geneRegions, final List<EnsemblGeneData> geneRegionsReversed)
     {
-        if(position == 40111449)
-        {
-            LOGGER.debug("here");
-        }
-
         // annotate with preceding gene info if the up distance isn't set
         long precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(geneData, geneData.Strand == 1 ? geneRegionsReversed : geneRegions);
 
@@ -785,110 +778,35 @@ public class SvGeneTranscriptCollection
 
         if(!delayTranscriptLoading)
         {
-            if (!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, Maps.newHashMap()))
+            if (!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, Lists.newArrayList()))
                 return false;
 
-            if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Maps.newHashMap()))
+            if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
                 return false;
         }
 
         return true;
     }
 
-    public boolean loadEnsemblTranscriptData(final Map<String,Boolean> uniqueGeneIds)
+    public boolean loadEnsemblTranscriptData(final List<String> uniqueGeneIds)
     {
         mGeneTransExonDataMap.clear();
 
         if(!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, uniqueGeneIds))
             return false;
 
-        Map<Integer,Boolean> uniqueTransIds = Maps.newHashMap();
+        List<Integer> uniqueTransIds = Lists.newArrayList();
 
         for(List<TranscriptExonData> transExonList : mGeneTransExonDataMap.values())
         {
             for(TranscriptExonData transExonData : transExonList)
             {
-                uniqueTransIds.put(transExonData.TransId, true);
+                if(!uniqueTransIds.contains(transExonData.TransId))
+                    uniqueTransIds.add(transExonData.TransId);
             }
         }
 
         return EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds);
     }
-
-    public void writeBreakendData(final String sampleId, final List<StructuralVariantAnnotation> annotations)
-    {
-        if(mDataPath.isEmpty())
-            return;
-
-        LOGGER.debug("writing {} breakend data to file", annotations.size());
-
-        try
-        {
-            if(mBreakendWriter == null)
-            {
-                mBreakendWriter = createBufferedWriter(mDataPath + "SV_BREAKENDS.csv", false);
-
-                mBreakendWriter.write("SampleId,SvId,IsStart,Chromosome,Position,Orientation,Type");
-                mBreakendWriter.write(",GeneName,GeneStableId,GeneStrand,TranscriptId,IsCanonical,BioType,TransStart,TransEnd");
-                mBreakendWriter.write(",ExonRankUp,ExonPhaseUp,ExonRankDown,ExonPhaseDown,CodingBases,TotalCodingBases,Disruptive");
-                mBreakendWriter.write(",ExonMax,CodingStart,CodingEnd,RegionType,CodingType,ExonDistanceUp,ExonDistanceDown");
-                mBreakendWriter.newLine();
-            }
-
-            BufferedWriter writer = mBreakendWriter;
-
-            for(final StructuralVariantAnnotation annotation : annotations)
-            {
-                if(annotation.annotations().isEmpty())
-                    continue;
-
-                for(final GeneAnnotation geneAnnotation : annotation.annotations())
-                {
-                    for(final Transcript transcript : geneAnnotation.transcripts())
-                    {
-                        final StructuralVariantData var = annotation.variant();
-
-                        boolean isStart = geneAnnotation.isStart();
-
-                        writer.write(String.format("%s,%s,%s,%s,%d,%d,%s",
-                                sampleId, var.id(), isStart, var.startChromosome(), var.startPosition(),
-                                var.startOrientation(), var.type()));
-
-                        // Gene info: geneName, geneStableId, geneStrand, transcriptId
-                        writer.write(
-                                String.format(",%s,%s,%d,%s,%s,%s,%d,%d",
-                                        geneAnnotation.GeneName, geneAnnotation.StableId, geneAnnotation.Strand,
-                                        transcript.StableId, transcript.isCanonical(), transcript.bioType(),
-                                        transcript.TranscriptStart, transcript.TranscriptEnd));
-
-                        // Transcript info: exonUpstream, exonUpstreamPhase, exonDownstream, exonDownstreamPhase, exonStart, exonEnd, exonMax, canonical, codingStart, codingEnd
-                        writer.write(
-                                String.format(",%d,%d,%d,%d,%d,%d,%s",
-                                        transcript.ExonUpstream, transcript.ExonUpstreamPhase,
-                                        transcript.ExonDownstream, transcript.ExonDownstreamPhase,
-                                        transcript.codingBases(), transcript.totalCodingBases(), transcript.isDisruptive()));
-
-                        writer.write(
-                                String.format(",%d,%d,%d,%s,%s,%d,%d",
-                                        transcript.ExonMax, transcript.codingStart(), transcript.codingEnd(),
-                                        transcript.regionType(), transcript.codingType(),
-                                        transcript.exonDistanceUp(), transcript.exonDistanceDown()));
-
-                        writer.newLine();
-                    }
-                }
-            }
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing breakend data: {}", e.toString());
-        }
-    }
-
-    public void close()
-    {
-        closeBufferedWriter(mBreakendWriter);
-    }
-
 
 }

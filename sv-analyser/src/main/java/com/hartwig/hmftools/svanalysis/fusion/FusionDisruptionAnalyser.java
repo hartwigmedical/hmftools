@@ -188,7 +188,7 @@ public class FusionDisruptionAnalyser
         if(selectiveLoading)
         {
             // only load transcript info for the genes covered
-            Map<String,Boolean> restrictedGeneIds = Maps.newHashMap();
+            List<String> restrictedGeneIds = Lists.newArrayList();
 
             for (final SvVarData var : svList)
             {
