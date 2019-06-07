@@ -31,6 +31,14 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <scope>provided</scope>
@@ -73,6 +81,38 @@
 
                 </configuration>
             </plugin>
+
+            <!--TODO: Work in progress. Will be removed-->
+            <!--<plugin>-->
+                <!--<groupId>org.jooq</groupId>-->
+                <!--<artifactId>jooq-codegen-maven</artifactId>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<goals>-->
+                            <!--<goal>generate</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<jdbc>-->
+                        <!--<driver>com.mysql.cj.jdbc.Driver</driver>-->
+                        <!--<url>jdbc:mysql://localhost:3306/vicc_db?useSSL=false&amp;serverTimezone=CET</url>-->
+                        <!--<user>build</user>-->
+                        <!--<password>build</password>-->
+                    <!--</jdbc>-->
+                    <!--<generator>-->
+                        <!--<database>-->
+                            <!--<name>org.jooq.util.mysql.MySQLDatabase</name>-->
+                            <!--<includes>.*</includes>x-->
+                            <!--<inputSchema>vicc_db</inputSchema>-->
+                        <!--</database>-->
+                        <!--<target>-->
+                            <!--<packageName>com.hartwig.hmftools.vicc.database</packageName>-->
+                            <!--<directory>target/generated-sources/jooq</directory>-->
+                        <!--</target>-->
+                    <!--</generator>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
         </plugins>
     </build>
 
