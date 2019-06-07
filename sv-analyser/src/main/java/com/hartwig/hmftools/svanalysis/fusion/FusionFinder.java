@@ -39,7 +39,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SvFusionAnalyser
+public class FusionFinder
 {
     public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
     public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
@@ -58,9 +58,9 @@ public class SvFusionAnalyser
     private BufferedWriter mFusionWriter;
     private static boolean mLogInvalidReasons;
 
-    private static final Logger LOGGER = LogManager.getLogger(SvFusionAnalyser.class);
+    private static final Logger LOGGER = LogManager.getLogger(FusionFinder.class);
 
-    public SvFusionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache, final String outputDir)
+    public FusionFinder(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache, final String outputDir)
     {
         mGeneTranscriptCollection = geneTransCache;
         mOutputDir = outputDir;

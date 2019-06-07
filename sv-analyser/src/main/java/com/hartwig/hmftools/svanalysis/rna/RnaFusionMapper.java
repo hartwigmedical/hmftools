@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.svanalysis.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.checkFusionLogic;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionFinder.checkFusionLogic;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,7 +38,7 @@ import com.hartwig.hmftools.svanalysis.types.SvBreakend;
 import com.hartwig.hmftools.svanalysis.types.SvChain;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.fusion.FusionFinder;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -49,14 +49,14 @@ public class RnaFusionMapper
     private String mSampleId;
     private String mOutputDir;
 
-    private SvFusionAnalyser mFusionFinder;
+    private FusionFinder mFusionFinder;
     private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
     private BufferedWriter mWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaFusionMapper.class);
 
-    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, SvFusionAnalyser fusionFinder)
+    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, FusionFinder fusionFinder)
     {
         mSampleRnaData = Maps.newHashMap();
         mWriter = null;

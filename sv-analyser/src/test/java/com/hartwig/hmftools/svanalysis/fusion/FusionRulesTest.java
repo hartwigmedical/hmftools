@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.checkFusionLogic;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionFinder.checkFusionLogic;
 
 import static org.junit.Assert.assertTrue;
 

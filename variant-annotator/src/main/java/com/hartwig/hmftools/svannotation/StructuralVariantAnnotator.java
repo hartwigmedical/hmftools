@@ -27,8 +27,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVaria
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
-import com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser;
-import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.fusion.DisruptionFinder;
+import com.hartwig.hmftools.svanalysis.fusion.FusionFinder;
 import com.hartwig.hmftools.svanalysis.gene.EnsemblDAO;
 import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
@@ -62,8 +62,8 @@ public class StructuralVariantAnnotator
 
     private boolean mRunFusions;
     private SvGeneTranscriptCollection mSvGeneTranscriptCollection;
-    private SvDisruptionAnalyser mDisruptionAnalyser;
-    private SvFusionAnalyser mFusionAnalyser;
+    private DisruptionFinder mDisruptionAnalyser;
+    private FusionFinder mFusionAnalyser;
     private boolean mUploadAnnotations;
 
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantAnnotator.class);
@@ -121,9 +121,9 @@ public class StructuralVariantAnnotator
 
             mUploadAnnotations = !mCmdLineArgs.hasOption(SKIP_DB_UPLOAD);
 
-            mFusionAnalyser = new SvFusionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection, mOutputDir);
+            mFusionAnalyser = new FusionFinder(mCmdLineArgs, mSvGeneTranscriptCollection, mOutputDir);
 
-            mDisruptionAnalyser = new SvDisruptionAnalyser(mCmdLineArgs, mSvGeneTranscriptCollection);
+            mDisruptionAnalyser = new DisruptionFinder(mCmdLineArgs, mSvGeneTranscriptCollection);
             mDisruptionAnalyser.setOutputDir(mOutputDir);
         }
 
@@ -403,7 +403,7 @@ public class StructuralVariantAnnotator
         options.addOption(ENSEMBL_DATA_DIR, true, "Cached Ensembl data path");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
-        SvFusionAnalyser.addCmdLineArgs(options);
+        FusionFinder.addCmdLineArgs(options);
         EnsemblDAO.addCmdLineArgs(options);
 
         // testing options

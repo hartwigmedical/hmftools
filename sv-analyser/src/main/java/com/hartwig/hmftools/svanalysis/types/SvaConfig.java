@@ -44,6 +44,7 @@ public class SvaConfig
     public static final String DATA_OUTPUT_PATH = "data_output_path"; // old config name support
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
+    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 
     // clustering analysis options

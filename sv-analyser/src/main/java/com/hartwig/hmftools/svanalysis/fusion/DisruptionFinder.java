@@ -33,7 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class SvDisruptionAnalyser
+public class DisruptionFinder
 {
     private Set<String> mDisruptionGeneIDPanel;
 
@@ -43,9 +43,9 @@ public class SvDisruptionAnalyser
     private BufferedWriter mWriter;
     private String mOutputDir;
 
-    private static final Logger LOGGER = LogManager.getLogger(SvDisruptionAnalyser.class);
+    private static final Logger LOGGER = LogManager.getLogger(DisruptionFinder.class);
 
-    public SvDisruptionAnalyser(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache)
+    public DisruptionFinder(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache)
     {
         mDisruptionGeneIDPanel = null;
         mOutputDir = "";

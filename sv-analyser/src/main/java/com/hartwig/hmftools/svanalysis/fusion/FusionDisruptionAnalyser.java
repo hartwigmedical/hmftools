@@ -7,17 +7,15 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.context;
 import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.fusionPloidy;
 import static com.hartwig.hmftools.svanalysis.analysis.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.svanalysis.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser.DRUP_TSG_GENES_FILE;
-import static com.hartwig.hmftools.svanalysis.fusion.SvDisruptionAnalyser.markNonDisruptiveTranscripts;
-import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.determineReportableFusion;
-import static com.hartwig.hmftools.svanalysis.types.SvCluster.isSpecificCluster;
+import static com.hartwig.hmftools.svanalysis.fusion.DisruptionFinder.DRUP_TSG_GENES_FILE;
+import static com.hartwig.hmftools.svanalysis.fusion.DisruptionFinder.markNonDisruptiveTranscripts;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svanalysis.types.SvVarData.isStart;
 import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.couldBeReportable;
-import static com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser.validFusionTranscript;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionFinder.couldBeReportable;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionFinder.validFusionTranscript;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -28,10 +26,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
@@ -67,12 +61,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ensembl.database.homo_sapiens_core.tables.Gene;
 
 public class FusionDisruptionAnalyser
 {
-    private SvFusionAnalyser mFusionFinder;
-    private SvDisruptionAnalyser mDisruptionFinder;
+    private FusionFinder mFusionFinder;
+    private DisruptionFinder mDisruptionFinder;
 
     private String mSampleId;
     private String mOutputDir;
@@ -138,8 +131,8 @@ public class FusionDisruptionAnalyser
 
         mConfig = config;
         mGeneTransCollection = ensemblDataCache;
-        mFusionFinder = new SvFusionAnalyser(cmdLineArgs, ensemblDataCache, mOutputDir);
-        mDisruptionFinder = new SvDisruptionAnalyser(cmdLineArgs, ensemblDataCache);
+        mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
+        mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache);
 
         populateKnownFusionGenes();
 
@@ -185,7 +178,7 @@ public class FusionDisruptionAnalyser
 
     // for testing
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
-    public final SvFusionAnalyser getFusionFinder() { return mFusionFinder; }
+    public final FusionFinder getFusionFinder() { return mFusionFinder; }
 
     public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection,
             boolean applyPromotorDistance, boolean selectiveLoading, boolean purgeInvalidTranscripts)

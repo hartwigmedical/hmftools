@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.getGenePhasingCounts;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.setGenePhasingCounts;
 import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_5P_UTR;
+import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_MAX;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,9 +48,11 @@ public class FusionLikelihoodTest
         transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
                 90, 100, 1, -1, -1, codingStart, codingEnd, ""));
 
-        int[] regionTotals = getGenePhasingCounts(geneData, transExonDataList);
+        int[] regionTotals5 = new int[GENE_PHASING_REGION_MAX];
+        int[] regionTotals3 = new int[GENE_PHASING_REGION_MAX];
+        setGenePhasingCounts(geneData, transExonDataList, regionTotals5, regionTotals3);
 
-        assertEquals(regionTotals[GENE_PHASING_REGION_5P_UTR], 26);
+        assertEquals(regionTotals3[GENE_PHASING_REGION_5P_UTR], 26);
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_0], 7);
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_1], 17);
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_2], 16);
@@ -84,7 +87,7 @@ public class FusionLikelihoodTest
         transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
                 90, 100, 1, -1, -1, codingStart, codingEnd, ""));
 
-        regionTotals = getGenePhasingCounts(geneData2, transExonDataList);
+        setGenePhasingCounts(geneData, transExonDataList, regionTotals5, regionTotals3);
 
         // assertEquals(regionTotals[GENE_PHASING_REGION_5P_UTR], 26);
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_0], 7);

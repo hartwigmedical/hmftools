@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svanalysis;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.svanalysis.fusion.FusionDisruptionAnalyser.setSvGeneData;
+import static com.hartwig.hmftools.svanalysis.types.SvaConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svanalysis.types.SvaConfig.LOG_DEBUG;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ import com.hartwig.hmftools.svanalysis.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.svanalysis.annotators.DriverGeneAnnotator;
 import com.hartwig.hmftools.svanalysis.types.SvVarData;
 import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.svanalysis.fusion.SvFusionAnalyser;
+import com.hartwig.hmftools.svanalysis.fusion.FusionFinder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -39,7 +40,6 @@ public class SvAnalyser {
 
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
-    private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -273,7 +273,7 @@ public class SvAnalyser {
 
         // allow sub-components to add their specific config
         SvaConfig.addCmdLineArgs(options);
-        SvFusionAnalyser.addCmdLineArgs(options);
+        FusionFinder.addCmdLineArgs(options);
         DriverGeneAnnotator.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);
 
