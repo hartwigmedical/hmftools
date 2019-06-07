@@ -17,19 +17,23 @@ import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -80,7 +84,7 @@ public final class ViccFactory {
                 }
             }
 
-            viccEntryBuilder.features(Lists.newArrayList());
+            viccEntryBuilder.features(createFeatures());
 
             JsonElement elementAssociation = viccEntryElement.get("association");
             Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
@@ -101,6 +105,41 @@ public final class ViccFactory {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static List<Feature> createFeatures() {
+        List<Feature> featureList = Lists.newArrayList();
+        featureList.add(ImmutableFeature.builder()
+                .name(Strings.EMPTY)
+                .biomarkerType(Strings.EMPTY)
+                .referenceName(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .start(Strings.EMPTY)
+                .end(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .provenance(Lists.newArrayList())
+                .provenanceRule(Strings.EMPTY)
+                .geneSymbol(Strings.EMPTY)
+                .synonyms(Lists.newArrayList())
+                .entrezId(Strings.EMPTY)
+                .sequenceOntology(createSequenceOntology())
+                .links(Lists.newArrayList())
+                .description(Strings.EMPTY)
+                .build());
+        return featureList;
+    }
+
+    @NotNull
+    private static SequenceOntology createSequenceOntology() {
+        return ImmutableSequenceOntology.builder()
+                .hierarchy(Lists.newArrayList())
+                .soid(Strings.EMPTY)
+                .parentSoid(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .parentName(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
