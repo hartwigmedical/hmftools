@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep13;
 import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep9;
@@ -138,7 +139,7 @@ public class StructuralVariantFusionDAO
 
         for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
-            final InsertValuesStep9 fusionInserter = context.insertInto(SVFUSION,
+            final InsertValuesStep13 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -147,6 +148,10 @@ public class StructuralVariantFusionDAO
                     SVFUSION.REPORTED,
                     SVFUSION.REPORTEDTYPE,
                     SVFUSION.CHAINLENGTH,
+                    SVFUSION.CHAINLINKS,
+                    SVFUSION.CHAINTERMINATED,
+                    SVFUSION.DOMAINSKEPT,
+                    SVFUSION.DOMAINSLOST,
                     SVFUSION.SKIPPEDEXONS);
 
             batch.forEach(fusion -> fusionInserter.values(timestamp,
@@ -157,6 +162,10 @@ public class StructuralVariantFusionDAO
                     fusion.reportable(),
                     fusion.getKnownFusionType(),
                     fusion.getChainLength(),
+                    fusion.getChainLinks(),
+                    fusion.isTerminated(),
+                    DatabaseUtil.checkStringLength(fusion.downstreamTrans().getProteinFeaturesKept(), SVFUSION.DOMAINSKEPT),
+                    DatabaseUtil.checkStringLength(fusion.downstreamTrans().getProteinFeaturesLost(), SVFUSION.DOMAINSLOST),
                     fusion.getExonsSkipped(true) + fusion.getExonsSkipped(false)));
 
             fusionInserter.execute();
