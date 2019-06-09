@@ -499,6 +499,7 @@ SomaticDeviation | 0.00 | Penalty from somatic variants with implied ploidies th
 Score | 0.68 | Score of fit (lower is better)
 Diploid Proportion | 0.02 | Proportion of copy number regions that have 1 (+- 0.2) minor and major allele
 PolyclonalProportion | 0.09 | Proportion of copy number regions that are more than 0.25 from a whole copy number
+WholeGenomeDuplication | true | True if more than 10 autosomes have major allele ploidy > 1.5
 [Gender](#1-gender) | MALE | One of `MALE`, `FEMALE` or `MALE_KLINEFELTER`
 [Status](#9-determine-a-qc-status-for-the-tumor) | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
 MinPurity | 0.95 | Minimum purity with score within 10% of best
@@ -855,6 +856,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History
 - Upcomming
   - Removed FittedSegment file and db table
+  - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)
 - [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-29)
   - Add biallelic status to somatic VCF
   - Removed low VAF SGL filtering logic

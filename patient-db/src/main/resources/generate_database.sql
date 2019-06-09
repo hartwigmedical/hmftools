@@ -327,6 +327,7 @@ CREATE TABLE purity
     ploidy DOUBLE PRECISION not null,
     diploidProportion DOUBLE PRECISION not null,
     polyclonalProportion DOUBLE PRECISION not null,
+    wholeGenomeDuplication BOOLEAN NOT NULL,
     minPurity DOUBLE PRECISION not null,
     maxPurity DOUBLE PRECISION not null,
     minPloidy DOUBLE PRECISION not null,

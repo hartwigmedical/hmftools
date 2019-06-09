@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
+import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.wholeGenomeDuplication;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
@@ -178,6 +179,7 @@ public class PurityPloidyEstimateApplication {
                     .gender(cobaltGender)
                     .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
+                    .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
                     .build();
 
             final List<GeneCopyNumber> geneCopyNumbers =

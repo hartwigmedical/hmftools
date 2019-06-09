@@ -63,6 +63,7 @@ class PurityDAO {
         return ImmutablePurityContext.builder()
                 .bestFit(purity)
                 .score(score)
+                .wholeGenomeDuplication(result.getValue(PURITY.WHOLEGENOMEDUPLICATION) == 1)
                 .version(result.getValue(PURITY.VERSION))
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
@@ -115,6 +116,7 @@ class PurityDAO {
                 PURITY.MINPLOIDY,
                 PURITY.MAXPLOIDY,
                 PURITY.POLYCLONALPROPORTION,
+                PURITY.WHOLEGENOMEDUPLICATION,
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
@@ -134,6 +136,7 @@ class PurityDAO {
                         DatabaseUtil.decimal(score.minPloidy()),
                         DatabaseUtil.decimal(score.maxPloidy()),
                         DatabaseUtil.decimal(purity.polyClonalProportion()),
+                        purity.wholeGenomeDuplication() ? (byte) 1 : (byte) 0,
                         timestamp)
                 .execute();
     }

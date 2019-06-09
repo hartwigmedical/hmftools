@@ -30,6 +30,7 @@ public class FittedPurityFileTest {
                 .gender(Gender.values()[random.nextInt(Gender.values().length)])
                 .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
                 .polyClonalProportion(nextDouble(random))
+                .wholeGenomeDuplication(random.nextBoolean())
                 .build();
 
         final List<String> lines = toLines(input);

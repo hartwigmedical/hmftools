@@ -31,14 +31,20 @@ public enum FittedPurityFile {
     @NotNull
     static PurityContext fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        return ImmutablePurityContext.builder()
+        ImmutablePurityContext.Builder builder =  ImmutablePurityContext.builder()
                 .score(score(values))
                 .bestFit(bestFit(values))
                 .gender(gender(values))
                 .status(status(values))
                 .polyClonalProportion(polyClonalProportion(values))
                 .version(values[14])
-                .build();
+                .wholeGenomeDuplication(false);
+
+        if (values.length > 16) {
+            builder.wholeGenomeDuplication(Boolean.valueOf(values[16]));
+        }
+
+        return  builder.build();
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
@@ -75,6 +81,7 @@ public enum FittedPurityFile {
                 .add("MaxDiploidProportion")
                 .add("Version")
                 .add("SomaticPenalty")
+                .add("WholeGenomeDuplication")
                 .toString();
     }
 
@@ -98,6 +105,7 @@ public enum FittedPurityFile {
                 .add(FORMAT.format(score.maxDiploidProportion()))
                 .add(String.valueOf(context.version()))
                 .add(FORMAT.format(purity.somaticPenalty()))
+                .add(String.valueOf(context.wholeGenomeDuplication()))
                 .toString();
     }
 
