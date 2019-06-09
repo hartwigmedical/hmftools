@@ -540,45 +540,6 @@ MaxStart | 1 | Maximum start location of this segment if there is any uncertaint
 MinorAllelePloidy | 0.8165 | Ploidy of minor allele adjusted for purity
 MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
 
-
-#### Fitted Segments File
-
-The fitted segments file `TUMOR.purple.fitted` contains interim copy number data after segmentation and purity fitting but **before** the 
-smoothing algorithm has been applied. It contains a lot more noise but also more detailed information than is available in the smoothed 
-copy number output above. As this file is included primarily for diagnostic purposes, it is recommended that the tumor copy number profile be 
-taken from the copy number file above.
-
-
-Column  | Example Value | Description
----|---|---
-Chromosome  | 1 | Chromosome of copy number segment
-Start  | 13188001 | Start base of copy number segment
-End  | 16850000 | End base of copy number segment
-GermlineStatus | DIPLOID | Status of the Germline in this segment. One of DIPLOID, AMPLIFICATION, HOM_DELETION, HET_DELETION, NOISE  or UNKNOWN
-SvCluster | false | Flag to indicate if this segment is part of a cluster of structural variants
-RatioSupport | true | Flag to indicate if this segment is supported by COBALT
-Support | NONE | The type of structural variant support for the copy number breakpoint at start of region. Allowed values as per SegmentStartSupport in Copy Number file.
-GcContent | 0.4693 | Proportion of segment that is G or C
-DepthWindowCount | 2834 | Count of COBALT windows covered by this segment
-BafCount  | 225 | Count of AMBER baf points covered by this segment
-ObservedBAF  | 0.7094 | Combined reference and tumor BAF in TUMOR sample **un**adjusted for purity and ploidy
-ObservedTumorRatio  | 0.8832 | COBALT ratio in TUMOR sample **un**adjusted for purity and ploidy
-ObservedNormalRatio  | 0.9986 | COBALT ratio in REFERENCE sample 
-[MinorAllelePloidyDeviation](#deviation-penalty) | 0.7601 | Penalty for deviation of minor allele from whole number
-[MinorAllelePloidyDeviation](#deviation-penalty) | 0.2000 | Penalty for deviation of major allele from whole number
-DeviationPenalty | 0.6777 | Sum of Minor and Major Allele ploidy deviation scaled by ObservedBAF
-[EventPenalty](#event-penalty) | 1.3460 | Penalty for number of events required to take solution away from diploid
-TumorCopyNumber  | 2.7807 | Absolute tumor copy number of segment adjusted for purity and ploidy
-TumorBAF | 0.7074 | Tumor BAF after adjusted for purity and ploidy adjusted for purity and ploidy
-RefNormalisedCopyNumber  | 2.7807 | Similar to TumorCopyNumber except calculated using actual ObservedNormalRatio instead of ideal one.  
-MinorAllelePloidy | 0.8136 | Ploidy of minor allele adjusted for purity
-MajorAllelePloidy | 1.9671 | Ploidy of major allele adjusted for purity
-FittedTumorCopyNumber  | 2.8240 | Copy number **after** smoothing. Multiple contiguous may share the same value corresponding to segments in the copy number table above.
-FittedBAF  | 0.7109 | BAF **after** smoothing. Multiple contiguous may share the same value corresponding to segments in the copy number table above.
-MinStart | 12913001 | Minimum start location of this segment if there is any uncertainty.
-MaxStart | 13188001 | Maximum start location of this segment if there is any uncertainty.
-
-
 #### Gene Copy Number File
 
 The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterations of each gene in the HMF gene panel:
@@ -708,7 +669,6 @@ After connecting to the PURPLE database (eg `mysql -u purple_reader -p -d patien
 ```
 SELECT * FROM purity WHERE sampleId = 'COLO829T';
 SELECT * FROM purityRange WHERE sampleId = 'COLO829T';
-SELECT * FROM copyNumberRegion WHERE sampleId = 'COLO829T';
 SELECT * FROM copyNumber WHERE sampleId = 'COLO829T';
 SELECT * FROM copyNumberGermline WHERE sampleId = 'COLO829T';
 SELECT * FROM geneCopyNumber WHERE sampleId = 'COLO829T';
@@ -893,6 +853,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcomming
+  - Removed FittedSegment file and db table
 - [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-29)
   - Add biallelic status to somatic VCF
   - Removed low VAF SGL filtering logic
