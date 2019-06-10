@@ -857,6 +857,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcomming
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)
+  - Improved logging of missing arguments
 - [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-29)
   - Add biallelic status to somatic VCF
   - Removed low VAF SGL filtering logic
