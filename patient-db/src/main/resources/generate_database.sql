@@ -494,7 +494,6 @@ CREATE TABLE structuralVariant
     INDEX(sampleId)
 );
 
-
 DROP TABLE IF EXISTS svAnnotation;
 CREATE TABLE svAnnotation
 (   id int NOT NULL AUTO_INCREMENT,

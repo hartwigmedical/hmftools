@@ -1,0 +1,4 @@
+Run the following commands as root (admin) on mysql prior to building (assuming you are also building patient-db)
+
+CREATE DATABASE vicc_db;
+GRANT ALL on vicc_db.* TO 'build'@'localhost';

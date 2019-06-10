@@ -44,6 +44,7 @@
         <maven.jaxb2.plugin.version>0.14.0</maven.jaxb2.plugin.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
+        <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
         <hmf-gene-panel.version>local-SNAPSHOT</hmf-gene-panel.version>
@@ -105,6 +106,11 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${maven.exec.plugin.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven.compiler.plugin.version}</version>
@@ -142,6 +148,7 @@
             </plugins>
         </pluginManagement>
     </build>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -406,7 +413,7 @@
                 <scope>test</scope>
                 <type>test-jar</type>
             </dependency>
-			<dependency>
+            <dependency>
                 <groupId>org.jmockit</groupId>
                 <artifactId>jmockit</artifactId>
                 <version>${jmockit.version}</version>
