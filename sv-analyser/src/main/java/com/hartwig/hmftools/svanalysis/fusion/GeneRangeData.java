@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
+import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.REGION_TYPE_NON_CODING;
+
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +21,6 @@ public class GeneRangeData
 
     public final EnsemblGeneData GeneData;
     public final String Arm;
-    private int[] mFivePrimePhaseCounts;
-    private int[] mThreePrimePhaseCounts;
     private List<GenePhaseRegion> mPhaseRegions;
 
     // maps from the DEL or DUP bucet length array index to overlap count
@@ -31,8 +31,6 @@ public class GeneRangeData
     {
         GeneData = geneData;
         mPhaseRegions = Lists.newArrayList();
-        mFivePrimePhaseCounts = new int[GENE_PHASING_REGION_MAX];
-        mThreePrimePhaseCounts = new int[GENE_PHASING_REGION_MAX];
 
         Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
 
@@ -46,18 +44,9 @@ public class GeneRangeData
     public Map<Integer,Long> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
     public Map<Integer,Long> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
 
-    public int[] getPhaseCounts(boolean useFive) { return useFive ? mFivePrimePhaseCounts : mThreePrimePhaseCounts; }
-
     public boolean hasCodingTranscripts(boolean useFive)
     {
-        return hasCodingTranscripts(getPhaseCounts(useFive));
-    }
-
-    public boolean hasCodingTranscripts(final int[] phaseCounts)
-    {
-        return phaseCounts[GENE_PHASING_REGION_CODING_0] > 0
-            || phaseCounts[GENE_PHASING_REGION_CODING_1] > 0
-            || phaseCounts[GENE_PHASING_REGION_CODING_2] > 0;
+        return mPhaseRegions.stream().anyMatch(x -> x.Phase != REGION_TYPE_NON_CODING);
     }
 
 }
