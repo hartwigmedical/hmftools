@@ -79,7 +79,7 @@ public class AmberFromPileupApplication {
         final AmberQC qcStats = AmberQCFactory.create(-1, result);
         final String qcFilename = AmberQCFile.generateFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
 
-        final String filename = AmberBAFFile.generateAmberFilename(outputDirectory, cmd.getOptionValue(SAMPLE));
+        final String filename = AmberBAFFile.generateAmberFilenameForWriting(outputDirectory, cmd.getOptionValue(SAMPLE));
         LOGGER.info("Persisting file {}", filename);
         AmberBAFFile.write(filename, result);
         AmberQCFile.write(qcFilename, qcStats);

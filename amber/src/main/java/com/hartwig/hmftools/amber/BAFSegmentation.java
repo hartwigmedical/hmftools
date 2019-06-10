@@ -18,15 +18,12 @@ public class BAFSegmentation {
     }
 
     public void applySegmentation(@NotNull final String tumor) throws InterruptedException, IOException {
-        final String ratioFile = AmberBAFFile.generateAmberFilename(outputDirectory, tumor);
-        bafSegmentation(ratioFile, tumor);
-    }
-
-    private void bafSegmentation(@NotNull final String ratioFile, @NotNull final String sample) throws IOException, InterruptedException {
-        final String pcfFile = PCFFile.generateBAFFilename(outputDirectory, sample);
+        final String ratioFile = AmberBAFFile.generateAmberFilenameForReading(outputDirectory, tumor);
+        final String pcfFile = PCFFile.generateBAFFilename(outputDirectory, tumor);
         int result = RExecutor.executeFromClasspath("r/bafSegmentation.R", ratioFile, pcfFile);
         if (result != 0) {
             throw new IOException("R execution failed. Unable to complete segmentation.");
         }
     }
+    
 }

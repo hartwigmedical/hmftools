@@ -24,11 +24,19 @@ public enum AmberBAFFile {
     private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
 
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "Chr";
-    private static final String AMBER_EXTENSION = ".amber.baf";
+    private static final String HEADER_PREFIX = "chr";
+    private static final String AMBER_EXTENSION = ".amber.baf.tsv";
 
-    public static String generateAmberFilename(@NotNull final String basePath, @NotNull final String sample) {
+    private static final String HEADER_PREFIX_OLD = "Chr";
+    private static final String AMBER_EXTENSION_OLD = ".amber.baf";
+
+    public static String generateAmberFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + AMBER_EXTENSION;
+    }
+
+    public static String generateAmberFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + AMBER_EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + AMBER_EXTENSION_OLD;
     }
 
     @NotNull
@@ -56,14 +64,14 @@ public enum AmberBAFFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
-                .add("Position")
-                .add("TumorBAF")
-                .add("TumorModifiedBAF")
-                .add("TumorDepth")
-                .add("NormalBAF")
-                .add("NormalModifiedBAF")
-                .add("NormalDepth")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+                .add("position")
+                .add("tumorBAF")
+                .add("tumorModifiedBAF")
+                .add("tumorDepth")
+                .add("normalBAF")
+                .add("normalModifiedBAF")
+                .add("normalDepth")
                 .toString();
     }
 
@@ -87,7 +95,7 @@ public enum AmberBAFFile {
         for (String line : lines) {
             i++;
             try {
-                if (!line.startsWith(HEADER_PREFIX)) {
+                if (!line.startsWith(HEADER_PREFIX) && !line.startsWith(HEADER_PREFIX_OLD)) {
                     final AmberBAF region = fromString(line);
                     result.put(HumanChromosome.fromString(region.chromosome()), region);
                 }
