@@ -72,7 +72,7 @@ fitted_segments_plot <- function(fittedSegments) {
     
     p = ggplot(fittedSegments, aes(x=majorAllelePloidy,y=minorAllelePloidy)) +
         geom_point(aes(size = Weight, color = Score), alpha = 0.7) +
-        xlab("Major Allele") + ylab("Minor Allele") + ggtitle("Fitted Segment Scores") +
+        xlab("Major Allele") + ylab("Minor Allele") + ggtitle("Segment Scores") +
         scale_x_continuous(breaks = c(-200:200), limits = c(minMajorAllelePloidy, maxMajorAllelePloidy)) +
         scale_y_continuous(breaks = c(-200:200), limits = c(0, maxMinorAllelePloidy)) +
         scale_color_gradientn(colours=c("blue","green","yellow","orange", "red"), limits = c(minScore, maxScore)) +
@@ -164,6 +164,6 @@ rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range
 rangePlot = purity_ploidy_range_plot(rangeDF)
 ggsave(filename = paste0(plotDir, "/", sample, ".purity.range.png"), rangePlot, units = "in", height = 4, width = 4.8, scale = 1)
 
-fittedSegmentsDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.fitted"), sep = "\t", header = T, comment.char = "!")
+fittedSegmentsDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.segment.tsv"), sep = "\t", header = T, comment.char = "!")
 fittedSegmentsPlot = fitted_segments_plot(fittedSegmentsDF)
-ggsave(filename = paste0(plotDir, "/", sample, ".fitted.segments.png"), fittedSegmentsPlot, units = "in", height = 4, width = 4.8, scale = 1)
+ggsave(filename = paste0(plotDir, "/", sample, ".segment.png"), fittedSegmentsPlot, units = "in", height = 4, width = 4.8, scale = 1)
