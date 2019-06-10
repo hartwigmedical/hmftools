@@ -1,15 +1,12 @@
 # AMBER
-AMBER is designed to generate a tumor BAF file for use in PURPLE. 
+AMBER is designed primarily to generate a tumor BAF file for use in PURPLE. 
 
-Looking directly at the BAM files, AMBER locates heterozygous sites within the reference sample then calculates the allelic frequency of corresponding sites in the tumor. 
+AMBER locates heterozygous sites within the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
+The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
-AMBER also locates homozygous sites in the reference to detect evidence of contamination in the tumor.
-
-Finally, the Bioconductor copy number package is used to generate pcf segments from the BAF file.
-
-Prior versions of AMBER relied on mpileups of the tumor and reference rather than the BAMs themselves. 
-This method is deprecated but still available in the jar file as AmberFromPileupApplication. 
-See below for more details.  
+Additionally, AMBER is able to: 
+  - detect evidence of contamination in the tumor from homozygous sites in the reference; and
+  - facilitate sample matching by recording SNPs in the germline
 
 ## R Dependencies
 Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
@@ -42,6 +39,7 @@ AMBER supports both BAM and CRAM file formats.
 
 Argument | Default | Description 
 ---|---|---
+snp_bed| None | Locations to record SNPs in the germline
 threads | 1 | Number of threads to use
 min_mapping_quality | 1| Minimum mapping quality for an alignment to be used
 min_base_quality | 13| Minimum quality for a base to be considered
@@ -93,16 +91,14 @@ File | Description
 TUMOR.amber.baf | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site.
 TUMOR.amber.baf.pcf | TSV of BAF segments using PCF algorithm.
 TUMOR.amber.qc | Contains median tumor baf and QC status. FAIL may indicate contamination in sample. 
-TUMOR.amber.vcf.gz | Similar information as BAF file but in VCF format. This file is not used by PURPLE.
+TUMOR.amber.vcf.gz | Similar information as BAF file but in VCF format. 
+TUMOR.amber.contamination.vcf.gz | Entry at each homozygous site in the reference and tumor.
+REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference. 
  
-## Comparison to pileup method
-Calculating the BAF directly from the bams is functionally equivalent to the pileup method when using the following samtools arguments:
-
-``` -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta ```
-
 # AMBER From Pileup - Deprecated
 
-This version of AMBER relies on mpileups of the reference and tumor samples sliced at likely heterozygous locations. Sambamba (or samtools) can be used to generate the mpileups. 
+Prior versions of AMBER relied on mpileups of the tumor and reference rather than the BAMs themselves. 
+Sambamba (or samtools) can be used to generate the mpileups. 
 
 Example generation:
 
@@ -150,7 +146,14 @@ java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication 
     -tumor /path/to/mpileup/TUMOR.mpileup
 ```
 
-## Version History
+## Comparison to bam method
+Calculating the BAF directly from the bams is functionally equivalent to the pileup method when using the following samtools arguments:
+
+``` -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta ```
+
+# Version History
+- Upcoming
+  - Added optional snp_bed parameter to output germline snps at specified locations
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2-3)
   - Gracefully handle contigs outside the ref genome. 
   - Fixed bug where TumorContamination file had two copies of tumor info rather than normal and tumor

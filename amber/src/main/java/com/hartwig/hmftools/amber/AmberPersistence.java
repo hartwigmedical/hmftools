@@ -40,7 +40,6 @@ class AmberPersistence {
     }
 
     void persistAmberBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException {
-        LOGGER.info("Writing {} BAF records to {}", result.size(), config.outputDirectory());
         final String filename = AmberBAFFile.generateAmberFilename(config.outputDirectory(), config.tumor());
         AmberBAFFile.write(filename, result);
 
@@ -50,6 +49,7 @@ class AmberPersistence {
 
     void persistTumorBAF(@NotNull final List<TumorBAF> tumorBAFList) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.vcf.gz";
+        LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
         new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
     }
 
@@ -63,8 +63,8 @@ class AmberPersistence {
     void persistContamination(@NotNull final List<TumorContamination> contaminationList) throws IOException {
         Collections.sort(contaminationList);
 
-        LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), config.outputDirectory());
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.contamination.vcf.gz";
+        LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
         new AmberVCF(config.normal(), config.tumor()).writeContamination(outputVcf, contaminationList);
 
         final String filename = TumorContaminationFile.generateContaminationFilename(config.outputDirectory(), config.tumor());
@@ -74,7 +74,7 @@ class AmberPersistence {
     void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths) {
         if (baseDepths.size() > 0) {
             final String outputVcf = config.outputDirectory() + File.separator + config.normal() + ".amber.snp.vcf.gz";
-            LOGGER.info("Writing {} snp check records to {}", baseDepths.size(), outputVcf);
+            LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
             new AmberVCF(config.normal()).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
         }
     }
