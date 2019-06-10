@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS featureName;
 CREATE TABLE featureName
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    featureName varchar(255) NOT NULL,
+    featureName varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
