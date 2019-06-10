@@ -1,4 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS copyNumberRegion;
+
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -325,6 +327,7 @@ CREATE TABLE purity
     ploidy DOUBLE PRECISION not null,
     diploidProportion DOUBLE PRECISION not null,
     polyclonalProportion DOUBLE PRECISION not null,
+    wholeGenomeDuplication BOOLEAN NOT NULL,
     minPurity DOUBLE PRECISION not null,
     maxPurity DOUBLE PRECISION not null,
     minPloidy DOUBLE PRECISION not null,
@@ -394,41 +397,6 @@ CREATE TABLE copyNumberGermline
     majorAllelePloidy DOUBLE PRECISION not null,
     copyNumberMethod varchar(255) NOT NULL,
     gcContent DOUBLE PRECISION not null,
-    minStart int not null,
-    maxStart int not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
-DROP TABLE IF EXISTS copyNumberRegion;
-CREATE TABLE copyNumberRegion
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    start int not null,
-    end int not null,
-    germlineStatus varchar(255) NOT NULL,
-    svCluster BOOLEAN NOT NULL,
-    ratioSupport BOOLEAN NOT NULL,
-    segmentStartSupport varchar(255) NOT NULL,
-    bafCount int not null,
-    observedBaf DOUBLE PRECISION not null,
-    observedTumorRatio DOUBLE PRECISION not null,
-    observedNormalRatio DOUBLE PRECISION not null,
-    depthWindowCount int not null,
-    gcContent DOUBLE PRECISION not null,
-    minorAllelePloidy DOUBLE PRECISION not null,
-    majorAllelePloidy DOUBLE PRECISION not null,
-    actualTumorBaf DOUBLE PRECISION not null,
-    actualTumorCopyNumber DOUBLE PRECISION not null,
-    refNormalisedTumorCopyNumber DOUBLE PRECISION not null,
-    minorAllelePloidyDeviation DOUBLE PRECISION not null,
-    majorAllelePloidyDeviation DOUBLE PRECISION not null,
-    deviationPenalty DOUBLE PRECISION not null,
-    eventPenalty DOUBLE PRECISION not null,
-    fittedBaf DOUBLE PRECISION not null,
-    fittedCopyNumber DOUBLE PRECISION not null,
     minStart int not null,
     maxStart int not null,
     PRIMARY KEY (id),
@@ -525,7 +493,6 @@ CREATE TABLE structuralVariant
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
-
 
 DROP TABLE IF EXISTS svAnnotation;
 CREATE TABLE svAnnotation

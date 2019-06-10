@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CircosFileWriter {
+public final class CircosFileWriter {
 
     public static <T extends GenomeRegion> void writeRegions(@NotNull final String filePath, @NotNull Collection<T> values,
             @NotNull ToDoubleFunction<T> valueExtractor) throws IOException {
@@ -38,11 +38,13 @@ public class CircosFileWriter {
         Files.write(new File(filePath).toPath(), lines);
     }
 
+    @NotNull
     private static String header() {
         return "#chromosome\tstart\tend\tvalue";
     }
 
-    private static <T extends GenomePosition> String transformPosition(ToDoubleFunction<T> valueExtractor, T position) {
+    @NotNull
+    private static <T extends GenomePosition> String transformPosition(@NotNull ToDoubleFunction<T> valueExtractor, @NotNull T position) {
         return new StringBuilder().append(circosContig(position.chromosome()))
                 .append('\t')
                 .append(position.position())
@@ -53,7 +55,8 @@ public class CircosFileWriter {
                 .toString();
     }
 
-    private static <T extends GenomeRegion> String transformRegion(ToDoubleFunction<T> valueExtractor, T region) {
+    @NotNull
+    private static <T extends GenomeRegion> String transformRegion(@NotNull ToDoubleFunction<T> valueExtractor, @NotNull T region) {
         return new StringBuilder().append(circosContig(region.chromosome()))
                 .append('\t')
                 .append(region.start())
@@ -65,12 +68,13 @@ public class CircosFileWriter {
     }
 
     @NotNull
-    static String circosContig(@NotNull final String chromosome) {
+    static String circosContig(@NotNull String chromosome) {
         return "hs" + HumanChromosome.fromString(chromosome);
     }
 
     @NotNull
-    static String transformPosition(@NotNull final PurityAdjustedSomaticVariant position, @NotNull Function<PurityAdjustedSomaticVariant, String> colourFunction) {
+    static String transformPosition(@NotNull PurityAdjustedSomaticVariant position,
+            @NotNull Function<PurityAdjustedSomaticVariant, String> colourFunction) {
         return new StringJoiner("\t").add(circosContig(position.chromosome()))
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.position()))

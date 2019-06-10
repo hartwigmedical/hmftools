@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -184,10 +183,6 @@ public class DatabaseAccess {
         copyNumberDAO.writeGermlineCopyNumber(sample, copyNumbers);
     }
 
-    public void writeCopynumberRegions(@NotNull final String sample, @NotNull List<FittedRegion> regions) {
-        copyNumberDAO.writeCopyNumberRegions(sample, regions);
-    }
-
     public void writeSvClusters(@NotNull final String sample, @NotNull List<LinxCluster> clusters) {
         structuralVariantClusterDAO.writeClusters(sample, clusters);
     }
@@ -206,11 +201,6 @@ public class DatabaseAccess {
 
     public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions) {
         structuralVariantFusionDAO.writeBreakendsAndFusions(sample, transcripts, fusions);
-    }
-
-    @NotNull
-    public List<FittedRegion> readCopyNumberRegions(@NotNull final String sample) {
-        return copyNumberDAO.readCopyNumberRegions(sample);
     }
 
     @NotNull

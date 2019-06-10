@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableSimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Structuralvariantbreakend;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,8 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep13;
 import org.jooq.InsertValuesStep18;
-import org.jooq.InsertValuesStep19;
-import org.jooq.InsertValuesStep9;
 import org.jooq.Record;
 import org.jooq.Record2;
 import org.jooq.Result;
@@ -38,7 +35,6 @@ import org.jooq.types.UInteger;
 
 public class StructuralVariantFusionDAO
 {
-
     private static final Logger LOGGER = LogManager.getLogger(StructuralVariantFusionDAO.class);
 
     @NotNull

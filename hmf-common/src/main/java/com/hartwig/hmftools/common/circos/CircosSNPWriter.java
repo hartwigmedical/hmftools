@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CircosSNPWriter {
+public final class CircosSNPWriter {
 
     private static final String PINK = "233,187,184";
     private static final String BLUE = "20,176,239";
@@ -26,7 +26,7 @@ public class CircosSNPWriter {
     }
 
     private static <T> void writeCircosFile(@NotNull final String filePath, @NotNull Collection<T> values,
-            Function<T, String> toStringFunction) throws IOException {
+            @NotNull Function<T, String> toStringFunction) throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         values.stream().map(toStringFunction).forEach(lines::add);
@@ -74,5 +74,4 @@ public class CircosSNPWriter {
         }
         return "A";
     }
-
 }

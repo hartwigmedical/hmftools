@@ -113,14 +113,14 @@ public class AmberApplication implements AutoCloseable {
 
         final SortedSetMultimap<String, GenomeRegion> snpBedRegionsSortedSet;
         if (!config.snpBedFilePath().isEmpty()) {
-            LOGGER.info("Loading snp bed file {}", config.snpBedFilePath());
+            LOGGER.info("Loading germline snp bed file {}", config.snpBedFilePath());
             snpBedRegionsSortedSet = BEDFileLoader.fromBedFile(config.snpBedFilePath());
         } else {
             snpBedRegionsSortedSet = TreeMultimap.create();
         }
 
+        snpCheckFilter = new SnpCheckFilter(snpBedRegionsSortedSet);
         bedRegions.putAll(snpBedRegionsSortedSet);
-        snpCheckFilter = new SnpCheckFilter(bedRegions);
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
@@ -144,10 +144,10 @@ public class AmberApplication implements AutoCloseable {
 
         persistence.persisQC(amberBAFList, contaminationList);
         persistence.persistVersionInfo(versionInfo);
-        persistence.persistContamination(contaminationList);
         persistence.persistTumorBAF(tumorBAFList);
-        persistence.persistAmberBAF(amberBAFList);
+        persistence.persistContamination(contaminationList);
         persistence.persistSnpCheck(snpCheck);
+        persistence.persistAmberBAF(amberBAFList);
     }
 
     @NotNull

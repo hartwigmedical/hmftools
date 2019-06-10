@@ -23,16 +23,12 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.bachelor.types.BachelorDataCollection;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
@@ -346,8 +342,7 @@ public class BachelorPostProcess
     private void annotateRecords(final String sampleId, List<BachelorGermlineVariant> bachRecords)
     {
         final PurityContext purityContext;
-        final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
-        final Multimap<Chromosome, FittedRegion> copyNumberRegions;
+        final List<PurpleCopyNumber> copyNumbers;
 
         if (mCmdLineArgs.hasOption(PURPLE_DATA_DIRECTORY))
         {
@@ -358,15 +353,7 @@ public class BachelorPostProcess
             try
             {
                 purityContext = FittedPurityFile.read(purplePath, sampleId);
-
-                List<PurpleCopyNumber> copyNumberData =
-                        PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, sampleId));
-
-                copyNumbers = Multimaps.fromRegions(copyNumberData);
-
-                List<FittedRegion> fittedRegionData = FittedRegionFile.read(FittedRegionFile.generateFilename(purplePath, sampleId));
-
-                copyNumberRegions = Multimaps.fromRegions(fittedRegionData);
+                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, sampleId));
             }
             catch (IOException e)
             {
@@ -385,9 +372,7 @@ public class BachelorPostProcess
                 LOGGER.warn("failed to read purity data");
             }
 
-            copyNumbers = Multimaps.fromRegions(mDbAccess.readCopynumbers(sampleId));
-
-            copyNumberRegions = Multimaps.fromRegions(mDbAccess.readCopyNumberRegions(sampleId));
+            copyNumbers = mDbAccess.readCopynumbers(sampleId);
         }
 
         List<SomaticVariant> variants = bachRecords.stream()
@@ -400,7 +385,7 @@ public class BachelorPostProcess
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
-                new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, copyNumberRegions);
+                new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers);
 
         final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 

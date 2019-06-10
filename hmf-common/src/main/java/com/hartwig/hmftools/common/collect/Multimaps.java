@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Multimaps {
+public final class Multimaps {
 
     @NotNull
     public static <T extends GenomeRegion> ListMultimap<Chromosome, T> fromRegions(@NotNull final Collection<T> regions) {
@@ -50,5 +50,4 @@ public class Multimaps {
         }
         return result;
     }
-
 }

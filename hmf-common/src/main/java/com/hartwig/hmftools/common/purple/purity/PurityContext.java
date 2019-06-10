@@ -18,4 +18,6 @@ public abstract class PurityContext {
     public abstract FittedPurityScore score();
 
     public abstract double polyClonalProportion();
+
+    public abstract boolean wholeGenomeDuplication();
 }

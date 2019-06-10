@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
+import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.wholeGenomeDuplication;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
@@ -41,7 +42,6 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
-import com.hartwig.hmftools.common.purple.region.FittedRegionFile;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
@@ -179,6 +179,7 @@ public class PurityPloidyEstimateApplication {
                     .gender(cobaltGender)
                     .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
+                    .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
                     .build();
 
             final List<GeneCopyNumber> geneCopyNumbers =
@@ -195,7 +196,6 @@ public class PurityPloidyEstimateApplication {
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
-            FittedRegionFile.write(FittedRegionFile.generateFilename(outputDirectory, tumorSample), enrichedFittedRegions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
             structuralVariants.write(purityAdjuster, copyNumbers);
             new SomaticVCF(config, configSupplier.somaticConfig()).write(purityAdjuster, copyNumbers, enrichedFittedRegions);
@@ -208,7 +208,6 @@ public class PurityPloidyEstimateApplication {
                         bestFit.bestFitPerPurity(),
                         copyNumbers,
                         germlineDeletions,
-                        enrichedFittedRegions,
                         purityContext,
                         qcChecks,
                         geneCopyNumbers);

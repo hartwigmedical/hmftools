@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
@@ -14,7 +13,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReferenceRatioStatisticsFactory {
+public final class ReferenceRatioStatisticsFactory {
 
     public static ReferenceRatioStatistics fromReferenceRatio(@NotNull final Multimap<Chromosome, ReadRatio> readRatios) {
         return fromRatio(readRatios, ReadRatio::ratio);
@@ -25,8 +24,7 @@ public class ReferenceRatioStatisticsFactory {
     }
 
     @NotNull
-    @VisibleForTesting
-    static <T> ReferenceRatioStatistics fromRatio(@NotNull final Multimap<Chromosome, T> readRatios,
+    private static <T> ReferenceRatioStatistics fromRatio(@NotNull final Multimap<Chromosome, T> readRatios,
             @NotNull Function<T, Double> transform) {
 
         final List<Double> xRatios =

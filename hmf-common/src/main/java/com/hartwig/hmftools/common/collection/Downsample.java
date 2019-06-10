@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Downsample {
+public final class Downsample {
 
     @NotNull
     public static <T> List<T> downsample(int maxEntries, @NotNull List<T> input) {
@@ -24,5 +24,4 @@ public class Downsample {
         }
         return result;
     }
-
 }

@@ -15,7 +15,6 @@ public interface ReferenceRatioStatistics {
     double Y_MEDIAN_CUTOFF = 0.05;
     int Y_COUNT_CUTOFF = 1000;
 
-
     int xCount();
 
     double xMedian();

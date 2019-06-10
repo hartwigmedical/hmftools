@@ -36,7 +36,7 @@ public class ChromosomeLengthFile {
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<ChromosomeLength> lengths) {
+    private static List<String> toLines(@NotNull final List<ChromosomeLength> lengths) {
         final List<String> lines = Lists.newArrayList();
         lengths.stream().map(ChromosomeLengthFile::toString).forEach(lines::add);
         return lines;
