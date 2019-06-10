@@ -2,9 +2,13 @@ package com.hartwig.hmftools.svanalysis.fusion;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.REGION_TYPE_5PUTR;
+import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.REGION_TYPE_CODING;
+import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.REGION_TYPE_NON_CODING;
 import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_5P_UTR;
 import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_CODING_0;
 import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_CODING_1;
@@ -24,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -52,6 +57,9 @@ public class FusionLikelihood
     private final Map<String, List<GeneRangeData>> mChrForwardGeneDataMap;
     private final Map<String, List<GeneRangeData>> mChrReverseGeneDataMap;
 
+    private Map<String,Map<Integer,Long>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
+    private Map<String,Map<Integer,Long>> mDupGenePairCounts;
+
     private static final String DEL_BUCKET_LENGTHS = "fl_del_bucket_lengths";
     private static final String DUP_BUCKET_LENGTHS = "fl_dup_bucket_lengths";
     private static final String LIMITED_GENE_IDS = "limited_gene_ids"; // for testing
@@ -64,6 +72,8 @@ public class FusionLikelihood
         mDupBucketLengths = Lists.newArrayList();
         mChrForwardGeneDataMap = Maps.newHashMap();
         mChrReverseGeneDataMap = Maps.newHashMap();
+        mDelGenePairCounts = Maps.newHashMap();
+        mDupGenePairCounts = Maps.newHashMap();
     }
 
     public final Map<String, List<GeneRangeData>> getChrGeneRangeDataMap() { return mChrForwardGeneDataMap; }
@@ -88,6 +98,14 @@ public class FusionLikelihood
         {
             setBucketLengths(cmdLineArgs.getOptionValue(DUP_BUCKET_LENGTHS), mDupBucketLengths);
         }
+    }
+
+    @VisibleForTesting
+    public void initialise(final SvGeneTranscriptCollection geneTransCache, final List<Long> delLengths, final List<Long> dupLengths)
+    {
+        mGeneTransCache = geneTransCache;
+        mDelBucketLengths.addAll(delLengths);
+        mDupBucketLengths.addAll(dupLengths);
     }
 
     private void setBucketLengths(final String lengthData, List<Long> bucketLengths)
@@ -132,15 +150,6 @@ public class FusionLikelihood
                 List<GenePhaseRegion> phaseRegions = generateGenePhaseRegions(geneData, transExonDataList);
                 geneRangeData.addPhaseRegions(phaseRegions);
 
-                /*
-
-                setGenePhasingCounts(
-                        geneData, transExonDataList,
-                        geneRangeData.getPhaseCounts(true),
-                        geneRangeData.getPhaseCounts(false));
-
-                */
-
                 geneList.add(geneRangeData);
 
                 int index = 0;
@@ -160,13 +169,246 @@ public class FusionLikelihood
         }
     }
 
-    private void checkAddGenePhaseRegion(final GenePhaseRegion newRegion, final List<GenePhaseRegion> regions)
+    public void generateProximateFusionCounts()
+    {
+        if(mDelBucketLengths.isEmpty() && mDupBucketLengths.isEmpty())
+            return;
+
+        // walk through each chromosome, and test distances between each gene and the next ones for potential
+        // fusions from DELs and DUPs within the configured bucket distances
+        for (Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
+        {
+            findProximateFusions(entry.getValue(), 1);
+        }
+
+        for (Map.Entry<String, List<GeneRangeData>> entry : mChrReverseGeneDataMap.entrySet())
+        {
+            findProximateFusions(entry.getValue(), -1);
+        }
+    }
+
+    private void findProximateFusions(List<GeneRangeData> geneRangeList, int strandMatch)
+    {
+        long delLimit = !mDelBucketLengths.isEmpty() ? mDelBucketLengths.get(mDelBucketLengths.size() - 1) : 0;
+        long dupLimit = !mDupBucketLengths.isEmpty() ? mDupBucketLengths.get(mDupBucketLengths.size() - 1) : 0;
+        long rangeLimit = max(delLimit, dupLimit);
+
+        for(int lowerIndex = 0; lowerIndex < geneRangeList.size() - 1; ++lowerIndex)
+        {
+            GeneRangeData lowerGene = geneRangeList.get(lowerIndex);
+
+            if(lowerGene.GeneData.Strand != strandMatch)
+                continue;
+
+            for(int upperIndex = lowerIndex + 1; upperIndex < geneRangeList.size(); ++upperIndex)
+            {
+                GeneRangeData upperGene = geneRangeList.get(upperIndex);
+
+                if(upperGene.GeneData.Strand != strandMatch)
+                    continue;
+
+                // exit if the gene is now too far away from the lower gene
+                if(upperGene.GeneData.GeneStart - lowerGene.GeneData.GeneEnd > rangeLimit)
+                    break;
+
+                findProximateFusions(lowerGene, upperGene);
+            }
+        }
+    }
+
+    private void findProximateFusions(GeneRangeData lowerGene, GeneRangeData upperGene)
+    {
+        // find all matching phasing regions and account for any duplicated overlapping regions from different phasing matches
+        // for all those found, assign them to a length bucket and find the number of bases that fall into the length bucket region
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean isDel = (i == 0);
+
+            // first find mutually exclusive matching regions
+            List<GenePhaseRegion> lowerMatchedRegions = Lists.newArrayList();
+            List<GenePhaseRegion> upperMatchedRegions = Lists.newArrayList();
+
+            for (GenePhaseRegion lowerRegion : lowerGene.getPhaseRegions())
+            {
+                if(!isDel && lowerRegion.RegionType == REGION_TYPE_NON_CODING)
+                    continue;
+
+                for (GenePhaseRegion upperRegion : upperGene.getPhaseRegions())
+                {
+                    if(isDel && upperRegion.RegionType == REGION_TYPE_NON_CODING)
+                        continue;
+
+                    if (lowerRegion.Phase != upperRegion.Phase)
+                        continue;
+
+                    // ignore overlapping regions for now since it's not clear whether a DUP or DEL would be required
+                    if (lowerRegion.end() > upperRegion.start())
+                        continue;
+
+                    // a common arbitrary matching phase is used
+                    checkAddGenePhaseRegion(
+                            new GenePhaseRegion(lowerRegion.GeneId, lowerRegion.start(), lowerRegion.end(), 0, REGION_TYPE_CODING),
+                            lowerMatchedRegions);
+
+                    checkAddGenePhaseRegion(
+                            new GenePhaseRegion(upperRegion.GeneId, upperRegion.start(), upperRegion.end(), 0, REGION_TYPE_CODING),
+                            upperMatchedRegions);
+                }
+            }
+
+            // for each pair of matching regions, assign overlapping base counts to each bucket category
+            for(GenePhaseRegion lowerRegion : lowerMatchedRegions)
+            {
+                for(GenePhaseRegion upperRegion : upperMatchedRegions)
+                {
+                    List<Long> bucketLengths = isDel ? mDelBucketLengths : mDupBucketLengths;
+
+                    Map<Integer, Long> bucketOverlapCounts = checkBucketLengths(
+                            bucketLengths, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
+
+                    for(Map.Entry<Integer,Long> entry : bucketOverlapCounts.entrySet())
+                    {
+                        int bucketIndex = entry.getKey();
+                        long overlap = entry.getValue();
+                        addGeneFusionData(lowerGene, upperGene, overlap, isDel, bucketIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    public static Map<Integer, Long> checkBucketLengths(
+            final List<Long> bucketLengths, GeneRangeData lowerGene, GeneRangeData upperGene,
+            GenePhaseRegion lowerRegion, GenePhaseRegion upperRegion, boolean isDel)
+    {
+        Map<Integer, Long> bucketOverlapCounts = Maps.newHashMap();
+
+        for (int i = 0; i < bucketLengths.size() - 1; ++i)
+        {
+            long minBucketLen = bucketLengths.get(i);
+            long maxBucketLen = bucketLengths.get(i + 1);
+
+            // first check whether the bucket can link these 2 genes
+            if(lowerRegion.start() + minBucketLen >= upperRegion.end() || lowerRegion.end() + maxBucketLen <= upperRegion.start())
+            {
+                continue;
+            }
+
+            /* Example scenarios:
+                - gene ranges 100-200 and 300-400
+                - if min bucket length is less than 100 (ie the distance between the lower gene end and upper gene start) then no restriction
+                - if max bucket length is greater than 300 (ie the distance from lower gene start to upper gene end) then no restriction
+                - in this case the base overlap is 100 x 100, so 10K - the number of different ways a unique SV can fuse these 2 genes
+                - if the min bucket length were increased say to 225, then the overlap ranges is limited
+                - if the max bucket length were a limiting factor at say 275 then 100 + 275 only reaches 375
+                - if the max bucket length = 150 then 100 + 150 doesn't reach the start of the upper gene, so the base overlap region must start from 150+
+            */
+
+            long baseOverlapArea = 0;
+
+            if(minBucketLen <= upperRegion.start() - lowerRegion.end() && maxBucketLen >= upperRegion.end() - lowerRegion.start())
+            {
+                // no restriction on the overlap
+                baseOverlapArea = lowerRegion.length() * upperRegion.length();
+            }
+            else
+            {
+                long lowerStart, lowerEnd, upperStart;
+
+                long upperEnd = min(upperRegion.end(), lowerRegion.end() + maxBucketLen);
+
+                if(lowerRegion.start() + minBucketLen > upperRegion.start())
+                {
+                    // min bucket length limits bases in the upper region
+                    lowerStart = lowerRegion.start();
+                    upperStart = lowerRegion.start() + minBucketLen;
+
+                    if(lowerRegion.end() + minBucketLen > upperRegion.end())
+                    {
+                        lowerEnd = upperRegion.end() - minBucketLen;
+                    }
+                    else
+                    {
+                        lowerEnd = lowerRegion.end();
+                    }
+                }
+                else
+                {
+                    // no min length restrictions, so just check if the max length is restrictive
+                    upperStart = upperRegion.start();
+                    lowerEnd = lowerRegion.end();
+
+                    if(lowerRegion.start() + maxBucketLen < upperRegion.start())
+                    {
+                        lowerStart = upperRegion.start() - maxBucketLen;
+                    }
+                    else
+                    {
+                        lowerStart = lowerRegion.start();
+                    }
+                }
+
+                for (long base = lowerStart; base <= lowerEnd; ++base)
+                {
+                    long overlap = min(upperEnd, base + maxBucketLen) - max(upperStart, base + minBucketLen);
+                    baseOverlapArea += overlap;
+                }
+            }
+
+            setBucketLengthData(
+                    isDel ? lowerGene.getDelFusionBaseCounts() : lowerGene.getDupFusionBaseCounts(),
+                    i, bucketLengths.size(), baseOverlapArea);
+
+            setBucketLengthData(
+                    isDel ? upperGene.getDelFusionBaseCounts() : upperGene.getDupFusionBaseCounts(),
+                    i, bucketLengths.size(), baseOverlapArea);
+
+            bucketOverlapCounts.put(i, baseOverlapArea);
+        }
+
+        return bucketOverlapCounts;
+
+    }
+
+    private static void setBucketLengthData(Map<Integer,Long> countsData, int bucketIndex, int maxBuckets, long newCounts)
+    {
+        // initialise the array if empty
+        Long bucketCount = countsData.get(bucketIndex);
+
+        if(bucketCount == null)
+        {
+            countsData.put(bucketIndex, newCounts);
+        }
+        else
+        {
+            countsData.put(bucketIndex, bucketCount + newCounts);
+        }
+    }
+
+    public void addGeneFusionData(final GeneRangeData lowerGene, final GeneRangeData upperGene, long overlapCount, boolean isDel, int bucketIndex)
+    {
+        Map<String, Map<Integer,Long>> genePairCounts = isDel ? mDelGenePairCounts : mDupGenePairCounts;
+
+        final String genePair = lowerGene.GeneData.GeneId + "_" + upperGene.GeneData.GeneId;
+        Map<Integer,Long> bucketOverlapCounts = genePairCounts.get(genePair);
+
+        if(bucketOverlapCounts == null)
+        {
+            bucketOverlapCounts = Maps.newHashMap();
+            genePairCounts.put(genePair, bucketOverlapCounts);
+        }
+
+        setBucketLengthData(bucketOverlapCounts, bucketIndex, isDel ? mDelBucketLengths.size() : mDelBucketLengths.size(), overlapCount);
+    }
+
+    public static void checkAddGenePhaseRegion(final GenePhaseRegion newRegion, final List<GenePhaseRegion> regions)
     {
         // add a region if it doesn't overlap with any existing
         // otherwise expand the existing region
         for(final GenePhaseRegion region : regions)
         {
-            if(region.Phase != newRegion.Phase)
+            if(region.Phase != newRegion.Phase || region.RegionType != newRegion.RegionType)
                 continue;
 
             if(region.start() > newRegion.end() || region.end() < newRegion.start())
@@ -182,8 +424,56 @@ public class FusionLikelihood
         regions.add(newRegion);
     }
 
-    private List<GenePhaseRegion> generateGenePhaseRegions(final EnsemblGeneData geneData, final List<TranscriptExonData> transExonDataList)
+    public void writeGeneLikelihoodData(final String outputDir)
     {
+        try
+        {
+            String outputFilename = outputDir + "GFL_GENE_DATA.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFilename, false);
+
+            writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
+            writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding");
+            writer.write(",");
+            writer.newLine();
+
+            for(Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
+            {
+                for(final GeneRangeData geneData :entry.getValue())
+                {
+                    if(!geneData.hasCodingTranscripts(true))
+                        continue;
+
+                    writer.write(String.format("%s,%s,%s,%s,%d,%d,%d",
+                            geneData.GeneData.GeneId, geneData.GeneData.GeneName, geneData.GeneData.Chromosome, geneData.Arm,
+                            geneData.GeneData.GeneStart, geneData.GeneData.GeneEnd, geneData.GeneData.Strand));
+
+                    for(int i = 0; i <= 1; ++i)
+                    {
+                        final int[] phaseCounts = geneData.getPhaseCounts(i == 0);
+
+                        writer.write(String.format(",%d,%d,%d,%d",
+                                phaseCounts[GENE_PHASING_REGION_5P_UTR], phaseCounts[GENE_PHASING_REGION_CODING_0],
+                                phaseCounts[GENE_PHASING_REGION_CODING_1], phaseCounts[GENE_PHASING_REGION_CODING_2]));
+
+                        writer.newLine();
+                    }
+                }
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing disruptions: {}", e.toString());
+        }
+    }
+
+    public static List<GenePhaseRegion> generateGenePhaseRegions(final EnsemblGeneData geneData, final List<TranscriptExonData> transExonDataList)
+    {
+        // 5-prime rules - must be post-promotor
+        // 3-prime rules: must be coding and > 1 exon
+        // need to mark coding and non-coding regions
         List<GenePhaseRegion> phaseRegions = Lists.newArrayList();
 
         int teIndex = 0;
@@ -193,24 +483,28 @@ public class FusionLikelihood
         {
             for (int i = 0; i < transcriptExons.size() - 1; ++i)
             {
+                // skip single-exon transcripts since without an intronic section their fusion likelihood is negligible
+                if(transcriptExons.size() == 1)
+                    break;
+
                 TranscriptExonData exonData = transcriptExons.get(i);
 
                 if (exonData.CodingStart == null)
                 {
                     // mark the whole transcript as a single UTR
                     GenePhaseRegion phaseRegion = new GenePhaseRegion(
-                            geneData.GeneId, exonData.TransStart, exonData.TransEnd, -1);
+                            geneData.GeneId, exonData.TransStart, exonData.TransEnd, -1, REGION_TYPE_NON_CODING);
 
                     checkAddGenePhaseRegion(phaseRegion, phaseRegions);
                     break;
                 }
 
-                if(geneData.Strand == 1 && exonData.ExonStart > exonData.CodingEnd)
+                TranscriptExonData nextExonData = transcriptExons.get(i+1);
+
+                if(geneData.Strand == 1 && nextExonData.ExonStart > exonData.CodingEnd)
                     break;
                 else if(geneData.Strand == -1 && exonData.ExonEnd < exonData.CodingStart)
                     continue;
-
-                TranscriptExonData nextExonData = transcriptExons.get(i+1);
 
                 // turn the intronic section into a phase region (and fold the exon in with same phasing for simplicity
 
@@ -218,11 +512,15 @@ public class FusionLikelihood
 
                 if(geneData.Strand == 1)
                 {
-                    phaseRegion = new GenePhaseRegion(geneData.GeneId, exonData.ExonStart, nextExonData.ExonStart, exonData.ExonPhaseEnd);
+                    phaseRegion = new GenePhaseRegion(
+                            geneData.GeneId, exonData.ExonStart, nextExonData.ExonStart, exonData.ExonPhaseEnd,
+                            exonData.ExonPhaseEnd == -1 ? REGION_TYPE_5PUTR : REGION_TYPE_CODING);
                 }
                 else
                 {
-                    phaseRegion = new GenePhaseRegion(geneData.GeneId, exonData.ExonEnd, nextExonData.ExonEnd, nextExonData.ExonPhaseEnd);
+                    phaseRegion = new GenePhaseRegion(
+                            geneData.GeneId, exonData.ExonEnd, nextExonData.ExonEnd, nextExonData.ExonPhaseEnd,
+                            nextExonData.ExonPhaseEnd == -1 ? REGION_TYPE_5PUTR : REGION_TYPE_CODING);
                 }
 
                 checkAddGenePhaseRegion(phaseRegion, phaseRegions);
@@ -235,6 +533,52 @@ public class FusionLikelihood
         return phaseRegions;
     }
 
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        final Options options = new Options();
+        addCmdLineArgs(options);
+        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl gene transcript data cache directory");
+
+        final CommandLineParser parser = new DefaultParser();
+        final CommandLine cmd = parser.parse(options, args);
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        LOGGER.info("Generating gene likelihood data");
+
+        SvGeneTranscriptCollection ensemblDataCache = new SvGeneTranscriptCollection();
+        ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+
+        List<String> restrictedGeneIds = Lists.newArrayList();
+        if(cmd.hasOption(LIMITED_GENE_IDS))
+        {
+            restrictedGeneIds = Arrays.stream(cmd.getOptionValue(LIMITED_GENE_IDS).split(";")).collect(Collectors.toList());
+        }
+
+        boolean limitedLoading = !restrictedGeneIds.isEmpty();
+
+        if(!ensemblDataCache.loadEnsemblData(limitedLoading))
+        {
+            LOGGER.error("Ensembl data cache load failed, exiting");
+            return;
+        }
+
+        if(limitedLoading)
+        {
+            ensemblDataCache.loadEnsemblTranscriptData(restrictedGeneIds);
+        }
+
+        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        FusionLikelihood fusionLikelihood = new FusionLikelihood();
+        fusionLikelihood.initialise(cmd, ensemblDataCache);
+        fusionLikelihood.generateGenePhasingCounts();
+        fusionLikelihood.generateProximateFusionCounts();
+        fusionLikelihood.writeGeneLikelihoodData(outputDir);
+
+        LOGGER.info("Gene likelihood data generation complete");
+    }
+
     @NotNull
     public static void setGenePhasingCounts(
             final EnsemblGeneData geneData, final List<TranscriptExonData> transExonDataList,
@@ -243,7 +587,7 @@ public class FusionLikelihood
         // sum up the number of bases in each phasing region across all transcripts for the gene
         // split by considering the gene independently as a 5 or 3 prime partner in a fusion
 
-        // 5-prime rules - must be post-promotor (exon 2 onwards)
+        // 5-prime rules - must be post-promotor
         // 3-prime rules: must be coding and > 1 exon
         long geneStart = geneData.GeneStart;
         long geneEnd = geneData.GeneEnd;
@@ -455,95 +799,6 @@ public class FusionLikelihood
         return -1;
     }
 
-    public void writeGeneLikelihoodData(final String outputDir)
-    {
-        try
-        {
-            String outputFilename = outputDir + "GFL_GENE_PHASE_COUNTS.csv";
-
-            BufferedWriter writer = createBufferedWriter(outputFilename, false);
-
-            writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
-            writer.write(",FivePrimeUTR,FivePrimePhase0,FivePrimePhase1,FivePrimePhase2");
-            writer.write(",ThreePrimeUTR,ThreePrimePhase0,ThreePrimePhase1,ThreePrimePhase2");
-            writer.newLine();
-
-            for(Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
-            {
-                for(final GeneRangeData geneData :entry.getValue())
-                {
-                    if(!geneData.hasCodingTranscripts(true))
-                        continue;
-
-                    writer.write(String.format("%s,%s,%s,%s,%d,%d,%d",
-                            geneData.GeneData.GeneId, geneData.GeneData.GeneName, geneData.GeneData.Chromosome, geneData.Arm,
-                            geneData.GeneData.GeneStart, geneData.GeneData.GeneEnd, geneData.GeneData.Strand));
-
-                    for(int i = 0; i <= 1; ++i)
-                    {
-                        final int[] phaseCounts = geneData.getPhaseCounts(i == 0);
-
-                        writer.write(String.format(",%d,%d,%d,%d",
-                                phaseCounts[GENE_PHASING_REGION_5P_UTR], phaseCounts[GENE_PHASING_REGION_CODING_0],
-                                phaseCounts[GENE_PHASING_REGION_CODING_1], phaseCounts[GENE_PHASING_REGION_CODING_2]));
-
-                        writer.newLine();
-                    }
-                }
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing disruptions: {}", e.toString());
-        }
-    }
-
-    public static void main(@NotNull final String[] args) throws ParseException
-    {
-        final Options options = new Options();
-        addCmdLineArgs(options);
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl gene transcript data cache directory");
-
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
-
-        Configurator.setRootLevel(Level.DEBUG);
-
-        LOGGER.info("Generating gene likelihood data");
-
-        SvGeneTranscriptCollection ensemblDataCache = new SvGeneTranscriptCollection();
-        ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-
-        List<String> restrictedGeneIds = Lists.newArrayList();
-        if(cmd.hasOption(LIMITED_GENE_IDS))
-        {
-            restrictedGeneIds = Arrays.stream(cmd.getOptionValue(LIMITED_GENE_IDS).split(";")).collect(Collectors.toList());
-        }
-
-        boolean limitedLoading = !restrictedGeneIds.isEmpty();
-
-        if(!ensemblDataCache.loadEnsemblData(limitedLoading))
-        {
-            LOGGER.error("Ensembl data cache load failed, exiting");
-            return;
-        }
-
-        if(limitedLoading)
-        {
-            ensemblDataCache.loadEnsemblTranscriptData(restrictedGeneIds);
-        }
-
-        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
-        FusionLikelihood fusionLikelihood = new FusionLikelihood();
-        fusionLikelihood.initialise(cmd, ensemblDataCache);
-        fusionLikelihood.generateGenePhasingCounts();
-        fusionLikelihood.writeGeneLikelihoodData(outputDir);
-
-        LOGGER.info("Gene likelihood data generation complete");
-    }
 
     /*
         public void investigateExonOverlaps(final EnsemblGeneData geneData, final List<TranscriptExonData> transExonDataList)

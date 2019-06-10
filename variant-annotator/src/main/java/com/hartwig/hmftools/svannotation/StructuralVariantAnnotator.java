@@ -161,7 +161,6 @@ public class StructuralVariantAnnotator
         {
             mFusionAnalyser.onCompleted();
             mDisruptionAnalyser.onCompleted();
-            mSvGeneTranscriptCollection.close();
         }
 
         return true;
