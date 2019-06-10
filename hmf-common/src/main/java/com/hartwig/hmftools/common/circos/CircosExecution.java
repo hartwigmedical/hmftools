@@ -14,7 +14,7 @@ import htsjdk.samtools.util.CollectionUtil;
 public class CircosExecution {
     private static final Logger LOGGER = LogManager.getLogger(CircosExecution.class);
 
-    final String executable;
+    private final String executable;
 
     public CircosExecution(@NotNull final String executable) {
         this.executable = executable;

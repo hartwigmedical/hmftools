@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CobaltRatioFile {
+public final class CobaltRatioFile {
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
 
     private static final String DELIMITER = "\t";

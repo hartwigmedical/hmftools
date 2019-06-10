@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReadCountFile {
+public final class ReadCountFile {
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "#";

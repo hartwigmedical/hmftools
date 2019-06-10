@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CircosINDELWriter {
+public final class CircosINDELWriter {
 
     public static void writePositions(@NotNull final String filePath, @NotNull Collection<PurityAdjustedSomaticVariant> values)
             throws IOException {
@@ -19,13 +19,14 @@ public class CircosINDELWriter {
     }
 
     private static <T> void writeCircosFile(@NotNull final String filePath, @NotNull Collection<T> values,
-            Function<T, String> toStringFunction) throws IOException {
+            @NotNull Function<T, String> toStringFunction) throws IOException {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
         values.stream().map(toStringFunction).forEach(lines::add);
         Files.write(new File(filePath).toPath(), lines);
     }
 
+    @NotNull
     private static String header() {
         return "#chromosome\tstart\tend\tvalue";
     }
@@ -37,12 +38,10 @@ public class CircosINDELWriter {
 
     @NotNull
     private static String color(@NotNull final PurityAdjustedSomaticVariant variant) {
-
         if (variant.alt().length() > variant.ref().length()) {
             return "vdyellow";
         }
 
         return "red";
     }
-
 }

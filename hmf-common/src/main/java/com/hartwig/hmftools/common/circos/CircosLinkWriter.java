@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CircosLinkWriter {
+public final class CircosLinkWriter {
 
     public static void writeVariants(@NotNull final String filePath, @NotNull Collection<StructuralVariant> values) throws IOException {
         final Collection<String> lines = values.stream()
