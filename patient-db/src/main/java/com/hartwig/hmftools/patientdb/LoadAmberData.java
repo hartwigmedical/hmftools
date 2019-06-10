@@ -39,12 +39,13 @@ public class LoadAmberData {
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         final String tumorSample = cmd.getOptionValue(SAMPLE);
         final String amberPath = cmd.getOptionValue(AMBER_DIR);
 
-        final String amberFile = AmberBAFFile.generateAmberFilename(amberPath, tumorSample);
+        final String amberFile = AmberBAFFile.generateAmberFilenameForReading(amberPath, tumorSample);
+        LOGGER.info("Loading data from {}", amberFile);
+
         final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFile);
         final GenomePositionSelector<AmberBAF> selector = GenomePositionSelectorFactory.create(bafs);
 
@@ -54,7 +55,8 @@ public class LoadAmberData {
             selector.select(GenomePositions.create(locus.chromosome(), locus.start())).ifPresent(lociAmberPoints::add);
         }
 
-        persistToDatabase(dbAccess, tumorSample, lociAmberPoints);
+        persistToDatabase(cmd, tumorSample, lociAmberPoints);
+        LOGGER.info("Complete");
     }
 
     @NotNull
@@ -84,8 +86,11 @@ public class LoadAmberData {
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
-    private static void persistToDatabase(final DatabaseAccess dbAccess, final String tumorSample, final List<AmberBAF> amber) {
-        dbAccess.writeAmberBAF(tumorSample, amber);
+    private static void persistToDatabase(@NotNull final CommandLine cmd, final String tumorSample, final List<AmberBAF> amber)
+            throws SQLException {
+        try (final DatabaseAccess dbAccess = databaseAccess(cmd)) {
+            dbAccess.writeAmberBAF(tumorSample, amber);
+        }
     }
 
 }
