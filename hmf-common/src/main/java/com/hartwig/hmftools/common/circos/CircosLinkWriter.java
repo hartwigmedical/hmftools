@@ -23,10 +23,16 @@ public final class CircosLinkWriter {
 
     @NotNull
     private static String toString(@NotNull final StructuralVariant variant) {
-        return new StringJoiner("\t").add(CircosFileWriter.circosContig(variant.chromosome(true)))
+        String startChromosome = variant.chromosome(true);
+        String endChromosome = variant.chromosome(false);
+
+        // SGLs are filtered out at this stage
+        assert startChromosome != null && endChromosome != null;
+
+        return new StringJoiner("\t").add(CircosFileWriter.circosContig(startChromosome))
                 .add(String.valueOf(variant.position(true)))
                 .add(String.valueOf(variant.position(true)))
-                .add(CircosFileWriter.circosContig(variant.chromosome(false)))
+                .add(CircosFileWriter.circosContig(endChromosome))
                 .add(String.valueOf(variant.position(false)))
                 .add(String.valueOf(variant.position(false)))
                 .add("color=" + color(variant))
