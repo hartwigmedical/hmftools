@@ -23,7 +23,7 @@ public class GeneRangeData
     public final String Arm;
     private List<GenePhaseRegion> mPhaseRegions;
 
-    // maps from the DEL or DUP bucet length array index to overlap count
+    // maps from the DEL or DUP bucket length array index to overlap count
     private Map<Integer,Long> mDelFusionBaseCounts;
     private Map<Integer,Long> mDupFusionBaseCounts;
 
@@ -44,7 +44,7 @@ public class GeneRangeData
     public Map<Integer,Long> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
     public Map<Integer,Long> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
 
-    public boolean hasCodingTranscripts(boolean useFive)
+    public boolean hasCodingTranscripts()
     {
         return mPhaseRegions.stream().anyMatch(x -> x.Phase != REGION_TYPE_NON_CODING);
     }

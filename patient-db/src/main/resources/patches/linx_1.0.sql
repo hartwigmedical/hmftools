@@ -12,7 +12,7 @@ ALTER TABLE structuralVariant
 UPDATE structuralVariant
 SET svId = id;
 
-CREATE TABLE svLinxData
+CREATE TABLE svAnnotation
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE svLinxData
     INDEX(svId)
 );
 
-CREATE TABLE cluster
+CREATE TABLE svCluster
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
