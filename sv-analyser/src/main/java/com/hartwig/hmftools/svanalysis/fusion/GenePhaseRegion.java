@@ -24,7 +24,7 @@ public class GenePhaseRegion
     public static final int PHASE_2 = 4;
     public static final int PHASE_MAX = 5;
 
-    public GenePhaseRegion(final String geneId, final long start, final long end, final int phase)
+    public GenePhaseRegion(final String geneId, long start, long end, int phase)
     {
         GeneId = geneId;
         Phase = phase;
@@ -39,6 +39,10 @@ public class GenePhaseRegion
             RegionType = REGION_TYPE_CODING;
 
         mPhaseArray = new boolean[PHASE_MAX];
+
+        if(!validPhase(phase))
+            return;
+
         mPhaseArray[phase] = true;
         calcCombinedPhase();
     }
@@ -81,6 +85,9 @@ public class GenePhaseRegion
 
     public void addPhases(final boolean[] phases)
     {
+        if(phases.length != mPhaseArray.length)
+            return;
+
         for(int i = 0; i < PHASE_MAX; ++i)
         {
             mPhaseArray[i] |= phases[i];
@@ -88,6 +95,44 @@ public class GenePhaseRegion
 
         calcCombinedPhase();
     }
+
+    public static boolean validPhase(int phase) { return phase >= 0 && phase < PHASE_MAX; }
+
+    public boolean hasPhase(int phase)
+    {
+        if(!validPhase(phase))
+            return false;
+
+        return mPhaseArray[phase];
+    }
+
+    public boolean hasPhaseOnly(int phase)
+    {
+        if(!validPhase(phase))
+            return false;
+
+        for(int i = 0; i < PHASE_MAX; ++i)
+        {
+            if(mPhaseArray[i] && phase != i)
+                return false;
+            if(!mPhaseArray[i] && phase == i)
+                return false;
+        }
+
+        return true;
+    }
+
+    public boolean hasAnyPhaseMatch(final boolean[] phaseArray)
+    {
+        for(int i = 0; i < PHASE_MAX; ++i)
+        {
+            if(mPhaseArray[i] && phaseArray[i])
+                return true;
+        }
+
+        return false;
+    }
+
 
     public int getCombinedPhase() { return mCombinedPhase; }
 
@@ -98,6 +143,9 @@ public class GenePhaseRegion
 
     public static int calcCombinedPhase(final boolean[] phases)
     {
+        if(phases.length != PHASE_MAX)
+            return -1;
+
         int combinedPhase = 0;
         for(int i = 0; i < PHASE_MAX; ++i)
         {
@@ -110,7 +158,11 @@ public class GenePhaseRegion
 
     public static int simpleToCombinedPhase(int phase)
     {
+        if(!validPhase(phase))
+            return -1;
+
         return (int)Math.pow(10, phase);
 
     }
+
 }

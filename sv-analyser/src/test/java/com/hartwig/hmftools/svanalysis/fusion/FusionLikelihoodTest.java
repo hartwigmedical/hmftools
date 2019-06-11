@@ -1,22 +1,18 @@
 package com.hartwig.hmftools.svanalysis.fusion;
 
-import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.svanalysis.analyser.com.hartwig.hmftools.svanalysis.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.checkAddCombinedGenePhaseRegion;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.checkBucketLengths;
+import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.generateGenePhaseRegions;
-import static com.hartwig.hmftools.svanalysis.fusion.FusionLikelihood.setGenePhasingCounts;
-import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.PHASE_0;
 import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.PHASE_1;
 import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.PHASE_2;
 import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.PHASE_MAX;
+import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.PHASE_NON_CODING;
 import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.calcCombinedPhase;
 import static com.hartwig.hmftools.svanalysis.fusion.GenePhaseRegion.simpleToCombinedPhase;
-import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_5P_UTR;
-import static com.hartwig.hmftools.svanalysis.fusion.GeneRangeData.GENE_PHASING_REGION_MAX;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -26,9 +22,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
-import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FusionLikelihoodTest
@@ -200,6 +194,31 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(regionsList, 100, 199, simpleToCombinedPhase(PHASE_2)));
         assertTrue(hasPhaseRegion(regionsList, 200, 300, combinedPhase));
         assertTrue(hasPhaseRegion(regionsList, 301, 400, simpleToCombinedPhase(PHASE_1)));
+
+        GenePhaseRegion region = new GenePhaseRegion(geneId, 100, 200, PHASE_NON_CODING);
+        assertTrue(region.hasPhaseOnly(PHASE_NON_CODING));
+
+        region.addPhases(phaseArray);
+        assertFalse(region.hasPhaseOnly(PHASE_NON_CODING));
+
+        boolean[] phaseArray1 = {false, true, false, true, false};
+        GenePhaseRegion region1 = new GenePhaseRegion(geneId, 100, 200, phaseArray1);
+
+        boolean[] phaseArray2 = {true, false, true, false, true};
+        GenePhaseRegion region2 = new GenePhaseRegion(geneId, 100, 200, phaseArray2);
+
+        assertFalse(region1.hasAnyPhaseMatch(region2.getPhaseArray()));
+        assertFalse(region2.hasAnyPhaseMatch(region1.getPhaseArray()));
+
+        region2.addPhases(phaseArray1);
+        region1.addPhases(phaseArray2);
+        assertTrue(region1.hasAnyPhaseMatch(region2.getPhaseArray()));
+        assertTrue(region2.hasAnyPhaseMatch(region1.getPhaseArray()));
+
+        EnsemblGeneData gene = createEnsemblGeneData(geneId, "GEN2", "1", 1, 10, 100);
+        GeneRangeData geneData = new GeneRangeData(gene);
+        geneData.addPhaseRegions(Lists.newArrayList(region));
+        assertFalse(geneData.hasCodingTranscripts());
     }
 
     private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, int combinedPhase)
@@ -232,7 +251,7 @@ public class FusionLikelihoodTest
         GenePhaseRegion lowerRegion = new GenePhaseRegion(geneId1, 100, 200, PHASE_1);
         GenePhaseRegion upperRegion = new GenePhaseRegion(geneId2, 300, 400, PHASE_1);
 
-        Map<Integer, Long> bucketOverlapCounts = checkBucketLengths(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         long overlap = bucketOverlapCounts.get(0);
@@ -241,7 +260,7 @@ public class FusionLikelihoodTest
         // with a max bucket length restriction
         delLengths.set(1, (long)150);
 
-        bucketOverlapCounts = checkBucketLengths(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
@@ -251,7 +270,7 @@ public class FusionLikelihoodTest
         delLengths.set(0, (long)250);
         delLengths.set(1, (long)400);
 
-        bucketOverlapCounts = checkBucketLengths(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
@@ -261,15 +280,14 @@ public class FusionLikelihoodTest
         delLengths.set(0, (long)225);
         delLengths.set(1, (long)275);
 
-        bucketOverlapCounts = checkBucketLengths(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
         assertEquals(2525, overlap);
     }
 
-
-    @Ignore
+    /*
     @Test
     public void testGeneRegionCounts()
     {
@@ -348,5 +366,6 @@ public class FusionLikelihoodTest
         //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_2], 16);
 
     }
+    */
 
 }

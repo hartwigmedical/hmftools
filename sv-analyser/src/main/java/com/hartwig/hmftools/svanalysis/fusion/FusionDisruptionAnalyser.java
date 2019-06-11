@@ -1008,9 +1008,6 @@ public class FusionDisruptionAnalyser
 
         // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
         // upload every breakend in a fusion to be uploaded, and any other disrupted canonical transcript
-
-
-
         List<Transcript> transcriptsToUpload = Lists.newArrayList();
 
         for (SvVarData var : svList)
