@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class LimsPatientReader {
 
@@ -25,12 +26,7 @@ public class LimsPatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
-        assert samples.size() > 0;
-
-        // Assume the primary tumor is the same for every sample belonging to one patient.
-        String primaryTumorLocation = samples.get(0).limsPrimaryTumor();
-
+    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation, @NotNull List<SampleData> samples) {
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 noPreTreatmentData(),

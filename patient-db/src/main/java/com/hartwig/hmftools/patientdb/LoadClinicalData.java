@@ -46,7 +46,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class LoadClinicalData {
@@ -82,23 +81,22 @@ public final class LoadClinicalData {
 
             final Lims lims = buildLims(cmd);
 
-            final Map<String, List<SampleData>> samplesPerPatient = extractSamplesFromLims(lims);
-            LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
+            final Map<String, List<SampleData>> limsSampleDataPerPatient = extractAllSamplesFromLims(lims);
+            LOGGER.info(String.format("Loaded samples for %s patients from LIMS", limsSampleDataPerPatient.keySet().size()));
 
             final List<RunContext> runContexts = loadRunContexts(cmd);
-            // TODO Change to Map<String, List<String>> based on datastore
-            final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
-            LOGGER.info(String.format("Found sequence runs for %s patients", sequencedPatientIdentifiers.size()));
+            final Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
+            LOGGER.info(String.format("Found sequence runs for %s patients", sequencedSamplesPerPatient.keySet().size()));
 
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
-                writeRawEcrf(dbWriter, sequencedPatientIdentifiers, ecrfModels);
+                writeRawEcrf(dbWriter, sequencedSamplesPerPatient.keySet(), ecrfModels);
             }
 
             writeClinicalData(dbWriter,
-                    sequencedPatientIdentifiers,
-                    samplesPerPatient,
+                    sequencedSamplesPerPatient,
+                    limsSampleDataPerPatient,
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
@@ -110,21 +108,43 @@ public final class LoadClinicalData {
     }
 
     @NotNull
+    private static Map<String, List<String>> extractSequencedSamplesFromRunContexts(@NotNull List<RunContext> runContexts) {
+        Map<String, List<String>> sequencedSamplesPerPatient = Maps.newHashMap();
+        for (RunContext runContext : runContexts) {
+            String patientId = Utils.extractPatientIdentifier(runContext.setName());
+            List<String> currentSampleIds = sequencedSamplesPerPatient.get(patientId);
+            if (currentSampleIds == null) {
+                currentSampleIds = Lists.newArrayList(runContext.tumorSample());
+            } else {
+                currentSampleIds.add(runContext.tumorSample());
+            }
+            sequencedSamplesPerPatient.put(patientId, currentSampleIds);
+        }
+
+        return sequencedSamplesPerPatient;
+    }
+
+    @NotNull
     private static Lims buildLims(@NotNull CommandLine cmd) throws IOException {
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
         return LimsFactory.fromLimsDirectory(limsDirectory);
     }
 
-    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull Set<String> sequencedPatientIdentifiers,
-            @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir,
-            @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink) throws IOException {
+    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess,
+            @NotNull Map<String, List<String>> sequencedSamplesPerPatient, @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient,
+            @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir, @NotNull Optional<String> tumorLocationSymlink,
+            @NotNull Optional<String> portalDataLink) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
-        Map<String, Patient> patients =
-                loadAndInterpretPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
+        Map<String, Patient> patients = loadAndInterpretPatients(sequencedSamplesPerPatient,
+                limsSampleDataPerPatient,
+                ecrfModels,
+                tumorLocationCurator,
+                treatmentCurator,
+                biopsySiteCurator);
 
         DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
 
@@ -133,13 +153,14 @@ public final class LoadClinicalData {
 
         int missingPatients = 0;
         int missingSamples = 0;
-        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
-        for (final String patientIdentifier : sequencedPatientIdentifiers) {
+        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedSamplesPerPatient.keySet().size()));
+        for (final String patientIdentifier : sequencedSamplesPerPatient.keySet()) {
             Patient patient = patients.get(patientIdentifier);
             if (patient == null) {
                 missingPatients++;
-                missingSamples += samplesPerPatient.get(patientIdentifier).size();
-                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
+                missingSamples += sequencedSamplesPerPatient.get(patientIdentifier).size();
+                dbAccess.writeSampleClinicalData(patientIdentifier,
+                        filter(limsSampleDataPerPatient.get(patientIdentifier), sequencedSamplesPerPatient.get(patientIdentifier)));
             } else {
                 dbAccess.writeFullClinicalData(patient);
                 List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
@@ -158,8 +179,9 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
-            @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
+    private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<String>> sequencedSamplesPerPatient,
+            @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient, @NotNull EcrfModels ecrfModels,
+            @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
             @NotNull BiopsySiteCurator biopsySiteCurator) {
         final EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info(String.format("Interpreting and curating data for %s CPCT patients.", cpctEcrfModel.patientCount()));
@@ -168,18 +190,21 @@ public final class LoadClinicalData {
                 biopsySiteCurator,
                 treatmentCurator);
 
-        Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
+        Map<String, Patient> cpctPatients =
+                readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), sequencedSamplesPerPatient, limsSampleDataPerPatient);
         LOGGER.info(String.format("Finished curation of %s CPCT patients.", cpctPatients.size()));
 
         final EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info(String.format("Interpreting and curating data for %s DRUP patients.", drupEcrfModel.patientCount()));
         EcrfPatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
 
-        Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
+        Map<String, Patient> drupPatients =
+                readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), sequencedSamplesPerPatient, limsSampleDataPerPatient);
         LOGGER.info(String.format("Finished curation of %s DRUP patients.", drupPatients.size()));
 
         LOGGER.info("Interpreting and curating data based off LIMS");
-        Map<String, Patient> patientsFromLims = readLimsPatients(samplesPerPatient, tumorLocationCurator);
+        Map<String, Patient> patientsFromLims =
+                readLimsPatients(sequencedSamplesPerPatient, limsSampleDataPerPatient, tumorLocationCurator);
         LOGGER.info(String.format("Finished curation of %s patients based off LIMS", patientsFromLims.keySet().size()));
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
@@ -191,32 +216,36 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, Patient> readEcrfPatients(@NotNull final EcrfPatientReader reader,
-            @NotNull final Iterable<EcrfPatient> patients, @NotNull final Map<String, List<SampleData>> samplesPerPatientSequenced) {
+    private static Map<String, Patient> readEcrfPatients(@NotNull EcrfPatientReader reader, @NotNull Iterable<EcrfPatient> patients,
+            @NotNull Map<String, List<String>> sequencedSamplesPerPatient,
+            @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient) {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         for (final EcrfPatient ecrfPatient : patients) {
-            // TODO Take sequenced samples only.
-            List<SampleData> samples = samplesPerPatientSequenced.get(ecrfPatient.patientId());
-            Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
+            List<SampleData> filteredSamples =
+                    filter(limsSampleDataPerPatient.get(ecrfPatient.patientId()), sequencedSamplesPerPatient.get(ecrfPatient.patientId()));
+            Patient patient = reader.read(ecrfPatient, filteredSamples);
             patientMap.put(patient.patientIdentifier(), patient);
         }
         return patientMap;
     }
 
     @NotNull
-    private static Map<String, Patient> readLimsPatients(@NotNull final Map<String, List<SampleData>> samplesPerPatientSequenced,
-            @NotNull TumorLocationCurator tumorLocationCurator) {
+    private static Map<String, Patient> readLimsPatients(@NotNull Map<String, List<String>> sequencedSamplesPerPatient,
+            @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient, @NotNull TumorLocationCurator tumorLocationCurator) {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         final LimsPatientReader limsPatientReader = new LimsPatientReader(tumorLocationCurator);
 
-        for (Map.Entry<String, List<SampleData>> entry : samplesPerPatientSequenced.entrySet()) {
+        for (Map.Entry<String, List<SampleData>> entry : limsSampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
             if (!samples.isEmpty()) {
                 LimsSampleType sampleType = LimsSampleType.fromSampleId(samples.get(0).sampleId());
 
                 if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
                     String patientId = entry.getKey();
-                    Patient limsPatient = limsPatientReader.read(patientId, samples);
+                    assert samples.size() > 0;
+                    Patient limsPatient = limsPatientReader.read(patientId,
+                            samples.get(0).limsPrimaryTumor(),
+                            filter(samples, sequencedSamplesPerPatient.get(patientId)));
                     patientMap.put(patientId, limsPatient);
                 }
             }
@@ -270,7 +299,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> extractSamplesFromLims(@NotNull Lims lims) {
+    private static Map<String, List<SampleData>> extractAllSamplesFromLims(@NotNull Lims lims) {
         LimsSampleReader sampleReader = new LimsSampleReader(lims);
 
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
@@ -297,19 +326,6 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static String extractTumorSampleIdsForPatient(@NotNull final String patientIdentifier,
-            @NotNull final List<RunContext> runContexts) {
-        String sampleIdsForPatient = Strings.EMPTY;
-        for (RunContext runContext : runContexts) {
-            final String sampleId = runContext.tumorSample();
-            if (sampleId.startsWith(patientIdentifier)) {
-                sampleIdsForPatient = sampleId;
-            }
-        }
-        return sampleIdsForPatient;
-    }
-
-    @NotNull
     private static EcrfModels loadEcrfModels(@NotNull CommandLine cmd) throws IOException, XMLStreamException {
         final String cpctEcrfFilePath = cmd.getOptionValue(CPCT_ECRF_FILE);
         final String cpctFormStatusCsv = cmd.getOptionValue(CPCT_FORM_STATUS_CSV);
@@ -324,6 +340,17 @@ public final class LoadClinicalData {
         LOGGER.info(String.format("Finished loading DRUP eCRF. Read %s patients.", drupEcrfModel.patientCount()));
 
         return ImmutableEcrfModels.of(cpctEcrfModel, drupEcrfModel);
+    }
+
+    @NotNull
+    private static List<SampleData> filter(@NotNull Iterable<SampleData> samples, @NotNull List<String> samplesToInclude) {
+        List<SampleData> filteredSamples = Lists.newArrayList();
+        for (SampleData sample : samples) {
+            if (samplesToInclude.contains(sample.sampleId())) {
+                filteredSamples.add(sample);
+            }
+        }
+        return filteredSamples;
     }
 
     @NotNull
