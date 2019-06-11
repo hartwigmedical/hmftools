@@ -76,6 +76,7 @@ public class FusionDisruptionAnalyser
 
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
+    private boolean mLogAllPotentials;
     private List<GeneFusion> mFusions;
 
     private List<Transcript> mDisruptions;
@@ -91,7 +92,8 @@ public class FusionDisruptionAnalyser
     public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
-    public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusion";
+    public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
+    public static final String LOG_ALL_POTENTIALS = "log_potential_fusions";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -105,6 +107,7 @@ public class FusionDisruptionAnalyser
         mDisruptions = Lists.newArrayList();
         mSkipFusionCheck = false;
         mLogReportableOnly = false;
+        mLogAllPotentials = false;
         mVisWriter = null;
         mRnaFusionMapper = null;
 
@@ -122,6 +125,7 @@ public class FusionDisruptionAnalyser
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
+        options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
     }
 
@@ -168,6 +172,7 @@ public class FusionDisruptionAnalyser
             }
 
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
+            mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
         }
     }
 
@@ -275,9 +280,20 @@ public class FusionDisruptionAnalyser
             writeSampleData();
         }
 
+        List<GeneFusion> uniqueFusions = extractUniqueFusions();
+
+        if(mLogAllPotentials)
+        {
+            mFusions.forEach(x -> writeFusionData(x));
+        }
+        else
+        {
+            uniqueFusions.forEach(x -> writeFusionData(x));
+        }
+
         if(dbAccess != null && mConfig.UploadToDB)
         {
-            uploadData(svList, dbAccess);
+            uploadData(svList, uniqueFusions, dbAccess);
         }
 
         if(mRnaFusionMapper != null)
@@ -382,7 +398,6 @@ public class FusionDisruptionAnalyser
 
                 fusion.setAnnotations(annotations);
                 mFusions.add(fusion);
-                writeFusionData(fusion, cluster);
             }
         }
 
@@ -454,7 +469,6 @@ public class FusionDisruptionAnalyser
                     continue;
 
                 mFusions.add(fusion);
-                writeFusionData(fusion, cluster);
             }
         }
     }
@@ -948,18 +962,14 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void uploadData(final List<SvVarData> svList, final DatabaseAccess dbAccess)
+    private List<GeneFusion> extractUniqueFusions()
     {
-        if (dbAccess == null)
-            return;
-
-        // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
-        // upload every breakend in a fusion to be uploaded, and any other disrupted canonical transcript
-
-        List<GeneFusion> fusionsToUpload = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
+        // from the list of all potential fusions, collect up all reportable ones, and then the highest priority fusion
+        // from amongst the rest
+        List<GeneFusion> uniqueFusions = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
 
         List<String> genePairs = Lists.newArrayList();
-        fusionsToUpload.stream().forEach(x -> genePairs.add(x.name()));
+        uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
 
         for(GeneFusion fusion : mFusions)
         {
@@ -970,7 +980,7 @@ public class FusionDisruptionAnalyser
             if(!fusion.isViable())
                 continue;
 
-                // gather up all other candidate fusions for this pairing and take the highest priority
+            // gather up all other candidate fusions for this pairing and take the highest priority
             List<GeneFusion> similarFusions = mFusions.stream()
                     .filter(x -> !x.reportable())
                     .filter(x -> x.isViable())
@@ -984,9 +994,22 @@ public class FusionDisruptionAnalyser
 
             if(topFusion != null)
             {
-                fusionsToUpload.add(topFusion);
+                uniqueFusions.add(topFusion);
             }
         }
+
+        return uniqueFusions;
+    }
+
+    private void uploadData(final List<SvVarData> svList, List<GeneFusion> fusionsToUpload, final DatabaseAccess dbAccess)
+    {
+        if (dbAccess == null)
+            return;
+
+        // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
+        // upload every breakend in a fusion to be uploaded, and any other disrupted canonical transcript
+
+
 
         List<Transcript> transcriptsToUpload = Lists.newArrayList();
 
@@ -1073,7 +1096,7 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void writeFusionData(GeneFusion fusion, final SvCluster cluster)
+    private void writeFusionData(final GeneFusion fusion)
     {
         // write fusions in detail
         if (fusion.reportable() || !mLogReportableOnly)
@@ -1083,11 +1106,13 @@ public class FusionDisruptionAnalyser
 
         if(fusion.reportable() && mVisWriter != null)
         {
-            mVisWriter.addGeneExonData(cluster.id(),
+            int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
+
+            mVisWriter.addGeneExonData(clusterId,
                     fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName,
                     fusion.upstreamTrans().StableId, fusion.upstreamTrans().parent().chromosome(), "FUSION");
 
-            mVisWriter.addGeneExonData(cluster.id(),
+            mVisWriter.addGeneExonData(clusterId,
                     fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName,
                     fusion.downstreamTrans().StableId, fusion.downstreamTrans().parent().chromosome(), "FUSION");
         }
