@@ -37,10 +37,9 @@ import org.xml.sax.SAXException;
 
 public class BachelorApplication {
 
-    GermlineVcfParser mGermlineVcfParser;
-    BachelorPostProcess mPostProcessor;
+    private GermlineVcfParser mGermlineVcfParser;
+    private BachelorPostProcess mPostProcessor;
 
-    private Map<String, Program> mConfigMap;
     private String mSampleDataDir;
     private String mSingleSampleId;
     private List<String> mRestrictedSampleIds;
@@ -49,9 +48,10 @@ public class BachelorApplication {
     private int mMaxBatchDirectories;
 
     // config options
-    public static final String CONFIG_XML = "xml_config";
-    public static final String BATCH_OUTPUT_DIR = "batch_output_dir";
-    public static final String LOG_DEBUG = "log_debug";
+    static final String CONFIG_XML = "xml_config";
+    static final String LOG_DEBUG = "log_debug";
+
+    private static final String BATCH_OUTPUT_DIR = "batch_output_dir";
 
     private static final String RUN_MODE = "run_mode";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -63,7 +63,7 @@ public class BachelorApplication {
     private static final String RUN_MODE_VCF_PARSE = "VcfParse";
     private static final String RUN_MODE_POST_PROCESS = "PostProcess";
 
-    public static final String DEFAULT_BACH_DIRECTORY = "bachelor";
+    static final String DEFAULT_BACH_DIRECTORY = "bachelor";
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
 
@@ -79,14 +79,15 @@ public class BachelorApplication {
         mMaxBatchDirectories = 0;
     }
 
-    public boolean loadConfig(final CommandLine cmd)
+    private boolean loadConfig(final CommandLine cmd)
     {
         if (!cmd.hasOption(CONFIG_XML))
             return false;
 
+        Map<String, Program> configMap;
         try
         {
-            mConfigMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
+            configMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
         }
         catch(Exception e)
         {
@@ -127,7 +128,7 @@ public class BachelorApplication {
         if(runMode.equals(RUN_MODE_BOTH) || runMode.equals(RUN_MODE_VCF_PARSE))
         {
             mGermlineVcfParser = new GermlineVcfParser();
-            mGermlineVcfParser.initialise(cmd, mConfigMap, mIsBatchMode, batchOutputDir);
+            mGermlineVcfParser.initialise(cmd, configMap, mIsBatchMode, batchOutputDir);
         }
 
         if(runMode.equals(RUN_MODE_BOTH) || runMode.equals(RUN_MODE_POST_PROCESS))
@@ -139,7 +140,7 @@ public class BachelorApplication {
         return true;
     }
 
-    public void run()
+    private void run()
     {
         for (int i = 0; i < mSampleDataDirectories.size(); ++i)
         {
@@ -256,7 +257,7 @@ public class BachelorApplication {
         return sampleIds;
     }
 
-    public static Map<String, Program> loadXML(final Path path) throws IOException, SAXException
+    static Map<String, Program> loadXML(final Path path) throws IOException, SAXException
     {
         final ConfigSchema schema = ConfigSchema.make();
 
@@ -306,7 +307,7 @@ public class BachelorApplication {
     }
 
     @NotNull
-    public static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
@@ -349,5 +350,4 @@ public class BachelorApplication {
         formatter.printHelp("Bachelor", "Determines eligibility", options, "", true);
         System.exit(1);
     }
-
 }
