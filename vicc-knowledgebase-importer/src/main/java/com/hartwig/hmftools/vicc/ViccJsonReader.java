@@ -158,7 +158,9 @@ public final class ViccJsonReader {
         return ImmutableGeneIdentifier.builder()
                 .symbol(geneIdentifierObject.getAsJsonPrimitive("symbol").getAsString())
                 .entrezId(geneIdentifierObject.getAsJsonPrimitive("entrez_id").getAsString())
-                .ensemblGeneId(Strings.EMPTY)
+                .ensemblGeneId(!geneIdentifierObject.get("ensembl_gene_id").isJsonNull()
+                        ? geneIdentifierObject.getAsJsonPrimitive("ensembl_gene_id").getAsString()
+                        : null)
                 .build();
     }
 

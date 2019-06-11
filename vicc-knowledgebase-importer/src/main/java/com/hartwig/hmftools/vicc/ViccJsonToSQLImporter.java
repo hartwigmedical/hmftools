@@ -12,7 +12,6 @@ import java.util.function.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.vicc.dao.ViccDAO;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,17 +31,17 @@ public class ViccJsonToSQLImporter {
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
 
-        ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
-
-        viccDAO.deleteAll();
-        int count = 0;
-        for (ViccEntry viccEntry : viccEntries) {
-            viccDAO.writeViccEntry(viccEntry);
-            count++;
-            if (count % 1000 == 0) {
-                LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
-            }
-        }
+//        ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
+//
+//        viccDAO.deleteAll();
+//        int count = 0;
+//        for (ViccEntry viccEntry : viccEntries) {
+//            viccDAO.writeViccEntry(viccEntry);
+//            count++;
+//            if (count % 1000 == 0) {
+//                LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
+//            }
+//        }
     }
 
     private static void analyzeViccEntries(@NotNull List<ViccEntry> viccEntries) {
