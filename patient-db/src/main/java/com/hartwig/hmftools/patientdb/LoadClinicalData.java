@@ -86,6 +86,7 @@ public final class LoadClinicalData {
             LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
 
             final List<RunContext> runContexts = loadRunContexts(cmd);
+            // TODO Change to Map<String, List<String>> based on datastore
             final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
             LOGGER.info(String.format("Found sequence runs for %s patients", sequencedPatientIdentifiers.size()));
 
@@ -194,6 +195,7 @@ public final class LoadClinicalData {
             @NotNull final Iterable<EcrfPatient> patients, @NotNull final Map<String, List<SampleData>> samplesPerPatientSequenced) {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         for (final EcrfPatient ecrfPatient : patients) {
+            // TODO Take sequenced samples only.
             List<SampleData> samples = samplesPerPatientSequenced.get(ecrfPatient.patientId());
             Patient patient = reader.read(ecrfPatient, samples != null ? samples : Lists.newArrayList());
             patientMap.put(patient.patientIdentifier(), patient);
