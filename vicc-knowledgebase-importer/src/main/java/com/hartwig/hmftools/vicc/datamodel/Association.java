@@ -22,16 +22,16 @@ public abstract class Association {
     @NotNull
     public abstract String evidenceLabel();
 
-    @NotNull
+    @Nullable
     public abstract String responseType();
 
-    @NotNull
+    @Nullable
     public abstract String drugLabels();
 
     @Nullable
     public abstract String sourceLink();
 
-    @NotNull
+    @Nullable
     public abstract List<String> publicationUrls();
 
     @NotNull
@@ -40,7 +40,7 @@ public abstract class Association {
     @NotNull
     public abstract String description();
 
-    @NotNull
+    @Nullable
     public abstract List<EnvironmentalContext> environmentalContexts();
 
     @Nullable
