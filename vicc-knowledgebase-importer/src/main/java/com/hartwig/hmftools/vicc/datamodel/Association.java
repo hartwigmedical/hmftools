@@ -16,31 +16,31 @@ public abstract class Association {
     @NotNull
     public abstract List<Evidence> evidence();
 
-    @NotNull
+    @Nullable
     public abstract String evidenceLevel();
 
-    @NotNull
+    @Nullable
     public abstract String evidenceLabel();
 
-    @NotNull
+    @Nullable
     public abstract String responseType();
 
-    @NotNull
+    @Nullable
     public abstract String drugLabels();
 
     @Nullable
     public abstract String sourceLink();
 
-    @NotNull
+    @Nullable
     public abstract List<String> publicationUrls();
 
-    @NotNull
+    @Nullable
     public abstract Phenotype phenotype();
 
     @NotNull
     public abstract String description();
 
-    @NotNull
+    @Nullable
     public abstract List<EnvironmentalContext> environmentalContexts();
 
     @Nullable

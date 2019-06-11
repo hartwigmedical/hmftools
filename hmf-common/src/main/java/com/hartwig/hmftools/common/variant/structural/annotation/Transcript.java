@@ -2,10 +2,8 @@ package com.hartwig.hmftools.common.variant.structural.annotation;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isDownstream;
 
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +62,7 @@ public class Transcript {
     public static String TRANS_CODING_TYPE_3P_UTR = "3P_UTR";
     public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
-    private static int STOP_CODON_LENGTH = 3;
+    private static final int STOP_CODON_LENGTH = 3;
 
     public Transcript(@NotNull final GeneAnnotation parent, int transId, final String stableId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,

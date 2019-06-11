@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorApplication.BATCH_OUTPUT_DIR;
 import static com.hartwig.hmftools.bachelor.BachelorApplication.CONFIG_XML;
 import static com.hartwig.hmftools.bachelor.BachelorApplication.LOG_DEBUG;
-import static com.hartwig.hmftools.bachelor.BachelorApplication.createCommandLine;
 import static com.hartwig.hmftools.bachelor.BachelorApplication.loadXML;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
@@ -32,6 +30,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
@@ -39,7 +38,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
-import htsjdk.tribble.TribbleException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -56,57 +54,51 @@ public class ExternalDBFilters
 
     private static final Logger LOGGER = LogManager.getLogger(ExternalDBFilters.class);
 
-    public static void main(final String... args)
+    public static void main(final String... args) throws ParseException
     {
         final Options options = new Options();
         options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
-        options.addOption(OUTPUT_DIR, true, "Optional: when in batch mode, all output written to single file");
-        options.addOption(CREATE_FILTER_FILE, true, "Optional: create black and white list filter files");
+        options.addOption(OUTPUT_DIR, true, "Optional, directory to where the output ClinVar filter file will be written to.");
+        options.addOption(CREATE_FILTER_FILE, true, "Input file to create the ClinVar db filters");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+
+        final CommandLine cmd = new DefaultParser().parse(options, args);
+
+        if (!cmd.hasOption(CONFIG_XML))
+        {
+            LOGGER.error("No " + CONFIG_XML + " provided to ExternalDBFilters!");
+            return;
+        }
+
+        if (cmd.hasOption(LOG_DEBUG))
+            Configurator.setRootLevel(Level.DEBUG);
+
+        LOGGER.info("Building ClinVar filter files");
+
+        Map<String, Program> configMap = null;
 
         try
         {
-            final CommandLine cmd = createCommandLine(options, args);
-
-            if (cmd.hasOption(LOG_DEBUG))
-                Configurator.setRootLevel(Level.DEBUG);
-
-            LOGGER.info("building Clinvar filter files");
-            final String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
-
-            String outputDir = cmd.getOptionValue(OUTPUT_DIR, "");
-
-            if (!cmd.hasOption(CONFIG_XML))
-                return;
-
-            Map<String, Program> configMap = null;
-
-            try
-            {
-                configMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
-            }
-            catch(Exception e)
-            {
-                LOGGER.error("error loading XML: {}", e.toString());
-                return;
-            }
-
-            final Program program = configMap.values().iterator().next();
-
-            ExternalDBFilters filterFileBuilder = new ExternalDBFilters(filterInputFile);
-            filterFileBuilder.createFilterFile(program, outputDir);
-
-            LOGGER.info("filter file creation complete");
+            configMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
         }
-        catch(ParseException e)
+        catch(Exception e)
         {
-            LOGGER.error("config error: {}", e.toString());
+            LOGGER.error("Error loading XML: {}", e.toString());
             return;
         }
+
+        Program program = configMap.values().iterator().next();
+
+        String filterInputFile = cmd.getOptionValue(CREATE_FILTER_FILE);
+        ExternalDBFilters filterFileBuilder = new ExternalDBFilters(filterInputFile);
+
+        String outputDir = cmd.getOptionValue(OUTPUT_DIR, "");
+        filterFileBuilder.createFilterFile(program, outputDir);
+
+        LOGGER.info("Filter file creation complete");
     }
 
-
-    public ExternalDBFilters(final String filterInputFile)
+    private ExternalDBFilters(final String filterInputFile)
     {
         mInputFilterFile = filterInputFile;
         mRequiredEffects = Lists.newArrayList();
@@ -114,7 +106,7 @@ public class ExternalDBFilters
         mFilterWriter = null;
     }
 
-    private static int BACHELOR_FILTER_CSV_FIELD_COUNT = 13;
+    private static final int BACHELOR_FILTER_CSV_FIELD_COUNT = 13;
 
     public static List<VariantFilter> loadExternalFilters(final String filterFile)
     {
@@ -178,70 +170,60 @@ public class ExternalDBFilters
         return filters;
     }
 
-    public boolean createFilterFile(final Program program, final String outputDir)
+    private void createFilterFile(final Program program, final String outputDir)
     {
         if (!Files.exists(Paths.get(mInputFilterFile)))
         {
-            LOGGER.error("failed to load filter input file: {}", mInputFilterFile);
-            return false;
+            LOGGER.error("Failed to load filter input file: {}", mInputFilterFile);
+            return;
         }
 
         if(!initialiseFilterWriter(outputDir))
-            return false;
+            return;
 
         ProgramPanel programConfig = program.getPanel().get(0);
 
-        List<GeneIdentifier> geneslist = programConfig.getGene();
+        List<GeneIdentifier> genesList = programConfig.getGene();
 
         // take up a collection of the effects to search for
         mRequiredEffects = programConfig.getSnpEffect().stream().map(SnpEffect::value).collect(Collectors.toList());
-        mPanelTranscripts = geneslist.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
+        mPanelTranscripts = genesList.stream().map(GeneIdentifier::getEnsembl).collect(Collectors.toList());
 
-        try
+        File vcfFile = new File(mInputFilterFile);
+
+        VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+
+        for (VariantContext variant : vcfReader)
         {
-            File vcfFile = new File(mInputFilterFile);
-
-            final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
-
-            for (final VariantContext variant : vcfReader)
-            {
-                processVariant(variant);
-            }
-        }
-        catch (final TribbleException e)
-        {
-            LOGGER.error("failed to read filter input VCF file: {}", e.getMessage());
-            return false;
+            processVariant(variant);
         }
 
         closeBufferedWriter(mFilterWriter);
-
-        return true;
     }
 
     // Clinvar annotations
-    private static String CLINVAR_SIGNIFICANCE = "CLNSIG";
-    private static String CLINVAR_SIG_INFO = "CLNSIGCONF";
-    private static String CLINVAR_DISEASE_NAME = "CLNDN";
-    private static String CLINVAR_MC = "MC";
-    private static String CLINVAR_RS_DB_SNP_ID = "RS";
-    private static String CLINVAR_PATHOGENIC = "Pathogenic";
-    private static String CLINVAR_LIKELY_PATHOGENIC = "Likely_pathogenic";
-    private static String CLINVAR_BENIGN = "Benign";
-    private static String CLINVAR_LIKELY_BENIGN = "Likely_benign";
-    private static String CLINVAR_CONFLICTING = "Conflicting";
+    private static final String CLINVAR_SIGNIFICANCE = "CLNSIG";
+    private static final String CLINVAR_SIG_INFO = "CLNSIGCONF";
+    private static final String CLINVAR_DISEASE_NAME = "CLNDN";
+    private static final String CLINVAR_MC = "MC";
+    private static final String CLINVAR_RS_DB_SNP_ID = "RS";
+    private static final String CLINVAR_PATHOGENIC = "Pathogenic";
+    private static final String CLINVAR_LIKELY_PATHOGENIC = "Likely_pathogenic";
+    private static final String CLINVAR_BENIGN = "Benign";
+    private static final String CLINVAR_LIKELY_BENIGN = "Likely_benign";
+    private static final String CLINVAR_CONFLICTING = "Conflicting";
 
-    public static boolean isPathogenic(final String clinvarSignificance)
+    private static boolean isPathogenic(final String clinvarSignificance)
     {
         return clinvarSignificance.contains(CLINVAR_PATHOGENIC) || clinvarSignificance.contains(CLINVAR_LIKELY_PATHOGENIC);
     }
 
-    public static boolean isBenign(final String clinvarSignificance)
+    static boolean isBenign(final String clinvarSignificance)
     {
         return clinvarSignificance.contains(CLINVAR_BENIGN) || clinvarSignificance.contains(CLINVAR_LIKELY_BENIGN);
     }
 
-    public static boolean isConflicting(final String clinvarSignificance)
+    private static boolean isConflicting(final String clinvarSignificance)
     {
         return clinvarSignificance.contains(CLINVAR_CONFLICTING);
     }
@@ -251,64 +233,50 @@ public class ExternalDBFilters
         // LOGGER.debug("read var({}) chr({}))", variant.getID(), variant.getContig());
 
         // first check against the genes list
-        final List<SnpEffAnnotation> sampleAnnotations = SnpEffAnnotationFactory.fromContext(variant);
+        final List<SnpEffAnnotation> variantAnnotations = SnpEffAnnotationFactory.fromContext(variant);
 
-        for (int i = 0; i < sampleAnnotations.size(); ++i)
-        {
-            final SnpEffAnnotation snpEff = sampleAnnotations.get(i);
-
-            if (!snpEff.isTranscriptFeature())
+        for (SnpEffAnnotation snpEff : variantAnnotations) {
+            if (!snpEff.isTranscriptFeature()) {
                 continue;
-
-            if (!mPanelTranscripts.contains(snpEff.transcript()))
-                continue;
-
-            String clinvarSignificance = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, "");
-            clinvarSignificance = stripArrayChars(clinvarSignificance);
-
-            String clinvarSigInfo = variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, "");
-
-            if(!clinvarSigInfo.isEmpty())
-            {
-                clinvarSigInfo = stripArrayChars(clinvarSigInfo);
             }
+
+            if (!mPanelTranscripts.contains(snpEff.transcript())) {
+                continue;
+            }
+
+            String clinvarSignificance = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, ""));
+            String clinvarSigInfo = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, ""));
 
             boolean isPathogenic = isPathogenic(clinvarSignificance);
 
-            if(!isPathogenic && isConflicting(clinvarSignificance))
-            {
+            if (!isPathogenic && isConflicting(clinvarSignificance)) {
                 // look in the significance field for a clear likelihood
                 isPathogenic = isPathogenic(clinvarSigInfo) && !isBenign(clinvarSigInfo);
             }
 
             boolean matchesRequiredEffect = false;
 
-            for (String requiredEffect : mRequiredEffects)
-            {
-                if (snpEff.effects().contains(requiredEffect))
-                {
+            for (String requiredEffect : mRequiredEffects) {
+                if (snpEff.effects().contains(requiredEffect)) {
                     matchesRequiredEffect = true;
                     break;
                 }
             }
 
-            if(!matchesRequiredEffect && !isPathogenic)
+            if (!matchesRequiredEffect && !isPathogenic) {
                 continue;
+            }
 
             String gene = snpEff.gene();
 
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
-            if(codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE)
-            {
+            if (codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE) {
                 //checkExistingBlacklistConditions(gene, variant, snpEff);
-            }
-            else
-            {
+            } else {
                 //checkExistingWhitelistConditions(gene, variant, snpEff);
 
-                if(!isPathogenic)
-                {
+                if (!isPathogenic) {
                     continue;
                 }
 
@@ -367,7 +335,6 @@ public class ExternalDBFilters
                     clinvarSignificance, clinvarSigInfo, clinvarDisease, clinvarEffects));
 
             mFilterWriter.newLine();
-
         }
         catch(IOException e)
         {
@@ -384,23 +351,21 @@ public class ExternalDBFilters
             if (!filterFileName.endsWith(File.separator))
                 filterFileName += File.separator;
 
-            filterFileName += "BACHELOR_CLINVAR_FILTERS.csv";
+            filterFileName += "bachelor_clinvar_filters.csv";
 
             mFilterWriter = createBufferedWriter(filterFileName, false);
 
-            mFilterWriter.write("Gene,TranscriptId,Chromsome,Position,Ref,Alt,CodingEffect,AllEffects");
+            mFilterWriter.write("Gene,TranscriptId,Chromosome,Position,Ref,Alt,CodingEffect,AllEffects");
             mFilterWriter.write(",HgvsProtein,HgvsCoding,DBSnpId");
             mFilterWriter.write(",ClinvarSignificance,ClinvarSigInfo,ClinvarDisease,ClinvarEffects");
             mFilterWriter.newLine();
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to create output filter file: {}", e.toString());
+            LOGGER.error("Failed to create output filter file: {}", e.toString());
             return false;
         }
 
         return true;
     }
-
-
 }

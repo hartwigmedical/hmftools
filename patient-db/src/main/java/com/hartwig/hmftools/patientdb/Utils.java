@@ -51,10 +51,10 @@ public final class Utils {
     }
 
     @NotNull
-    private static String extractPatientIdentifier(@NotNull final String runName) {
-        final String[] names = runName.split("_");
+    static String extractPatientIdentifier(@NotNull final String setName) {
+        final String[] names = setName.split("_");
         if (names.length < 5) {
-            LOGGER.error("Run name {} had less than 5 parts after splitting on _", runName);
+            LOGGER.error("Run name {} had less than 5 parts after splitting on _", setName);
             return Strings.EMPTY;
         }
         return names[4];

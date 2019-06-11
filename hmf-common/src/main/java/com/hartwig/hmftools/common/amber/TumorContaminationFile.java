@@ -13,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 public class TumorContaminationFile {
 
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "Chr";
+    private static final String HEADER_PREFIX = "chr";
 
-    private static final String AMBER_EXTENSION = ".amber.contamination";
+    private static final String AMBER_EXTENSION = ".amber.contamination.tsv";
 
     public static String generateContaminationFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + AMBER_EXTENSION;
@@ -73,16 +73,16 @@ public class TumorContaminationFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
-                .add("Position")
-                .add("Ref")
-                .add("Alt")
-                .add("NormalDepth")
-                .add("NormalRefSupport")
-                .add("NormalAltSupport")
-                .add("TumorDepth")
-                .add("TumorRefSupport")
-                .add("TumorAltSupport")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+                .add("position")
+                .add("ref")
+                .add("alt")
+                .add("normalDepth")
+                .add("normalRefSupport")
+                .add("normalAltSupport")
+                .add("tumorDepth")
+                .add("tumorRefSupport")
+                .add("tumorAltSupport")
                 .toString();
     }
 

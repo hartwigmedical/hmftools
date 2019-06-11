@@ -8,12 +8,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Evidence {
 
-    @NotNull
+    @Nullable
     public abstract EvidenceInfo info();
 
     @NotNull
     public abstract EvidenceType evidenceType();
 
-    @NotNull
+    @Nullable
     public abstract String description();
 }

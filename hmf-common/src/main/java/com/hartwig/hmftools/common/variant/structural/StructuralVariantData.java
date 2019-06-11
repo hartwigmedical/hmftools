@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import org.immutables.value.Value;
-import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 public abstract class StructuralVariantData {

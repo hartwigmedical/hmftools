@@ -7,7 +7,6 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HumanChromosomeTest {

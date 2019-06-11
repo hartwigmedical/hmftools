@@ -88,10 +88,10 @@ Pileup | 64 | 44 | 272
 ## Output
 File | Description
 --- | ---
-TUMOR.amber.baf | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site.
+TUMOR.amber.baf.tsv | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site.
 TUMOR.amber.baf.pcf | TSV of BAF segments using PCF algorithm.
 TUMOR.amber.qc | Contains median tumor baf and QC status. FAIL may indicate contamination in sample. 
-TUMOR.amber.vcf.gz | Similar information as BAF file but in VCF format. 
+TUMOR.amber.baf.vcf.gz | Similar information as BAF file but in VCF format. 
 TUMOR.amber.contamination.vcf.gz | Entry at each homozygous site in the reference and tumor.
 REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference. 
  
@@ -154,6 +154,7 @@ Calculating the BAF directly from the bams is functionally equivalent to the pil
 # Version History
 - Upcoming
   - Added optional snp_bed parameter to output germline snps at specified locations
+  - Changed file names and headers for better consistency with other HMF tools
 - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2-3)
   - Gracefully handle contigs outside the ref genome. 
   - Fixed bug where TumorContamination file had two copies of tumor info rather than normal and tumor

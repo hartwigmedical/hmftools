@@ -14,6 +14,6 @@ public abstract class GeneIdentifier {
     @NotNull
     public abstract String entrezId();
 
-    @NotNull
+    @Nullable
     public abstract String ensemblGeneId();
 }

@@ -42,7 +42,7 @@ import org.jooq.conf.RenderMapping;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public class DatabaseAccess {
+public class DatabaseAccess implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(DatabaseAccess.class);
     private static final String DEV_CATALOG = "hmfpatients_test";
 
@@ -199,7 +199,8 @@ public class DatabaseAccess {
         structuralVariantClusterDAO.writeViralInserts(sample, inserts);
     }
 
-    public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions) {
+    public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts,
+            @NotNull List<GeneFusion> fusions) {
         structuralVariantFusionDAO.writeBreakendsAndFusions(sample, transcripts, fusions);
     }
 
@@ -331,6 +332,11 @@ public class DatabaseAccess {
         driverCatalogDAO.deleteForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");
+    }
+
+    @Override
+    public void close() {
+        context.close();
     }
 }
 

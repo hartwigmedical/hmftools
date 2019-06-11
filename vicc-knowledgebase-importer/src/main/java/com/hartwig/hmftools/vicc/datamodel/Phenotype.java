@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Phenotype {
 
-    @NotNull
+    @Nullable
     public abstract PhenotypeType type();
 
     @NotNull

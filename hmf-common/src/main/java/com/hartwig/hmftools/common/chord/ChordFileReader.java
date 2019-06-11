@@ -78,5 +78,4 @@ public final class ChordFileReader {
         }
         return lineNumbers.get();
     }
-
 }

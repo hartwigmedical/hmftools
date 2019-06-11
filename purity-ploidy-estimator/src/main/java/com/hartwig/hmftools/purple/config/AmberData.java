@@ -43,7 +43,7 @@ public interface AmberData {
             throws ParseException, IOException {
 
         final String amberDirectory = commonConfig.amberDirectory();
-        final String amberFilename = AmberBAFFile.generateAmberFilename(amberDirectory, commonConfig.tumorSample());
+        final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, commonConfig.tumorSample());
         if (!new File(amberFilename).exists()) {
             throw new ParseException("Unable to open amber baf file: " + amberFilename);
         }

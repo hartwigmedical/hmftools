@@ -40,7 +40,7 @@ class AmberPersistence {
     }
 
     void persistAmberBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException {
-        final String filename = AmberBAFFile.generateAmberFilename(config.outputDirectory(), config.tumor());
+        final String filename = AmberBAFFile.generateAmberFilenameForWriting(config.outputDirectory(), config.tumor());
         AmberBAFFile.write(filename, result);
 
         LOGGER.info("Applying pcf segmentation");
@@ -48,7 +48,7 @@ class AmberPersistence {
     }
 
     void persistTumorBAF(@NotNull final List<TumorBAF> tumorBAFList) {
-        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.vcf.gz";
+        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
         new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
     }
