@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>sv-analyser</artifactId>
+            <artifactId>sv-linx</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>

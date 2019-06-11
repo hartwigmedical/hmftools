@@ -4,11 +4,6 @@ import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.types.SvaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.types.SvaConfig.formOutputPath;
 
-import java.sql.SQLException;
-
-import com.hartwig.hmftools.linx.SvAnalyser;
-import com.hartwig.hmftools.linx.types.SvaConfig;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;

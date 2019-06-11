@@ -10,10 +10,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sv-analyser</artifactId>
+    <artifactId>sv-linx</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - SV Analyser</name>
+    <name>HMF Tools - SV LINX</name>
 
     <dependencies>
         <dependency>
@@ -78,7 +78,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.linx.SvAnalyser
+                            <mainClass>com.hartwig.hmftools.linx.SvLinxApplication
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>

@@ -36,7 +36,8 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 
-public class SvAnalyser {
+public class SvLinxApplication
+{
 
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
@@ -45,7 +46,7 @@ public class SvAnalyser {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    private static final Logger LOGGER = LogManager.getLogger(SvAnalyser.class);
+    private static final Logger LOGGER = LogManager.getLogger(SvLinxApplication.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
