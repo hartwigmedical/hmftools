@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.LoadStructuralVariants.convertSvData;
-import static com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,10 +27,10 @@ import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVaria
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
-import com.hartwig.hmftools.svanalysis.fusion.DisruptionFinder;
-import com.hartwig.hmftools.svanalysis.fusion.FusionFinder;
-import com.hartwig.hmftools.svanalysis.gene.EnsemblDAO;
-import com.hartwig.hmftools.svanalysis.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.fusion.DisruptionFinder;
+import com.hartwig.hmftools.linx.fusion.FusionFinder;
+import com.hartwig.hmftools.linx.gene.EnsemblDAO;
+import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
