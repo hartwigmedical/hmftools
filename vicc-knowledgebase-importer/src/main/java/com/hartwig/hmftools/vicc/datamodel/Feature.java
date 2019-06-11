@@ -10,43 +10,43 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Feature {
 
-    @NotNull
+    @Nullable
     public abstract String name();
 
-    @NotNull
+    @Nullable
     public abstract String biomarkerType();
 
-    @NotNull
+    @Nullable
     public abstract String referenceName();
 
-    @NotNull
+    @Nullable
     public abstract String chromosome();
 
-    @NotNull
+    @Nullable
     public abstract String start();
 
-    @NotNull
+    @Nullable
     public abstract String end();
 
-    @NotNull
+    @Nullable
     public abstract String ref();
 
-    @NotNull
+    @Nullable
     public abstract String alt();
 
     @NotNull
     public abstract List<String> provenance();
 
-    @NotNull
+    @Nullable
     public abstract String provenanceRule();
 
-    @NotNull
+    @Nullable
     public abstract String geneSymbol();
 
     @NotNull
     public abstract List<String> synonyms();
 
-    @NotNull
+    @Nullable
     public abstract String entrezId();
 
     @NotNull
@@ -55,6 +55,6 @@ public abstract class Feature {
     @NotNull
     public abstract List<String> links();
 
-    @NotNull
+    @Nullable
     public abstract String description();
 }
