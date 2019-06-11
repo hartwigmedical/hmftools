@@ -24,8 +24,6 @@ public abstract class ReportableDisruption
     @NotNull
     public abstract String gene();
 
-    public abstract boolean canonical();
-
     @NotNull
     public abstract String type();
 

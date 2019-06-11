@@ -33,7 +33,6 @@ final class SvAnalysisDatamodelTestFactory {
                 .gene(Strings.EMPTY)
                 .chrBand(Strings.EMPTY)
                 .strand(1)
-                .canonical(false)
                 .exonUp(0)
                 .exonDown(0);
     }

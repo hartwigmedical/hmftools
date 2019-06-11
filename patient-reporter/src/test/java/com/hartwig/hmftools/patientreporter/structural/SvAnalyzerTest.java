@@ -54,8 +54,7 @@ public class SvAnalyzerTest {
                 createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
 
         List<ReportableDisruption> testDisruptions = Lists.newArrayList(
-                createTestDisruptionBuilder().gene(DISRUPTED_GENE).canonical(true).build(),
-                createTestDisruptionBuilder().gene(DISRUPTED_GENE).canonical(false).build());
+                createTestDisruptionBuilder().gene(DISRUPTED_GENE).build());
 
         List<Disruption> testDisruptionsOld = Lists.newArrayList(
                 createTestDisruptionBuilderOld().gene(DISRUPTED_GENE).isDisruptive(true).canonical(true).build(),

@@ -109,7 +109,6 @@ public class SvAnalyzer {
         if (!disruptions.isEmpty()) {
             return disruptions.stream()
                     .filter(x -> geneModel.disruptionGenes().contains(x.gene()))
-                    .filter(ReportableDisruption::canonical)
                     .collect(Collectors.toList());
         } else {
             List<ReportableDisruption> disruptions = Lists.newArrayList();
@@ -123,7 +122,6 @@ public class SvAnalyzer {
                             .strand(disruption.strand())
                             .chrBand(disruption.chrBand())
                             .gene(disruption.gene())
-                            .canonical(disruption.canonical())
                             .type(disruption.type())
                             .ploidy(disruption.ploidy())
                             .exonUp(disruption.exonUp())

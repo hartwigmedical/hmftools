@@ -1071,7 +1071,6 @@ public class FusionDisruptionAnalyser
                     .strand(gene.Strand)
                     .chrBand(gene.karyotypeBand())
                     .gene(transcript.geneName())
-                    .canonical(true)
                     .type(gene.type().toString())
                     .ploidy(gene.ploidy())
                     .exonUp(transcript.ExonUpstream)
