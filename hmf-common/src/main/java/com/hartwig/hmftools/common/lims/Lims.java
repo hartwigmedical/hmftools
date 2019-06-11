@@ -45,7 +45,7 @@ public class Lims {
     }
 
     @NotNull
-    public Set<String> allSampleIds() {
+    public Set<String> sampleIds() {
         return dataPerSample.keySet();
     }
 

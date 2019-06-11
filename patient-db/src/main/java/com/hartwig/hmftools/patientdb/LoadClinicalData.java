@@ -12,7 +12,6 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
@@ -83,9 +82,11 @@ public final class LoadClinicalData {
 
             final Lims lims = buildLims(cmd);
 
-            final Map<String, List<SampleData>> samplesPerPatientAll = loadSamplesPerPatientAll(lims);
-            LOGGER.info(samplesPerPatientAll);
-            final Map<String, List<SampleData>> samplesPerPatientFilteredToOnlySequenced = filterPatients(cmd, samplesPerPatientAll);
+
+            final Map<String, List<SampleData>> allSamplesPerPatient = extractSamplesFromLims(lims);
+            LOGGER.info(String.format("Loaded all samples for %s patients from LIMS", allSamplesPerPatient.keySet().size()));
+
+            final Map<String, List<SampleData>> samplesPerPatientFilteredToOnlySequenced = filterPatients(cmd, allSamplesPerPatient);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
@@ -94,7 +95,7 @@ public final class LoadClinicalData {
 
             writeClinicalData(dbWriter,
                     samplesPerPatientFilteredToOnlySequenced,
-                    samplesPerPatientAll,
+                    allSamplesPerPatient,
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
@@ -298,30 +299,30 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> loadSamplesPerPatientAll(@NotNull Lims lims) {
-        Map<String, List<SampleData>> samplesPerPatientAll = extractSamplesFromLims(lims);
-        LOGGER.info(String.format("Loaded all samples for %s patients from LIMS", samplesPerPatientAll.keySet().size()));
-
-        return samplesPerPatientAll;
-    }
-
-    @NotNull
     private static Map<String, List<SampleData>> extractSamplesFromLims(@NotNull Lims lims) {
         LimsSampleReader sampleReader = new LimsSampleReader(lims);
-        Set<String> allSampleIDs = lims.allSampleIds();
 
-        Map<String, List<SampleData>> samplesPerPatientAll = Maps.newHashMap();
-        for (String sampleId : allSampleIDs) {
+        Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
+        for (String sampleId : lims.sampleIds()) {
             LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
-            if (sampleType.equals(LimsSampleType.CORE) || sampleType.equals(LimsSampleType.WIDE) || sampleType.equals(LimsSampleType.DRUP)
-                    || sampleType.equals(LimsSampleType.CPCT)) {
-                if (sampleId.substring(12).contains("T")) {
-                    String patientIdentifier = sampleId.substring(0, 12);
-                    samplesPerPatientAll.put(patientIdentifier, sampleReader.read(Sets.newHashSet(sampleId)));
+
+            if (sampleType != LimsSampleType.OTHER) {
+                String patientId = lims.patientId(sampleId);
+                SampleData sampleData = sampleReader.read(sampleId);
+
+                if (sampleData != null) {
+                    List<SampleData> currentSamples = samplesPerPatient.get(patientId);
+                    if (currentSamples != null) {
+                        currentSamples.add(sampleData);
+                    } else {
+                        currentSamples = Lists.newArrayList(sampleData);
+                    }
+                    samplesPerPatient.put(patientId, currentSamples);
                 }
             }
         }
-        return samplesPerPatientAll;
+
+        return samplesPerPatient;
     }
 
     @NotNull
