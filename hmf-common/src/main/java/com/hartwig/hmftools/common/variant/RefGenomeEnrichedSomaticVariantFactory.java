@@ -19,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class RefGenomeEnrichedSomaticVariantFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeEnrichedSomaticVariantFactory.class);

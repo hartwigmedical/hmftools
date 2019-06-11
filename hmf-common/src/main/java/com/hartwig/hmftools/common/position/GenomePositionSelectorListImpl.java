@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 class GenomePositionSelectorListImpl<P extends GenomePosition> implements GenomePositionSelector<P> {
 
@@ -63,5 +62,4 @@ class GenomePositionSelectorListImpl<P extends GenomePosition> implements Genome
     private P current() {
         return positions.get(index);
     }
-
 }
