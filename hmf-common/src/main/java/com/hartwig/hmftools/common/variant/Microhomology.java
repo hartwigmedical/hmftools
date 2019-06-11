@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -56,6 +58,7 @@ final class Microhomology {
         return commonPrefix.length() > commonSuffixWithRef.length() ? commonPrefix : commonSuffixWithRef;
     }
 
+    @VisibleForTesting
     @NotNull
     static String commonSuffix(@NotNull final String first, @NotNull final String second) {
         int minLength = Math.min(second.length(), first.length());
@@ -73,10 +76,11 @@ final class Microhomology {
     }
 
     @NotNull
-    static String commonPrefix(@NotNull final String first, @NotNull final String second) {
+    private static String commonPrefix(@NotNull final String first, @NotNull final String second) {
         return commonPrefix(first, second, first.length());
     }
 
+    @VisibleForTesting
     @NotNull
     static String commonPrefix(@NotNull final String first, @NotNull final String second, int maxLength) {
         int minLength = Math.min(maxLength, Math.min(second.length(), first.length()));
@@ -91,5 +95,4 @@ final class Microhomology {
         }
         return first.substring(0, minLength);
     }
-
 }
