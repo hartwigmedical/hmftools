@@ -164,28 +164,6 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static Association createAssociationEmpty() {
-        return ImmutableAssociation.builder()
-                .variantName(Strings.EMPTY)
-                .evidence(Lists.newArrayList())
-                .evidenceLevel(Strings.EMPTY)
-                .evidenceLabel(Strings.EMPTY)
-                .responseType(Strings.EMPTY)
-                .drugLabels(Strings.EMPTY)
-                .sourceLink(Strings.EMPTY)
-                .publicationUrls(Lists.newArrayList())
-                .phenotype(ImmutablePhenotype.builder()
-                        .type(ImmutablePhenotypeType.builder().source(Strings.EMPTY).term(Strings.EMPTY).id(Strings.EMPTY).build())
-                        .description(Strings.EMPTY)
-                        .family(Strings.EMPTY)
-                        .build())
-                .description(Strings.EMPTY)
-                .environmentalContexts(Lists.newArrayList())
-                .oncogenic(Strings.EMPTY)
-                .build();
-    }
-
-    @NotNull
     private static Association createAssociation(@NotNull JsonObject associationObject) {
         return ImmutableAssociation.builder()
                 .variantName(associationObject.has("variant_name") && associationObject.get("variant_name").isJsonArray()
