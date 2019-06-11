@@ -95,7 +95,7 @@ public final class ViccJsonReader {
                 LOGGER.warn(keysAssociation);
             }
 
-            viccEntryBuilder.association(createAssociationEmpty());
+            viccEntryBuilder.association(createAssociation(elementAssociation));
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
@@ -194,8 +194,11 @@ public final class ViccJsonReader {
                                 ? associationObject.getAsJsonPrimitive("variant_name").getAsString()
                                 : null)
                 .evidence(createEvidence(associationObject.getAsJsonArray("evidence")))
-                .evidenceLevel(associationObject.getAsJsonPrimitive("evidence_level").getAsString())
-                .evidenceLabel(associationObject.getAsJsonPrimitive("evidence_label").getAsString())
+                .evidenceLevel(associationObject.has("evidence_level") ? associationObject.getAsJsonPrimitive("evidence_level")
+                        .getAsString() : null)
+                .evidenceLabel(associationObject.has("evidence_label") && !associationObject.get("evidence_label").isJsonNull()
+                        ? associationObject.getAsJsonPrimitive("evidence_label").getAsString()
+                        : null)
                 .responseType(associationObject.has("response_type") && !associationObject.get("response_type").isJsonNull()
                         ? associationObject.getAsJsonPrimitive("response_type").getAsString()
                         : null)
@@ -206,7 +209,7 @@ public final class ViccJsonReader {
                         : associationObject.has("publication_url") && associationObject.get("publication_url").isJsonArray()
                                 ? Lists.newArrayList(associationObject.getAsJsonArray("publication_url").getAsString())
                                 : null)
-                .phenotype(createPhenotype(associationObject.getAsJsonObject("phenotype")))
+                .phenotype(associationObject.has("phenotype") ? createPhenotype(associationObject.getAsJsonObject("phenotype")) : null)
                 .description(associationObject.getAsJsonPrimitive("description").getAsString())
                 .environmentalContexts(associationObject.get("environmentalContexts") != null
                         ? createEnvironmentalContexts(associationObject.getAsJsonArray("environmentalContexts"))
@@ -271,7 +274,7 @@ public final class ViccJsonReader {
             JsonObject evidenceObject = evidenceElement.getAsJsonObject();
 
             listEvidence.add(ImmutableEvidence.builder()
-                    .info(createEvidenceInfo(evidenceObject.getAsJsonObject("info")))
+                    .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
                     .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
                     .description(!evidenceObject.get("description").isJsonNull() ? evidenceObject.getAsJsonPrimitive("description")
                             .getAsString() : null)
@@ -298,7 +301,7 @@ public final class ViccJsonReader {
     @NotNull
     private static Phenotype createPhenotype(@NotNull JsonObject phenotypeObject) {
         return ImmutablePhenotype.builder()
-                .type(createPhenotypeType(phenotypeObject.getAsJsonObject("type")))
+                .type(phenotypeObject.has("type") ? createPhenotypeType(phenotypeObject.getAsJsonObject("type")) : null)
                 .description(phenotypeObject.getAsJsonPrimitive("description").getAsString())
                 .family(phenotypeObject.getAsJsonPrimitive("family").getAsString())
                 .build();
@@ -307,7 +310,7 @@ public final class ViccJsonReader {
     @NotNull
     private static PhenotypeType createPhenotypeType(JsonObject phenotypeTypeObject) {
         return ImmutablePhenotypeType.builder()
-                .source(phenotypeTypeObject.getAsJsonPrimitive("source").getAsString())
+                .source(!phenotypeTypeObject.get("source").isJsonNull() ?  phenotypeTypeObject.getAsJsonPrimitive("source").getAsString() : null)
                 .term(phenotypeTypeObject.getAsJsonPrimitive("term").getAsString())
                 .id(phenotypeTypeObject.getAsJsonPrimitive("id").getAsString())
                 .build();

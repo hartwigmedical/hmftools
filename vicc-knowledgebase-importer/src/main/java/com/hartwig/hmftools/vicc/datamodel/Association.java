@@ -16,10 +16,10 @@ public abstract class Association {
     @NotNull
     public abstract List<Evidence> evidence();
 
-    @NotNull
+    @Nullable
     public abstract String evidenceLevel();
 
-    @NotNull
+    @Nullable
     public abstract String evidenceLabel();
 
     @Nullable
@@ -34,7 +34,7 @@ public abstract class Association {
     @Nullable
     public abstract List<String> publicationUrls();
 
-    @NotNull
+    @Nullable
     public abstract Phenotype phenotype();
 
     @NotNull
