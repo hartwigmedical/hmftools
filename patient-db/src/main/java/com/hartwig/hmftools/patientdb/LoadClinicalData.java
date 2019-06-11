@@ -82,20 +82,22 @@ public final class LoadClinicalData {
 
             final Lims lims = buildLims(cmd);
 
+            final Map<String, List<SampleData>> samplesPerPatient = extractSamplesFromLims(lims);
+            LOGGER.info(String.format("Loaded samples for %s patients from LIMS", samplesPerPatient.keySet().size()));
 
-            final Map<String, List<SampleData>> allSamplesPerPatient = extractSamplesFromLims(lims);
-            LOGGER.info(String.format("Loaded all samples for %s patients from LIMS", allSamplesPerPatient.keySet().size()));
+            final List<RunContext> runContexts = loadRunContexts(cmd);
+            final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
+            LOGGER.info(String.format("Found sequence runs for %s patients", sequencedPatientIdentifiers.size()));
 
-            final Map<String, List<SampleData>> samplesPerPatientFilteredToOnlySequenced = filterPatients(cmd, allSamplesPerPatient);
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
-                writeRawEcrf(dbWriter, samplesPerPatientFilteredToOnlySequenced.keySet(), ecrfModels);
+                writeRawEcrf(dbWriter, sequencedPatientIdentifiers, ecrfModels);
             }
 
             writeClinicalData(dbWriter,
-                    samplesPerPatientFilteredToOnlySequenced,
-                    allSamplesPerPatient,
+                    sequencedPatientIdentifiers,
+                    samplesPerPatient,
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
                     Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
@@ -107,60 +109,27 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> filterPatients(@NotNull CommandLine cmd,
-            @NotNull Map<String, List<SampleData>> samplesPerPatientAll) throws IOException {
-        List<RunContext> contextsRunExtracted = loadRunContexts(cmd);
-
-        Map<String, List<SampleData>> samplesPerPatientSequenced = extractSamplesFromRunContexts(contextsRunExtracted, samplesPerPatientAll);
-        LOGGER.info(String.format("Using sequenced samples for %s patients from LIMS", samplesPerPatientSequenced.keySet().size()));
-        return samplesPerPatientSequenced;
-    }
-
-    @NotNull
-    private static Map<String, List<SampleData>> extractSamplesFromRunContexts(@NotNull List<RunContext> runContexts,
-            Map<String, List<SampleData>> samplesPerPatientAll) {
-
-
-        final Set<String> sequencedPatientIdentifiers = Utils.sequencedPatientIdentifiers(runContexts);
-
-        Map<String, List<SampleData>> samplesPerPatientSequenced = Maps.newHashMap();
-        for (String patientIdentifier : sequencedPatientIdentifiers) {
-            boolean filteredSequencedSamples = samplesPerPatientAll.keySet().contains(patientIdentifier);
-            if (filteredSequencedSamples) {
-                String sampleId = extractTumorSampleIdsForPatient(patientIdentifier, runContexts);
-                samplesPerPatientSequenced.put(patientIdentifier, samplesPerPatientAll.get(patientIdentifier));
-            }
-        }
-        return samplesPerPatientSequenced;
-    }
-
-    @NotNull
     private static Lims buildLims(@NotNull CommandLine cmd) throws IOException {
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         LOGGER.info(String.format("Loading samples from LIMS on %s.", limsDirectory));
         return LimsFactory.fromLimsDirectory(limsDirectory);
     }
 
-    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess,
-            @NotNull Map<String, List<SampleData>> samplesPerPatientSequenced, Map<String, List<SampleData>> samplesPerPatientAll,
-            @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir, @NotNull Optional<String> tumorLocationSymlink,
-            @NotNull Optional<String> portalDataLink) throws IOException {
+    private static void writeClinicalData(@NotNull final DatabaseAccess dbAccess, @NotNull Set<String> sequencedPatientIdentifiers,
+            @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir,
+            @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
         Map<String, Patient> patients =
-                loadAndInterpretPatients(samplesPerPatientSequenced, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
+                loadAndInterpretPatients(samplesPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
-        Map<String, Patient> patientsAll =
-                loadAndInterpretPatients(samplesPerPatientAll, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
-
-        DumpClinicalData.writeClinicalDumps(csvOutputDir, patientsAll.values(), tumorLocationSymlink, portalDataLink);
+        DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
 
-        Set<String> sequencedPatientIdentifiers = samplesPerPatientSequenced.keySet();
         int missingPatients = 0;
         int missingSamples = 0;
         LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIdentifiers.size()));
@@ -168,8 +137,8 @@ public final class LoadClinicalData {
             Patient patient = patients.get(patientIdentifier);
             if (patient == null) {
                 missingPatients++;
-                missingSamples += samplesPerPatientSequenced.get(patientIdentifier).size();
-                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatientSequenced.get(patientIdentifier));
+                missingSamples += samplesPerPatient.get(patientIdentifier).size();
+                dbAccess.writeSampleClinicalData(patientIdentifier, samplesPerPatient.get(patientIdentifier));
             } else {
                 dbAccess.writeFullClinicalData(patient);
                 List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
@@ -283,11 +252,11 @@ public final class LoadClinicalData {
     @NotNull
     private static List<RunContext> loadRunContexts(@NotNull CommandLine cmd) throws IOException {
         final String runsFolderPathDb = cmd.getOptionValue(RUNS_DIR_DATABASE);
-        final List<RunContext> runContextsDb = RunsFolderReader.getRunContexts(new File(runsFolderPathDb));
+        final List<RunContext> runContextsDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathDb));
         LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathDb, runContextsDb.size()));
 
         final String runsFolderPathNonDb = cmd.getOptionValue(RUNS_DIR_NON_DATABASE);
-        final List<RunContext> runContextsNonDb = RunsFolderReader.getRunContexts(new File(runsFolderPathNonDb));
+        final List<RunContext> runContextsNonDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathNonDb));
         LOGGER.info(String.format("Loading run contexts from %s (%s sets)", runsFolderPathNonDb, runContextsNonDb.size()));
 
         List<RunContext> runContextsAll = Lists.newArrayList();
@@ -329,7 +298,7 @@ public final class LoadClinicalData {
     private static String extractTumorSampleIdsForPatient(@NotNull final String patientIdentifier,
             @NotNull final List<RunContext> runContexts) {
         String sampleIdsForPatient = Strings.EMPTY;
-        for (RunContext runContext: runContexts) {
+        for (RunContext runContext : runContexts) {
             final String sampleId = runContext.tumorSample();
             if (sampleId.startsWith(patientIdentifier)) {
                 sampleIdsForPatient = sampleId;

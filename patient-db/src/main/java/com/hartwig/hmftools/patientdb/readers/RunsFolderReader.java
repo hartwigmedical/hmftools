@@ -20,7 +20,7 @@ public final class RunsFolderReader {
     }
 
     @NotNull
-    public static List<RunContext> getRunContexts(@NotNull final File dir) throws IOException {
+    public static List<RunContext> extractRunContexts(@NotNull final File dir) throws IOException {
         final List<RunContext> runContexts = Lists.newArrayList();
         final File[] folders = dir.listFiles(File::isDirectory);
         if (folders == null) {

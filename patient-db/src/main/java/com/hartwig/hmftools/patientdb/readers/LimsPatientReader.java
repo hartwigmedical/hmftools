@@ -25,16 +25,16 @@ public class LimsPatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull String patientId, @NotNull List<SampleData> sequencedBiopsies) {
-        assert sequencedBiopsies.size() > 0;
+    public Patient read(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
+        assert samples.size() > 0;
 
         // Assume the primary tumor is the same for every sample belonging to one patient.
-        String primaryTumorLocation = sequencedBiopsies.get(0).limsPrimaryTumor();
+        String primaryTumorLocation = samples.get(0).limsPrimaryTumor();
 
-        return new Patient(patientId,
+        return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 noPreTreatmentData(),
-                sequencedBiopsies,
+                samples,
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
