@@ -49,6 +49,8 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(4, 5, 6, 7, 8, 9, 10, 11);
+    private static final List<Integer> EXPECTED_FEATURES_ELEMENT_SIZES = Lists.newArrayList(2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
 
     private ViccJsonReader() {
     }
@@ -84,7 +86,7 @@ public final class ViccJsonReader {
                 }
             }
 
-            viccEntryBuilder.features(createFeatures());
+            viccEntryBuilder.features(createFeatures(viccEntryObject));
 
             JsonObject elementAssociation = viccEntryObject.getAsJsonObject("association");
             Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
@@ -108,26 +110,40 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<Feature> createFeatures() {
+    private static List<Feature> createFeatures(@NotNull JsonObject viccEntryObject) {
+
+        JsonArray arrayFeatures = viccEntryObject.getAsJsonArray("features");
         List<Feature> featureList = Lists.newArrayList();
-        featureList.add(ImmutableFeature.builder()
-                .name(Strings.EMPTY)
-                .biomarkerType(Strings.EMPTY)
-                .referenceName(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
-                .start(Strings.EMPTY)
-                .end(Strings.EMPTY)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
-                .provenance(Lists.newArrayList())
-                .provenanceRule(Strings.EMPTY)
-                .geneSymbol(Strings.EMPTY)
-                .synonyms(Lists.newArrayList())
-                .entrezId(Strings.EMPTY)
-                .sequenceOntology(createSequenceOntology())
-                .links(Lists.newArrayList())
-                .description(Strings.EMPTY)
-                .build());
+
+        for (JsonElement elementFeature : arrayFeatures) {
+            Set<String> keysFeatures = elementFeature.getAsJsonObject().keySet();
+            if (!EXPECTED_FEATURES_ELEMENT_SIZES.contains(keysFeatures.size())) {
+                LOGGER.warn("Found " + keysFeatures.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_FEATURES_ELEMENT_SIZES);
+                LOGGER.warn(keysFeatures);
+            }
+
+            featureList.add(ImmutableFeature.builder()
+                    .name(Strings.EMPTY)
+                    .biomarkerType(Strings.EMPTY)
+                    .referenceName(Strings.EMPTY)
+                    .chromosome(Strings.EMPTY)
+                    .start(Strings.EMPTY)
+                    .end(Strings.EMPTY)
+                    .ref(Strings.EMPTY)
+                    .alt(Strings.EMPTY)
+                    .provenance(Lists.newArrayList())
+                    .provenanceRule(Strings.EMPTY)
+                    .geneSymbol(Strings.EMPTY)
+                    .synonyms(Lists.newArrayList())
+                    .entrezId(Strings.EMPTY)
+                    .sequenceOntology(createSequenceOntology())
+                    .links(Lists.newArrayList())
+                    .description(Strings.EMPTY)
+                    .build());
+        }
+
+
         return featureList;
     }
 
