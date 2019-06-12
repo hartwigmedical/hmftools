@@ -50,14 +50,14 @@ public class Lims {
     }
 
     @NotNull
-    public String patientId(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String patientId(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         return sampleData != null ? sampleData.patientId() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String tumorBarcode(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String tumorBarcode(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             String tumorBarcode = sampleData.tumorBarcode();
             if (tumorBarcode.isEmpty()) {
@@ -70,8 +70,8 @@ public class Lims {
     }
 
     @NotNull
-    public String refBarcode(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String refBarcode(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             String refBarcode = sampleData.refBarcode();
             if (refBarcode == null || refBarcode.isEmpty()) {
@@ -84,52 +84,48 @@ public class Lims {
     }
 
     @Nullable
-    public LocalDate arrivalDate(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public LocalDate arrivalDate(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDate()) : null;
 
         if (arrivalDate == null) {
-            arrivalDate = preLimsArrivalDates.get(sample);
-        }
-
-        if (arrivalDate == null) {
-            LOGGER.warn("Could not find a valid arrival date for sample: " + sample + " in LIMS");
+            arrivalDate = preLimsArrivalDates.get(sampleId);
         }
 
         return arrivalDate;
     }
 
     @Nullable
-    public LocalDate samplingDate(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public LocalDate samplingDate(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             final String samplingDateString = sampleData.samplingDate();
-            final LocalDate samplingDate = getNullableDate(samplingDateString);
-            if (samplingDate == null && !samplesWithoutSamplingDate.contains(sample)) {
-                LOGGER.warn("LIMS sampling date for " + sample + ": " + sampleData.samplingDate() + " is not a valid date.");
-            }
-            return samplingDate;
+            return getNullableDate(samplingDateString);
         }
         return null;
     }
 
+    public boolean confirmedToHaveNoSamplingDate(@NotNull String sampleId) {
+        return samplesWithoutSamplingDate.contains(sampleId);
+    }
+
     @NotNull
-    public String submissionId(@NotNull final String sample) {
-        String submission = submission(sample);
+    public String submissionId(@NotNull String sampleId) {
+        String submission = submission(sampleId);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String projectName(@NotNull final String sample) {
-        String submission = submission(sample);
+    public String projectName(@NotNull String sampleId) {
+        String submission = submission(sampleId);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.projectName() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable
-    public Integer dnaNanograms(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public Integer dnaNanograms(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             try {
                 // LIMS stores the amount of nanograms per micro liter.
@@ -142,15 +138,15 @@ public class Lims {
     }
 
     @NotNull
-    public String purityShallowSeq(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String purityShallowSeq(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
 
         if (sampleData != null) {
-            boolean purityShallowExecuted = shallowSeqExecuted(sample);
-            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sample);
+            boolean purityShallowExecuted = shallowSeqExecuted(sampleId);
+            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleId);
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab status do not match for sample " + sample + "!");
+                LOGGER.warn("BFX lims and lab status do not match for sample " + sampleId + "!");
             } else {
                 if (purityShallowExecuted) {
                     LOGGER.info("Purity from shallow seq: " + shallowSeq.purityShallowSeq());
@@ -173,11 +169,11 @@ public class Lims {
     }
 
     @NotNull
-    public String pathologyTumorPercentage(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String pathologyTumorPercentage(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             // Even if pathology tumor percentage has been determined, we still suppress it in case of shallow seq.
-            if (shallowSeqExecuted(sample)) {
+            if (shallowSeqExecuted(sampleId)) {
                 return NOT_DETERMINED_STRING;
             }
 
@@ -196,8 +192,8 @@ public class Lims {
     }
 
     @NotNull
-    public String primaryTumor(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String primaryTumor(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             return sampleData.primaryTumor();
         }
@@ -206,30 +202,30 @@ public class Lims {
     }
 
     @NotNull
-    public String labProcedures(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String labProcedures(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
-        LOGGER.warn("Could not find lab SOP versions for sample: " + sample + " in LIMS");
+        LOGGER.warn("Could not find lab SOP versions for sample: " + sampleId + " in LIMS");
         return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String requesterEmail(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String requesterEmail(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         return sampleData != null ? sampleData.requesterEmail() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String requesterName(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String requesterName(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         return sampleData != null ? sampleData.requesterName() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String hospitalPatientId(@NotNull final String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String hospitalPatientId(@NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             String hospitalPatientId = sampleData.hospitalPatientId();
             return hospitalPatientId != null ? hospitalPatientId : NOT_KNOWN_STRING;

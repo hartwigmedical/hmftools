@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.lims;
 import static com.hartwig.hmftools.common.lims.LimsTestUtil.createLimsSampleDataBuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -68,6 +69,7 @@ public class LimsTest {
         final Lims lims = buildFullTestLims(sampleData, submissionData, shallowSeqData);
 
         assertEquals(1, lims.sampleCount());
+        assertFalse(lims.confirmedToHaveNoSamplingDate(SAMPLE));
 
         assertEquals(patientId, lims.patientId(SAMPLE));
         assertEquals(refBarcode, lims.refBarcode(SAMPLE));
@@ -217,13 +219,13 @@ public class LimsTest {
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         dataPerSubmission.put(submissionData.submission(), submissionData);
 
-        Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
+        Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
 
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
         shallowSeqDataPerSample.put(shallowSeqData.sampleId(), shallowSeqData);
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
+        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 
     @NotNull
@@ -231,11 +233,11 @@ public class LimsTest {
         Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sampleData.sampleId(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
-        Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
-        Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
+        Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
+        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 
     @NotNull
@@ -244,25 +246,25 @@ public class LimsTest {
         Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
         dataPerSample.put(sampleData.sampleId(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
-        Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
-        Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
+        Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
         shallowSeqDataPerSample.put(sampleData.sampleId(), ImmutableLimsShallowSeqData.of(sampleData.sampleId(), shallowSeqPurity));
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
+        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 
     @NotNull
     private static Lims buildTestLimsWithPreLIMSArrivalDateForSample(@NotNull final String sample, @NotNull final LocalDate date) {
         final Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
         final Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
-        final Map<String, LocalDate> preLIMSArrivalDates = Maps.newHashMap();
-        preLIMSArrivalDates.put(sample, date);
+        final Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
+        preLimsArrivalDates.put(sample, date);
 
-        Set<String> samplesWithSamplingDates = Sets.newHashSet();
+        Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
+        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 }
