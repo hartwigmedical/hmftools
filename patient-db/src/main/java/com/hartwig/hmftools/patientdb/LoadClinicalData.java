@@ -87,14 +87,16 @@ public final class LoadClinicalData {
             final Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
             final Set<String> sequencedSampleIds = toUniqueSampleIds(sequencedSamplesPerPatient);
 
-            LOGGER.info(String.format(" Found sequence runs for %s patient IDs (%s samples)",
+            LOGGER.info(String.format(" Loaded sequence runs for %s patient IDs (%s samples).",
                     sequencedPatientIds.size(),
                     sequencedSampleIds.size()));
 
             LOGGER.info("Loading sample data from LIMS.");
             final Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
             final Map<String, List<SampleData>> limsSampleDataPerPatient = extractAllSamplesFromLims(lims, sequencedSampleIds);
-            LOGGER.info(String.format(" Loaded samples for %s patient IDs from LIMS", limsSampleDataPerPatient.keySet().size()));
+            LOGGER.info(String.format(" Loaded samples for %s patient IDs (%s samples).",
+                    limsSampleDataPerPatient.keySet().size(),
+                    countValues(limsSampleDataPerPatient)));
 
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
@@ -119,11 +121,11 @@ public final class LoadClinicalData {
     private static List<RunContext> loadRunContexts(@NotNull CommandLine cmd) throws IOException {
         final String runsFolderPathDb = cmd.getOptionValue(RUNS_DIR_DATABASE);
         final List<RunContext> runContextsDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathDb));
-        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets)", runsFolderPathDb, runContextsDb.size()));
+        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets).", runsFolderPathDb, runContextsDb.size()));
 
         final String runsFolderPathNonDb = cmd.getOptionValue(RUNS_DIR_NON_DATABASE);
         final List<RunContext> runContextsNonDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathNonDb));
-        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets)", runsFolderPathNonDb, runContextsNonDb.size()));
+        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets).", runsFolderPathNonDb, runContextsNonDb.size()));
 
         List<RunContext> runContextsAll = Lists.newArrayList();
         runContextsAll.addAll(runContextsDb);
@@ -279,7 +281,7 @@ public final class LoadClinicalData {
         Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), limsSampleDataPerPatient);
         LOGGER.info(String.format(" Finished curation of %s DRUP patients.", drupPatients.size()));
 
-        LOGGER.info("Interpreting and curating data based off LIMS");
+        LOGGER.info("Interpreting and curating data based off LIMS.");
         Map<String, Patient> patientsFromLims = readLimsPatients(limsSampleDataPerPatient, tumorLocationCurator);
         LOGGER.info(String.format(" Finished curation of %s patients based off LIMS", patientsFromLims.keySet().size()));
 
@@ -329,11 +331,19 @@ public final class LoadClinicalData {
     private static Map<String, Patient> readColoPatients() {
         final Map<String, Patient> patientMap = Maps.newHashMap();
         final ColoPatientReader coloPatientReader = new ColoPatientReader();
-        LOGGER.info("Creating patient representation for COLO829");
+        LOGGER.info("Creating patient representation for COLO829.");
         Patient colo829Patient = coloPatientReader.read("COLO829T");
 
         patientMap.put(colo829Patient.patientIdentifier(), colo829Patient);
         return patientMap;
+    }
+
+    private static <V, K> int countValues(@NotNull Map<V, List<K>> map) {
+        int count = 0;
+        for (Map.Entry<V, List<K>> entry : map.entrySet()) {
+            count += entry.getValue().size();
+        }
+        return count;
     }
 
     @NotNull
