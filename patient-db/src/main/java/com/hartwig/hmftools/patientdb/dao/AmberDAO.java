@@ -38,11 +38,11 @@ class AmberDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
             @NotNull AmberBAF variant) {
+        //noinspection unchecked
         inserter.values(sample, variant.chromosome(), variant.position(), Doubles.greaterThan(variant.normalBAF(), 0), timestamp);
     }
 
     void deleteAmberRecordsForSample(@NotNull String sample) {
         context.delete(AMBER).where(AMBER.SAMPLEID.eq(sample)).execute();
     }
-
 }

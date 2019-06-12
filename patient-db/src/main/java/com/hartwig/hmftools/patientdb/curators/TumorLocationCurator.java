@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -19,7 +18,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.TestOnly;
 
 public class TumorLocationCurator implements CleanableCurator {
 
@@ -37,7 +35,7 @@ public class TumorLocationCurator implements CleanableCurator {
     }
 
     @VisibleForTesting
-    public TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
         final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
             final String searchTerm = record.get("searchTerm");
@@ -69,15 +67,5 @@ public class TumorLocationCurator implements CleanableCurator {
     @Override
     public Set<String> unusedSearchTerms() {
         return unusedSearchTerms;
-    }
-
-    @TestOnly
-    @NotNull
-    public Set<String> primaryTumorLocations() {
-        return tumorLocationMap.entrySet()
-                .stream()
-                .map(Map.Entry::getValue)
-                .map(CuratedTumorLocation::primaryTumorLocation)
-                .collect(Collectors.toSet());
     }
 }
