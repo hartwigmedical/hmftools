@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class TreatmentMatcherTest {
+
     private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");

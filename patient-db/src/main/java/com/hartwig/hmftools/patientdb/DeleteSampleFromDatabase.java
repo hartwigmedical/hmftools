@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DeleteSampleFromDatabase {
+
     private static final Logger LOGGER = LogManager.getLogger(DeleteSampleFromDatabase.class);
 
     private static final String DB_USER = "db_user";

@@ -12,14 +12,11 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -50,8 +47,7 @@ class StructuralVariantDAO {
 
             // TEMP CAS: ploidy correction for NONE segment SVs
             Double ploidy = record.getValue(STRUCTURALVARIANT.PLOIDY);
-            if(isSingleBreakend && ploidy == null && filterStr.equals(INFERRED))
-            {
+            if (isSingleBreakend && ploidy == null && filterStr.equals(INFERRED)) {
                 ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
@@ -141,8 +137,7 @@ class StructuralVariantDAO {
 
         deleteStructuralVariantsForSample(sample);
 
-        for (List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE))
-        {
+        for (List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
                     STRUCTURALVARIANT.SVID,
@@ -205,8 +200,7 @@ class StructuralVariantDAO {
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull StructuralVariantData variant)
-    {
+            @NotNull StructuralVariantData variant) {
         boolean isSingle = variant.type() == SGL;
 
         inserter.values(sample,

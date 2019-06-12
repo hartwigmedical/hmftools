@@ -72,18 +72,17 @@ class PurityDAO {
     }
 
     @NotNull
-    public final List<String> getSamplesPassingQC(double minPurity)
-    {
+    public final List<String> getSamplesPassingQC(double minPurity) {
         List<String> sampleIds = Lists.newArrayList();
 
-        final Result<Record> result = context.select().from(PURITY)
+        final Result<Record> result = context.select()
+                .from(PURITY)
                 .where(PURITY.PURITY_.ge(minPurity))
                 .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
                 .and(PURITY.QCSTATUS.eq("PASS"))
                 .fetch();
 
-        for (Record record : result)
-        {
+        for (Record record : result) {
             sampleIds.add(record.getValue(PURITY.SAMPLEID));
         }
 

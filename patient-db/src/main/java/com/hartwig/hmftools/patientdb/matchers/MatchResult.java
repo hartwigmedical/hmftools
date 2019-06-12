@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import org.jetbrains.annotations.NotNull;
 
 public class MatchResult<T> {
+
     @NotNull
     private final List<T> values;
 

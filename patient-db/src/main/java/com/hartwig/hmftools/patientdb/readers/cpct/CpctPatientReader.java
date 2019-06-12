@@ -46,7 +46,7 @@ public class CpctPatientReader implements EcrfPatientReader {
 
     @NotNull
     @Override
-    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedBiopsies) {
+    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) {
         final BaselineData baselineData = baselineReader.read(ecrfPatient);
         final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
         final List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
@@ -56,7 +56,7 @@ public class CpctPatientReader implements EcrfPatientReader {
         final List<RanoMeasurementData> ranoMeasurements = RanoMeasurementReader.read(ecrfPatient);
 
         final MatchResult<BiopsyData> matchedBiopsies =
-                BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
+                BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedSamples, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments);
 
@@ -73,8 +73,7 @@ public class CpctPatientReader implements EcrfPatientReader {
 
         return new Patient(ecrfPatient.patientId(),
                 baselineData,
-                preTreatmentData,
-                sequencedBiopsies,
+                preTreatmentData, sequencedSamples,
                 matchedBiopsies.values(),
                 matchedTreatments.values(),
                 matchedResponses.values(),

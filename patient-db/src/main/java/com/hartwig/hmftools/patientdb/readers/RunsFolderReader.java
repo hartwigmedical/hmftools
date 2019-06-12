@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class RunsFolderReader {
+
     private static final Logger LOGGER = LogManager.getLogger(RunsFolderReader.class);
 
     private RunsFolderReader() {

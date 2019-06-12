@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.hartwig.hmftools.common.context.RunContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class Utils {
+
     private static final Logger LOGGER = LogManager.getLogger(Utils.class);
 
     private Utils() {
@@ -40,14 +36,6 @@ public final class Utils {
         } else {
             return string.toUpperCase().substring(0, 1) + string.substring(1);
         }
-    }
-
-    @NotNull
-    static Set<String> sequencedPatientIdentifiers(@NotNull final List<RunContext> runContexts) {
-        return runContexts.stream()
-                .map(runContext -> extractPatientIdentifier(runContext.setName()))
-                .filter(patientIdentifier -> !patientIdentifier.isEmpty())
-                .collect(Collectors.toSet());
     }
 
     @NotNull

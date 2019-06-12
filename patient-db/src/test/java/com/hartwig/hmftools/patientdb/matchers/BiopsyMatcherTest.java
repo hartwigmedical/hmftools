@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class BiopsyMatcherTest {
+
     private final static LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private final static LocalDate FEB2015 = LocalDate.parse("2015-02-01");
     private final static LocalDate MAR2015 = LocalDate.parse("2015-03-01");
@@ -67,7 +68,7 @@ public class BiopsyMatcherTest {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_JAN);
 
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, (String) null);
     }
 
     //    ---sample(aug)-biopsy(sep)---
@@ -76,7 +77,7 @@ public class BiopsyMatcherTest {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_AUG);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_SEP);
 
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, (String) null);
     }
 
     //    ---biopsy(feb)-biopsy(mar)-x-x-x-sample(jul)---
@@ -193,7 +194,7 @@ public class BiopsyMatcherTest {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_ARRIVED_NOV_SAMPLED_MAR);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_JAN);
 
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, (String) null);
     }
 
     @Test
@@ -201,7 +202,7 @@ public class BiopsyMatcherTest {
         final List<SampleData> sequencedBiopsies = Lists.newArrayList(SEQUENCED_BIOPSY_JUL);
         final List<BiopsyData> clinicalBiopsies = Lists.newArrayList(CLINICAL_BIOPSY_MAR_NOT_EVALUABLE);
 
-        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, null);
+        runMatcherAndVerify(sequencedBiopsies, clinicalBiopsies, (String) null);
     }
 
     @Test

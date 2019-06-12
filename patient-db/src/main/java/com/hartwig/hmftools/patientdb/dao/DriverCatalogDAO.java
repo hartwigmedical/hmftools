@@ -55,6 +55,7 @@ class DriverCatalogDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
+        //noinspection unchecked
         inserter.values(sample,
                 entry.gene(),
                 entry.category(),
@@ -74,8 +75,7 @@ class DriverCatalogDAO {
     }
 
     @NotNull
-    List<DriverCatalog> readDriverData(@NotNull final String sample)
-    {
+    List<DriverCatalog> readDriverData(@NotNull final String sample) {
         final List<DriverCatalog> dcList = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).fetch();
@@ -99,5 +99,4 @@ class DriverCatalogDAO {
 
         return dcList;
     }
-
 }

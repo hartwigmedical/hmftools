@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class BaselineReader {
+
     private static final Logger LOGGER = LogManager.getLogger(BaselineReader.class);
 
     private static final String STUDY_BASELINE = "SE.BASELINE";
@@ -49,7 +50,6 @@ class BaselineReader {
     private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.CARCINOMA.PTUMLOC";
     private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.CARCINOMA.PTUMLOCS";
     private static final String FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT = "FLD.SELCRIT.SELPTM";
-
 
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 

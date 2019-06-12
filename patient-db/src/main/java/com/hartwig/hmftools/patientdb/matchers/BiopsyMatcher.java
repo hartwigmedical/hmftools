@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 import org.jetbrains.annotations.NotNull;
 
 public final class BiopsyMatcher {
+
     private BiopsyMatcher() {
     }
 

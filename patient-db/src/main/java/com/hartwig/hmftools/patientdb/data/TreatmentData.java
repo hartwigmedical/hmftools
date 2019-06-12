@@ -51,7 +51,6 @@ public interface TreatmentData extends Comparable<TreatmentData> {
         return Strings.emptyToNull(concatenatedTreatmentName);
     }
 
-
     @Nullable
     @Value.Derived
     default String concatenatedType() {

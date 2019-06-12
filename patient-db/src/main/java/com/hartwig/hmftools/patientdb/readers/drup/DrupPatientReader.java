@@ -33,18 +33,17 @@ public class DrupPatientReader implements EcrfPatientReader {
 
     @NotNull
     @Override
-    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedBiopsies) {
+    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) {
         final BaselineData baselineData = baselineReader.read(ecrfPatient);
         final PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
         final List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
 
         final MatchResult<BiopsyData> matchedBiopsies =
-                BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedBiopsies, clinicalBiopsies);
+                BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedSamples, clinicalBiopsies);
 
         return new Patient(ecrfPatient.patientId(),
                 baselineData,
-                noPreTreatmentData,
-                sequencedBiopsies,
+                noPreTreatmentData, sequencedSamples,
                 matchedBiopsies.values(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),

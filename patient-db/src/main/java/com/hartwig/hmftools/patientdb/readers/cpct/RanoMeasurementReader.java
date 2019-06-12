@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientdb.data.RanoMeasurementData;
 import org.jetbrains.annotations.NotNull;
 
 final class RanoMeasurementReader {
+
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
     private static final String FORM_RESPONSE_RANO = "FRM.TMRANO";
     private static final String ITEMGROUP_RESPONSE_RANO = "GRP.TMRANO.TMRANO";
