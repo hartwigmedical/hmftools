@@ -54,4 +54,41 @@ CREATE TABLE devTag
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
+DROP TABLE IF EXISTS feature;
+CREATE TABLE feature
+(   idFeature int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    name varchar(255),
+    biomarkerType varchar(255),
+    referenceName varchar(255),
+    chromosome varchar(255),
+    start varchar(255),
+    end varchar(255),
+    ref varchar(255),
+    alt varchar(255),
+    provenance varchar(255),
+    provenanceRule varchar(255),
+    geneSymbol varchar(255),
+    synonyms varchar(255),
+    entrezId varchar(255),
+    links varchar(255),
+    description varchar(255),
+    PRIMARY KEY (idFeature),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+DROP TABLE IF EXISTS sequenceOntology;
+CREATE TABLE sequenceOntology
+(   id int NOT NULL AUTO_INCREMENT,
+    featureEntryId int NOT NULL,
+    hierarchy varchar(255),
+    soid varchar(255) NOT NULL,
+    parentSoid varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    parentName varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (featureEntryId) REFERENCES feature(idFeature)
+);
+
+
 SET FOREIGN_KEY_CHECKS = 1;
