@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.PHASE_NON_CODING;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.REGION_TYPE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
 
 import java.util.List;
 import java.util.Map;
@@ -22,8 +21,10 @@ public class GeneRangeData
     private Map<Integer,Long> mDelFusionBaseCounts;
     private Map<Integer,Long> mDupFusionBaseCounts;
 
-    private long mTranslocationOverlapCount;
-    private long mLocalArmOverlapCount;
+    private long mRemoteBaseOverlapCountDownstream;
+    private long mRemoteBaseOverlapCountUpstream;
+    private long mLocalBaseOverlapCountDownstream;
+    private long mLocalBaseOverlapCountUpstream;
 
     public GeneRangeData(final EnsemblGeneData geneData)
     {
@@ -36,8 +37,10 @@ public class GeneRangeData
         mDelFusionBaseCounts = Maps.newHashMap();
         mDupFusionBaseCounts = Maps.newHashMap();
 
-        mTranslocationOverlapCount = 0;
-        mLocalArmOverlapCount = 0;
+        mRemoteBaseOverlapCountUpstream = 0;
+        mRemoteBaseOverlapCountDownstream = 0;
+        mLocalBaseOverlapCountUpstream = 0;
+        mLocalBaseOverlapCountDownstream = 0;
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
@@ -54,11 +57,13 @@ public class GeneRangeData
         return mPhaseRegions.stream().anyMatch(x -> x.Phase != PHASE_NON_CODING);
     }
 
-    public long getTranslocationOverlapCount() { return mTranslocationOverlapCount; }
-    public void addTranslocationOverlapCount(long count) { mTranslocationOverlapCount += count; }
+    public long getRemoteBaseOverlapCountUpstream() { return mRemoteBaseOverlapCountUpstream; }
+    public void addRemoteBaseOverlapCountUpstream(long count) { mRemoteBaseOverlapCountUpstream += count; }
+    public long getRemoteBaseOverlapCountDownstream() { return mRemoteBaseOverlapCountDownstream; }
+    public void addRemoteBaseOverlapCountDownstream(long count) { mRemoteBaseOverlapCountDownstream += count; }
 
-    public long getLocalArmOverlapCount() { return mLocalArmOverlapCount; }
-    public void addLocalArmOverlapCount(long count) { mLocalArmOverlapCount += count; }
-
-
+    public long getLocalBaseOverlapCountUpstream() { return mLocalBaseOverlapCountUpstream; }
+    public void addLocalBaseOverlapCountUpstream(long count) { mLocalBaseOverlapCountUpstream += count; }
+    public long getLocalBaseOverlapCountDownstream() { return mLocalBaseOverlapCountDownstream; }
+    public void addLocalBaseOverlapCountDownstream(long count) { mLocalBaseOverlapCountDownstream += count; }
 }

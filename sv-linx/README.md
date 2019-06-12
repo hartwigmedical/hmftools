@@ -26,8 +26,8 @@ Data is loaded from the HMF patients data and other reference files, and each an
 Required DB tables:
 * copyNumber
 * structuralVariant
-* svLinxData, cluster and svLinks
-* structuralVariantBreakend and structuralVariantFusion
+* svAnnotation, svCluster and svLink
+* svBreakend and svFusion
 * purity - can be empty but needs to exist (but see note about QC below)
 * geneCopyNumber - can be empty but needs to exist 
 * driverCatalog - can be empty but needs to exist
@@ -131,7 +131,7 @@ Prior to clustering the following annotation routines are completed:
 - SVs are marked as having either 1 or both breakends in fragile sites  
 - SVs are marked as having either 1 or both breakends in known LINE elements
 - breakends within or upstream (by default by 100K beses) of genes are marked with all valid transcripts
-- calculate a 'long DEL and DUP' length is calculated for each sample (see below)
+- a 'long DEL and DUP' length is calculated for each sample (see below)
 - SVs are marked with their replication timing
 - LOH events are identified and the linking breakends marked
 - a min and max ploidy is calculated from copy number data

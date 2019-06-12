@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.hasAnyPhaseMatch;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.regionsPhaseMatched;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_0;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_1;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_2;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_5P_UTR;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_MAX;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.typeAsInt;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.fusion.FusionLikelihood.checkAddCombinedGenePhaseRegion;
 import static com.hartwig.hmftools.linx.fusion.FusionLikelihood.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion.FusionLikelihood.generateGenePhaseRegions;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.PHASE_1;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.PHASE_2;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.PHASE_MAX;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.PHASE_NON_CODING;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.calcCombinedPhase;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.simpleToCombinedPhase;
 
@@ -41,40 +46,40 @@ public class FusionLikelihoodTest
 
         String transName = "T001";
         int transId = 1;
-        int transStart = 10;
-        int transEnd = 80;
-        Long codingStart = new Long(35);
-        Long codingEnd = new Long(75);
+        int transStart = 110;
+        int transEnd = 180;
+        Long codingStart = new Long(135);
+        Long codingEnd = new Long(175);
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                10, 20, 1, -1, -1, codingStart, codingEnd, ""));
+                110, 120, 1, -1, -1, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                30, 40, 2, -1, 1, codingStart, codingEnd, ""));
+                130, 140, 2, -1, 1, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                50, 60, 3, 1, 2, codingStart, codingEnd, ""));
+                150, 160, 3, 1, 2, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                70, 80, 4, 2, -1, codingStart, codingEnd, ""));
+                170, 180, 4, 2, -1, codingStart, codingEnd, ""));
 
         transName = "T002";
         transId = 2;
-        codingStart = new Long(15);
-        codingEnd = new Long(55);
+        codingStart = new Long(115);
+        codingEnd = new Long(155);
 
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                10, 20, 1, -1, 0, codingStart, codingEnd, ""));
+                110, 120, 1, -1, 0, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                30, 40, 2, 0, 0, codingStart, codingEnd, ""));
+                130, 140, 2, 0, 0, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                50, 60, 3, 0, -1, codingStart, codingEnd, ""));
+                150, 160, 3, 0, -1, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                70, 80, 4, -1, -1, codingStart, codingEnd, ""));
+                170, 180, 4, -1, -1, codingStart, codingEnd, ""));
 
         // and a non-coding transcript
         transName = "T003";
@@ -83,13 +88,26 @@ public class FusionLikelihoodTest
         codingEnd = null;
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                10, 20, 1, -1, -1, codingStart, codingEnd, ""));
+                110, 120, 1, -1, -1, codingStart, codingEnd, ""));
 
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
-                70, 80, 2, -1, -1, codingStart, codingEnd, ""));
+                170, 180, 2, -1, -1, codingStart, codingEnd, ""));
 
-        List<GenePhaseRegion> phaseRegions = generateGenePhaseRegions(geneData, transExonDataList);
+        List<GenePhaseRegion> phaseRegions = generateGenePhaseRegions(geneData, transExonDataList, 0);
         assertEquals(5, phaseRegions.size());
+
+        assertTrue(hasPhaseRegion(phaseRegions, 110, 130, PHASE_5P_UTR, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 110, 150, PHASE_0, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 130, 150, PHASE_1, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 150, 170, PHASE_2, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 110, 180, PHASE_NON_CODING, false));
+
+        // test again but with a preceding gene region distance
+        phaseRegions = generateGenePhaseRegions(geneData, transExonDataList, 60);
+        assertEquals(7, phaseRegions.size());
+
+        assertTrue(hasPhaseRegion(phaseRegions, 60, 109, PHASE_5P_UTR, true));
+        assertTrue(hasPhaseRegion(phaseRegions, 60, 109, PHASE_0, true));
 
         // test for the reverse strand
         geneId = "G002";
@@ -147,9 +165,34 @@ public class FusionLikelihoodTest
         transExonDataList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
                 70, 80, 1, -1, -1, codingStart, codingEnd, ""));
 
-        phaseRegions = generateGenePhaseRegions(geneData, transExonDataList);
+        phaseRegions = generateGenePhaseRegions(geneData, transExonDataList, 0);
         assertEquals(5, phaseRegions.size());
+
+        assertTrue(hasPhaseRegion(phaseRegions, 60, 80, PHASE_5P_UTR, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 20, 60, PHASE_0, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 40, 60, PHASE_1, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 60, 80, PHASE_2, false));
+        assertTrue(hasPhaseRegion(phaseRegions, 10, 80, PHASE_NON_CODING, false));
+
+        // test again but with a preceding gene region distance - will be capped at 10K
+        phaseRegions = generateGenePhaseRegions(geneData, transExonDataList, 100000);
+        assertEquals(7, phaseRegions.size());
+
+        assertTrue(hasPhaseRegion(phaseRegions, 81, 10080, PHASE_5P_UTR, true));
+        assertTrue(hasPhaseRegion(phaseRegions, 81, 10080, PHASE_2, true));
     }
+
+    private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, GenePhaseType phase, boolean isPreGene)
+    {
+        for(GenePhaseRegion region : regionsList)
+        {
+            if(region.start() == start && region.end() == end && region.Phase == phase && region.isAnyPreGene() == isPreGene)
+                return true;
+        }
+
+        return false;
+    }
+
 
     @Test
     public void testPhaseRegionMerging()
@@ -178,8 +221,9 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(regionsList, 601, 800, simpleToCombinedPhase(PHASE_2)));
 
         boolean[] phaseArray = new boolean[PHASE_MAX];
-        phaseArray[PHASE_1] = true;
-        phaseArray[PHASE_2] = true;
+        boolean[] preGeneStatus = new boolean[PHASE_MAX];
+        phaseArray[typeAsInt(PHASE_1)] = true;
+        phaseArray[typeAsInt(PHASE_2)] = true;
         int combinedPhase = calcCombinedPhase(phaseArray);
         assertTrue(hasPhaseRegion(regionsList, 100, 400, combinedPhase));
         assertTrue(hasPhaseRegion(regionsList, 500, 600, combinedPhase));
@@ -198,20 +242,20 @@ public class FusionLikelihoodTest
         GenePhaseRegion region = new GenePhaseRegion(geneId, 100, 200, PHASE_NON_CODING);
         assertTrue(region.hasPhaseOnly(PHASE_NON_CODING));
 
-        region.addPhases(phaseArray);
+        region.addPhases(phaseArray, preGeneStatus);
         assertFalse(region.hasPhaseOnly(PHASE_NON_CODING));
 
         boolean[] phaseArray1 = {false, true, false, true, false};
-        GenePhaseRegion region1 = new GenePhaseRegion(geneId, 100, 200, phaseArray1);
+        GenePhaseRegion region1 = new GenePhaseRegion(geneId, 100, 200, phaseArray1, preGeneStatus);
 
         boolean[] phaseArray2 = {true, false, true, false, true};
-        GenePhaseRegion region2 = new GenePhaseRegion(geneId, 100, 200, phaseArray2);
+        GenePhaseRegion region2 = new GenePhaseRegion(geneId, 100, 200, phaseArray2, preGeneStatus);
 
         assertFalse(region1.hasAnyPhaseMatch(region2.getPhaseArray()));
         assertFalse(region2.hasAnyPhaseMatch(region1.getPhaseArray()));
 
-        region2.addPhases(phaseArray1);
-        region1.addPhases(phaseArray2);
+        region2.addPhases(phaseArray1, preGeneStatus);
+        region1.addPhases(phaseArray2, preGeneStatus);
         assertTrue(region1.hasAnyPhaseMatch(region2.getPhaseArray()));
         assertTrue(region2.hasAnyPhaseMatch(region1.getPhaseArray()));
 
@@ -219,6 +263,33 @@ public class FusionLikelihoodTest
         GeneRangeData geneData = new GeneRangeData(gene);
         geneData.addPhaseRegions(Lists.newArrayList(region));
         assertFalse(geneData.hasCodingTranscripts());
+    }
+
+    @Test
+    public void testPhaseMatching()
+    {
+        final String geneId = "001";
+
+        GenePhaseRegion region1 = new GenePhaseRegion(geneId, 100, 200, PHASE_0);
+        region1.setPreGene(true, region1.Phase);
+
+        GenePhaseRegion region2 = new GenePhaseRegion(geneId, 100, 200, PHASE_0);
+
+        assertFalse(hasAnyPhaseMatch(region1, region2, false));
+        assertFalse(hasAnyPhaseMatch(region1, region2, true));
+        assertTrue(hasAnyPhaseMatch(region2, region1, true));
+
+        assertFalse(hasAnyPhaseMatch(region1, region2, false));
+        assertTrue(regionsPhaseMatched(region2, region1));
+        assertFalse(regionsPhaseMatched(region1, region2));
+
+        // test with a non-coding 5' region to downstream UTR
+        region1 = new GenePhaseRegion(geneId, 100, 200, PHASE_NON_CODING);
+
+        region2 = new GenePhaseRegion(geneId, 100, 200, PHASE_5P_UTR);
+        assertFalse(regionsPhaseMatched(region2, region1));
+        assertTrue(regionsPhaseMatched(region1, region2));
+
     }
 
     private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, int combinedPhase)

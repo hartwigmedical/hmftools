@@ -285,7 +285,7 @@ public class SvGeneTranscriptCollection
         return matchedGenes;
     }
 
-    private long findPrecedingGeneSpliceAcceptorPosition(final EnsemblGeneData refGene, List<EnsemblGeneData> geneDataList)
+    public long findPrecedingGeneSpliceAcceptorPosition(final EnsemblGeneData refGene, List<EnsemblGeneData> geneDataList)
     {
         // find the first upstream non-overlapping gene with a splice acceptor
         if(refGene.Strand == 1)

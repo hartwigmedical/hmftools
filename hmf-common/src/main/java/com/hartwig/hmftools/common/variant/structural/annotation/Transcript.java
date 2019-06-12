@@ -112,7 +112,6 @@ public class Transcript {
             mCodingBases = codingBases;
         }
 
-
         mCodingType = calcCodingType();
         mRegionType = calcRegionType();
 
