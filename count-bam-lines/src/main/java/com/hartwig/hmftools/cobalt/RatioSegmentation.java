@@ -28,10 +28,10 @@ class RatioSegmentation {
     }
 
     void applySegmentation(@NotNull final String reference, @NotNull final String tumor) throws ExecutionException, InterruptedException {
-        final String ratioFile = CobaltRatioFile.generateFilename(outputDirectory, tumor);
+        final String ratioFile = CobaltRatioFile.generateFilenameForReading(outputDirectory, tumor);
         final List<Future<Object>> futures = Lists.newArrayList();
-        futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, reference, "ReferenceGCDiploidRatio")));
-        futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, tumor, "TumorGCRatio")));
+        futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, reference, "referenceGCDiploidRatio")));
+        futures.add(executorService.submit(() -> ratioSegmentation(ratioFile, tumor, "tumorGCRatio")));
 
         for (Future<Object> future : futures) {
             future.get();

@@ -84,9 +84,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Output
 The following tab delimited files are written:
 
-`/run_dir/cobalt/TUMOR.cobalt`
-
 `/run_dir/cobalt/TUMOR.chr.len`
+
+`/run_dir/cobalt/TUMOR.cobalt.ratio.tsv`
 
 `/run_dir/cobalt/TUMOR.cobalt.ratio.pcf`
 
@@ -107,6 +107,7 @@ TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regi
 ## Version History
 - Upcoming
   - Exit gracefully on exceptions
+  - Changed file names and headers for better consistency with other HMF tools
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1-6)
   - CRAM support
 - 1.5
