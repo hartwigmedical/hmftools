@@ -147,7 +147,8 @@ public final class ViccJsonReader {
                             : null)
                     .synonyms(objectFeatures.has("synonyms") ? jsonArrayToStringList(objectFeatures.getAsJsonArray("synonyms")) : null)
                     .entrezId(objectFeatures.has("entrez_id") ? objectFeatures.getAsJsonPrimitive("entrez_id").getAsString() : null)
-                    .sequenceOntology(objectFeatures.has("sequence_ontology") ? createSequenceOntology(objectFeatures.getAsJsonObject("sequence_ontology")) : null)
+                    .sequenceOntology(objectFeatures.has("sequence_ontology") ? createSequenceOntology(objectFeatures.getAsJsonObject(
+                            "sequence_ontology")) : null)
                     .links(objectFeatures.has("links") ? jsonArrayToStringList(objectFeatures.getAsJsonArray("links")) : null)
                     .description(objectFeatures.has("description") ? objectFeatures.getAsJsonPrimitive("description").getAsString() : null)
                     .build());
@@ -159,7 +160,9 @@ public final class ViccJsonReader {
     @NotNull
     private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
         return ImmutableSequenceOntology.builder()
-                .hierarchy(objectSequenceOntology.has("hierarchy") ? jsonArrayToStringList(objectSequenceOntology.getAsJsonArray("hierarchy")) : null)
+                .hierarchy(objectSequenceOntology.has("hierarchy")
+                        ? jsonArrayToStringList(objectSequenceOntology.getAsJsonArray("hierarchy"))
+                        : null)
                 .soid(objectSequenceOntology.getAsJsonPrimitive("soid").getAsString())
                 .parentSoid(objectSequenceOntology.getAsJsonPrimitive("parent_soid").getAsString())
                 .name(objectSequenceOntology.getAsJsonPrimitive("name").getAsString())
