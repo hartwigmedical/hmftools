@@ -1228,7 +1228,7 @@ public class ClusterAnalyser {
                 if(breakend.isAssembledLink())
                     continue;
 
-                isSpecificSV(breakend.getSV());
+                // isSpecificSV(breakend.getSV());
 
                 SvBreakend nextBreakend = breakendList.get(i + 1);
 

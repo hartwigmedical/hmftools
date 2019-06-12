@@ -1,4 +1,4 @@
-# LINX
+# SV LINX
 
 A collection of components for analysing and annotating structural variants. 
 
@@ -34,6 +34,27 @@ Required DB tables:
 
 ## Configuration
 All values are optional unless otherwise specified.
+
+Example command and arguments:
+
+```
+java -jar sv-linx.jar 
+    -sample SAMPLE_ID 
+    -db_url [db_url] -db_user [username] -db_pass [password] 
+    -output_dir /path_to_sample_data/ 
+    -fragile_site_file fragile_sites.csv 
+    -line_element_file line_elements.csv 
+    -replication_origins_file heli_rep_origins.bed 
+    -viral_hosts_file viral_host_ref.csv 
+    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -check_fusions 
+    -fusion_pairs_csv knownFusionPairs.csv 
+    -promiscuous_five_csv knownPromiscuousFive.csv 
+    -promiscuous_three_csv knownPromiscuousThree.csv 
+    -write_vis_data 
+    -log_debug
+```
+
 
 #### Core
 Argument  | Description
