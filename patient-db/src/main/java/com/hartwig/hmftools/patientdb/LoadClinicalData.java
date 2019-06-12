@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class LoadClinicalData {
-    
+
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
@@ -84,21 +84,26 @@ public final class LoadClinicalData {
             LOGGER.info("Loading sequence runs from file system.");
             final List<RunContext> runContexts = loadRunContexts(cmd);
             final Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
-            LOGGER.info(String.format(" Found sequence runs for %s patients", sequencedSamplesPerPatient.keySet().size()));
+            final Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
+            final Set<String> sequencedSampleIds = toUniqueSampleIds(sequencedSamplesPerPatient);
+
+            LOGGER.info(String.format(" Found sequence runs for %s patients (%s samples)",
+                    sequencedPatientIds.size(),
+                    sequencedSampleIds.size()));
 
             LOGGER.info("Loading sample data from LIMS.");
             final Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
-            final Map<String, List<SampleData>> limsSampleDataPerPatient = extractAllSamplesFromLims(lims, sequencedSamplesPerPatient);
+            final Map<String, List<SampleData>> limsSampleDataPerPatient = extractAllSamplesFromLims(lims, sequencedSampleIds);
             LOGGER.info(String.format(" Loaded samples for %s patients from LIMS", limsSampleDataPerPatient.keySet().size()));
 
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
             if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
-                writeRawEcrf(dbWriter, sequencedSamplesPerPatient.keySet(), ecrfModels);
+                writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
             }
 
             writeClinicalData(dbWriter,
-                    sequencedSamplesPerPatient.keySet(),
+                    sequencedPatientIds,
                     limsSampleDataPerPatient,
                     ecrfModels,
                     cmd.getOptionValue(CSV_OUT_DIR),
@@ -145,12 +150,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, List<SampleData>> extractAllSamplesFromLims(@NotNull Lims lims,
-            @NotNull Map<String, List<String>> sequencedSamplesPerPatient) {
-        Set<String> sequencedSampleIds = Sets.newHashSet();
-        for (Map.Entry<String, List<String>> entry : sequencedSamplesPerPatient.entrySet()) {
-            sequencedSampleIds.addAll(entry.getValue());
-        }
+    private static Map<String, List<SampleData>> extractAllSamplesFromLims(@NotNull Lims lims, @NotNull Set<String> sequencedSampleIds) {
         LimsSampleReader sampleReader = new LimsSampleReader(lims, sequencedSampleIds);
 
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
@@ -183,12 +183,12 @@ public final class LoadClinicalData {
         LOGGER.info(String.format("Loading CPCT eCRF from %s.", cpctEcrfFilePath));
         final FormStatusModel cpctFormStatusModel = FormStatusReader.buildModelFromCsv(cpctFormStatusCsv);
         final EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLWithFormStates(cpctEcrfFilePath, cpctFormStatusModel);
-        LOGGER.info(String.format("Finished loading CPCT eCRF. Read %s patients.", cpctEcrfModel.patientCount()));
+        LOGGER.info(String.format(" Finished loading CPCT eCRF. Read %s patients.", cpctEcrfModel.patientCount()));
 
         final String drupEcrfFilePath = cmd.getOptionValue(DRUP_ECRF_FILE);
         LOGGER.info(String.format("Loading DRUP eCRF from %s.", drupEcrfFilePath));
         final EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(drupEcrfFilePath);
-        LOGGER.info(String.format("Finished loading DRUP eCRF. Read %s patients.", drupEcrfModel.patientCount()));
+        LOGGER.info(String.format(" Finished loading DRUP eCRF. Read %s patients.", drupEcrfModel.patientCount()));
 
         return ImmutableEcrfModels.of(cpctEcrfModel, drupEcrfModel);
     }
@@ -208,7 +208,7 @@ public final class LoadClinicalData {
         LOGGER.info(String.format(" Finished writing raw drup ecrf data for %s patients.", drupEcrfModel.patientCount()));
     }
 
-    private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Set<String> sequencedPatients,
+    private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Set<String> sequencedPatientIds,
             @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient, @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir,
             @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
@@ -225,21 +225,21 @@ public final class LoadClinicalData {
 
         int missingPatients = 0;
         int missingSamples = 0;
-        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatients.size()));
-        for (final String patientIdentifier : sequencedPatients) {
-            Patient patient = patients.get(patientIdentifier);
+        LOGGER.info(String.format("Writing clinical data for %s sequenced patients.", sequencedPatientIds.size()));
+        for (final String patientId : sequencedPatientIds) {
+            Patient patient = patients.get(patientId);
             if (patient == null) {
                 missingPatients++;
-                List<SampleData> samples = limsSampleDataPerPatient.get(patientIdentifier);
+                List<SampleData> samples = limsSampleDataPerPatient.get(patientId);
                 if (samples == null) {
-                    LOGGER.warn("Could not find any samples for " + patientIdentifier + "! Skipping writing to db.");
+                    LOGGER.warn("Could not find any samples for " + patientId + "! Skipping writing to db.");
                 } else {
                     List<SampleData> sequencedSamples = sequencedOnly(samples);
                     missingSamples += sequencedSamples.size();
-                    dbAccess.writeSampleClinicalData(patientIdentifier, sequencedSamples);
+                    dbAccess.writeSampleClinicalData(patientId, sequencedSamples);
                 }
             } else if (patient.sequencedBiopsies().isEmpty()) {
-                LOGGER.warn("No sequenced biopsies found for sequenced patient: " + patientIdentifier + "! Skipping writing to db.");
+                LOGGER.warn("No sequenced biopsies found for sequenced patient: " + patientId + "! Skipping writing to db.");
             } else {
                 dbAccess.writeFullClinicalData(patient);
                 List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
@@ -334,6 +334,15 @@ public final class LoadClinicalData {
 
         patientMap.put(colo829Patient.patientIdentifier(), colo829Patient);
         return patientMap;
+    }
+
+    @NotNull
+    private static Set<String> toUniqueSampleIds(@NotNull Map<String, List<String>> samplesPerPatient) {
+        Set<String> uniqueSampleIds = Sets.newHashSet();
+        for (Map.Entry<String, List<String>> entry : samplesPerPatient.entrySet()) {
+            uniqueSampleIds.addAll(entry.getValue());
+        }
+        return uniqueSampleIds;
     }
 
     @NotNull

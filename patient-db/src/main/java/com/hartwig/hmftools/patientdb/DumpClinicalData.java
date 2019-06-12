@@ -39,7 +39,7 @@ final class DumpClinicalData {
     private static void writeCuratedTumorLocationsToCSV(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
             @NotNull final Collection<Patient> patients) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_curatedTumorLocations.csv");
-        LOGGER.info("Writing curated tumor locations to csv in {}.", csvOutputDir);
+        LOGGER.info("Writing curated tumor locations to " + outputFile);
         final List<PatientTumorLocation> tumorLocations = patients.stream()
                 .map(patient -> ImmutablePatientTumorLocation.of(patient.patientIdentifier(),
                         Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()),
@@ -48,13 +48,13 @@ final class DumpClinicalData {
 
         PatientTumorLocation.writeRecords(outputFile, tumorLocations);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} records to {}.", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} records.", tumorLocations.size());
     }
 
     private static void writePortalClinicalData(@NotNull final String csvOutputDir, @NotNull final Optional<String> linkName,
             @NotNull final Collection<Patient> patients) throws IOException {
         final String outputFile = fileLocation(csvOutputDir, "_portal.csv");
-        LOGGER.info("Writing portal clinical data to csv in {}.", csvOutputDir);
+        LOGGER.info("Writing portal clinical data to " + outputFile);
         final List<PortalClinicalData> portalData = patients.stream()
                 .flatMap(patient -> patient.sequencedBiopsies()
                         .stream()
@@ -68,7 +68,7 @@ final class DumpClinicalData {
                 .collect(Collectors.toList());
         PortalClinicalData.writeRecords(outputFile, portalData);
         linkName.ifPresent(link -> updateSymlink(csvOutputDir + File.separator + link, outputFile));
-        LOGGER.info("Written {} sample records to {}.", portalData.size(), outputFile);
+        LOGGER.info(" Written {} sample records.", portalData.size());
     }
 
     @NotNull
