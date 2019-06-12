@@ -50,6 +50,8 @@ public final class ViccJsonReader {
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(4, 5, 6, 7, 8, 9, 10, 11);
     private static final List<Integer> EXPECTED_FEATURES_ELEMENT_SIZES = Lists.newArrayList(2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    private static final List<Integer> EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES = Lists.newArrayList(4, 5);
+
 
     private ViccJsonReader() {
     }
@@ -159,6 +161,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
+        Set<String> keysSequenceOntology = objectSequenceOntology.keySet();
+        if (!EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES.contains(keysSequenceOntology.size())) {
+            LOGGER.warn("Found " + keysSequenceOntology.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES);
+            LOGGER.warn(keysSequenceOntology);
+        }
+
         return ImmutableSequenceOntology.builder()
                 .hierarchy(objectSequenceOntology.has("hierarchy")
                         ? jsonArrayToStringList(objectSequenceOntology.getAsJsonArray("hierarchy"))
