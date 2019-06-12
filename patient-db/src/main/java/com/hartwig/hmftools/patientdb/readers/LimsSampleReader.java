@@ -50,6 +50,5 @@ public class LimsSampleReader {
                 lims.dnaNanograms(sampleId),
                 lims.primaryTumor(sampleId),
                 lims.pathologyTumorPercentage(sampleId));
-
     }
 }
