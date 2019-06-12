@@ -87,14 +87,14 @@ public final class LoadClinicalData {
             final Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
             final Set<String> sequencedSampleIds = toUniqueSampleIds(sequencedSamplesPerPatient);
 
-            LOGGER.info(String.format(" Found sequence runs for %s patients (%s samples)",
+            LOGGER.info(String.format(" Found sequence runs for %s patient IDs (%s samples)",
                     sequencedPatientIds.size(),
                     sequencedSampleIds.size()));
 
             LOGGER.info("Loading sample data from LIMS.");
             final Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
             final Map<String, List<SampleData>> limsSampleDataPerPatient = extractAllSamplesFromLims(lims, sequencedSampleIds);
-            LOGGER.info(String.format(" Loaded samples for %s patients from LIMS", limsSampleDataPerPatient.keySet().size()));
+            LOGGER.info(String.format(" Loaded samples for %s patient IDs from LIMS", limsSampleDataPerPatient.keySet().size()));
 
             final EcrfModels ecrfModels = loadEcrfModels(cmd);
 
