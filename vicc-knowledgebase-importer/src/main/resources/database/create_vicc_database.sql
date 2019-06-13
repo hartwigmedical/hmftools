@@ -122,4 +122,114 @@ CREATE TABLE hierarchy
     FOREIGN KEY (sequenceOntologyEntryId) REFERENCES sequenceOntology(id)
 );
 
+DROP TABLE IF EXISTS associations;
+CREATE TABLE associations
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    variantName varchar(255),
+    evidenceLevel varchar(255),
+    evidenceLabel varchar(255),
+    responseType varchar(255),
+    drugLabels varchar(255),
+    sourceLink varchar(255),
+    description varchar(255) NOT NULL,
+    oncogenic varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+DROP TABLE IF EXISTS evidence;
+CREATE TABLE evidence
+(   id int NOT NULL AUTO_INCREMENT,
+    associationEntryId int NOT NULL,
+    description varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+);
+
+DROP TABLE IF EXISTS evidenceInfo;
+CREATE TABLE evidenceInfo
+(   id int NOT NULL AUTO_INCREMENT,
+    evidenceEntryId int NOT NULL,
+    publications varchar(225),
+    PRIMARY KEY (id),
+    FOREIGN KEY (evidenceEntryId) REFERENCES evidence(id)
+);
+
+DROP TABLE IF EXISTS evidenceType;
+CREATE TABLE evidenceType
+(   id int NOT NULL AUTO_INCREMENT,
+    evidenceEntryId int NOT NULL,
+    sourceName varchar(225),
+    idEvidenceType varchar(225),
+    PRIMARY KEY (id),
+    FOREIGN KEY (evidenceEntryId) REFERENCES evidence(id)
+);
+
+DROP TABLE IF EXISTS publicationUrls;
+CREATE TABLE publicationUrls
+(   id int NOT NULL AUTO_INCREMENT,
+    associationEntryId int NOT NULL,
+    publicationUrls varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+);
+
+DROP TABLE IF EXISTS phenotype;
+CREATE TABLE phenotype
+(   id int NOT NULL AUTO_INCREMENT,
+    associationEntryId int NOT NULL,
+    description varchar(255),
+    family varchar(255),
+    idPhenotype varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+);
+
+DROP TABLE IF EXISTS phenotypeType;
+CREATE TABLE phenotypeType
+(   id int NOT NULL AUTO_INCREMENT,
+    phenotypeEntryId int NOT NULL,
+    source varchar(255),
+    term varchar(255),
+    idPhenotypeType varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (phenotypeEntryId) REFERENCES phenotype(id)
+);
+
+DROP TABLE IF EXISTS environmentalContext;
+CREATE TABLE environmentalContext
+(   id int NOT NULL AUTO_INCREMENT,
+    associationEntryId int NOT NULL,
+    term varchar(255),
+    description varchar(255),
+    source varchar(255),
+    usanStem varchar(255),
+    idEnvironmentalContexts varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+);
+
+DROP TABLE IF EXISTS approvedCountries;
+CREATE TABLE approvedCountries
+(   id int NOT NULL AUTO_INCREMENT,
+    environmentalContextsEntryId int NOT NULL,
+    approvedCountries varchar(225),
+    PRIMARY KEY (id),
+    FOREIGN KEY (environmentalContextsEntryId) REFERENCES environmentalContext(id)
+);
+
+DROP TABLE IF EXISTS taxonomy;
+CREATE TABLE taxonomy
+(   id int NOT NULL AUTO_INCREMENT,
+    environmentalContextsEntryId int NOT NULL,
+    kingdom varchar(225),
+    directParent varchar(225),
+    class varchar(225),
+    subClass varchar(225),
+    superClass varchar(225),
+    PRIMARY KEY (id),
+    FOREIGN KEY (environmentalContextsEntryId) REFERENCES environmentalContext(id)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;
