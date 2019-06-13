@@ -119,7 +119,7 @@ Class or Term | Description
 ---|---
 SV | As sourced from the StructuralVariant database table and annotated with various other information
 Breakend | The start or end of an SV defined by its position and orientation
-Simple SV | DEL, DUP or INS - ie not a BND, INS or SGL
+Simple SV | DEL, DUP or INS - ie not a BND, INV or SGL
 Cluster | A set of SVs grouped by one or more clustering rules such as proximity. A cluster represents a set of SVs which are considered to have occurred in the genomic event.
 Linked Pair | 2 SVs from either 2 breakends facing away, forming a deletion bridge (DB), or facing towards each other, forming a templated insertion (TI) 
 Inferred vs Assembled Link | Assembled links are those formed using GRIDSS assembly data. Inferred links are speculative links. Both cannot be shorter than the anchor distance specified per breakend by GRIDSS if known. 
