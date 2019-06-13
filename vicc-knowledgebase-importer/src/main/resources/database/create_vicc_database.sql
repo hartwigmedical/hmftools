@@ -142,7 +142,7 @@ DROP TABLE IF EXISTS evidence;
 CREATE TABLE evidence
 (   id int NOT NULL AUTO_INCREMENT,
     associationEntryId int NOT NULL,
-    description varchar(255),
+    description varchar(500),
     PRIMARY KEY (id),
     FOREIGN KEY (associationEntryId) REFERENCES association(id)
 );
