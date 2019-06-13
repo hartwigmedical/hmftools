@@ -35,8 +35,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
@@ -120,7 +120,7 @@ public class CnDataLoader
         {
             try
             {
-                mCnRecords = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(mPurpleDataPath, sampleId));
+                mCnRecords = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(mPurpleDataPath, sampleId));
                 mPurityContext = FittedPurityFile.read(mPurpleDataPath, sampleId);
             }
             catch(IOException e)

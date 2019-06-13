@@ -13,7 +13,11 @@ public final class TestDatamodelFactory {
 
     @NotNull
     public static ImmutableSampleData.Builder sampleBuilder(@NotNull LocalDate arrivalDate) {
-        return ImmutableSampleData.builder().sampleId("sample-" + arrivalDate.toString()).arrivalDate(arrivalDate).tumorPercentage("N/A");
+        return ImmutableSampleData.builder()
+                .sequenced(false)
+                .sampleId("sample-" + arrivalDate.toString())
+                .arrivalDate(arrivalDate)
+                .tumorPercentage("N/A");
     }
 
     @NotNull

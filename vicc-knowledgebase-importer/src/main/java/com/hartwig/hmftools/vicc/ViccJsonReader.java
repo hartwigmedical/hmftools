@@ -50,6 +50,13 @@ public final class ViccJsonReader {
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(4, 5, 6, 7, 8, 9, 10, 11);
     private static final List<Integer> EXPECTED_FEATURES_ELEMENT_SIZES = Lists.newArrayList(2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    private static final List<Integer> EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES = Lists.newArrayList(4, 5);
+    private static final List<Integer> EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_EVIDENCE_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES = Lists.newArrayList(1);
+    private static final List<Integer> EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES = Lists.newArrayList(1, 2);
+    private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
+    private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
 
     private ViccJsonReader() {
     }
@@ -145,10 +152,11 @@ public final class ViccJsonReader {
                     .geneSymbol(objectFeatures.has("geneSymbol") && !objectFeatures.get("geneSymbol").isJsonNull()
                             ? objectFeatures.getAsJsonPrimitive("geneSymbol").getAsString()
                             : null)
-                    .synonyms(Lists.newArrayList())
+                    .synonyms(objectFeatures.has("synonyms") ? jsonArrayToStringList(objectFeatures.getAsJsonArray("synonyms")) : null)
                     .entrezId(objectFeatures.has("entrez_id") ? objectFeatures.getAsJsonPrimitive("entrez_id").getAsString() : null)
-                    .sequenceOntology(createSequenceOntology())
-                    .links(Lists.newArrayList())
+                    .sequenceOntology(objectFeatures.has("sequence_ontology") ? createSequenceOntology(objectFeatures.getAsJsonObject(
+                            "sequence_ontology")) : null)
+                    .links(objectFeatures.has("links") ? jsonArrayToStringList(objectFeatures.getAsJsonArray("links")) : null)
                     .description(objectFeatures.has("description") ? objectFeatures.getAsJsonPrimitive("description").getAsString() : null)
                     .build());
         }
@@ -157,13 +165,22 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static SequenceOntology createSequenceOntology() {
+    private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
+        Set<String> keysSequenceOntology = objectSequenceOntology.keySet();
+        if (!EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES.contains(keysSequenceOntology.size())) {
+            LOGGER.warn("Found " + keysSequenceOntology.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES);
+            LOGGER.warn(keysSequenceOntology);
+        }
+
         return ImmutableSequenceOntology.builder()
-                .hierarchy(Lists.newArrayList())
-                .soid(Strings.EMPTY)
-                .parentSoid(Strings.EMPTY)
-                .name(Strings.EMPTY)
-                .parentName(Strings.EMPTY)
+                .hierarchy(objectSequenceOntology.has("hierarchy")
+                        ? jsonArrayToStringList(objectSequenceOntology.getAsJsonArray("hierarchy"))
+                        : null)
+                .soid(objectSequenceOntology.getAsJsonPrimitive("soid").getAsString())
+                .parentSoid(objectSequenceOntology.getAsJsonPrimitive("parent_soid").getAsString())
+                .name(objectSequenceOntology.getAsJsonPrimitive("name").getAsString())
+                .parentName(objectSequenceOntology.getAsJsonPrimitive("parent_name").getAsString())
                 .build();
     }
 
@@ -173,6 +190,12 @@ public final class ViccJsonReader {
         List<GeneIdentifier> listGeneIdentifiers = Lists.newArrayList();
 
         for (JsonElement elementGeneIdentifier : geneIdentifiers) {
+            Set<String> keysGeneIdentifier = elementGeneIdentifier.getAsJsonObject().keySet();
+            if (!EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
+                LOGGER.warn("Found " + keysGeneIdentifier.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES);
+                LOGGER.warn(keysGeneIdentifier);
+            }
             listGeneIdentifiers.add(toGeneIdentifier(elementGeneIdentifier.getAsJsonObject()));
         }
         return listGeneIdentifiers;
@@ -276,6 +299,12 @@ public final class ViccJsonReader {
 
         for (JsonElement evidenceElement : evidenceArray) {
             JsonObject evidenceObject = evidenceElement.getAsJsonObject();
+            Set<String> keysEvidence = evidenceObject.keySet();
+            if (!EXPECTED_EVIDENCE_ELEMENT_SIZES.contains(keysEvidence.size())) {
+                LOGGER.warn("Found " + keysEvidence.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_EVIDENCE_ELEMENT_SIZES);
+                LOGGER.warn(keysEvidence);
+            }
 
             listEvidence.add(ImmutableEvidence.builder()
                     .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
@@ -289,6 +318,11 @@ public final class ViccJsonReader {
 
     @NotNull
     private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
+        if (!EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES.contains(evidenceTypeObject.keySet().size())) {
+            LOGGER.warn("Found " + evidenceTypeObject.keySet().size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
+            LOGGER.warn(evidenceTypeObject.keySet());
+        }
         return ImmutableEvidenceType.builder()
                 .sourceName(evidenceTypeObject.getAsJsonPrimitive("sourceName").getAsString())
                 .id(evidenceTypeObject.has("id") ? evidenceTypeObject.getAsJsonPrimitive("id").getAsString() : null)
@@ -297,6 +331,11 @@ public final class ViccJsonReader {
 
     @NotNull
     private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
+        if (!EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES.contains(evidenceInfoObject.keySet().size())) {
+            LOGGER.warn("Found " + evidenceInfoObject.keySet().size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
+            LOGGER.warn(evidenceInfoObject.keySet());
+        }
         return ImmutableEvidenceInfo.builder()
                 .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
                 .build();
@@ -304,15 +343,26 @@ public final class ViccJsonReader {
 
     @NotNull
     private static Phenotype createPhenotype(@NotNull JsonObject phenotypeObject) {
+        if (!EXPECTED_PHENOTYPE_ELEMENT_SIZES.contains(phenotypeObject.keySet().size())) {
+            LOGGER.warn("Found " + phenotypeObject.keySet().size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_PHENOTYPE_ELEMENT_SIZES);
+            LOGGER.warn(phenotypeObject.keySet());
+        }
         return ImmutablePhenotype.builder()
                 .type(phenotypeObject.has("type") ? createPhenotypeType(phenotypeObject.getAsJsonObject("type")) : null)
                 .description(phenotypeObject.getAsJsonPrimitive("description").getAsString())
                 .family(phenotypeObject.getAsJsonPrimitive("family").getAsString())
+                .id(phenotypeObject.has("id") ? phenotypeObject.getAsJsonPrimitive("id").getAsString() : null)
                 .build();
     }
 
     @NotNull
     private static PhenotypeType createPhenotypeType(JsonObject phenotypeTypeObject) {
+        if (!EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES.contains(phenotypeTypeObject.keySet().size())) {
+            LOGGER.warn("Found " + phenotypeTypeObject.keySet().size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES);
+            LOGGER.warn(phenotypeTypeObject.keySet());
+        }
         return ImmutablePhenotypeType.builder()
                 .source(!phenotypeTypeObject.get("source").isJsonNull()
                         ? phenotypeTypeObject.getAsJsonPrimitive("source").getAsString()

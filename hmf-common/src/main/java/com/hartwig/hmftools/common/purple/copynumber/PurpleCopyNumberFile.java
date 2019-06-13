@@ -20,19 +20,36 @@ public enum PurpleCopyNumberFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    static final String HEADER_PREFIX = "#";
+    private static final String COMMENT = "#";
 
-    private static final String SOMATIC_EXTENSION = ".purple.cnv";
-    private static final String GERMLINE_EXTENSION = ".purple.germline.cnv";
+    private static final String SOMATIC_EXTENSION = ".purple.cnv.somatic.tsv";
+    private static final String GERMLINE_EXTENSION = ".purple.cnv.germline.tsv";
+
+    private static final String SOMATIC_EXTENSION_OLD = ".purple.cnv";
+    private static final String GERMLINE_EXTENSION_OLD = ".purple.germline.cnv";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + SOMATIC_EXTENSION;
+    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + SOMATIC_EXTENSION_OLD;
     }
 
     @NotNull
-    public static String generateGermlineFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + GERMLINE_EXTENSION;
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + SOMATIC_EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + SOMATIC_EXTENSION_OLD;
+    }
+
+    @NotNull
+    public static String generateGermlineFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + GERMLINE_EXTENSION_OLD;
+    }
+
+    @NotNull
+    public static String generateGermlineFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + GERMLINE_EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + GERMLINE_EXTENSION_OLD;
     }
 
     @NotNull
@@ -56,12 +73,15 @@ public enum PurpleCopyNumberFile {
     @VisibleForTesting
     @NotNull
     static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(PurpleCopyNumberFile::fromString).collect(toList());
+        return lines.stream()
+                .filter(x -> !x.startsWith(COMMENT) && !x.startsWith("chr"))
+                .map(PurpleCopyNumberFile::fromString)
+                .collect(toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("chromosome")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
                 .add("start")
                 .add("end")
                 .add("copyNumber")

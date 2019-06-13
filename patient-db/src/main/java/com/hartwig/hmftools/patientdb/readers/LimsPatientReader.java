@@ -26,11 +26,12 @@ public class LimsPatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation, @NotNull List<SampleData> samples) {
+    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
+            @NotNull List<SampleData> sequencedSamples) {
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 noPreTreatmentData(),
-                samples,
+                sequencedSamples,
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),

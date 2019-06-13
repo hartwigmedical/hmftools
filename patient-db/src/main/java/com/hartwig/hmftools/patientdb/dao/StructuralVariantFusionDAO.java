@@ -22,8 +22,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusio
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep13;
@@ -33,9 +31,7 @@ import org.jooq.Record2;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
 
-public class StructuralVariantFusionDAO
-{
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariantFusionDAO.class);
+public class StructuralVariantFusionDAO {
 
     @NotNull
     private final DSLContext context;
@@ -44,37 +40,35 @@ public class StructuralVariantFusionDAO
         this.context = context;
     }
 
-    public void deleteAnnotationsForSample(@NotNull String sampleId)
-    {
+    public void deleteAnnotationsForSample(@NotNull String sampleId) {
         context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
     }
 
-    private InsertValuesStep18 createBreakendInserter()
-    {
+    private InsertValuesStep18 createBreakendInserter() {
         return context.insertInto(SVBREAKEND,
-            SVBREAKEND.MODIFIED,
-            SVBREAKEND.SAMPLEID,
-            SVBREAKEND.SVID,
-            SVBREAKEND.STARTBREAKEND,
-            SVBREAKEND.GENE,
-            SVBREAKEND.TRANSCRIPTID,
-            SVBREAKEND.CANONICALTRANSCRIPT,
-            SVBREAKEND.GENEORIENTATION,
-            SVBREAKEND.DISRUPTIVE,
-            SVBREAKEND.REPORTEDDISRUPTION,
-            SVBREAKEND.REGIONTYPE,
-            SVBREAKEND.CODINGCONTEXT,
-            SVBREAKEND.BIOTYPE,
-            SVBREAKEND.EXONICBASEPHASE,
-            SVBREAKEND.NEXTSPLICEEXONRANK,
-            SVBREAKEND.NEXTSPLICEEXONPHASE,
-            SVBREAKEND.NEXTSPLICEDISTANCE,
-            SVBREAKEND.TOTALEXONCOUNT);
+                SVBREAKEND.MODIFIED,
+                SVBREAKEND.SAMPLEID,
+                SVBREAKEND.SVID,
+                SVBREAKEND.STARTBREAKEND,
+                SVBREAKEND.GENE,
+                SVBREAKEND.TRANSCRIPTID,
+                SVBREAKEND.CANONICALTRANSCRIPT,
+                SVBREAKEND.GENEORIENTATION,
+                SVBREAKEND.DISRUPTIVE,
+                SVBREAKEND.REPORTEDDISRUPTION,
+                SVBREAKEND.REGIONTYPE,
+                SVBREAKEND.CODINGCONTEXT,
+                SVBREAKEND.BIOTYPE,
+                SVBREAKEND.EXONICBASEPHASE,
+                SVBREAKEND.NEXTSPLICEEXONRANK,
+                SVBREAKEND.NEXTSPLICEEXONPHASE,
+                SVBREAKEND.NEXTSPLICEDISTANCE,
+                SVBREAKEND.TOTALEXONCOUNT);
     }
 
-    public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<Transcript> transcripts, @NotNull List<GeneFusion> fusions)
-    {
+    public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<Transcript> transcripts,
+            @NotNull List<GeneFusion> fusions) {
         context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
 
@@ -86,12 +80,12 @@ public class StructuralVariantFusionDAO
         InsertValuesStep18 inserter = createBreakendInserter();
         List<Transcript> transcriptsList = Lists.newArrayList();
 
-        for (int i = 0; i < transcripts.size(); ++i)
-        {
+        for (int i = 0; i < transcripts.size(); ++i) {
             final Transcript transcript = transcripts.get(i);
             final GeneAnnotation geneAnnotation = transcript.parent();
             boolean isUpstream = isUpstream(geneAnnotation);
 
+            //noinspection unchecked
             inserter.values(timestamp,
                     sampleId,
                     transcript.parent().id(),
@@ -114,17 +108,16 @@ public class StructuralVariantFusionDAO
             transcriptsList.add(transcript);
 
             // batch-insert transcripts since there can be many more than the batch size per sample
-            if(transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1)
-            {
+            if (transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1) {
+
+                @SuppressWarnings("unchecked")
                 final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
-                if (ids.size() != transcriptsList.size())
-                {
-                    throw new RuntimeException("not all transcripts were inserted successfully");
+                if (ids.size() != transcriptsList.size()) {
+                    throw new RuntimeException("Not all transcripts were inserted successfully");
                 }
 
-                for (int j = 0; j < ids.size(); j++)
-                {
+                for (int j = 0; j < ids.size(); j++) {
                     transcriptToDatabaseIdMap.put(transcriptsList.get(j), ids.get(j).intValue());
                 }
 
@@ -133,8 +126,7 @@ public class StructuralVariantFusionDAO
             }
         }
 
-        for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
-        {
+        for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE)) {
             final InsertValuesStep13 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
@@ -150,6 +142,7 @@ public class StructuralVariantFusionDAO
                     SVFUSION.DOMAINSLOST,
                     SVFUSION.SKIPPEDEXONS);
 
+            //noinspection unchecked
             batch.forEach(fusion -> fusionInserter.values(timestamp,
                     sampleId,
                     transcriptToDatabaseIdMap.get(fusion.upstreamTrans()),
@@ -169,8 +162,7 @@ public class StructuralVariantFusionDAO
     }
 
     @NotNull
-    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample)
-    {
+    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
         Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
 
         Svbreakend five = SVBREAKEND.as("five");
@@ -193,6 +185,5 @@ public class StructuralVariantFusionDAO
 
         return Lists.newArrayList(simpleGeneFusions);
     }
-
 }
 

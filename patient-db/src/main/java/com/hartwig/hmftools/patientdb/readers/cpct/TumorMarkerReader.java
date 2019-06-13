@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import org.jetbrains.annotations.NotNull;
 
 final class TumorMarkerReader {
+
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
     private static final String FORM_RESPONSE = "FRM.RESPONSE";
     private static final String ITEMGROUP_RESPONSE = "GRP.RESPONSE.RESPONSE";

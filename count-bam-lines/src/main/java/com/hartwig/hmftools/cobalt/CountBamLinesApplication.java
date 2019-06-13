@@ -84,8 +84,7 @@ public class CountBamLinesApplication implements AutoCloseable {
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfilePath());
 
         final SamReaderFactory readerFactory = readerFactory(config);
-        final CountSupplier countSupplier = new CountSupplier(config.reference(),
-                config.tumor(),
+        final CountSupplier countSupplier = new CountSupplier(config.tumor(),
                 config.outputDirectory(),
                 config.windowSize(),
                 config.minMappingQuality(),
@@ -96,7 +95,7 @@ public class CountBamLinesApplication implements AutoCloseable {
         final RatioSupplier ratioSupplier = new RatioSupplier(config.reference(), config.tumor(), config.outputDirectory());
         final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);
 
-        final String outputFilename = CobaltRatioFile.generateFilename(config.outputDirectory(), config.tumor());
+        final String outputFilename = CobaltRatioFile.generateFilenameForWriting(config.outputDirectory(), config.tumor());
         LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
         versionInfo.write(config.outputDirectory());
         CobaltRatioFile.write(outputFilename, ratios);

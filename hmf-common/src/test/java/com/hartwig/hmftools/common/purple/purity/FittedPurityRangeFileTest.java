@@ -31,7 +31,7 @@ public class FittedPurityRangeFileTest {
         final List<FittedPurity> purities = create(size);
         final List<String> toLines = FittedPurityRangeFile.toLines(purities);
         assertEquals(size + 1, toLines.size());
-        assertTrue(toLines.get(0).startsWith(FittedPurityFile.HEADER_PREFIX));
+        assertTrue(toLines.get(0).startsWith("purity"));
     }
 
     @Test

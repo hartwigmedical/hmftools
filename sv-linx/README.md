@@ -13,7 +13,7 @@ Data is loaded from the HMF patients data and other reference files, and each an
 ## Contents
 
 * [Configuration](#configuration)
-* [Defintions and Key Classes](#defintions-and-key-classes)
+* [Definitions and Key Classes](#definitions-and-key-classes)
 * [Pre-Clustering Routines](#pre-clustering-routines)
 * [Clustering](#clustering)
 * [Chaining](#chaining)
@@ -101,8 +101,8 @@ skip_fusion_output | fusion data is not written to file
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 no_fusion_phase_match | find fusions without requiring a up & down stream phase match
-log_reportable_fusion | only log reportabl fusions
-fusion_pairs_csv, promiscuous_five_csv, promiscuous_three_csv | reference files for known fusions andand promiscuous genes
+log_reportable_fusion | only log reportable fusions
+fusion_pairs_csv, promiscuous_five_csv, promiscuous_three_csv | reference files for known fusions and promiscuous genes
 
 
 #### Logging
@@ -114,7 +114,7 @@ log_cluster_id | log data for a specific cluster
 log_sv_id | log data for specific SV
 
 
-## Defintions and Key Classes
+## Definitions and Key Classes
 Class or Term | Description
 ---|---
 SV | As sourced from the StructuralVariant database table and annotated with various other information
@@ -130,8 +130,7 @@ Chain - 1 or more TI link pairs linked to form a continuous chain
 Prior to clustering the following annotation routines are completed:
 - SVs are marked as having either 1 or both breakends in fragile sites  
 - SVs are marked as having either 1 or both breakends in known LINE elements
-- breakends within or upstream (by default by 100K beses) of genes are marked with all valid transcripts
-- a 'long DEL and DUP' length is calculated for each sample (see below)
+- breakends within or upstream (by default by 100K beses) of genes are marked with all valid transcripts>>>>>>> 5c187c858614b2f2f3a9426c47ed8828c4604d3e
 - SVs are marked with their replication timing
 - LOH events are identified and the linking breakends marked
 - a min and max ploidy is calculated from copy number data
@@ -174,7 +173,7 @@ Hence we use the following formula to
 
 	CNChangeUncertainty = MAX(maxAdjacentCopyNumber * BaseRelativeUncertainy [0.1],BaseAbsoluteUncertainty [0.15])+  MAX(AdditionalAbsoluteUncertainty [0.4],AdditionalRelativeUncertainty [0.15]*maxAdjacentCopyNumber)/SQRT(minAdjacentDepthWindowCount)
 
-If the mindAdjacentDepthWindowCount = 0, then this means the segment is inferred by the SV ploidy in PURPLE already and no copy number estimate is calculated.
+If the minAdjacentDepthWindowCount = 0, then this means the segment is inferred by the SV ploidy in PURPLE already and no copy number estimate is calculated.
 
 For the special case of foldback inversions, if the flanking depth window counts are both higher than the internal depth window count, a single copy number change observation of half the combined copy number change is made with the confidences determined from the flanking windows
 
@@ -184,21 +183,21 @@ The raw ploidy of the SV is already estimated in PURPLE by multiplying the purit
 
 To estimate the uncertainty in the PLOIDY, we estimate the 1% and 99% confidence intervals of the true read count from the  observed read count and then calculate the ploidy uncertainty as half the relative range of the confidence interval.
 
-	Ploidy Uncertainty = Ploidy * (ReadCount99.5%CI-ReadCount0.5%CI) / 2 / ObseverdReadCount
+	Ploidy Uncertainty = Ploidy * (ReadCount99.5%CI-ReadCount0.5%CI) / 2 / ObservedReadCount
 
 
 ##### 3. Average the 3 ploidy predictions and estimate a consolidated uncertainty
 
 To we weigh the observations by the inverse square of their estimated uncertainties:
 
-	 consloidatedPloidy =  SUM[Observation(i)*(1/Uncertainty(i)^2)] / Sum[1/Uncertainty(i)^2]
+	 consolidatedPloidy =  SUM[Observation(i)*(1/Uncertainty(i)^2)] / Sum[1/Uncertainty(i)^2]
 
 The combined uncertainty is estimated as the square root of the weighted sum of squares of the difference between the final ploidy estimate and each individual estimate, but capped at a minimum of half the input uncertainty.   Ie. 
 
 	consolidatedUncertainty = SQRT(countObservations /  (countObervations-1) * SUM[1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedPloidy,Uncertainty(i)/2))^2] / Sum[1/Uncertainty(i)^2] )
 
 
-## Clustering 
+## Clustering
 
 All SVs within a sample are grouped into clusters by the rules described below.
 
@@ -208,8 +207,8 @@ Type or Condition | Description
 ---|---
 LowQual | Any variant (excluding INS) with copy number change at both ends < 0.5 unless clustered by proximity
 Low VAF SGLs | Any SGL with low VAF (< 0.1)
-Poly C/G SGLs | Any SGL with a poly C or G moitf (repeat count 16)
-Equiv SGLs | Any SGL marked as 'eqv' in GRIDDS assembly data or a duplicate of another breakend
+Poly C/G SGLs | Any SGL with a poly C or G motif (repeat count 16)
+Equiv SGLs | Any SGL marked as 'eqv' in GRIDSS assembly data or a duplicate of another breakend
 Overlapping DELs | A DEL will not be clustered with another DEL which overlaps it
 LINE | Clusters with breakends marked as LINE elements are excluded from all except proximity-clustering rules
 
@@ -232,14 +231,14 @@ The 2 breakends forming an LOH are clustered if not a simple DEL.
 
 
 #### Chaining of Simple Clusters 
-Prior to subequent merging of clusters by more complex rules and interaction of SVs, some basic chaining and cluster identification is performed:
+Prior to subsequent merging of clusters by more complex rules and interaction of SVs, some basic chaining and cluster identification is performed:
 
 ##### Simple Cluster Resolution
 Clusters comprised of a between 1-3 simple SVs are marked as 'Simple' and by default excluded from subsequent clustering and chaining.
 
 ##### Simple Chaining
 Clusters not marked as 'Simple' are put through a simple chaining routine:
-1. If the cluster has consistent ploidy, has 3 or less SVs and has consistent (see note) breakends, the consider it 'Simple', otherwise 'Completx'.
+1. If the cluster has consistent ploidy, has 3 or less SVs and has consistent (see note) breakends, the consider it 'Simple', otherwise 'Complex'.
 2. For simple clusters, form a chain allowing inferred links as well as assembled links. For complex clusters, only form chains from assembled links.
 3. For simple clusters, identify synthetic DELs and DUPs from the following pairs of SVs:
     - a DEL-DUP pair, 2 non-overlapping DELs or 2 DUPs
@@ -335,7 +334,7 @@ If this exceeds the telomeric / centromeric major allele ploidy then search for 
 ## Other SV Analysis routines
 
 Linx has routines for other SV-related analyses:
-* statistical co-occurence routines, eg gene to bucket
+* statistical co-occurrence routines, eg gene to bucket
 * analyse multiple biopsy samples for shared vs private overlaps
 * run simulations of shattering
 
@@ -345,7 +344,7 @@ Argument  | Description
 run_cn_analysis | required to run the following routines
 sv_ploidy_file | load calculated ploidy per SV from file
 loh_file | load LOH event data from file
-write_ploidy_data | calculate and write calcualated ploidy data to file, with optional config 'verbose_ploidy_data' to show intermediary calc values
+write_ploidy_data | calculate and write calculated ploidy data to file, with optional config 'verbose_ploidy_data' to show intermediary calc values
 
 #### Multiple Biopsy Analysis
 Argument  | Description

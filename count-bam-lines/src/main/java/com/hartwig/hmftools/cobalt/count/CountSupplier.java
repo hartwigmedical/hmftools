@@ -18,10 +18,7 @@ import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltCountFactory;
-import com.hartwig.hmftools.common.cobalt.CobaltCountFile;
-import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
-import com.hartwig.hmftools.common.cobalt.ReadCountFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +31,6 @@ public class CountSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
-    private final String reference;
     private final String tumor;
     private final String outputDirectory;
     private final int windowSize;
@@ -42,35 +38,14 @@ public class CountSupplier {
     private final ExecutorService executorService;
     private final SamReaderFactory readerFactory;
 
-    public CountSupplier(final String reference, final String tumor, final String outputDirectory, final int windowSize,
-            final int minMappingQuality, final ExecutorService executorService, final SamReaderFactory readerFactory) {
-        this.reference = reference;
+    public CountSupplier(final String tumor, final String outputDirectory, final int windowSize, final int minMappingQuality,
+            final ExecutorService executorService, final SamReaderFactory readerFactory) {
         this.tumor = tumor;
         this.outputDirectory = outputDirectory;
         this.windowSize = windowSize;
         this.minMappingQuality = minMappingQuality;
         this.executorService = executorService;
         this.readerFactory = readerFactory;
-    }
-
-    @NotNull
-    public Multimap<Chromosome, CobaltCount> fromReadCountFiles() throws IOException {
-        final String referenceFilename = ReadCountFile.generateFilename(outputDirectory, reference);
-        LOGGER.info("Reading reference count from {}", referenceFilename);
-        Multimap<Chromosome, ReadCount> referenceCounts = ReadCountFile.readFile(referenceFilename);
-
-        final String tumorFilename = ReadCountFile.generateFilename(outputDirectory, tumor);
-        LOGGER.info("Reading tumor count from {}", tumorFilename);
-        Multimap<Chromosome, ReadCount> tumorCounts = ReadCountFile.readFile(tumorFilename);
-
-        return CobaltCountFactory.merge(referenceCounts, tumorCounts);
-    }
-
-    @NotNull
-    public Multimap<Chromosome, CobaltCount> fromExistingCobaltFile() throws IOException {
-        final String filename = CobaltRatioFile.generateFilename(outputDirectory, tumor);
-        LOGGER.info("Reading reference and tumor counts from {}", filename);
-        return CobaltCountFile.read(filename);
     }
 
     @NotNull

@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.vicc.dao;
 
 import static com.hartwig.hmftools.vicc.database.Tables.DEVTAG;
+import static com.hartwig.hmftools.vicc.database.Tables.FEATURE;
 import static com.hartwig.hmftools.vicc.database.Tables.FEATURENAME;
 import static com.hartwig.hmftools.vicc.database.Tables.GENE;
 import static com.hartwig.hmftools.vicc.database.Tables.GENEIDENTIFIER;
+import static com.hartwig.hmftools.vicc.database.Tables.HIERARCHY;
+import static com.hartwig.hmftools.vicc.database.Tables.LINKS;
+import static com.hartwig.hmftools.vicc.database.Tables.PROVENANCE;
+import static com.hartwig.hmftools.vicc.database.Tables.SEQUENCEONTOLOGY;
+import static com.hartwig.hmftools.vicc.database.Tables.SYNONYMS;
 import static com.hartwig.hmftools.vicc.database.Tables.TAG;
 import static com.hartwig.hmftools.vicc.database.Tables.VICCENTRY;
 
@@ -13,7 +19,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.vicc.ViccJsonToSQLImporter;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
@@ -56,6 +64,91 @@ public class ViccDAO {
         writeGeneIdentifiers(id, viccEntry.geneIdentifiers());
         writeGenes(id, viccEntry.genes());
         writeFeatureNames(id, viccEntry.featureNames());
+        writeFeatures(id, viccEntry.features());
+    }
+
+    private void writeFeatures(int viccEntryId, @NotNull List<Feature> features) {
+        for (Feature feature : features) {
+            int id = context.insertInto(FEATURE,
+                    FEATURE.NAME,
+                    FEATURE.BIOMARKERTYPE,
+                    FEATURE.REFERENCENAME,
+                    FEATURE.CHROMOSOME,
+                    FEATURE.START,
+                    FEATURE.END,
+                    FEATURE.REF,
+                    FEATURE.ALT,
+                    FEATURE.PROVENANCERULE,
+                    FEATURE.GENESYMBOL,
+                    FEATURE.ENTREZID,
+                    FEATURE.DESCRIPTION,
+                    FEATURE.VICCENTRYID)
+                    .values(feature.name(),
+                            feature.biomarkerType(),
+                            feature.referenceName(),
+                            feature.chromosome(),
+                            feature.start(),
+                            feature.end(),
+                            feature.ref(),
+                            feature.alt(),
+                            feature.provenanceRule(),
+                            feature.geneSymbol(),
+                            feature.entrezId(),
+                            feature.description(),
+                            viccEntryId)
+                    .returning(FEATURE.ID)
+                    .fetchOne()
+                    .getValue(FEATURE.ID);
+            writeProvenance(id, feature.provenance());
+            writeSynonyms(id, feature.synonyms());
+            writeLinks(id, feature.links());
+            writeSequenceOntology(id, feature.sequenceOntology());
+
+        }
+    }
+
+    private void writeProvenance(int featureEntryId, @NotNull List<String> provenances) {
+        for (String provenance : provenances) {
+            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCE_, PROVENANCE.FEATUREENTRYID).values(provenance, featureEntryId).execute();
+        }
+    }
+
+    private void writeSynonyms(int featureEntryId, @NotNull List<String> synonyms) {
+        for (String synonym : synonyms) {
+            context.insertInto(SYNONYMS, SYNONYMS.SYNONYMS_, SYNONYMS.FEATUREENTRYID).values(synonym, featureEntryId).execute();
+        }
+    }
+
+    private void writeLinks(int featureEntryId, @NotNull List<String> links) {
+        for (String link : links) {
+            context.insertInto(LINKS, LINKS.LINKS_, LINKS.FEATUREENTRYID).values(link, featureEntryId).execute();
+        }
+    }
+
+    private void writeSequenceOntology(int featureId, @Nullable SequenceOntology sequenceOntologies) {
+        int id = context.insertInto(SEQUENCEONTOLOGY,
+                SEQUENCEONTOLOGY.SOID,
+                SEQUENCEONTOLOGY.PARENTSOID,
+                SEQUENCEONTOLOGY.NAME,
+                SEQUENCEONTOLOGY.PARENTNAME,
+                SEQUENCEONTOLOGY.FEATUREENTRYID)
+                .values(sequenceOntologies.soid(),
+                        sequenceOntologies.parentSoid(),
+                        sequenceOntologies.name(),
+                        sequenceOntologies.parentName(),
+                        featureId)
+                .returning(SEQUENCEONTOLOGY.ID)
+                .fetchOne()
+                .getValue(SEQUENCEONTOLOGY.ID);
+        writeHierarchy(id, sequenceOntologies.hierarchy());
+    }
+
+    private void writeHierarchy(int sequenceOntologyId, @Nullable List<String> hierchies) {
+        for (String hierchy : hierchies) {
+            context.insertInto(HIERARCHY, HIERARCHY.HIERARCHY_, HIERARCHY.SEQUENCEONTOLOGYENTRYID)
+                    .values(hierchy, sequenceOntologyId)
+                    .execute();
+        }
     }
 
     private void writeTags(int viccEntryId, @NotNull List<String> tags) {
@@ -106,6 +199,12 @@ public class ViccDAO {
         context.deleteFrom(GENEIDENTIFIER).execute();
         context.deleteFrom(GENE).execute();
         context.deleteFrom(FEATURENAME).execute();
+        context.deleteFrom(FEATURE).execute();
+        context.deleteFrom(PROVENANCE).execute();
+        context.deleteFrom(SYNONYMS).execute();
+        context.deleteFrom(LINKS).execute();
+        context.deleteFrom(SEQUENCEONTOLOGY).execute();
+        context.deleteFrom(HIERARCHY).execute();
         context.deleteFrom(VICCENTRY).execute();
     }
 }

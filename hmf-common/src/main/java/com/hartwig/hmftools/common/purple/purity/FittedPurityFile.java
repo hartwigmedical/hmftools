@@ -18,12 +18,27 @@ public enum FittedPurityFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     static final String DELIMITER = "\t";
-    static final String HEADER_PREFIX = "#";
-    private static final String EXTENSION = ".purple.purity";
+
+    private static final String EXTENSION = ".purple.purity.tsv";
+    private static final String EXTENSION_OLD = ".purple.purity";
+
+
+    @NotNull
+    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + EXTENSION_OLD;
+    }
+
+    @NotNull
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+    }
+
 
     @NotNull
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+        final String filePath = generateFilenameForReading(basePath, sample);
         final String line =  Files.readAllLines(new File(filePath).toPath()).get(1);
         return fromLine(line);
     }
@@ -54,7 +69,7 @@ public enum FittedPurityFile {
 
     private static void writeBestPurity(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
             throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+        final String filePath = generateFilenameForWriting(basePath, sample);
         Files.write(new File(filePath).toPath(), toLines(context));
     }
 
@@ -65,23 +80,23 @@ public enum FittedPurityFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("Purity")
-                .add("NormFactor")
-                .add("Score")
-                .add("DiploidProportion")
-                .add("Ploidy")
-                .add("Gender")
-                .add("Status")
-                .add("PolyclonalProportion")
-                .add("MinPurity")
-                .add("MaxPurity")
-                .add("MinPloidy")
-                .add("MaxPloidy")
-                .add("MinDiploidProportion")
-                .add("MaxDiploidProportion")
-                .add("Version")
-                .add("SomaticPenalty")
-                .add("WholeGenomeDuplication")
+        return new StringJoiner(DELIMITER, "", "").add("purity")
+                .add("normFactor")
+                .add("score")
+                .add("diploidProportion")
+                .add("ploidy")
+                .add("gender")
+                .add("status")
+                .add("polyclonalProportion")
+                .add("minPurity")
+                .add("maxPurity")
+                .add("minPloidy")
+                .add("maxPloidy")
+                .add("minDiploidProportion")
+                .add("maxDiploidProportion")
+                .add("version")
+                .add("somaticPenalty")
+                .add("wholeGenomeDuplication")
                 .toString();
     }
 

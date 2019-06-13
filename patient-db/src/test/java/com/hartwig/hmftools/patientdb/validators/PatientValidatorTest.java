@@ -87,10 +87,6 @@ public class PatientValidatorTest {
     private static final BiopsyTreatmentData TREATMENT_FEB_ONGOING =
             biopsyTreatmentBuilder().biopsyId(1).treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(DRUG_FEB_ONGOING).build();
 
-    private static final BiopsyTreatmentResponseData RESPONSE_JAN2015 =
-            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(JAN).build();
-    private static final BiopsyTreatmentResponseData RESPONSE_FEB2015 =
-            biopsyTreatmentResponseBuilder().measurementDone("Yes").response("PR").responseDate(FEB).build();
     private static final BiopsyTreatmentResponseData RESPONSE_NULL = biopsyTreatmentResponseBuilder().build();
     private static final BiopsyTreatmentResponseData RESPONSE_ONLY = biopsyTreatmentResponseBuilder().response("PR").build();
     private static final BiopsyTreatmentResponseData RESPONSE_MISSING_DATA =

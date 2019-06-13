@@ -21,9 +21,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
@@ -139,6 +137,7 @@ public class DatabaseAccess implements AutoCloseable {
 
     public static final double MIN_SAMPLE_PURITY = 0.195;
 
+    @NotNull
     public final List<String> getSamplesPassingQC(double minPurity) {
         return purityDAO.getSamplesPassingQC(minPurity);
     }
@@ -148,12 +147,16 @@ public class DatabaseAccess implements AutoCloseable {
         return purityDAO.readPurityContext(sampleId);
     }
 
-    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
-        somaticVariantDAO.write(sampleId, variants);
+    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+        copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
     public void writeAmberBAF(@NotNull final String sampleId, @NotNull final List<AmberBAF> amber) {
         amberDAO.write(sampleId, amber);
+    }
+
+    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
+        somaticVariantDAO.write(sampleId, variants);
     }
 
     @NotNull
@@ -163,10 +166,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariantData> variants) {
         structuralVariantDAO.write(sampleId, variants);
-    }
-
-    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
-        copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
     @NotNull
@@ -197,11 +196,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeSvViralInserts(@NotNull final String sample, @NotNull List<LinxViralInsertFile> inserts) {
         structuralVariantClusterDAO.writeViralInserts(sample, inserts);
-    }
-
-    public void writeBreakendsAndFusions(@NotNull final String sample, @NotNull List<Transcript> transcripts,
-            @NotNull List<GeneFusion> fusions) {
-        structuralVariantFusionDAO.writeBreakendsAndFusions(sample, transcripts, fusions);
     }
 
     @NotNull
@@ -273,10 +267,10 @@ public class DatabaseAccess implements AutoCloseable {
     public void writeDrupEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
-        LOGGER.info("Done writing DRUP datamodel.");
+        LOGGER.info(" Done writing DRUP datamodel.");
         LOGGER.info("Writing DRUP patients...");
         model.patients().forEach(patient -> ecrfDAO.writeDrupPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("Done writing DRUP patients.");
+        LOGGER.info(" Done writing DRUP patients.");
     }
 
     public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {

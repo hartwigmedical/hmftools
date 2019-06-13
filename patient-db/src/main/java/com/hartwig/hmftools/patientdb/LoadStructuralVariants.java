@@ -29,8 +29,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class LoadStructuralVariants
-{
+public class LoadStructuralVariants {
+
     private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
     private static final String TUMOR_SAMPLE = "tumor";
@@ -66,24 +66,19 @@ public class LoadStructuralVariants
 
         List<StructuralVariantData> svDataList = Lists.newArrayList();
 
-        for(EnrichedStructuralVariant var : enrichedVariants)
-        {
+        for (EnrichedStructuralVariant var : enrichedVariants) {
             svDataList.add(convertSvData(var, svId++));
         }
 
         LOGGER.info("Persisting {} SVs to db", svDataList.size());
         dbAccess.writeStructuralVariants(cmd.getOptionValue(ALIAS, tumorSample), svDataList);
 
-        if(svDataOutputDir != null)
-        {
+        if (svDataOutputDir != null) {
             // write data to file
-            try
-            {
+            try {
                 final String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
                 StructuralVariantFile.write(svFilename, svDataList);
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 LOGGER.error("failed to write SV data: {}", e.toString());
             }
         }
@@ -91,8 +86,7 @@ public class LoadStructuralVariants
         LOGGER.info("Complete");
     }
 
-    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var, int svId)
-    {
+    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var, int svId) {
         return ImmutableStructuralVariantData.builder()
                 .id(svId)
                 .startChromosome(var.chromosome(true))
@@ -100,7 +94,7 @@ public class LoadStructuralVariants
                 .startPosition(var.position(true))
                 .endPosition(var.end() == null ? -1 : var.position(false))
                 .startOrientation(var.orientation(true))
-                .endOrientation(var.end() == null ? (byte)0 : var.orientation(false))
+                .endOrientation(var.end() == null ? (byte) 0 : var.orientation(false))
                 .startHomologySequence(var.start().homology())
                 .endHomologySequence(var.end() == null ? "" : var.end().homology())
                 .ploidy(getValueNotNull(var.ploidy()))
@@ -179,5 +173,4 @@ public class LoadStructuralVariants
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
-
 }

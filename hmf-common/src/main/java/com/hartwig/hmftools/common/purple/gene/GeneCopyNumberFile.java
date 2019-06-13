@@ -20,25 +20,30 @@ public final class GeneCopyNumberFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "Chr";
-    private static final String EXTENSION = ".purple.gene.cnv";
+    private static final String HEADER_PREFIX = "chr";
+    private static final String HEADER_PREFIX_OLD = "Chr";
+
+    private static final String EXTENSION = ".purple.cnv.gene.tsv";
+    private static final String EXTENSION_OLD = ".purple.gene.cnv";
 
     private GeneCopyNumberFile() {
     }
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + EXTENSION;
+    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + EXTENSION_OLD;
+    }
+
+    @NotNull
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
     }
 
     @NotNull
     public static List<GeneCopyNumber> read(@NotNull final String fileName) throws IOException {
-        return read(new File(fileName));
-    }
-
-    @NotNull
-    public static List<GeneCopyNumber> read(@NotNull final File file) throws IOException {
-        return fromLines(Files.readAllLines(file.toPath()));
+        return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
     public static void write(@NotNull final String fileName, @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
@@ -56,32 +61,31 @@ public final class GeneCopyNumberFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
-                .add("Start")
-                .add("End")
-                .add("Gene")
-                .add("MinCopyNumber")
-                .add("MaxCopyNumber")
-                .add("Unused")
-                .add("SomaticRegions")
-                .add("GermlineHomRegions")
-                .add("GermlineHet2HomRegions")
-                .add("TranscriptId")
-                .add("TranscriptVersion")
-                .add("ChromosomeBand")
-                .add("MinRegions")
-                .add("MinRegionStart")
-                .add("MinRegionEnd")
-                .add("MinRegionStartSupport")
-                .add("MinRegionEndSupport")
-                .add("MinRegionMethod")
-                .add("MinMinorAllelePloidy")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+                .add("start")
+                .add("end")
+                .add("gene")
+                .add("minCopyNumber")
+                .add("maxCopyNumber")
+                .add("unused")
+                .add("somaticRegions")
+                .add("germlineHomRegions")
+                .add("germlineHet2HomRegions")
+                .add("transcriptId")
+                .add("transcriptVersion")
+                .add("chromosomeBand")
+                .add("minRegions")
+                .add("minRegionStart")
+                .add("minRegionEnd")
+                .add("minRegionStartSupport")
+                .add("minRegionEndSupport")
+                .add("minRegionMethod")
+                .add("minMinorAllelePloidy")
                 .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final GeneCopyNumber geneCopyNumber) {
-
 
         return new StringJoiner(DELIMITER).add(String.valueOf(geneCopyNumber.chromosome()))
                 .add(String.valueOf(geneCopyNumber.start()))
@@ -109,7 +113,10 @@ public final class GeneCopyNumberFile {
     @NotNull
     @VisibleForTesting
     static List<GeneCopyNumber> fromLines(@NotNull List<String> lines) {
-        return lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(GeneCopyNumberFile::fromString).collect(toList());
+        return lines.stream()
+                .filter(x -> !x.startsWith(HEADER_PREFIX) & !x.startsWith(HEADER_PREFIX_OLD))
+                .map(GeneCopyNumberFile::fromString)
+                .collect(toList());
     }
 
     @VisibleForTesting

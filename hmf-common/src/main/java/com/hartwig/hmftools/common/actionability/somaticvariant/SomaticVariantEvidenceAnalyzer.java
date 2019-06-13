@@ -36,12 +36,8 @@ public class SomaticVariantEvidenceAnalyzer {
     @NotNull
     public Set<String> actionableGenes() {
         Set<String> genes = Sets.newHashSet();
-        for (ActionableSomaticVariant variant : actionableVariants) {
-            genes.add(variant.gene());
-        }
-        for (ActionableRange range : actionableRanges) {
-            genes.add(range.gene());
-        }
+        actionableRanges.forEach(x -> genes.add(x.gene()));
+        actionableVariants.forEach(x -> genes.add(x.gene()));
         return genes;
     }
 

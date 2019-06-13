@@ -22,18 +22,32 @@ public enum FittedPurityRangeFile {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final int MAX_RECORDS = 10000;
     private static final String DELIMITER = "\t";
-    static final String HEADER_PREFIX = "#";
-    private static final String EXTENSION = ".purple.purity.range";
+    private static final String COMMENT = "#";
+
+    private static final String EXTENSION = ".purple.purity.range.tsv";
+    private static final String EXTENSION_OLD = ".purple.purity.range";
+
+    @NotNull
+    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + EXTENSION_OLD;
+    }
+
+    @NotNull
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+    }
 
     @NotNull
     public static List<FittedPurity> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+        final String filePath = generateFilenameForReading(basePath, sample);
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final List<FittedPurity> purity)
             throws IOException {
-        final String filePath = basePath + File.separator + sample + EXTENSION;
+        final String filePath = generateFilenameForWriting(basePath, sample);
         Files.write(new File(filePath).toPath(), toLines(purity));
     }
 
@@ -47,8 +61,11 @@ public enum FittedPurityRangeFile {
 
     @NotNull
     static List<FittedPurity> fromLines(@NotNull final List<String> lines) {
-        final List<FittedPurity> all =
-                lines.stream().filter(x -> !x.startsWith(HEADER_PREFIX)).map(FittedPurityRangeFile::fromString).sorted().collect(toList());
+        final List<FittedPurity> all = lines.stream()
+                .filter(x -> !x.startsWith(COMMENT) && !x.startsWith("purity"))
+                .map(FittedPurityRangeFile::fromString)
+                .sorted()
+                .collect(toList());
 
         return bestFitPerPurity(all);
     }
@@ -70,12 +87,12 @@ public enum FittedPurityRangeFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, HEADER_PREFIX, "").add("Purity")
-                .add("NormFactor")
-                .add("Score")
-                .add("DiploidProportion")
-                .add("Ploidy")
-                .add("SomaticPenalty")
+        return new StringJoiner(DELIMITER, "", "").add("purity")
+                .add("normFactor")
+                .add("score")
+                .add("diploidProportion")
+                .add("ploidy")
+                .add("somaticPenalty")
                 .toString();
     }
 

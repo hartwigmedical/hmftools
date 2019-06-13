@@ -50,9 +50,10 @@ public class LoadPurpleData {
 
         LOGGER.info("Reading data from {}", purplePath);
         final PurityContext purityContext = FittedPurityFile.read(purplePath, tumorSample);
-        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(purplePath, tumorSample));
+        final List<GeneCopyNumber> geneCopyNumbers =
+                GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
         final List<PurpleCopyNumber> copyNumbers =
-                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, tumorSample));
+                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
 
         final PurpleQC purpleQC;
         final List<FittedPurity> bestFitPerPurity;
@@ -67,7 +68,8 @@ public class LoadPurpleData {
         } else {
             purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
             bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
-            germlineCopyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilename(purplePath, tumorSample));
+            germlineCopyNumbers =
+                    PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purplePath, tumorSample));
         }
 
         LOGGER.info("Persisting to db");

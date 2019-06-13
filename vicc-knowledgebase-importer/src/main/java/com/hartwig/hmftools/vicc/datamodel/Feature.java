@@ -43,16 +43,16 @@ public abstract class Feature {
     @Nullable
     public abstract String geneSymbol();
 
-    @NotNull
+    @Nullable
     public abstract List<String> synonyms();
 
     @Nullable
     public abstract String entrezId();
 
-    @NotNull
+    @Nullable
     public abstract SequenceOntology sequenceOntology();
 
-    @NotNull
+    @Nullable
     public abstract List<String> links();
 
     @Nullable

@@ -21,8 +21,8 @@ public final class FusionEvidenceAnalyzerFactory {
     public static FusionEvidenceAnalyzer loadFromFileFusions(@NotNull String fileFusionPairs, @NotNull String filePromiscuousFive,
             @NotNull String filePromiscuousThree) throws IOException {
         final List<ActionableFusion> fusionPairs = Lists.newArrayList();
-        final List<ActionablePromiscuousFive> promiscuousFive = Lists.newArrayList();
-        final List<ActionablePromiscuousThree> promiscuousThree = Lists.newArrayList();
+        final List<ActionablePromiscuous> promiscuousFive = Lists.newArrayList();
+        final List<ActionablePromiscuous> promiscuousThree = Lists.newArrayList();
 
         final List<String> lineFusionPairs = Files.readAllLines(new File(fileFusionPairs).toPath());
         final List<String> linePromiscuousFives = Files.readAllLines(new File(filePromiscuousFive).toPath());
@@ -33,35 +33,20 @@ public final class FusionEvidenceAnalyzerFactory {
         }
 
         for (String linePromiscuousFive : linePromiscuousFives.subList(1, linePromiscuousFives.size())) {
-            promiscuousFive.add(fromLinePromiscuousFive(linePromiscuousFive));
+            promiscuousFive.add(fromLinePromiscuous(linePromiscuousFive));
         }
 
         for (String linePromiscuousThree : linePromiscuousThrees.subList(1, linePromiscuousThrees.size())) {
-            promiscuousThree.add(fromLinePromiscuousThree(linePromiscuousThree));
+            promiscuousThree.add(fromLinePromiscuous(linePromiscuousThree));
         }
 
         return new FusionEvidenceAnalyzer(fusionPairs, promiscuousFive, promiscuousThree);
     }
 
     @NotNull
-    private static ActionablePromiscuousThree fromLinePromiscuousThree(@NotNull String line) {
+    private static ActionablePromiscuous fromLinePromiscuous(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        return ImmutableActionablePromiscuousThree.builder()
-                .gene(values[0])
-                .source(values[1])
-                .reference(values[2])
-                .drug(MultiDrugCurator.reformat(values[3]))
-                .drugsType(values[4])
-                .cancerType(values[5])
-                .level(values[7])
-                .response(values[10])
-                .build();
-    }
-
-    @NotNull
-    private static ActionablePromiscuousFive fromLinePromiscuousFive(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
-        return ImmutableActionablePromiscuousFive.builder()
+        return ImmutableActionablePromiscuous.builder()
                 .gene(values[0])
                 .source(values[1])
                 .reference(values[2])

@@ -55,7 +55,7 @@ public interface CobaltData {
     static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig)
             throws ParseException, IOException {
         final String cobaltDirectory = commonConfig.cobaltDirectory();
-        final String cobaltFilename = CobaltRatioFile.generateFilename(cobaltDirectory, commonConfig.tumorSample());
+        final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, commonConfig.tumorSample());
         if (!new File(cobaltFilename).exists()) {
             throw new ParseException("Unable to open cobalt ratio file: " + cobaltFilename);
         }

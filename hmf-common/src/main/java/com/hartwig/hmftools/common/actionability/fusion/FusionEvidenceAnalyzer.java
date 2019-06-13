@@ -21,13 +21,12 @@ public class FusionEvidenceAnalyzer {
     @NotNull
     private final List<ActionableFusion> fusionPairs;
     @NotNull
-    private final List<ActionablePromiscuousFive> promiscuousFive;
+    private final List<ActionablePromiscuous> promiscuousFive;
     @NotNull
-    private final List<ActionablePromiscuousThree> promiscuousThree;
+    private final List<ActionablePromiscuous> promiscuousThree;
 
-    FusionEvidenceAnalyzer(@NotNull final List<ActionableFusion> fusionPairs,
-            @NotNull final List<ActionablePromiscuousFive> promiscuousFive,
-            @NotNull final List<ActionablePromiscuousThree> promiscuousThree) {
+    FusionEvidenceAnalyzer(@NotNull final List<ActionableFusion> fusionPairs, @NotNull final List<ActionablePromiscuous> promiscuousFive,
+            @NotNull final List<ActionablePromiscuous> promiscuousThree) {
         this.fusionPairs = fusionPairs;
         this.promiscuousFive = promiscuousFive;
         this.promiscuousThree = promiscuousThree;
@@ -41,11 +40,11 @@ public class FusionEvidenceAnalyzer {
             genes.add(fusionPairsSet.threeGene());
         }
 
-        for (ActionablePromiscuousFive promiscuousFiveSet : promiscuousFive) {
+        for (ActionablePromiscuous promiscuousFiveSet : promiscuousFive) {
             genes.add(promiscuousFiveSet.gene());
         }
 
-        for (ActionablePromiscuousThree promiscuousThreeSet : promiscuousThree) {
+        for (ActionablePromiscuous promiscuousThreeSet : promiscuousThree) {
             genes.add(promiscuousThreeSet.gene());
         }
 
@@ -58,8 +57,7 @@ public class FusionEvidenceAnalyzer {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         for (ActionableFusion actionableFusion : fusionPairs) {
-            if (actionableFusion.fiveGene().equals(geneFusion.fiveGene()) && actionableFusion.threeGene()
-                    .equals(geneFusion.threeGene())) {
+            if (actionableFusion.fiveGene().equals(geneFusion.fiveGene()) && actionableFusion.threeGene().equals(geneFusion.threeGene())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
                 evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableFusion.cancerType(), primaryTumorLocation));
@@ -67,11 +65,10 @@ public class FusionEvidenceAnalyzer {
             }
         }
 
-        for (ActionablePromiscuousFive actionablePromiscuousFive : promiscuousFive) {
+        for (ActionablePromiscuous actionablePromiscuousFive : promiscuousFive) {
             if (actionablePromiscuousFive.gene().equals(geneFusion.fiveGene())) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousFive(actionablePromiscuousFive);
-                evidenceBuilder.event(
-                        actionablePromiscuousFive.gene() + " - " + geneFusion.threeGene() + " fusion");
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuous(actionablePromiscuousFive);
+                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.threeGene() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousFive.cancerType(),
                         primaryTumorLocation));
 
@@ -79,11 +76,10 @@ public class FusionEvidenceAnalyzer {
             }
         }
 
-        for (ActionablePromiscuousThree actionablePromiscuousThree : promiscuousThree) {
+        for (ActionablePromiscuous actionablePromiscuousThree : promiscuousThree) {
             if (actionablePromiscuousThree.gene().equals(geneFusion.threeGene())) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuousThree(actionablePromiscuousThree);
-                evidenceBuilder.event(
-                        geneFusion.fiveGene() + " - " + actionablePromiscuousThree.gene() + " fusion");
+                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuous(actionablePromiscuousThree);
+                evidenceBuilder.event(geneFusion.fiveGene() + " - " + actionablePromiscuousThree.gene() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousThree.cancerType(),
                         primaryTumorLocation));
 
@@ -108,8 +104,8 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuousThree(
-            @NotNull ActionablePromiscuousThree actionablePromiscuousThree) {
+    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuous(
+            @NotNull ActionablePromiscuous actionablePromiscuousThree) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionablePromiscuousThree.reference())
                 .source(ActionabilitySource.fromString(actionablePromiscuousThree.source()))
@@ -118,20 +114,6 @@ public class FusionEvidenceAnalyzer {
                 .level(EvidenceLevel.fromString(actionablePromiscuousThree.level()))
                 .response(actionablePromiscuousThree.response())
                 .cancerType(actionablePromiscuousThree.cancerType())
-                .scope(EvidenceScope.SPECIFIC);
-    }
-
-    @NotNull
-    private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuousFive(
-            @NotNull ActionablePromiscuousFive actionablePromiscuousFive) {
-        return ImmutableEvidenceItem.builder()
-                .reference(actionablePromiscuousFive.reference())
-                .source(ActionabilitySource.fromString(actionablePromiscuousFive.source()))
-                .drug(actionablePromiscuousFive.drug())
-                .drugsType(actionablePromiscuousFive.drugsType())
-                .level(EvidenceLevel.fromString(actionablePromiscuousFive.level()))
-                .response(actionablePromiscuousFive.response())
-                .cancerType(actionablePromiscuousFive.cancerType())
                 .scope(EvidenceScope.SPECIFIC);
     }
 }

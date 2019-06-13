@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.HEADER_PREFIX;
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.fromLines;
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.toLines;
 
@@ -28,7 +27,7 @@ public class PurpleCopyNumberFileTest {
         final List<PurpleCopyNumber> copyNumbers = create(size);
         final List<String> toLines = toLines(copyNumbers);
         assertEquals(size + 1, toLines.size());
-        assertTrue(toLines.get(0).startsWith(HEADER_PREFIX));
+        assertTrue(toLines.get(0).startsWith("chr"));
     }
 
     @Test

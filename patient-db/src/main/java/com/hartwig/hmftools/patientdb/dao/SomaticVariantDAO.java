@@ -199,5 +199,4 @@ class SomaticVariantDAO {
 
         return samplesList;
     }
-
 }

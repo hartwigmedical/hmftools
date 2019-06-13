@@ -21,11 +21,19 @@ public final class CobaltRatioFile {
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
 
     private static final String DELIMITER = "\t";
-    private static final String EXTENSION = ".cobalt";
+    private static final String EXTENSION = ".cobalt.ratio.tsv";
+
+    private static final String EXTENSION_OLD = ".cobalt";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + EXTENSION;
+    }
+
+    @NotNull
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
     }
 
     @NotNull
@@ -53,13 +61,13 @@ public final class CobaltRatioFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Chromosome")
-                .add("Position")
-                .add("ReferenceReadCount")
-                .add("TumorReadCount")
-                .add("ReferenceGCRatio")
-                .add("TumorGCRatio")
-                .add("ReferenceGCDiploidRatio")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+                .add("position")
+                .add("referenceReadCount")
+                .add("tumorReadCount")
+                .add("referenceGCRatio")
+                .add("tumorGCRatio")
+                .add("referenceGCDiploidRatio")
                 .toString();
     }
 
@@ -79,7 +87,7 @@ public final class CobaltRatioFile {
     private static ListMultimap<Chromosome, CobaltRatio> fromLines(@NotNull final List<String> lines) {
         final ListMultimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
         for (String line : lines) {
-            if (!line.startsWith("Ch")) {
+            if (!line.startsWith("Ch") && !line.startsWith("ch") ) {
                 final CobaltRatio ratio = fromLine(line);
                 result.put(HumanChromosome.fromString(ratio.chromosome()), ratio);
             }

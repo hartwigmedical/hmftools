@@ -26,7 +26,7 @@ public class FusionEvidenceAnalyzerTest {
                 .source("CGI")
                 .build();
 
-        ActionablePromiscuousFive five = ImmutableActionablePromiscuousFive.builder()
+        ActionablePromiscuous five = ImmutableActionablePromiscuous.builder()
                 .cancerType("Acute lymphoblastic leukemia")
                 .drug("FORT-1")
                 .drugsType("Trial")
@@ -37,7 +37,7 @@ public class FusionEvidenceAnalyzerTest {
                 .source("iclusion")
                 .build();
 
-        ActionablePromiscuousThree three = ImmutableActionablePromiscuousThree.builder()
+        ActionablePromiscuous three = ImmutableActionablePromiscuous.builder()
                 .cancerType("Acute lymphoblastic leukemia")
                 .drug("AZD5363")
                 .drugsType("AKT inhibitor")
