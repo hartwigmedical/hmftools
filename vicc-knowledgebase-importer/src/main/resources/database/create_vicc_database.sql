@@ -78,7 +78,7 @@ DROP TABLE IF EXISTS provenance;
 CREATE TABLE provenance
 (   id int NOT NULL AUTO_INCREMENT,
     featureEntryId int NOT NULL,
-    provenance varchar(255) NOT NULL,
+    provenance varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (featureEntryId) REFERENCES feature(id)
 );
@@ -87,7 +87,7 @@ DROP TABLE IF EXISTS synonyms;
 CREATE TABLE synonyms
 (   id int NOT NULL AUTO_INCREMENT,
     featureEntryId int NOT NULL,
-    synonyms varchar(255) NOT NULL,
+    synonyms varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (featureEntryId) REFERENCES feature(id)
 );
@@ -96,7 +96,7 @@ DROP TABLE IF EXISTS links;
 CREATE TABLE links
 (   id int NOT NULL AUTO_INCREMENT,
     featureEntryId int NOT NULL,
-    links varchar(255) NOT NULL,
+    links varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (featureEntryId) REFERENCES feature(id)
 );
@@ -105,10 +105,10 @@ DROP TABLE IF EXISTS sequenceOntology;
 CREATE TABLE sequenceOntology
 (   id int NOT NULL AUTO_INCREMENT,
     featureEntryId int NOT NULL,
-    soid varchar(255) NOT NULL,
-    parentSoid varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
-    parentName varchar(255) NOT NULL,
+    soid varchar(255),
+    parentSoid varchar(255),
+    name varchar(255),
+    parentName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (featureEntryId) REFERENCES feature(id)
 );
@@ -117,7 +117,7 @@ DROP TABLE IF EXISTS hierarchy;
 CREATE TABLE hierarchy
 (   id int NOT NULL AUTO_INCREMENT,
     sequenceOntologyEntryId int NOT NULL,
-    hierarchy varchar(255) NOT NULL,
+    hierarchy varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (sequenceOntologyEntryId) REFERENCES sequenceOntology(id)
 );
@@ -132,7 +132,7 @@ CREATE TABLE association
     responseType varchar(255),
     drugLabels varchar(255),
     sourceLink varchar(255),
-    description varchar(255) NOT NULL,
+    description varchar(500),
     oncogenic varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
