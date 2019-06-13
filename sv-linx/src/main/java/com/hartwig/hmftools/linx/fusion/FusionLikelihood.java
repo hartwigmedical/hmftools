@@ -385,7 +385,7 @@ public class FusionLikelihood
 
             LOGGER.info("calculating local and remote overlap counts for chr({})", chromosome);
 
-            // sum up the phase counts across all other chromsomes
+            // sum up the phase counts across all other chromosomes
             Map<Integer, Long> remotePhaseCountsUpstream = Maps.newHashMap();
             Map<Integer, Long> remotePhaseCountsDownstream = Maps.newHashMap();
 
@@ -975,7 +975,7 @@ public class FusionLikelihood
 
             writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
             writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding,PreGene");
-            writer.write(",LocalRateUp,LocalRateDown,RemoteRateUp,RemoteRateDown");
+            writer.write(",NonProximateArmRateUp,NonProximateRateDown,RemoteRateUp,RemoteRateDown");
             writer.newLine();
 
             // adjustment factors to convert overlap base count into rates - with the 2 presenting orientation combinations
@@ -1050,7 +1050,7 @@ public class FusionLikelihood
 
         try
         {
-            String outputFilename = outputDir + "GFL_FUSION_CANDIDATES.csv";
+            String outputFilename = outputDir + "GFL_DEL_DUP_PROXIMATES.csv";
 
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
 
@@ -1149,6 +1149,8 @@ public class FusionLikelihood
             LOGGER.error("Ensembl data cache load failed, exiting");
             return;
         }
+
+        ensemblDataCache.createGeneIdDataMap();
 
         if(limitedLoading)
         {

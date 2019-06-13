@@ -616,7 +616,10 @@ public class SvVarData
 
     public final String getGeneInBreakend(boolean isStart)
     {
-        final List<GeneAnnotation> genesList = getGenesList(isStart);
+        // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
+        final List<GeneAnnotation> genesList = getGenesList(isStart).stream()
+                .filter(GeneAnnotation::breakendWithinGene)
+                .collect(Collectors.toList());
 
         String genesStr = "";
         for(final GeneAnnotation gene : genesList)

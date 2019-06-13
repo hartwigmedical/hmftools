@@ -33,8 +33,9 @@ public class SvGeneTranscriptCollection
 
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;// keyed by GeneId (aka StableId)
     private Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
-    private Map<String, List<EnsemblGeneData>> mChrReverseGeneDataMap; // order by gene end not start, for traversal in the reverse direction
+    private Map<String, List<EnsemblGeneData>> mChrReverseGeneDataMap; // order by gene end instead of start, for traversal in the reverse direction
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
 
     // the distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
@@ -47,6 +48,7 @@ public class SvGeneTranscriptCollection
         mChrGeneDataMap = Maps.newHashMap();
         mChrReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
+        mGeneDataMap = Maps.newHashMap();
     }
 
     public void setDataPath(final String dataPath)
@@ -74,6 +76,9 @@ public class SvGeneTranscriptCollection
 
     public final EnsemblGeneData getGeneDataById(final String geneId)
     {
+        if(!mGeneDataMap.isEmpty())
+            return mGeneDataMap.get(geneId);
+
         return getGeneData(geneId, false);
     }
 
@@ -89,6 +94,17 @@ public class SvGeneTranscriptCollection
         }
 
         return null;
+    }
+
+    public void createGeneIdDataMap()
+    {
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
+        {
+            for(final EnsemblGeneData geneData : entry.getValue())
+            {
+                mGeneDataMap.put(geneData.GeneId, geneData);
+            }
+        }
     }
 
     public List<TranscriptExonData> getTransExonData(final String geneId)

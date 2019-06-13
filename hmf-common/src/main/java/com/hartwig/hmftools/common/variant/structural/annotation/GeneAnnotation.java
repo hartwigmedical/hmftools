@@ -97,11 +97,6 @@ public class GeneAnnotation {
 
     public List<Transcript> transcripts() { return mTranscripts; }
 
-    public boolean hasAnyDisruptiveTranscript()
-    {
-        return mTranscripts.stream().anyMatch(x -> x.isDisruptive());
-    }
-
     @Nullable
     public Transcript canonical() {
         return mTranscripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
@@ -128,5 +123,7 @@ public class GeneAnnotation {
     {
         return !isUpstream(gene);
     }
+
+    public boolean breakendWithinGene() { return mGeneData != null ? (mPosition >= mGeneData.GeneStart && mPosition <= mGeneData.GeneEnd) : false; }
 
 }
