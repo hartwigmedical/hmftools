@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.vicc.dao;
 
 import static com.hartwig.hmftools.vicc.database.Tables.APPROVEDCOUNTRIES;
-import static com.hartwig.hmftools.vicc.database.Tables.ASSOCIATIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.ASSOCIATION;
 import static com.hartwig.hmftools.vicc.database.Tables.DEVTAG;
 import static com.hartwig.hmftools.vicc.database.Tables.ENVIRONMENTALCONTEXT;
 import static com.hartwig.hmftools.vicc.database.Tables.EVIDENCE;
@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.LINKS;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPETYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PROVENANCE;
-import static com.hartwig.hmftools.vicc.database.Tables.PUBLICATIONURLS;
+import static com.hartwig.hmftools.vicc.database.Tables.PUBLICATIONURL;
 import static com.hartwig.hmftools.vicc.database.Tables.SEQUENCEONTOLOGY;
 import static com.hartwig.hmftools.vicc.database.Tables.SYNONYMS;
 import static com.hartwig.hmftools.vicc.database.Tables.TAG;
@@ -87,16 +87,16 @@ public class ViccDAO {
     }
 
     private void writeAssociation(int viccEntryId, @NotNull Association association) {
-        int id = context.insertInto(ASSOCIATIONS,
-                ASSOCIATIONS.VARIANTNAME,
-                ASSOCIATIONS.EVIDENCELEVEL,
-                ASSOCIATIONS.EVIDENCELABEL,
-                ASSOCIATIONS.RESPONSETYPE,
-                ASSOCIATIONS.DRUGLABELS,
-                ASSOCIATIONS.SOURCELINK,
-                ASSOCIATIONS.DESCRIPTION,
-                ASSOCIATIONS.ONCOGENIC,
-                ASSOCIATIONS.VICCENTRYID)
+        int id = context.insertInto(ASSOCIATION,
+                ASSOCIATION.VARIANTNAME,
+                ASSOCIATION.EVIDENCELEVEL,
+                ASSOCIATION.EVIDENCELABEL,
+                ASSOCIATION.RESPONSETYPE,
+                ASSOCIATION.DRUGLABELS,
+                ASSOCIATION.SOURCELINK,
+                ASSOCIATION.DESCRIPTION,
+                ASSOCIATION.ONCOGENIC,
+                ASSOCIATION.VICCENTRYID)
                 .values(association.variantName(),
                         association.evidenceLevel(),
                         association.evidenceLabel(),
@@ -106,9 +106,9 @@ public class ViccDAO {
                         association.description(),
                         association.oncogenic(),
                         viccEntryId)
-                .returning(ASSOCIATIONS.ID)
+                .returning(ASSOCIATION.ID)
                 .fetchOne()
-                .getValue(ASSOCIATIONS.ID);
+                .getValue(ASSOCIATION.ID);
         writeEvidence(id, association.evidence());
         writePublicaionsUrls(id, association.publicationUrls());
         writePhenotype(id, association.phenotype());
@@ -184,7 +184,7 @@ public class ViccDAO {
 
     private void writePublicaionsUrls(int associationEntryId, @NotNull List<String> publicationsUrls) {
         for (String publicationUrl : publicationsUrls) {
-            context.insertInto(PUBLICATIONURLS, PUBLICATIONURLS.PUBLICATIONURLS_, PUBLICATIONURLS.ASSOCIATIONENTRYID)
+            context.insertInto(PUBLICATIONURL, PUBLICATIONURL.PUBLICATIONURLS, PUBLICATIONURL.ASSOCIATIONENTRYID)
                     .values(publicationUrl, associationEntryId)
                     .execute();
         }
@@ -354,11 +354,11 @@ public class ViccDAO {
         context.deleteFrom(LINKS).execute();
         context.deleteFrom(SEQUENCEONTOLOGY).execute();
         context.deleteFrom(HIERARCHY).execute();
-        context.deleteFrom(ASSOCIATIONS).execute();
+        context.deleteFrom(ASSOCIATION).execute();
         context.deleteFrom(EVIDENCE).execute();
         context.deleteFrom(EVIDENCEINFO).execute();
         context.deleteFrom(EVIDENCETYPE).execute();
-        context.deleteFrom(PUBLICATIONURLS).execute();
+        context.deleteFrom(PUBLICATIONURL).execute();
         context.deleteFrom(PHENOTYPE).execute();
         context.deleteFrom(PHENOTYPETYPE).execute();
         context.deleteFrom(ENVIRONMENTALCONTEXT).execute();

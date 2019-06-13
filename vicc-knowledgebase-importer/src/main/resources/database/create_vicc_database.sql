@@ -122,8 +122,8 @@ CREATE TABLE hierarchy
     FOREIGN KEY (sequenceOntologyEntryId) REFERENCES sequenceOntology(id)
 );
 
-DROP TABLE IF EXISTS associations;
-CREATE TABLE associations
+DROP TABLE IF EXISTS association;
+CREATE TABLE association
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
     variantName varchar(255),
@@ -144,7 +144,7 @@ CREATE TABLE evidence
     associationEntryId int NOT NULL,
     description varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+    FOREIGN KEY (associationEntryId) REFERENCES association(id)
 );
 
 DROP TABLE IF EXISTS evidenceInfo;
@@ -166,13 +166,13 @@ CREATE TABLE evidenceType
     FOREIGN KEY (evidenceEntryId) REFERENCES evidence(id)
 );
 
-DROP TABLE IF EXISTS publicationUrls;
-CREATE TABLE publicationUrls
+DROP TABLE IF EXISTS publicationUrl;
+CREATE TABLE publicationUrl
 (   id int NOT NULL AUTO_INCREMENT,
     associationEntryId int NOT NULL,
     publicationUrls varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+    FOREIGN KEY (associationEntryId) REFERENCES association(id)
 );
 
 DROP TABLE IF EXISTS phenotype;
@@ -183,7 +183,7 @@ CREATE TABLE phenotype
     family varchar(255),
     idPhenotype varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+    FOREIGN KEY (associationEntryId) REFERENCES association(id)
 );
 
 DROP TABLE IF EXISTS phenotypeType;
@@ -207,7 +207,7 @@ CREATE TABLE environmentalContext
     usanStem varchar(255),
     idEnvironmentalContexts varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES associations(id)
+    FOREIGN KEY (associationEntryId) REFERENCES association(id)
 );
 
 DROP TABLE IF EXISTS approvedCountries;
