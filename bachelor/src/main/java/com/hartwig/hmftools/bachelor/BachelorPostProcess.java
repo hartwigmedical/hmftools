@@ -353,7 +353,7 @@ public class BachelorPostProcess
             try
             {
                 purityContext = FittedPurityFile.read(purplePath, sampleId);
-                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(purplePath, sampleId));
+                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, sampleId));
             }
             catch (IOException e)
             {

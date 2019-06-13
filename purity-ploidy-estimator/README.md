@@ -854,6 +854,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Consistent file headers
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-30)
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)

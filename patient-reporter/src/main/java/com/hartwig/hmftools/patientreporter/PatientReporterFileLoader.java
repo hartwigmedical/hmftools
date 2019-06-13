@@ -54,13 +54,13 @@ final class PatientReporterFileLoader {
     @NotNull
     static List<PurpleCopyNumber> loadPurpleCopyNumbers(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
-        return PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilename(cnvBasePath, sample));
+        return PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(cnvBasePath, sample));
     }
 
     @NotNull
     static List<GeneCopyNumber> loadPurpleGeneCopyNumbers(@NotNull String runDirectory, @NotNull String sample) throws IOException {
         final String cnvBasePath = runDirectory + File.separator + PURPLE_DIRECTORY;
-        final String fileName = GeneCopyNumberFile.generateFilename(cnvBasePath, sample);
+        final String fileName = GeneCopyNumberFile.generateFilenameForReading(cnvBasePath, sample);
         return GeneCopyNumberFile.read(fileName);
     }
 

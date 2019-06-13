@@ -195,9 +195,9 @@ public class PurityPloidyEstimateApplication {
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilename(outputDirectory, tumorSample), copyNumbers);
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDeletions);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilename(outputDirectory, tumorSample), geneCopyNumbers);
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), copyNumbers);
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDirectory, tumorSample), germlineDeletions);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
             new SomaticVCF(config, configSupplier.somaticConfig()).write(purityAdjuster, copyNumbers, enrichedFittedRegions);

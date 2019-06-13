@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.HEADER_PREFIX;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.fromLine;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityFile.toLines;
 
@@ -35,7 +34,7 @@ public class FittedPurityFileTest {
 
         final List<String> lines = toLines(input);
         assertEquals(2, lines.size());
-        assertTrue(lines.get(0).startsWith(HEADER_PREFIX));
+        assertTrue(lines.get(0).startsWith("purity"));
 
         final PurityContext output = fromLine(lines.get(1));
         assertEquals(input, output);
