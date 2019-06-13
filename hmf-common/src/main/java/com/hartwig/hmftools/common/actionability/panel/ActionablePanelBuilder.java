@@ -31,7 +31,7 @@ public class ActionablePanelBuilder {
     }
 
     @NotNull
-    public ActionablePanelBuilder addFusions(@NotNull final SomaticVariantEvidenceAnalyzer variantEvidenceAnalyzer) {
+    public ActionablePanelBuilder addVariants(@NotNull final SomaticVariantEvidenceAnalyzer variantEvidenceAnalyzer) {
         variantEvidenceAnalyzer.actionableGenes().forEach(x -> select(x).variant(true));
         return this;
     }

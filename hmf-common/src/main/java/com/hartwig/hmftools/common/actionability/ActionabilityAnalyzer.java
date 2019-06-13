@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerF
 import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.common.actionability.panel.ActionablePanel;
+import com.hartwig.hmftools.common.actionability.panel.ActionablePanelBuilder;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -57,8 +59,7 @@ public class ActionabilityAnalyzer {
                 basePath + ACTIONABLE_PROMISCUOUS_FIVE_FILE,
                 basePath + ACTIONABLE_PROMISCUOUS_THREE_FILE);
 
-        CancerTypeAnalyzer cancerTypeAnalyzer =
-                CancerTypeAnalyzer.createFromKnowledgeBase(basePath + CANCER_TYPE_DOID_MAPPING_FILE);
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.createFromKnowledgeBase(basePath + CANCER_TYPE_DOID_MAPPING_FILE);
 
         return new ActionabilityAnalyzer(variantAnalyzer, cnvAnalyzer, fusionAnalyzer, cancerTypeAnalyzer);
     }
@@ -88,6 +89,14 @@ public class ActionabilityAnalyzer {
     @NotNull
     FusionEvidenceAnalyzer fusionAnalyzer() {
         return fusionAnalyzer;
+    }
+
+    @NotNull
+    public List<ActionablePanel> panel() {
+        return new ActionablePanelBuilder().addCopyNumbers(copyNumberAnalyzer)
+                .addFusions(fusionAnalyzer)
+                .addVariants(variantAnalyzer)
+                .build();
     }
 
     @NotNull
