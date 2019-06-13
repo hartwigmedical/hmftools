@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.actionability.cnv;
 
 import org.jetbrains.annotations.NotNull;
 
-enum CopyNumberType {
+public enum CopyNumberType {
     AMPLIFICATION("Amplification"),
     DELETION("Deletion");
 
