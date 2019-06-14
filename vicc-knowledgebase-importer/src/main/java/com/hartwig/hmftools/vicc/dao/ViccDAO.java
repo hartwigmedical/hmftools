@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.dao;
 
-import static com.hartwig.hmftools.vicc.database.Tables.APPROVEDCOUNTRIES;
+import static com.hartwig.hmftools.vicc.database.Tables.APPROVEDCOUNTRY;
 import static com.hartwig.hmftools.vicc.database.Tables.ASSOCIATION;
 import static com.hartwig.hmftools.vicc.database.Tables.DEVTAG;
 import static com.hartwig.hmftools.vicc.database.Tables.ENVIRONMENTALCONTEXT;
@@ -12,13 +12,13 @@ import static com.hartwig.hmftools.vicc.database.Tables.FEATURENAME;
 import static com.hartwig.hmftools.vicc.database.Tables.GENE;
 import static com.hartwig.hmftools.vicc.database.Tables.GENEIDENTIFIER;
 import static com.hartwig.hmftools.vicc.database.Tables.HIERARCHY;
-import static com.hartwig.hmftools.vicc.database.Tables.LINKS;
+import static com.hartwig.hmftools.vicc.database.Tables.LINK;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPETYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PROVENANCE;
 import static com.hartwig.hmftools.vicc.database.Tables.PUBLICATIONURL;
 import static com.hartwig.hmftools.vicc.database.Tables.SEQUENCEONTOLOGY;
-import static com.hartwig.hmftools.vicc.database.Tables.SYNONYMS;
+import static com.hartwig.hmftools.vicc.database.Tables.SYNONYM;
 import static com.hartwig.hmftools.vicc.database.Tables.TAG;
 import static com.hartwig.hmftools.vicc.database.Tables.TAXONOMY;
 import static com.hartwig.hmftools.vicc.database.Tables.VICCENTRY;
@@ -92,7 +92,7 @@ public class ViccDAO {
                 ASSOCIATION.EVIDENCELEVEL,
                 ASSOCIATION.EVIDENCELABEL,
                 ASSOCIATION.RESPONSETYPE,
-                ASSOCIATION.DRUGLABELS,
+                ASSOCIATION.DRUGLABEL,
                 ASSOCIATION.SOURCELINK,
                 ASSOCIATION.DESCRIPTION,
                 ASSOCIATION.ONCOGENIC,
@@ -109,13 +109,14 @@ public class ViccDAO {
                 .returning(ASSOCIATION.ID)
                 .fetchOne()
                 .getValue(ASSOCIATION.ID);
-        writeEvidence(id, association.evidence());
-        writePublicaionsUrls(id, association.publicationUrls());
-        writePhenotype(id, association.phenotype());
-        writeEnvironmentalContexts(id, association.environmentalContexts());
+        writeEvidence(id, association.evidence(), viccEntryId);
+        writePublicaionsUrls(id, association.publicationUrls(), viccEntryId);
+        writePhenotype(id, association.phenotype(), viccEntryId);
+        writeEnvironmentalContexts(id, association.environmentalContexts(), viccEntryId);
     }
 
-    private void writeEnvironmentalContexts(int associationEntryId, @Nullable List<EnvironmentalContext> environmentalContexts) {
+    private void writeEnvironmentalContexts(int associationEntryId, @Nullable List<EnvironmentalContext> environmentalContexts,
+            int viccEntryId) {
         if (environmentalContexts != null) {
             for (EnvironmentalContext environmentalContext : environmentalContexts) {
                 int id = context.insertInto(ENVIRONMENTALCONTEXT,
@@ -123,24 +124,26 @@ public class ViccDAO {
                         ENVIRONMENTALCONTEXT.DESCRIPTION,
                         ENVIRONMENTALCONTEXT.SOURCE,
                         ENVIRONMENTALCONTEXT.USANSTEM,
-                        ENVIRONMENTALCONTEXT.IDENVIRONMENTALCONTEXTS,
-                        ENVIRONMENTALCONTEXT.ASSOCIATIONENTRYID)
+                        ENVIRONMENTALCONTEXT.IDENVIRONMENTALCONTEXT,
+                        ENVIRONMENTALCONTEXT.ASSOCIATIONENTRYID,
+                        ENVIRONMENTALCONTEXT.VICCENTRYID)
                         .values(environmentalContext.term(),
                                 environmentalContext.description(),
                                 environmentalContext.source(),
                                 environmentalContext.usanStem(),
                                 environmentalContext.id(),
-                                associationEntryId)
+                                associationEntryId,
+                                viccEntryId)
                         .returning(ENVIRONMENTALCONTEXT.ID)
                         .fetchOne()
                         .getValue(ENVIRONMENTALCONTEXT.ID);
-                writeApprovedCountries(id, environmentalContext.approvedCountries());
-                writeTaxonomy(id, environmentalContext.taxonomy());
+                writeApprovedCountries(id, environmentalContext.approvedCountries(), viccEntryId);
+                writeTaxonomy(id, environmentalContext.taxonomy(), viccEntryId);
             }
         }
     }
 
-    private void writeTaxonomy(int environmentalContextsEntryId, @Nullable Taxonomy taxonomy) {
+    private void writeTaxonomy(int environmentalContextsEntryId, @Nullable Taxonomy taxonomy, int viccEntryId) {
         if (taxonomy != null) {
             context.insertInto(TAXONOMY,
                     TAXONOMY.KINGDOM,
@@ -148,88 +151,96 @@ public class ViccDAO {
                     TAXONOMY.CLASS,
                     TAXONOMY.SUBCLASS,
                     TAXONOMY.SUPERCLASS,
-                    TAXONOMY.ENVIRONMENTALCONTEXTSENTRYID)
+                    TAXONOMY.ENVIRONMENTALCONTEXTSENTRYID,
+                    TAXONOMY.VICCENTRYID)
                     .values(taxonomy.kingdom(),
                             taxonomy.directParent(),
                             taxonomy.classs(),
                             taxonomy.subClass(),
                             taxonomy.superClass(),
-                            environmentalContextsEntryId)
+                            environmentalContextsEntryId,
+                            viccEntryId)
                     .execute();
         }
     }
 
-    private void writeApprovedCountries(int environmentalContextsEntryId, @NotNull List<String> approvedCountries) {
+    private void writeApprovedCountries(int environmentalContextsEntryId, @NotNull List<String> approvedCountries, int viccEntryId) {
         for (String approvesCountry : approvedCountries) {
-            context.insertInto(APPROVEDCOUNTRIES, APPROVEDCOUNTRIES.APPROVEDCOUNTRIES_, APPROVEDCOUNTRIES.ENVIRONMENTALCONTEXTSENTRYID)
-                    .values(approvesCountry, environmentalContextsEntryId)
-                    .execute();
+            context.insertInto(APPROVEDCOUNTRY,
+                    APPROVEDCOUNTRY.APPROVEDCOUNTRY_,
+                    APPROVEDCOUNTRY.ENVIRONMENTALCONTEXTSENTRYID,
+                    APPROVEDCOUNTRY.VICCENTRYID).values(approvesCountry, environmentalContextsEntryId, viccEntryId).execute();
         }
     }
 
-    private void writePhenotype(int associationEntryId, @Nullable Phenotype phenotype) {
+    private void writePhenotype(int associationEntryId, @Nullable Phenotype phenotype, int viccEntryId) {
         if (phenotype != null) {
             int id = context.insertInto(PHENOTYPE,
                     PHENOTYPE.DESCRIPTION,
                     PHENOTYPE.FAMILY,
                     PHENOTYPE.IDPHENOTYPE,
-                    PHENOTYPE.ASSOCIATIONENTRYID)
-                    .values(phenotype.description(), phenotype.family(), phenotype.id(), associationEntryId)
+                    PHENOTYPE.ASSOCIATIONENTRYID,
+                    PHENOTYPE.VICCENTRYID)
+                    .values(phenotype.description(), phenotype.family(), phenotype.id(), associationEntryId, viccEntryId)
                     .returning(PHENOTYPE.ID)
                     .fetchOne()
                     .getValue(PHENOTYPE.ID);
-            writePhenotypeType(id, phenotype.type());
+            writePhenotypeType(id, phenotype.type(), viccEntryId);
         }
     }
 
-    private void writePhenotypeType(int phenoTypeEntryId, @Nullable PhenotypeType phenotypeType) {
+    private void writePhenotypeType(int phenoTypeEntryId, @Nullable PhenotypeType phenotypeType, int viccEntryId) {
         if (phenotypeType != null) {
             context.insertInto(PHENOTYPETYPE,
                     PHENOTYPETYPE.SOURCE,
                     PHENOTYPETYPE.TERM,
                     PHENOTYPETYPE.IDPHENOTYPETYPE,
-                    PHENOTYPETYPE.PHENOTYPEENTRYID)
-                    .values(phenotypeType.source(), phenotypeType.term(), phenotypeType.id(), phenoTypeEntryId)
+                    PHENOTYPETYPE.PHENOTYPEENTRYID,
+                    PHENOTYPE.VICCENTRYID)
+                    .values(phenotypeType.source(), phenotypeType.term(), phenotypeType.id(), phenoTypeEntryId, viccEntryId)
                     .execute();
         }
     }
 
-    private void writePublicaionsUrls(int associationEntryId, @Nullable List<String> publicationsUrls) {
+    private void writePublicaionsUrls(int associationEntryId, @Nullable List<String> publicationsUrls, int viccEntryId) {
         if (publicationsUrls != null) {
             for (String publicationUrl : publicationsUrls) {
-                context.insertInto(PUBLICATIONURL, PUBLICATIONURL.PUBLICATIONURLS, PUBLICATIONURL.ASSOCIATIONENTRYID)
-                        .values(publicationUrl, associationEntryId)
-                        .execute();
+                context.insertInto(PUBLICATIONURL,
+                        PUBLICATIONURL.PUBLICATIONURL_,
+                        PUBLICATIONURL.ASSOCIATIONENTRYID,
+                        PUBLICATIONURL.VICCENTRYID).values(publicationUrl, associationEntryId, viccEntryId).execute();
             }
         }
     }
 
-    private void writeEvidence(int associationEntryId, @NotNull List<Evidence> evidences) {
+    private void writeEvidence(int associationEntryId, @NotNull List<Evidence> evidences, int viccEntryId) {
         for (Evidence evidence : evidences) {
-            int id = context.insertInto(EVIDENCE, EVIDENCE.DESCRIPTION, EVIDENCE.ASSOCIATIONENTRYID)
-                    .values(evidence.description(), associationEntryId)
+            int id = context.insertInto(EVIDENCE, EVIDENCE.DESCRIPTION, EVIDENCE.ASSOCIATIONENTRYID, EVIDENCE.VICCENTRYID)
+                    .values(evidence.description(), associationEntryId, viccEntryId)
                     .returning(EVIDENCE.ID)
                     .fetchOne()
                     .getValue(EVIDENCE.ID);
-            writeEvidenceInfo(id, evidence.info());
-            writeEvidenceType(id, evidence.evidenceType());
+            writeEvidenceInfo(id, evidence.info(), viccEntryId);
+            writeEvidenceType(id, evidence.evidenceType(), viccEntryId);
         }
     }
 
-    private void writeEvidenceInfo(int evidenceEntryId, @Nullable EvidenceInfo evidenceInfo) {
+    private void writeEvidenceInfo(int evidenceEntryId, @Nullable EvidenceInfo evidenceInfo, int viccEntryId) {
         if (evidenceInfo != null) {
             for (String publication : evidenceInfo.publications()) {
-                context.insertInto(EVIDENCEINFO, EVIDENCEINFO.PUBLICATIONS, EVIDENCEINFO.EVIDENCEENTRYID)
-                        .values(publication, evidenceEntryId)
+                context.insertInto(EVIDENCEINFO, EVIDENCEINFO.PUBLICATION, EVIDENCEINFO.EVIDENCEENTRYID, EVIDENCEINFO.VICCENTRYID)
+                        .values(publication, evidenceEntryId, viccEntryId)
                         .execute();
             }
         }
     }
 
-    private void writeEvidenceType(int evidenceEntryId, @NotNull EvidenceType evidenceType) {
-        context.insertInto(EVIDENCETYPE, EVIDENCETYPE.SOURCENAME, EVIDENCETYPE.IDEVIDENCETYPE, EVIDENCETYPE.EVIDENCEENTRYID)
-                .values(evidenceType.sourceName(), evidenceType.id(), evidenceEntryId)
-                .execute();
+    private void writeEvidenceType(int evidenceEntryId, @NotNull EvidenceType evidenceType, int viccEntryId) {
+        context.insertInto(EVIDENCETYPE,
+                EVIDENCETYPE.SOURCENAME,
+                EVIDENCETYPE.IDEVIDENCETYPE,
+                EVIDENCETYPE.EVIDENCEENTRYID,
+                EVIDENCETYPE.VICCENTRYID).values(evidenceType.sourceName(), evidenceType.id(), evidenceEntryId, viccEntryId).execute();
     }
 
     private void writeFeatures(int viccEntryId, @NotNull List<Feature> features) {
@@ -264,61 +275,69 @@ public class ViccDAO {
                     .returning(FEATURE.ID)
                     .fetchOne()
                     .getValue(FEATURE.ID);
-            writeProvenance(id, feature.provenance());
-            writeSynonyms(id, feature.synonyms());
-            writeLinks(id, feature.links());
-            writeSequenceOntology(id, feature.sequenceOntology());
+            writeProvenance(id, feature.provenance(), viccEntryId);
+            writeSynonyms(id, feature.synonyms(), viccEntryId);
+            writeLinks(id, feature.links(), viccEntryId);
+            writeSequenceOntology(id, feature.sequenceOntology(), viccEntryId);
 
         }
     }
 
-    private void writeProvenance(int featureEntryId, @NotNull List<String> provenances) {
+    private void writeProvenance(int featureEntryId, @NotNull List<String> provenances, int viccEntryId) {
         for (String provenance : provenances) {
-            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCE_, PROVENANCE.FEATUREENTRYID).values(provenance, featureEntryId).execute();
+            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCE_, PROVENANCE.FEATUREENTRYID, PROVENANCE.VICCENTRYID)
+                    .values(provenance, featureEntryId, viccEntryId)
+                    .execute();
         }
     }
 
-    private void writeSynonyms(int featureEntryId, @Nullable List<String> synonyms) {
+    private void writeSynonyms(int featureEntryId, @Nullable List<String> synonyms, int viccEntryId) {
         if (synonyms != null) {
             for (String synonym : synonyms) {
-                context.insertInto(SYNONYMS, SYNONYMS.SYNONYMS_, SYNONYMS.FEATUREENTRYID).values(synonym, featureEntryId).execute();
+                context.insertInto(SYNONYM, SYNONYM.SYNONYM_, SYNONYM.FEATUREENTRYID, SYNONYM.VICCENTRYID)
+                        .values(synonym, featureEntryId, viccEntryId)
+                        .execute();
             }
         }
     }
 
-    private void writeLinks(int featureEntryId, @Nullable List<String> links) {
+    private void writeLinks(int featureEntryId, @Nullable List<String> links, int viccEntryId) {
         if (links != null) {
             for (String link : links) {
-                context.insertInto(LINKS, LINKS.LINKS_, LINKS.FEATUREENTRYID).values(link, featureEntryId).execute();
+                context.insertInto(LINK, LINK.LINK_, LINK.FEATUREENTRYID, LINK.VICCENTRYID)
+                        .values(link, featureEntryId, viccEntryId)
+                        .execute();
             }
         }
     }
 
-    private void writeSequenceOntology(int featureId, @Nullable SequenceOntology sequenceOntologies) {
+    private void writeSequenceOntology(int featureId, @Nullable SequenceOntology sequenceOntologies, int viccEntryId) {
         if (sequenceOntologies != null) {
             int id = context.insertInto(SEQUENCEONTOLOGY,
                     SEQUENCEONTOLOGY.SOID,
                     SEQUENCEONTOLOGY.PARENTSOID,
                     SEQUENCEONTOLOGY.NAME,
                     SEQUENCEONTOLOGY.PARENTNAME,
-                    SEQUENCEONTOLOGY.FEATUREENTRYID)
+                    SEQUENCEONTOLOGY.FEATUREENTRYID,
+                    SEQUENCEONTOLOGY.VICCENTRYID)
                     .values(sequenceOntologies.soid(),
                             sequenceOntologies.parentSoid(),
                             sequenceOntologies.name(),
                             sequenceOntologies.parentName(),
-                            featureId)
+                            featureId,
+                            viccEntryId)
                     .returning(SEQUENCEONTOLOGY.ID)
                     .fetchOne()
                     .getValue(SEQUENCEONTOLOGY.ID);
-            writeHierarchy(id, sequenceOntologies.hierarchy());
+            writeHierarchy(id, sequenceOntologies.hierarchy(), viccEntryId);
         }
     }
 
-    private void writeHierarchy(int sequenceOntologyId, @Nullable List<String> hierchies) {
+    private void writeHierarchy(int sequenceOntologyId, @Nullable List<String> hierchies, int viccEntryId) {
         if (hierchies != null) {
             for (String hierchy : hierchies) {
-                context.insertInto(HIERARCHY, HIERARCHY.HIERARCHY_, HIERARCHY.SEQUENCEONTOLOGYENTRYID)
-                        .values(hierchy, sequenceOntologyId)
+                context.insertInto(HIERARCHY, HIERARCHY.HIERARCHY_, HIERARCHY.SEQUENCEONTOLOGYENTRYID, HIERARCHY.VICCENTRYID)
+                        .values(hierchy, sequenceOntologyId, viccEntryId)
                         .execute();
             }
         }
@@ -374,8 +393,8 @@ public class ViccDAO {
         context.deleteFrom(FEATURENAME).execute();
         context.deleteFrom(FEATURE).execute();
         context.deleteFrom(PROVENANCE).execute();
-        context.deleteFrom(SYNONYMS).execute();
-        context.deleteFrom(LINKS).execute();
+        context.deleteFrom(SYNONYM).execute();
+        context.deleteFrom(LINK).execute();
         context.deleteFrom(SEQUENCEONTOLOGY).execute();
         context.deleteFrom(HIERARCHY).execute();
         context.deleteFrom(ASSOCIATION).execute();
@@ -386,7 +405,7 @@ public class ViccDAO {
         context.deleteFrom(PHENOTYPE).execute();
         context.deleteFrom(PHENOTYPETYPE).execute();
         context.deleteFrom(ENVIRONMENTALCONTEXT).execute();
-        context.deleteFrom(APPROVEDCOUNTRIES).execute();
+        context.deleteFrom(APPROVEDCOUNTRY).execute();
         context.deleteFrom(TAXONOMY).execute();
         context.deleteFrom(VICCENTRY).execute();
     }
