@@ -18,6 +18,7 @@ public class GeneAnnotation {
 
     private int mVarId;
     private final boolean mIsStart;
+    private boolean mUpstream;
 
     private EnsemblGeneData mGeneData;
 
@@ -68,6 +69,7 @@ public class GeneAnnotation {
         mChromosome = chromosome;
         mPosition = position;
         mOrientation = orientation;
+        mUpstream = isUpstream(this);
     }
 
     public void setSvData(final StructuralVariantData var)
@@ -78,6 +80,7 @@ public class GeneAnnotation {
         mChromosome = mIsStart ? var.startChromosome() : var.endChromosome();
         mSvType = var.type();
         mInsertSequence = var.insertSequence();
+        mUpstream = isUpstream(this);
     }
 
     public int id() { return mVarId; }
@@ -87,6 +90,7 @@ public class GeneAnnotation {
     public String chromosome() { return mChromosome; }
     public double ploidy() { return mPloidy; }
     public String insertSequence() { return mInsertSequence; }
+    public boolean isUpstream() { return mUpstream; }
 
     public boolean isStart() { return mIsStart; }
     public boolean isEnd() { return !mIsStart; }

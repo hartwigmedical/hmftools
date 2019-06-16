@@ -233,12 +233,35 @@ public class Transcript {
     public GeneAnnotation parent() { return mGene; }
 
     public long svPosition() { return mGene.position(); }
-
     public String geneName() { return mGene.GeneName; }
+    public boolean isUpstream() { return mGene.isUpstream(); }
 
     public int codingBases() { return mCodingBases; }
     public int calcCodingBases(boolean isUpstream) { return isUpstream ? mCodingBases : mTotalCodingBases - mCodingBases; }
     public int totalCodingBases() { return mTotalCodingBases; }
+
+    public void setExonicCodingBase()
+    {
+        int calcStartPhase = calcPositionPhasing(this, isUpstream());
+        setExactCodingBase(calcStartPhase);
+    }
+
+    public static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
+    {
+        // if upstream then can just use the coding bases
+        // if downstream then coding bases are what's remaining
+        long codingBases = transcript.calcCodingBases(isUpstream);
+
+        // factor in insert sequence for the upstream partner
+        if(isUpstream && !transcript.parent().insertSequence().isEmpty())
+        {
+            codingBases += transcript.parent().insertSequence().length();
+        }
+
+        int adjustedPhase = (int)(codingBases % 3);
+
+        return adjustedPhase;
+    }
 
     public int exactCodingBase() { return mExactCodingBase; }
     public void setExactCodingBase(int base) { mExactCodingBase = base; }

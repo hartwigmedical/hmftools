@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.calcPositionPhasing;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -150,11 +151,11 @@ public class FusionFinder
         for (final GeneAnnotation startGene : breakendGenes1)
         {
             // left is upstream, right is downstream
-            boolean startUpstream = isUpstream(startGene);
+            boolean startUpstream = startGene.isUpstream();
 
             for (final GeneAnnotation endGene : breakendGenes2)
             {
-                boolean endUpstream = isUpstream(endGene);
+                boolean endUpstream = endGene.isUpstream();
 
                 if (startUpstream == endUpstream)
                 {
@@ -220,9 +221,7 @@ public class FusionFinder
         if(transcript.postCoding())
             return false;
 
-        boolean isUpstream = isUpstream(transcript.parent());
-
-        if(isUpstream)
+        if(transcript.isUpstream())
         {
             if(transcript.isPromoter())
                 return false;
@@ -342,7 +341,7 @@ public class FusionFinder
 
         if(checkExactMatch)
         {
-            phaseMatched = exonToExonInPhase(upstreamTrans, true, downstreamTrans, false);
+            phaseMatched = exonToExonInPhase(upstreamTrans, downstreamTrans);
 
             if(!phaseMatched)
             {
@@ -402,36 +401,13 @@ public class FusionFinder
         return null;
     }
 
-    private static boolean exonToExonInPhase(final Transcript startTrans, boolean startUpstream,
-            final Transcript endTrans, boolean endUpstream)
+    private static boolean exonToExonInPhase(final Transcript transUp, final Transcript transDown)
     {
         // check phasing and offset since exon start or coding start
-        int calcStartPhase = calcPositionPhasing(startTrans, startUpstream);
+        transUp.setExonicCodingBase();
+        transDown.setExonicCodingBase();
 
-        // factor in insert sequence
-        if(!startTrans.parent().insertSequence().isEmpty())
-        {
-            int insSeqAdjustment = (startTrans.parent().insertSequence().length() % 3);
-            calcStartPhase += insSeqAdjustment;
-        }
-
-        int calcEndPhase = calcPositionPhasing(endTrans, endUpstream);
-
-        startTrans.setExactCodingBase(calcStartPhase);
-        endTrans.setExactCodingBase(calcEndPhase);
-
-        return calcStartPhase == calcEndPhase;
-    }
-
-    private static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
-    {
-        // if upstream then can just use the coding bases
-        // if downstream then coding bases are what's remaining
-        long codingBases = transcript.calcCodingBases(isUpstream);
-
-        int adjustedPhase = (int)(codingBases % 3);
-
-        return adjustedPhase;
+        return transUp.exactCodingBase() == transDown.exactCodingBase();
     }
 
     private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
@@ -485,7 +461,26 @@ public class FusionFinder
         reportableFusion.setReportable(true);
 
         // check impact on protein regions
-        final Transcript downTrans = reportableFusion.downstreamTrans();
+        setFusionProteinFeatures(reportableFusion);
+
+        if (reportableFusion.getKnownFusionType() != REPORTABLE_TYPE_KNOWN)
+        {
+            final Transcript downTrans = reportableFusion.downstreamTrans();
+            long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+            long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+
+            if (requiredKeptButLost > 0 || requiredLostButKept > 0)
+                reportableFusion.setReportable(false);
+        }
+    }
+
+    public void setFusionProteinFeatures(GeneFusion fusion)
+    {
+        final Transcript downTrans = fusion.downstreamTrans();
+
+        if(!downTrans.getProteinFeaturesKept().isEmpty() || !downTrans.getProteinFeaturesLost().isEmpty())
+            return;
+
         final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(downTrans.TransId);
 
         if(transProteinData == null || transProteinData.isEmpty() || !downTrans.isCoding())
@@ -515,14 +510,6 @@ public class FusionFinder
             processedFeatures.add(feature);
         }
 
-        if (reportableFusion.getKnownFusionType() != REPORTABLE_TYPE_KNOWN)
-        {
-            long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
-            long requiredLostButKept = mProteinsRequiredLost.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
-
-            if (requiredKeptButLost > 0 || requiredLostButKept > 0)
-                reportableFusion.setReportable(false);
-        }
     }
 
     private void addProteinFeature(final Transcript transcript, boolean isDownstream, final String feature, int featureStart, int featureEnd)

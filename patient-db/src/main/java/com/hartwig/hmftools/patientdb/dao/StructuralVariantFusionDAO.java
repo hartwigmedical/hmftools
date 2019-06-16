@@ -31,8 +31,8 @@ import org.jooq.Record2;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
 
-public class StructuralVariantFusionDAO {
-
+public class StructuralVariantFusionDAO
+{
     @NotNull
     private final DSLContext context;
 
@@ -45,7 +45,8 @@ public class StructuralVariantFusionDAO {
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
     }
 
-    private InsertValuesStep18 createBreakendInserter() {
+    private InsertValuesStep18 createBreakendInserter()
+    {
         return context.insertInto(SVBREAKEND,
                 SVBREAKEND.MODIFIED,
                 SVBREAKEND.SAMPLEID,
@@ -68,7 +69,8 @@ public class StructuralVariantFusionDAO {
     }
 
     public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<Transcript> transcripts,
-            @NotNull List<GeneFusion> fusions) {
+            @NotNull List<GeneFusion> fusions)
+    {
         context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
 
@@ -80,10 +82,11 @@ public class StructuralVariantFusionDAO {
         InsertValuesStep18 inserter = createBreakendInserter();
         List<Transcript> transcriptsList = Lists.newArrayList();
 
-        for (int i = 0; i < transcripts.size(); ++i) {
+        for (int i = 0; i < transcripts.size(); ++i)
+        {
             final Transcript transcript = transcripts.get(i);
             final GeneAnnotation geneAnnotation = transcript.parent();
-            boolean isUpstream = isUpstream(geneAnnotation);
+            boolean isUpstream = transcript.isUpstream();
 
             //noinspection unchecked
             inserter.values(timestamp,
@@ -108,7 +111,8 @@ public class StructuralVariantFusionDAO {
             transcriptsList.add(transcript);
 
             // batch-insert transcripts since there can be many more than the batch size per sample
-            if (transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1) {
+            if (transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1)
+            {
 
                 @SuppressWarnings("unchecked")
                 final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
@@ -126,7 +130,8 @@ public class StructuralVariantFusionDAO {
             }
         }
 
-        for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE)) {
+        for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
+        {
             final InsertValuesStep13 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
@@ -162,7 +167,8 @@ public class StructuralVariantFusionDAO {
     }
 
     @NotNull
-    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
+    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample)
+    {
         Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
 
         Svbreakend five = SVBREAKEND.as("five");
@@ -176,7 +182,8 @@ public class StructuralVariantFusionDAO {
                 .where(SVFUSION.SAMPLEID.eq(sample))
                 .fetch();
 
-        for (Record record : resultFiveGene) {
+        for (Record record : resultFiveGene)
+        {
             simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
                     .fiveGene(record.getValue(five.GENE))
                     .threeGene(record.getValue(three.GENE))

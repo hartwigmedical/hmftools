@@ -441,8 +441,30 @@ public class SvGeneTranscriptCollection
                     upExonRank = downExonRank = exonData.ExonRank;
                     upExonPhase = exonData.ExonPhase;
                     downExonPhase = exonData.ExonPhaseEnd;
-                    nextDownDistance = isForwardStrand ? exonData.ExonEnd - position : position - exonData.ExonStart;
-                    nextUpDistance = isForwardStrand ? position - exonData.ExonStart : exonData.ExonEnd - position;
+
+                    // set distance to next and previous splice acceptor
+                    if(isForwardStrand)
+                    {
+                        nextUpDistance = position - exonData.ExonStart;
+
+                        if(index < transcriptExons.size() - 1)
+                        {
+                            final TranscriptExonData nextExonData = transcriptExons.get(index + 1);
+                            nextDownDistance = nextExonData.ExonStart - position;
+                        }
+                    }
+                    else
+                    {
+                        nextUpDistance = exonData.ExonEnd - position;
+
+                        if(index > 1)
+                        {
+                            // first splice acceptor is the second exon (or later on)
+                            final TranscriptExonData prevExonData = transcriptExons.get(index - 1);
+                            nextDownDistance = position - prevExonData.ExonEnd;
+                        }
+                    }
+
                     break;
                 }
                 else if(position < exonData.ExonStart)

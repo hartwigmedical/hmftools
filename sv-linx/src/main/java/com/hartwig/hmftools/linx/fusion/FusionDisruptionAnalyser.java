@@ -841,7 +841,7 @@ public class FusionDisruptionAnalyser
         long minDistance = startPair.length();
         boolean allLinksAssembled = startPair.isAssembled();
 
-        boolean isUpstream = isUpstream(transcript.parent());
+        boolean isUpstream = transcript.isUpstream();
 
         while(linkIndex >= 0 && linkIndex <= chain.getLinkedPairs().size() - 1)
         {
@@ -995,6 +995,9 @@ public class FusionDisruptionAnalyser
 
             if(topFusion != null)
             {
+                // add protein information which won't have been set for non-known fusions
+                mFusionFinder.setFusionProteinFeatures(topFusion);
+
                 uniqueFusions.add(topFusion);
             }
         }
@@ -1033,6 +1036,8 @@ public class FusionDisruptionAnalyser
                 transcriptsToUpload.add(fusion.downstreamTrans());
         }
 
+        // transcripts not used in fusions won't have the exact exonic base set
+        transcriptsToUpload.stream().filter(Transcript::isExonic).forEach(x -> x.setExonicCodingBase());
 
         LOGGER.debug("persisting {} breakends and {} fusions to database", transcriptsToUpload.size(), fusionsToUpload.size());
 
