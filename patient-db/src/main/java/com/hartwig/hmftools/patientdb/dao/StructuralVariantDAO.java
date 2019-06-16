@@ -23,21 +23,25 @@ import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.Result;
 
-class StructuralVariantDAO {
+class StructuralVariantDAO
+{
     @NotNull
     private final DSLContext context;
 
-    StructuralVariantDAO(@NotNull final DSLContext context) {
+    StructuralVariantDAO(@NotNull final DSLContext context)
+    {
         this.context = context;
     }
 
     @NotNull
-    public final List<StructuralVariantData> read(@NotNull final String sample) {
+    public final List<StructuralVariantData> read(@NotNull final String sample)
+    {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result) {
+        for (Record record : result)
+        {
 
             boolean isSingleBreakend =
                     record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null && record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
@@ -47,12 +51,13 @@ class StructuralVariantDAO {
 
             // TEMP CAS: ploidy correction for NONE segment SVs
             Double ploidy = record.getValue(STRUCTURALVARIANT.PLOIDY);
-            if (isSingleBreakend && ploidy == null && filterStr.equals(INFERRED)) {
+            if (isSingleBreakend && ploidy == null && filterStr.equals(INFERRED))
+            {
                 ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
-                    .id(record.getValue(STRUCTURALVARIANT.ID))
+                    .id(record.getValue(STRUCTURALVARIANT.SVID))
                     .startChromosome(record.getValue(STRUCTURALVARIANT.STARTCHROMOSOME))
                     .endChromosome(isSingleBreakend ? "0" : record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME))
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
@@ -111,7 +116,8 @@ class StructuralVariantDAO {
     }
 
     @NotNull
-    public final List<String> getSamplesList(@NotNull final String sampleSearch) {
+    public final List<String> getSamplesList(@NotNull final String sampleSearch)
+    {
         final Result<Record1<String>> result = sampleSearch.equals("")
                 ? context.select(STRUCTURALVARIANT.SAMPLEID)
                 .from(STRUCTURALVARIANT)
@@ -125,19 +131,22 @@ class StructuralVariantDAO {
 
         List<String> samplesList = Lists.newArrayList();
 
-        for (Record record : result) {
+        for (Record record : result)
+        {
             samplesList.add(record.getValue(STRUCTURALVARIANT.SAMPLEID));
         }
 
         return samplesList;
     }
 
-    void write(@NotNull final String sample, @NotNull final List<StructuralVariantData> variants) {
+    void write(@NotNull final String sample, @NotNull final List<StructuralVariantData> variants)
+    {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         deleteStructuralVariantsForSample(sample);
 
-        for (List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE)) {
+        for (List<StructuralVariantData> batch : Iterables.partition(variants, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANT,
                     STRUCTURALVARIANT.SAMPLEID,
                     STRUCTURALVARIANT.SVID,
@@ -200,7 +209,8 @@ class StructuralVariantDAO {
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull StructuralVariantData variant) {
+            @NotNull StructuralVariantData variant)
+    {
         boolean isSingle = variant.type() == SGL;
 
         inserter.values(sample,
@@ -260,11 +270,13 @@ class StructuralVariantDAO {
                 timestamp);
     }
 
-    public void deleteStructuralVariantsForSample(@NotNull String sample) {
+    public void deleteStructuralVariantsForSample(@NotNull String sample)
+    {
         context.delete(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).execute();
     }
 
-    private static boolean byteToBoolean(@NotNull Byte b) {
+    private static boolean byteToBoolean(@NotNull Byte b)
+    {
         return b != 0;
     }
 }
