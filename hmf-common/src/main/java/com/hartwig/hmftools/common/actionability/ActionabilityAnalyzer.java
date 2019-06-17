@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
@@ -15,8 +14,6 @@ import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerF
 import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.actionability.panel.ActionablePanel;
-import com.hartwig.hmftools.common.actionability.panel.ActionablePanelBuilder;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -73,30 +70,19 @@ public class ActionabilityAnalyzer {
         this.cancerTypeAnalyzer = cancerTypeAnalyzer;
     }
 
-    @VisibleForTesting
     @NotNull
-    SomaticVariantEvidenceAnalyzer variantAnalyzer() {
+    public SomaticVariantEvidenceAnalyzer variantAnalyzer() {
         return variantAnalyzer;
     }
 
-    @VisibleForTesting
     @NotNull
-    CopyNumberEvidenceAnalyzer cnvAnalyzer() {
+    public CopyNumberEvidenceAnalyzer cnvAnalyzer() {
         return copyNumberAnalyzer;
     }
 
-    @VisibleForTesting
     @NotNull
-    FusionEvidenceAnalyzer fusionAnalyzer() {
+    public FusionEvidenceAnalyzer fusionAnalyzer() {
         return fusionAnalyzer;
-    }
-
-    @NotNull
-    public List<ActionablePanel> panel() {
-        return new ActionablePanelBuilder().addCopyNumbers(copyNumberAnalyzer)
-                .addFusions(fusionAnalyzer)
-                .addVariants(variantAnalyzer)
-                .build();
     }
 
     @NotNull

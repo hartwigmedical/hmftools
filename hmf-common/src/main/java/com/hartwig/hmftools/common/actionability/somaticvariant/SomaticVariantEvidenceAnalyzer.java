@@ -42,6 +42,16 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
+    public List<ActionableSomaticVariant> actionableVariants() {
+        return actionableVariants;
+    }
+
+    @NotNull
+    public List<ActionableRange> actionableRanges() {
+        return actionableRanges;
+    }
+
+    @NotNull
     public List<EvidenceItem> evidenceForSomaticVariant(@NotNull SomaticVariant variant, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();

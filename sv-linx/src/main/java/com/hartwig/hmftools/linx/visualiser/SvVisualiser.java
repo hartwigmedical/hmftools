@@ -17,19 +17,19 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.linx.visualisation.circos.CircosConfigWriter;
-import com.hartwig.hmftools.linx.visualisation.circos.CircosDataWriter;
-import com.hartwig.hmftools.linx.visualisation.circos.ColorPicker;
-import com.hartwig.hmftools.linx.visualisation.circos.Span;
-import com.hartwig.hmftools.linx.visualisation.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualisation.data.CopyNumberAlterations;
-import com.hartwig.hmftools.linx.visualisation.data.Exon;
-import com.hartwig.hmftools.linx.visualisation.data.Exons;
-import com.hartwig.hmftools.linx.visualisation.data.Link;
-import com.hartwig.hmftools.linx.visualisation.data.Links;
-import com.hartwig.hmftools.linx.visualisation.data.Segment;
-import com.hartwig.hmftools.linx.visualisation.data.Segments;
+import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
+import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
+import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
+import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
+import com.hartwig.hmftools.linx.visualiser.circos.Span;
+import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
+import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
+import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -216,14 +216,15 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
+        final CircosData circosData = new CircosData(segments, links, alterations, exons);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations, exons);
+        confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
+
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(circosData);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),

@@ -31,11 +31,8 @@ public class CopyNumberEvidenceAnalyzer {
     }
 
     @NotNull
-    public Set<String> actionableGenes(@NotNull final CopyNumberType type) {
-        return actionableCopyNumbers.stream()
-                .filter(x -> x.type().equals(type))
-                .map(ActionableCopyNumber::gene)
-                .collect(Collectors.toSet());
+    public List<ActionableCopyNumber> actionableCopyNumbers() {
+        return actionableCopyNumbers;
     }
 
     @NotNull

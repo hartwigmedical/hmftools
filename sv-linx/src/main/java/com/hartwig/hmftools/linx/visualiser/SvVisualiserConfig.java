@@ -7,14 +7,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.linx.visualisation.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualisation.data.CopyNumberAlterations;
-import com.hartwig.hmftools.linx.visualisation.data.Exon;
-import com.hartwig.hmftools.linx.visualisation.data.Exons;
-import com.hartwig.hmftools.linx.visualisation.data.Link;
-import com.hartwig.hmftools.linx.visualisation.data.Links;
-import com.hartwig.hmftools.linx.visualisation.data.Segment;
-import com.hartwig.hmftools.linx.visualisation.data.Segments;
+import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
+import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
+import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
