@@ -36,11 +36,13 @@ public class StructuralVariantFusionDAO
     @NotNull
     private final DSLContext context;
 
-    public StructuralVariantFusionDAO(@NotNull final DSLContext context) {
+    public StructuralVariantFusionDAO(@NotNull final DSLContext context)
+    {
         this.context = context;
     }
 
-    public void deleteAnnotationsForSample(@NotNull String sampleId) {
+    public void deleteAnnotationsForSample(@NotNull String sampleId)
+    {
         context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
     }
@@ -113,15 +115,15 @@ public class StructuralVariantFusionDAO
             // batch-insert transcripts since there can be many more than the batch size per sample
             if (transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1)
             {
-
-                @SuppressWarnings("unchecked")
                 final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
-                if (ids.size() != transcriptsList.size()) {
+                if (ids.size() != transcriptsList.size())
+                {
                     throw new RuntimeException("Not all transcripts were inserted successfully");
                 }
 
-                for (int j = 0; j < ids.size(); j++) {
+                for (int j = 0; j < ids.size(); j++)
+                {
                     transcriptToDatabaseIdMap.put(transcriptsList.get(j), ids.get(j).intValue());
                 }
 
