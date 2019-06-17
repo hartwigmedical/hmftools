@@ -15,6 +15,9 @@ import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_1;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_2;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_5P_UTR;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion.GeneRangeData.NON_PROX_TYPE_LONG_SAME_ARM;
+import static com.hartwig.hmftools.linx.fusion.GeneRangeData.NON_PROX_TYPE_REMOTE;
+import static com.hartwig.hmftools.linx.fusion.GeneRangeData.NON_PROX_TYPE_SHORT_INV;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.nextTranscriptExons;
 import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.types.SvaConfig.GENE_TRANSCRIPTS_DIR;
@@ -375,9 +378,13 @@ public class FusionLikelihood
 
     public void generateNonProximateCounts()
     {
+        // for each arm and each gene in that arm sum up the overlapping counts against all genes beyond the specified
+        // DEL and DUP max bucket length, and then all overlapping counts on remote arms
         long delLimit = !mDelBucketLengths.isEmpty() ? mDelBucketLengths.get(mDelBucketLengths.size() - 1) : 0;
         long dupLimit = !mDupBucketLengths.isEmpty() ? mDupBucketLengths.get(mDupBucketLengths.size() - 1) : 0;
         long proximateLimit = max(delLimit, dupLimit);
+
+        long shortInvBucketLength = 100000;
 
         for (Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
         {
@@ -427,7 +434,7 @@ public class FusionLikelihood
 
                         if(remoteCounts != null)
                         {
-                            gene1.addRemoteBaseOverlapCountDownstream(remoteCounts * region.length());
+                            gene1.addBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE, remoteCounts * region.length());
                         }
                     }
 
@@ -437,20 +444,40 @@ public class FusionLikelihood
 
                         if(remoteCounts != null)
                         {
-                            gene1.addRemoteBaseOverlapCountUpstream(remoteCounts * region.length());
+                            gene1.addBaseOverlapCountUpstream(NON_PROX_TYPE_REMOTE, remoteCounts * region.length());
                         }
                     }
                 }
 
-                // and now the local ones outside the DEL and DUP proximity lengths
+                // and now the local ones outside the DEL and DUP proximity lengths, ignoring any strand checking
+                // this is considering fusions between DUPs, DUPs or INVs
                 for(int j = i+1; j < geneList.size(); ++j)
                 {
                     GeneRangeData gene2 = geneList.get(j);
 
-                    if (abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart) < proximateLimit
-                    || abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneEnd) < proximateLimit
-                    || abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneEnd) < proximateLimit
-                    || abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneStart) < proximateLimit)
+                    if(!gene1.Arm.equals(gene2.Arm))
+                    {
+                        break;
+                    }
+
+                    int type = -1;
+
+                    if (abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart) > proximateLimit
+                    && abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneEnd) > proximateLimit
+                    && abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneEnd) > proximateLimit
+                    && abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneStart) > proximateLimit)
+                    {
+                        type = NON_PROX_TYPE_LONG_SAME_ARM;
+                    }
+                    else if(gene1.GeneData.Strand != gene2.GeneData.Strand
+                    && abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart) < shortInvBucketLength
+                    && abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneEnd) < shortInvBucketLength
+                    && abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneEnd) < shortInvBucketLength
+                    && abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneStart) < shortInvBucketLength)
+                    {
+                        type = NON_PROX_TYPE_SHORT_INV;
+                    }
+                    else
                     {
                         continue;
                     }
@@ -465,21 +492,21 @@ public class FusionLikelihood
 
                             if(hasAnyPhaseMatch(region1, region2, false))
                             {
-                                gene1.addLocalBaseOverlapCountUpstream(regionOverlap);
-                                gene1.addLocalBaseOverlapCountDownstream(regionOverlap);
+                                gene1.addBaseOverlapCountUpstream(type, regionOverlap);
+                                gene1.addBaseOverlapCountDownstream(type, regionOverlap);
 
-                                gene2.addLocalBaseOverlapCountUpstream(regionOverlap);
-                                gene2.addLocalBaseOverlapCountDownstream(regionOverlap);
+                                gene2.addBaseOverlapCountUpstream(type, regionOverlap);
+                                gene2.addBaseOverlapCountDownstream(type, regionOverlap);
                             }
                             else if(regionsPhaseMatched(region1, region2))
                             {
-                                gene1.addLocalBaseOverlapCountUpstream(regionOverlap);
-                                gene2.addLocalBaseOverlapCountDownstream(regionOverlap);
+                                gene1.addBaseOverlapCountUpstream(type, regionOverlap);
+                                gene2.addBaseOverlapCountDownstream(type, regionOverlap);
                             }
                             else if(regionsPhaseMatched(region2, region1))
                             {
-                                gene1.addLocalBaseOverlapCountDownstream(regionOverlap);
-                                gene2.addLocalBaseOverlapCountUpstream(regionOverlap);
+                                gene1.addBaseOverlapCountDownstream(type, regionOverlap);
+                                gene2.addBaseOverlapCountUpstream(type, regionOverlap);
                             }
                         }
                     }
@@ -501,7 +528,7 @@ public class FusionLikelihood
 
         for (Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
         {
-            LOGGER.info("proximate DEL fusion candidates from chromosome({})", entry.getKey());
+            LOGGER.info("proximate forward-strand fusion candidates from chromosome({})", entry.getKey());
             findProximateFusions(entry.getValue(), 1);
         }
 
@@ -509,7 +536,7 @@ public class FusionLikelihood
 
         for (Map.Entry<String, List<GeneRangeData>> entry : mChrReverseGeneDataMap.entrySet())
         {
-            LOGGER.info("proximate DUP fusion candidates from chromosome({})", entry.getKey());
+            LOGGER.info("proximate reverse-strand fusion candidates from chromosome({})", entry.getKey());
             findProximateFusions(entry.getValue(), -1);
         }
     }
@@ -527,7 +554,8 @@ public class FusionLikelihood
             if(lowerGene.GeneData.Strand != strandMatch)
                 continue;
 
-            for(int upperIndex = lowerIndex + 1; upperIndex < geneRangeList.size(); ++upperIndex)
+            // allow same-gene fusions, so start the next gene at the current one
+            for(int upperIndex = lowerIndex; upperIndex < geneRangeList.size(); ++upperIndex)
             {
                 GeneRangeData upperGene = geneRangeList.get(upperIndex);
 
@@ -566,8 +594,11 @@ public class FusionLikelihood
                 for (GenePhaseRegion upperRegion : upperGene.getCombinedPhaseRegions())
                 {
                     // ignore overlapping regions for now since it's not clear whether a DUP or DEL would be required
-                    if (lowerRegion.end() > upperRegion.start())
+                    if (!(lowerRegion.end() < upperRegion.start() || lowerRegion.start() > upperRegion.end()))
                         continue;
+
+                    // if (lowerRegion.end() > upperRegion.start())
+                    //    continue;
 
                     boolean phaseMatched = hasAnyPhaseMatch(lowerRegion, upperRegion, false);
 
@@ -975,7 +1006,7 @@ public class FusionLikelihood
 
             writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
             writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding,PreGene");
-            writer.write(",NonProximateArmRateUp,NonProximateRateDown,RemoteRateUp,RemoteRateDown");
+            writer.write(",ShortInvRateUp,ShortInvRateDown,SameArmRateUp,SameArmRateDown,RemoteRateUp,RemoteRateDown");
             writer.newLine();
 
             // adjustment factors to convert overlap base count into rates - with the 2 presenting orientation combinations
@@ -1023,11 +1054,13 @@ public class FusionLikelihood
                     writer.write(String.format(",%d,%d,%d,%d,%d,%d",
                             phase5pUTR, phase0, phase1, phase2, nonCoding, preGene));
 
-                    writer.write(String.format(",%.9f,%.9f,%.9f,%.9f",
-                            geneData.getLocalBaseOverlapCountUpstream() * localFusionFactor,
-                            geneData.getLocalBaseOverlapCountDownstream() * localFusionFactor,
-                            geneData.getRemoteBaseOverlapCountUpstream() * remoteFusionFactor,
-                            geneData.getRemoteBaseOverlapCountDownstream() * remoteFusionFactor));
+                    writer.write(String.format(",%.9f,%.9f,%.9f,%.9f,%.9f,%.9f",
+                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * localFusionFactor,
+                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_SHORT_INV) * localFusionFactor,
+                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * remoteFusionFactor,
+                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * remoteFusionFactor,
+                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE) * remoteFusionFactor,
+                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE) * remoteFusionFactor));
 
                     writer.newLine();
                 }

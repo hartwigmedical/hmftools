@@ -21,10 +21,12 @@ public class GeneRangeData
     private Map<Integer,Long> mDelFusionBaseCounts;
     private Map<Integer,Long> mDupFusionBaseCounts;
 
-    private long mRemoteBaseOverlapCountDownstream;
-    private long mRemoteBaseOverlapCountUpstream;
-    private long mLocalBaseOverlapCountDownstream;
-    private long mLocalBaseOverlapCountUpstream;
+    private long[] mBaseOverlapCountDownstream;
+    private long[] mBaseOverlapCountUpstream;
+
+    public static final int NON_PROX_TYPE_SHORT_INV = 0;
+    public static final int NON_PROX_TYPE_LONG_SAME_ARM = 1;
+    public static final int NON_PROX_TYPE_REMOTE = 2;
 
     public GeneRangeData(final EnsemblGeneData geneData)
     {
@@ -37,10 +39,8 @@ public class GeneRangeData
         mDelFusionBaseCounts = Maps.newHashMap();
         mDupFusionBaseCounts = Maps.newHashMap();
 
-        mRemoteBaseOverlapCountUpstream = 0;
-        mRemoteBaseOverlapCountDownstream = 0;
-        mLocalBaseOverlapCountUpstream = 0;
-        mLocalBaseOverlapCountDownstream = 0;
+        mBaseOverlapCountUpstream = new long[NON_PROX_TYPE_REMOTE+1];
+        mBaseOverlapCountDownstream = new long[NON_PROX_TYPE_REMOTE+1];
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
@@ -57,13 +57,8 @@ public class GeneRangeData
         return mPhaseRegions.stream().anyMatch(x -> x.Phase != PHASE_NON_CODING);
     }
 
-    public long getRemoteBaseOverlapCountUpstream() { return mRemoteBaseOverlapCountUpstream; }
-    public void addRemoteBaseOverlapCountUpstream(long count) { mRemoteBaseOverlapCountUpstream += count; }
-    public long getRemoteBaseOverlapCountDownstream() { return mRemoteBaseOverlapCountDownstream; }
-    public void addRemoteBaseOverlapCountDownstream(long count) { mRemoteBaseOverlapCountDownstream += count; }
-
-    public long getLocalBaseOverlapCountUpstream() { return mLocalBaseOverlapCountUpstream; }
-    public void addLocalBaseOverlapCountUpstream(long count) { mLocalBaseOverlapCountUpstream += count; }
-    public long getLocalBaseOverlapCountDownstream() { return mLocalBaseOverlapCountDownstream; }
-    public void addLocalBaseOverlapCountDownstream(long count) { mLocalBaseOverlapCountDownstream += count; }
+    public long getBaseOverlapCountUpstream(int type) { return mBaseOverlapCountUpstream[type]; }
+    public void addBaseOverlapCountUpstream(int type, long count) { mBaseOverlapCountUpstream[type] += count; }
+    public long getBaseOverlapCountDownstream(int type) { return mBaseOverlapCountDownstream[type]; }
+    public void addBaseOverlapCountDownstream(int type, long count) { mBaseOverlapCountDownstream[type] += count; }
 }
