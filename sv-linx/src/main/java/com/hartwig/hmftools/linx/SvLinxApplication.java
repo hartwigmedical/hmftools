@@ -46,6 +46,8 @@ public class SvLinxApplication
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
+    private static final String FILTER_QC_PASS = "filter_qc_pass";
+
     private static final Logger LOGGER = LogManager.getLogger(SvLinxApplication.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
@@ -73,7 +75,11 @@ public class SvLinxApplication
 
         if (samplesList.isEmpty())
         {
-            samplesList = getStructuralVariantSamplesList(dbAccess);
+            boolean filterQCPassOnly = cmd.hasOption(FILTER_QC_PASS);
+            samplesList = getStructuralVariantSamplesList(dbAccess, filterQCPassOnly);
+
+            LOGGER.info("retrieved {} samples {}", samplesList.size(), filterQCPassOnly ? "QC-pass-filtered" : "");
+
             svaConfig.setSampleIds(samplesList);
         }
 
@@ -252,9 +258,9 @@ public class SvLinxApplication
     }
 
 
-    private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess)
+    private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess, boolean filterQCPassOnly)
     {
-        final List<String> sampleIds = dbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY);
+        final List<String> sampleIds = filterQCPassOnly ? dbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY) : dbAccess.getSampleIds();
 
         if(!sampleIds.isEmpty())
             return sampleIds;
@@ -271,6 +277,7 @@ public class SvLinxApplication
         options.addOption(DRIVERS_CHECK, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
+        options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
 
         // allow sub-components to add their specific config
         SvaConfig.addCmdLineArgs(options);

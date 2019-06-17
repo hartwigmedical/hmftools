@@ -972,9 +972,19 @@ public class FusionDisruptionAnalyser
         List<String> genePairs = Lists.newArrayList();
         uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
 
+        List<Integer> usedSvIds = Lists.newArrayList();
+        uniqueFusions.stream().forEach(x -> usedSvIds.add(x.upstreamTrans().parent().id()));
+
+        uniqueFusions.stream()
+                .filter(x -> !usedSvIds.contains(x.downstreamTrans().parent().id()))
+                .forEach(x -> usedSvIds.add(x.downstreamTrans().parent().id()));
+
         for(GeneFusion fusion : mFusions)
         {
             if(fusion.reportable() || genePairs.contains(fusion.name()))
+                continue;
+
+            if(usedSvIds.contains(fusion.upstreamTrans().parent().id()) || usedSvIds.contains(fusion.downstreamTrans().parent().id()))
                 continue;
 
             // only add viable fusions for upload
@@ -990,6 +1000,11 @@ public class FusionDisruptionAnalyser
                     .collect(Collectors.toList());
 
             genePairs.add(fusion.name());
+
+            usedSvIds.add(fusion.upstreamTrans().parent().id());
+
+            if(!usedSvIds.contains(fusion.downstreamTrans().parent().id()))
+                usedSvIds.add(fusion.downstreamTrans().parent().id());
 
             GeneFusion topFusion = determineReportableFusion(similarFusions, false);
 

@@ -142,6 +142,11 @@ public class DatabaseAccess implements AutoCloseable {
         return purityDAO.getSamplesPassingQC(minPurity);
     }
 
+    @NotNull
+    public final List<String> getSampleIds() {
+        return purityDAO.getSampleIds();
+    }
+
     @Nullable
     public PurityContext readPurityContext(@NotNull final String sampleId) {
         return purityDAO.readPurityContext(sampleId);

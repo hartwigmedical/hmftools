@@ -707,11 +707,11 @@ public class FusionFinder
                     mFusionWriter.write(String.format(",%s", annotatationHeaders));
 
 
-                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,PloidyUp,GeneUp,ChrBandUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
+                mFusionWriter.write(",SvIdUp,ChrUp,PosUp,OrientUp,TypeUp,PloidyUp,GeneIdUp,GeneNameUp,ChrBandUp,TranscriptUp,StrandUp,RegionTypeUp,CodingTypeUp");
                 mFusionWriter.write(",ExonUp,PhaseUp,ExonMaxUp,DisruptiveUp,ExactBaseUp,CodingBasesUp,TotalCodingUp");
                 mFusionWriter.write(",CodingStartUp,CodingEndUp,TransStartUp,TransEndUp,DistancePrevUp,CanonicalUp,BiotypeUp");
 
-                mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,PloidyDown,GeneDown,ChrBandDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
+                mFusionWriter.write(",SvIdDown,ChrDown,PosDown,OrientDown,TypeDown,PloidyDown,GeneIdDown,GeneNameDown,ChrBandDown,TranscriptDown,StrandDown,RegionTypeDown,CodingTypeDown");
                 mFusionWriter.write(",ExonDown,PhaseDown,ExonMaxDown,DisruptiveDown,ExactBaseDown,CodingBasesDown,TotalCodingDown");
                 mFusionWriter.write(",CodingStartDown,CodingEndDown,TransStartDown,TransEndDown,DistancePrevDown,CanonicalDown,BiotypeDown");
 
@@ -749,8 +749,8 @@ public class FusionFinder
             final Transcript upTrans = fusion.upstreamTrans();
             final Transcript downTrans = fusion.downstreamTrans();
 
-            final GeneAnnotation startVar = upTrans.parent();
-            final GeneAnnotation endVar = downTrans.parent();
+            final GeneAnnotation upGene = upTrans.parent();
+            final GeneAnnotation downGene = downTrans.parent();
 
             final FusionAnnotations annotations = fusion.getAnnotations();
             String annotationsStr = ",,";
@@ -805,13 +805,13 @@ public class FusionFinder
             // write upstream SV, transcript and exon info
             writer.write(
                     String.format(",%d,%s,%d,%d,%s,%.6f",
-                            startVar.id(), startVar.chromosome(), startVar.position(), startVar.orientation(),
-                            startVar.type(), startVar.ploidy()));
+                            upGene.id(), upGene.chromosome(), upGene.position(), upGene.orientation(),
+                            upGene.type(), upGene.ploidy()));
 
             writer.write(
-                    String.format(",%s,%s,%s,%d,%s,%s",
-                            startVar.GeneName, startVar.karyotypeBand(), upTrans.StableId,
-                            startVar.Strand, upTrans.regionType(), upTrans.codingType()));
+                    String.format(",%s,%s,%s,%s,%d,%s,%s",
+                            upGene.StableId, upGene.GeneName, upGene.karyotypeBand(), upTrans.StableId,
+                            upGene.Strand, upTrans.regionType(), upTrans.codingType()));
 
             writer.write(
                     String.format(",%d,%d,%d,%s",
@@ -824,13 +824,13 @@ public class FusionFinder
 
             writer.write(
                     String.format(",%d,%s,%d,%d,%s,%.6f",
-                            endVar.id(), endVar.chromosome(), endVar.position(), endVar.orientation(),
-                            endVar.type(), endVar.ploidy()));
+                            downGene.id(), downGene.chromosome(), downGene.position(), downGene.orientation(),
+                            downGene.type(), downGene.ploidy()));
 
             writer.write(
-                    String.format(",%s,%s,%s,%d,%s,%s",
-                            endVar.GeneName, endVar.karyotypeBand(), downTrans.StableId,
-                            endVar.Strand, downTrans.regionType(), downTrans.codingType()));
+                    String.format(",%s,%s,%s,%s,%d,%s,%s",
+                            downGene.StableId, downGene.GeneName, downGene.karyotypeBand(), downTrans.StableId,
+                            downGene.Strand, downTrans.regionType(), downTrans.codingType()));
 
             writer.write(
                     String.format(",%d,%d,%d,%s",

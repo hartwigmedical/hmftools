@@ -89,6 +89,19 @@ class PurityDAO {
         return sampleIds;
     }
 
+    @NotNull
+    public final List<String> getSampleIds() {
+        List<String> sampleIds = Lists.newArrayList();
+
+        final Result<Record> result = context.select().from(PURITY).fetch();
+
+        for (Record record : result) {
+            sampleIds.add(record.getValue(PURITY.SAMPLEID));
+        }
+
+        return sampleIds;
+    }
+
     void write(@NotNull final String sample, @NotNull final PurityContext purity, @NotNull final PurpleQC checks) {
         final FittedPurity bestFit = purity.bestFit();
         final FittedPurityScore score = purity.score();
