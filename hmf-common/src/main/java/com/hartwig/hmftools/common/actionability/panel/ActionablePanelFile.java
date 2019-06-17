@@ -51,11 +51,11 @@ public class ActionablePanelFile {
                 .add(String.valueOf(panel.fusion()))
                 .add(String.valueOf(panel.variant()))
                 .add(String.valueOf(panel.drup()))
-                .add(panel.drupCategory())
-                .add(panel.responsive())
-                .add(panel.responsiveSource())
-                .add(panel.resistant())
-                .add(panel.resistantSource())
+                .add(panel.drupCategory().isEmpty() ? "NA" : panel.drupCategory())
+                .add(panel.responsive().isEmpty() ? "NA" : panel.responsive())
+                .add(panel.responsiveSource().isEmpty() ? "NA" : panel.responsiveSource())
+                .add(panel.resistant().isEmpty() ? "NA" : panel.resistant())
+                .add(panel.resistantSource().isEmpty() ? "NA" : panel.resistantSource())
                 .toString();
     }
 
