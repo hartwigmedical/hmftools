@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.linx.visualisation.data;
+package com.hartwig.hmftools.linx.visualiser.data;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.visualisation.circos.SegmentTerminal;
+import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ public class SegmentsTest
 
     private static Segment createSegment(String chromosome)
     {
-        return com.hartwig.hmftools.linx.visualisation.data.ImmutableSegment.builder()
+        return ImmutableSegment.builder()
                 .sampleId("sampleId")
                 .clusterId(1)
                 .chainId(1)

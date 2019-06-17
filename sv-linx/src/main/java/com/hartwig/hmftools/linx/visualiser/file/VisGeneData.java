@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualiser;
+package com.hartwig.hmftools.linx.visualiser.file;
 
 public class VisGeneData
 {

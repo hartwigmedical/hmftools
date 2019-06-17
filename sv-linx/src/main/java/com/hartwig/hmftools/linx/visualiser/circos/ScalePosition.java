@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualisation.circos;
+package com.hartwig.hmftools.linx.visualiser.circos;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,14 +13,14 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.linx.visualisation.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualisation.data.Exon;
-import com.hartwig.hmftools.linx.visualisation.data.ImmutableCopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualisation.data.ImmutableExon;
-import com.hartwig.hmftools.linx.visualisation.data.ImmutableLink;
-import com.hartwig.hmftools.linx.visualisation.data.ImmutableSegment;
-import com.hartwig.hmftools.linx.visualisation.data.Link;
-import com.hartwig.hmftools.linx.visualisation.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
+import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableLink;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableSegment;
+import com.hartwig.hmftools.linx.visualiser.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

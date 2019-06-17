@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualisation.data;
+package com.hartwig.hmftools.linx.visualiser.data;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
 

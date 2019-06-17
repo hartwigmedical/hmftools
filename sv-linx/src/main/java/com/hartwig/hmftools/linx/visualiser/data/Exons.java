@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.linx.visualisation.data;
+package com.hartwig.hmftools.linx.visualiser.data;
 
-import static com.hartwig.hmftools.linx.visualisation.circos.Span.maxPositionPerChromosome;
-import static com.hartwig.hmftools.linx.visualisation.circos.Span.minPositionPerChromosome;
+import static com.hartwig.hmftools.linx.visualiser.circos.Span.maxPositionPerChromosome;
+import static com.hartwig.hmftools.linx.visualiser.circos.Span.minPositionPerChromosome;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.linx.visualiser.VisGeneExonFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
 

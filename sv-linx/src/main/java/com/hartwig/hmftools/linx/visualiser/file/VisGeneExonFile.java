@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.linx.visualiser;
+package com.hartwig.hmftools.linx.visualiser.file;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.linx.visualiser.VisCopyNumberFile.DELIMITER;
+import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;

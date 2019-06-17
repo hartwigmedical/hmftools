@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.linx.visualisation.data;
+package com.hartwig.hmftools.linx.visualiser.data;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.linx.visualisation.circos.SegmentTerminal;
+import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

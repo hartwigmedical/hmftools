@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualisation.circos;
+package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.linx.visualisation.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.Link;
 
 import org.jetbrains.annotations.NotNull;
 

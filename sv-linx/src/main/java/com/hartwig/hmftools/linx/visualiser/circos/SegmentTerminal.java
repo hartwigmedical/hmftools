@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualisation.circos;
+package com.hartwig.hmftools.linx.visualiser.circos;
 
 import org.jetbrains.annotations.NotNull;
 

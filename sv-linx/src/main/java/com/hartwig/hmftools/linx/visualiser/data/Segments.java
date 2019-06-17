@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.linx.visualisation.data;
+package com.hartwig.hmftools.linx.visualiser.data;
 
-import static com.hartwig.hmftools.linx.visualisation.circos.Span.maxPositionPerChromosome;
-import static com.hartwig.hmftools.linx.visualisation.circos.Span.minPositionPerChromosome;
+import static com.hartwig.hmftools.linx.visualiser.circos.Span.maxPositionPerChromosome;
+import static com.hartwig.hmftools.linx.visualiser.circos.Span.minPositionPerChromosome;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,9 +18,9 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.linx.visualiser.VisSegmentFile;
-import com.hartwig.hmftools.linx.visualisation.circos.SegmentTerminal;
-import com.hartwig.hmftools.linx.visualisation.circos.Span;
+import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
+import com.hartwig.hmftools.linx.visualiser.circos.Span;
+import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
 
 import org.jetbrains.annotations.NotNull;
 

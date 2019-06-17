@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualisation.circos;
+package com.hartwig.hmftools.linx.visualiser.circos;
 
 import java.util.Collections;
 import java.util.List;

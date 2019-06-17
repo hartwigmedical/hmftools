@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.visualisation.circos;
+package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static java.util.stream.Collectors.toList;
 
@@ -21,11 +21,11 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
-import com.hartwig.hmftools.linx.visualisation.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualisation.data.Exon;
-import com.hartwig.hmftools.linx.visualisation.data.Link;
-import com.hartwig.hmftools.linx.visualisation.data.Links;
-import com.hartwig.hmftools.linx.visualisation.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
+import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
 
