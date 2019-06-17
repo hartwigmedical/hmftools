@@ -129,10 +129,8 @@ public class VisualiserWriter
 
         for(final SvCluster cluster : clusters)
         {
-            if (cluster.isResolved() && (cluster.getChains().isEmpty() || isFilteredResolvedType(cluster.getResolvedType())))
-            {
+            if (cluster.getSvCount() == 1 || isFilteredResolvedType(cluster.getResolvedType()))
                 continue;
-            }
 
             // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
             List<SvLinkedPair> uniquePairs = Lists.newArrayList();
