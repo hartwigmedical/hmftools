@@ -132,7 +132,7 @@ CREATE TABLE association
     responseType varchar(255),
     drugLabel varchar(255),
     sourceLink varchar(255),
-    description varchar(500) NOT NULL,
+    description varchar(800) NOT NULL,
     oncogenic varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
