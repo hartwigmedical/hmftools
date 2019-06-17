@@ -17,7 +17,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
@@ -217,17 +216,18 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final int chromosomeCount = (int) segments.stream().map(GenomeRegion::chromosome).distinct().count();
         int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
         final CircosData circosData = new CircosData(segments, links, alterations, exons);
-        new CircosConfigWriter(sample, config.outputConfFile()).writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
+        confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
+
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(circosData);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(config.outputConfFile(),
+        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
                 config.outputPlotPath(),
                 outputPlotName,
                 config.outputConfPath());

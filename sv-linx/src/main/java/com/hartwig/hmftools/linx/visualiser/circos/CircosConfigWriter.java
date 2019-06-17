@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Map;
 
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -54,9 +55,12 @@ public class CircosConfigWriter
         return SEGMENT_INNER_RADIUS + track * singleTrack;
     }
 
-    public void writeConfig(int chromosomeCount, int maxTracks, final double maxCopyNumber, final double maxMinorAllelePloidy)
+    public void writeConfig(@NotNull final Map<String, Integer> contigLengths, int maxTracks, final double maxCopyNumber,
+            final double maxMinorAllelePloidy)
             throws IOException
     {
+        int chromosomeCount = contigLengths.size();
+        int totalContigLength = contigLengths.values().stream().mapToInt(x -> x).sum();
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(maxCopyNumber - 2)));
         double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);
@@ -67,7 +71,7 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : "20u")
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(EXON_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(EXON_OUTER_RADIUS))
