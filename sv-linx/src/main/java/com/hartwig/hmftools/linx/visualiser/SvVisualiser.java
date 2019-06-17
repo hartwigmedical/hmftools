@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
+import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
@@ -221,12 +222,12 @@ public class SvVisualiser implements AutoCloseable
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(segments, links, alterations, exons);
+        final CircosData circosData = new CircosData(segments, links, alterations, exons);
+        new CircosConfigWriter(sample, config.outputConfFile()).writeConfig(chromosomeCount, maxTracks, maxCopyNumber, maxMinorAllelePloidy);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(circosData);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
+        return new CircosExecution(config.circosBin()).generateCircos(config.outputConfFile(),
                 config.outputPlotPath(),
                 outputPlotName,
                 config.outputConfPath());

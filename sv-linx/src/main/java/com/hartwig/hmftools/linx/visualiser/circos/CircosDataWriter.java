@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,34 +50,16 @@ public class CircosDataWriter
         this.maxTracks = maxTracks;
     }
 
-    public void write(@NotNull final List<Segment> unadjustedSegments, @NotNull final List<Link> unadjustedLinks,
-            @NotNull final List<CopyNumberAlteration> unadjustedAlterations, @NotNull final List<Exon> unadjustedExons) throws IOException
+    public void write(@NotNull final CircosData data) throws IOException
     {
+        final Map<String, Integer> contigLengths = data.contigLengths();
 
-        final List<GenomeRegion> unadjustedFragileSites =
-                Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
-
-        final List<GenomeRegion> unadjustedLineElements =
-                Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
-
-        // Note we do not add exons here because we want them interpolated.
-        final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
-        unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
-
-        final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
-        final List<GenomePosition> scaledPositions = scalePosition.scaled();
-        final Map<String, Integer> contigLengths = contigLengths(scaledPositions);
-
-        final List<Segment> segments = scalePosition.scaleSegments(unadjustedSegments);
-        final List<Link> links = scalePosition.scaleLinks(unadjustedLinks);
-        final List<CopyNumberAlteration> alterations = scalePosition.scaleAlterations(unadjustedAlterations);
-        final List<GenomeRegion> fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
-        final List<GenomeRegion> lineElements = scalePosition.scaleRegions(unadjustedLineElements);
-        final List<Exon> exons = scalePosition.interpolateExons(unadjustedExons);
+        final List<Segment> segments = data.segments();
+        final List<Link> links = data.links();
+        final List<CopyNumberAlteration> alterations = data.alterations();
+        final List<GenomeRegion> fragileSites = data.fragileSites();
+        final List<GenomeRegion> lineElements = data.lineElements();
+        final List<Exon> exons = data.exons();
 
         final String exonPath = filePrefix + ".exon.circos";
         Files.write(new File(exonPath).toPath(), exons(exons));
@@ -90,7 +71,7 @@ public class CircosDataWriter
         Files.write(new File(geneNamePath).toPath(), geneName(exons));
 
         final String textPath = filePrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(debug, unadjustedLinks, links, segments));
+        Files.write(new File(textPath).toPath(), createPositionText(debug, data.unadjustedLinks(), links, segments));
 
         final String histogramPath = filePrefix + ".segment.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(segments));
@@ -120,9 +101,9 @@ public class CircosDataWriter
         Files.write(new File(line).toPath(), highlights(lineElements));
 
         final String distances = filePrefix + ".distance.circos";
-        if (unadjustedAlterations.size() < 200)
+        if (alterations.size() < 200)
         {
-            Files.write(new File(distances).toPath(), createDistances(unadjustedAlterations, alterations));
+            Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
         }
         else
         {
@@ -525,20 +506,6 @@ public class CircosDataWriter
         }
 
         return result;
-    }
-
-    @NotNull
-    private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions)
-    {
-        final Map<String, Integer> results = new LinkedHashMap<>();
-        final List<GenomePosition> sortedPositions = positions.stream().sorted().collect(toList());
-
-        for (GenomePosition position : sortedPositions)
-        {
-            int end = (int) position.position();
-            results.merge(position.chromosome(), end, Math::max);
-        }
-        return results;
     }
 
     @NotNull
