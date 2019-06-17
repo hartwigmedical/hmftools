@@ -52,6 +52,21 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
+    public List<ActionableFusion> actionableFusionPairs() {
+        return fusionPairs;
+    }
+
+    @NotNull
+    public List<ActionablePromiscuous> actionablePromiscuousFive() {
+        return promiscuousFive;
+    }
+
+    @NotNull
+    public List<ActionablePromiscuous> actionablePromiscuousThree() {
+        return promiscuousThree;
+    }
+
+    @NotNull
     public List<EvidenceItem> evidenceForFusion(@NotNull SimpleGeneFusion geneFusion, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();

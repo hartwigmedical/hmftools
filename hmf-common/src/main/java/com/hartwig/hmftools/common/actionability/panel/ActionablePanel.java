@@ -20,6 +20,23 @@ public abstract class ActionablePanel implements Comparable<ActionablePanel> {
 
     public abstract boolean variant();
 
+    public abstract boolean drup();
+
+    @NotNull
+    public abstract String drupCategory();
+
+    @NotNull
+    public abstract String responsive();
+
+    @NotNull
+    public abstract String responsiveSource();
+
+    @NotNull
+    public abstract String resistant();
+
+    @NotNull
+    public abstract String resistantSource();
+
     @Override
     public int compareTo(@NotNull final ActionablePanel o) {
         return gene().compareTo(o.gene());

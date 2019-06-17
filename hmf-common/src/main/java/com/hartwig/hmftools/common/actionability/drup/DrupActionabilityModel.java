@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.actionability;
+package com.hartwig.hmftools.common.actionability.drup;
 
 import java.util.Map;
 import java.util.Set;

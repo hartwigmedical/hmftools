@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestUtil;
 
 import org.junit.Test;

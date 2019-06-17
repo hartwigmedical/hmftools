@@ -34,6 +34,12 @@ public class ActionablePanelFile {
                 .add("deletion")
                 .add("fusion")
                 .add("variant")
+                .add("drup")
+                .add("drupCategory")
+                .add("responsive")
+                .add("responsiveSource")
+                .add("resistant")
+                .add("resistantSource")
                 .toString();
     }
 
@@ -44,6 +50,12 @@ public class ActionablePanelFile {
                 .add(String.valueOf(panel.deletion()))
                 .add(String.valueOf(panel.fusion()))
                 .add(String.valueOf(panel.variant()))
+                .add(String.valueOf(panel.drup()))
+                .add(panel.drupCategory())
+                .add(panel.responsive())
+                .add(panel.responsiveSource())
+                .add(panel.resistant())
+                .add(panel.resistantSource())
                 .toString();
     }
 
