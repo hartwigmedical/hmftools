@@ -314,19 +314,17 @@ public final class LoadClinicalData {
         for (Map.Entry<String, List<SampleData>> entry : limsSampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 
-            assert samples != null && !samples.isEmpty();
-            LimsSampleType sampleType = LimsSampleType.fromSampleId(samples.get(0).sampleId());
+            assert samples != null;
+            List<SampleData> tumorSamples = extractTumorSamples(samples);
+            if (!tumorSamples.isEmpty()) {
+                LimsSampleType sampleType = LimsSampleType.fromSampleId(tumorSamples.get(0).sampleId());
 
-            if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
-                String patientId = entry.getKey();
-                if (extraxtTumorSamples(samples).size() > 0) {
-                    Patient limsPatient = limsPatientReader.read(patientId,
-                            extraxtTumorSamples(samples).get(0).limsPrimaryTumor(),
-                            extraxtTumorSamples(samples));
+                if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
+                    String patientId = entry.getKey();
+                    Patient limsPatient =
+                            limsPatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
                     patientMap.put(patientId, limsPatient);
                 }
-
-
             }
         }
 
@@ -334,11 +332,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<SampleData> extraxtTumorSamples(@Nullable Iterable<SampleData> samples) {
-        if (samples == null) {
-            return Lists.newArrayList();
-        }
-
+    private static List<SampleData> extractTumorSamples(@NotNull Iterable<SampleData> samples) {
         List<SampleData> tumorSamples = Lists.newArrayList();
 
         for (SampleData sample : samples) {
@@ -348,7 +342,6 @@ public final class LoadClinicalData {
                     tumorSamples.add(sample);
                 }
             }
-
         }
         return tumorSamples;
     }
