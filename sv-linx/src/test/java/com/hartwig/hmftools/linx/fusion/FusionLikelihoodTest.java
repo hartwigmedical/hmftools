@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.regionsPhaseMatched;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_0;
@@ -9,12 +11,15 @@ import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_5P_UTR;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_MAX;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.typeAsInt;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.fusion.FusionLikelihood.checkAddCombinedGenePhaseRegion;
 import static com.hartwig.hmftools.linx.fusion.FusionLikelihood.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion.FusionLikelihood.generateGenePhaseRegions;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.calcCombinedPhase;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.simpleToCombinedPhase;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -27,6 +32,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
 
@@ -35,6 +41,8 @@ public class FusionLikelihoodTest
     @Test
     public void testGeneRegions()
     {
+        FusionLikelihood.PRE_GENE_3P_DISTANCE = 10000;
+
         // 2 genes, each with transcripts with different phasings
         String geneId = "G001";
         byte strand = 1;
@@ -290,6 +298,9 @@ public class FusionLikelihoodTest
         assertFalse(regionsPhaseMatched(region2, region1));
         assertTrue(regionsPhaseMatched(region1, region2));
 
+        // don't allow standard non-coding to non-coding
+        region2 = new GenePhaseRegion(geneId, 100, 200, PHASE_NON_CODING);
+        assertFalse(hasAnyPhaseMatch(region1, region2, false));
     }
 
     private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, int combinedPhase)
@@ -302,7 +313,6 @@ public class FusionLikelihoodTest
 
         return false;
     }
-
 
     @Test
     public void testProximateFusionCounts()
@@ -357,86 +367,110 @@ public class FusionLikelihoodTest
         overlap = bucketOverlapCounts.get(0);
         assertEquals(2525, overlap);
     }
-
-    /*
+    
     @Test
-    public void testGeneRegionCounts()
+    public void testIntegratedCounts()
     {
-        String geneId  = "G001";
-        byte strand = 1;
-        EnsemblGeneData geneData = createEnsemblGeneData(geneId, "GEN1", "1", strand, 10, 100);
+        // test multiple chromosomes together for the various types of counts
 
-        List<TranscriptExonData> transExonDataList = Lists.newArrayList();
+        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
 
-        // 3 coding exons, with coding region starting and ending half way through them
+        int geneIndex = 1;
+        String geneId, geneName;
 
-        int transStart = 10;
-        int transEnd = 100;
-        Long codingStart = new Long(35);
-        Long codingEnd = new Long(75);
+        int transId = 1;
+        long geneStart, geneEnd;
 
-        transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
-                10, 20, 1, -1, -1, codingStart, codingEnd, ""));
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<TranscriptExonData> transExonList = null;
 
-        transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
-                30, 40, 1, -1, 1, codingStart, codingEnd, ""));
+        // for 3 chromosomes add 3 genes on one strand, 3 on the other at varying distances
+        // for calculate simplicity make each intron distance 1000 bases
 
-        transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
-                50, 60, 1, 1, 2, codingStart, codingEnd, ""));
+        long[] geneExons1 = {1000, 2000, 3000, 4000, 5000};
+        long[] geneExons2 = {10000, 12000, 13000};
+        long[] geneExons3 = {200000, 202000, 203000};
 
-        transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
-                70, 80, 1, 2, -1, codingStart, codingEnd, ""));
+        for(int i = 1; i <= 3; ++i)
+        {
+            String chromosome = String.valueOf(i);
 
-        transExonDataList.add(new TranscriptExonData(geneId, "T001", 1, true, strand, transStart, transEnd,
-                90, 100, 1, -1, -1, codingStart, codingEnd, ""));
+            for(int j = 0; j <= 1; ++j)
+            {
+                byte strand = (j == 0) ? (byte)1 : (byte)-1;
 
-        int[] regionTotals5 = new int[GENE_PHASING_REGION_MAX];
-        int[] regionTotals3 = new int[GENE_PHASING_REGION_MAX];
-        setGenePhasingCounts(geneData, transExonDataList, regionTotals5, regionTotals3);
+                transExonList = Lists.newArrayList();
+                geneId = geneName = String.format("ESNG%04d", geneIndex++);
+                createTransExons(transExonList, geneId, transId++, strand, geneExons1, new int[] {-1, 0, 1, 0, -1}, 100);
+                addTransExonData(geneTransCache, geneId, transExonList);
+                geneStart = transExonList.get(0).TransStart;
+                geneEnd = transExonList.get(transExonList.size() - 1).TransEnd;
+                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, geneStart, geneEnd));
 
-        assertEquals(regionTotals3[GENE_PHASING_REGION_5P_UTR], 26);
-        //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_0], 7);
-        //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_1], 17);
-        //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_2], 16);
+                transExonList = Lists.newArrayList();
+                geneId = geneName = String.format("ESNG%04d", geneIndex++);
+                createTransExons(transExonList, geneId, transId++, strand, geneExons2, new int[] {-1, 0, -1}, 100);
+                addTransExonData(geneTransCache, geneId, transExonList);
+                geneStart = transExonList.get(0).TransStart;
+                geneEnd = transExonList.get(transExonList.size() - 1).TransEnd;
+                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, geneStart, geneEnd));
 
+                // another transcript outside the DEL and DUP bucket length ranges
+                transExonList = Lists.newArrayList();
+                geneId = geneName = String.format("ESNG%04d", geneIndex++);
+                createTransExons(transExonList, geneId, transId++, strand, geneExons3, new int[] {-1, 0, -1}, 100);
+                addTransExonData(geneTransCache, geneId, transExonList);
+                geneStart = transExonList.get(0).TransStart;
+                geneEnd = transExonList.get(transExonList.size() - 1).TransEnd;
+                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, geneStart, geneEnd));
 
-        // now test with the reverse strand
-        geneId  = "G002";
-        strand = -1;
-        EnsemblGeneData geneData2 = createEnsemblGeneData(geneId, "GEN2", "1", strand, 10, 100);
+            }
 
-        transExonDataList.clear();
+            addGeneData(geneTransCache, chromosome, geneList);
+            geneList = Lists.newArrayList();
+        }
 
-        // 3 coding exons, with coding region starting and ending half way through them
+        // DELs can link sae gene and both closer genes, DUPs on the closer genes
+        List<Long> delLengths = Lists.newArrayList((long)50, (long)5000, (long)50000);
+        List<Long> dupLengths = Lists.newArrayList((long)5000, (long)50000);
+        int shortInv = 20000;
 
-        codingStart = new Long(35);
-        codingEnd = new Long(75);
+        FusionLikelihood fusionLikelihood = new FusionLikelihood();
+        fusionLikelihood.initialise(geneTransCache, delLengths, dupLengths, shortInv, 0);
+        fusionLikelihood.generateGenePhasingCounts();
+        fusionLikelihood.generateProximateFusionCounts();
+        fusionLikelihood.generateNonProximateCounts();
 
-        String transId = "T001";
+        // expected overlap counts
+        int intronLength = 1000;
+        long shortDelOverlap = intronLength * intronLength;
+        long medDelOverlap = 2 * intronLength * intronLength;
 
-        transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
-                10, 20, 1, -1, -1, codingStart, codingEnd, ""));
+        final Map<String, List<GeneRangeData>> chrGeneDataMap = fusionLikelihood.getChrGeneRangeDataMap();
+        assertEquals(3, chrGeneDataMap.size());
 
-        transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
-                30, 40, 1, -1, 1, codingStart, codingEnd, ""));
+        List<GeneRangeData> geneRangeList = chrGeneDataMap.get("1");
+        assertEquals(6, geneRangeList.size());
 
-        transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
-                50, 60, 1, 1, 2, codingStart, codingEnd, ""));
+        GeneRangeData geneData = geneRangeList.get(0);
+        assertEquals(4, geneData.getCombinedPhaseRegions().size());
+        assertEquals(4, geneData.getPhaseRegions().size());
 
-        transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
-                70, 80, 1, 2, -1, codingStart, codingEnd, ""));
+        assertEquals(2, geneData.getDelFusionBaseCounts().size());
 
-        transExonDataList.add(new TranscriptExonData(geneId, transId, 1, true, strand, transStart, transEnd,
-                90, 100, 1, -1, -1, codingStart, codingEnd, ""));
-
-        setGenePhasingCounts(geneData, transExonDataList, regionTotals5, regionTotals3);
-
-        // assertEquals(regionTotals[GENE_PHASING_REGION_5P_UTR], 26);
-        //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_0], 7);
-        //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_1], 17);
-        //assertEquals(regionTotals[GENE_PHASING_REGION_CODING_2], 16);
+        assertTrue(approxEqual(shortDelOverlap, geneData.getDelFusionBaseCounts().get(0), 0.01));
 
     }
-    */
+
+    private boolean approxEqual(long bases1, long bases2, double allowPerc)
+    {
+        if((bases1 == 0) != (bases2 == 0))
+            return false;
+
+        double diff1 = (abs(bases1 - bases2) / (double)bases1);
+        double diff2 = (abs(bases1 - bases2) / (double)bases2);
+
+        return diff1 <= allowPerc && diff2 <= allowPerc;
+    }
 
 }

@@ -12,7 +12,6 @@ public class GenePhaseRegion
 {
     public final String GeneId;
     public GenePhaseType Phase;
-    public final int RegionType;
 
     private long mStart;
     private long mEnd;
@@ -21,24 +20,12 @@ public class GenePhaseRegion
     private boolean[] mPreGenePhaseStatus;
     private int mCombinedPhase;
 
-    public static final int REGION_TYPE_CODING = 0;
-    public static final int REGION_TYPE_5PUTR = 1;
-    public static final int REGION_TYPE_NON_CODING = 2;
-    public static final int REGION_TYPE_MIXED = 3;
-
     public GenePhaseRegion(final String geneId, long start, long end, GenePhaseType phase)
     {
         GeneId = geneId;
         Phase = phase;
         mStart = start;
         mEnd = end;
-
-        if(phase == PHASE_NON_CODING)
-            RegionType = REGION_TYPE_NON_CODING;
-        else if(phase == PHASE_5P_UTR)
-            RegionType = REGION_TYPE_5PUTR;
-        else
-            RegionType = REGION_TYPE_CODING;
 
         mPhaseArray = new boolean[GenePhaseType.values().length];
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
@@ -53,8 +40,6 @@ public class GenePhaseRegion
         Phase = PHASE_5P_UTR; // will not be used
         mStart = start;
         mEnd = end;
-
-        RegionType = REGION_TYPE_MIXED;
 
         mPhaseArray = new boolean[PHASE_MAX];
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
@@ -125,8 +110,12 @@ public class GenePhaseRegion
 
     public static boolean hasAnyPhaseMatch(final GenePhaseRegion regionUp, final GenePhaseRegion regionDown, boolean allowPreGeneDown)
     {
+        // look for any phase match but exclude non-coding since this is handled in the direction-specific method below
         for(int i = 0; i < PHASE_MAX; ++i)
         {
+            if(i == typeAsInt(PHASE_NON_CODING))
+                continue;
+
             if(regionUp.getPhaseArray()[i] && regionDown.getPhaseArray()[i])
             {
                 if((regionUp.getPreGenePhaseStatus()[i]))

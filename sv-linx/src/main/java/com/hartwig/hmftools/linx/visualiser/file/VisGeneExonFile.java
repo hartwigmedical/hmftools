@@ -87,7 +87,7 @@ public class VisGeneExonFile
                 .add("Chromosome")
                 .add("AnnotationType")
                 .add("ExonRank")
-                .add("ExonStartr")
+                .add("ExonStart")
                 .add("ExonEnd")
                 .toString();
     }
