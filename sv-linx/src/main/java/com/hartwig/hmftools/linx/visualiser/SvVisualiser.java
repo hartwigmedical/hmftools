@@ -25,7 +25,6 @@ import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
-import com.hartwig.hmftools.linx.visualiser.data.Exons;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
@@ -200,11 +199,7 @@ public class SvVisualiser implements AutoCloseable
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
         positionsToCover.addAll(Span.allPositions(filteredSegments));
-
-        // Limit exons to genes within segments and links
-        final Set<String> genes = Exons.genesInSegmentsAndLinks(filteredExons, positionsToCover);
-        final List<Exon> exons = filteredExons.stream().filter(x -> genes.contains(x.gene())).collect(toList());
-        positionsToCover.addAll(Span.allPositions(exons));
+        positionsToCover.addAll(Span.allPositions(filteredExons));
 
         // Need to extend terminal segments past any current segments, links and exons
         final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links, positionsToCover);
@@ -220,7 +215,7 @@ public class SvVisualiser implements AutoCloseable
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
-        final CircosData circosData = new CircosData(segments, links, alterations, exons);
+        final CircosData circosData = new CircosData(segments, links, alterations, filteredExons);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
 

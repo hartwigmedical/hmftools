@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class Span
     }
 
     @NotNull
-    public static List<GenomePosition> allPositions(@NotNull final List<? extends GenomeRegion> segments)
+    public static List<GenomePosition> allPositions(@NotNull final Collection<? extends GenomeRegion> segments)
     {
         final List<GenomePosition> results = Lists.newArrayList();
 

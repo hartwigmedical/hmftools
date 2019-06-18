@@ -221,7 +221,7 @@ class ScalePosition
 
     static int logDistance(long distance)
     {
-        return (int) Math.floor(Math.pow(Math.log10(distance), 3)) + 1;
+        return (int) Math.floor(Math.pow(Math.log10(distance), 3)) + 10;
     }
 
 }

@@ -1,13 +1,39 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- TODO: Remove per 1st of july.
+DROP TABLE IF EXISTS features;
+
 DROP TABLE IF EXISTS viccEntry;
+DROP TABLE IF EXISTS gene;
+DROP TABLE IF EXISTS geneIdentifier;
+DROP TABLE IF EXISTS featureName;
+DROP TABLE IF EXISTS tag;
+DROP TABLE IF EXISTS devTag;
+DROP TABLE IF EXISTS feature;
+DROP TABLE IF EXISTS provenance;
+DROP TABLE IF EXISTS synonym;
+DROP TABLE IF EXISTS link;
+DROP TABLE IF EXISTS sequenceOntology;
+DROP TABLE IF EXISTS hierarchy;
+DROP TABLE IF EXISTS association;
+DROP TABLE IF EXISTS evidence;
+DROP TABLE IF EXISTS evidenceInfo;
+DROP TABLE IF EXISTS evidenceType;
+DROP TABLE IF EXISTS publicationUrl;
+DROP TABLE IF EXISTS phenotype;
+DROP TABLE IF EXISTS phenotypeType;
+DROP TABLE IF EXISTS environmentalContext;
+DROP TABLE IF EXISTS approvedCountry;
+DROP TABLE IF EXISTS taxonomy;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 CREATE TABLE viccEntry
 (   id int NOT NULL AUTO_INCREMENT,
     source varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS gene;
 CREATE TABLE gene
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -16,7 +42,6 @@ CREATE TABLE gene
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS geneIdentifier;
 CREATE TABLE geneIdentifier
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -27,7 +52,7 @@ CREATE TABLE geneIdentifier
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS featureName;
+
 CREATE TABLE featureName
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -36,7 +61,6 @@ CREATE TABLE featureName
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS tag;
 CREATE TABLE tag
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -45,7 +69,6 @@ CREATE TABLE tag
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS devTag;
 CREATE TABLE devTag
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -54,7 +77,6 @@ CREATE TABLE devTag
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS feature;
 CREATE TABLE feature
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -74,65 +96,49 @@ CREATE TABLE feature
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS provenance;
 CREATE TABLE provenance
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    featureEntryId int NOT NULL,
+    featureId int NOT NULL,
     provenance varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (featureEntryId) REFERENCES feature(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (featureId) REFERENCES feature(id)
 );
 
-DROP TABLE IF EXISTS synonym;
 CREATE TABLE synonym
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    featureEntryId int NOT NULL,
+    featureId int NOT NULL,
     synonym varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (featureEntryId) REFERENCES feature(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (featureId) REFERENCES feature(id)
 );
 
-DROP TABLE IF EXISTS link;
 CREATE TABLE link
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    featureEntryId int NOT NULL,
+    featureId int NOT NULL,
     link varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (featureEntryId) REFERENCES feature(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (featureId) REFERENCES feature(id)
 );
 
-DROP TABLE IF EXISTS sequenceOntology;
 CREATE TABLE sequenceOntology
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    featureEntryId int NOT NULL,
+    featureId int NOT NULL,
     soid varchar(255) NOT NULL,
     parentSoid varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
     parentName varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (featureEntryId) REFERENCES feature(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (featureId) REFERENCES feature(id)
 );
 
-DROP TABLE IF EXISTS hierarchy;
 CREATE TABLE hierarchy
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    sequenceOntologyEntryId int NOT NULL,
+    sequenceOntologyId int NOT NULL,
     hierarchy varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (sequenceOntologyEntryId) REFERENCES sequenceOntology(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (sequenceOntologyId) REFERENCES sequenceOntology(id)
 );
 
-DROP TABLE IF EXISTS association;
 CREATE TABLE association
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -142,122 +148,93 @@ CREATE TABLE association
     responseType varchar(255),
     drugLabel varchar(255),
     sourceLink varchar(255),
-    description varchar(500) NOT NULL,
+    description varchar(800) NOT NULL,
     oncogenic varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-DROP TABLE IF EXISTS evidence;
 CREATE TABLE evidence
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    associationEntryId int NOT NULL,
+    associationId int NOT NULL,
     description varchar(500),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES association(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
-DROP TABLE IF EXISTS evidenceInfo;
 CREATE TABLE evidenceInfo
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    evidenceEntryId int NOT NULL,
+    evidenceId int NOT NULL,
     publication varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (evidenceEntryId) REFERENCES evidence(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (evidenceId) REFERENCES evidence(id)
 );
 
-DROP TABLE IF EXISTS evidenceType;
 CREATE TABLE evidenceType
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    evidenceEntryId int NOT NULL,
+    evidenceId int NOT NULL,
     sourceName varchar(225) NOT NULL,
     idEvidenceType varchar(225),
     PRIMARY KEY (id),
-    FOREIGN KEY (evidenceEntryId) REFERENCES evidence(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (evidenceId) REFERENCES evidence(id)
 );
 
-DROP TABLE IF EXISTS publicationUrl;
 CREATE TABLE publicationUrl
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    associationEntryId int NOT NULL,
+    associationId int NOT NULL,
     publicationUrl varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES association(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
-DROP TABLE IF EXISTS phenotype;
 CREATE TABLE phenotype
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    associationEntryId int NOT NULL,
+    associationId int NOT NULL,
     description varchar(255) NOT NULL,
     family varchar(255) NOT NULL,
     idPhenotype varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES association(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
-DROP TABLE IF EXISTS phenotypeType;
 CREATE TABLE phenotypeType
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    phenotypeEntryId int NOT NULL,
+    phenotypeId int NOT NULL,
     source varchar(255),
     term varchar(255) NOT NULL,
     idPhenotypeType varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (phenotypeEntryId) REFERENCES phenotype(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (phenotypeId) REFERENCES phenotype(id)
 );
 
-DROP TABLE IF EXISTS environmentalContext;
 CREATE TABLE environmentalContext
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    associationEntryId int NOT NULL,
+    associationId int NOT NULL,
     term varchar(255),
     description varchar(255),
     source varchar(255),
     usanStem varchar(255),
     idEnvironmentalContext varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (associationEntryId) REFERENCES association(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
-DROP TABLE IF EXISTS approvedCountry;
 CREATE TABLE approvedCountry
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    environmentalContextsEntryId int NOT NULL,
+    environmentalContextsId int NOT NULL,
     approvedCountry varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentalContextsEntryId) REFERENCES environmentalContext(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (environmentalContextsId) REFERENCES environmentalContext(id)
 );
 
-DROP TABLE IF EXISTS taxonomy;
 CREATE TABLE taxonomy
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    environmentalContextsEntryId int NOT NULL,
+    environmentalContextsId int NOT NULL,
     kingdom varchar(225) NOT NULL,
     directParent varchar(225) NOT NULL,
     class varchar(225) NOT nULL,
     subClass varchar(225),
     superClass varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentalContextsEntryId) REFERENCES environmentalContext(id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (environmentalContextsId) REFERENCES environmentalContext(id)
 );
-
-SET FOREIGN_KEY_CHECKS = 1;
