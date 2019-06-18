@@ -1,37 +1,37 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import static com.hartwig.hmftools.linx.visualiser.circos.Span.maxPositionPerChromosome;
-import static com.hartwig.hmftools.linx.visualiser.circos.Span.minPositionPerChromosome;
-
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Exons
 {
-    @NotNull
-    public static Set<String> genesInSegmentsAndLinks(@NotNull final List<Exon> exons, @NotNull final List<GenomePosition> allPositions)
+
+    public static Collection<GenomeRegion> geneSpanPerChromosome(@NotNull final List<Exon> exons)
     {
-
-        final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
-        final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
-
-        final Predicate<Exon> inSegments = exon ->
+        final Map<String, GenomeRegion> resultMap = Maps.newHashMap();
+        for (Exon exon : exons)
         {
-            long min = minPositionPerChromosome.containsKey(exon.chromosome()) ? minPositionPerChromosome.get(exon.chromosome()) : 0;
-            long max = maxPositionPerChromosome.containsKey(exon.chromosome()) ? maxPositionPerChromosome.get(exon.chromosome()) : 0;
-            return exon.start() <= max && exon.end() >= min;
-        };
+            final String contig = exon.chromosome();
 
-        return exons.stream().filter(inSegments).map(Exon::gene).collect(Collectors.toSet());
+            final GenomeRegion currentGene = resultMap.computeIfAbsent(contig, x -> exon);
+            final GenomeRegion newGene =
+                    GenomeRegionFactory.create(contig, Math.min(currentGene.start(), exon.start()), Math.max(currentGene.end(), exon
+                            .end()));
+            resultMap.put(contig, newGene);
+
+        }
+
+        return resultMap.values();
     }
 
     @NotNull
