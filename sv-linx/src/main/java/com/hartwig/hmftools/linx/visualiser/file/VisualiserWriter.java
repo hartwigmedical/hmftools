@@ -276,8 +276,8 @@ public class VisualiserWriter
 
             for (final TranscriptExonData exonData : exonDataLst)
             {
-                geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, exonData.TransName, geneData.Chromosome, geneData.GeneName,
-                        geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+                geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, exonData.TransName,
+                        geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
             }
         }
 
@@ -310,7 +310,8 @@ public class VisualiserWriter
             }
         }
 
-        final String outputFile = mBatchOutput ? mOutputDir + "SVA_VIS_COPY_NUMBER.csv" : VisCopyNumberFile.generateFilename(mOutputDir, mSampleId);
+        final String outputFile = mBatchOutput ? mOutputDir + "SVA_VIS_COPY_NUMBER.csv" :
+                VisCopyNumberFile.generateFilename(mOutputDir, mSampleId);
 
         try
         {

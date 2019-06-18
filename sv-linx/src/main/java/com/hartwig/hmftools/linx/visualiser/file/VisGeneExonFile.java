@@ -26,13 +26,14 @@ public class VisGeneExonFile
     public final long ExonStart;
     public final long ExonEnd;
 
-    public VisGeneExonFile(final String sampleId, int clusterId, final String transcript, final String chromosome, final String gene, final String type, int exonRank, long exonStart, long exonEnd)
+    public VisGeneExonFile(final String sampleId, int clusterId, final String gene, final String transcript, final String chromosome,
+            final String type, int exonRank, long exonStart, long exonEnd)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
-        Chromosome = chromosome;
         Gene = gene;
         Transcript = transcript;
+        Chromosome = chromosome;
         AnnotationType = type;
         ExonRank = exonRank;
         ExonStart = exonStart;
@@ -79,9 +80,9 @@ public class VisGeneExonFile
         return new StringJoiner(DELIMITER)
                 .add("SampleId")
                 .add("ClusterId")
+                .add("Gene")
                 .add("Transcript")
                 .add("Chromosome")
-                .add("Gene")
                 .add("AnnotationType")
                 .add("ExonRank")
                 .add("ExonStart")
