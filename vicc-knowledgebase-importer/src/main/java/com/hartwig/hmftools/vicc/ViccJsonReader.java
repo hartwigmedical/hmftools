@@ -13,6 +13,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.vicc.datamodel.Association;
+import com.hartwig.hmftools.vicc.datamodel.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCgi;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
@@ -107,12 +109,42 @@ public final class ViccJsonReader {
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
+            viccEntryBuilder.cgi(createCgi());
 
             entries.add(viccEntryBuilder.build());
+
         }
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static Cgi createCgi() {
+        return ImmutableCgi.builder()
+                .targeting(Strings.EMPTY)
+                .source(Strings.EMPTY)
+                .cDNA(Lists.newArrayList())
+                .primary_tumor_type(Strings.EMPTY)
+                .individual_mutation(Lists.newArrayList())
+                .curator(Strings.EMPTY)
+                .drug_family(Strings.EMPTY)
+                .alteration(Strings.EMPTY)
+                .drug(Strings.EMPTY)
+                .biomarker(Strings.EMPTY)
+                .gDNA(Lists.newArrayList())
+                .drug_status(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .transcript(Lists.newArrayList())
+                .strand(Lists.newArrayList())
+                .info(Lists.newArrayList())
+                .assay_type(Strings.EMPTY)
+                .alteration_type(Strings.EMPTY)
+                .region(Lists.newArrayList())
+                .evidence_level(Strings.EMPTY)
+                .association(Strings.EMPTY)
+                .metastatic_Tumor_Type(Strings.EMPTY)
+                .build();
     }
 
     @NotNull

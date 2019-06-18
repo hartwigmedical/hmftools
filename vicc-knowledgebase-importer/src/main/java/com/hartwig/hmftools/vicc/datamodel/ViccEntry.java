@@ -35,5 +35,8 @@ public abstract class ViccEntry {
     @NotNull
     public abstract List<String> devTags();
 
+    @NotNull
+    public abstract Cgi cgi();
+
 }
 
