@@ -76,7 +76,7 @@ public class ViccDAO {
                 .returning(VICCENTRY.ID)
                 .fetchOne()
                 .getValue(VICCENTRY.ID);
-
+        LOGGER.info("vicc entry id: " + id);
         writeTags(id, viccEntry.tags());
         writeDevTags(id, viccEntry.devTags());
         writeGeneIdentifiers(id, viccEntry.geneIdentifiers());
@@ -160,7 +160,7 @@ public class ViccDAO {
     private void writeApprovedCountries(int environmentalContextsEntryId, @NotNull List<String> approvedCountries) {
         for (String approvesCountry : approvedCountries) {
             context.insertInto(APPROVEDCOUNTRY,
-                    APPROVEDCOUNTRY.APPROVEDCOUNTRY_,
+                    APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME,
                     APPROVEDCOUNTRY.ENVIRONMENTALCONTEXTSID).values(approvesCountry, environmentalContextsEntryId).execute();
         }
     }
@@ -196,7 +196,7 @@ public class ViccDAO {
         if (publicationsUrls != null) {
             for (String publicationUrl : publicationsUrls) {
                 context.insertInto(PUBLICATIONURL,
-                        PUBLICATIONURL.PUBLICATIONURL_,
+                        PUBLICATIONURL.URLOFPUBLICATION,
                         PUBLICATIONURL.ASSOCIATIONID).values(publicationUrl, associationEntryId).execute();
             }
         }
@@ -273,7 +273,7 @@ public class ViccDAO {
 
     private void writeProvenance(int featureEntryId, @NotNull List<String> provenances, int viccEntryId) {
         for (String provenance : provenances) {
-            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCE_, PROVENANCE.FEATUREID)
+            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCENAME, PROVENANCE.FEATUREID)
                     .values(provenance, featureEntryId)
                     .execute();
         }
@@ -282,7 +282,7 @@ public class ViccDAO {
     private void writeSynonyms(int featureEntryId, @Nullable List<String> synonyms, int viccEntryId) {
         if (synonyms != null) {
             for (String synonym : synonyms) {
-                context.insertInto(SYNONYM, SYNONYM.SYNONYM_, SYNONYM.FEATUREID)
+                context.insertInto(SYNONYM, SYNONYM.SYNONYMNAME, SYNONYM.FEATUREID)
                         .values(synonym, featureEntryId)
                         .execute();
             }
@@ -292,7 +292,7 @@ public class ViccDAO {
     private void writeLinks(int featureEntryId, @Nullable List<String> links, int viccEntryId) {
         if (links != null) {
             for (String link : links) {
-                context.insertInto(LINK, LINK.LINK_, LINK.FEATUREID)
+                context.insertInto(LINK, LINK.LINKNAME, LINK.FEATUREID)
                         .values(link, featureEntryId)
                         .execute();
             }
@@ -322,7 +322,7 @@ public class ViccDAO {
     private void writeHierarchy(int sequenceOntologyId, @Nullable List<String> hierchies) {
         if (hierchies != null) {
             for (String hierchy : hierchies) {
-                context.insertInto(HIERARCHY, HIERARCHY.HIERARCHY_, HIERARCHY.SEQUENCEONTOLOGYID)
+                context.insertInto(HIERARCHY, HIERARCHY.HIERARCHYNAME, HIERARCHY.SEQUENCEONTOLOGYID)
                         .values(hierchy, sequenceOntologyId)
                         .execute();
             }
@@ -362,7 +362,7 @@ public class ViccDAO {
     private void writeFeatureNames(int viccEntryId, @Nullable List<String> featureNames) {
         if (featureNames != null) {
             for (String featureName : featureNames) {
-                context.insertInto(FEATURENAME, FEATURENAME.FEATURENAME_, FEATURENAME.VICCENTRYID)
+                context.insertInto(FEATURENAME, FEATURENAME.NAMEOFFEATURE, FEATURENAME.VICCENTRYID)
                         .values(featureName, viccEntryId)
                         .execute();
             }
