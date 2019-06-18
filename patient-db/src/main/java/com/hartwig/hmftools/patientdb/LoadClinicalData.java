@@ -319,12 +319,38 @@ public final class LoadClinicalData {
 
             if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
                 String patientId = entry.getKey();
-                Patient limsPatient = limsPatientReader.read(patientId, samples.get(0).limsPrimaryTumor(), sequencedOnly(samples));
-                patientMap.put(patientId, limsPatient);
+                if (extraxtTumorSamples(samples).size() > 0) {
+                    Patient limsPatient = limsPatientReader.read(patientId,
+                            extraxtTumorSamples(samples).get(0).limsPrimaryTumor(),
+                            extraxtTumorSamples(samples));
+                    patientMap.put(patientId, limsPatient);
+                }
+
+
             }
         }
 
         return patientMap;
+    }
+
+    @NotNull
+    private static List<SampleData> extraxtTumorSamples(@Nullable Iterable<SampleData> samples) {
+        if (samples == null) {
+            return Lists.newArrayList();
+        }
+
+        List<SampleData> tumorSamples = Lists.newArrayList();
+
+        for (SampleData sample : samples) {
+            LimsSampleType sampleType = LimsSampleType.fromSampleId(sample.sampleId());
+            if (sampleType != LimsSampleType.OTHER) {
+                if (sample.sampleId().substring(12).contains("T")) {
+                    tumorSamples.add(sample);
+                }
+            }
+
+        }
+        return tumorSamples;
     }
 
     @NotNull
