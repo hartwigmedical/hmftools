@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Cgi {
 
-    @Nullable
+    @NotNull
     public abstract String targeting();
 
     @NotNull

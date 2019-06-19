@@ -13,6 +13,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.vicc.datamodel.Association;
+import com.hartwig.hmftools.vicc.datamodel.BRCA;
+import com.hartwig.hmftools.vicc.datamodel.BRCApart1;
+import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
@@ -21,6 +24,9 @@ import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCA;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart1;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart2;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCgi;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
@@ -60,6 +66,7 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
+    private static final List<Integer> EXPECTED_BRCA_ELEMENT_SIZES = Lists.newArrayList(137);
 
 
     private ViccJsonReader() {
@@ -117,8 +124,8 @@ public final class ViccJsonReader {
                 Set<String> keysCgi = objectCgi.keySet();
 
                 if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
-                    LOGGER.warn("Found " + keysCgi.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_CGI_ELEMENT_SIZES);
+                    LOGGER.warn(
+                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
                     LOGGER.warn(keysCgi);
                 }
                 viccEntryBuilder.cgi(createCgi(objectCgi));
@@ -126,12 +133,182 @@ public final class ViccJsonReader {
                 viccEntryBuilder.cgi(createCgiEmpty());
             }
 
+            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
+            LOGGER.info(objectBRCA);
+            if (viccEntryObject.has("brca")) {
+                Set<String> keysBRCA = objectBRCA.keySet();
+                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
+                    LOGGER.warn(
+                            "Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected " + EXPECTED_BRCA_ELEMENT_SIZES);
+                    LOGGER.warn(keysBRCA);
+                }
+
+                viccEntryBuilder.brca(createBRCA());
+            } else {
+                viccEntryBuilder.brca(createBRCA());
+            }
+
+
+
             entries.add(viccEntryBuilder.build());
 
         }
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static BRCA createBRCA() {
+        return ImmutableBRCA.builder().brcApart1(createBRCAPart1()).brcApart2(createBRCAPart2()).build();
+    }
+
+    @NotNull
+    private static BRCApart1 createBRCAPart1() {
+        return ImmutableBRCApart1.builder()
+                .Variant_frequency_LOVD(Strings.EMPTY)
+                .Allele_frequency_FIN_ExAC(Strings.EMPTY)
+                .ClinVarAccession_ENIGMA(Strings.EMPTY)
+                .Homozygous_count_AFR_ExAC(Strings.EMPTY)
+                .BX_ID_ExAC(Strings.EMPTY)
+                .Variant_in_LOVD(Strings.EMPTY)
+                .Allele_frequency_AFR_ExAC(Strings.EMPTY)
+                .Chr(Strings.EMPTY)
+                .BX_ID_ENIGMA(Strings.EMPTY)
+                .Co_occurrence_LR_exLOVD(Strings.EMPTY)
+                .Homozygous_count_EAS_ExAC(Strings.EMPTY)
+                .Submitter_ClinVar(Strings.EMPTY)
+                .Allele_frequency_EAS_ExAC(Strings.EMPTY)
+                .Hg37_End(Strings.EMPTY)
+                .Submitters_LOVD(Strings.EMPTY)
+                .Clinical_classification_BIC(Strings.EMPTY)
+                .Homozygous_count_NFE_ExAC(Strings.EMPTY)
+                .Allele_count_SAS_ExAC(Strings.EMPTY)
+                .Method_ClinVar(Strings.EMPTY)
+                .Allele_count_NFE_ExAC(Strings.EMPTY)
+                .Pathogenicity_all(Strings.EMPTY)
+                .Germline_or_Somatic_BIC(Strings.EMPTY)
+                .Homozygous_count_SAS_ExAC(Strings.EMPTY)
+                .BIC_Nomenclature(Strings.EMPTY)
+                .Assertion_method_ENIGMA(Strings.EMPTY)
+                .Literature_source_exLOVD(Strings.EMPTY)
+                .Change_Type_id(Strings.EMPTY)
+                .Collection_method_ENIGMA(Strings.EMPTY)
+                .Sum_family_LR_exLOVD(Strings.EMPTY)
+                .HGVS_cDNA_LOVD(Strings.EMPTY)
+                .Homozygous_count_FIN_ExAC(Strings.EMPTY)
+                .EAS_Allele_frequency_1000_Genomes(Strings.EMPTY)
+                .Ethnicity_BIC(Strings.EMPTY)
+                .Individuals_LOVD(Strings.EMPTY)
+                .Variant_in_ExAC(Strings.EMPTY)
+                .URL_ENIGMA(Strings.EMPTY)
+                .Allele_Origin_ClinVar(Strings.EMPTY)
+                .Allele_frequency_AMR_ExAC(Strings.EMPTY)
+                .Variant_in_1000_Genomes(Strings.EMPTY)
+                .AFR_Allele_frequency_1000_Genomes(Strings.EMPTY)
+                .BX_ID_exLOVD(Strings.EMPTY)
+                .Source(Strings.EMPTY)
+                .Condition_ID_value_ENIGMA(Strings.EMPTY)
+                .HGVS_Protein(Strings.EMPTY)
+                .Ref(Strings.EMPTY)
+                .Allele_number_AFR_ExAC(Strings.EMPTY)
+                .Allele_count_AFR_ExAC(Strings.EMPTY)
+                .BX_ID_LOVD(Strings.EMPTY)
+                .Synonyms(Strings.EMPTY)
+                .Gene_Symbol(Strings.EMPTY)
+                .Comment_on_clinical_significance_ENIGMA(Strings.EMPTY)
+                .Missense_analysis_prior_probability_exLOVD(Strings.EMPTY)
+                .Allele_number_FIN_ExAC(Strings.EMPTY)
+                .Posterior_probability_exLOVD(Strings.EMPTY)
+                .Polyphen_Score(Strings.EMPTY)
+                .Reference_Sequence(Strings.EMPTY)
+                .Allele_count_EAS_ExAC(Strings.EMPTY)
+                .Hg38_End(Strings.EMPTY)
+                .HGVS_cDNA(Strings.EMPTY)
+                .Functional_analysis_technique_LOVD(Strings.EMPTY)
+                .SAS_Allele_frequency_1000_Genomes(Strings.EMPTY)
+                .RNA_LOVD(Strings.EMPTY)
+                .Combined_prior_probablility_exLOVD(Strings.EMPTY)
+                .BX_ID_ClinVar(Strings.EMPTY)
+                .IARC_class_exLOVD(Strings.EMPTY)
+                .BX_ID_BIC(Strings.EMPTY)
+                .Sift_Prediction(Strings.EMPTY)
+                .Allele_number_NFE_ExAC(Strings.EMPTY)
+                .Allele_origin_ENIGMA(Strings.EMPTY)
+                .Allele_number_OTH_ExAC(Strings.EMPTY)
+                .Hg36_End(Strings.EMPTY)
+                .Allele_frequency_SAS_ExAC(Strings.EMPTY)
+                .Date_Last_Updated_ClinVar(Strings.EMPTY)
+                .Allele_number_EAS_ExAC(Strings.EMPTY)
+                .Allele_frequency_OTH_ExAC(Strings.EMPTY)
+                .Source_URL(Strings.EMPTY)
+                .SCV_ClinVar(Strings.EMPTY)
+                .Pathogenicity_expert(Strings.EMPTY)
+                .Allele_frequency_1000_Genomes(Strings.EMPTY)
+                .Functional_analysis_result_LOVD(Strings.EMPTY)
+                .AMR_Allele_frequency_1000_Genomes(Strings.EMPTY)
+                .Variant_in_ESP(Strings.EMPTY)
+                .Variant_in_BIC(Strings.EMPTY)
+                .Clinical_significance_ENIGMA(Strings.EMPTY)
+                .Max_Allele_Frequency(Strings.EMPTY)
+                .Allele_count_AMR_ExAC(Strings.EMPTY)
+                .Variant_in_ENIGMA(Strings.EMPTY)
+                .BX_ID_ESP(Strings.EMPTY)
+                .Patient_nationality_BIC(Strings.EMPTY)
+                .BX_ID_1000_Genomes(Strings.EMPTY)
+                .Genomic_Coordinate_hg37(Strings.EMPTY)
+                .Genomic_Coordinate_hg36(Strings.EMPTY)
+                .EUR_Allele_frequency_1000_Genomes(Strings.EMPTY)
+                .Number_of_family_member_carrying_mutation_BIC(Strings.EMPTY)
+                .Segregation_LR_exLOVD(Strings.EMPTY)
+                .Allele_Frequency(Strings.EMPTY)
+                .Minor_allele_frequency_percent_ESP(Strings.EMPTY)
+                .Allele_frequency_ExAC(Strings.EMPTY)
+                .Mutation_type_BIC(Strings.EMPTY)
+                .Assertion_method_citation_ENIGMA(Strings.EMPTY)
+                .Condition_ID_type_ENIGMA(Strings.EMPTY)
+                .Allele_count_OTH_ExAC(Strings.EMPTY)
+                .HGVS_protein_LOVD(Strings.EMPTY)
+                .Variant_in_ClinVar(Strings.EMPTY)
+                .Clinical_importance_BIC(Strings.EMPTY)
+                .Discordant(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static BRCApart2 createBRCAPart2() {
+        return ImmutableBRCApart2.builder()
+                .Allele_count_FIN_ExAC(Strings.EMPTY)
+                .Condition_category_ENIGMA(Strings.EMPTY)
+                .Allele_Frequency_ESP(Strings.EMPTY)
+                .Homozygous_count_OTH_ExAC(Strings.EMPTY)
+                .Genetic_origin_LOVD(Strings.EMPTY)
+                .id(Strings.EMPTY)
+                .Homozygous_count_AMR_ExAC(Strings.EMPTY)
+                .Clinical_Significance_ClinVar(Strings.EMPTY)
+                .AA_Allele_Frequency_ESP(Strings.EMPTY)
+                .Protein_Change(Strings.EMPTY)
+                .Variant_in_exLOVD(Strings.EMPTY)
+                .EA_Allele_Frequency_ESP(Strings.EMPTY)
+                .HGVS_RNA(Strings.EMPTY)
+                .Clinical_significance_citations_ENIGMA(Strings.EMPTY)
+                .Variant_effect_LOVD(Strings.EMPTY)
+                .Polyphen_Prediction(Strings.EMPTY)
+                .Data_Release_id(Strings.EMPTY)
+                .Hg37_Start(Strings.EMPTY)
+                .Hg36_Start(Strings.EMPTY)
+                .Sift_Score(Strings.EMPTY)
+                .Genomic_Coordinate_hg38(Strings.EMPTY)
+                .Alt(Strings.EMPTY)
+                .Literature_citation_BIC(Strings.EMPTY)
+                .Variant_haplotype_LOVD(Strings.EMPTY)
+                .Allele_frequency_NFE_ExAC(Strings.EMPTY)
+                .Hg38_Start(Strings.EMPTY)
+                .Pos(Strings.EMPTY)
+                .Date_last_evaluated_ENIGMA(Strings.EMPTY)
+                .Allele_number_SAS_ExAC(Strings.EMPTY)
+                .Allele_number_AMR_ExAC(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
