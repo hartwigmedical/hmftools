@@ -23,4 +23,18 @@ public enum GenePhaseType
 
         return 0;
     }
+
+    public static GenePhaseType intAsType(int phase)
+    {
+        switch(phase)
+        {
+            case 0: return PHASE_NON_CODING;
+            case 1 : return PHASE_5P_UTR;
+            case 2: return PHASE_0;
+            case 3: return PHASE_1;
+            case 4: return PHASE_2;
+        }
+
+        return PHASE_5P_UTR;
+    }
 }

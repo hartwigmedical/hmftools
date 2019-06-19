@@ -6,7 +6,10 @@ import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_2;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_5P_UTR;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_MAX;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion.GenePhaseType.intAsType;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseType.typeAsInt;
+
+import java.util.StringJoiner;
 
 public class GenePhaseRegion
 {
@@ -34,7 +37,7 @@ public class GenePhaseRegion
         calcCombinedPhase();
     }
 
-    public GenePhaseRegion(final String geneId, final long start, final long end, final boolean[] phaseArray, final boolean[] preGeneArray)
+    public GenePhaseRegion(final String geneId, long start, long end, final boolean[] phaseArray, final boolean[] preGeneArray)
     {
         GeneId = geneId;
         Phase = PHASE_5P_UTR; // will not be used
@@ -49,7 +52,7 @@ public class GenePhaseRegion
 
     public void setPreGene(boolean toggle, GenePhaseType phase)
     {
-        mPreGenePhaseStatus[typeAsInt(phase)] = true;
+        mPreGenePhaseStatus[typeAsInt(phase)] = toggle;
     }
 
     public static GenePhaseType mapExonPhase(int exonPhase)
@@ -165,17 +168,6 @@ public class GenePhaseRegion
         return false;
     }
 
-    public boolean hasNonPreGene()
-    {
-        for(int i = 0; i < PHASE_MAX; ++i)
-        {
-            if(mPhaseArray[i] && !mPreGenePhaseStatus[i])
-                return true;
-        }
-
-        return false;
-    }
-
     public int getCombinedPhase() { return mCombinedPhase; }
 
     private void calcCombinedPhase()
@@ -202,6 +194,83 @@ public class GenePhaseRegion
     {
         return (int)Math.pow(10, typeAsInt(phase));
 
+    }
+
+    public static final String PD_DELIMITER = ":";
+
+    private static String boolToStr(boolean value) { return value ? "1" : "0"; }
+    private static boolean strToBool(final String value) { return value.equals("1"); }
+
+    public String toCsv(boolean useArray)
+    {
+        StringJoiner output = new StringJoiner(PD_DELIMITER);
+        output.add(String.valueOf(mStart));
+        output.add(String.valueOf(mEnd));
+
+        if(useArray)
+        {
+            for (int i = 0; i < PHASE_MAX; ++i)
+            {
+                output.add(boolToStr(mPhaseArray[i]));
+            }
+
+            for (int i = 0; i < PHASE_MAX; ++i)
+            {
+                output.add(boolToStr(mPreGenePhaseStatus[i]));
+            }
+        }
+        else
+        {
+            int phase = typeAsInt(Phase);
+            output.add(String.valueOf(phase));
+            output.add(boolToStr(mPreGenePhaseStatus[phase]));
+        }
+
+        return output.toString();
+    }
+
+    public static GenePhaseRegion fromCsv(final String geneId, final String inputStr, boolean useArray)
+    {
+        String[] items = inputStr.split(PD_DELIMITER);
+
+        int startEndItems = 2;
+
+        if(useArray)
+        {
+            if (items.length != startEndItems + PHASE_MAX * 2)
+                return null;
+        }
+        else
+        {
+            if(items.length != 4)
+                return null;
+        }
+
+        long start = Long.parseLong(items[0]);
+        long end = Long.parseLong(items[1]);
+
+        if(useArray)
+        {
+            boolean[] phases = new boolean[PHASE_MAX];
+            boolean[] status = new boolean[PHASE_MAX];
+
+            for (int i = 0; i < PHASE_MAX; ++i)
+            {
+                phases[i] = strToBool(items[i + startEndItems]);
+                status[i] = strToBool(items[i + startEndItems + PHASE_MAX]);
+            }
+
+            return new GenePhaseRegion(geneId, start, end, phases, status);
+        }
+        else
+        {
+            GenePhaseType phase = intAsType(Integer.parseInt(items[2]));
+            boolean preGene = strToBool(items[3]);
+
+            GenePhaseRegion region = new GenePhaseRegion(geneId, start, end, phase);
+            region.setPreGene(preGene, phase);
+            return region;
+        }
     }
 
 }

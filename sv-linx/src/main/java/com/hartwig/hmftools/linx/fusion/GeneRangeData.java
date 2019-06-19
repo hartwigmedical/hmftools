@@ -61,4 +61,59 @@ public class GeneRangeData
     public void addBaseOverlapCountUpstream(int type, long count) { mBaseOverlapCountUpstream[type] += count; }
     public long getBaseOverlapCountDownstream(int type) { return mBaseOverlapCountDownstream[type]; }
     public void addBaseOverlapCountDownstream(int type, long count) { mBaseOverlapCountDownstream[type] += count; }
+
+    public static final String PGD_DELIMITER = ",";
+    public static final String PPR_DELIMITER = ";";
+
+    public String toCsv()
+    {
+        String outputStr = GeneData.GeneId + PGD_DELIMITER;
+
+        for(int i = 0; i < mPhaseRegions.size(); ++i)
+        {
+            if(i > 0)
+                outputStr += PPR_DELIMITER;
+
+            outputStr += mPhaseRegions.get(i).toCsv(false);
+        }
+
+        outputStr += PGD_DELIMITER;
+
+        for(int i = 0; i < mCombinedPhaseRegions.size(); ++i)
+        {
+            if(i > 0)
+                outputStr += PPR_DELIMITER;
+
+            outputStr += mCombinedPhaseRegions.get(i).toCsv(true);
+        }
+
+        return outputStr;
+    }
+
+    public void loadRegionsFromCsv(final String inputStr)
+    {
+        final String[] regions = inputStr.split(PGD_DELIMITER);
+
+        if(regions.length != 2)
+            return;
+
+        final String[] phaseStrings = regions[0].split(PPR_DELIMITER);
+        final String[] phaseArrayStrings = regions[1].split(PPR_DELIMITER);
+
+        for(int i = 0; i < phaseStrings.length; ++i)
+        {
+            GenePhaseRegion region = GenePhaseRegion.fromCsv(GeneData.GeneId, phaseStrings[i], false);
+
+            if(region != null)
+                mPhaseRegions.add(region);
+        }
+
+        for(int i = 0; i < phaseArrayStrings.length; ++i)
+        {
+            GenePhaseRegion region = GenePhaseRegion.fromCsv(GeneData.GeneId, phaseArrayStrings[i], true);
+
+            if(region != null)
+                mCombinedPhaseRegions.add(region);
+        }
+    }
 }
