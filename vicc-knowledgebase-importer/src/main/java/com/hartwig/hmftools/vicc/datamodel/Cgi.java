@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Cgi {
 
-    @NotNull
+    @Nullable
     public abstract String targeting();
 
     @NotNull
@@ -24,6 +24,9 @@ public abstract class Cgi {
 
     @NotNull
     public abstract List<String> individual_mutation();
+
+    @NotNull
+    public abstract String drugsFullName();
 
     @NotNull
     public abstract String curator();

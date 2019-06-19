@@ -59,6 +59,8 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES = Lists.newArrayList(1, 2);
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
+
 
     private ViccJsonReader() {
     }
@@ -109,7 +111,20 @@ public final class ViccJsonReader {
 
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
-            viccEntryBuilder.cgi(createCgi());
+
+            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
+            if (viccEntryObject.has("cgi")) {
+                Set<String> keysCgi = objectCgi.keySet();
+
+                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
+                    LOGGER.warn("Found " + keysCgi.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_CGI_ELEMENT_SIZES);
+                    LOGGER.warn(keysCgi);
+                }
+                viccEntryBuilder.cgi(createCgi(objectCgi));
+            } else {
+                viccEntryBuilder.cgi(createCgiEmpty());
+            }
 
             entries.add(viccEntryBuilder.build());
 
@@ -120,13 +135,14 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static Cgi createCgi() {
+    private static Cgi createCgiEmpty() {
         return ImmutableCgi.builder()
                 .targeting(Strings.EMPTY)
                 .source(Strings.EMPTY)
                 .cDNA(Lists.newArrayList())
                 .primary_tumor_type(Strings.EMPTY)
                 .individual_mutation(Lists.newArrayList())
+                .drugsFullName(Strings.EMPTY)
                 .curator(Strings.EMPTY)
                 .drug_family(Strings.EMPTY)
                 .alteration(Strings.EMPTY)
@@ -144,6 +160,35 @@ public final class ViccJsonReader {
                 .evidence_level(Strings.EMPTY)
                 .association(Strings.EMPTY)
                 .metastatic_Tumor_Type(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static Cgi createCgi(@NotNull JsonObject objectCgi) {
+        return ImmutableCgi.builder()
+                .targeting(objectCgi.getAsJsonPrimitive("Targeting").getAsString())
+                .source(objectCgi.getAsJsonPrimitive("Source").getAsString())
+                .cDNA(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("cDNA"))))
+                .primary_tumor_type(objectCgi.getAsJsonPrimitive("Primary Tumor type").getAsString())
+                .individual_mutation(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("individual_mutation"))))
+                .drugsFullName(objectCgi.getAsJsonPrimitive("Drug full name").getAsString())
+                .curator(objectCgi.getAsJsonPrimitive("Curator").getAsString())
+                .drug_family(objectCgi.getAsJsonPrimitive("Drug family").getAsString())
+                .alteration(objectCgi.getAsJsonPrimitive("Alteration").getAsString())
+                .drug(objectCgi.getAsJsonPrimitive("Drug").getAsString())
+                .biomarker(objectCgi.getAsJsonPrimitive("Biomarker").getAsString())
+                .gDNA(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("gDNA"))))
+                .drug_status(objectCgi.getAsJsonPrimitive("Drug status").getAsString())
+                .gene(objectCgi.getAsJsonPrimitive("Gene").getAsString())
+                .transcript(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("transcript"))))
+                .strand(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("strand"))))
+                .info(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("info"))))
+                .assay_type(objectCgi.getAsJsonPrimitive("Assay type").getAsString())
+                .alteration_type(objectCgi.getAsJsonPrimitive("Alteration type").getAsString())
+                .region(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("region"))))
+                .evidence_level(objectCgi.getAsJsonPrimitive("Evidence level").getAsString())
+                .association(objectCgi.getAsJsonPrimitive("Association").getAsString())
+                .metastatic_Tumor_Type(objectCgi.getAsJsonPrimitive("Metastatic Tumor Type").getAsString())
                 .build();
     }
 
