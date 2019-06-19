@@ -3,10 +3,14 @@ package com.hartwig.hmftools.linx.fusion;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_LENGTHS;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.mapExonPhase;
 import static com.hartwig.hmftools.linx.fusion.GenePhaseRegion.regionsPhaseMatched;
@@ -48,7 +52,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class FusionLikelihood
 {
@@ -64,11 +67,12 @@ public class FusionLikelihood
     private Map<String,Map<Integer,Long>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
     private Map<String,Map<Integer,Long>> mDupGenePairCounts;
 
-    private Map<String, List<GenePhaseRegion>> mChrPhaseCountsUpstream;
-    private Map<String, List<GenePhaseRegion>> mChrPhaseCountsDownstream;
+    // cache the total counts (expressed as a length) for each unique phase combination per chromosome
+    private Map<String, List<GenePhaseRegion>> mChrPhaseRegionsPosStrand;
+    private Map<String, List<GenePhaseRegion>> mChrPhaseRegionsNegStrand;
 
     private List<String> mRestrictedChromosomes;
-    private long mChromosomeLengthFactor;
+    private long mArmLengthFactor;
     private boolean mLogVerbose;
 
     private static final String DEL_BUCKET_LENGTHS = "fl_del_bucket_lengths";
@@ -93,10 +97,10 @@ public class FusionLikelihood
         mChrReverseGeneDataMap = Maps.newHashMap();
         mDelGenePairCounts = Maps.newHashMap();
         mDupGenePairCounts = Maps.newHashMap();
-        mChrPhaseCountsUpstream = Maps.newHashMap();
-        mChrPhaseCountsDownstream = Maps.newHashMap();
+        mChrPhaseRegionsPosStrand = Maps.newHashMap();
+        mChrPhaseRegionsNegStrand = Maps.newHashMap();
         mRestrictedChromosomes = Lists.newArrayList();
-        mChromosomeLengthFactor = 0;
+        mArmLengthFactor = 0;
         mLogVerbose = false;
     }
 
@@ -136,10 +140,22 @@ public class FusionLikelihood
                     .collect(Collectors.toList());
         }
 
+        // sum up all arm lengths to adjusted same-arm fusion rates
+        long maxBucketLength = max(getMaxBucketLength(), 4000000);
+
         for(Map.Entry<String,Integer> entry : CHROMOSOME_LENGTHS.entrySet())
         {
-            int chromosomeLength = entry.getValue();
-            mChromosomeLengthFactor += Math.pow(chromosomeLength, 2);
+            final String chromosome = entry.getKey();
+
+            long armLength = getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
+
+            if(armLength > maxBucketLength)
+                mArmLengthFactor += pow(armLength - maxBucketLength, 2);
+
+            armLength = getChromosomalArmLength(chromosome, CHROMOSOME_ARM_Q);
+
+            if(armLength > maxBucketLength)
+                mArmLengthFactor += pow(armLength - maxBucketLength, 2);
         }
     }
 
@@ -195,15 +211,17 @@ public class FusionLikelihood
             if(!mRestrictedChromosomes.isEmpty() && !mRestrictedChromosomes.contains(chromosome))
                 continue;
 
-            LOGGER.debug("generating phase counts for chromosome({})", chromosome);
+            LOGGER.info("generating phase counts for chromosome({})", chromosome);
 
             final List<EnsemblGeneData> geneDataList = entry.getValue();
             final List<EnsemblGeneData> reverseGeneDataList = chrReverseGeneDataMap.get(chromosome);
 
             List<GeneRangeData> geneList = Lists.newArrayList();
             List<GeneRangeData> geneEndFirstList = Lists.newArrayList();
-            List<GenePhaseRegion> chrPhaseRegionsUpstream = Lists.newArrayList();
-            List<GenePhaseRegion> chrPhaseRegionsDownstream = Lists.newArrayList();
+            List<GenePhaseRegion> chrPhaseRegionsPosStrand = Lists.newArrayList();
+            List<GenePhaseRegion> chrPhaseRegionsNegStrand = Lists.newArrayList();
+            long posStrandTotal = 0;
+            long negStrandTotal = 0;
 
             for(final EnsemblGeneData geneData :entry.getValue())
             {
@@ -246,14 +264,17 @@ public class FusionLikelihood
                         continue;
                     }
 
-                    if(!region.isAnyPreGene())
+                    // add to the chromosome's summary phasing regions by strand, without concern for overlaps
+                    // across genes on the same strand
+                    if(geneData.Strand == 1)
                     {
-                        addPhaseRegion(chrPhaseRegionsUpstream, region);
+                        posStrandTotal += region.length();
+                        addPhaseRegion(chrPhaseRegionsPosStrand, region);
                     }
-
-                    if(!region.hasPhaseOnly(PHASE_NON_CODING))
+                    else
                     {
-                        addPhaseRegion(chrPhaseRegionsDownstream, region);
+                        negStrandTotal += region.length();
+                        addPhaseRegion(chrPhaseRegionsNegStrand, region);
                     }
                 }
 
@@ -271,8 +292,10 @@ public class FusionLikelihood
                 geneEndFirstList.add(index, geneRangeData);
             }
 
-            mChrPhaseCountsUpstream.put(chromosome, chrPhaseRegionsUpstream);
-            mChrPhaseCountsDownstream.put(chromosome, chrPhaseRegionsDownstream);
+            mChrPhaseRegionsPosStrand.put(chromosome, chrPhaseRegionsPosStrand);
+            mChrPhaseRegionsNegStrand.put(chromosome, chrPhaseRegionsNegStrand);
+
+            LOGGER.debug("chr({}) posStrandTotal({}) negStrandTotal({})", chromosome, posStrandTotal, negStrandTotal);
 
             mChrForwardGeneDataMap.put(chromosome, geneList);
             mChrReverseGeneDataMap.put(chromosome, geneEndFirstList);
@@ -402,9 +425,7 @@ public class FusionLikelihood
     {
         // for each arm and each gene in that arm sum up the overlapping counts against all genes beyond the specified
         // DEL and DUP max bucket length, and then all overlapping counts on remote arms
-        long delLimit = !mDelBucketLengths.isEmpty() ? mDelBucketLengths.get(mDelBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
-        long dupLimit = !mDupBucketLengths.isEmpty() ? mDupBucketLengths.get(mDupBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
-        long proximateLimit = max(delLimit, dupLimit);
+        long proximateLimit = getMaxBucketLength();
 
         for (Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
         {
@@ -412,85 +433,50 @@ public class FusionLikelihood
 
             LOGGER.info("calculating local and remote overlap counts for chr({})", chromosome);
 
-            // sum up the phase counts across all other chromosomes
-            List<GenePhaseRegion> remotePhasesUpstream = Lists.newArrayList();
-            List<GenePhaseRegion> remotePhasesDownstream = Lists.newArrayList();
-
-            for(int i = 0; i <= 1; ++i)
-            {
-                List<GenePhaseRegion> remotePhases = (i == 0) ? remotePhasesUpstream : remotePhasesDownstream;
-
-                Map<String, List<GenePhaseRegion>> chrPhaseRegionsMap = (i == 0) ? mChrPhaseCountsUpstream : mChrPhaseCountsDownstream;
-
-                for (Map.Entry<String, List<GenePhaseRegion>> chrEntry : chrPhaseRegionsMap.entrySet())
-                {
-                    if (chrEntry.getKey().equals(chromosome)) // skip the same chromosome
-                        continue;
-
-                    for (GenePhaseRegion remoteRegion : chrEntry.getValue())
-                    {
-                        addPhaseRegion(remotePhases, remoteRegion);
-                    }
-                }
-            }
-
-            /*
-            if(chromosome.equals("3"))
-            {
-                LOGGER.debug("chr({}) remote totals", chromosome);
-
-                for(Map.Entry<Integer, Long> pc : remotePhaseCountsUpstream.entrySet())
-                {
-                    LOGGER.info("upstream phase({}) overlap({})", pc.getKey(), pc.getValue());
-                }
-
-                for(Map.Entry<Integer, Long> pc : remotePhaseCountsDownstream.entrySet())
-                {
-                    LOGGER.info("downstream phase({}) overlap({})", pc.getKey(), pc.getValue());
-                }
-            }
-            */
-
             List<GeneRangeData> geneList = entry.getValue();
 
             for(int i = 0; i < geneList.size(); ++i)
             {
                 GeneRangeData gene1 = geneList.get(i);
 
+                /*
                 if(gene1.GeneData.GeneId.equals("ENSG00000189283"))
                 {
                     LOGGER.info("specific gene: {}", gene1.GeneData.GeneId);
                 }
+                */
 
-                // first set the remote overlap counts
-                for (GenePhaseRegion region : gene1.getCombinedPhaseRegions())
+                // determine the remote overlap count by comparing this gene's regions to all matching remote ones
+                for(int j = 0; j <= 1; ++j)
                 {
-                    // the downstream gene of the potential fusion cannot be non-coding
-                    long maxOverlap = 0;
+                    final Map<String, List<GenePhaseRegion>> chrPhaseRegions =
+                            (j == 0) ? mChrPhaseRegionsPosStrand : mChrPhaseRegionsNegStrand;
 
-                    // test gene as an downstream vs all remote upstream phasing regions
-                    for (GenePhaseRegion remoteRegion : remotePhasesUpstream)
+                    for (Map.Entry<String, List<GenePhaseRegion>> chrEntry : chrPhaseRegions.entrySet())
                     {
-                        if (hasAnyPhaseMatch(remoteRegion, region, false) || regionsPhaseMatched(remoteRegion, region))
+                        if (chrEntry.getKey().equals(chromosome)) // skip the same chromosome
+                            continue;
+
+                        final List<GenePhaseRegion> remoteRegions = chrEntry.getValue();
+
+                        for (GenePhaseRegion region : gene1.getCombinedPhaseRegions())
                         {
-                            maxOverlap = max(maxOverlap, remoteRegion.length());
+                            for (GenePhaseRegion remoteRegion : remoteRegions)
+                            {
+                                // test gene as an downstream vs all remote upstream phasing regions
+                                if (hasAnyPhaseMatch(remoteRegion, region, false) || regionsPhaseMatched(remoteRegion, region))
+                                {
+                                    gene1.addBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE, region.length() * remoteRegion.length());
+                                }
+
+                                // then as an upstream partner
+                                if (hasAnyPhaseMatch(region, remoteRegion, false) || regionsPhaseMatched(region, remoteRegion))
+                                {
+                                    gene1.addBaseOverlapCountUpstream(NON_PROX_TYPE_REMOTE, region.length() * remoteRegion.length());
+                                }
+                            }
                         }
                     }
-
-                    gene1.addBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE, region.length() * maxOverlap);
-
-                    maxOverlap = 0;
-
-                    // test gene as an upstream vs all remote downstream phasing regions
-                    for (GenePhaseRegion remoteRegion : remotePhasesDownstream)
-                    {
-                        if (hasAnyPhaseMatch(region, remoteRegion, false) || regionsPhaseMatched(region, remoteRegion))
-                        {
-                            maxOverlap = max(maxOverlap, remoteRegion.length());
-                        }
-                    }
-
-                    gene1.addBaseOverlapCountUpstream(NON_PROX_TYPE_REMOTE, region.length() * maxOverlap);
                 }
 
                 // and now the local ones outside the DEL and DUP proximity lengths, ignoring any strand checking
@@ -582,11 +568,16 @@ public class FusionLikelihood
         }
     }
 
+    private long getMaxBucketLength()
+    {
+        long delLimit = !mDelBucketLengths.isEmpty() ? mDelBucketLengths.get(mDelBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
+        long dupLimit = !mDupBucketLengths.isEmpty() ? mDupBucketLengths.get(mDupBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
+        return max(delLimit, dupLimit);
+    }
+
     private void findProximateFusions(List<GeneRangeData> geneRangeList, int strandMatch)
     {
-        long delLimit = !mDelBucketLengths.isEmpty() ? mDelBucketLengths.get(mDelBucketLengths.size() - 1) : 0;
-        long dupLimit = !mDupBucketLengths.isEmpty() ? mDupBucketLengths.get(mDupBucketLengths.size() - 1) : 0;
-        long rangeLimit = max(delLimit, dupLimit);
+        long rangeLimit = getMaxBucketLength();
 
         for(int lowerIndex = 0; lowerIndex < geneRangeList.size(); ++lowerIndex)
         {
@@ -1064,9 +1055,10 @@ public class FusionLikelihood
             writer.write(",ShortInvRateUp,ShortInvRateDown,SameArmRateUp,SameArmRateDown,RemoteRateUp,RemoteRateDown");
             writer.newLine();
 
-            // adjustment factors to convert overlap base count into rates - with the 2 presenting orientation combinations
-            double remoteFusionFactor = 1.0 / (GENOME_BASE_COUNT * GENOME_BASE_COUNT * 2);
-            double localFusionFactor = 1.0 / (2 * mChromosomeLengthFactor);
+            // adjustment factors to convert overlap base count into rates
+            double remoteFusionFactor = 1.0 / (GENOME_BASE_COUNT * GENOME_BASE_COUNT);
+            double sameArmFusionFactor = 1.0 / mArmLengthFactor;
+            double shortInvFusionFactor = 1.0 / (SHORT_INV_BUCKET * GENOME_BASE_COUNT);
 
             for(Map.Entry<String, List<GeneRangeData>> entry : mChrForwardGeneDataMap.entrySet())
             {
@@ -1109,11 +1101,11 @@ public class FusionLikelihood
                     writer.write(String.format(",%d,%d,%d,%d,%d,%d",
                             phase5pUTR, phase0, phase1, phase2, nonCoding, preGene));
 
-                    writer.write(String.format(",%.9f,%.9f,%.9f,%.9f,%.9f,%.9f",
-                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * localFusionFactor,
-                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_SHORT_INV) * localFusionFactor,
-                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * remoteFusionFactor,
-                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_LONG_SAME_ARM) * remoteFusionFactor,
+                    writer.write(String.format(",%.12f,%.12f,%.12f,%.12f,%.12f,%.12f",
+                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor,
+                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor,
+                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor,
+                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor,
                             geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_REMOTE) * remoteFusionFactor,
                             geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE) * remoteFusionFactor));
 
