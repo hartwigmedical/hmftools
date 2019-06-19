@@ -152,7 +152,7 @@ searchTerm,primaryTumorLocation,subType
 "neuroendocrine carcinoma",NET,""
 "Neuroendocrine tumor",NET,""
 "non-HIV Kaposisarcoom",Skin,"Other"
-"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma"",Lung,"Lung Cancer: Non-Small Cell"
+"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,"Lung Cancer: Non-Small Cell"
 "Oesophagal cancer (at transition from oesophagus to stomach)",Esophagus,""
 "Oesophago-gastric cancer (junctional)",Esophagus,"Esophagus-Gastric junction"
 "Oesophagus/Cardiacarcinoma",Stomach,"Cardiacarcinoma"
