@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.linx.fusion;
+package com.hartwig.hmftools.linx.fusion_likelihood;
 
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class GeneRangeData
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
-    public void addPhaseRegions(List<GenePhaseRegion> regions) { mPhaseRegions.addAll(regions); }
+    public void setPhaseRegions(List<GenePhaseRegion> regions) { mPhaseRegions = regions; }
 
     public final List<GenePhaseRegion> getCombinedPhaseRegions() { return mCombinedPhaseRegions; }
     public void setCombinedPhaseRegions(List<GenePhaseRegion> regions) { mCombinedPhaseRegions = regions; }

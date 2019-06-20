@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.linx.fusion;
+package com.hartwig.hmftools.linx.fusion_likelihood;
 
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_0;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_1;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_2;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_5P_UTR;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_MAX;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.PHASE_NON_CODING;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.intAsType;
-import static com.hartwig.hmftools.linx.fusion.GenePhaseType.typeAsInt;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_0;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_1;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_2;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_5P_UTR;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_MAX;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.intAsType;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
 
 import java.util.StringJoiner;
 
@@ -48,6 +48,11 @@ public class GenePhaseRegion
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
         addPhases(phaseArray, preGeneArray);
         calcCombinedPhase();
+    }
+
+    public static GenePhaseRegion from(final GenePhaseRegion other)
+    {
+        return new GenePhaseRegion(other.GeneId, other.start(), other.end(), other.Phase);
     }
 
     public void setPreGene(boolean toggle, GenePhaseType phase)
