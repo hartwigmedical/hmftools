@@ -95,7 +95,7 @@ public class ExternalDBFilters
         String outputDir = cmd.getOptionValue(OUTPUT_DIR, "");
         filterFileBuilder.createFilterFile(program, outputDir);
 
-        LOGGER.info("Filter file creation complete and written to {}", filterInputFile);
+        LOGGER.info("Filter file creation complete");
     }
 
     private ExternalDBFilters(String filterInputFile)
