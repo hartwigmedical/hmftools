@@ -326,7 +326,7 @@ public class GermlineVariantFinder
             {
                 if (effects.contains(requiredEffect))
                 {
-                    LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
+                    LOGGER.debug("Match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                             gene, transcriptId, chromosome, position, ref, alt, effects);
 
                     matchType = MATCH_TYPE_REQUIRED_EFFECT;
@@ -355,7 +355,7 @@ public class GermlineVariantFinder
 
                             if(isBenign(filter.ClinvarSignificance) || filter.ClinvarSignificance.isEmpty())
                             {
-                                LOGGER.debug("gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
+                                LOGGER.debug("Gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
                                         gene, varId, chromosome, position, ref, alt, hgvsProtein);
 
                                 return;
@@ -375,7 +375,7 @@ public class GermlineVariantFinder
                     {
                         if(filter.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
                         {
-                            LOGGER.debug("match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
+                            LOGGER.debug("Match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
                                     gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
                             matchType = MATCH_TYPE_WHITELIST;
                             matchedFilter = filter;

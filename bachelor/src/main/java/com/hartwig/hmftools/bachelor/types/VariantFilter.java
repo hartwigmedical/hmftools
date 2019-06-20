@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 
 public class VariantFilter
 {
+    private static final Logger LOGGER = LogManager.getLogger(VariantFilter.class);
+
     public final String Gene;
     public final String TranscriptId;
     public final String Chromosome;
@@ -21,8 +23,6 @@ public class VariantFilter
     public final int MinCodon;
     public final String ClinvarSignificance;
     public final String ClinvarSigInfo;
-
-    private static final Logger LOGGER = LogManager.getLogger(VariantFilter.class);
 
     public VariantFilter(final String gene, final String transcriptId,
             final String chromosome, long position, final String ref, final String alt, final CodingEffect effect,
@@ -48,7 +48,7 @@ public class VariantFilter
         {
             if (proteinPosition >=0 && MinCodon <= proteinPosition)
             {
-                LOGGER.debug("gene({}) var({}:{}) ref({}) alt({}) matches filter on minCodon({})",
+                LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on minCodon({})",
                         gene, chromosome, position, ref, alt, proteinPosition);
 
                 return true;
@@ -57,7 +57,7 @@ public class VariantFilter
 
         if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
         {
-            LOGGER.debug("gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
+            LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
                     gene, chromosome, position, ref, alt);
 
             return true;
@@ -73,7 +73,7 @@ public class VariantFilter
         {
             if (!HgvsProteinCodon.isEmpty() && HgvsProteinCodon.equals(hgvsProtein))
             {
-                LOGGER.debug("gene({}) matches filter on hgvsProtein({})", gene, hgvsProtein);
+                LOGGER.debug("Gene({}) matches filter on hgvsProtein({})", gene, hgvsProtein);
 
                 return true;
             }
@@ -82,7 +82,7 @@ public class VariantFilter
         {
             if (Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt))
             {
-                LOGGER.debug("gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
+                LOGGER.debug("Gene({}) var({}:{}) ref({}) alt({}) matches filter on position, ref & alt",
                         gene, chromosome, position, ref, alt);
 
                 return true;
@@ -91,6 +91,4 @@ public class VariantFilter
 
         return false;
     }
-
-
-    }
+}
