@@ -43,6 +43,7 @@ public class BachelorApplication {
 
     private String mSampleDataDir;
     private String mSingleSampleId;
+    private String mSingleSampleOutputDir;
     private List<String> mRestrictedSampleIds;
     private List<RunDirectory> mSampleDataDirectories;
     private boolean mIsBatchMode;
@@ -73,6 +74,7 @@ public class BachelorApplication {
         mPostProcessor = null;
         mSampleDataDir = "";
         mSingleSampleId = "";
+        mSingleSampleOutputDir = "";
         mSampleDataDirectories = Lists.newArrayList();
         mRestrictedSampleIds = Lists.newArrayList();
         mIsBatchMode = false;
@@ -121,6 +123,13 @@ public class BachelorApplication {
         if (!mSampleDataDir.endsWith(File.separator))
         {
             mSampleDataDir += File.separator;
+        }
+
+        mSingleSampleOutputDir = cmd.getOptionValue(SINGLE_SAMPLE_OUTPUT_DIR);
+
+        if (!mSingleSampleOutputDir.endsWith(File.separator))
+        {
+            mSingleSampleOutputDir += File.separator;
         }
 
         setSampleDataDirectories();
@@ -173,17 +182,15 @@ public class BachelorApplication {
                 continue;
             }
 
-            // processSampleDirectory(runDir, "");
-
             if(mGermlineVcfParser != null)
             {
-                mGermlineVcfParser.run(runDir, sampleId, SINGLE_SAMPLE_OUTPUT_DIR);
+                mGermlineVcfParser.run(runDir, sampleId, mSingleSampleOutputDir);
             }
 
             if(mPostProcessor != null)
             {
                 List<BachelorGermlineVariant> bachelorRecords = mGermlineVcfParser != null ? mGermlineVcfParser.getBachelorRecords() : null;
-                mPostProcessor.run(runDir, bachelorRecords, SINGLE_SAMPLE_OUTPUT_DIR);
+                mPostProcessor.run(runDir, bachelorRecords, mSingleSampleOutputDir);
             }
 
             if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)

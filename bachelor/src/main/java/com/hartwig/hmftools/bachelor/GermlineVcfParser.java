@@ -64,7 +64,7 @@ public class GermlineVcfParser
 
         if (mProgramConfigMap.isEmpty())
         {
-            LOGGER.error("no Programs loaded, exiting");
+            LOGGER.error("No programs loaded, exiting");
             return;
         }
 
@@ -109,6 +109,7 @@ public class GermlineVcfParser
 
         if(!mUsingBatchOutput)
         {
+            LOGGER.debug("Creating single sample output dir: " + singleSampleOutputDir);
             createOutputFiles(singleSampleOutputDir);
         }
 

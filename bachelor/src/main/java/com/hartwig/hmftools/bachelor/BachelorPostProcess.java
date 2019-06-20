@@ -200,7 +200,7 @@ public class BachelorPostProcess
         }
         else
         {
-            mBachDataDir = singleSampleOutputDir + File.separator;
+            mBachDataDir = singleSampleOutputDir;
         }
 
         if(bachRecords == null)
