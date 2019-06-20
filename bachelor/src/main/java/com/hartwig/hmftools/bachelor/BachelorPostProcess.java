@@ -147,10 +147,10 @@ public class BachelorPostProcess
 
             try
             {
-                LOGGER.debug("reading high confidence bed file");
+                LOGGER.debug("Reading high confidence bed file");
                 mHighConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-                LOGGER.debug("loading indexed fasta reference file");
+                LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
                 if(mBamCountReader != null)
@@ -158,7 +158,7 @@ public class BachelorPostProcess
             }
             catch (IOException e)
             {
-                LOGGER.error("reference file loading failed");
+                LOGGER.error("Reference file loading failed");
                 return;
             }
         }
@@ -272,7 +272,7 @@ public class BachelorPostProcess
             final String specificSample = entry.getKey();
             sampleRecords = entry.getValue();
 
-            LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
+            LOGGER.info("Sample({}) processing {} germline reports", specificSample, sampleRecords.size());
 
             // sort by chromosome and position
             Collections.sort(sampleRecords);
@@ -286,13 +286,13 @@ public class BachelorPostProcess
 
             if (sampleRecords.isEmpty())
             {
-                LOGGER.info("sample({}) has no valid germline reports", specificSample);
+                LOGGER.info("Sample({}) has no valid germline reports", specificSample);
                 continue;
             }
 
             if (mUploadRecordsToDB)
             {
-                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
+                LOGGER.info("Sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
                 writeToDatabase(specificSample, sampleRecords);
             }
 
@@ -343,7 +343,7 @@ public class BachelorPostProcess
         {
             final String purplePath = mSampleDataDir + mCmdLineArgs.getOptionValue(PURPLE_DATA_DIRECTORY);
 
-            LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, purplePath);
+            LOGGER.debug("Sample({}) loading purple data from file using path {}", sampleId, purplePath);
 
             try
             {
@@ -352,19 +352,19 @@ public class BachelorPostProcess
             }
             catch (IOException e)
             {
-                LOGGER.error("failed to read purple data from {}: {}", purplePath, e.toString());
+                LOGGER.error("Failed to read purple data from {}: {}", purplePath, e.toString());
                 return;
             }
         }
         else
         {
-            LOGGER.debug("sample({}) loading purple data from database", sampleId);
+            LOGGER.debug("Sample({}) loading purple data from database", sampleId);
 
             purityContext = mDbAccess.readPurityContext(sampleId);
 
             if (purityContext == null)
             {
-                LOGGER.warn("failed to read purity data");
+                LOGGER.warn("Failed to read purity data");
             }
 
             copyNumbers = mDbAccess.readCopynumbers(sampleId);
@@ -419,7 +419,7 @@ public class BachelorPostProcess
             }
         }
 
-        LOGGER.debug("sample({}) enriching variants", sampleId);
+        LOGGER.debug("Sample({}) enriching variants", sampleId);
 
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(
                 mHighConfidenceRegions,
@@ -444,7 +444,7 @@ public class BachelorPostProcess
 
             if (!matched)
             {
-                LOGGER.debug("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
+                LOGGER.debug("Sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
                         sampleId, bachRecord.VariantId, bachRecord.Gene, bachRecord.TranscriptId,
                         bachRecord.Chromosome, bachRecord.Position);
             }
@@ -473,7 +473,7 @@ public class BachelorPostProcess
 
                 if(repeatCount > 8)
                 {
-                    LOGGER.debug("filtered var({}) indel {} with high repeatCount({})",
+                    LOGGER.debug("Filtered var({}) indel {} with high repeatCount({})",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
                     bachRecords.remove(index);
                     continue;
@@ -501,7 +501,7 @@ public class BachelorPostProcess
 
                 if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
                 {
-                    LOGGER.debug("filtered var({}) indel {} with ref, alt and microHom equal",
+                    LOGGER.debug("Filtered var({}) indel {} with ref, alt and microHom equal",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
                     bachRecords.remove(index);
                     continue;
@@ -588,7 +588,7 @@ public class BachelorPostProcess
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile: {}", e.toString());
+            LOGGER.error("Error writing to outputFile: {}", e.toString());
         }
     }
 

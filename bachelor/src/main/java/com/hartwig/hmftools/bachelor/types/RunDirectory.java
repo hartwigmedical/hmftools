@@ -64,16 +64,4 @@ public class RunDirectory {
             return null;
         }
     }
-
-    public final String directoryName() { return mSampleDir.getFileName().toString(); }
-
-    public final String getPatientID()
-    {
-        final String[] split = mSampleDir.getFileName().toString().split("_");
-
-        if(split.length < 2)
-            return "";
-
-        return split[split.length - 1];
-    }
 }
