@@ -172,12 +172,12 @@ public class BachelorPostProcess
         if (mCmdLineArgs.hasOption(BACH_INPUT_FILE))
         {
             bachelorInputFile = mCmdLineArgs.getOptionValue(BACH_INPUT_FILE);
-            LOGGER.info("loading specific input file: {}", bachelorInputFile);
+            LOGGER.info("Loading specific input file: {}", bachelorInputFile);
         }
         else
         {
             bachelorInputFile = mBachDataDir + DEFAULT_BACH_INPUT_FILE;
-            LOGGER.info("loading sample default file: {}", bachelorInputFile);
+            LOGGER.info("Loading sample default file: {}", bachelorInputFile);
         }
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();

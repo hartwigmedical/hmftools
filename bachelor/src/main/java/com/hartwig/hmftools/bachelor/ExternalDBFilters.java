@@ -339,7 +339,7 @@ public class ExternalDBFilters
         }
         catch(IOException e)
         {
-            LOGGER.error("error writing filter output: {}", e.toString());
+            LOGGER.error("Error writing filter output: {}", e.toString());
         }
     }
 

@@ -89,16 +89,16 @@ public class BamCountReader
 
                 if(bamFiles.size() != 1)
                 {
-                    LOGGER.warn("invalid BAM file count({})", bamFiles.size());
+                    LOGGER.warn("Invalid BAM file count({})", bamFiles.size());
                     return;
                 }
 
                 bamFile = bamFiles.get(0).getAbsolutePath();
-                LOGGER.debug("found BAM file: {}", bamFile);
+                LOGGER.debug("Found BAM file: {}", bamFile);
             }
             catch (IOException e)
             {
-                LOGGER.error("failed to find BAM files from dir({})", bachDataDir);
+                LOGGER.error("Failed to find BAM files from dir({})", bachDataDir);
                 return;
             }
         }
@@ -126,7 +126,7 @@ public class BamCountReader
 
         if(tumorEvidence.size() != bachRecords.size())
         {
-            LOGGER.error("incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
+            LOGGER.error("Incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
             return;
         }
 

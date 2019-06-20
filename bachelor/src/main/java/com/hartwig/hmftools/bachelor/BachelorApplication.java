@@ -93,13 +93,13 @@ public class BachelorApplication {
         }
         catch(Exception e)
         {
-            LOGGER.error("error loading XML: {}", e.toString());
+            LOGGER.error("Error loading XML: {}", e.toString());
             return false;
         }
 
         String runMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
 
-        LOGGER.info("run mode: {}", runMode);
+        LOGGER.info("Run mode: {}", runMode);
 
         String batchOutputDir = cmd.getOptionValue(BATCH_OUTPUT_DIR, "");
 
@@ -107,7 +107,7 @@ public class BachelorApplication {
 
         if (mSingleSampleId.isEmpty() || mSingleSampleId.equals("*"))
         {
-            LOGGER.info("running in batch mode");
+            LOGGER.info("Running in batch mode");
             mIsBatchMode = true;
 
             if(cmd.hasOption(SAMPLE_LIST_FILE))
@@ -178,7 +178,7 @@ public class BachelorApplication {
 
             if(!mRestrictedSampleIds.isEmpty() && !mRestrictedSampleIds.contains(sampleId))
             {
-                LOGGER.info("skipping sampleId({}) not in specified list", sampleId);
+                LOGGER.info("Skipping sampleId({}) not in specified list", sampleId);
                 continue;
             }
 
@@ -207,7 +207,7 @@ public class BachelorApplication {
             mPostProcessor.close();
         }
 
-        LOGGER.info("run complete");
+        LOGGER.info("Run complete");
     }
 
     private void setSampleDataDirectories()
@@ -225,10 +225,10 @@ public class BachelorApplication {
             }
             catch (Exception e)
             {
-                LOGGER.error("failed walking batch directories: {}", e.toString());
+                LOGGER.error("Failed walking batch directories: {}", e.toString());
             }
 
-            LOGGER.info("found {} batch directories", mSampleDataDirectories.size());
+            LOGGER.info("Found {} batch directories", mSampleDataDirectories.size());
         }
         else
         {
@@ -337,6 +337,7 @@ public class BachelorApplication {
 
             if(!bachelorApp.loadConfig(cmd))
             {
+                LOGGER.debug("Could not load config");
                 System.exit(1);
                 return;
             }
