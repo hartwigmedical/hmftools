@@ -34,15 +34,15 @@ public class BamCountReader
     private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private String mSampleBamFile;
     private File mRefGenomeFile;
-    SamReader mTumorReader;
+    private SamReader mTumorReader;
 
-    private static String TUMOR_BAM_FILE = "tumor_bam_file";
-    private static int DEFAULT_MIN_BASE_QUALITY = 13;
-    private static int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    private static final String TUMOR_BAM_FILE = "tumor_bam_file";
+    private static final int DEFAULT_MIN_BASE_QUALITY = 13;
+    private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
     private static final Logger LOGGER = LogManager.getLogger(BamCountReader.class);
 
-    public BamCountReader()
+    BamCountReader()
     {
         mIndexedFastaSequenceFile = null;
         mTumorReader = null;
@@ -55,7 +55,7 @@ public class BamCountReader
         options.addOption(TUMOR_BAM_FILE, true, "Location of a specific BAM file");
     }
 
-    public boolean initialise(final CommandLine cmd, IndexedFastaSequenceFile ifSeqFile)
+    public void initialise(CommandLine cmd, IndexedFastaSequenceFile ifSeqFile)
     {
         mIndexedFastaSequenceFile = ifSeqFile;
 
@@ -65,8 +65,6 @@ public class BamCountReader
         {
             mSampleBamFile = cmd.getOptionValue(TUMOR_BAM_FILE);
         }
-
-        return true;
     }
 
     public void readBamCounts(List<BachelorGermlineVariant> bachRecords, final String bachDataDir)
@@ -150,5 +148,4 @@ public class BamCountReader
             }
         }
     }
-
 }

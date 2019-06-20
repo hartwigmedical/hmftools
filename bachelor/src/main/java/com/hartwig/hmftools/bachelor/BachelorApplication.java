@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.ConfigSchema;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
@@ -52,6 +53,7 @@ public class BachelorApplication {
     static final String LOG_DEBUG = "log_debug";
 
     private static final String BATCH_OUTPUT_DIR = "batch_output_dir";
+    private static final String SINGLE_SAMPLE_OUTPUT_DIR = "output_dir";
 
     private static final String RUN_MODE = "run_mode";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -62,8 +64,6 @@ public class BachelorApplication {
     private static final String RUN_MODE_BOTH = "Both";
     private static final String RUN_MODE_VCF_PARSE = "VcfParse";
     private static final String RUN_MODE_POST_PROCESS = "PostProcess";
-
-    static final String DEFAULT_BACH_DIRECTORY = "bachelor";
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
 
@@ -177,12 +177,13 @@ public class BachelorApplication {
 
             if(mGermlineVcfParser != null)
             {
-                mGermlineVcfParser.run(runDir, sampleId);
+                mGermlineVcfParser.run(runDir, sampleId, SINGLE_SAMPLE_OUTPUT_DIR);
             }
 
             if(mPostProcessor != null)
             {
-                mPostProcessor.run(runDir, sampleId, mGermlineVcfParser != null ? mGermlineVcfParser.getBachelorRecords() : null);
+                List<BachelorGermlineVariant> bachelorRecords = mGermlineVcfParser != null ? mGermlineVcfParser.getBachelorRecords() : null;
+                mPostProcessor.run(runDir, bachelorRecords, SINGLE_SAMPLE_OUTPUT_DIR);
             }
 
             if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
@@ -293,6 +294,7 @@ public class BachelorApplication {
         options.addOption(RUN_MODE, true, "VcfParse, PostProcess or Both (default)");
         options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
         options.addOption(BATCH_OUTPUT_DIR, true, "Optional: when in batch mode, all output written to single file");
+        options.addOption(SINGLE_SAMPLE_OUTPUT_DIR, true, "When in single-sample mode, all output written to this dir");
         options.addOption(SAMPLE_DATA_DIR, true, "the run directory to look for inputs");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");

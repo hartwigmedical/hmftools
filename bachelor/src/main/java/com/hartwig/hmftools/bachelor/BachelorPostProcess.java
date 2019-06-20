@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorApplication.DEFAULT_BACH_DIRECTORY;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -75,7 +74,7 @@ public class BachelorPostProcess
     private boolean mUsingBatchOutput;
 
     // config items
-    public static final String REF_GENOME = "ref_genome";
+    static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String WRITE_TO_DB = "write_to_db";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // purple data directory within the sample fir
@@ -89,10 +88,9 @@ public class BachelorPostProcess
 
     private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
 
-
     private static final Logger LOGGER = LogManager.getLogger(BachelorPostProcess.class);
 
-    public BachelorPostProcess()
+    BachelorPostProcess()
     {
         mCmdLineArgs = null;
         mBachRecords = Lists.newArrayList();
@@ -113,7 +111,7 @@ public class BachelorPostProcess
         mWriter = null;
     }
 
-    public boolean initialise(final CommandLine cmd, boolean isBatchMode, final String batchOutputDir)
+    public void initialise(final CommandLine cmd, boolean isBatchMode, final String batchOutputDir)
     {
         mCmdLineArgs = cmd;
         mIsBatchMode = isBatchMode;
@@ -125,7 +123,7 @@ public class BachelorPostProcess
         catch (SQLException e)
         {
             LOGGER.error("DB connection failed: {}", e.toString());
-            return false;
+            return;
         }
 
         mBatchDataDir = batchOutputDir;
@@ -161,13 +159,11 @@ public class BachelorPostProcess
             catch (IOException e)
             {
                 LOGGER.error("reference file loading failed");
-                return false;
+                return;
             }
         }
 
         mUploadRecordsToDB = cmd.hasOption(WRITE_TO_DB);
-
-        return true;
     }
 
     private void loadBachelorRecords()
@@ -194,7 +190,7 @@ public class BachelorPostProcess
         mBachRecords.addAll(dataCollection.getBachelorVariants());
     }
 
-    public void run(RunDirectory runDir, final String sampleId, @Nullable  List<BachelorGermlineVariant> bachRecords)
+    public void run(RunDirectory runDir, @Nullable List<BachelorGermlineVariant> bachRecords, String singleSampleOutputDir)
     {
         mSampleDataDir = runDir.sampleDir().toString() + File.separator;
 
@@ -204,7 +200,7 @@ public class BachelorPostProcess
         }
         else
         {
-            mBachDataDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
+            mBachDataDir = singleSampleOutputDir + File.separator;
         }
 
         if(bachRecords == null)
@@ -230,19 +226,17 @@ public class BachelorPostProcess
 
     private void processCurrentRecords(List<BachelorGermlineVariant> bachRecords)
     {
-        String sampleBachDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
-
         long recordsWithTumorData = bachRecords.stream().filter(x -> x.isReadDataSet()).count();
 
         if(recordsWithTumorData < bachRecords.size())
         {
             if (mReadBamsDirect)
             {
-                mBamCountReader.readBamCounts(bachRecords, sampleBachDir);
+                mBamCountReader.readBamCounts(bachRecords, mBachDataDir);
             }
             else
             {
-                if (!mAllelDepthLoader.loadMiniPileupData(sampleBachDir))
+                if (!mAllelDepthLoader.loadMiniPileupData(mBachDataDir))
                     return;
 
                 if (!mAllelDepthLoader.applyPileupData(bachRecords))
@@ -269,6 +263,7 @@ public class BachelorPostProcess
                 }
             }
 
+            assert sampleRecords != null;
             sampleRecords.add(bachRecord);
         }
 
@@ -456,8 +451,6 @@ public class BachelorPostProcess
         }
     }
 
-    private static int INDEL_REPEAT_LIMIT = 8;
-
     private void filterRecords(final List<BachelorGermlineVariant> bachRecords)
     {
         // currently the only filter is on INDELs with either microhomology matching the gain or loss, or with high repeat count
@@ -478,7 +471,7 @@ public class BachelorPostProcess
             {
                 int repeatCount = enrichedVariant.repeatCount();
 
-                if(repeatCount > INDEL_REPEAT_LIMIT)
+                if(repeatCount > 8)
                 {
                     LOGGER.debug("filtered var({}) indel {} with high repeatCount({})",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);

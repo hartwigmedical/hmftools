@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorApplication.DEFAULT_BACH_DIRECTORY;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 
@@ -39,8 +38,7 @@ public class GermlineVcfParser
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
 
-
-    public GermlineVcfParser()
+    GermlineVcfParser()
     {
         mProgramConfigMap = null;
         mExternalFiltersFile = "";
@@ -60,14 +58,14 @@ public class GermlineVcfParser
         options.addOption(EXTERNAL_FILTER_FILE, true, "Optional: name of an external filter file");
     }
 
-    public boolean initialise(final CommandLine cmd, Map<String, Program> configMap, boolean isBatchMode, final String batchOutputDir)
+    public void initialise(final CommandLine cmd, Map<String, Program> configMap, boolean isBatchMode, String batchOutputDir)
     {
         mProgramConfigMap = configMap;
 
         if (mProgramConfigMap.isEmpty())
         {
             LOGGER.error("no Programs loaded, exiting");
-            return false;
+            return;
         }
 
         mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
@@ -80,7 +78,9 @@ public class GermlineVcfParser
         mProgram = new GermlineVariantFinder();
 
         if(!mProgram.loadConfig(mProgramConfigMap))
-            return false;
+        {
+            return;
+        }
 
         if(!mExternalFiltersFile.isEmpty())
         {
@@ -91,13 +91,11 @@ public class GermlineVcfParser
         {
             createOutputFiles(mBatchDataDir);
         }
-
-        return true;
     }
 
     public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
 
-    public void run(final RunDirectory runDir, String sampleId)
+    public void run(RunDirectory runDir, String sampleId, String singleSampleOutputDir)
     {
         LOGGER.info("Processing run for sampleId({}) directory({})", sampleId, runDir.sampleDir());
 
@@ -108,8 +106,7 @@ public class GermlineVcfParser
 
         if(!mUsingBatchOutput)
         {
-            String sampleOutputDir = runDir.sampleDir().toString() + File.separator + DEFAULT_BACH_DIRECTORY + File.separator;
-            createOutputFiles(sampleOutputDir);
+            createOutputFiles(singleSampleOutputDir);
         }
 
         try
@@ -193,5 +190,4 @@ public class GermlineVcfParser
             LOGGER.error("failed to create output files: {}", e.toString());
         }
     }
-
 }
