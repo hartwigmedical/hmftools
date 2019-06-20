@@ -336,7 +336,7 @@ public class GermlineVariantFinder
 
             VariantFilter matchedFilter = null;
 
-            if (matchType.equals(MATCH_TYPE_REQUIRED_EFFECT) && !mBlacklistFilters.isEmpty())
+            if (matchType == MATCH_TYPE_REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
             {
                 // for variants matching the required effects, check whether they should be blacklisted
                 // for Clinvar entries this is if the variant is Benign, for other filters any match will cause a blacklist
@@ -365,7 +365,7 @@ public class GermlineVariantFinder
                 }
             }
 
-            if (matchType.equals(MATCH_TYPE_NONE) && !mWhitelistFilters.isEmpty())
+            if (matchType == MATCH_TYPE_NONE && !mWhitelistFilters.isEmpty())
             {
                 List<VariantFilter> filters = mWhitelistFilters.get(gene);
 
@@ -385,7 +385,7 @@ public class GermlineVariantFinder
                 }
             }
 
-            if(matchType.equals(MATCH_TYPE_NONE))
+            if(matchType == MATCH_TYPE_NONE)
                 return;
 
             String annotationsStr = SnpEffAnnotationFactory.rawAnnotations(variant).get(i);

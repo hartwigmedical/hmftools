@@ -24,12 +24,12 @@ public class VariantFilter
 
     private static final Logger LOGGER = LogManager.getLogger(VariantFilter.class);
 
-    public VariantFilter(final String gene, final String trancriptId,
+    public VariantFilter(final String gene, final String transcriptId,
             final String chromosome, long position, final String ref, final String alt, final CodingEffect effect,
             final String hgvsProteinCodon, final String dbSnpId, final String clinvarSig, final String clinvarSigInfo, int minCodon)
     {
         Gene = gene;
-        TranscriptId = trancriptId;
+        TranscriptId = transcriptId;
         Chromosome = chromosome;
         Position = position;
         Ref = ref;
