@@ -102,7 +102,10 @@ public class GermlineVcfParser
         processVCF(sampleId, runDir.germline());
 
         if(mProgram.getVariants().isEmpty())
+        {
+            LOGGER.debug("No valid variants found in " + runDir.germline().getPath());
             return;
+        }
 
         if(!mUsingBatchOutput)
         {
