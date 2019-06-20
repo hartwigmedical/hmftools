@@ -132,12 +132,12 @@ public class ExternalDBFilters
 
                 ++lineIndex;
 
-                // parse CSV data
-                String[] items = line.split(",");
+                // parse CSV data. -1 as 2nd param makes sure we include trailing empty fields
+                String[] items = line.split(",", -1);
 
                 if (items.length < BACHELOR_FILTER_CSV_FIELD_COUNT)
                 {
-                    LOGGER.error("Invalid item count({}), fileIndex({})", items.length, lineIndex);
+                    LOGGER.error("Invalid item count({}), lineIndex({})", items.length, lineIndex);
                     continue;
                 }
 
