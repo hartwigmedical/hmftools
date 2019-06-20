@@ -257,6 +257,12 @@ public class FusionDisruptionAnalyser
 
             // mark any transcripts as not disruptive prior to running any fusion logic
             markNonDisruptiveTranscripts(var.getGenesList(true), var.getGenesList(false));
+
+            // inferred SGLs are always non-disruptive
+            if(var.isNoneSegment())
+            {
+                var.getGenesList(true).stream().forEach(x -> x.transcripts().stream().forEach(y -> y.setIsDisruptive(false)));
+            }
         }
     }
 
