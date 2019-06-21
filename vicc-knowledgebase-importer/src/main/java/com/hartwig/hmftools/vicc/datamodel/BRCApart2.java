@@ -97,4 +97,7 @@ public abstract class BRCApart2 {
 
     @NotNull
     public abstract String Allele_number_AMR_ExAC();
+
+    @NotNull
+    public abstract String DBID_LOVD();
 }
