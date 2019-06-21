@@ -195,9 +195,8 @@ public class CohortExpFusions
 
                 generateGenePhaseRegions(geneRangeData, transExonDataList, precedingGeneSAPos);
 
-                List<GenePhaseRegion> combinedPhaseRegions = geneRangeData.getPhaseRegions();
-
                 /*
+                List<GenePhaseRegion> combinedPhaseRegions = geneRangeData.getPhaseRegions();
                 // convert to a non-overlapping combined set of phase regions
                 combinedPhaseRegions = Lists.newArrayList();
 
@@ -213,11 +212,6 @@ public class CohortExpFusions
                 }
                 */
 
-                geneRangeData.setCombinedPhaseRegions(combinedPhaseRegions);
-                mergePhaseRegions(combinedPhaseRegions);
-
-                validateSimpleVsCombinedPhaseRegions(geneData.GeneId, geneRangeData.getPhaseRegions(), combinedPhaseRegions);
-
                 if(mLogVerbose)
                 {
                     for(GenePhaseRegion region : geneRangeData.getPhaseRegions())
@@ -227,7 +221,7 @@ public class CohortExpFusions
                     }
                 }
 
-                for(GenePhaseRegion region : combinedPhaseRegions)
+                for(GenePhaseRegion region : geneRangeData.getPhaseRegions())
                 {
                     // validity check
                     if(region.length() <= 0)
@@ -396,8 +390,9 @@ public class CohortExpFusions
             transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
         }
 
-        geneRangeData.setPhaseRegions(phaseRegions);
+        mergePhaseRegions(phaseRegions);
 
+        geneRangeData.setPhaseRegions(phaseRegions);
     }
 
     public void generateSameGeneCounts(GeneRangeData geneRangeData, final List<GenePhaseRegion> transcriptRegions,
@@ -509,7 +504,7 @@ public class CohortExpFusions
 
                         final List<GenePhaseRegion> remoteRegions = chrEntry.getValue();
 
-                        for (GenePhaseRegion region : gene1.getCombinedPhaseRegions())
+                        for (GenePhaseRegion region : gene1.getPhaseRegions())
                         {
                             for (GenePhaseRegion remoteRegion : remoteRegions)
                             {
@@ -585,10 +580,10 @@ public class CohortExpFusions
                     }
 
                     // calculate phasing overlap areas
-                    for (GenePhaseRegion region1 : gene1.getCombinedPhaseRegions())
+                    for (GenePhaseRegion region1 : gene1.getPhaseRegions())
                     {
                         // the downstream gene of the potential fusion cannot be non-coding
-                        for (GenePhaseRegion region2 : gene2.getCombinedPhaseRegions())
+                        for (GenePhaseRegion region2 : gene2.getPhaseRegions())
                         {
                             long regionOverlap = region1.length() * region2.length();
 
@@ -683,9 +678,9 @@ public class CohortExpFusions
 
                 // find all matching phasing regions and account for any duplicated overlapping regions from different phasing matches
                 // for all those found, assign them to a length bucket and find the number of bases that fall into the length bucket region
-                for (GenePhaseRegion lowerRegion : lowerGene.getCombinedPhaseRegions())
+                for (GenePhaseRegion lowerRegion : lowerGene.getPhaseRegions())
                 {
-                    for (GenePhaseRegion upperRegion : upperGene.getCombinedPhaseRegions())
+                    for (GenePhaseRegion upperRegion : upperGene.getPhaseRegions())
                     {
                         if (!haveOverlap(lowerRegion, upperRegion, false))
                         {

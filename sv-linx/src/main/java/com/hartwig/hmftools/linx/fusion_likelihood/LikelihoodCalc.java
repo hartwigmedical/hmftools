@@ -23,10 +23,10 @@ public class LikelihoodCalc
         // calculate the overlap area for 2 non-proximate genes
         long totalOverlap = 0;
 
-        for (GenePhaseRegion regionUp : geneUp.getCombinedPhaseRegions())
+        for (GenePhaseRegion regionUp : geneUp.getPhaseRegions())
         {
             // the downstream gene of the potential fusion cannot be non-coding
-            for (GenePhaseRegion regionDown : geneDown.getCombinedPhaseRegions())
+            for (GenePhaseRegion regionDown : geneDown.getPhaseRegions())
             {
                 if(hasAnyPhaseMatch(regionUp, regionDown, false)
                 || regionsPhaseMatched(regionUp, regionDown))

@@ -15,7 +15,6 @@ public class GeneRangeData
     public final EnsemblGeneData GeneData;
     public final String Arm;
     private List<GenePhaseRegion> mPhaseRegions;
-    private List<GenePhaseRegion> mCombinedPhaseRegions;
 
     // maps from the DEL or DUP bucket length array index to overlap count
     private Map<Integer,Long> mDelFusionBaseCounts;
@@ -32,7 +31,6 @@ public class GeneRangeData
     {
         GeneData = geneData;
         mPhaseRegions = Lists.newArrayList();
-        mCombinedPhaseRegions = Lists.newArrayList();
 
         Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
 
@@ -45,9 +43,6 @@ public class GeneRangeData
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
     public void setPhaseRegions(List<GenePhaseRegion> regions) { mPhaseRegions = regions; }
-
-    public final List<GenePhaseRegion> getCombinedPhaseRegions() { return mCombinedPhaseRegions; }
-    public void setCombinedPhaseRegions(List<GenePhaseRegion> regions) { mCombinedPhaseRegions = regions; }
 
     public Map<Integer,Long> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
     public Map<Integer,Long> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
@@ -83,16 +78,6 @@ public class GeneRangeData
             outputStr += mPhaseRegions.get(i).toCsv(false);
         }
 
-        outputStr += PGD_DELIMITER;
-
-        for(int i = 0; i < mCombinedPhaseRegions.size(); ++i)
-        {
-            if(i > 0)
-                outputStr += PPR_DELIMITER;
-
-            outputStr += mCombinedPhaseRegions.get(i).toCsv(true);
-        }
-
         return outputStr;
     }
 
@@ -112,14 +97,6 @@ public class GeneRangeData
 
             if(region != null)
                 mPhaseRegions.add(region);
-        }
-
-        for(int i = 0; i < phaseArrayStrings.length; ++i)
-        {
-            GenePhaseRegion region = GenePhaseRegion.fromCsv(GeneData.GeneId, phaseArrayStrings[i], true);
-
-            if(region != null)
-                mCombinedPhaseRegions.add(region);
         }
     }
 }
