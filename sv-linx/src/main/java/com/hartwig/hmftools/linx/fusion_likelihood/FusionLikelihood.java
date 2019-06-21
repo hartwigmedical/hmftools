@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.linx.fusion_likelihood;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
@@ -13,18 +17,24 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_0;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_1;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_2;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_5P_UTR;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_MAX;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_LONG_SAME_ARM;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_SHORT_INV;
+import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcNonProximateLikelihood;
 import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.types.SvaConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.types.SvaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.types.SvaConfig.formOutputPath;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -158,89 +168,7 @@ public class FusionLikelihood
 
         writeGeneData(outputDir);
         writeTopProximateFusionCandidates(outputDir);
-
-        // if(mGeneRangeDataMap != null && mGeneRangeDataMap.isEmpty())
-        //    writeGenePhaseData(outputDir);
     }
-
-    private static final String GENE_PHASE_DATA_FILE = "GFL_GENE_PHASE_DATA.csv";
-
-    private void writeGenePhaseData(final String outputDir)
-    {
-        LOGGER.info("writing gene phase data cache file");
-
-        try
-        {
-            String outputFilename = outputDir + GENE_PHASE_DATA_FILE;
-
-            BufferedWriter writer = createBufferedWriter(outputFilename, false);
-
-            writer.write("GeneId,PhaseRegions");
-            writer.newLine();
-
-            for (Map.Entry<String, List<GeneRangeData>> entry : mCohortCalculator.getChrGeneRangeDataMap().entrySet())
-            {
-                for (final GeneRangeData geneData : entry.getValue())
-                {
-                    if(geneData.getPhaseRegions().isEmpty())
-                        continue;
-
-                    writer.write(geneData.toCsv());
-                    writer.newLine();
-                }
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing gene range data: {}", e.toString());
-        }
-    }
-
-    /*
-    public boolean loadGenePhaseData(final String inputDir)
-    {
-        mGeneRangeDataMap = Maps.newHashMap();
-
-        // attempt to load cached gene phase data from file to avoid re-creating it each time
-        String filename = inputDir + GENE_PHASE_DATA_FILE;
-
-        if(!Files.exists(Paths.get(filename)))
-            return false;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            // skip field names
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                return false;
-            }
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(PGD_DELIMITER);
-
-                if(items.length != 3)
-                    continue;
-
-                final String geneId = items[0];
-                mGeneRangeDataMap.put(geneId, items[1] + PGD_DELIMITER + items[2]);
-            }
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("Failed to read gene range data CSV file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-    */
 
     private void writeGeneData(final String outputDir)
     {
@@ -253,7 +181,8 @@ public class FusionLikelihood
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
 
             writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
-            writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding,PreGene");
+            writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding");
+            writer.write(",FivePrimeUTRPG,Phase0PG,Phase1PG,Phase2PG");
             writer.write(",ShortInvRateUp,ShortInvRateDown,SameArmRateUp,SameArmRateDown,RemoteRateUp,RemoteRateDown");
             writer.newLine();
 
@@ -266,36 +195,27 @@ public class FusionLikelihood
             {
                 for(final GeneRangeData geneData :entry.getValue())
                 {
-                    long phase0 = 0;
-                    long phase1 = 0;
-                    long phase2 = 0;
-                    long phase5pUTR = 0;
-                    long nonCoding = 0;
-                    long preGene = 0;
+                    long[] phaseCounts = new long[PHASE_MAX];
+                    long[] phaseCountsPreGene = new long[PHASE_MAX];
 
-                    for(final GenePhaseRegion region : geneData.getPhaseRegions())
-                    {
-                        if(region.Phase == PHASE_5P_UTR)
-                            phase5pUTR += region.length();
-                        else if(region.Phase == PHASE_NON_CODING)
-                            nonCoding += region.length();
-                        else if(region.Phase == PHASE_0)
-                            phase0 += region.length();
-                        else if(region.Phase == PHASE_1)
-                            phase1 += region.length();
-                        else if(region.Phase == PHASE_2)
-                            phase2 += region.length();
+                    geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCounts, false));
+                    geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCountsPreGene, true));
 
-                        if(region.isAnyPreGene())
-                            preGene += region.length();
-                    }
+                    long preGene = geneData.getPhaseRegions().stream()
+                            .filter(GenePhaseRegion::isAnyPreGene)
+                            .mapToLong(GenePhaseRegion::length).sum();
 
                     writer.write(String.format("%s,%s,%s,%s,%d,%d,%d",
                             geneData.GeneData.GeneId, geneData.GeneData.GeneName, geneData.GeneData.Chromosome, geneData.Arm,
                             geneData.GeneData.GeneStart, geneData.GeneData.GeneEnd, geneData.GeneData.Strand));
 
-                    writer.write(String.format(",%d,%d,%d,%d,%d,%d",
-                            phase5pUTR, phase0, phase1, phase2, nonCoding, preGene));
+                    writer.write(String.format(",%d,%d,%d,%d,%d",
+                            phaseCounts[typeAsInt(PHASE_5P_UTR)], phaseCounts[typeAsInt(PHASE_0)], phaseCounts[typeAsInt(PHASE_1)],
+                            phaseCounts[typeAsInt(PHASE_2)], phaseCounts[typeAsInt(PHASE_NON_CODING)]));
+
+                    writer.write(String.format(",%d,%d,%d,%d",
+                            phaseCountsPreGene[typeAsInt(PHASE_5P_UTR)], phaseCountsPreGene[typeAsInt(PHASE_0)],
+                            phaseCountsPreGene[typeAsInt(PHASE_1)], phaseCountsPreGene[typeAsInt(PHASE_2)]));
 
                     writer.write(String.format(",%.12f,%.12f,%.12f,%.12f,%.12f,%.12f",
                             geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor,
@@ -394,8 +314,140 @@ public class FusionLikelihood
         mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
         mCohortCalculator.generateProximateFusionCounts();
         mCohortCalculator.generateNonProximateCounts();
-        mCohortCalculator.logGlobalCounts();
+        // mCohortCalculator.logGlobalCounts();
         writeGeneLikelihoodData(outputDir);
+    }
+
+    public void calculateSpecificFusionLikelihood(final String filename, final String outputDir)
+    {
+        // attempt to load cached gene phase data from file to avoid re-creating it each time
+        if(!Files.exists(Paths.get(filename)))
+            return;
+
+        // expected format: GeneIdUp,GeneIdDown
+
+        // List<GeneRangeData> geneDataList = Lists.newArrayList();
+
+        List<String[]> geneFusionPairs = Lists.newArrayList();
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+                return;
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                if(items.length < 2)
+                    continue;
+
+                final String geneIdUp = items[0];
+                final String geneIdDown = items[1];
+
+                geneFusionPairs.add(items);
+
+                if(!mRestrictedGeneIds.contains(geneIdUp))
+                    mRestrictedGeneIds.add(geneIdUp);
+
+                if(!mRestrictedGeneIds.contains(geneIdDown))
+                    mRestrictedGeneIds.add(geneIdDown);
+
+            }
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("Failed to read specific gene fusions CSV file({}): {}", filename, e.toString());
+            return;
+        }
+
+        LOGGER.info("calculating fusion-likelihood for {} gene-pairs", geneFusionPairs.size());
+
+        // generate phase data for all required genes, which will also care of any same-gene fusion likelihoods
+        mCohortCalculator.initialiseGeneIdRangeDataMap();
+        mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
+
+        try
+        {
+            String outputFilename = outputDir + "GFL_FUSION_PAIR_LIKELIHOOD.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFilename, false);
+
+            writer.write("GeneIdUp,GeneIdDown,Type,LengthMin,LengthMax,LIkelihood");
+            writer.newLine();
+
+            long proximateLimit = mCohortCalculator.getMaxBucketLength();
+
+            for(final String[] genePair : geneFusionPairs)
+            {
+                final GeneRangeData geneUp = mCohortCalculator.findGeneRangeData(genePair[0]);
+                final GeneRangeData geneDown = mCohortCalculator.findGeneRangeData(genePair[1]);
+
+                // work out whether these genes are proximate to each other or not
+                boolean areProximate = false;
+
+                if(geneUp.GeneData.Chromosome.equals(geneDown.GeneData.Chromosome) && geneUp.GeneData.Strand == geneDown.GeneData.Strand)
+                {
+                    long minDistance = min(abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneStart),
+                            abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneEnd));
+
+                    minDistance = min(minDistance, abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneEnd));
+                    minDistance = min(minDistance, abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneStart));
+
+                    if(minDistance <= proximateLimit)
+                    {
+                        areProximate = true;
+                    }
+                }
+
+                if(areProximate)
+                {
+                    /*
+                    for (GenePhaseRegion region1 : geneUp.getCombinedPhaseRegions())
+                    {
+                        for (GenePhaseRegion region2 : geneDown.getCombinedPhaseRegions())
+                        {
+                            testProximatePhaseRegions(geneUp, geneDown, region1, region2);
+                        }
+                    }
+
+                    writer.write(String.format("%s,%d,%d,%s,%s,%s,%s,%s,%d,%.9f",
+                            isDel ? "DEL" : "DUP", bucketMinMax[BUCKET_MIN], bucketMinMax[BUCKET_MAX],
+                            geneUp.GeneId, geneUp.GeneName, geneDown.GeneId, geneDown.GeneName,
+                            geneDown.Chromosome, geneDown.Strand, fusionRate));
+
+                    writer.newLine();
+                    */
+
+                }
+                else
+                {
+                    /*
+                    long overlapCount = calcNonProximateLikelihood(geneUp, geneDown);
+
+                    writer.write(String.format("%s,%d,%d,%s,%s,%s,%s,%s,%d,%.9f",
+                            isDel ? "DEL" : "DUP", bucketMinMax[BUCKET_MIN], bucketMinMax[BUCKET_MAX],
+                            geneUp.GeneId, geneUp.GeneName, geneDown.GeneId, geneDown.GeneName,
+                            geneDown.Chromosome, geneDown.Strand, fusionRate));
+
+                    writer.newLine();
+                    */
+
+                }
+
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing gene-pair fusion candidates: {}", e.toString());
+        }
 
     }
 

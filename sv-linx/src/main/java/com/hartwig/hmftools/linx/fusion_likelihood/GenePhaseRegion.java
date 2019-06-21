@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.fusion_likelihood;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_0;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_1;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_2;
@@ -9,7 +11,13 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NO
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.intAsType;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
 
+import java.util.List;
 import java.util.StringJoiner;
+
+import com.google.common.collect.Lists;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GenePhaseRegion
 {
@@ -22,6 +30,7 @@ public class GenePhaseRegion
     private boolean[] mPhaseArray;
     private boolean[] mPreGenePhaseStatus;
     private int mCombinedPhase;
+    private int mCombinedPreGeneStatus;
 
     public GenePhaseRegion(final String geneId, long start, long end, GenePhaseType phase)
     {
@@ -43,7 +52,6 @@ public class GenePhaseRegion
         Phase = PHASE_5P_UTR; // will not be used
         mStart = start;
         mEnd = end;
-
         mPhaseArray = new boolean[PHASE_MAX];
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
         addPhases(phaseArray, preGeneArray);
@@ -52,21 +60,22 @@ public class GenePhaseRegion
 
     public static GenePhaseRegion from(final GenePhaseRegion other)
     {
-        return new GenePhaseRegion(other.GeneId, other.start(), other.end(), other.Phase);
+        return new GenePhaseRegion(other.GeneId, other.start(), other.end(), other.getPhaseArray(), other.getPreGenePhaseStatus());
     }
 
     public void setPreGene(boolean toggle, GenePhaseType phase)
     {
         mPreGenePhaseStatus[typeAsInt(phase)] = toggle;
+        calcCombinedPhase();
     }
 
     public static GenePhaseType mapExonPhase(int exonPhase)
     {
-        if(exonPhase == 0)
+        if (exonPhase == 0)
             return PHASE_0;
-        else if(exonPhase == 1)
+        else if (exonPhase == 1)
             return PHASE_1;
-        else if(exonPhase == 2)
+        else if (exonPhase == 2)
             return PHASE_2;
         else
             return PHASE_5P_UTR;
@@ -85,10 +94,10 @@ public class GenePhaseRegion
 
     public void addPhases(final boolean[] phases, final boolean[] preGeneArray)
     {
-        if(phases.length != mPhaseArray.length)
+        if (phases.length != mPhaseArray.length)
             return;
 
-        for(int i = 0; i < PHASE_MAX; ++i)
+        for (int i = 0; i < PHASE_MAX; ++i)
         {
             mPhaseArray[i] |= phases[i];
             mPreGenePhaseStatus[i] |= preGeneArray[i];
@@ -139,7 +148,7 @@ public class GenePhaseRegion
         return false;
     }
 
-    public static  boolean regionsPhaseMatched(final GenePhaseRegion regionUp, final GenePhaseRegion regionDown)
+    public static boolean regionsPhaseMatched(final GenePhaseRegion regionUp, final GenePhaseRegion regionDown)
     {
         if(regionUp.hasPhase(PHASE_NON_CODING) && regionDown.hasPhase(PHASE_5P_UTR))
             return true;
@@ -178,6 +187,7 @@ public class GenePhaseRegion
     private void calcCombinedPhase()
     {
         mCombinedPhase = calcCombinedPhase(mPhaseArray);
+        mCombinedPreGeneStatus = calcCombinedPhase(mPreGenePhaseStatus);
     }
 
     public static int calcCombinedPhase(final boolean[] phases)
@@ -195,11 +205,60 @@ public class GenePhaseRegion
         return combinedPhase;
     }
 
+    public int getCombinedPreGeneStatus() { return mCombinedPreGeneStatus; }
+
     public static int simpleToCombinedPhase(GenePhaseType phase)
     {
         return (int)Math.pow(10, typeAsInt(phase));
-
     }
+
+    public void populateLengthCounts(long[] counts, boolean allowPreGene)
+    {
+        if(counts.length != PHASE_MAX)
+            return;
+
+        for(int i = 0; i < PHASE_MAX; ++i)
+        {
+            if(mPhaseArray[i] && allowPreGene == mPreGenePhaseStatus[i])
+                counts[i] += length();
+        }
+    }
+
+    public static boolean haveOverlap(final GenePhaseRegion region1, final GenePhaseRegion region2, boolean includeAdjacency)
+    {
+        // if adjacency is included, then regions which are a base apart are considered an overlap - eg 100-199 and 200-300
+        int extraBase = includeAdjacency ? 1 : 0;
+
+        if (region1.end() < region2.start() - extraBase || region1.start() > region2.end() + extraBase)
+            return false;
+
+        return true;
+    }
+
+    public static boolean hasNoOverlappingRegions(final List<GenePhaseRegion> regions)
+    {
+        for (int i = 0; i < regions.size(); ++i)
+        {
+            GenePhaseRegion region1 = regions.get(i);
+
+            for (int j = i + 1; j < regions.size(); ++j)
+            {
+                GenePhaseRegion region2 = regions.get(j);
+
+                if(haveOverlap(region1, region2, false))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    public final String toString()
+    {
+        return String.format("range(%d - %d) len(%d) phases(%d) preGene(%d)",
+                mStart, mEnd, length(), mCombinedPhase, mCombinedPreGeneStatus);
+    }
+
 
     public static final String PD_DELIMITER = ":";
 

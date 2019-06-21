@@ -62,6 +62,12 @@ public class GeneRangeData
     public long getBaseOverlapCountDownstream(int type) { return mBaseOverlapCountDownstream[type]; }
     public void addBaseOverlapCountDownstream(int type, long count) { mBaseOverlapCountDownstream[type] += count; }
 
+    public void clearOverlapCounts()
+    {
+        mDelFusionBaseCounts.clear();
+        mDupFusionBaseCounts.clear();
+    }
+
     public static final String PGD_DELIMITER = ",";
     public static final String PPR_DELIMITER = ";";
 
