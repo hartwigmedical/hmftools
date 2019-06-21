@@ -166,7 +166,6 @@ searchTerm,primaryTumorLocation,subType
 "Ovarian cancer",Ovary,""
 "Pancreatic cancer",Pancreas,""
 "Pancreatic Neuroendocrine Tumors (Islet Cell Tumors)",NET,"Pancreatic"
-"Pancreatic_",Pancreas,""
 "Paraganglioma / NET lung?",NET,"Paraganglioma (lung?)"
 "Penile cancer",Penile,""
 "plexuspapilloom",Nervous system,"Plexuspapilloom"
