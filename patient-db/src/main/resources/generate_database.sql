@@ -702,7 +702,6 @@ CREATE TABLE germlineVariant
     biallelic BOOLEAN NOT NULL,
     hotspot BOOLEAN NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
-    germlineStatus varchar(255) NOT NULL,
     minorAllelePloidy DOUBLE PRECISION NOT NULL,
     refStatus varchar(20) NOT NULL,
     source varchar(255) NOT NULL,
