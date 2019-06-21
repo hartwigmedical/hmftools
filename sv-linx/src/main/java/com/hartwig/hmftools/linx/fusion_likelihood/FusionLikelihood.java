@@ -201,10 +201,6 @@ public class FusionLikelihood
                     geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCounts, false));
                     geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCountsPreGene, true));
 
-                    long preGene = geneData.getPhaseRegions().stream()
-                            .filter(GenePhaseRegion::isAnyPreGene)
-                            .mapToLong(GenePhaseRegion::length).sum();
-
                     writer.write(String.format("%s,%s,%s,%s,%d,%d,%d",
                             geneData.GeneData.GeneId, geneData.GeneData.GeneName, geneData.GeneData.Chromosome, geneData.Arm,
                             geneData.GeneData.GeneStart, geneData.GeneData.GeneEnd, geneData.GeneData.Strand));

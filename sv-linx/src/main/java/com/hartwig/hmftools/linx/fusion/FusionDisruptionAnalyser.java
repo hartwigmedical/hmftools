@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscrip
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.IOException;
@@ -230,25 +231,6 @@ public class FusionDisruptionAnalyser
                 for (GeneAnnotation gene : genesList)
                 {
                     gene.setSvData(var.getSvData());
-
-                    if(purgeInvalidTranscripts)
-                    {
-                        int transIndex = 0;
-                        while (transIndex < gene.transcripts().size())
-                        {
-                            Transcript transcript = gene.transcripts().get(transIndex);
-
-                            // only retain transcript which are potential fusion candidates (with exception for canonical)
-                            if (!validFusionTranscript(transcript) && !transcript.isCanonical())
-                            {
-                                gene.transcripts().remove(transIndex);
-                            }
-                            else
-                            {
-                                ++transIndex;
-                            }
-                        }
-                    }
                 }
 
                 var.setGenesList(genesList, isStart);
@@ -261,6 +243,41 @@ public class FusionDisruptionAnalyser
             if(var.isNoneSegment())
             {
                 var.getGenesList(true).stream().forEach(x -> x.transcripts().stream().forEach(y -> y.setIsDisruptive(false)));
+            }
+
+            // now that transcripts have been marked as disruptive it is safe to purge any which cannot make viable fusions
+            if (purgeInvalidTranscripts)
+            {
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    if (be == SE_END && var.isNullBreakend())
+                        continue;
+
+                    boolean isStart = isStart(be);
+
+                    List<GeneAnnotation> genesList = var.getGenesList(isStart);
+
+                    for (GeneAnnotation gene : genesList)
+                    {
+                        gene.setSvData(var.getSvData());
+
+                        int transIndex = 0;
+                        while (transIndex < gene.transcripts().size())
+                        {
+                            Transcript transcript = gene.transcripts().get(transIndex);
+
+                            // only retain transcript which are potential fusion candidates (with exception for canonical)
+                            if (!transcript.isDisruptive() && !validFusionTranscript(transcript) && !transcript.isCanonical())
+                            {
+                                gene.transcripts().remove(transIndex);
+                            }
+                            else
+                            {
+                                ++transIndex;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
