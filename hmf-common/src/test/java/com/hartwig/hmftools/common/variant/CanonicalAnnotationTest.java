@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,34 +19,33 @@ import org.junit.Test;
 public class CanonicalAnnotationTest {
 
     private static final String CDKN2A = "ENST00000498124";
-    private static final String CDKN2Ap14ARF = "ENST00000361570";
+    private static final String CDKN2A_P14ARF = "ENST00000361570";
+    private static final String CDKN2A_OTHER = "ENST00000000000";
 
     @Test
-    public void testFavourCDKN2ACosmicAnnotation() {
+    public void favourCDKN2ACosmicAnnotation() {
         final CosmicAnnotation p16 = createCosmicAnnotation("CDKN2A", CDKN2A);
-        final CosmicAnnotation p14 = createCosmicAnnotation("CDKN2Ap14ARF", CDKN2Ap14ARF);
+        final CosmicAnnotation p14 = createCosmicAnnotation("CDKN2A", CDKN2A_P14ARF);
+        final CosmicAnnotation other = createCosmicAnnotation("CDKN2A", CDKN2A_OTHER);
 
-        final List<CosmicAnnotation> all = Lists.newArrayList(p14, p16);
-        Collections.shuffle(all);
+        final List<CosmicAnnotation> all = Lists.newArrayList(other, p14, p16);
 
         final CanonicalAnnotation victim = new CanonicalAnnotation();
         assertEquals(p16, victim.canonicalCosmicAnnotation(all).get());
-        assertEquals(p14, victim.canonicalCosmicAnnotation(Lists.newArrayList(p14)).get());
+        assertFalse(victim.canonicalCosmicAnnotation(Lists.newArrayList(p14)).isPresent());
     }
 
     @Test
-    public void testFavourCDKN2ASnpEffAnnotation() {
-        final SnpEffAnnotation p16 =
-                createSnpEffAnnotation("CDKN2A", CDKN2A, Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT));
-        final SnpEffAnnotation p14 =
-                createSnpEffAnnotation("CDKN2Ap14ARF", CDKN2Ap14ARF, Lists.newArrayList(VariantConsequence.MISSENSE_VARIANT));
+    public void favourCDKN2ASnpEffAnnotation() {
+        final SnpEffAnnotation p16 = createSnpEffAnnotation("CDKN2A", CDKN2A, VariantConsequence.MISSENSE_VARIANT);
+        final SnpEffAnnotation p14 = createSnpEffAnnotation("CDKN2A", CDKN2A_P14ARF, VariantConsequence.MISSENSE_VARIANT);
+        final SnpEffAnnotation other = createSnpEffAnnotation("CDKN2A", CDKN2A_OTHER, VariantConsequence.MISSENSE_VARIANT);
 
-        final List<SnpEffAnnotation> all = Lists.newArrayList(p14, p16);
-        Collections.shuffle(all);
+        final List<SnpEffAnnotation> all = Lists.newArrayList(other, p14, p16);
 
         final CanonicalAnnotation victim = new CanonicalAnnotation();
         assertEquals(p16, victim.canonicalSnpEffAnnotation(all).get());
-        assertEquals(p14, victim.canonicalSnpEffAnnotation(Lists.newArrayList(p14)).get());
+        assertFalse(victim.canonicalSnpEffAnnotation(Lists.newArrayList(p14)).isPresent());
     }
 
     @Test
@@ -83,11 +82,11 @@ public class CanonicalAnnotationTest {
 
     @NotNull
     private static SnpEffAnnotation createSnpEffAnnotation(@NotNull final String gene, @NotNull final String transcript,
-            @NotNull final List<VariantConsequence> consequences) {
+            @NotNull VariantConsequence consequence) {
         return ImmutableSnpEffAnnotation.builder()
                 .allele("")
                 .effects("")
-                .consequences(consequences)
+                .consequences(Lists.newArrayList(consequence))
                 .severity("")
                 .gene(gene)
                 .geneID(gene)
