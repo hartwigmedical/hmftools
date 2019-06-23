@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -19,10 +20,10 @@ public class TumorContaminationModel {
     private static final double INCREMENT = 0.001;
     private static final long MIN_THREE_PLUS_READS = 2000;
 
-    public double contamination(@NotNull final List<TumorContamination> samples) {
-        long medianTumorReadDepth = medianDepth(samples);
+    public double contamination(@NotNull final List<TumorContamination> contamination) {
+        long medianTumorReadDepth = medianDepth(contamination);
         LOGGER.info("Median tumor depth at potential contamination sites is {} reads", medianTumorReadDepth);
-        final Map<Integer, Long> map = samples.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
+        final Map<Integer, Long> map = contamination.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
         return contamination(medianTumorReadDepth, map);
     }
 
@@ -92,9 +93,14 @@ public class TumorContaminationModel {
         return altSupportMap.entrySet().stream().filter(x -> x.getKey() >= minAltSupport).mapToLong(Map.Entry::getValue).sum();
     }
 
-    private static int medianDepth(@NotNull final List<TumorContamination> baf) {
-        final List<Integer> reads = baf.stream().map(x -> x.tumor().readDepth()).filter(x -> x > 0).sorted().collect(Collectors.toList());
+    @VisibleForTesting
+    static int medianDepth(@NotNull final List<TumorContamination> contamination) {
+        final List<Integer> reads = contamination.stream().map(x -> x.tumor().readDepth()).filter(x -> x > 0).sorted().collect(Collectors.toList());
         int count = reads.size();
+        if (count == 0) {
+            return 0;
+        }
+
         return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
     }
 
