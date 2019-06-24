@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_PAIR_OTHER;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_POLY_G_C;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_SGL_PAIR;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -790,23 +791,28 @@ public class SvClusteringMethods {
 
         long length = abs(breakend1.position() - breakend2.position());
 
+        String resolvedType;
+
         if(breakendsFace)
         {
             // a DUP if breakends are further than the anchor distance away, else an INS
             int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
             if(length >= minTiLength)
-                return RESOLVED_TYPE_DUP;
+                resolvedType = RESOLVED_TYPE_DUP;
             else
-                return RESOLVED_TYPE_INS;
+                resolvedType = RESOLVED_TYPE_INS;
         }
         else
         {
             // a DEL if the breakends are further than the min DEL length, else an INS
             if(length >= MIN_DEL_LENGTH)
-                return RESOLVED_TYPE_DEL;
+                resolvedType = RESOLVED_TYPE_DEL;
             else
-                return RESOLVED_TYPE_INS;
+                resolvedType = RESOLVED_TYPE_INS;
         }
+
+        // mark these differently from those formed from normal SVs
+        return RESOLVED_TYPE_SGL_PAIR + "_" + resolvedType;
     }
 
     private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;

@@ -271,9 +271,6 @@ public class SvClassification
 
             if(resolvedType != RESOLVED_TYPE_NONE)
             {
-                // mark these differently from those formed from normal SVs
-                resolvedType = RESOLVED_TYPE_SGL_PAIR + "_" + resolvedType;
-
                 long length = abs(sgl1.position(true) - sgl2.position(true));
                 cluster.setResolved(true, resolvedType);
                 cluster.setSyntheticData(length, 0);
