@@ -1,6 +1,6 @@
 # Bachelor
 
-Bachelor filters and annotates all nonsense, splice or frameshift germline variants which affect our included gene list but are not in the blacklist. It also picks up germline variants of other types which are specifically whitelisted.
+Bachelor filters and annotates all nonsense, splice and frameshift germline variants which affect our included gene list but are not in the blacklist. It also picks up germline variants of other types which are specifically whitelisted.
 
 The steps in the routine are as follows:
 1. Parse germline VCF to identify candidate variants. Apply black and white lists to exclude or include variants.
