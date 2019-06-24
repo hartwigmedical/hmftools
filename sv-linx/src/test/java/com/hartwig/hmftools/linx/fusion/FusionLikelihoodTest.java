@@ -110,7 +110,7 @@ public class FusionLikelihoodTest
 
         // for testing same-gene fusions
         List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
-        likelihoodCalc.initialise(delLengths, 0, false);
+        likelihoodCalc.initialise(delLengths, 0);
 
         likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
@@ -424,7 +424,7 @@ public class FusionLikelihoodTest
         List<Long> delDupLengths = Lists.newArrayList((long)10, (long)10000);
 
         CohortExpFusions likelihoodCalc = new CohortExpFusions();
-        likelihoodCalc.initialise(delDupLengths, 0, false);
+        likelihoodCalc.initialise(delDupLengths, 0);
 
         GeneRangeData lowerGene = new GeneRangeData(createEnsemblGeneData("G1", "G1", "1", 1, 100, 1000));
         GeneRangeData upperGene = new GeneRangeData(createEnsemblGeneData("G2", "G2", "1", 1, 100, 1000));
@@ -510,7 +510,7 @@ public class FusionLikelihoodTest
 
 
         CohortExpFusions likelihoodCalc = new CohortExpFusions();
-        likelihoodCalc.initialise(delDupLengths, shortInv, false);
+        likelihoodCalc.initialise(delDupLengths, shortInv);
         likelihoodCalc.generateGenePhasingCounts(geneTransCache, Lists.newArrayList(), Lists.newArrayList());
         likelihoodCalc.generateProximateFusionCounts();
         likelihoodCalc.generateNonProximateCounts();

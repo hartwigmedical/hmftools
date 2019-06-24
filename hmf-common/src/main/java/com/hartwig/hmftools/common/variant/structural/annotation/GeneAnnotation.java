@@ -128,6 +128,30 @@ public class GeneAnnotation {
         return !isUpstream(gene);
     }
 
-    public boolean breakendWithinGene() { return mGeneData != null ? (mPosition >= mGeneData.GeneStart && mPosition <= mGeneData.GeneEnd) : false; }
+    public boolean breakendWithinGene(int preGeneDistance)
+    {
+        if(mGeneData == null)
+            return false;
+
+        if(mPosition >= mGeneData.GeneStart && mPosition <= mGeneData.GeneEnd)
+            return true;
+
+        if(preGeneDistance <= 0)
+            return false;
+
+        // return true if the gene has a transcript such that the breakend falls into its pre-gene region
+        for(final Transcript trans : mTranscripts)
+        {
+            if(trans.exonDistanceUp() < 0) // exclude if the position is interupted by another splice acceptor
+                continue;
+
+            long distance = Strand == 1 ? trans.TranscriptStart - mPosition : mPosition - trans.TranscriptEnd;
+
+            if(distance > 0 && distance <= preGeneDistance)
+                return true;
+        }
+
+        return false;
+    }
 
 }

@@ -17,6 +17,7 @@ public class GeneTestUtils
         List<Integer> entrezIds = Lists.newArrayList();
         String karyotypeBand = "";
 
+
         GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, synonyms, entrezIds, karyotypeBand);
         gene.setPositionalData(chromosome, position, (byte)orientation);
 

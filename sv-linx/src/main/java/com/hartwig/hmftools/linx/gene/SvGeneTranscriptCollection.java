@@ -139,7 +139,7 @@ public class SvGeneTranscriptCollection
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
         final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
-        final List<EnsemblGeneData> geneRegionsReversed = mChrReverseGeneDataMap.get(chromosome);
+        // final List<EnsemblGeneData> geneRegionsReversed = mChrReverseGeneDataMap.get(chromosome);
 
         if(geneRegions == null)
             return geneAnnotations;
@@ -177,7 +177,7 @@ public class SvGeneTranscriptCollection
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
                     {
-                        setPrecedingGeneDistance(transcript, geneData, position, geneRegions, geneRegionsReversed);
+                        setPrecedingGeneDistance(transcript, position);
                     }
                 }
 
@@ -189,6 +189,18 @@ public class SvGeneTranscriptCollection
         }
 
         return geneAnnotations;
+    }
+
+    private void setPrecedingGeneDistance(Transcript transcript, long position)
+    {
+        // annotate with preceding gene info if the up distance isn't set
+        long precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(transcript.TransId);
+
+        if(precedingGeneSAPos >= 0)
+        {
+            long preDistance = transcript.parent().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
+            transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
+        }
     }
 
     private void setPrecedingGeneDistance(
@@ -844,7 +856,7 @@ public class SvGeneTranscriptCollection
             }
             else
             {
-                createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap());
+                // createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap());
             }
         }
 
@@ -940,7 +952,10 @@ public class SvGeneTranscriptCollection
                         long firstSpliceAcceptorPos =
                                 findFirstSpliceAcceptor(transStartPos, gene.Strand, proximateGenes, geneTransExonDataMap);
 
-                        long distance = gene.Strand == 1 ? transStartPos - firstSpliceAcceptorPos : firstSpliceAcceptorPos - transStartPos;
+                        long distance = -1;
+
+                        if(firstSpliceAcceptorPos >= 0)
+                            distance = gene.Strand == 1 ? transStartPos - firstSpliceAcceptorPos : firstSpliceAcceptorPos - transStartPos;
 
                         // cache value and continue
                         writer.write(String.format("%s,%d,%s,%d,%d,%d",

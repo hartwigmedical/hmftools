@@ -614,17 +614,20 @@ public class SvVarData
         mGenes.get(seIndex(isStart)).addAll(genesList);
     }
 
-    public final String getGeneInBreakend(boolean isStart)
+    private static final int PRE_TRANSCRIPT_DISTANCE = 10000;
+
+    public final String getGeneInBreakend(boolean isStart, boolean includeId)
     {
         // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
         final List<GeneAnnotation> genesList = getGenesList(isStart).stream()
-                .filter(GeneAnnotation::breakendWithinGene)
+                .filter(x -> x.breakendWithinGene(PRE_TRANSCRIPT_DISTANCE))
                 .collect(Collectors.toList());
 
         String genesStr = "";
         for(final GeneAnnotation gene : genesList)
         {
-            genesStr = appendStr(genesStr, gene.GeneName, ';');
+            String geneStr = includeId ? gene.StableId + ":" + gene.GeneName : gene.GeneName;
+            genesStr = appendStr(genesStr, geneStr, ';');
         }
 
         return genesStr;

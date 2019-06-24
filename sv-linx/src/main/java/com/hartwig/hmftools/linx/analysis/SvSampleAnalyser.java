@@ -38,6 +38,7 @@ import static com.hartwig.hmftools.linx.types.SvChain.CM_OVERLAPPING_TI;
 import static com.hartwig.hmftools.linx.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
@@ -592,7 +593,7 @@ public class SvSampleAnalyser {
                     }
 
                     mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f",
-                            var.getGeneInBreakend(true), var.getGeneInBreakend(false),
+                            var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
                             var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
 
                     mSvFileWriter.write(String.format(",%.2f,%,2f,%,2f,%,2f",
@@ -616,8 +617,8 @@ public class SvSampleAnalyser {
                             .lineTypeEnd(var.getLineElement(false))
                             .ploidyMin(var.ploidyMin())
                             .ploidyMax(var.ploidyMax())
-                            .geneStart(var.getGeneInBreakend(true))
-                            .geneEnd(var.getGeneInBreakend(true))
+                            .geneStart(var.getGeneInBreakend(true, false))
+                            .geneEnd(var.getGeneInBreakend(true, false))
                             .replicationTimingStart(var.getReplicationOrigin(true))
                             .replicationTimingEnd(var.getReplicationOrigin(false))
                             .localTopologyIdStart(armClusterStart.id())
@@ -830,8 +831,8 @@ public class SvSampleAnalyser {
                             mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%s,%s,%s",
                                     beStart.position(), beEnd.position(),
                                     acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
-                                    beStart.getSV().getGeneInBreakend(beStart.usesStart()),
-                                    beEnd.getSV().getGeneInBreakend(beEnd.usesStart()), pair.getExonMatchData()));
+                                    beStart.getSV().getGeneInBreakend(beStart.usesStart(), false),
+                                    beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false), pair.getExonMatchData()));
 
                             mLinksFileWriter.newLine();
                         }

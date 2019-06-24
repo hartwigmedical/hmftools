@@ -86,6 +86,7 @@ public class CohortExpFusions
         mGlobalShortInvCount = 0;
         mGlobalLongDelDupInvCount = 0;
         mArmLengthFactor = 0;
+        mLogVerbose = false;
     }
 
     public final Map<String, List<GeneRangeData>> getChrGeneRangeDataMap() { return mChrForwardGeneDataMap; }
@@ -94,13 +95,11 @@ public class CohortExpFusions
 
     public long getArmLengthFactor() { return mArmLengthFactor; }
 
-    public void initialise(List<Long> proximateBucketLengths, int shortInvBucketLength, boolean logVerbose)
+    public void initialise(List<Long> proximateBucketLengths, int shortInvBucketLength)
     {
         mProximateBucketLengths = proximateBucketLengths;
 
         mProximateBucketLengths.stream().forEach(x -> mGlobalProximateCounts.add(0));
-
-        mLogVerbose = logVerbose;
 
         // sum up all arm lengths to adjusted same-arm fusion rates
         long maxBucketLength = max(getMaxBucketLength(), 4000000);
@@ -125,6 +124,8 @@ public class CohortExpFusions
 
         LOGGER.info("arm length factor: {}", mArmLengthFactor);
     }
+
+    public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
     public void initialiseGeneIdRangeDataMap()
     {
@@ -163,6 +164,9 @@ public class CohortExpFusions
 
             for(final EnsemblGeneData geneData :entry.getValue())
             {
+                if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneData.GeneId))
+                    continue;
+
                 GeneRangeData geneRangeData = new GeneRangeData(geneData);
 
                 geneList.add(geneRangeData);
@@ -178,17 +182,11 @@ public class CohortExpFusions
 
                 geneEndFirstList.add(index, geneRangeData);
 
-                if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneData.GeneId))
-                    continue;
-
                 // load from Ensembl transcript and exon data
                 final List<TranscriptExonData> transExonDataList = geneTransCache.getTransExonData(geneData.GeneId);
 
                 if (transExonDataList == null)
                     continue;
-
-                // long precedingGeneSAPos = geneTransCache.findPrecedingGeneSpliceAcceptorPosition(
-                //        geneData, geneData.Strand == 1 ? reverseGeneDataList : geneDataList);
 
                 /*
                 if(geneData.GeneId.equals("ENSG00000260411"))

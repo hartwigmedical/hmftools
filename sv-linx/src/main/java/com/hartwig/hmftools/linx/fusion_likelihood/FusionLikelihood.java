@@ -121,7 +121,7 @@ public class FusionLikelihood
                     .collect(Collectors.toList());
         }
 
-        mCohortCalculator.initialise(mProximateBucketLengths, shortInvBucket, mLogVerbose);
+        mCohortCalculator.initialise(mProximateBucketLengths, shortInvBucket);
 
     }
 
@@ -134,7 +134,11 @@ public class FusionLikelihood
         mProximateBucketLengths.addAll(delDepLengths);
     }
 
-    public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
+    public void setLogVerbose(boolean toggle)
+    {
+        mLogVerbose = toggle;
+        mCohortCalculator.setLogVerbose(toggle);
+    }
 
     private void setBucketLengths(final String lengthData, List<Long> bucketLengths)
     {
@@ -501,7 +505,7 @@ public class FusionLikelihood
 
         fusionLikelihood.initialise(cmd, ensemblDataCache);
 
-        if(restrictedGeneIds.size() == 1)
+        if(restrictedGeneIds.size() <= 2)
             fusionLikelihood.setLogVerbose(true);
 
         fusionLikelihood.generateGlobalFusionCounts(outputDir);
