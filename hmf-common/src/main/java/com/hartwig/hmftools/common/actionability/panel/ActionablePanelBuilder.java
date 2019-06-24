@@ -3,9 +3,11 @@ package com.hartwig.hmftools.common.actionability.panel;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.Actionable;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
@@ -21,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActionablePanelBuilder {
 
+    private static final Set<String> EXCLUDE = Sets.newHashSet("iclusion");
+
     private final Map<String, ImmutableActionablePanel.Builder> result = Maps.newHashMap();
 
     public ActionablePanelBuilder(@NotNull final String knowledgebaseDirector, @NotNull final String drupLocation) throws IOException {
@@ -35,7 +39,7 @@ public class ActionablePanelBuilder {
 
     @NotNull
     public ActionablePanelBuilder addCopyNumbers(@NotNull final CopyNumberEvidenceAnalyzer copyNumberEvidenceAnalyzer) {
-        copyNumberEvidenceAnalyzer.actionableCopyNumbers().forEach(x -> {
+        copyNumberEvidenceAnalyzer.actionableCopyNumbers().stream().filter(this::filterSource).forEach(x -> {
             final ImmutableActionablePanel.Builder builder = addActionable(x.gene(), x);
             if (x.type() == CopyNumberType.AMPLIFICATION) {
                 builder.amplification(true);
@@ -48,9 +52,15 @@ public class ActionablePanelBuilder {
 
     @NotNull
     public ActionablePanelBuilder addFusions(@NotNull final FusionEvidenceAnalyzer fusionAnalyser) {
-        fusionAnalyser.actionablePromiscuousThree().forEach(x -> addActionable(x.gene(), x).fusion(true));
-        fusionAnalyser.actionablePromiscuousFive().forEach(x -> addActionable(x.gene(), x).fusion(true));
-        fusionAnalyser.actionableFusionPairs().forEach(x -> {
+        fusionAnalyser.actionablePromiscuousThree()
+                .stream()
+                .filter(this::filterSource)
+                .forEach(x -> addActionable(x.gene(), x).fusion(true));
+        fusionAnalyser.actionablePromiscuousFive()
+                .stream()
+                .filter(this::filterSource)
+                .forEach(x -> addActionable(x.gene(), x).fusion(true));
+        fusionAnalyser.actionableFusionPairs().stream().filter(this::filterSource).forEach(x -> {
             addActionable(x.threeGene(), x).fusion(true);
             addActionable(x.fiveGene(), x).fusion(true);
         });
@@ -59,8 +69,14 @@ public class ActionablePanelBuilder {
 
     @NotNull
     public ActionablePanelBuilder addVariants(@NotNull final SomaticVariantEvidenceAnalyzer variantEvidenceAnalyzer) {
-        variantEvidenceAnalyzer.actionableRanges().forEach(x -> addActionable(x.gene(), x).variant(true));
-        variantEvidenceAnalyzer.actionableVariants().forEach(x -> addActionable(x.gene(), x).variant(true));
+        variantEvidenceAnalyzer.actionableRanges()
+                .stream()
+                .filter(this::filterSource)
+                .forEach(x -> addActionable(x.gene(), x).variant(true));
+        variantEvidenceAnalyzer.actionableVariants()
+                .stream()
+                .filter(this::filterSource)
+                .forEach(x -> addActionable(x.gene(), x).variant(true));
         return this;
     }
 
@@ -123,4 +139,9 @@ public class ActionablePanelBuilder {
                 .resistant(Strings.EMPTY)
                 .resistantSource(Strings.EMPTY);
     }
+
+    private boolean filterSource(@NotNull final Actionable actionable) {
+        return !EXCLUDE.contains(actionable.source());
+    }
+
 }
