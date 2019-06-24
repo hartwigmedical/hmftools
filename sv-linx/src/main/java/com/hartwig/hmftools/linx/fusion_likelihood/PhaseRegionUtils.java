@@ -19,48 +19,12 @@ public class PhaseRegionUtils
 {
     private static final Logger LOGGER = LogManager.getLogger(PhaseRegionUtils.class);
 
-    public static void checkAddGenePhaseRegion(final GenePhaseRegion newRegion, final List<GenePhaseRegion> regions)
-    {
-        // a simpler phase region merging routine that assumes a single phase and only expands regions which touch or overlap
-        if(newRegion.length() <= 0)
-        {
-            LOGGER.warn("gene({}) attempting to add invalid region with length({})", newRegion.GeneId, newRegion.length());
-            return;
-        }
-
-        // add a region if it doesn't overlap with any existing, otherwise expand the existing region
-        for(final GenePhaseRegion region : regions)
-        {
-            if(region.Phase != newRegion.Phase || region.isAnyPreGene() != newRegion.isAnyPreGene())
-                continue;
-
-            if(!haveOverlap(region, newRegion, true))
-                continue;
-
-            // widen the region to cover both region boundaries
-            region.setStart(min(region.start(), newRegion.start()));
-            region.setEnd(max(region.end(), newRegion.end()));
-
-            if(region.length() <= 0)
-            {
-                LOGGER.warn("gene({}) adjusted to invalid region with length({})", region.GeneId, region.length());
-                return;
-            }
-
-            return;
-        }
-
-        // add new non-overlapping or differently-phased region
-        addRegionInOrder(newRegion, regions);
-    }
-
     public static void checkAddCombinedGenePhaseRegion(final GenePhaseRegion regionToAdd, final List<GenePhaseRegion> regions)
     {
         // combine all regions into non-overlapping regions, allowing for mixed phasings
 
         // clone to avoid changing the contents of the original
-        GenePhaseRegion tmp = new GenePhaseRegion(regionToAdd.GeneId, regionToAdd.start(), regionToAdd.end(),
-                regionToAdd.getPhaseArray(), regionToAdd.getPreGenePhaseStatus());
+        GenePhaseRegion tmp = GenePhaseRegion.from(regionToAdd);
 
         List<GenePhaseRegion> newRegions = Lists.newArrayList(tmp);
 
@@ -86,7 +50,7 @@ public class PhaseRegionUtils
                     return;
                 }
 
-                if (!haveOverlap(region, newRegion, false))
+                if (!haveOverlap(region, newRegion, 0))
                 {
                     ++index;
                     continue;

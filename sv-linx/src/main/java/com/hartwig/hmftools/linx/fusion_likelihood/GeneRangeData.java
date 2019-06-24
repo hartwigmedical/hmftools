@@ -24,8 +24,9 @@ public class GeneRangeData
     private long[] mBaseOverlapCountUpstream;
 
     public static final int NON_PROX_TYPE_SHORT_INV = 0;
-    public static final int NON_PROX_TYPE_LONG_SAME_ARM = 1;
-    public static final int NON_PROX_TYPE_REMOTE = 2;
+    public static final int NON_PROX_TYPE_MEDIUM_INV = 1;
+    public static final int NON_PROX_TYPE_LONG_SAME_ARM = 2;
+    public static final int NON_PROX_TYPE_REMOTE = 3;
 
     public GeneRangeData(final EnsemblGeneData geneData)
     {

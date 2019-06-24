@@ -224,12 +224,10 @@ public class GenePhaseRegion
         }
     }
 
-    public static boolean haveOverlap(final GenePhaseRegion region1, final GenePhaseRegion region2, boolean includeAdjacency)
+    public static boolean haveOverlap(final GenePhaseRegion region1, final GenePhaseRegion region2, int overlapBases)
     {
         // if adjacency is included, then regions which are a base apart are considered an overlap - eg 100-199 and 200-300
-        int extraBase = includeAdjacency ? 1 : 0;
-
-        if (region1.end() < region2.start() - extraBase || region1.start() > region2.end() + extraBase)
+        if (region1.end() < region2.start() - overlapBases || region1.start() > region2.end() + overlapBases)
             return false;
 
         return true;
@@ -245,7 +243,7 @@ public class GenePhaseRegion
             {
                 GenePhaseRegion region2 = regions.get(j);
 
-                if(haveOverlap(region1, region2, false))
+                if(haveOverlap(region1, region2, 0))
                     return false;
             }
         }

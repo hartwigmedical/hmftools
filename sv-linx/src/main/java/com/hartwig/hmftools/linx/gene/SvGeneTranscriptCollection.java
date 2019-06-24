@@ -7,19 +7,20 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
+import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
@@ -35,6 +36,7 @@ public class SvGeneTranscriptCollection
     private Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
     private Map<String, List<EnsemblGeneData>> mChrReverseGeneDataMap; // order by gene end instead of start, for traversal in the reverse direction
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
     private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
 
     // the distance upstream of a gene for a breakend to be consider a fusion candidate
@@ -48,6 +50,7 @@ public class SvGeneTranscriptCollection
         mChrGeneDataMap = Maps.newHashMap();
         mChrReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
+        mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
     }
 
@@ -68,6 +71,7 @@ public class SvGeneTranscriptCollection
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrReverseGeneDataMap() { return mChrReverseGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
+    public Map<Integer,Long> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
 
     public final EnsemblGeneData getGeneDataByName(final String geneName)
     {
@@ -299,6 +303,15 @@ public class SvGeneTranscriptCollection
         }
 
         return matchedGenes;
+    }
+
+    public long findPrecedingGeneSpliceAcceptorPosition(int transId)
+    {
+        if(mTransSpliceAcceptorPosDataMap.isEmpty())
+            return -1;
+
+        Long spliceAcceptorPos = mTransSpliceAcceptorPosDataMap.get(transId);
+        return spliceAcceptorPos != null ? spliceAcceptorPos : -1;
     }
 
     public long findPrecedingGeneSpliceAcceptorPosition(final EnsemblGeneData refGene, List<EnsemblGeneData> geneDataList)
@@ -821,6 +834,18 @@ public class SvGeneTranscriptCollection
 
             if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
                 return false;
+
+            final String transSpliceFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+
+            if (Files.exists(Paths.get(transSpliceFile)))
+            {
+                if(!EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
+                    return false;
+            }
+            else
+            {
+                createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap());
+            }
         }
 
         return true;
@@ -844,7 +869,131 @@ public class SvGeneTranscriptCollection
             }
         }
 
-        return EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds);
+        if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
+            return false;
+
+        return EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds);
+    }
+
+    public void createTranscriptPreGenePositionData(final Map<String, List<EnsemblGeneData>> chrGeneDataMap, final Map<String, List<TranscriptExonData>> geneTransExonDataMap)
+    {
+        try
+        {
+            final String outputFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
+
+            writer.write("GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance");
+            writer.newLine();
+
+            // for each gene, collect up any gene which overlaps it or is within the specified distance upstream from it
+            for (Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneDataMap.entrySet())
+            {
+                final String chromosome = entry.getKey();
+
+                LOGGER.info("calculating pre-gene positions for chromosome({})", chromosome);
+
+                final List<EnsemblGeneData> geneList = entry.getValue();
+
+                for (final EnsemblGeneData gene : geneList)
+                {
+                    List<String> proximateGenes = Lists.newArrayList();
+
+                    for (final EnsemblGeneData otherGene : geneList)
+                    {
+                        if (otherGene.Strand != gene.Strand || otherGene.GeneId.equals(gene.GeneId))
+                            continue;
+
+                        if (gene.Strand == 1)
+                        {
+                            if (otherGene.GeneStart >= gene.GeneStart || otherGene.GeneEnd < gene.GeneStart - PRE_GENE_PROMOTOR_DISTANCE)
+                                continue;
+
+                            proximateGenes.add(otherGene.GeneId);
+                        }
+                        else
+                        {
+                            if (otherGene.GeneEnd <= gene.GeneEnd || otherGene.GeneStart > gene.GeneEnd + PRE_GENE_PROMOTOR_DISTANCE)
+                                continue;
+
+                            proximateGenes.add(otherGene.GeneId);
+                        }
+                    }
+
+                    if(proximateGenes.isEmpty())
+                        continue;
+
+                    // now set the preceding splice acceptor position for each transcript in this gene
+                    final List<TranscriptExonData> transExonDataList = geneTransExonDataMap.get(gene.GeneId);
+
+                    if (transExonDataList == null || transExonDataList.isEmpty())
+                        continue;
+
+                    int teIndex = 0;
+                    List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+
+                    while (!transcriptExons.isEmpty())
+                    {
+                        final TranscriptExonData exonData = transcriptExons.get(0);
+                        long transStartPos = gene.Strand == 1 ? exonData.TransStart : exonData.TransEnd;
+
+                        long firstSpliceAcceptorPos =
+                                findFirstSpliceAcceptor(transStartPos, gene.Strand, proximateGenes, geneTransExonDataMap);
+
+                        long distance = gene.Strand == 1 ? transStartPos - firstSpliceAcceptorPos : firstSpliceAcceptorPos - transStartPos;
+
+                        // cache value and continue
+                        writer.write(String.format("%s,%d,%s,%d,%d,%d",
+                                gene.GeneId, exonData.TransId, exonData.TransName, transStartPos, firstSpliceAcceptorPos, distance));
+
+                        writer.newLine();
+
+                        mTransSpliceAcceptorPosDataMap.put(exonData.TransId, firstSpliceAcceptorPos);
+
+                        teIndex += transcriptExons.size();
+                        transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+                    }
+                }
+            }
+
+            LOGGER.info("pre-gene positions written to file: {}", outputFile);
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("error writing Ensembl trans splice data file: {}", e.toString());
+        }
+    }
+
+    private long findFirstSpliceAcceptor(
+            long transStartPos, int strand, final List<String> proximateGenes, final Map<String, List<TranscriptExonData>> geneTransExonDataMap)
+    {
+        long closestPosition = -1;
+
+        for(final String geneId : proximateGenes)
+        {
+            final List<TranscriptExonData> transExonDataList = geneTransExonDataMap.get(geneId);
+
+            if(transExonDataList.isEmpty())
+                continue;
+
+            for(final TranscriptExonData exonData : transExonDataList)
+            {
+                // check if exon is upstream and if so record its position
+                if(strand == 1 && exonData.ExonEnd < transStartPos)
+                {
+                    if(closestPosition == -1 || exonData.ExonStart > closestPosition)
+                        closestPosition = exonData.ExonStart;
+                }
+                else if(strand == -1 && exonData.ExonStart > transStartPos)
+                {
+                    if(closestPosition == -1 || exonData.ExonEnd < closestPosition)
+                        closestPosition = exonData.ExonEnd;
+                }
+            }
+        }
+
+        return closestPosition;
     }
 
 }

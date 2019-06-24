@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_MA
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_LONG_SAME_ARM;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_MEDIUM_INV;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_SHORT_INV;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcNonProximateLikelihood;
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
@@ -126,13 +128,10 @@ public class FusionLikelihood
     public void setRestrictedGeneIds(final List<String> geneIds) { mRestrictedGeneIds.addAll(geneIds); }
 
     @VisibleForTesting
-    public void initialise(final SvGeneTranscriptCollection geneTransCache, final List<Long> delDepLengths,
-            int shortInvBucketLength, int preGeneDistance)
+    public void initialise(final SvGeneTranscriptCollection geneTransCache, final List<Long> delDepLengths)
     {
         mGeneTransCache = geneTransCache;
         mProximateBucketLengths.addAll(delDepLengths);
-        // SHORT_INV_BUCKET = shortInvBucketLength;
-        // PRE_GENE_3P_DISTANCE = preGeneDistance;
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
@@ -183,12 +182,15 @@ public class FusionLikelihood
             writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
             writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding");
             writer.write(",FivePrimeUTRPG,Phase0PG,Phase1PG,Phase2PG");
-            writer.write(",ShortInvRateUp,ShortInvRateDown,SameArmRateUp,SameArmRateDown,RemoteRateUp,RemoteRateDown");
+            writer.write(",ShortInvRateUp,ShortInvRateDown,MedInvRateUp,MedInvRateDown");
+            writer.write(",LongDDIRateUp,LongDDIRateDown,RemoteRateUp,RemoteRateDown");
             writer.newLine();
 
             // adjustment factors to convert overlap base count into rates
             double remoteFusionFactor = 1.0 / (GENOME_BASE_COUNT * GENOME_BASE_COUNT);
             double sameArmFusionFactor = 1.0 / mCohortCalculator.getArmLengthFactor();
+            long maxBucketLength = mCohortCalculator.getMaxBucketLength();
+            double mediumInvFusionFactor = 1.0 / ((maxBucketLength - SHORT_INV_BUCKET) * GENOME_BASE_COUNT);
             double shortInvFusionFactor = 1.0 / (SHORT_INV_BUCKET * GENOME_BASE_COUNT);
 
             for(Map.Entry<String, List<GeneRangeData>> entry : mCohortCalculator.getChrGeneRangeDataMap().entrySet())
@@ -213,9 +215,11 @@ public class FusionLikelihood
                             phaseCountsPreGene[typeAsInt(PHASE_5P_UTR)], phaseCountsPreGene[typeAsInt(PHASE_0)],
                             phaseCountsPreGene[typeAsInt(PHASE_1)], phaseCountsPreGene[typeAsInt(PHASE_2)]));
 
-                    writer.write(String.format(",%.12f,%.12f,%.12f,%.12f,%.12f,%.12f",
+                    writer.write(String.format(",%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f,%.12f",
                             geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor,
                             geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor,
+                            geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_MEDIUM_INV) * mediumInvFusionFactor,
+                            geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_MEDIUM_INV) * mediumInvFusionFactor,
                             geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor,
                             geneData.getBaseOverlapCountDownstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor,
                             geneData.getBaseOverlapCountUpstream(NON_PROX_TYPE_REMOTE) * remoteFusionFactor,
@@ -480,11 +484,9 @@ public class FusionLikelihood
             fusionLikelihood.setRestrictedGeneIds(restrictedGeneIds);
         }
 
-        boolean hasCachedData = false; // cmd.hasOption(USE_PHASE_CACHE) ? fusionLikelihood.loadGenePhaseData(outputDir) : false;
-
         boolean limitedLoading = !restrictedGeneIds.isEmpty();
 
-        if(!ensemblDataCache.loadEnsemblData(limitedLoading || hasCachedData))
+        if(!ensemblDataCache.loadEnsemblData(limitedLoading))
         {
             LOGGER.error("Ensembl data cache load failed, exiting");
             return;

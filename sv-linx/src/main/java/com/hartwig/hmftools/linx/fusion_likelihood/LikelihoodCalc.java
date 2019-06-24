@@ -49,6 +49,7 @@ public class LikelihoodCalc
         if(lowerRegion.length() < 0 || upperRegion.length() < 0)
         {
             LOGGER.warn("negative region lengths");
+            return bucketOverlapCounts;
         }
 
         for (int i = 0; i < bucketLengths.size() - 1; ++i)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 
 import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
@@ -40,6 +42,7 @@ public class EnsemblDAO
 
     public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
     public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
+    public static String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
     public static String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
 
     private DSLContext mDbContext;
@@ -577,6 +580,69 @@ public class EnsemblDAO
         return true;
     }
 
+    // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
+    private static int TA_GENE_ID = 0;
+    private static int TA_TRANS_ID = 1;
+    private static int TA_TRANS_NAME = 2;
+    private static int TA_TRANS_START = 3;
+    private static int TA_SA_POSITION = 4;
+    private static int TA_DISTANCE = 5;
+
+    public static boolean loadTranscriptSpliceAcceptorData(final String dataPath, Map<Integer,Long> transSaPositionDataMap,
+            List<Integer> restrictedTransIds)
+    {
+        String filename = dataPath;
+
+        filename += ENSEMBL_TRANS_SPLICE_DATA_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
+                return false;
+            }
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                final int transId = Integer.parseInt(items[TA_TRANS_ID]);
+
+                if(!restrictedTransIds.isEmpty() && !restrictedTransIds.contains(transId))
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
+
+                final long saPosition = Long.parseLong(items[TA_SA_POSITION]);
+
+                transSaPositionDataMap.put(transId, saPosition);
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} trans splice-acceptor position records", transSaPositionDataMap.size());
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load transcript splice data({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
 
 
 }
