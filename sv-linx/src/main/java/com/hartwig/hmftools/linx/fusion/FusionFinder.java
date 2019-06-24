@@ -481,9 +481,12 @@ public class FusionFinder
         if(!downTrans.getProteinFeaturesKept().isEmpty() || !downTrans.getProteinFeaturesLost().isEmpty())
             return;
 
+        if(downTrans.nonCoding())
+            return;
+
         final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(downTrans.TransId);
 
-        if(transProteinData == null || transProteinData.isEmpty() || !downTrans.isCoding())
+        if(transProteinData == null || transProteinData.isEmpty())
             return;
 
         List<String> processedFeatures = Lists.newArrayList();
@@ -516,18 +519,29 @@ public class FusionFinder
     {
         boolean featurePreserved;
 
-        if(isDownstream)
+        if(transcript.preCoding())
         {
-            // coding must start before the start of the feature for it to be preserved
-            int codingBaseStart = transcript.totalCodingBases() - transcript.calcCodingBases(!isDownstream);
-            int featureCodingBaseStart = featureStart * 3;
-            featurePreserved = (codingBaseStart <= featureCodingBaseStart);
+            featurePreserved = isDownstream;
+        }
+        else if(transcript.postCoding())
+        {
+            featurePreserved = !isDownstream;
         }
         else
         {
-            int codingBaseEnd = transcript.calcCodingBases(!isDownstream);
-            int featureCodingBaseEnd = featureEnd * 3;
-            featurePreserved = (featureCodingBaseEnd <= codingBaseEnd);
+            if (isDownstream)
+            {
+                // coding must start before the start of the feature for it to be preserved
+                int codingBaseStart = transcript.totalCodingBases() - transcript.calcCodingBases(!isDownstream);
+                int featureCodingBaseStart = featureStart * 3;
+                featurePreserved = (codingBaseStart <= featureCodingBaseStart);
+            }
+            else
+            {
+                int codingBaseEnd = transcript.calcCodingBases(!isDownstream);
+                int featureCodingBaseEnd = featureEnd * 3;
+                featurePreserved = (featureCodingBaseEnd <= codingBaseEnd);
+            }
         }
 
         transcript.addProteinFeature(feature, featurePreserved);
