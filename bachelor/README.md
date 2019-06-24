@@ -41,38 +41,44 @@ Alternatively Stage 1 and Stage 2 can be run independently as shown below.
 ```bash
 java -jar bachelor.jar 
     -sample [sampleId] 
-    -xml_config bachelor.xml 
-    -ext_filter_file BACHELOR_CLINVAR_FILTERS.csv 
-    -sample_data_dir [path_to_sample_vcf] 
-    -bam_direct 
+    -xml_config /path/to/bachelor_config.xml 
+    -ext_filter_file /path/to/bachelor_clinvar_filters.csv 
+    -sample_data_dir /path/to/dir_that_holds_germline_vcf
     -purple_data_dir purple
-    -db_url [db_url] -db_user [user] -db_pass [password] 
-    -high_confidence_bed [path_to_file] 
-    -ref_genome [path_to_file] 
+    -output_dir /path/to/dir_that_will_hold_all_output 
+    -bam_direct 
+    -ref_genome /path/to/ref_genome.fasta 
+    -high_confidence_bed /path/to/high_conf_bed.vcf.gz 
     -write_to_db  
+    -db_url [db_url] -db_user [user] -db_pass [password] 
 ```
 
 2. Single-sample Stage 1 only
 
 ```bash
 java -jar bachelor.jar 
+    -run_mode VcfParse 
     -sample [sampleId] 
-    -xml_config bachelor.xml 
-    -ext_filter_file BACHELOR_CLINVAR_FILTERS.csv 
-    -sample_data_dir [path_to_sample_vcf] 
+    -xml_config /path/to/bachelor_config.xml 
+    -ext_filter_file /path/to/bachelor_clinvar_filters.csv 
+    -sample_data_dir /path/to/dir_that_holds_germline_vcf
+    -output_dir /path/to/dir_that_will_hold_all_output 
 ```
 
 3. Single-sample Stage 2 only
 ```bash
 java -jar bachelor.jar 
+    -run_mode PostProcess
     -sample [sampleId] 
-    -sample_data_dir [path_to_sample_vcf] 
-    -bam_direct 
+    -xml_config /path/to/bachelor_config.xml
+    -sample_data_dir /path/to/dir_that_holds_germline_vcf 
     -purple_data_dir purple
-    -db_url [db_url] -db_user [user] -db_pass [password] 
-    -high_confidence_bed [path_to_file] 
-    -ref_genome [path_to_file] 
+    -output_dir /path/to/dir_that_will_hold_all_output
+    -bam_direct 
+    -ref_genome /path/to/ref_genome.fasta 
+    -high_confidence_bed /path/to/high_conf_bed.vcf.gz 
     -write_to_db  
+    -db_url [db_url] -db_user [user] -db_pass [password] 
 ```
 
 
@@ -81,15 +87,15 @@ java -jar bachelor.jar
 ```bash
 java -jar bachelor.jar 
     -sample "*" or omit 
-    -xml_config bachelor.xml 
-    -ext_filter_file BACHELOR_CLINVAR_FILTERS.csv 
+    -xml_config /path/to/bachelor_config.xml 
+    -ext_filter_file /path/to/bachelor_clinvar_filters.csv 
     -sample_data_dir [path_to_sample_vcf] 
     -bam_direct 
     -purple_data_dir purple
-    -db_url [db_url] -db_user [user] -db_pass [password] 
-    -high_confidence_bed [path_to_file] 
-    -ref_genome [path_to_file] 
+    -ref_genome /path/to/ref_genome.fasta 
+    -high_confidence_bed /path/to/high_conf_bed.vcf.gz 
     -write_to_db  
+    -db_url [db_url] -db_user [user] -db_pass [password] 
 ```
 
 Optional config:
@@ -128,7 +134,7 @@ Create a set of files from CLINVAR variant classification with this command:
 
 ```bash
 java -cp bachelor.jar com.hartwig.hmftools.bachelor.ExternalDBFilters
-    -xml_config bachelor.xml 
-    -create_filter_file /path_to/clinvar_snp.vcf.gz 
-    -output_dir path_to_log
+    -xml_config /path/to/bachelor_config.xml 
+    -create_filter_file /path/to/clinvar_snp.vcf.gz 
+    -output_dir /path/to/dir_that_will_hold_all_output
 ```
