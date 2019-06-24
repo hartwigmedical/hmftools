@@ -26,7 +26,7 @@ public class GermlineVariantDAO {
 
     public void write(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
     {
-        // first remove any existing records for this patient
+        // First remove any existing records for this patient
         context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sampleId)).execute();
 
         final Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -59,7 +59,6 @@ public class GermlineVariantDAO {
                 Tables.GERMLINEVARIANT.BIALLELIC,
                 Tables.GERMLINEVARIANT.HOTSPOT,
                 Tables.GERMLINEVARIANT.MAPPABILITY,
-                Tables.GERMLINEVARIANT.GERMLINESTATUS,
                 Tables.GERMLINEVARIANT.MINORALLELEPLOIDY,
                 Tables.GERMLINEVARIANT.REFSTATUS,
                 Tables.GERMLINEVARIANT.PROGRAM,
@@ -71,37 +70,36 @@ public class GermlineVariantDAO {
             if (!bachRecord.isValid())
                 continue;
 
-            final EnrichedSomaticVariant region = bachRecord.getEnrichedVariant();
+            final EnrichedSomaticVariant variant = bachRecord.getEnrichedVariant();
 
             inserter.values(sampleId,
                     bachRecord.Chromosome,
                     bachRecord.Position,
                     bachRecord.isLowScore() ? "ARTEFACT" : PASS,
-                    region.type(),
-                    region.ref(),
-                    region.alt(),
+                    variant.type(),
+                    variant.ref(),
+                    variant.alt(),
                     bachRecord.Gene,
-                    region.dbsnpID() == null ? "" : region.dbsnpID(),
-                    region.canonicalCosmicID() == null ? "" : region.canonicalCosmicID(),
+                    variant.dbsnpID() == null ? "" : variant.dbsnpID(),
+                    variant.canonicalCosmicID() == null ? "" : variant.canonicalCosmicID(),
                     bachRecord.Effects,
                     bachRecord.CodingEffect,
                     bachRecord.TranscriptId,
                     bachRecord.getTumorAltCount(),
                     bachRecord.getTumorReadDepth(),
-                    DatabaseUtil.decimal(region.adjustedCopyNumber()),
-                    DatabaseUtil.decimal(bachRecord.getAdjustedVaf()), // region.adjustedVAF()
-                    region.highConfidenceRegion(),
-                    region.trinucleotideContext(),
-                    region.microhomology(),
-                    region.repeatSequence(),
-                    region.repeatCount(),
+                    DatabaseUtil.decimal(variant.adjustedCopyNumber()),
+                    DatabaseUtil.decimal(bachRecord.getAdjustedVaf()),
+                    variant.highConfidenceRegion(),
+                    variant.trinucleotideContext(),
+                    variant.microhomology(),
+                    variant.repeatSequence(),
+                    variant.repeatCount(),
                     bachRecord.HgvsProtein,
                     bachRecord.HgvsCoding,
                     bachRecord.isBiallelic(),
-                    region.isHotspot(),
-                    DatabaseUtil.decimal(region.mappability()),
-                    region.germlineStatus(),
-                    DatabaseUtil.decimal(region.minorAllelePloidy()),
+                    variant.isHotspot(),
+                    DatabaseUtil.decimal(variant.mappability()),
+                    DatabaseUtil.decimal(variant.minorAllelePloidy()),
                     bachRecord.IsHomozygous ? "HOM" : "HET",
                     bachRecord.Program,
                     "GERMLINE",

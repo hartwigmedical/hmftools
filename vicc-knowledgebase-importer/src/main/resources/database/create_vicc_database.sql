@@ -56,7 +56,7 @@ CREATE TABLE geneIdentifier
 CREATE TABLE featureName
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    featureName varchar(2500),
+    nameOfFeature varchar(2500),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -80,18 +80,18 @@ CREATE TABLE devTag
 CREATE TABLE feature
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    name varchar(255),
+    name varchar(1000),
     biomarkerType varchar(255),
     referenceName varchar(255),
     chromosome varchar(255),
     start varchar(255),
     end varchar(255),
-    ref varchar(255),
+    ref varchar(1000),
     alt varchar(255),
     provenanceRule varchar(255),
     geneSymbol varchar(255),
     entrezId varchar(255),
-    description varchar(255),
+    description varchar(2000),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -99,7 +99,7 @@ CREATE TABLE feature
 CREATE TABLE provenance
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    provenance varchar(255) NOT NULL,
+    provenanceName varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -107,7 +107,7 @@ CREATE TABLE provenance
 CREATE TABLE synonym
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    synonym varchar(255),
+    synonymName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -115,7 +115,7 @@ CREATE TABLE synonym
 CREATE TABLE link
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    link varchar(255),
+    linkName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -134,7 +134,7 @@ CREATE TABLE sequenceOntology
 CREATE TABLE hierarchy
 (   id int NOT NULL AUTO_INCREMENT,
     sequenceOntologyId int NOT NULL,
-    hierarchy varchar(255),
+    hierarchyName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (sequenceOntologyId) REFERENCES sequenceOntology(id)
 );
@@ -146,9 +146,9 @@ CREATE TABLE association
     evidenceLevel varchar(255),
     evidenceLabel varchar(255),
     responseType varchar(255),
-    drugLabel varchar(255),
+    drugLabel varchar(2000),
     sourceLink varchar(255),
-    description varchar(800) NOT NULL,
+    description varchar(2500) NOT NULL,
     oncogenic varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
@@ -157,7 +157,7 @@ CREATE TABLE association
 CREATE TABLE evidence
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    description varchar(500),
+    description varchar(2000),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -182,7 +182,7 @@ CREATE TABLE evidenceType
 CREATE TABLE publicationUrl
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    publicationUrl varchar(255),
+    urlOfPublication varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -222,7 +222,7 @@ CREATE TABLE environmentalContext
 CREATE TABLE approvedCountry
 (   id int NOT NULL AUTO_INCREMENT,
     environmentalContextsId int NOT NULL,
-    approvedCountry varchar(225) NOT NULL,
+    approvedCountryName varchar(225) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (environmentalContextsId) REFERENCES environmentalContext(id)
 );

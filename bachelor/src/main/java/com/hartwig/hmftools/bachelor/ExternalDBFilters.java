@@ -73,7 +73,7 @@ public class ExternalDBFilters
         if (cmd.hasOption(LOG_DEBUG))
             Configurator.setRootLevel(Level.DEBUG);
 
-        LOGGER.info("Building ClinVar filter files");
+        LOGGER.info("Building ClinVar filter file");
 
         Map<String, Program> configMap = null;
 
@@ -98,7 +98,7 @@ public class ExternalDBFilters
         LOGGER.info("Filter file creation complete");
     }
 
-    private ExternalDBFilters(final String filterInputFile)
+    private ExternalDBFilters(String filterInputFile)
     {
         mInputFilterFile = filterInputFile;
         mRequiredEffects = Lists.newArrayList();
@@ -108,7 +108,7 @@ public class ExternalDBFilters
 
     private static final int BACHELOR_FILTER_CSV_FIELD_COUNT = 13;
 
-    public static List<VariantFilter> loadExternalFilters(final String filterFile)
+    public static List<VariantFilter> loadExternalFilters(String filterFile)
     {
         List<VariantFilter> filters = Lists.newArrayList();
 
@@ -132,12 +132,12 @@ public class ExternalDBFilters
 
                 ++lineIndex;
 
-                // parse CSV data
-                String[] items = line.split(",");
+                // parse CSV data. -1 as 2nd param makes sure we include trailing empty fields
+                String[] items = line.split(",", -1);
 
                 if (items.length < BACHELOR_FILTER_CSV_FIELD_COUNT)
                 {
-                    LOGGER.error("invalid item count({}), fileIndex({})", items.length, lineIndex);
+                    LOGGER.error("Invalid item count({}), lineIndex({})", items.length, lineIndex);
                     continue;
                 }
 
@@ -165,7 +165,7 @@ public class ExternalDBFilters
             LOGGER.error("Failed to read bachelor input CSV file({}) index({}): {}", filterFile, lineIndex, e.toString());
         }
 
-        LOGGER.info("loaded {} clinvar filter records", filters.size());
+        LOGGER.info("Loaded {} ClinVar filter records from {}", filters.size(), filterFile);
 
         return filters;
     }
@@ -271,6 +271,7 @@ public class ExternalDBFilters
 
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
+            //noinspection StatementWithEmptyBody
             if (codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE) {
                 //checkExistingBlacklistConditions(gene, variant, snpEff);
             } else {
@@ -338,7 +339,7 @@ public class ExternalDBFilters
         }
         catch(IOException e)
         {
-            LOGGER.error("error writing filter output: {}", e.toString());
+            LOGGER.error("Error writing filter output: {}", e.toString());
         }
     }
 

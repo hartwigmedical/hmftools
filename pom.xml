@@ -51,14 +51,15 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <hmf-patient-db.version>3.22</hmf-patient-db.version>
+        <hmf-bachelor.version>1.7</hmf-bachelor.version>
+        <hmf-patient-db.version>3.23</hmf-patient-db.version>
         <hmf-variant-annotation.version>2.15</hmf-variant-annotation.version>
         <hmf-sv-linx.version>1.0</hmf-sv-linx.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
         <hmf-patient-reporter.version>6.1</hmf-patient-reporter.version>
         <hmf-health-checker.version>3.0</hmf-health-checker.version>
 
-        <amber.version>2.4</amber.version>
+        <amber.version>2.5</amber.version>
         <cobalt.version>1.7</cobalt.version>
         <purple.version>2.31</purple.version>
 

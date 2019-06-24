@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
+import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.ConfigSchema;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
 import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
@@ -42,6 +43,7 @@ public class BachelorApplication {
 
     private String mSampleDataDir;
     private String mSingleSampleId;
+    private String mSingleSampleOutputDir;
     private List<String> mRestrictedSampleIds;
     private List<RunDirectory> mSampleDataDirectories;
     private boolean mIsBatchMode;
@@ -52,6 +54,7 @@ public class BachelorApplication {
     static final String LOG_DEBUG = "log_debug";
 
     private static final String BATCH_OUTPUT_DIR = "batch_output_dir";
+    private static final String SINGLE_SAMPLE_OUTPUT_DIR = "output_dir";
 
     private static final String RUN_MODE = "run_mode";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -63,8 +66,6 @@ public class BachelorApplication {
     private static final String RUN_MODE_VCF_PARSE = "VcfParse";
     private static final String RUN_MODE_POST_PROCESS = "PostProcess";
 
-    static final String DEFAULT_BACH_DIRECTORY = "bachelor";
-
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
 
     private BachelorApplication()
@@ -73,6 +74,7 @@ public class BachelorApplication {
         mPostProcessor = null;
         mSampleDataDir = "";
         mSingleSampleId = "";
+        mSingleSampleOutputDir = "";
         mSampleDataDirectories = Lists.newArrayList();
         mRestrictedSampleIds = Lists.newArrayList();
         mIsBatchMode = false;
@@ -91,13 +93,13 @@ public class BachelorApplication {
         }
         catch(Exception e)
         {
-            LOGGER.error("error loading XML: {}", e.toString());
+            LOGGER.error("Error loading XML: {}", e.toString());
             return false;
         }
 
         String runMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
 
-        LOGGER.info("run mode: {}", runMode);
+        LOGGER.info("Run mode: {}", runMode);
 
         String batchOutputDir = cmd.getOptionValue(BATCH_OUTPUT_DIR, "");
 
@@ -105,7 +107,7 @@ public class BachelorApplication {
 
         if (mSingleSampleId.isEmpty() || mSingleSampleId.equals("*"))
         {
-            LOGGER.info("running in batch mode");
+            LOGGER.info("Running in batch mode");
             mIsBatchMode = true;
 
             if(cmd.hasOption(SAMPLE_LIST_FILE))
@@ -121,6 +123,13 @@ public class BachelorApplication {
         if (!mSampleDataDir.endsWith(File.separator))
         {
             mSampleDataDir += File.separator;
+        }
+
+        mSingleSampleOutputDir = cmd.getOptionValue(SINGLE_SAMPLE_OUTPUT_DIR);
+
+        if (!mSingleSampleOutputDir.endsWith(File.separator))
+        {
+            mSingleSampleOutputDir += File.separator;
         }
 
         setSampleDataDirectories();
@@ -169,20 +178,19 @@ public class BachelorApplication {
 
             if(!mRestrictedSampleIds.isEmpty() && !mRestrictedSampleIds.contains(sampleId))
             {
-                LOGGER.info("skipping sampleId({}) not in specified list", sampleId);
+                LOGGER.info("Skipping sampleId({}) not in specified list", sampleId);
                 continue;
             }
 
-            // processSampleDirectory(runDir, "");
-
             if(mGermlineVcfParser != null)
             {
-                mGermlineVcfParser.run(runDir, sampleId);
+                mGermlineVcfParser.run(runDir, sampleId, mSingleSampleOutputDir);
             }
 
             if(mPostProcessor != null)
             {
-                mPostProcessor.run(runDir, sampleId, mGermlineVcfParser != null ? mGermlineVcfParser.getBachelorRecords() : null);
+                List<BachelorGermlineVariant> bachelorRecords = mGermlineVcfParser != null ? mGermlineVcfParser.getBachelorRecords() : null;
+                mPostProcessor.run(runDir, bachelorRecords, mSingleSampleOutputDir);
             }
 
             if(mMaxBatchDirectories > 0 && i >= mMaxBatchDirectories)
@@ -199,7 +207,7 @@ public class BachelorApplication {
             mPostProcessor.close();
         }
 
-        LOGGER.info("run complete");
+        LOGGER.info("Run complete");
     }
 
     private void setSampleDataDirectories()
@@ -217,10 +225,10 @@ public class BachelorApplication {
             }
             catch (Exception e)
             {
-                LOGGER.error("failed walking batch directories: {}", e.toString());
+                LOGGER.error("Failed walking batch directories: {}", e.toString());
             }
 
-            LOGGER.info("found {} batch directories", mSampleDataDirectories.size());
+            LOGGER.info("Found {} batch directories", mSampleDataDirectories.size());
         }
         else
         {
@@ -293,6 +301,7 @@ public class BachelorApplication {
         options.addOption(RUN_MODE, true, "VcfParse, PostProcess or Both (default)");
         options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
         options.addOption(BATCH_OUTPUT_DIR, true, "Optional: when in batch mode, all output written to single file");
+        options.addOption(SINGLE_SAMPLE_OUTPUT_DIR, true, "When in single-sample mode, all output written to this dir");
         options.addOption(SAMPLE_DATA_DIR, true, "the run directory to look for inputs");
         options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
@@ -328,6 +337,7 @@ public class BachelorApplication {
 
             if(!bachelorApp.loadConfig(cmd))
             {
+                LOGGER.debug("Could not load config");
                 System.exit(1);
                 return;
             }

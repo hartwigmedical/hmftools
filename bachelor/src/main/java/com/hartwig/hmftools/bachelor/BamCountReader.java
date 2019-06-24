@@ -34,15 +34,15 @@ public class BamCountReader
     private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private String mSampleBamFile;
     private File mRefGenomeFile;
-    SamReader mTumorReader;
+    private SamReader mTumorReader;
 
-    private static String TUMOR_BAM_FILE = "tumor_bam_file";
-    private static int DEFAULT_MIN_BASE_QUALITY = 13;
-    private static int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    private static final String TUMOR_BAM_FILE = "tumor_bam_file";
+    private static final int DEFAULT_MIN_BASE_QUALITY = 13;
+    private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
     private static final Logger LOGGER = LogManager.getLogger(BamCountReader.class);
 
-    public BamCountReader()
+    BamCountReader()
     {
         mIndexedFastaSequenceFile = null;
         mTumorReader = null;
@@ -55,7 +55,7 @@ public class BamCountReader
         options.addOption(TUMOR_BAM_FILE, true, "Location of a specific BAM file");
     }
 
-    public boolean initialise(final CommandLine cmd, IndexedFastaSequenceFile ifSeqFile)
+    public void initialise(CommandLine cmd, IndexedFastaSequenceFile ifSeqFile)
     {
         mIndexedFastaSequenceFile = ifSeqFile;
 
@@ -65,8 +65,6 @@ public class BamCountReader
         {
             mSampleBamFile = cmd.getOptionValue(TUMOR_BAM_FILE);
         }
-
-        return true;
     }
 
     public void readBamCounts(List<BachelorGermlineVariant> bachRecords, final String bachDataDir)
@@ -91,16 +89,16 @@ public class BamCountReader
 
                 if(bamFiles.size() != 1)
                 {
-                    LOGGER.warn("invalid BAM file count({})", bamFiles.size());
+                    LOGGER.warn("Invalid BAM file count({})", bamFiles.size());
                     return;
                 }
 
                 bamFile = bamFiles.get(0).getAbsolutePath();
-                LOGGER.debug("found BAM file: {}", bamFile);
+                LOGGER.debug("Found BAM file: {}", bamFile);
             }
             catch (IOException e)
             {
-                LOGGER.error("failed to find BAM files from dir({})", bachDataDir);
+                LOGGER.error("Failed to find BAM files from dir({})", bachDataDir);
                 return;
             }
         }
@@ -128,7 +126,7 @@ public class BamCountReader
 
         if(tumorEvidence.size() != bachRecords.size())
         {
-            LOGGER.error("incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
+            LOGGER.error("Incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
             return;
         }
 
@@ -150,5 +148,4 @@ public class BamCountReader
             }
         }
     }
-
 }

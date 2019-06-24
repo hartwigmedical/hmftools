@@ -44,7 +44,7 @@ public class AlleleDepthLoader
                     .filter(p_ -> p_.getName().endsWith(MPILEUP_FILE_EXTN))
                     .collect(Collectors.toList());
 
-            LOGGER.debug("found {} mini-pileup files", mpuFiles.size());
+            LOGGER.debug("Found {} mini-pileup files", mpuFiles.size());
 
             for (final File mpuFile : mpuFiles)
             {
@@ -53,17 +53,17 @@ public class AlleleDepthLoader
                     continue;
                 }
 
-                LOGGER.debug("processing mini-pileup file({})", mpuFile.getName());
+                LOGGER.debug("Processing mini-pileup file({})", mpuFile.getName());
 
                 List<Pileup> pileups = PileupFile.read(mpuFile.getPath());
                 mPileupData.addAll(pileups);
             }
 
-            LOGGER.info("loaded {} pileup files, {} records", mpuFiles.size(), mPileupData.size());
+            LOGGER.info("Loaded {} pileup files, {} records", mpuFiles.size(), mPileupData.size());
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to process pileup files from dir({})", mpDirectory);
+            LOGGER.error("Failed to process pileup files from dir({})", mpDirectory);
             return false;
         }
 

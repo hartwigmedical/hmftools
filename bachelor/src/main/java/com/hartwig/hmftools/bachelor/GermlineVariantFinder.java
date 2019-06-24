@@ -50,7 +50,6 @@ public class GermlineVariantFinder
     private Map<String,List<VariantFilter>> mWhitelistFilters;
     private Map<String,List<VariantFilter>> mBlacklistFilters;
 
-    private SortedSetMultimap<String, HmfTranscriptRegion> mGenesByChromosomeMap;
     private Map<String, HmfTranscriptRegion> mAllGenesMap;
     private Map<String, HmfTranscriptRegion> mAllTranscriptsMap;
 
@@ -60,7 +59,7 @@ public class GermlineVariantFinder
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineVariantFinder.class);
 
-    public GermlineVariantFinder()
+    GermlineVariantFinder()
     {
         mName = "";
         mRequiredEffects = null;
@@ -327,7 +326,7 @@ public class GermlineVariantFinder
             {
                 if (effects.contains(requiredEffect))
                 {
-                    LOGGER.debug("match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
+                    LOGGER.debug("Match found: gene({} {}) var({}:{}) ref({}) alt({}) on effect({})",
                             gene, transcriptId, chromosome, position, ref, alt, effects);
 
                     matchType = MATCH_TYPE_REQUIRED_EFFECT;
@@ -337,7 +336,7 @@ public class GermlineVariantFinder
 
             VariantFilter matchedFilter = null;
 
-            if (matchType == MATCH_TYPE_REQUIRED_EFFECT && !mBlacklistFilters.isEmpty())
+            if (matchType.equals(MATCH_TYPE_REQUIRED_EFFECT) && !mBlacklistFilters.isEmpty())
             {
                 // for variants matching the required effects, check whether they should be blacklisted
                 // for Clinvar entries this is if the variant is Benign, for other filters any match will cause a blacklist
@@ -356,7 +355,7 @@ public class GermlineVariantFinder
 
                             if(isBenign(filter.ClinvarSignificance) || filter.ClinvarSignificance.isEmpty())
                             {
-                                LOGGER.debug("gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
+                                LOGGER.debug("Gene({}) var({}:{}:{}) ref({}) alt({}) protein({}) blacklisted",
                                         gene, varId, chromosome, position, ref, alt, hgvsProtein);
 
                                 return;
@@ -366,7 +365,7 @@ public class GermlineVariantFinder
                 }
             }
 
-            if (matchType == MATCH_TYPE_NONE && !mWhitelistFilters.isEmpty())
+            if (matchType.equals(MATCH_TYPE_NONE) && !mWhitelistFilters.isEmpty())
             {
                 List<VariantFilter> filters = mWhitelistFilters.get(gene);
 
@@ -376,7 +375,7 @@ public class GermlineVariantFinder
                     {
                         if(filter.whitelistMatch(gene, chromosome, position, ref, alt, codingEffect, hgvsProtein))
                         {
-                            LOGGER.debug("match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
+                            LOGGER.debug("Match found: gene({} {}) var({}:{}:{}) ref({}) alt({}) hgvsProtein({}) whitelisted",
                                     gene, transcriptId, varId, chromosome, position, ref, alt, hgvsProtein);
                             matchType = MATCH_TYPE_WHITELIST;
                             matchedFilter = filter;
@@ -386,7 +385,7 @@ public class GermlineVariantFinder
                 }
             }
 
-            if(matchType == MATCH_TYPE_NONE)
+            if(matchType.equals(MATCH_TYPE_NONE))
                 return;
 
             String annotationsStr = SnpEffAnnotationFactory.rawAnnotations(variant).get(i);
@@ -435,6 +434,8 @@ public class GermlineVariantFinder
             if(hasDepthInfo)
                 germlineVariant.setReadData(tumorAltCount, tumorReadDepth);
 
+            LOGGER.debug("Adding germline variant({} {}:{}) to list of germline variants",
+                    germlineVariant.Gene, germlineVariant.Chromosome, germlineVariant.Position);
             mVariants.add(germlineVariant);
         }
     }
@@ -447,14 +448,9 @@ public class GermlineVariantFinder
                 .collect(Collectors.toList());
     }
 
-    private static boolean atPosition(final VariantContext v, final String position)
-    {
-        return position.equals(v.getContig() + ":" + v.getStart());
-    }
-
     private void initialiseGeneData()
     {
-        mGenesByChromosomeMap = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
+        SortedSetMultimap<String, HmfTranscriptRegion> mGenesByChromosomeMap = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
 
         mAllGenesMap = Maps.newHashMap();
         for (final HmfTranscriptRegion region : mGenesByChromosomeMap.values())
@@ -492,5 +488,4 @@ public class GermlineVariantFinder
         }
 
     */
-
 }

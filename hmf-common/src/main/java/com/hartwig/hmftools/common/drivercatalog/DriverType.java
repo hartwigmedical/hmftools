@@ -8,5 +8,6 @@ public enum DriverType {
     DNDS,
     AMP,
     DEL,
+    PROMOTER,
     NONE
 }

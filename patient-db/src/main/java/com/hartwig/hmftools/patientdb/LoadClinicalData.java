@@ -314,17 +314,36 @@ public final class LoadClinicalData {
         for (Map.Entry<String, List<SampleData>> entry : limsSampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 
-            assert samples != null && !samples.isEmpty();
-            LimsSampleType sampleType = LimsSampleType.fromSampleId(samples.get(0).sampleId());
+            assert samples != null;
+            List<SampleData> tumorSamples = extractTumorSamples(samples);
+            if (!tumorSamples.isEmpty()) {
+                LimsSampleType sampleType = LimsSampleType.fromSampleId(tumorSamples.get(0).sampleId());
 
-            if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
-                String patientId = entry.getKey();
-                Patient limsPatient = limsPatientReader.read(patientId, samples.get(0).limsPrimaryTumor(), sequencedOnly(samples));
-                patientMap.put(patientId, limsPatient);
+                if (sampleType == LimsSampleType.CORE || sampleType == LimsSampleType.WIDE) {
+                    String patientId = entry.getKey();
+                    Patient limsPatient =
+                            limsPatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
+                    patientMap.put(patientId, limsPatient);
+                }
             }
         }
 
         return patientMap;
+    }
+
+    @NotNull
+    private static List<SampleData> extractTumorSamples(@NotNull Iterable<SampleData> samples) {
+        List<SampleData> tumorSamples = Lists.newArrayList();
+
+        for (SampleData sample : samples) {
+            LimsSampleType sampleType = LimsSampleType.fromSampleId(sample.sampleId());
+            if (sampleType != LimsSampleType.OTHER) {
+                if (sample.sampleId().substring(12).contains("T")) {
+                    tumorSamples.add(sample);
+                }
+            }
+        }
+        return tumorSamples;
     }
 
     @NotNull

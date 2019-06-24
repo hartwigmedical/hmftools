@@ -33,7 +33,7 @@ public class ConfigSchema
     @Nullable
     public Program processXML(final Path path)
     {
-        LOGGER.info("loading input file: {}", path);
+        LOGGER.info("Loading input file: {}", path);
 
         try
         {
@@ -43,7 +43,7 @@ public class ConfigSchema
             return (Program) unmarshaller.unmarshal(path.toFile());
         }
         catch (final JAXBException e) {
-            LOGGER.error("failed to process: {}", path);
+            LOGGER.error("Failed to process: {}", path);
             LOGGER.error(e);
             return null;
         }

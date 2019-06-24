@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +53,11 @@ public class TumorContaminationModelTest {
 
         final double contamination = model.contamination( 107, contaminationMap);
         assertEquals(0, contamination, EPSILON);
+    }
+
+    @Test
+    public void testMedianReturnsZeroIfListEmpty() {
+        assertEquals(0, TumorContaminationModel.medianDepth(Collections.emptyList()));
     }
 
     @NotNull

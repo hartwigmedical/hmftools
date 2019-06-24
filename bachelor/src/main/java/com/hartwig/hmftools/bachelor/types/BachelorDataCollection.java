@@ -58,7 +58,7 @@ public class BachelorDataCollection
 
                 if (items.length < BACHELOR_CSV_FIELD_COUNT)
                 {
-                    LOGGER.warn("invalid item count({}), fileIndex({})", items.length, mFileIndex);
+                    LOGGER.warn("Invalid item count({}), fileIndex({})", items.length, mFileIndex);
                     continue;
                 }
 
@@ -78,17 +78,17 @@ public class BachelorDataCollection
                 }
                 catch(Exception nfe)
                 {
-                    LOGGER.debug("line parse error({}) fileIndex({}) line: {}", nfe.toString(), mFileIndex, line);
+                    LOGGER.debug("Line parse error({}) fileIndex({}) line: {}", nfe.toString(), mFileIndex, line);
                     return false;
                 }
             }
 
-            LOGGER.debug("loaded {} bachelor records", mGermlineVariants.size());
+            LOGGER.debug("Loaded {} bachelor records", mGermlineVariants.size());
 
         }
         catch (IOException exception)
         {
-            LOGGER.error("failed to read bachelor input file({}): {}", filename, exception.toString());
+            LOGGER.error("Failed to read bachelor input file({}): {}", filename, exception.toString());
             return false;
         }
 

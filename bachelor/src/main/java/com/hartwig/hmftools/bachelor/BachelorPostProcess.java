@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorApplication.DEFAULT_BACH_DIRECTORY;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -75,7 +74,7 @@ public class BachelorPostProcess
     private boolean mUsingBatchOutput;
 
     // config items
-    public static final String REF_GENOME = "ref_genome";
+    static final String REF_GENOME = "ref_genome";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String WRITE_TO_DB = "write_to_db";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // purple data directory within the sample fir
@@ -89,10 +88,9 @@ public class BachelorPostProcess
 
     private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
 
-
     private static final Logger LOGGER = LogManager.getLogger(BachelorPostProcess.class);
 
-    public BachelorPostProcess()
+    BachelorPostProcess()
     {
         mCmdLineArgs = null;
         mBachRecords = Lists.newArrayList();
@@ -113,7 +111,7 @@ public class BachelorPostProcess
         mWriter = null;
     }
 
-    public boolean initialise(final CommandLine cmd, boolean isBatchMode, final String batchOutputDir)
+    public void initialise(final CommandLine cmd, boolean isBatchMode, final String batchOutputDir)
     {
         mCmdLineArgs = cmd;
         mIsBatchMode = isBatchMode;
@@ -125,7 +123,7 @@ public class BachelorPostProcess
         catch (SQLException e)
         {
             LOGGER.error("DB connection failed: {}", e.toString());
-            return false;
+            return;
         }
 
         mBatchDataDir = batchOutputDir;
@@ -149,10 +147,10 @@ public class BachelorPostProcess
 
             try
             {
-                LOGGER.debug("reading high confidence bed file");
+                LOGGER.debug("Reading high confidence bed file");
                 mHighConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-                LOGGER.debug("loading indexed fasta reference file");
+                LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
                 if(mBamCountReader != null)
@@ -160,14 +158,12 @@ public class BachelorPostProcess
             }
             catch (IOException e)
             {
-                LOGGER.error("reference file loading failed");
-                return false;
+                LOGGER.error("Reference file loading failed");
+                return;
             }
         }
 
         mUploadRecordsToDB = cmd.hasOption(WRITE_TO_DB);
-
-        return true;
     }
 
     private void loadBachelorRecords()
@@ -176,12 +172,12 @@ public class BachelorPostProcess
         if (mCmdLineArgs.hasOption(BACH_INPUT_FILE))
         {
             bachelorInputFile = mCmdLineArgs.getOptionValue(BACH_INPUT_FILE);
-            LOGGER.info("loading specific input file: {}", bachelorInputFile);
+            LOGGER.info("Loading specific input file: {}", bachelorInputFile);
         }
         else
         {
             bachelorInputFile = mBachDataDir + DEFAULT_BACH_INPUT_FILE;
-            LOGGER.info("loading sample default file: {}", bachelorInputFile);
+            LOGGER.info("Loading sample default file: {}", bachelorInputFile);
         }
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
@@ -194,7 +190,7 @@ public class BachelorPostProcess
         mBachRecords.addAll(dataCollection.getBachelorVariants());
     }
 
-    public void run(RunDirectory runDir, final String sampleId, @Nullable  List<BachelorGermlineVariant> bachRecords)
+    public void run(RunDirectory runDir, @Nullable List<BachelorGermlineVariant> bachRecords, String singleSampleOutputDir)
     {
         mSampleDataDir = runDir.sampleDir().toString() + File.separator;
 
@@ -204,7 +200,7 @@ public class BachelorPostProcess
         }
         else
         {
-            mBachDataDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
+            mBachDataDir = singleSampleOutputDir;
         }
 
         if(bachRecords == null)
@@ -230,19 +226,17 @@ public class BachelorPostProcess
 
     private void processCurrentRecords(List<BachelorGermlineVariant> bachRecords)
     {
-        String sampleBachDir = mSampleDataDir + DEFAULT_BACH_DIRECTORY + File.separator;
-
         long recordsWithTumorData = bachRecords.stream().filter(x -> x.isReadDataSet()).count();
 
         if(recordsWithTumorData < bachRecords.size())
         {
             if (mReadBamsDirect)
             {
-                mBamCountReader.readBamCounts(bachRecords, sampleBachDir);
+                mBamCountReader.readBamCounts(bachRecords, mBachDataDir);
             }
             else
             {
-                if (!mAllelDepthLoader.loadMiniPileupData(sampleBachDir))
+                if (!mAllelDepthLoader.loadMiniPileupData(mBachDataDir))
                     return;
 
                 if (!mAllelDepthLoader.applyPileupData(bachRecords))
@@ -269,6 +263,7 @@ public class BachelorPostProcess
                 }
             }
 
+            assert sampleRecords != null;
             sampleRecords.add(bachRecord);
         }
 
@@ -277,7 +272,7 @@ public class BachelorPostProcess
             final String specificSample = entry.getKey();
             sampleRecords = entry.getValue();
 
-            LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
+            LOGGER.info("Sample({}) processing {} germline reports", specificSample, sampleRecords.size());
 
             // sort by chromosome and position
             Collections.sort(sampleRecords);
@@ -291,13 +286,13 @@ public class BachelorPostProcess
 
             if (sampleRecords.isEmpty())
             {
-                LOGGER.info("sample({}) has no valid germline reports", specificSample);
+                LOGGER.info("Sample({}) has no valid germline reports", specificSample);
                 continue;
             }
 
             if (mUploadRecordsToDB)
             {
-                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
+                LOGGER.info("Sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
                 writeToDatabase(specificSample, sampleRecords);
             }
 
@@ -348,7 +343,7 @@ public class BachelorPostProcess
         {
             final String purplePath = mSampleDataDir + mCmdLineArgs.getOptionValue(PURPLE_DATA_DIRECTORY);
 
-            LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, purplePath);
+            LOGGER.debug("Sample({}) loading purple data from file using path {}", sampleId, purplePath);
 
             try
             {
@@ -357,19 +352,19 @@ public class BachelorPostProcess
             }
             catch (IOException e)
             {
-                LOGGER.error("failed to read purple data from {}: {}", purplePath, e.toString());
+                LOGGER.error("Failed to read purple data from {}: {}", purplePath, e.toString());
                 return;
             }
         }
         else
         {
-            LOGGER.debug("sample({}) loading purple data from database", sampleId);
+            LOGGER.debug("Sample({}) loading purple data from database", sampleId);
 
             purityContext = mDbAccess.readPurityContext(sampleId);
 
             if (purityContext == null)
             {
-                LOGGER.warn("failed to read purity data");
+                LOGGER.warn("Failed to read purity data");
             }
 
             copyNumbers = mDbAccess.readCopynumbers(sampleId);
@@ -424,7 +419,7 @@ public class BachelorPostProcess
             }
         }
 
-        LOGGER.debug("sample({}) enriching variants", sampleId);
+        LOGGER.debug("Sample({}) enriching variants", sampleId);
 
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(
                 mHighConfidenceRegions,
@@ -449,14 +444,12 @@ public class BachelorPostProcess
 
             if (!matched)
             {
-                LOGGER.debug("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
+                LOGGER.debug("Sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
                         sampleId, bachRecord.VariantId, bachRecord.Gene, bachRecord.TranscriptId,
                         bachRecord.Chromosome, bachRecord.Position);
             }
         }
     }
-
-    private static int INDEL_REPEAT_LIMIT = 8;
 
     private void filterRecords(final List<BachelorGermlineVariant> bachRecords)
     {
@@ -478,9 +471,9 @@ public class BachelorPostProcess
             {
                 int repeatCount = enrichedVariant.repeatCount();
 
-                if(repeatCount > INDEL_REPEAT_LIMIT)
+                if(repeatCount > 8)
                 {
-                    LOGGER.debug("filtered var({}) indel {} with high repeatCount({})",
+                    LOGGER.debug("Filtered var({}) indel {} with high repeatCount({})",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
                     bachRecords.remove(index);
                     continue;
@@ -508,7 +501,7 @@ public class BachelorPostProcess
 
                 if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
                 {
-                    LOGGER.debug("filtered var({}) indel {} with ref, alt and microHom equal",
+                    LOGGER.debug("Filtered var({}) indel {} with ref, alt and microHom equal",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
                     bachRecords.remove(index);
                     continue;
@@ -595,7 +588,7 @@ public class BachelorPostProcess
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile: {}", e.toString());
+            LOGGER.error("Error writing to outputFile: {}", e.toString());
         }
     }
 

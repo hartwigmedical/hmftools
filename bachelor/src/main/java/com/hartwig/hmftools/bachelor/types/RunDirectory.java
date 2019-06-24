@@ -31,7 +31,7 @@ public class RunDirectory {
     {
         try
         {
-            // first try for tbe expected possible germline file names
+            // first try for the to-be-expected possible germline file names
             final String filePrefix = mSampleDir.toRealPath().toString() + "/" + mSampleDir.getFileName() + ".";
 
             if(Files.exists(Paths.get(filePrefix + VCF_FILE_SUFFIX1)))
@@ -63,17 +63,5 @@ public class RunDirectory {
         {
             return null;
         }
-    }
-
-    public final String directoryName() { return mSampleDir.getFileName().toString(); }
-
-    public final String getPatientID()
-    {
-        final String[] split = mSampleDir.getFileName().toString().split("_");
-
-        if(split.length < 2)
-            return "";
-
-        return split[split.length - 1];
     }
 }

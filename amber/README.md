@@ -152,6 +152,8 @@ Calculating the BAF directly from the bams is functionally equivalent to the pil
 ``` -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta ```
 
 # Version History
+- [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2-5)
+  - Fixed bug in contamination model if absolute zero contamination
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2-4)
   - Added optional snp_bed parameter to output germline snps at specified locations
   - Changed file names and headers for better consistency with other HMF tools

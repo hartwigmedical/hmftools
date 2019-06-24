@@ -8,6 +8,8 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
+import org.jetbrains.annotations.NotNull;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class BachelorGermlineVariant implements Comparable<BachelorGermlineVariant>
@@ -53,7 +55,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     public static final String MATCH_TYPE_HOTSPOT = "HotSpot";
     public static final String MATCH_TYPE_WHITELIST = "WhiteList";
 
-    public static int PHRED_SCORE_CUTOFF = 150;
+    public static final int PHRED_SCORE_CUTOFF = 150;
 
     public BachelorGermlineVariant(String sampleId, String program, String varId,
             String gene, String transcriptId, String chromosome, long position,
@@ -115,7 +117,7 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         return String.format("id(%s) location(%s:%d) gene(%s)", VariantId, Chromosome, Position, Gene);
     }
 
-    public int compareTo(final BachelorGermlineVariant other)
+    public int compareTo(@NotNull BachelorGermlineVariant other)
     {
         // sort based on Chromosome then Position
         if(other.Chromosome.equals(Chromosome))
@@ -312,5 +314,4 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
         return bachRecord;
     }
-
 }
