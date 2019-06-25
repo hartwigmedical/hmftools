@@ -123,15 +123,7 @@ public final class LoadClinicalData {
         final List<RunContext> runContextsDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathDb));
         LOGGER.info(String.format(" Loaded run contexts from %s (%s sets).", runsFolderPathDb, runContextsDb.size()));
 
-        final String runsFolderPathNonDb = cmd.getOptionValue(RUNS_DIR_NON_DATABASE);
-        final List<RunContext> runContextsNonDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathNonDb));
-        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets).", runsFolderPathNonDb, runContextsNonDb.size()));
-
-        List<RunContext> runContextsAll = Lists.newArrayList();
-        runContextsAll.addAll(runContextsDb);
-        runContextsAll.addAll(runContextsNonDb);
-
-        return runContextsAll;
+        return runContextsDb;
     }
 
     @NotNull
