@@ -59,7 +59,7 @@ public class PatientReporterApplication {
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
-    private static final String LINX_DISRUPTION_TSV = "linx_disruption _tsv";
+    private static final String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
     private static final String BACHELOR_CSV = "bachelor_csv";
     private static final String CHORD_PREDICTION_FILE = "chord_prediction_file";
     private static final String CIRCOS_FILE = "circos_file";
