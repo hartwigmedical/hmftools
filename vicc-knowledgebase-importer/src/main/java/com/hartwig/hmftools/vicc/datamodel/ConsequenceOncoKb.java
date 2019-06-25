@@ -6,12 +6,16 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BRCA implements KbSpecificObject {
+public abstract class ConsequenceOncoKb {
 
     @NotNull
-    public abstract BRCApart1 brcApart1();
+    public abstract String term();
 
     @NotNull
-    public abstract BRCApart2 brcApart2();
+    public abstract String description();
+
+    @NotNull
+    public abstract String isGenerallyTruncating();
 
 }
+

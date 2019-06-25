@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Cgi {
+public abstract class Cgi implements KbSpecificObject {
 
     @NotNull
     public abstract String targeting();

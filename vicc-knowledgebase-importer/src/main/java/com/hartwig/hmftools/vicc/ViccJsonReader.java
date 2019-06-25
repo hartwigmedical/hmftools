@@ -16,26 +16,33 @@ import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.BRCA;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.BiologicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.ConsequenceOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.GeneOncokb;
 import com.hartwig.hmftools.vicc.datamodel.GenePmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCA;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableBiologicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCgi;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableConsequenceOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGenePmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkb;
@@ -44,8 +51,11 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTissuePmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTumorPmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+import com.hartwig.hmftools.vicc.datamodel.Oncokb;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.Pmkb;
@@ -54,6 +64,7 @@ import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.TissuePmkb;
 import com.hartwig.hmftools.vicc.datamodel.TumorPmkb;
+import com.hartwig.hmftools.vicc.datamodel.VariantOncokb;
 import com.hartwig.hmftools.vicc.datamodel.VariantPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -61,7 +72,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
@@ -87,6 +97,9 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_PMKB_TISSUE_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_PMKB_VARIANT_ELEMENT_SIZES = Lists.newArrayList(21);
     private static final List<Integer> EXPECTED_PMKB_GENE_ELEMENT_SIZES = Lists.newArrayList(7);
+
+    private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
+
 
 
 
@@ -141,67 +154,143 @@ public final class ViccJsonReader {
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
 
-            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
-            if (viccEntryObject.has("cgi")) {
-                Set<String> keysCgi = objectCgi.keySet();
-
-                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
-                    LOGGER.warn(
-                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
-                    LOGGER.warn(keysCgi);
-                }
-                viccEntryBuilder.cgi(createCgi(objectCgi));
-            } else {
-                viccEntryBuilder.cgi(createCgiEmpty());
-            }
-
-            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
-            if (viccEntryObject.has("brca")) {
-                Set<String> keysBRCA = objectBRCA.keySet();
-                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
-                    LOGGER.warn("Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_BRCA_ELEMENT_SIZES);
-                    LOGGER.warn(keysBRCA);
-                }
-                viccEntryBuilder.brca(createBRCA(objectBRCA));
-            } else {
-                viccEntryBuilder.brca(createBRCAEmpty());
-            }
-
-            JsonObject objectSage = viccEntryObject.getAsJsonObject("sage");
-            if (viccEntryObject.has("sage")) {
-                Set<String> keysSage = objectSage.keySet();
-                if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
-                    LOGGER.warn("Found " + keysSage.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_SAGE_ELEMENT_SIZES);
-                    LOGGER.warn(keysSage);
-                }
-                viccEntryBuilder.sage(createSage(objectSage));
-            } else {
-                viccEntryBuilder.sage(createSageEmpty());
-
-            }
-
-            JsonObject objectPmkb = viccEntryObject.getAsJsonObject("pmkb");
-            if (viccEntryObject.has("pmkb")) {
-                Set<String> keysPmkb = objectPmkb.keySet();
-                if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
-                    LOGGER.warn("Found " + keysPmkb.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_PMKB_ELEMENT_SIZES);
-                    LOGGER.warn(keysPmkb);
-                }
-                viccEntryBuilder.pmkb(createPmkb(objectPmkb));
-            } else {
-                viccEntryBuilder.pmkb(createPmkbEmpty());
-
-            }
-
+//            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
+//            if (viccEntryObject.has("cgi")) {
+//                Set<String> keysCgi = objectCgi.keySet();
+//
+//                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
+//                    LOGGER.warn(
+//                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
+//                    LOGGER.warn(keysCgi);
+//                }
+//                viccEntryBuilder.cgi(createCgi(objectCgi));
+//            } else {
+//                viccEntryBuilder.cgi(createCgiEmpty());
+//            }
+//
+//            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
+//            if (viccEntryObject.has("brca")) {
+//                Set<String> keysBRCA = objectBRCA.keySet();
+//                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
+//                    LOGGER.warn("Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_BRCA_ELEMENT_SIZES);
+//                    LOGGER.warn(keysBRCA);
+//                }
+//                viccEntryBuilder.brca(createBRCA(objectBRCA));
+//            } else {
+//                viccEntryBuilder.brca(createBRCAEmpty());
+//            }
+//
+//            JsonObject objectSage = viccEntryObject.getAsJsonObject("sage");
+//            if (viccEntryObject.has("sage")) {
+//                Set<String> keysSage = objectSage.keySet();
+//                if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
+//                    LOGGER.warn("Found " + keysSage.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_SAGE_ELEMENT_SIZES);
+//                    LOGGER.warn(keysSage);
+//                }
+//                viccEntryBuilder.sage(createSage(objectSage));
+//            } else {
+//                viccEntryBuilder.sage(createSageEmpty());
+//
+//            }
+//
+//            JsonObject objectPmkb = viccEntryObject.getAsJsonObject("pmkb");
+//            if (viccEntryObject.has("pmkb")) {
+//                Set<String> keysPmkb = objectPmkb.keySet();
+//                if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
+//                    LOGGER.warn("Found " + keysPmkb.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_PMKB_ELEMENT_SIZES);
+//                    LOGGER.warn(keysPmkb);
+//                }
+//                viccEntryBuilder.pmkb(createPmkb(objectPmkb));
+//            } else {
+//                viccEntryBuilder.pmkb(createPmkbEmpty());
+//
+//            }
+//
+//            JsonObject objectOncokb = viccEntryObject.getAsJsonObject("oncokb");
+//            if (viccEntryObject.has("oncokb")) {
+//                Set<String> keysOncokb = objectOncokb.keySet();
+//                if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
+//                    LOGGER.warn("Found " + keysOncokb.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_ONCOKB_ELEMENT_SIZES);
+//                    LOGGER.warn(keysOncokb);
+//                }
+//                viccEntryBuilder.oncokb(createOncoKb());
+//            } else {
+//                viccEntryBuilder.oncokb(createOncoKb());
+//            }
+//            if (viccEntryObject.has("cgi")) {
+//                viccEntryBuilder.KbSpecificObject(createCgiEmpty());
+//
+//            } else if (viccEntryObject.has("brca")) {
+//                viccEntryBuilder.KbSpecificObject(createBRCAEmpty());
+//
+//            }
             entries.add(viccEntryBuilder.build());
 
         }
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static Oncokb createOncoKb() {
+        return ImmutableOncokb.builder().biologicalPmkb(createBiologicalOncoKb()).build();
+    }
+
+    @NotNull
+    private static BiologicalOncoKb createBiologicalOncoKb() {
+        return ImmutableBiologicalOncoKb.builder()
+                .mutationEffectPmids(Strings.EMPTY)
+                .Isoform(Strings.EMPTY)
+                .variantOncokb(createVariantOncoKb())
+                .entrezGeneID(Strings.EMPTY)
+                .oncogenic(Strings.EMPTY)
+                .mutationEffect(Strings.EMPTY)
+                .RefSeq(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .mutationEffectAbstracts(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static VariantOncokb createVariantOncoKb() {
+        return ImmutableVariantOncokb.builder()
+                .variantResidues(Strings.EMPTY)
+                .proteinStart(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .proteinEnd(Strings.EMPTY)
+                .refResidues(Strings.EMPTY)
+                .alteration(Strings.EMPTY)
+                .consequenceOncoKb(createConsequenceOncokb())
+                .geneOncokb(createGeneOncoKb())
+                .build();
+    }
+
+    @NotNull
+    private static ConsequenceOncoKb createConsequenceOncokb() {
+        return ImmutableConsequenceOncoKb.builder()
+                .term(Strings.EMPTY)
+                .description(Strings.EMPTY)
+                .isGenerallyTruncating(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static GeneOncokb createGeneOncoKb() {
+        return ImmutableGeneOncokb.builder()
+                .oncogene(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .hugoSymbol(Strings.EMPTY)
+                .curatedRefSeq(Strings.EMPTY)
+                .entrezGeneId(Strings.EMPTY)
+                .geneAliases(Lists.newArrayList())
+                .tsg(Strings.EMPTY)
+                .curatedIsoform(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
