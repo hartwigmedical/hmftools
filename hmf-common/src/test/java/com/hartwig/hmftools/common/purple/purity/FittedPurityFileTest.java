@@ -59,7 +59,7 @@ public class FittedPurityFileTest {
     }
 
     @NotNull
-    static FittedPurity createRandomPurity(@NotNull Random random) {
+    private static FittedPurity createRandomPurity(@NotNull Random random) {
         return createRandomPurityBuilder(random).build();
     }
 

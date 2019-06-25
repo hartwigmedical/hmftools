@@ -7,34 +7,24 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum FittedPurityFile {
-    ;
+public final class FittedPurityFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    static final String DELIMITER = "\t";
+    private static final String DELIMITER = "\t";
 
     private static final String EXTENSION = ".purple.purity.tsv";
     private static final String EXTENSION_OLD = ".purple.purity";
-
-
-    @NotNull
-    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
-        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
-        return basePath + File.separator + sample + EXTENSION_OLD;
-    }
 
     @NotNull
     public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
         String filename = basePath + File.separator + sample + EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
     }
-
 
     @NotNull
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
@@ -74,6 +64,12 @@ public enum FittedPurityFile {
             throws IOException {
         final String filePath = generateFilenameForWriting(basePath, sample);
         Files.write(new File(filePath).toPath(), toLines(context));
+    }
+
+    @NotNull
+    private static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + EXTENSION_OLD;
     }
 
     @NotNull
@@ -128,8 +124,7 @@ public enum FittedPurityFile {
     }
 
     @NotNull
-    @VisibleForTesting
-    static FittedPurity bestFit(@NotNull final String[] values) {
+    private static FittedPurity bestFit(@NotNull final String[] values) {
         final ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder()
                 .purity(Double.valueOf(values[0]))
                 .normFactor(Double.valueOf(values[1]))
@@ -146,20 +141,17 @@ public enum FittedPurityFile {
     }
 
     @NotNull
-    @VisibleForTesting
-    static Gender gender(@NotNull final String[] values) {
+    private static Gender gender(@NotNull final String[] values) {
         return Gender.valueOf(values[5]);
     }
 
     @NotNull
-    @VisibleForTesting
-    static FittedPurityStatus status(@NotNull final String[] values) {
+    private static FittedPurityStatus status(@NotNull final String[] values) {
         return FittedPurityStatus.valueOf(values[6]);
     }
 
     @NotNull
-    @VisibleForTesting
-    static FittedPurityScore score(@NotNull final String[] values) {
+    private static FittedPurityScore score(@NotNull final String[] values) {
         return ImmutableFittedPurityScore.builder()
                 .minPurity(Double.valueOf(values[8]))
                 .maxPurity(Double.valueOf(values[9]))
@@ -170,8 +162,7 @@ public enum FittedPurityFile {
                 .build();
     }
 
-    @VisibleForTesting
-    static double polyClonalProportion(@NotNull final String[] values) {
+    private static double polyClonalProportion(@NotNull final String[] values) {
         return Double.valueOf(values[7]);
     }
 }

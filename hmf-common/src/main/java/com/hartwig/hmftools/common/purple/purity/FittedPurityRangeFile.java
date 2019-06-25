@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.TreeSet;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum FittedPurityRangeFile {
-    ;
+public final class FittedPurityRangeFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final int MAX_RECORDS = 10000;
@@ -26,12 +26,6 @@ public enum FittedPurityRangeFile {
 
     private static final String EXTENSION = ".purple.purity.range.tsv";
     private static final String EXTENSION_OLD = ".purple.purity.range";
-
-    @NotNull
-    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
-        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
-        return basePath + File.separator + sample + EXTENSION_OLD;
-    }
 
     @NotNull
     public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
@@ -52,6 +46,13 @@ public enum FittedPurityRangeFile {
     }
 
     @NotNull
+    private static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
+        return basePath + File.separator + sample + EXTENSION_OLD;
+    }
+
+    @NotNull
+    @VisibleForTesting
     static List<String> toLines(@NotNull final List<FittedPurity> purity) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -60,6 +61,7 @@ public enum FittedPurityRangeFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static List<FittedPurity> fromLines(@NotNull final List<String> lines) {
         final List<FittedPurity> all = lines.stream()
                 .filter(x -> !x.startsWith(COMMENT) && !x.startsWith("purity"))
@@ -71,6 +73,7 @@ public enum FittedPurityRangeFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static List<FittedPurity> bestFitPerPurity(@NotNull final List<FittedPurity> all) {
         Collections.sort(all);
 

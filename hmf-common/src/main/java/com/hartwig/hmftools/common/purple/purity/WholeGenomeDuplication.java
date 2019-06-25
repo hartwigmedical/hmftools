@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 
-public class WholeGenomeDuplication {
+public final class WholeGenomeDuplication {
 
     static final double MIN_AVERAGE_PLOIDY = 1.5;
     static final int MIN_DUPLICATED_AUTOSOMES = 11;
@@ -35,7 +35,6 @@ public class WholeGenomeDuplication {
     }
 
     static double averageMajorAllelePloidy(@NotNull final List<PurpleCopyNumber> copyNumbers) {
-
         double weightedMajorAllelePloidy = 0;
         long totalBafCount = 0;
 
@@ -46,5 +45,4 @@ public class WholeGenomeDuplication {
 
         return totalBafCount > 0 ? weightedMajorAllelePloidy / totalBafCount : 0;
     }
-
 }

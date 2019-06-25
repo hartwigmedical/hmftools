@@ -19,7 +19,6 @@ public class FittedPurityRangeFileTest {
 
     private Random random;
 
-
     @Before
     public void setup() {
         random = new Random();
@@ -71,11 +70,8 @@ public class FittedPurityRangeFileTest {
         return result;
     }
 
-
     @NotNull
     private FittedPurity createRandomPurity(double purity, double score) {
         return createRandomPurityBuilder(random).purity(purity).score(score).build();
     }
-
-
 }

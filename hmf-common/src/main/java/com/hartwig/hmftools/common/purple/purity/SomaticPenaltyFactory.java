@@ -13,8 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SomaticPenaltyFactory {
 
-    public static double penalty(final PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
-            Collection<SomaticVariant> variants) {
+    public static double penalty(@NotNull PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
+            @NotNull Collection<SomaticVariant> variants) {
         final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
 
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
