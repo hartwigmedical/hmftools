@@ -320,6 +320,7 @@ public class PatientReporterApplication {
         options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
         options.addOption(BACHELOR_CSV, true, "Path towards the germline germline CSV (optional).");
         options.addOption(CHORD_PREDICTION_FILE, true, "Path towards the CHORD prediction file.");
+        options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
         options.addOption(REF_SAMPLE, true, "The reference sample for the sample for which we are generating a report.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
