@@ -55,8 +55,7 @@ public final class LoadClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
-    private static final String RUNS_DIR_DATABASE = "runs_dir_db";
-    private static final String RUNS_DIR_NON_DATABASE = "runs_dir_non_db";
+    private static final String RUNS_DIRECTORY = "runs_dir";
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
@@ -119,11 +118,11 @@ public final class LoadClinicalData {
 
     @NotNull
     private static List<RunContext> loadRunContexts(@NotNull CommandLine cmd) throws IOException {
-        final String runsFolderPathDb = cmd.getOptionValue(RUNS_DIR_DATABASE);
-        final List<RunContext> runContextsDb = RunsFolderReader.extractRunContexts(new File(runsFolderPathDb));
-        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets).", runsFolderPathDb, runContextsDb.size()));
+        final String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
+        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
+        LOGGER.info(String.format(" Loaded run contexts from %s (%s sets).", runsDirectory, runContexts.size()));
 
-        return runContextsDb;
+        return runContexts;
     }
 
     @NotNull
@@ -388,11 +387,9 @@ public final class LoadClinicalData {
     }
 
     private static boolean checkInputs(@NotNull CommandLine cmd) {
-        final String runsFolderPathDb = cmd.getOptionValue(RUNS_DIR_DATABASE);
-        final String runsFolderPathNonDb = cmd.getOptionValue(RUNS_DIR_NON_DATABASE);
+        final String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
 
-        boolean allParamsPresent = !Utils.anyNull(runsFolderPathDb,
-                runsFolderPathNonDb,
+        boolean allParamsPresent = !Utils.anyNull(runsDirectory,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
                 cmd.getOptionValue(DB_URL),
@@ -404,17 +401,11 @@ public final class LoadClinicalData {
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
-            final File runDirectoryDb = new File(runsFolderPathDb);
+            final File runDirectoryDb = new File(runsDirectory);
 
             if (!runDirectoryDb.exists() || !runDirectoryDb.isDirectory()) {
                 validRunDirectories = false;
                 LOGGER.warn("HMF database run directory " + runDirectoryDb + " does not exist or is not a directory.");
-            }
-
-            final File runDirectoryNonDb = new File(runsFolderPathNonDb);
-            if (!runDirectoryNonDb.exists() || !runDirectoryNonDb.isDirectory()) {
-                validRunDirectories = false;
-                LOGGER.warn("Non-database run directory " + runDirectoryDb + " does not exist or is not a directory.");
             }
         }
 
@@ -424,13 +415,9 @@ public final class LoadClinicalData {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(RUNS_DIR_DATABASE,
+        options.addOption(RUNS_DIRECTORY,
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
-
-        options.addOption(RUNS_DIR_NON_DATABASE,
-                true,
-                "Path towards the folder containing patient runs that are not considered part of HMF database.");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
