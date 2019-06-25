@@ -8,8 +8,7 @@ public enum QCFailReason {
     LOW_TUMOR_PERCENTAGE("low_tumor_percentage", "Low Tumor Percentage Report"),
     LOW_DNA_YIELD("low_dna_yield", "Low DNA Yield Report"),
     POST_ANALYSIS_FAIL("post_analysis_fail", "Failed Post DNA Isolation Report"),
-    SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity",
-            "Low Molecular Tumor Percentage Report"),
+    SHALLOW_SEQ_LOW_PURITY("shallow_seq_low_purity", "Low Molecular Tumor Percentage Report"),
     INSUFFICIENT_TISSUE("insufficient_tissue_delivered", "Insufficient Tissue Report"),
     UNDEFINED(Strings.EMPTY, Strings.EMPTY);
 
