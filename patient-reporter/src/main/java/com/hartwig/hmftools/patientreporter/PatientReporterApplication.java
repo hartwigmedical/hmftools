@@ -36,9 +36,17 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //        public static final String VERSION = "6.1";
+    //        public static final String VERSION = "7.0";
 
     private static final String RUN_DIRECTORY = "run_dir";
+    private static final String SAMPLE = "sample";
+    private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
+    private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
+    private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
+    private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
+    private static final String LINX_DISRUPTION_TSV = "linx_disruption _tsv";
+    private static final String BACHELOR_CSV = "bachelor_csv";
+    private static final String CHORD_PREDICTION_FILE = "chord_prediction_file";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String HOSPITALS_DIRECTORY = "hospital_dir";
@@ -49,16 +57,13 @@ public class PatientReporterApplication {
     private static final String QC_FAIL_REASON = "qc_fail_reason";
     private static final String QC_FAIL_SAMPLE = "qc_fail_sample";
 
-    private static final String FUSION_CSV = "fusion_csv";
-    private static final String DISRUPTION_CSV = "disruption_csv";
-
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String HOTSPOT_TSV = "hotspot_tsv";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
-    private static final String SUMMARY_SAMPLES_CSV = "summary_samples_csv";
+    private static final String SAMPLE_SUMMARY_CSV = "sample_summary_csv";
 
     private static final String RVA_LOGO = "rva_logo";
     private static final String COMPANY_LOGO = "company_logo";
@@ -147,13 +152,13 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(HIGH_CONFIDENCE_BED),
                 cmd.getOptionValue(GERMLINE_GENES_CSV),
-                cmd.getOptionValue(SUMMARY_SAMPLES_CSV));
+                cmd.getOptionValue(SAMPLE_SUMMARY_CSV));
     }
 
     @NotNull
     private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
             throws IOException {
-        final SvAnalyzer svAnalyzer = SvAnalyzer.fromFiles(cmd.getOptionValue(FUSION_CSV), cmd.getOptionValue(DISRUPTION_CSV));
+        final SvAnalyzer svAnalyzer = SvAnalyzer.fromFiles(cmd.getOptionValue(LINX_FUSION_TSV), cmd.getOptionValue(LINX_DISRUPTION_TSV));
 
         return new PatientReporter(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
@@ -163,10 +168,10 @@ public class PatientReporterApplication {
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
         final String hotspotTsv = cmd.getOptionValue(HOTSPOT_TSV);
-        final String fusionsCsv = cmd.getOptionValue(FUSION_CSV);
-        final String disruptionsCsv = cmd.getOptionValue(DISRUPTION_CSV);
+        final String fusionsCsv = cmd.getOptionValue(LINX_FUSION_TSV);
+        final String disruptionsCsv = cmd.getOptionValue(LINX_DISRUPTION_TSV);
         final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
-        final String summarySamplesCsv = cmd.getOptionValue(SUMMARY_SAMPLES_CSV);
+        final String summarySamplesCsv = cmd.getOptionValue(SAMPLE_SUMMARY_CSV);
 
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
@@ -182,15 +187,15 @@ public class PatientReporterApplication {
         } else if (fastaFileLocation == null || !exists(fastaFileLocation)) {
             LOGGER.warn(FASTA_FILE_LOCATION + " has to be an existing file: " + fastaFileLocation);
         } else if (fusionsCsv == null || !exists(fusionsCsv)) {
-            LOGGER.warn(FUSION_CSV + " has to be an existing file: " + fusionsCsv);
+            LOGGER.warn(LINX_FUSION_TSV + " has to be an existing file: " + fusionsCsv);
         } else if (disruptionsCsv == null || !exists(disruptionsCsv)) {
-            LOGGER.warn(DISRUPTION_CSV + " has to be an existing file: " + disruptionsCsv);
+            LOGGER.warn(LINX_DISRUPTION_TSV + " has to be an existing file: " + disruptionsCsv);
         } else if (highConfidenceBed == null || !exists(highConfidenceBed)) {
             LOGGER.warn(HIGH_CONFIDENCE_BED + " has to be an existing file: " + highConfidenceBed);
         } else if (germlineGenesCsv == null || !exists(germlineGenesCsv)) {
             LOGGER.warn(GERMLINE_GENES_CSV + " has to be an existing file: " + germlineGenesCsv);
         } else if (summarySamplesCsv == null || !exists(summarySamplesCsv)) {
-            LOGGER.warn(SUMMARY_SAMPLES_CSV + " has to be an existing file: " + summarySamplesCsv);
+            LOGGER.warn(SAMPLE_SUMMARY_CSV + " has to be an existing file: " + summarySamplesCsv);
         } else {
             return true;
         }
@@ -269,14 +274,14 @@ public class PatientReporterApplication {
                 true,
                 "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
         options.addOption(QC_FAIL_SAMPLE, true, "In case of qc-fail reports, the name of the sample used.");
-        options.addOption(FUSION_CSV, true, "Path towards a CSV of fusions of the sample");
-        options.addOption(DISRUPTION_CSV, true, "Path towards a CSV of disruptions of the sample");
+        options.addOption(LINX_FUSION_TSV, true, "Path towards a CSV of fusions of the sample");
+        options.addOption(LINX_DISRUPTION_TSV, true, "Path towards a CSV of disruptions of the sample");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location csv.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report");
-        options.addOption(SUMMARY_SAMPLES_CSV, true, "Path towards a CSV containing the summary of the samples");
+        options.addOption(SAMPLE_SUMMARY_CSV, true, "Path towards a CSV containing the summary of the samples");
         options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");

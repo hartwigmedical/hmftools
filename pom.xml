@@ -56,7 +56,7 @@
         <hmf-variant-annotation.version>2.15</hmf-variant-annotation.version>
         <hmf-sv-linx.version>1.0</hmf-sv-linx.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
-        <hmf-patient-reporter.version>6.1</hmf-patient-reporter.version>
+        <hmf-patient-reporter.version>7.0</hmf-patient-reporter.version>
         <hmf-health-checker.version>3.0</hmf-health-checker.version>
 
         <amber.version>2.5</amber.version>
