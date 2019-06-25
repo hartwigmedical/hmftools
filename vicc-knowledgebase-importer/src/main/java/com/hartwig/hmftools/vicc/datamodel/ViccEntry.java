@@ -44,5 +44,8 @@ public abstract class ViccEntry {
     @NotNull
     public abstract Sage sage();
 
+    @NotNull
+    public abstract Pmkb pmkb();
+
 }
 
