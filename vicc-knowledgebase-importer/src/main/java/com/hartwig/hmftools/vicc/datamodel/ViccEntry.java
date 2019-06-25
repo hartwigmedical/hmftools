@@ -41,5 +41,8 @@ public abstract class ViccEntry {
     @NotNull
     public abstract BRCA brca();
 
+    @NotNull
+    public abstract Sage sage();
+
 }
 

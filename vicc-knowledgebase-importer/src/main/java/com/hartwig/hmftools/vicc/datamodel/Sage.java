@@ -1,0 +1,35 @@
+package com.hartwig.hmftools.vicc.datamodel;
+
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public abstract class Sage {
+
+    @NotNull
+    public abstract String entrezId();
+
+    @NotNull
+    public abstract String clinicalManifestation();
+
+    @NotNull
+    public abstract String publicationUrl();
+
+    @NotNull
+    public abstract String germlineOrSomatic();
+
+    @NotNull
+    public abstract String evidenceLabel();
+
+    @NotNull
+    public abstract String drugLabels();
+
+    @NotNull
+    public abstract String responseType();
+
+    @NotNull
+    public abstract String gene();
+
+}

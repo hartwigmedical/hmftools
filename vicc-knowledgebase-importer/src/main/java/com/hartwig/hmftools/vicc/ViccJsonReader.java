@@ -36,11 +36,13 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableSage;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.Sage;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -67,6 +69,8 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
     private static final List<Integer> EXPECTED_BRCA_ELEMENT_SIZES = Lists.newArrayList(137);
+    private static final List<Integer> EXPECTED_SAGE_ELEMENT_SIZES = Lists.newArrayList(8);
+
 
 
     private ViccJsonReader() {
@@ -146,12 +150,54 @@ public final class ViccJsonReader {
                 viccEntryBuilder.brca(createBRCAEmpty());
             }
 
+
+            JsonObject objectSage = viccEntryObject.getAsJsonObject("sage");
+            if (viccEntryObject.has("sage")) {
+                Set<String> keysSage = objectSage.keySet();
+                if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
+                    LOGGER.warn(
+                            "Found " + keysSage.size() + " elements in a vicc entry rather than the expected " + EXPECTED_BRCA_ELEMENT_SIZES);
+                    LOGGER.warn(keysSage);
+                }
+                viccEntryBuilder.sage(createSage(objectSage));
+            }
+            viccEntryBuilder.sage(createSageEmpty());
+
+
             entries.add(viccEntryBuilder.build());
 
         }
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static Sage createSage(@NotNull JsonObject objectSage) {
+        return ImmutableSage.builder()
+                .entrezId(objectSage.getAsJsonPrimitive("entrez_id").getAsString())
+                .clinicalManifestation(objectSage.getAsJsonPrimitive("clinical_manifestation").getAsString())
+                .publicationUrl(objectSage.getAsJsonPrimitive("publication_url").getAsString())
+                .germlineOrSomatic(objectSage.getAsJsonPrimitive("germline_or_somatic").getAsString())
+                .evidenceLabel(objectSage.getAsJsonPrimitive("evidence_label").getAsString())
+                .drugLabels(objectSage.getAsJsonPrimitive("drug_labels").getAsString())
+                .responseType(objectSage.getAsJsonPrimitive("response_type").getAsString())
+                .gene(objectSage.getAsJsonPrimitive("gene").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static Sage createSageEmpty() {
+        return ImmutableSage.builder()
+                .entrezId(Strings.EMPTY)
+                .clinicalManifestation(Strings.EMPTY)
+                .publicationUrl(Strings.EMPTY)
+                .germlineOrSomatic(Strings.EMPTY)
+                .evidenceLabel(Strings.EMPTY)
+                .drugLabels(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
