@@ -14,9 +14,9 @@ import org.jetbrains.annotations.NotNull;
 public class DriverCatalogFile {
 
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    static final String HEADER_PREFIX = "Gene";
+    static final String HEADER_PREFIX = "gene";
     private static final String DELIMITER = "\t";
-    private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog";
+    private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + DRIVER_CATALOG_EXTENSION;
@@ -52,16 +52,16 @@ public class DriverCatalogFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("Gene")
-                .add("Category")
-                .add("Driver")
-                .add("DriverLikelihood")
-                .add("DndsLikelihood")
-                .add("Missense")
-                .add("Nonsense")
-                .add("Splice")
-                .add("Inframe")
-                .add("Frameshift")
+        return new StringJoiner(DELIMITER, "", "").add("gene")
+                .add("category")
+                .add("driver")
+                .add("driverLikelihood")
+                .add("dndsLikelihood")
+                .add("missense")
+                .add("nonsense")
+                .add("splice")
+                .add("inframe")
+                .add("frameshift")
                 .toString();
     }
 
