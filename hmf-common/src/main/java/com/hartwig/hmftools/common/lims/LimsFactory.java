@@ -120,7 +120,14 @@ public final class LimsFactory {
             if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
                     final LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
-                    limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
+                    // DEV - 785 use the barcode from sample which is sequenced
+                    if (limsDataPerSample.keySet().contains(limsJsonSampleData.sampleId())) {
+                        if (!limsJsonSampleData.labSopVersions().equals("NA")) {
+                            limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
+                        }
+                    } else {
+                        limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
+                    }
                 } catch (JsonSyntaxException e) {
                     LOGGER.warn("Could not convert json element to LimsJsonSampleData: " + jsonSample.getValue() + " - message:"
                             + e.getMessage());
