@@ -10,12 +10,12 @@ import org.junit.Test;
 
 public class SummaryFileTest {
 
-    private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/summary_samples.csv").getPath();
+    private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
     @Test
     public void canLoadSummarySamplesCSV() throws IOException {
-        SummaryModel summaryModel = SummaryFile.buildFromCsv(SUMMARY_SAMPLES_CSV);
+        SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
 
-        assertEquals(1, summaryModel.sizeSummarySamples().size());
+        assertEquals(1, summaryModel.summaryCount());
     }
 }

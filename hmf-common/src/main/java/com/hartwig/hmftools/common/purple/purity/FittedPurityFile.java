@@ -38,9 +38,12 @@ public enum FittedPurityFile {
 
     @NotNull
     public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        final String filePath = generateFilenameForReading(basePath, sample);
-        final String line =  Files.readAllLines(new File(filePath).toPath()).get(1);
-        return fromLine(line);
+        return read(generateFilenameForReading(basePath, sample));
+    }
+
+    @NotNull
+    public static PurityContext read(@NotNull String filePath) throws IOException {
+        return fromLine(Files.readAllLines(new File(filePath).toPath()).get(1));
     }
 
     @NotNull

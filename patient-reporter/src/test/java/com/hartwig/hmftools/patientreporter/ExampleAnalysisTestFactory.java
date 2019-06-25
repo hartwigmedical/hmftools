@@ -23,17 +23,13 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
@@ -49,6 +45,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildCOLO829() {
+        final boolean hasReliablePurityFit = true;
         final double impliedTumorPurity = 0.98;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -56,21 +53,19 @@ public final class ExampleAnalysisTestFactory {
         final double microsatelliteIndelsPerMb = 0.1179;
 
         final BaseReportData baseReportData = testBaseReportData();
-        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
-        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
 
         final SampleReport sampleReport = createCOLO829SampleReport();
 
-        final String summaryContent = "Melanoma sample with an activating BRAF mutation that is associated with "
+        final String clinicalSummary = "Melanoma sample with an activating BRAF mutation that is associated with "
                 + "response to BRAF-inhibitors (in combination with a MEK-inhibitor). The tumor shows a complete "
                 + "inactivation of CDKN2A, indicating potential benefit of CDK4/6 inhibitors (e.g. palbociclib). The "
                 + "observed complete loss of PTEN likely results in an activation of the PI3K-AKT-mTOR pathway and "
@@ -79,10 +74,10 @@ public final class ExampleAnalysisTestFactory {
                 + "inhibitor immunotherapy.";
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                summaryContent,
-                fittedPurity.purity(),
-                true,
-                fittedPurity.ploidy(),
+                hasReliablePurityFit,
+                impliedTumorPurity,
+                averageTumorPloidy,
+                clinicalSummary,
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
@@ -103,6 +98,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
+        final boolean hasReliablePurityFit = true;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -110,25 +106,24 @@ public final class ExampleAnalysisTestFactory {
         final double microsatelliteIndelsPerMb = 0.1089;
 
         final BaseReportData baseReportData = testBaseReportData();
-        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createAllSomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
         final SampleReport sampleReport = createCOLO829SampleReport();
+        final String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                "",
-                fittedPurity.purity(),
-                true,
-                fittedPurity.ploidy(),
+                hasReliablePurityFit,
+                impliedTumorPurity,
+                averageTumorPloidy,
+                clinicalSummary,
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
@@ -148,7 +143,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSamples() {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample() {
+        final boolean hasReliablePurityFit = false;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -156,25 +152,24 @@ public final class ExampleAnalysisTestFactory {
         final double microsatelliteIndelsPerMb = 0.1089;
 
         final BaseReportData baseReportData = testBaseReportData();
-        final FittedPurity fittedPurity = createFittedPurity(impliedTumorPurity, averageTumorPloidy);
 
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.MALE, fittedPurity);
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        final List<ReportableVariant> reportableVariants = createAllSomaticVariants(purityAdjuster);
+        final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
         final SampleReport sampleReport = createCOLO829SampleReport();
+        final String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
-                "",
-                fittedPurity.purity(),
-                false,
-                fittedPurity.ploidy(),
+                hasReliablePurityFit,
+                impliedTumorPurity,
+                averageTumorPloidy,
+                clinicalSummary,
                 tumorLocationSpecificEvidence,
                 clinicalTrials,
                 offLabelEvidence,
@@ -463,19 +458,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static FittedPurity createFittedPurity(double impliedPurity, double averageTumorPloidy) {
-        return ImmutableFittedPurity.builder()
-                .purity(impliedPurity)
-                .diploidProportion(0)
-                .normFactor(0)
-                .score(0)
-                .ploidy(averageTumorPloidy)
-                .somaticPenalty(0)
-                .build();
-    }
-
-    @NotNull
-    private static List<ReportableVariant> createCOLO829SomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
+    private static List<ReportableVariant> createCOLO829SomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
                 .isDrupActionable(true)
@@ -488,7 +471,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(6)
                 .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("7", 6, 107D / 161D))
+                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
                 .notifyClinicalGeneticist(false)
@@ -506,7 +489,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(2)
                 .minorAllelePloidy(0)
                 .biallelic(true)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("9", 2, 44D / 44D))
+                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
                 .notifyClinicalGeneticist(false)
@@ -524,7 +507,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(3)
                 .minorAllelePloidy(1)
                 .biallelic(false)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("2", 3, 72D / 107D))
+                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
                 .notifyClinicalGeneticist(false)
@@ -542,7 +525,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
+                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(false)
@@ -551,7 +534,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVariant> createAllSomaticVariants(@NotNull PurityAdjuster purityAdjuster) {
+    private static List<ReportableVariant> createAllSomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("TP63")
                 .isDrupActionable(false)
@@ -564,7 +547,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
+                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(false)
@@ -582,7 +565,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(2)
                 .biallelic(true)
-                .adjustedVAF(purityAdjuster.purityAdjustedVAF("3", 4, 48D / 103D))
+                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(true)

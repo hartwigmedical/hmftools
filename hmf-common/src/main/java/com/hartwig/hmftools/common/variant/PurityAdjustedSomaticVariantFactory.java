@@ -71,7 +71,6 @@ public class PurityAdjustedSomaticVariantFactory {
 
     @NotNull
     public VariantContext enrich(@NotNull final String tumorSample, @NotNull final VariantContext variant) {
-
         final Genotype genotype = variant.getGenotype(tumorSample);
         if (genotype != null && genotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
             final VariantContextBuilder builder = new VariantContextBuilder(variant);

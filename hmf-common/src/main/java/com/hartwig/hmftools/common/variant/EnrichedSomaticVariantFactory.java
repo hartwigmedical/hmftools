@@ -31,7 +31,7 @@ public class EnrichedSomaticVariantFactory extends RefGenomeEnrichedSomaticVaria
         final Builder builder = super.enrich(variant);
 
         highConfidenceSelector.select(variant).ifPresent(x -> inHighConfidenceRegion(builder));
-        builder.clonality(clonalityFactory.fromSample(variant));
+        builder.clonality(clonalityFactory.determineClonalityForVariant(variant));
 
         return builder;
     }

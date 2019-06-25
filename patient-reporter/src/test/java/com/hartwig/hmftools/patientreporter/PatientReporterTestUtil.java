@@ -46,7 +46,7 @@ public final class PatientReporterTestUtil {
     private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
 
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
-    private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/summary_samples.csv").getPath();
+    private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
     private PatientReporterTestUtil() {
     }

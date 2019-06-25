@@ -424,7 +424,7 @@ public class BachelorPostProcess
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(
                 mHighConfidenceRegions,
                 mIndexedFastaSeqFile,
-                new ClonalityFactory(purityAdjuster, clonalPloidy));
+                ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy));
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 

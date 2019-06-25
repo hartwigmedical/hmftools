@@ -50,7 +50,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForBelowDetectionSamples() throws IOException {
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSamples();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample();
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_below_detection_limit_sequence_report.pdf"));

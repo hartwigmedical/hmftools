@@ -75,7 +75,7 @@ public class SummaryChapter implements ReportChapter {
                 patientReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
 
-        final String summaryContent = patientReport.summarySample();
+        final String summaryContent = patientReport.clinicalSummary();
         renderSummaryText(summaryContent, reportDocument);
 
         renderTreatmentIndications(patientReport.tumorSpecificEvidence(), patientReport.clinicalTrials(), reportDocument);

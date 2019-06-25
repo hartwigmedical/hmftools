@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.immutables.value.Value;
@@ -23,14 +23,14 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract SampleReport sampleReport();
 
-    @NotNull
-    public abstract String summarySample();
+    public abstract boolean hasReliablePurityFit();
 
     public abstract double impliedPurity();
 
-    public abstract boolean hasReliablePurityFit();
-
     public abstract double averageTumorPloidy();
+
+    @NotNull
+    public abstract String clinicalSummary();
 
     @NotNull
     public abstract List<EvidenceItem> tumorSpecificEvidence();

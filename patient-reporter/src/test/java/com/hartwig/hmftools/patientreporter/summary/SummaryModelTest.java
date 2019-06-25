@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.patientreporter.summary;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -17,8 +20,8 @@ public class SummaryModelTest {
         summaryToSampleMap.put("CPCT11111111T", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        assertTrue(summaryModel.sampleIdPresentInSummaryFile("CPCT11111111T"));
-        assertFalse(summaryModel.sampleIdPresentInSummaryFile("CPCT"));
+        assertTrue(summaryModel.samplePresentInSummaries("CPCT11111111T"));
+        assertFalse(summaryModel.samplePresentInSummaries("CPCT"));
     }
 
     @Test
@@ -27,7 +30,7 @@ public class SummaryModelTest {
         summaryToSampleMap.put("CPCT11111111T", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        assertEquals("this is a test summary", summaryModel.extractSummarySampleId("CPCT11111111T"));
-        assertNotEquals("this is a test summary", summaryModel.extractSummarySampleId("CPCT11111111"));
+        assertEquals("this is a test summary", summaryModel.findSummaryForSample("CPCT11111111T"));
+        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("CPCT11111111"));
     }
 }

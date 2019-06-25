@@ -109,7 +109,7 @@ public class LoadSomaticVariants {
         LOGGER.info("Enriching variants");
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
                 indexedFastaSequenceFile,
-                new ClonalityFactory(purityAdjuster, clonalPloidy));
+                ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy));
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
 
         LOGGER.info("Persisting variants to database");
