@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.region.TranscriptRegion;
@@ -26,8 +26,8 @@ class CanonicalAnnotation {
     private final Map<String, String> canonicalTranscriptGeneMap;
 
     CanonicalAnnotation() {
-        this.driverCatalogGenes = asSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood());
-        this.driverCatalogGenes.addAll(asSet(DndsDriverGeneLikelihoodSupplier.oncoLikelihood()));
+        this.driverCatalogGenes = Sets.newHashSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
+        this.driverCatalogGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
 
         // The p14Arf transcript for CDKN2A is included in our canonical transcript map.
         // We need to filter it out since this map assumes only "real" canonical transcripts.
@@ -45,8 +45,8 @@ class CanonicalAnnotation {
 
     @NotNull
     public Optional<SnpEffAnnotation> canonicalSnpEffAnnotation(@NotNull final List<SnpEffAnnotation> allAnnotations) {
-        final List<SnpEffAnnotation> transcriptAnnotations = allAnnotations.stream()
-                .filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
+        final List<SnpEffAnnotation> transcriptAnnotations =
+                allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
         return pickCanonicalFavourDriverGene(transcriptAnnotations);
     }
 
@@ -70,8 +70,4 @@ class CanonicalAnnotation {
         return Optional.empty();
     }
 
-    @NotNull
-    private static Set<String> asSet(Map<String, DndsDriverGeneLikelihood> dndsLikelihoods) {
-        return dndsLikelihoods.values().stream().map(DndsDriverGeneLikelihood::gene).collect(Collectors.toSet());
-    }
 }

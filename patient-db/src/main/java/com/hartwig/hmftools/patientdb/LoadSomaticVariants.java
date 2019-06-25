@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
@@ -120,8 +119,8 @@ public class LoadSomaticVariants {
         final CNADrivers cnaDrivers = new CNADrivers();
         final List<EnrichedSomaticVariant> passingVariants =
                 enrichedVariants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
-        final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), passingVariants);
-        final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), passingVariants);
+        final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(passingVariants);
+        final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(passingVariants);
         driverCatalog.addAll(tsgCatalog);
         driverCatalog.addAll(PromoterDrivers.drivers(passingVariants));
         if (purityContext != null) {

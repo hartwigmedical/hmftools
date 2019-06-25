@@ -10,13 +10,11 @@ public class DndsDriverGeneLikelihoodSupplierTest {
 
     @Test
     public void testReadOncoGenes() {
-        final Map<String, DndsDriverGeneLikelihood> dndsLiklihoods = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        final Map<String, DndsDriverImpactLikelihood> dndsLiklihoods = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
 
-        // AKT1	0.202114162676839	0.000802950703029438	1.24219636244432e-07	0	0	0	0	0	0	0	0	0
-        final DndsDriverGeneLikelihood gene = dndsLiklihoods.get("AKT1");
-        final DndsDriverImpactLikelihood missense = gene.missense();
+        // AKT1	0.202114162676839	0.000802950703029438	1.24219636244432e-07
+        final DndsDriverImpactLikelihood missense = dndsLiklihoods.get("AKT1");
 
-        assertEquals("AKT1", gene.gene());
         assertEquals(0.202, missense.dndsLikelihood(), 0.001);
         assertEquals(8.0e-04, missense.pDriver(), 0.001);
         assertEquals(1e-07, missense.pVariantNonDriverFactor(), 1e-7);

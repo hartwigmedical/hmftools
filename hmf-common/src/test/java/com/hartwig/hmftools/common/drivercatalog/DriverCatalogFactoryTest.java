@@ -17,15 +17,15 @@ public class DriverCatalogFactoryTest {
 
     @Test
     public void testHIST2H3DMissense() {
-        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        double value = DriverCatalogFactory.probabilityDriverVariant(27742, dnds.get("HIST2H3D").missense());
+        final Map<String, DndsDriverImpactLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        double value = DriverCatalogFactory.probabilityDriverVariant(27742, dnds.get("HIST2H3D"));
         assertEquals(0.6065, value, EPSILON);
     }
 
     @Test
     public void testABL1Missense()  {
-        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        double value = DriverCatalogFactory.probabilityDriverVariant(996698, dnds.get("ABL1").missense());
+        final Map<String, DndsDriverImpactLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        double value = DriverCatalogFactory.probabilityDriverVariant(996698, dnds.get("ABL1"));
         assertEquals(0.00, value, EPSILON);
     }
 
