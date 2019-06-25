@@ -1,11 +1,24 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.*;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ActionableOrDriversChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.CircosChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.DetailsAndDisclaimerChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ExplanationChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.QCFailChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -17,11 +30,6 @@ import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 
 public class CFReportWriter implements ReportWriter {
 
@@ -40,7 +48,7 @@ public class CFReportWriter implements ReportWriter {
     }
 
     @Override
-    public void writeAnalysedPatientReport(@NotNull final AnalysedPatientReport report, @NotNull final String outputFilePath)
+    public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath)
             throws IOException {
         writeReport(report,
                 new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapter(report), new ActionableOrDriversChapter(report),
@@ -50,11 +58,11 @@ public class CFReportWriter implements ReportWriter {
     }
 
     @Override
-    public void writeQCFailReport(@NotNull final QCFailReport report, @NotNull final String outputFilePath) throws IOException {
+    public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
     }
 
-    private void writeReport(@NotNull final PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
+    private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
             throws IOException {
         final Document doc = initializeReport(outputFilePath, writeToFile);
         final PdfDocument pdfDocument = doc.getPdfDocument();
@@ -84,7 +92,7 @@ public class CFReportWriter implements ReportWriter {
         if (writeToFile) {
             LOGGER.info("Created patient report at " + outputFilePath);
         } else {
-            LOGGER.info("Created patient report");
+            LOGGER.info("Generated in-memory patient report");
         }
     }
 
