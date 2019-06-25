@@ -43,7 +43,7 @@ public class PatientReporterApplication {
     private static final String OUTPUT_DIRECTORY = "output_dir";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
-    private static final String HOSPITALS_DIRECTORY = "hospital_dir";
+    private static final String HOSPITAL_DIRECTORY = "hospital_dir";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
 
     private static final String RVA_LOGO = "rva_logo";
@@ -145,7 +145,7 @@ public class PatientReporterApplication {
         final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
 
-        String hospitalsDirectory = cmd.getOptionValue(HOSPITALS_DIRECTORY);
+        String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
         LOGGER.info("Loading hospitals from {}.", hospitalsDirectory);
         final HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
         LOGGER.info(" Loaded data for {} hospitals.", hospitalModel.hospitalCount());
@@ -262,7 +262,7 @@ public class PatientReporterApplication {
     private static boolean validInputForBaseReportData(@NotNull final CommandLine cmd) {
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
-        final String hospitalDirectory = cmd.getOptionValue(HOSPITALS_DIRECTORY);
+        final String hospitalDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
 
         final String signaturePath = cmd.getOptionValue(SIGNATURE);
         final String rvaLogoPath = cmd.getOptionValue(RVA_LOGO);
@@ -273,7 +273,7 @@ public class PatientReporterApplication {
         } else if (limsDirectory == null || !exists(limsDirectory) || !isDirectory(limsDirectory)) {
             LOGGER.warn(LIMS_DIRECTORY + " has to be an existing directory: " + limsDirectory);
         } else if (hospitalDirectory == null || !exists(hospitalDirectory) || !isDirectory(hospitalDirectory)) {
-            LOGGER.warn(HOSPITALS_DIRECTORY + " has to be an existing directory: " + hospitalDirectory);
+            LOGGER.warn(HOSPITAL_DIRECTORY + " has to be an existing directory: " + hospitalDirectory);
         } else if (signaturePath == null || !exists(signaturePath)) {
             LOGGER.warn(SIGNATURE + " has to be an existing file: " + signaturePath);
         } else if (rvaLogoPath == null || !exists(rvaLogoPath)) {
@@ -302,7 +302,7 @@ public class PatientReporterApplication {
 
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
-        options.addOption(HOSPITALS_DIRECTORY, true, "Path towards the directory containing hospital data.");
+        options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
 
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");
