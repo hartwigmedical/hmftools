@@ -1,4 +1,0 @@
-SampleId,Reportable,SvId,Chromosome,Position,Orientation,Type,Ploidy,Gene,ChrBand,Transcript,Strand,RegionType,CodingType,Canonical,Biotype,ExonUp,ExonDown,IsDisruptive
-CPCT11111111T,false,1,2,47734991,1,DEL,0.4,GENE1,p16.3-p21,ENST00000601243,1,Upstream,5P_UTR,true,protein_coding,0,1,false
-CPCT11111111T,false,2,2,47734992,1,DEL,,GENE2,p16.3-p21,ENST00000601243,1,Upstream,5P_UTR,true,protein_coding,0,1,false
-CPCT11111111T,false,3,2,47734993,1,DEL,0.00000,GENE3,p16.3-p21,ENST00000601243,1,Upstream,5P_UTR,true,protein_coding,0,1,false

@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class FusionFileReaderTest {
 
-    private static final String FUSION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_fusions.csv").getPath();
+    private static final String FUSION_FILE = Resources.getResource("test_run/svAnalysis/sample.linx.fusions.tsv").getPath();
 
     @Test
     public void canReadFromFile() throws IOException {

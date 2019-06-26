@@ -19,13 +19,12 @@ public class PatientReporterTest {
     private static final String TUMOR_SAMPLE = "CPCT11111111T";
     private static final String REF_SAMPLE = "CPCT11111111R";
 
-    private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/CPCT11111111T.purple.purity";
-    private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/CPCT11111111T.purple.gene.cnv";
+    private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
+    private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.gene.cnv";
+    private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/kodu.sage.vcf.gz";
     private static final String BACHELOR_CSV = BASE_DIRECTORY + "/bachelor/CPCT11111111T_germline_variants.csv";
     private static final String CHORD_PREDICTION_FILE = BASE_DIRECTORY + "/chord/CPCT11111111T_chord_prediction.txt";
-
-    private static final String CIRCOS_FILE = Resources.getResource("circos").getPath() + "/circos_example.png";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {

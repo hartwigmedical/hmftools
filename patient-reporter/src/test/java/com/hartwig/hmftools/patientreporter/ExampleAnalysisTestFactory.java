@@ -39,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+    private static final String CIRCOS_PATH = Resources.getResource("test_run/purple/plot/sample.circos.png").getPath();
 
     private ExampleAnalysisTestFactory() {
     }
@@ -89,7 +90,7 @@ public final class ExampleAnalysisTestFactory {
                 copyNumbers,
                 fusions,
                 disruptions,
-                Resources.getResource("circos/circos_example.png").getPath(),
+                CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
                 baseReportData.signaturePath(),
                 baseReportData.logoRVAPath(),
@@ -135,7 +136,7 @@ public final class ExampleAnalysisTestFactory {
                 copyNumbers,
                 fusions,
                 disruptions,
-                Resources.getResource("circos/circos_example.png").getPath(),
+                CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
                 baseReportData.signaturePath(),
                 baseReportData.logoRVAPath(),
@@ -181,7 +182,7 @@ public final class ExampleAnalysisTestFactory {
                 copyNumbers,
                 fusions,
                 disruptions,
-                Resources.getResource("circos/circos_example.png").getPath(),
+                CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
                 baseReportData.signaturePath(),
                 baseReportData.logoRVAPath(),

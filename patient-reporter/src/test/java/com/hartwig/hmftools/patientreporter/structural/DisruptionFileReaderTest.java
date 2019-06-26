@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class DisruptionFileReaderTest {
 
-    private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
+    private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/sample.linx.disruptions.tsv").getPath();
 
     @Test
     public void canReadFromFile() throws IOException {

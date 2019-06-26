@@ -42,8 +42,8 @@ public final class PatientReporterTestUtil {
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
 
-    private static final String FUSION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_fusions.csv").getPath();
-    private static final String DISRUPTION_FILE = Resources.getResource("test_run/svAnalysis/CPCT11111111T_disruptions.csv").getPath();
+    private static final String LINX_FUSIONS_TSV = Resources.getResource("test_run/svAnalysis/sample.linx.fusions.tsv").getPath();
+    private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/svAnalysis/sample.linx.disruptions.tsv").getPath();
 
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
     private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
@@ -63,7 +63,7 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     static SvAnalyzer testSvAnalyzerModel() throws IOException {
-        return SvAnalyzer.fromFiles(FUSION_FILE, DISRUPTION_FILE);
+        return SvAnalyzer.fromFiles(LINX_FUSIONS_TSV, LINX_DISRUPTIONS_TSV);
     }
 
     @NotNull
