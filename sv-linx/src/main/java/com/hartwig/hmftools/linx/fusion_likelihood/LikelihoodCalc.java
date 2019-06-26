@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion_likelihood;
 
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -41,7 +42,8 @@ public class LikelihoodCalc
     }
 
     public static Map<Integer, Long> calcOverlapBucketAreas(
-            final List<Long> bucketLengths, GeneRangeData lowerGene, GeneRangeData upperGene,
+            final List<Long> bucketLengths, RegionAllocator regionAllocator,
+            GeneRangeData lowerGene, GeneRangeData upperGene,
             GenePhaseRegion lowerRegion, GenePhaseRegion upperRegion, boolean isDel)
     {
         Map<Integer, Long> bucketOverlapCounts = Maps.newHashMap();
@@ -51,6 +53,8 @@ public class LikelihoodCalc
             LOGGER.warn("negative region lengths");
             return bucketOverlapCounts;
         }
+
+        boolean hasOverlaps = lowerRegion.hasOverlaps() && upperRegion.hasOverlaps();
 
         for (int i = 0; i < bucketLengths.size() - 1; ++i)
         {
@@ -117,14 +121,26 @@ public class LikelihoodCalc
                     }
                 }
 
-                for (long base = lowerStart; base <= lowerEnd; ++base)
+                long actUpperStart = max(upperStart, lowerStart + minBucketLen);
+                long actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
+
+                if(regionAllocator != null)
                 {
-                    long overlap = min(upperEnd, base + maxBucketLen) - max(upperStart, base + minBucketLen);
+                    baseOverlapArea += regionAllocator.allocateBases(
+                            lowerStart, lowerEnd, actUpperStart, actUpperEnd, minBucketLen, maxBucketLen, hasOverlaps);
+                }
+                else
+                {
+                    // per-base allocation without memory
+                    for (long base = lowerStart; base <= lowerEnd; ++base)
+                    {
+                        long overlap = min(upperEnd, base + maxBucketLen) - max(upperStart, base + minBucketLen);
 
-                    if(overlap > 0)
-                        baseOverlapArea += overlap;
+                        if (overlap > 0)
+                            baseOverlapArea += overlap;
 
-                    // is there any early exit here once overlap starts to be negative?
+                        // is there any early exit here once overlap starts to be negative?
+                    }
                 }
             }
 
@@ -132,7 +148,7 @@ public class LikelihoodCalc
 
             if(!upperGene.GeneData.GeneId.equals(lowerGene.GeneData.GeneId))
             {
-                // avoid double counting same gene fusions
+                // avoid double-counting same gene fusions
                 setBucketLengthData(isDel ? upperGene.getDelFusionBaseCounts() : upperGene.getDupFusionBaseCounts(), i, baseOverlapArea);
             }
 
@@ -156,6 +172,87 @@ public class LikelihoodCalc
         {
             countsData.put(bucketIndex, bucketCount + newCounts);
         }
+    }
+
+    public static void reportGeneOverlaps(Map<String, List<GeneRangeData>> chrGeneDataMap)
+    {
+        int blockSize = 1000;
+        int bucketMax = 250000; // to cover the longest arm
+
+        int[] overlapBuckets = new int[bucketMax];
+
+        for (Map.Entry<String, List<GeneRangeData>> entry : chrGeneDataMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            List<GeneRangeData> geneRangeList = entry.getValue();
+
+            if(geneRangeList.isEmpty())
+                continue;
+
+            LOGGER.info("calculating genic overlap for chromosome({}) geneCount({})", chromosome, geneRangeList.size());
+
+            for(int s = 0; s <= 1; ++s)
+            {
+                int strand = (s == 0) ? 1 : -1;
+
+                String currentArm = geneRangeList.get(0).Arm;
+                long totalGenicRegion = 0;
+
+                for(GeneRangeData gene : geneRangeList)
+                {
+                    if(gene.getPhaseRegions().isEmpty())
+                        continue;
+
+                    if(gene.GeneData.Strand != strand)
+                        continue;
+
+                    if(!currentArm.equals(gene.Arm))
+                    {
+                        logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
+
+                        currentArm = gene.Arm;
+                        totalGenicRegion = 0;
+                    }
+
+                    long geneStart = gene.getPhaseRegions().get(0).start();
+                    long geneEnd = gene.getPhaseRegions().get(gene.getPhaseRegions().size() - 1).end();
+
+                    totalGenicRegion += (geneEnd - geneStart);
+
+                    int lowerIndex = (int)floor(geneStart/(double)blockSize);
+                    int upperIndex = (int)floor(geneEnd/(double)blockSize);
+
+                    if(upperIndex < bucketMax)
+                    {
+                        for (int i = lowerIndex; i <= upperIndex; ++i)
+                        {
+                            ++overlapBuckets[i];
+                        }
+                    }
+                }
+
+                logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
+            }
+        }
+    }
+
+    private static void logArmStats(final String chromosome, final String arm, int strand,
+            final int[] overlapBuckets, long totalGenicRegion, int blockSize)
+    {
+        int overlapRegions = 0;
+
+        for(int i = 0; i < overlapBuckets.length;++i)
+        {
+            if(overlapBuckets[i] > 1)
+                overlapRegions += blockSize;
+
+            overlapBuckets[i] = 0;
+        }
+
+        LOGGER.info("chromosome({}) arm({}) strand({}) genicRegion({}) overlapRegion({}) percent({})",
+                chromosome, arm, strand, totalGenicRegion, overlapRegions,
+                String.format("%.1f", overlapRegions/(double)totalGenicRegion*100));
     }
 
 }

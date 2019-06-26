@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.generateGenePhaseRegions;
+import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.createPhaseRegionsFromTranscript;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasNoOverlappingRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NO
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
-import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.validateSimpleVsCombinedPhaseRegions;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
@@ -36,8 +35,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions;
 import com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion;
-import com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType;
 import com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData;
+import com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
@@ -71,7 +70,7 @@ public class FusionLikelihoodTest
         // converts to 110-129 -1, 130-149 1, 150-169 2
 
         // first test phase creation by itself
-        List<GenePhaseRegion> phaseRegions = generateGenePhaseRegions(geneData, transcriptsList, 0);
+        List<GenePhaseRegion> phaseRegions = createPhaseRegionsFromTranscript(geneData, transcriptsList, 0);
 
         assertEquals(3, phaseRegions.size());
         assertTrue(hasPhaseRegion(phaseRegions, 110, 129, 10, 0));
@@ -85,7 +84,7 @@ public class FusionLikelihoodTest
 
         // converts to 110-129 0, 130-149 0
 
-        phaseRegions = generateGenePhaseRegions(geneData, transcriptsList, 0);
+        phaseRegions = createPhaseRegionsFromTranscript(geneData, transcriptsList, 0);
 
         assertEquals(2, phaseRegions.size());
         assertTrue(hasPhaseRegion(phaseRegions, 110, 129, 100, 0));
@@ -100,7 +99,7 @@ public class FusionLikelihoodTest
 
         // converts to 110-179 -1
 
-        phaseRegions = generateGenePhaseRegions(geneData, transcriptsList, 0);
+        phaseRegions = createPhaseRegionsFromTranscript(geneData, transcriptsList, 0);
 
         assertEquals(1, phaseRegions.size());
         assertTrue(hasPhaseRegion(phaseRegions, 110, 180, 1, 0));
@@ -112,7 +111,7 @@ public class FusionLikelihoodTest
         List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
         likelihoodCalc.initialise(delLengths, 0);
 
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(4, phaseRegions.size());
 
@@ -126,7 +125,7 @@ public class FusionLikelihoodTest
         transExonDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)60));
 
         // test again but with a preceding gene region distance
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(5, phaseRegions.size());
 
@@ -163,7 +162,7 @@ public class FusionLikelihoodTest
 
         transSAMap.clear();
 
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(4, phaseRegions.size());
 
@@ -175,7 +174,7 @@ public class FusionLikelihoodTest
         transExonDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)100000));
 
         // test again but with a preceding gene region distance - will be capped at 10K
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(5, phaseRegions.size());
 
@@ -200,12 +199,13 @@ public class FusionLikelihoodTest
 
         transSAMap.clear();
 
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         // likelihoodCalc.generateSameGeneCounts(geneRangeData);
 
         geneRangeData.clearOverlapCounts();
 
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        /*
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         assertEquals(1, geneRangeData.getDelFusionBaseCounts().size());
 
         Long overlapCount = new Long(19*19 +19*19 + 19*19);
@@ -222,8 +222,9 @@ public class FusionLikelihoodTest
         exonPhases = new int[]{-1, 2, 1, 0, -1};
         createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
 
-        likelihoodCalc.generateGenePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         assertTrue(geneRangeData.getDelFusionBaseCounts().isEmpty());
+        */
     }
 
     private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, int combinedPhase, int combinedPreGene)
@@ -312,6 +313,19 @@ public class FusionLikelihoodTest
         GeneRangeData geneData = new GeneRangeData(gene);
         geneData.setPhaseRegions(Lists.newArrayList(region));
         assertFalse(geneData.hasCodingTranscripts());
+
+        // test not expanding an existing region to overlap others just because it matches a new one exactly
+        regionsList.clear();
+
+        checkAddCombinedGenePhaseRegion(new GenePhaseRegion(geneId, 100, 200, PHASE_2), regionsList);
+        checkAddCombinedGenePhaseRegion(new GenePhaseRegion(geneId, 201, 300, PHASE_1), regionsList);
+        checkAddCombinedGenePhaseRegion(new GenePhaseRegion(geneId, 150, 250, PHASE_2), regionsList);
+
+        assertEquals(3, regionsList.size());
+        assertTrue(hasPhaseRegion(regionsList, 100, 200, 10000, 0));
+        assertTrue(hasPhaseRegion(regionsList, 201, 250, 11000, 0));
+        assertTrue(hasPhaseRegion(regionsList, 251, 300, 1000, 0));
+
     }
 
     @Test
@@ -366,6 +380,43 @@ public class FusionLikelihoodTest
     }
 
     @Test
+    public void testRegionAllocator()
+    {
+        RegionAllocator regionAllocator = new RegionAllocator(100);
+
+        assertEquals(0, regionAllocator.baseToIndex(0));
+        assertEquals(0, regionAllocator.baseToIndex(99));
+        assertEquals(1, regionAllocator.baseToIndex(100));
+
+        int blockArea = regionAllocator.blockSize() * regionAllocator.blockSize();
+
+        // first test without any restricting bucket lengths
+        long overlap = regionAllocator.allocateBases(10, 45, 55, 99);
+        assertEquals(blockArea, overlap);
+
+        // cannot reallocate
+        overlap = regionAllocator.allocateBases(10, 45, 55, 99);
+        assertEquals(0, overlap);
+
+        regionAllocator.reset();
+
+        overlap = regionAllocator.allocateBases(0, 499, 800, 999);
+        assertEquals(blockArea * 5 * 2, overlap);
+
+        overlap = regionAllocator.allocateBases(300, 599, 600, 999);
+        assertEquals(blockArea * (3 * 2 + 2), overlap);
+
+        regionAllocator.reset();
+
+        // now test with length min and max
+        int minBucketLen = 100;
+        int maxBucketLen = 300;
+        overlap = regionAllocator.allocateBases(100, 599, 100, 599, minBucketLen, maxBucketLen, true);
+        assertEquals(blockArea * (3 + 3 + 2 + 1), overlap);
+
+    }
+
+    @Test
     public void testProximateFusionCounts()
     {
         String geneId1 = "ESNG001";
@@ -382,7 +433,7 @@ public class FusionLikelihoodTest
         GenePhaseRegion lowerRegion = new GenePhaseRegion(geneId1, 100, 200, PHASE_1);
         GenePhaseRegion upperRegion = new GenePhaseRegion(geneId2, 300, 400, PHASE_1);
 
-        Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         long overlap = bucketOverlapCounts.get(0);
@@ -391,7 +442,7 @@ public class FusionLikelihoodTest
         // with a max bucket length restriction
         delLengths.set(1, (long)150);
 
-        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
@@ -401,7 +452,7 @@ public class FusionLikelihoodTest
         delLengths.set(0, (long)250);
         delLengths.set(1, (long)400);
 
-        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
@@ -411,13 +462,14 @@ public class FusionLikelihoodTest
         delLengths.set(0, (long)225);
         delLengths.set(1, (long)275);
 
-        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
         assertEquals(2525, overlap);
     }
 
+    /*
     @Test
     public void testOverlappingProximateRegions()
     {
@@ -441,6 +493,7 @@ public class FusionLikelihoodTest
         assertTrue(approxEqual(overlap,  lowerGene.getDelFusionBaseCounts().get(0), 0.1));
 
     }
+    */
     
     @Test
     public void testIntegratedCounts()
@@ -511,9 +564,7 @@ public class FusionLikelihoodTest
 
         CohortExpFusions likelihoodCalc = new CohortExpFusions();
         likelihoodCalc.initialise(delDupLengths, shortInv);
-        likelihoodCalc.generateGenePhasingCounts(geneTransCache, Lists.newArrayList(), Lists.newArrayList());
-        likelihoodCalc.generateProximateFusionCounts();
-        likelihoodCalc.generateNonProximateCounts();
+        likelihoodCalc.generateExpectedFusions(geneTransCache, Lists.newArrayList(), Lists.newArrayList());
 
         // expected overlap counts
         int intronLength = 1000;

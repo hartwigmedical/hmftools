@@ -32,12 +32,18 @@ public class GenePhaseRegion
     private int mCombinedPhase;
     private int mCombinedPreGeneStatus;
 
+    private boolean mHasOverlaps;
+    private int mTransId;
+
     public GenePhaseRegion(final String geneId, long start, long end, GenePhaseType phase)
     {
         GeneId = geneId;
         Phase = phase;
         mStart = start;
         mEnd = end;
+
+        mHasOverlaps = false;
+        mTransId = 0;
 
         mPhaseArray = new boolean[GenePhaseType.values().length];
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
@@ -52,6 +58,8 @@ public class GenePhaseRegion
         Phase = PHASE_5P_UTR; // will not be used
         mStart = start;
         mEnd = end;
+        mTransId = 0;
+
         mPhaseArray = new boolean[PHASE_MAX];
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
         addPhases(phaseArray, preGeneArray);
@@ -68,6 +76,12 @@ public class GenePhaseRegion
         mPreGenePhaseStatus[typeAsInt(phase)] = toggle;
         calcCombinedPhase();
     }
+
+    public void setHasOverlaps(boolean toggle) { mHasOverlaps = toggle; }
+    public boolean hasOverlaps() { return mHasOverlaps; }
+
+    public void setTransId(int transId) { mTransId = transId; }
+    public int transId() { return mTransId; }
 
     public static GenePhaseType mapExonPhase(int exonPhase)
     {

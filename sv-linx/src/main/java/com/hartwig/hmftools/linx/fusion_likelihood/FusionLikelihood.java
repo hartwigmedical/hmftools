@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_SHORT_INV;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcNonProximateLikelihood;
+import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.reportGeneOverlaps;
 import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.types.SvaConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.types.SvaConfig.LOG_DEBUG;
@@ -315,9 +316,11 @@ public class FusionLikelihood
 
     public void generateGlobalFusionCounts(final String outputDir)
     {
-        mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
-        mCohortCalculator.generateProximateFusionCounts();
-        mCohortCalculator.generateNonProximateCounts();
+        mCohortCalculator.generateExpectedFusions(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
+        // mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
+        // reportGeneOverlaps(mCohortCalculator.getChrGeneRangeDataMap());
+        //mCohortCalculator.generateProximateFusionCounts();
+        //mCohortCalculator.generateNonProximateCounts();
         // mCohortCalculator.logGlobalCounts();
         writeGeneLikelihoodData(outputDir);
     }
@@ -374,7 +377,7 @@ public class FusionLikelihood
 
         // generate phase data for all required genes, which will also care of any same-gene fusion likelihoods
         mCohortCalculator.initialiseGeneIdRangeDataMap();
-        mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
+        // mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
 
         try
         {

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.fusion_likelihood;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
 
 import java.util.List;
@@ -14,7 +15,16 @@ public class GeneRangeData
 {
     public final EnsemblGeneData GeneData;
     public final String Arm;
+    public final String ChromosomeArm;
+
+    // a set of merged and extended regions with matching phase and pre-gene combinations
     private List<GenePhaseRegion> mPhaseRegions;
+
+    // a set of overlapping intronic regions, not crossing over any exon boundary
+    private List<GenePhaseRegion> mIntronicPhaseRegions;
+
+    // intronic regions for each transcript
+    private List<GenePhaseRegion> mTranscriptPhaseRegions;
 
     // maps from the DEL or DUP bucket length array index to overlap count
     private Map<Integer,Long> mDelFusionBaseCounts;
@@ -32,8 +42,11 @@ public class GeneRangeData
     {
         GeneData = geneData;
         mPhaseRegions = Lists.newArrayList();
+        mIntronicPhaseRegions = Lists.newArrayList();
+        mTranscriptPhaseRegions = Lists.newArrayList();
 
         Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
+        ChromosomeArm = makeChrArmStr(geneData.Chromosome, Arm);
 
         mDelFusionBaseCounts = Maps.newHashMap();
         mDupFusionBaseCounts = Maps.newHashMap();
@@ -44,6 +57,12 @@ public class GeneRangeData
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
     public void setPhaseRegions(List<GenePhaseRegion> regions) { mPhaseRegions = regions; }
+
+    public final List<GenePhaseRegion> getIntronicPhaseRegions() { return mIntronicPhaseRegions; }
+    public void setIntronicPhaseRegions(List<GenePhaseRegion> regions) { mIntronicPhaseRegions = regions; }
+
+    public final List<GenePhaseRegion> getTranscriptPhaseRegions() { return mTranscriptPhaseRegions; }
+    public void setTranscriptPhaseRegions(List<GenePhaseRegion> regions) { mTranscriptPhaseRegions = regions; }
 
     public Map<Integer,Long> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
     public Map<Integer,Long> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
