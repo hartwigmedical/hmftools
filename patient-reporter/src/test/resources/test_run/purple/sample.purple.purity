@@ -1,2 +1,2 @@
-#Purity	NormFactor	Score	DiploidProportion	Ploidy	Gender	Status	PolyclonalProportion	MinPurity	MaxPurity	MinPloidy	MaxPloidy	MinDiploidProportion	MaxDiploidProportion	Version	SomaticDeviation
-0.9900	0.6400	0.7201	0.0202	3.0744	MALE	NORMAL	0.1235	0.9500	1.0000	3.0480	3.0854	0.0202	0.0202	2.15	0.0009
+#Purity	NormFactor	Score	DiploidProportion	Ploidy	Gender	Status	PolyclonalProportion	MinPurity	MaxPurity	MinPloidy	MaxPloidy	MinDiploidProportion	MaxDiploidProportion	Version	SomaticPenalty	WholeGenomeDuplication
+0.7300	0.9700	0.3557	0.7203	2.0621	MALE	NORMAL	0.0207	0.6900	0.7700	2.0597	2.0865	0.7144	0.7271	2.30	0.0002	true
