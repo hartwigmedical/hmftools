@@ -14,23 +14,22 @@ import org.junit.Test;
 public class SummaryModelTest {
 
     @Test
-    public void sampleArePresentInSummaryFile() {
-
+    public void sampleArePresentInSummaryModel() {
         Map<String, String> summaryToSampleMap = Maps.newHashMap();
-        summaryToSampleMap.put("CPCT11111111T", "this is a test summary");
+        summaryToSampleMap.put("sample", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        assertTrue(summaryModel.samplePresentInSummaries("CPCT11111111T"));
-        assertFalse(summaryModel.samplePresentInSummaries("CPCT"));
+        assertTrue(summaryModel.samplePresentInSummaries("sample"));
+        assertFalse(summaryModel.samplePresentInSummaries("sample2"));
     }
 
     @Test
     public void canExtractSummaryOfSample() {
         Map<String, String> summaryToSampleMap = Maps.newHashMap();
-        summaryToSampleMap.put("CPCT11111111T", "this is a test summary");
+        summaryToSampleMap.put("sample", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        assertEquals("this is a test summary", summaryModel.findSummaryForSample("CPCT11111111T"));
-        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("CPCT11111111"));
+        assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample"));
+        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2"));
     }
 }
