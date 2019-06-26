@@ -33,7 +33,6 @@ public class SvClassification
     // Resolved types - all the standard usual SV types plus
     public static final String RESOLVED_TYPE_NONE = "NONE";
     public static final String RESOLVED_TYPE_DUP_BE = "DUP_BE";
-    public static final String RESOLVED_TYPE_POLY_G_C = "POLY_G_C";
     public static final String RESOLVED_TYPE_LINE = "LINE";
 
     public static final String RESOLVED_TYPE_DEL = "DEL";
@@ -140,7 +139,7 @@ public class SvClassification
 
     public static boolean isFilteredResolvedType(final String resolvedType)
     {
-        return resolvedType.equals(RESOLVED_TYPE_POLY_G_C) || resolvedType.equals(RESOLVED_TYPE_DUP_BE);
+        return resolvedType.equals(RESOLVED_TYPE_DUP_BE);
     }
 
     public static void setClusterResolvedState(

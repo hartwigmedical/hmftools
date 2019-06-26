@@ -83,6 +83,18 @@ public class GeneRangeData
         mDupFusionBaseCounts.clear();
     }
 
+    public long codingBases()
+    {
+        final boolean[] codingPhases = {false, false, true, true, true};
+
+        long codingBases = mPhaseRegions.stream()
+                .filter(x -> x.hasAnyPhaseMatch(codingPhases))
+                .mapToLong(x -> x.length())
+                .sum();
+
+        return codingBases;
+    }
+
     public static final String PGD_DELIMITER = ",";
     public static final String PPR_DELIMITER = ";";
 

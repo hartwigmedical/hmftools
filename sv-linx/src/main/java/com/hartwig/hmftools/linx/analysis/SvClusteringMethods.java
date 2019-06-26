@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_INS;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_PAIR_OTHER;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_POLY_G_C;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_SGL_PAIR;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -354,9 +353,6 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
     }
 
-    private static String POLY_C_MOTIF = "CCCCCCCCCCCCCCCC";
-    private static String POLY_G_MOTIF = "GGGGGGGGGGGGGGGG";
-
     private String getSingleBreakendUnclusteredType(final SvVarData var)
     {
         if(var.type() != SGL|| var.isNoneSegment())
@@ -364,9 +360,6 @@ public class SvClusteringMethods {
 
         if(var.isEquivBreakend(true))
             return RESOLVED_TYPE_DUP_BE;
-
-        if(var.getSvData().insertSequence().contains(POLY_C_MOTIF) || var.getSvData().insertSequence().contains(POLY_G_MOTIF))
-            return RESOLVED_TYPE_POLY_G_C;
 
         return RESOLVED_TYPE_NONE;
     }

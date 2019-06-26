@@ -317,12 +317,14 @@ public class FusionLikelihood
     public void generateGlobalFusionCounts(final String outputDir)
     {
         mCohortCalculator.generateExpectedFusions(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
-        // mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
-        // reportGeneOverlaps(mCohortCalculator.getChrGeneRangeDataMap());
-        //mCohortCalculator.generateProximateFusionCounts();
-        //mCohortCalculator.generateNonProximateCounts();
-        // mCohortCalculator.logGlobalCounts();
         writeGeneLikelihoodData(outputDir);
+    }
+
+    public void generateGlobalStats(final String outputDir)
+    {
+        mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
+        reportGeneOverlaps(mCohortCalculator.getChrGeneRangeDataMap());
+        // mCohortCalculator.logGlobalCounts();
     }
 
     public void calculateSpecificFusionLikelihood(final String filename, final String outputDir)
@@ -511,7 +513,8 @@ public class FusionLikelihood
         if(restrictedGeneIds.size() <= 2)
             fusionLikelihood.setLogVerbose(true);
 
-        fusionLikelihood.generateGlobalFusionCounts(outputDir);
+        // fusionLikelihood.generateGlobalFusionCounts(outputDir);
+        fusionLikelihood.generateGlobalStats(outputDir);
 
         LOGGER.info("Gene likelihood data generation complete");
     }

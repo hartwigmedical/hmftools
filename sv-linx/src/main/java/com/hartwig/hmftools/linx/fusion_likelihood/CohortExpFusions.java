@@ -330,8 +330,6 @@ public class CohortExpFusions
             List<GeneRangeData> geneEndFirstList = Lists.newArrayList();
             List<GenePhaseRegion> chrPhaseRegionsPosStrand = Lists.newArrayList();
             List<GenePhaseRegion> chrPhaseRegionsNegStrand = Lists.newArrayList();
-            long posStrandTotal = 0;
-            long negStrandTotal = 0;
 
             for(final EnsemblGeneData geneData :entry.getValue())
             {
@@ -387,24 +385,18 @@ public class CohortExpFusions
                     // across genes on the same strand
                     if(geneData.Strand == 1)
                     {
-                        posStrandTotal += region.length();
                         addPhaseRegion(chrPhaseRegionsPosStrand, region);
                     }
                     else
                     {
-                        negStrandTotal += region.length();
                         addPhaseRegion(chrPhaseRegionsNegStrand, region);
                     }
                 }
 
             }
 
-            // markOverlappingRegions(geneList);
-
             mChrPhaseRegionsPosStrand.put(chromosome, chrPhaseRegionsPosStrand);
             mChrPhaseRegionsNegStrand.put(chromosome, chrPhaseRegionsNegStrand);
-
-            LOGGER.debug("chr({}) posStrandTotal({}) negStrandTotal({})", chromosome, posStrandTotal, negStrandTotal);
 
             mChrGeneDataMap.put(chromosome, geneList);
             // mChrReverseGeneDataMap.put(chromosome, geneEndFirstList);

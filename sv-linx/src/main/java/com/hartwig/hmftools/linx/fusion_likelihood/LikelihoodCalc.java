@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
 
 import java.util.List;
@@ -178,8 +179,7 @@ public class LikelihoodCalc
     {
         int blockSize = 1000;
         int bucketMax = 250000; // to cover the longest arm
-
-        int[] overlapBuckets = new int[bucketMax];
+        // int[] overlapBuckets = new int[bucketMax];
 
         for (Map.Entry<String, List<GeneRangeData>> entry : chrGeneDataMap.entrySet())
         {
@@ -199,8 +199,10 @@ public class LikelihoodCalc
                 String currentArm = geneRangeList.get(0).Arm;
                 long totalGenicRegion = 0;
 
-                for(GeneRangeData gene : geneRangeList)
+                for(int i = 0; i < geneRangeList.size(); ++i)
                 {
+                    GeneRangeData gene = geneRangeList.get(i);
+
                     if(gene.getPhaseRegions().isEmpty())
                         continue;
 
@@ -209,12 +211,13 @@ public class LikelihoodCalc
 
                     if(!currentArm.equals(gene.Arm))
                     {
-                        logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
+                        // logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
 
                         currentArm = gene.Arm;
                         totalGenicRegion = 0;
                     }
 
+                    /*
                     long geneStart = gene.getPhaseRegions().get(0).start();
                     long geneEnd = gene.getPhaseRegions().get(gene.getPhaseRegions().size() - 1).end();
 
@@ -230,9 +233,54 @@ public class LikelihoodCalc
                             ++overlapBuckets[i];
                         }
                     }
+                    */
+
+                    for(int j = i+1; j < geneRangeList.size(); ++j)
+                    {
+                        GeneRangeData gene2 = geneRangeList.get(j);
+
+                        if (gene2.getPhaseRegions().isEmpty())
+                            continue;
+
+                        if (gene2.GeneData.Strand != strand)
+                            continue;
+
+                        if (!gene2.Arm.equals(gene.Arm))
+                            break;
+
+                        long totalOverlap = 0;
+
+                        for (GenePhaseRegion region1 : gene.getPhaseRegions())
+                        {
+                            for (GenePhaseRegion region2 : gene2.getPhaseRegions())
+                            {
+                                if (!haveOverlap(region1, region2, 0))
+                                    continue;
+
+                                long overlapStart = max(region1.start(), region2.start());
+                                long overlapEnd = min(region1.end(), region2.end());
+
+                                if(overlapEnd > overlapStart)
+                                    totalOverlap += (overlapEnd - overlapStart);
+                            }
+                        }
+
+                        if(totalOverlap > 0)
+                        {
+                            // Time,GeneId,GeneName,Strand,GeneStart,GeneEnd,GeneLength,RegionCount,CodingBases,
+                            // OtherGeneId,OtherGeneName,OtherGeneStart,OtherGeneEnd,OtherGeneLength,OtherRegionCount,OtherCodingBases,TotalOverlap
+                            LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                                    gene.GeneData.GeneId, gene.GeneData.GeneName, gene.GeneData.Strand,
+                                    gene.GeneData.GeneStart, gene.GeneData.GeneEnd, gene.GeneData.GeneEnd - gene.GeneData.GeneStart,
+                                    gene.getPhaseRegions().size(), gene.codingBases(),
+                                    gene2.GeneData.GeneId, gene2.GeneData.GeneName,
+                                    gene2.GeneData.GeneStart, gene2.GeneData.GeneEnd, gene2.GeneData.GeneEnd - gene2.GeneData.GeneStart,
+                                    gene2.getPhaseRegions().size(), gene2.codingBases(), totalOverlap);
+                        }
+                    }
                 }
 
-                logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
+                // logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
             }
         }
     }
