@@ -42,8 +42,8 @@ public final class PatientReporterTestUtil {
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
     private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
 
-    private static final String LINX_FUSIONS_TSV = Resources.getResource("test_run/svAnalysis/sample.linx.fusions.tsv").getPath();
-    private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/svAnalysis/sample.linx.disruptions.tsv").getPath();
+    private static final String LINX_FUSIONS_TSV = Resources.getResource("test_run/linx/sample.linx.fusions.tsv").getPath();
+    private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/linx/sample.linx.disruptions.tsv").getPath();
 
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
     private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
