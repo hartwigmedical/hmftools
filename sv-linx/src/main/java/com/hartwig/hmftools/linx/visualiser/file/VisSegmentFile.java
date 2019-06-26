@@ -72,7 +72,7 @@ public class VisSegmentFile
     }
 
     @NotNull
-    private static String header()
+    public static String header()
     {
         return new StringJoiner(DELIMITER)
                 .add("SampleId")
@@ -86,7 +86,7 @@ public class VisSegmentFile
     }
 
     @NotNull
-    private static String toString(@NotNull final VisSegmentFile segment)
+    public static String toString(@NotNull final VisSegmentFile segment)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(segment.SampleId))

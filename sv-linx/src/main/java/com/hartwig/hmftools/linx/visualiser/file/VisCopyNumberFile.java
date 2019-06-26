@@ -69,7 +69,7 @@ public class VisCopyNumberFile
     }
 
     @NotNull
-    private static String header()
+    public static String header()
     {
         return new StringJoiner(DELIMITER)
                 .add("SampleId")
@@ -82,7 +82,7 @@ public class VisCopyNumberFile
     }
 
     @NotNull
-    private static String toString(@NotNull final VisCopyNumberFile cnData)
+    public static String toString(@NotNull final VisCopyNumberFile cnData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(cnData.SampleId))

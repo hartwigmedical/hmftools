@@ -892,6 +892,8 @@ public class SvSampleAnalyser {
         closeBufferedWriter(mClusterFileWriter);
         closeBufferedWriter(mLinksFileWriter);
 
+        mVisWriter.close();
+
         if(mConfig.hasMultipleSamples() || LOGGER.isDebugEnabled())
         {
             // log perf stats

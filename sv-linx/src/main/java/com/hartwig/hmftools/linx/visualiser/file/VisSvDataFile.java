@@ -92,7 +92,7 @@ public class VisSvDataFile
     }
 
     @NotNull
-    private static String header()
+    public static String header()
     {
         return new StringJoiner(DELIMITER)
                 .add("SampleId")
@@ -114,7 +114,7 @@ public class VisSvDataFile
     }
 
     @NotNull
-    private static String toString(@NotNull final VisSvDataFile svData)
+    public static String toString(@NotNull final VisSvDataFile svData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.SampleId))

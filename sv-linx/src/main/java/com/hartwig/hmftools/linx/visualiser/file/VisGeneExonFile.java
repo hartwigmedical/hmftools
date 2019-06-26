@@ -75,7 +75,7 @@ public class VisGeneExonFile
     }
 
     @NotNull
-    private static String header()
+    public static String header()
     {
         return new StringJoiner(DELIMITER)
                 .add("SampleId")
@@ -91,7 +91,7 @@ public class VisGeneExonFile
     }
 
     @NotNull
-    private static String toString(@NotNull final VisGeneExonFile geData)
+    public static String toString(@NotNull final VisGeneExonFile geData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(geData.SampleId))

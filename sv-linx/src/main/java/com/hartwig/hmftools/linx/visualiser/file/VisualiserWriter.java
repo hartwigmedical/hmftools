@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.visualiser.file;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -13,6 +15,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile.INFO_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile.INFO_TYPE_NORMAL;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +40,15 @@ public class VisualiserWriter
 
     private List<VisGeneData> mGeneData;
 
-    private boolean mBatchOutput;
     private boolean mEnabled;
     private final String mOutputDir;
     private String mSampleId;
+
+    private boolean mBatchOutput;
+    private BufferedWriter mSvFileWriter;
+    private BufferedWriter mSegmentFileWriter;
+    private BufferedWriter mCnFileWriter;
+    private BufferedWriter mGeneFileWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
 
@@ -52,9 +60,48 @@ public class VisualiserWriter
         mSampleId = "";
         mBatchOutput = isBatchOutput;
 
+        if(mBatchOutput)
+        {
+            initialiseBatchOutputFiles();
+        }
+
         mGeneTranscriptCollection = null;
 
         mGeneData = Lists.newArrayList();
+    }
+
+    private void initialiseBatchOutputFiles()
+    {
+        try
+        {
+            mSvFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SVS.csv", false);
+            mSvFileWriter.write(VisSvDataFile.header());
+            mSvFileWriter.newLine();
+
+            mSegmentFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SEGMENTS.csv", false);
+            mSegmentFileWriter.write(VisSegmentFile.header());
+            mSegmentFileWriter.newLine();
+
+            mCnFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_COPY_NUMBER.csv", false);
+            mCnFileWriter.write(VisCopyNumberFile.header());
+            mCnFileWriter.newLine();
+
+            mGeneFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_GENE_EXONS.csv", false);
+            mGeneFileWriter.write(VisGeneExonFile.header());
+            mGeneFileWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to open and write output file headers");
+        }
+    }
+
+    public void close()
+    {
+        closeBufferedWriter(mSvFileWriter);
+        closeBufferedWriter(mSegmentFileWriter);
+        closeBufferedWriter(mCnFileWriter);
+        closeBufferedWriter(mGeneFileWriter);
     }
 
     public void setGeneDataCollection(SvGeneTranscriptCollection geneTranscriptCollection)
@@ -111,11 +158,20 @@ public class VisualiserWriter
             }
         }
 
-        final String outputFile = mBatchOutput ? mOutputDir + "SVA_VIS_SVS.csv" : VisSvDataFile.generateFilename(mOutputDir, mSampleId);
-
         try
         {
-            VisSvDataFile.write(outputFile, svDataList);
+            if(mBatchOutput)
+            {
+                for(final VisSvDataFile data : svDataList)
+                {
+                    mSvFileWriter.write(VisSvDataFile.toString(data));
+                    mSvFileWriter.newLine();
+                }
+            }
+            else
+            {
+                VisSvDataFile.write(VisSvDataFile.generateFilename(mOutputDir, mSampleId), svDataList);
+            }
         }
         catch(IOException e)
         {
@@ -214,10 +270,18 @@ public class VisualiserWriter
 
         try
         {
-            String outputFileName = mBatchOutput ? mOutputDir + "SVA_VIS_SEGMENTS.csv" :
-                    VisSegmentFile.generateFilename(mOutputDir, mSampleId);
-
-            VisSegmentFile.write(outputFileName, segments);
+            if(mBatchOutput)
+            {
+                for(final VisSegmentFile data : segments)
+                {
+                    mSegmentFileWriter.write(VisSegmentFile.toString(data));
+                    mSegmentFileWriter.newLine();
+                }
+            }
+            else
+            {
+                VisSegmentFile.write(VisSegmentFile.generateFilename(mOutputDir, mSampleId), segments);
+            }
         }
         catch (final IOException e)
         {
@@ -283,11 +347,18 @@ public class VisualiserWriter
 
         try
         {
-            String outputFileName = mBatchOutput ? mOutputDir + "SVA_VIS_GENE_EXONS.csv" :
-                    VisGeneExonFile.generateFilename(mOutputDir, mSampleId);
-
-            VisGeneExonFile.write(outputFileName, geneExonList);
-
+            if(mBatchOutput)
+            {
+                for(final VisGeneExonFile data : geneExonList)
+                {
+                    mGeneFileWriter.write(VisGeneExonFile.toString(data));
+                    mGeneFileWriter.newLine();
+                }
+            }
+            else
+            {
+                VisGeneExonFile.write(VisGeneExonFile.generateFilename(mOutputDir, mSampleId), geneExonList);
+            }
         }
         catch (final IOException e)
         {
@@ -310,12 +381,20 @@ public class VisualiserWriter
             }
         }
 
-        final String outputFile = mBatchOutput ? mOutputDir + "SVA_VIS_COPY_NUMBER.csv" :
-                VisCopyNumberFile.generateFilename(mOutputDir, mSampleId);
-
         try
         {
-            VisCopyNumberFile.write(outputFile, cnDataList);
+            if(mBatchOutput)
+            {
+                for(final VisCopyNumberFile data : cnDataList)
+                {
+                    mCnFileWriter.write(VisCopyNumberFile.toString(data));
+                    mCnFileWriter.newLine();
+                }
+            }
+            else
+            {
+                VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mOutputDir, mSampleId), cnDataList);
+            }
         }
         catch(IOException e)
         {
