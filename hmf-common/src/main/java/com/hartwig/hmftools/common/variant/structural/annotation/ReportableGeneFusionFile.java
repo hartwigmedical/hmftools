@@ -47,7 +47,7 @@ public final class ReportableGeneFusionFile {
     }
 
     @NotNull
-    static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines)
+    private static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("geneStart")).map(ReportableGeneFusionFile::fromString).collect(toList());
     }
@@ -68,7 +68,7 @@ public final class ReportableGeneFusionFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final ReportableGeneFusion fusion) {
+    private static String toString(@NotNull ReportableGeneFusion fusion) {
         return new StringJoiner(DELIMITER).add(String.valueOf(fusion.geneStart()))
                 .add(String.valueOf(fusion.geneContextStart()))
                 .add(String.valueOf(fusion.geneTranscriptStart()))
@@ -81,8 +81,8 @@ public final class ReportableGeneFusionFile {
     }
 
     @NotNull
-    private static ReportableGeneFusion fromString(@NotNull final String clusterData) {
-        String[] values = clusterData.split(DELIMITER);
+    private static ReportableGeneFusion fromString(@NotNull String line) {
+        String[] values = line.split(DELIMITER);
 
         int index = 0;
 

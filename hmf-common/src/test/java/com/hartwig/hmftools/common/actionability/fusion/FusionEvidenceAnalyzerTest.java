@@ -5,9 +5,11 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableSimpleGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FusionEvidenceAnalyzerTest {
@@ -53,11 +55,19 @@ public class FusionEvidenceAnalyzerTest {
 
         CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin", "4159");
 
-        SimpleGeneFusion simpleGeneFusion = ImmutableSimpleGeneFusion.builder()
-                .fiveGene("TMPRSS2")
-                .threeGene("PNPLA7")
-                .build();
+        ReportableGeneFusion reportableFusion = createTestFusionBuilder().geneStart("TMPRSS2").geneEnd("PNPLA7").build();
 
-        assertTrue(analyzer.evidenceForFusion(simpleGeneFusion, "Skin", cancerTypeAnalyzer).isEmpty());
+        assertTrue(analyzer.evidenceForFusion(reportableFusion, "Skin", cancerTypeAnalyzer).isEmpty());
+    }
+
+    @NotNull
+    private static ImmutableReportableGeneFusion.Builder createTestFusionBuilder() {
+        return ImmutableReportableGeneFusion.builder()
+                .geneContextStart(Strings.EMPTY)
+                .geneContextEnd(Strings.EMPTY)
+                .geneTranscriptStart(Strings.EMPTY)
+                .geneTranscriptEnd(Strings.EMPTY)
+                .ploidy(1D)
+                .source(Strings.EMPTY);
     }
 }

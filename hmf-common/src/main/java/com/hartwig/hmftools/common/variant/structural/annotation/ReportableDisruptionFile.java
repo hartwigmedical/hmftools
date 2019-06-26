@@ -45,7 +45,7 @@ public final class ReportableDisruptionFile
     }
 
     @NotNull
-    static List<ReportableDisruption> fromLines(@NotNull List<String> lines)
+    private static List<ReportableDisruption> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("svId")).map(ReportableDisruptionFile::fromString).collect(toList());
     }
@@ -67,7 +67,7 @@ public final class ReportableDisruptionFile
     }
 
     @NotNull
-    private static String toString(@NotNull final ReportableDisruption disruption)
+    private static String toString(@NotNull ReportableDisruption disruption)
     {
         return new StringJoiner(DELIMITER).add(String.valueOf(disruption.svId()))
                 .add(String.valueOf(disruption.chromosome()))
@@ -83,7 +83,7 @@ public final class ReportableDisruptionFile
     }
 
     @NotNull
-    private static ReportableDisruption fromString(@NotNull final String line)
+    private static ReportableDisruption fromString(@NotNull String line)
     {
         String[] values = line.split(DELIMITER);
 

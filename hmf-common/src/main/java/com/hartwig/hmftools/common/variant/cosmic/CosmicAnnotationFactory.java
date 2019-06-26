@@ -26,7 +26,6 @@ public final class CosmicAnnotationFactory {
                     .map(x -> x.trim().split(FIELD_SEPARATOR))
                     .map(CosmicAnnotationFactory::fromParts)
                     .collect(Collectors.toList());
-
         }
         return Collections.emptyList();
     }

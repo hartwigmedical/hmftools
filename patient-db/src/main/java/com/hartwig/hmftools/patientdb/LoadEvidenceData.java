@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -102,14 +102,14 @@ public class LoadEvidenceData {
                 evidencePerGeneCopyNumber.keySet().size());
 
         LOGGER.info("Reading gene fusions from DB");
-        List<SimpleGeneFusion> simpleGeneFusions = dbAccess.readGeneFusions(sample);
-        LOGGER.info("All simpleGeneFusions: " + simpleGeneFusions.size());
+        List<ReportableGeneFusion> fusions = dbAccess.readGeneFusions(sample);
+        LOGGER.info(" All fusions: " + fusions.size());
 
-        Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion =
-                actionabilityAnalyzer.evidenceForFusions(simpleGeneFusions, primaryTumorLocation);
+        Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion =
+                actionabilityAnalyzer.evidenceForFusions(fusions, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-        LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), simpleGeneFusions.size());
+        LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), fusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
         combinedEvidence.addAll(allEvidenceForSomaticVariants);

@@ -18,8 +18,6 @@ public enum StructuralVariantType {
         return StructuralVariantType.valueOf(svType);
     }
 
-    public static int SV_TYPE_COUNT = 6;
-
     public static int typeAsInt(StructuralVariantType type)
     {
         // ordered alphabetically

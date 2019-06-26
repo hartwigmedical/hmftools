@@ -131,7 +131,6 @@ public class RecoverStructuralVariants implements Closeable {
 
     @NotNull
     private List<RecoveredVariant> recoverFromUnexplainedSegments() throws IOException {
-
         final List<RecoveredVariant> result = Lists.newArrayList();
 
         for (Chromosome chromosome : allCopyNumbers.keySet()) {

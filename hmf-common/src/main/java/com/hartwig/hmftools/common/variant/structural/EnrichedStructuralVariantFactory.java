@@ -24,14 +24,12 @@ public final class EnrichedStructuralVariantFactory {
     @Nullable
     private final IndexedFastaSequenceFile reference;
 
-
     public EnrichedStructuralVariantFactory(@Nullable final IndexedFastaSequenceFile reference) {
         this.reference = reference;
     }
 
     @NotNull
     public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
-
         final List<EnrichedStructuralVariant> result = Lists.newArrayList();
 
         for (StructuralVariant variant : variants) {
