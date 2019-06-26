@@ -471,7 +471,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(6)
                 .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
+                .adjustedVAF(0.67)
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
                 .notifyClinicalGeneticist(false)
@@ -489,7 +489,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(2)
                 .minorAllelePloidy(0)
                 .biallelic(true)
-                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
+                .adjustedVAF(1D)
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
                 .notifyClinicalGeneticist(false)
@@ -507,7 +507,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(3)
                 .minorAllelePloidy(1)
                 .biallelic(false)
-                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
+                .adjustedVAF(0.68)
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
                 .notifyClinicalGeneticist(false)
@@ -525,7 +525,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
+                .adjustedVAF(0.47)
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(false)
@@ -547,7 +547,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
+                .adjustedVAF(0.5)
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(false)
@@ -565,7 +565,7 @@ public final class ExampleAnalysisTestFactory {
                 .adjustedCopyNumber(4)
                 .minorAllelePloidy(2)
                 .biallelic(true)
-                .adjustedVAF(0D) // TODO Calculate adjusted VAF.
+                .adjustedVAF(0.5)
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(true)
