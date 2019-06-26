@@ -7,8 +7,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class FittedPurityScoreFactoryTest
-{
+public class FittedPurityScoreFactoryTest {
+
     @Test
     public void testPolyclonalProportion() {
         assertTrue(isPolyclonal(2.749));

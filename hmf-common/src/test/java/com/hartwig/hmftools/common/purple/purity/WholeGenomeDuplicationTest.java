@@ -23,6 +23,17 @@ public class WholeGenomeDuplicationTest {
     private static final double EPSILON = 1e-10;
 
     @Test
+    public void testKeySet() {
+        final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+        for (int i = 1; i <= 22; i++) {
+            copyNumbers.add(create("1", 3, 1000));
+            copyNumbers.add(create(String.valueOf(i), 1, 1000));
+        }
+
+        assertFalse(WholeGenomeDuplication.wholeGenomeDuplication(copyNumbers));
+    }
+
+    @Test
     public void testAverageMajorAllelePloidyIsBafCountWeighted() {
         PurpleCopyNumber one = create("1", 1, 1000);
         PurpleCopyNumber two = create("1", 2, 3000);
@@ -51,5 +62,4 @@ public class WholeGenomeDuplicationTest {
     private static PurpleCopyNumber create(String chromosome, double majorAllelePloidy, int bafCount) {
         return PurpleDatamodelTest.createCopyNumber(chromosome, 1, 1, majorAllelePloidy).averageActualBAF(1).bafCount(bafCount).build();
     }
-
 }

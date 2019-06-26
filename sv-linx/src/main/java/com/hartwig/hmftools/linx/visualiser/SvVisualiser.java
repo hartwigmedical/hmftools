@@ -215,7 +215,7 @@ public class SvVisualiser implements AutoCloseable
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
-        final CircosData circosData = new CircosData(segments, links, alterations, filteredExons);
+        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
 

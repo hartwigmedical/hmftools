@@ -28,7 +28,8 @@ public class BestFitFactory {
     private final BestFit bestFit;
 
     public BestFitFactory(double minSomaticUnadjustedVaf, int minVariants, int minPeak, double highlyDiploidPercentage,
-            double minSomaticPurity, double minSomaticPuritySpread, @NotNull final List<FittedPurity> bestFitPerPurity, @NotNull final List<FittedPurity> all, @NotNull final List<SomaticVariant> somatics) {
+            double minSomaticPurity, double minSomaticPuritySpread, @NotNull final List<FittedPurity> bestFitPerPurity,
+            @NotNull final List<FittedPurity> all, @NotNull final List<SomaticVariant> somatics) {
         assert (!bestFitPerPurity.isEmpty());
         this.minSomaticUnadjustedVaf = minSomaticUnadjustedVaf;
         this.minVariants = minVariants;

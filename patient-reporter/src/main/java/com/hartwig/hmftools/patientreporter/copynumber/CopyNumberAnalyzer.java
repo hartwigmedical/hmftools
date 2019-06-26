@@ -7,9 +7,9 @@ import java.util.Map;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
@@ -23,9 +23,9 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull List<PurpleCopyNumber> purpleCopyNumbers,
-            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull GeneModel geneModel,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
+    public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
+            @NotNull GeneModel geneModel, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
 
         List<GeneCopyNumber> reportableGeneCopyNumbers =
@@ -46,11 +46,10 @@ public final class CopyNumberAnalyzer {
         }
 
         return ImmutableCopyNumberAnalysis.builder()
+                .hasReliablePurityFit(purityContext.status() != FittedPurityStatus.NO_TUMOR)
+                .purity(bestFit.purity())
+                .ploidy(bestFit.ploidy())
                 .gender(purityContext.gender())
-                .status(purityContext.status())
-                .fittedPurity(bestFit)
-                .fittedScorePurity(purityContext.score())
-                .copyNumbers(purpleCopyNumbers)
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGeneCopyNumbers(reportableGeneCopyNumbers)
                 .evidenceItems(filteredEvidence)

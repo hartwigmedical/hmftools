@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -23,6 +24,11 @@ import org.jetbrains.annotations.NotNull;
 public final class TsgDrivers {
 
     private TsgDrivers() {
+    }
+
+    @NotNull
+    public static List<DriverCatalog> drivers(@NotNull final List<EnrichedSomaticVariant> variants) {
+        return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants);
     }
 
     @NotNull
@@ -58,17 +64,17 @@ public final class TsgDrivers {
 
     @NotNull
     static DriverCatalog geneDriver(long sampleSNVCount, long sampleIndelCount, @NotNull final DndsDriverGeneLikelihood likelihood,
-            @NotNull final List<EnrichedSomaticVariant> codingVariants) {
-        codingVariants.sort(new TsgImpactComparator());
+            @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+        geneVariants.sort(new TsgImpactComparator());
 
-        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
+        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
         long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
         long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
         long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
         long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
 
-        final double maxDndsLikelihood = codingVariants.stream()
+        final double maxDndsLikelihood = geneVariants.stream()
                 .map(x -> impactLikelihood(likelihood, x))
                 .mapToDouble(DndsDriverImpactLikelihood::dndsLikelihood)
                 .max()
@@ -86,26 +92,26 @@ public final class TsgDrivers {
                 .frameshift(frameshiftVariants)
                 .driver(DriverType.DNDS);
 
-        if (codingVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
+        if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 
-        if (codingVariants.stream().anyMatch(PurityAdjustedSomaticVariant::biallelic)) {
+        if (geneVariants.stream().anyMatch(PurityAdjustedSomaticVariant::biallelic)) {
             return builder.driver(DriverType.BIALLELIC).build();
         }
 
-        final DndsDriverImpactLikelihood firstImpactLikelihood = impactLikelihood(likelihood, codingVariants.get(0));
-        final long firstVariantTypeCount = codingVariants.get(0).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
+        final DndsDriverImpactLikelihood firstImpactLikelihood = impactLikelihood(likelihood, geneVariants.get(0));
+        final long firstVariantTypeCount = geneVariants.get(0).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
 
-        if (codingVariants.size() == 1) {
+        if (geneVariants.size() == 1) {
             return builder.dndsLikelihood(firstImpactLikelihood.dndsLikelihood())
                     .driverLikelihood(singleHit(firstVariantTypeCount, firstImpactLikelihood))
                     .build();
         }
 
         // MultiHit
-        final DndsDriverImpactLikelihood secondImpactLikelihood = impactLikelihood(likelihood, codingVariants.get(1));
-        final long secondVariantTypeCount = codingVariants.get(1).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
+        final DndsDriverImpactLikelihood secondImpactLikelihood = impactLikelihood(likelihood, geneVariants.get(1));
+        final long secondVariantTypeCount = geneVariants.get(1).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
 
         return builder.dndsLikelihood(Math.max(firstImpactLikelihood.dndsLikelihood(), secondImpactLikelihood.dndsLikelihood()))
                 .driverLikelihood(DriverCatalogFactory.probabilityDriverVariant(firstVariantTypeCount,

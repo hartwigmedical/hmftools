@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -26,7 +26,12 @@ public final class OncoDrivers {
     }
 
     @NotNull
-    static public List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
+    public static List<DriverCatalog> drivers(@NotNull final List<EnrichedSomaticVariant> variants) {
+        return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants);
+    }
+
+    @NotNull
+    private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverImpactLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
@@ -36,7 +41,7 @@ public final class OncoDrivers {
         final Map<String, List<EnrichedSomaticVariant>> codingVariants = oncogenicVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
-            final DndsDriverImpactLikelihood geneMissenseLikelihood = likelihoodsByGene.get(gene).missense();
+            final DndsDriverImpactLikelihood geneMissenseLikelihood = likelihoodsByGene.get(gene);
             final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
 
             driverCatalog.add(geneDriver(sampleSNVCount, gene, geneMissenseLikelihood, geneVariants));

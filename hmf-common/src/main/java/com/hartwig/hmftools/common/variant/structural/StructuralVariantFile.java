@@ -37,7 +37,7 @@ public class StructuralVariantFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<StructuralVariantData> svDataList)
+    private static List<String> toLines(@NotNull final List<StructuralVariantData> svDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -46,7 +46,7 @@ public class StructuralVariantFile
     }
 
     @NotNull
-    static List<StructuralVariantData> fromLines(@NotNull List<String> lines)
+    private static List<StructuralVariantData> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("id")).map(StructuralVariantFile::fromString).collect(toList());
     }
@@ -234,5 +234,4 @@ public class StructuralVariantFile
 
         return builder.build();
     }
-
 }

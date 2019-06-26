@@ -16,33 +16,56 @@ import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.BRCA;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.BiologicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.ConsequenceOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.GeneOncokb;
+import com.hartwig.hmftools.vicc.datamodel.GenePmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCA;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableBiologicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCgi;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableConsequenceOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneOncokb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableGenePmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableSage;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableTissuePmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableTumorPmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantOncokb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+import com.hartwig.hmftools.vicc.datamodel.Oncokb;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.Pmkb;
+import com.hartwig.hmftools.vicc.datamodel.Sage;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
+import com.hartwig.hmftools.vicc.datamodel.TissuePmkb;
+import com.hartwig.hmftools.vicc.datamodel.TumorPmkb;
+import com.hartwig.hmftools.vicc.datamodel.VariantOncokb;
+import com.hartwig.hmftools.vicc.datamodel.VariantPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
@@ -67,6 +90,18 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
     private static final List<Integer> EXPECTED_BRCA_ELEMENT_SIZES = Lists.newArrayList(137);
+    private static final List<Integer> EXPECTED_SAGE_ELEMENT_SIZES = Lists.newArrayList(8);
+    private static final List<Integer> EXPECTED_PMKB_ELEMENT_SIZES = Lists.newArrayList(3);
+
+    private static final List<Integer> EXPECTED_PMKB_TUMOR_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_PMKB_TISSUE_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_PMKB_VARIANT_ELEMENT_SIZES = Lists.newArrayList(21);
+    private static final List<Integer> EXPECTED_PMKB_GENE_ELEMENT_SIZES = Lists.newArrayList(7);
+
+    private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
+
+
+
 
 
     private ViccJsonReader() {
@@ -119,39 +154,323 @@ public final class ViccJsonReader {
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
 
-            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
-            if (viccEntryObject.has("cgi")) {
-                Set<String> keysCgi = objectCgi.keySet();
-
-                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
-                    LOGGER.warn(
-                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
-                    LOGGER.warn(keysCgi);
-                }
-                viccEntryBuilder.cgi(createCgi(objectCgi));
-            } else {
-                viccEntryBuilder.cgi(createCgiEmpty());
-            }
-
-            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
-            if (viccEntryObject.has("brca")) {
-                Set<String> keysBRCA = objectBRCA.keySet();
-                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
-                    LOGGER.warn(
-                            "Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected " + EXPECTED_BRCA_ELEMENT_SIZES);
-                    LOGGER.warn(keysBRCA);
-                }
-                viccEntryBuilder.brca(createBRCA(objectBRCA));
-            } else {
-                viccEntryBuilder.brca(createBRCAEmpty());
-            }
-
+//            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
+//            if (viccEntryObject.has("cgi")) {
+//                Set<String> keysCgi = objectCgi.keySet();
+//
+//                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
+//                    LOGGER.warn(
+//                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
+//                    LOGGER.warn(keysCgi);
+//                }
+//                viccEntryBuilder.cgi(createCgi(objectCgi));
+//            } else {
+//                viccEntryBuilder.cgi(createCgiEmpty());
+//            }
+//
+//            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
+//            if (viccEntryObject.has("brca")) {
+//                Set<String> keysBRCA = objectBRCA.keySet();
+//                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
+//                    LOGGER.warn("Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_BRCA_ELEMENT_SIZES);
+//                    LOGGER.warn(keysBRCA);
+//                }
+//                viccEntryBuilder.brca(createBRCA(objectBRCA));
+//            } else {
+//                viccEntryBuilder.brca(createBRCAEmpty());
+//            }
+//
+//            JsonObject objectSage = viccEntryObject.getAsJsonObject("sage");
+//            if (viccEntryObject.has("sage")) {
+//                Set<String> keysSage = objectSage.keySet();
+//                if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
+//                    LOGGER.warn("Found " + keysSage.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_SAGE_ELEMENT_SIZES);
+//                    LOGGER.warn(keysSage);
+//                }
+//                viccEntryBuilder.sage(createSage(objectSage));
+//            } else {
+//                viccEntryBuilder.sage(createSageEmpty());
+//
+//            }
+//
+//            JsonObject objectPmkb = viccEntryObject.getAsJsonObject("pmkb");
+//            if (viccEntryObject.has("pmkb")) {
+//                Set<String> keysPmkb = objectPmkb.keySet();
+//                if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
+//                    LOGGER.warn("Found " + keysPmkb.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_PMKB_ELEMENT_SIZES);
+//                    LOGGER.warn(keysPmkb);
+//                }
+//                viccEntryBuilder.pmkb(createPmkb(objectPmkb));
+//            } else {
+//                viccEntryBuilder.pmkb(createPmkbEmpty());
+//
+//            }
+//
+//            JsonObject objectOncokb = viccEntryObject.getAsJsonObject("oncokb");
+//            if (viccEntryObject.has("oncokb")) {
+//                Set<String> keysOncokb = objectOncokb.keySet();
+//                if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
+//                    LOGGER.warn("Found " + keysOncokb.size() + " elements in a vicc entry rather than the expected "
+//                            + EXPECTED_ONCOKB_ELEMENT_SIZES);
+//                    LOGGER.warn(keysOncokb);
+//                }
+//                viccEntryBuilder.oncokb(createOncoKb());
+//            } else {
+//                viccEntryBuilder.oncokb(createOncoKb());
+//            }
+//            if (viccEntryObject.has("cgi")) {
+//                viccEntryBuilder.KbSpecificObject(createCgiEmpty());
+//
+//            } else if (viccEntryObject.has("brca")) {
+//                viccEntryBuilder.KbSpecificObject(createBRCAEmpty());
+//
+//            }
             entries.add(viccEntryBuilder.build());
 
         }
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static Oncokb createOncoKb() {
+        return ImmutableOncokb.builder().biologicalPmkb(createBiologicalOncoKb()).build();
+    }
+
+    @NotNull
+    private static BiologicalOncoKb createBiologicalOncoKb() {
+        return ImmutableBiologicalOncoKb.builder()
+                .mutationEffectPmids(Strings.EMPTY)
+                .Isoform(Strings.EMPTY)
+                .variantOncokb(createVariantOncoKb())
+                .entrezGeneID(Strings.EMPTY)
+                .oncogenic(Strings.EMPTY)
+                .mutationEffect(Strings.EMPTY)
+                .RefSeq(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .mutationEffectAbstracts(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static VariantOncokb createVariantOncoKb() {
+        return ImmutableVariantOncokb.builder()
+                .variantResidues(Strings.EMPTY)
+                .proteinStart(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .proteinEnd(Strings.EMPTY)
+                .refResidues(Strings.EMPTY)
+                .alteration(Strings.EMPTY)
+                .consequenceOncoKb(createConsequenceOncokb())
+                .geneOncokb(createGeneOncoKb())
+                .build();
+    }
+
+    @NotNull
+    private static ConsequenceOncoKb createConsequenceOncokb() {
+        return ImmutableConsequenceOncoKb.builder()
+                .term(Strings.EMPTY)
+                .description(Strings.EMPTY)
+                .isGenerallyTruncating(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static GeneOncokb createGeneOncoKb() {
+        return ImmutableGeneOncokb.builder()
+                .oncogene(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .hugoSymbol(Strings.EMPTY)
+                .curatedRefSeq(Strings.EMPTY)
+                .entrezGeneId(Strings.EMPTY)
+                .geneAliases(Lists.newArrayList())
+                .tsg(Strings.EMPTY)
+                .curatedIsoform(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static Pmkb createPmkbEmpty() {
+
+        return ImmutablePmkb.builder()
+                .tumor(Lists.newArrayList(ImmutableTumorPmkb.builder().id(Strings.EMPTY).name(Strings.EMPTY).build()))
+                .tissue(Lists.newArrayList(ImmutableTissuePmkb.builder().id(Strings.EMPTY).name(Strings.EMPTY).build()))
+                .variant(Lists.newArrayList(createVariantPmkbEmpty()))
+                .build();
+    }
+
+    @NotNull
+    private static VariantPmkb createVariantPmkbEmpty() {
+        return ImmutableVariantPmkb.builder()
+                .aminoAcidChange(Strings.EMPTY)
+                .germline(Strings.EMPTY)
+                .partnerGene(Strings.EMPTY)
+                .codons(Strings.EMPTY)
+                .description(Strings.EMPTY)
+                .exons(Strings.EMPTY)
+                .notes(Strings.EMPTY)
+                .cosmic(Strings.EMPTY)
+                .effect(Strings.EMPTY)
+                .cnvType(Strings.EMPTY)
+                .id(Strings.EMPTY)
+                .cytoband(Strings.EMPTY)
+                .variantType(Strings.EMPTY)
+                .dnaChange(Strings.EMPTY)
+                .coordinates(Strings.EMPTY)
+                .chromosomeBasedCnv(Strings.EMPTY)
+                .gene(Lists.newArrayList(ImmutableGenePmkb.builder()
+                        .description(Strings.EMPTY)
+                        .createdAt(Strings.EMPTY)
+                        .updatedAt(Strings.EMPTY)
+                        .activeInd(Strings.EMPTY)
+                        .externalId(Strings.EMPTY)
+                        .id(Strings.EMPTY)
+                        .name(Strings.EMPTY)
+                        .build()))
+                .transcript(Strings.EMPTY)
+                .descriptionType(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .build();
+    }
+
+    @NotNull
+    private static Pmkb createPmkb(@NotNull JsonObject objectPmkb) {
+        JsonObject tumor = objectPmkb.getAsJsonObject("tumor");
+        JsonArray tissue = objectPmkb.getAsJsonArray("tissues");
+        JsonObject variant = objectPmkb.getAsJsonObject("variant");
+
+        return ImmutablePmkb.builder()
+                .tumor(createTumor(tumor))
+                .tissue(createTissue(tissue))
+                .variant(createVariantPmkb(variant))
+                .build();
+    }
+
+    @NotNull
+    private static List<TumorPmkb> createTumor(@NotNull JsonObject tumor) {
+        Set<String> keysTumor = tumor.keySet();
+        if (!EXPECTED_PMKB_TUMOR_ELEMENT_SIZES.contains(keysTumor.size())) {
+            LOGGER.warn("Found " + keysTumor.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_PMKB_TUMOR_ELEMENT_SIZES);
+            LOGGER.warn(keysTumor);
+        }
+
+        List<TumorPmkb> listTumor = Lists.newArrayList();
+        listTumor.add(ImmutableTumorPmkb.builder()
+                .id(tumor.getAsJsonPrimitive("id").getAsString())
+                .name(tumor.getAsJsonPrimitive("name").getAsString())
+                .build());
+
+        return listTumor;
+    }
+
+    @NotNull
+    private static List<TissuePmkb> createTissue(@NotNull JsonArray tissues) {
+
+        List<TissuePmkb> listTissue = Lists.newArrayList();
+        for (JsonElement tissue : tissues) {
+            Set<String> keysTissue = tissue.getAsJsonObject().keySet();
+            if (!EXPECTED_PMKB_TISSUE_ELEMENT_SIZES.contains(keysTissue.size())) {
+                LOGGER.warn("Found " + keysTissue.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
+                LOGGER.warn(keysTissue);
+            }
+            listTissue.add(ImmutableTissuePmkb.builder()
+                    .id(tissue.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .name(tissue.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .build());
+        }
+        return listTissue;
+    }
+
+    @NotNull
+    private static List<VariantPmkb> createVariantPmkb(@NotNull JsonObject variant) {
+        Set<String> keysVariant = variant.keySet();
+        if (!EXPECTED_PMKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
+            LOGGER.warn("Found " + keysVariant.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
+            LOGGER.warn(keysVariant);
+        }
+        return Lists.newArrayList(ImmutableVariantPmkb.builder()
+                .aminoAcidChange(variant.get("amino_acid_change").isJsonNull() ? null : variant.get("amino_acid_change").getAsString())
+                .germline(variant.get("germline").isJsonNull() ? null : variant.get("germline").getAsString())
+                .partnerGene(variant.get("partner_gene").isJsonNull() ? null : variant.get("partner_gene").getAsString())
+                .codons(variant.get("codons").isJsonNull() ? null : variant.get("codons").getAsString())
+                .description(variant.get("description").isJsonNull() ? null : variant.get("description").getAsString())
+                .exons(variant.get("exons").isJsonNull() ? null : variant.get("exons").getAsString())
+                .notes(variant.get("notes").isJsonNull() ? null : variant.get("notes").getAsString())
+                .cosmic(variant.get("cosmic").isJsonNull() ? null : variant.get("cosmic").getAsString())
+                .effect(variant.get("effect").isJsonNull() ? null : variant.get("effect").getAsString())
+                .cnvType(variant.get("cnv_type").isJsonNull() ? null : variant.get("cnv_type").getAsString())
+                .id(variant.get("id").isJsonNull() ? null : variant.get("id").getAsString())
+                .cytoband(variant.get("cytoband").isJsonNull() ? null : variant.get("cytoband").getAsString())
+                .variantType(variant.get("variant_type").isJsonNull() ? null : variant.get("variant_type").getAsString())
+                .dnaChange(variant.get("dna_change").isJsonNull() ? null : variant.get("dna_change").getAsString())
+                .coordinates(variant.get("coordinates").isJsonNull() ? null : variant.get("coordinates").getAsString())
+                .chromosomeBasedCnv(variant.get("chromosome_based_cnv").isJsonNull() ? null : variant.get("chromosome_based_cnv").getAsString())
+                .gene(createGene(variant))
+                .transcript(variant.getAsJsonPrimitive("transcript").getAsString())
+                .descriptionType(variant.get("description_type").isJsonNull() ? null : variant.get("description_type").getAsString())
+                .chromosome(variant.get("chromosome").isJsonNull() ? null : variant.get("chromosome").getAsString())
+                .name(variant.get("name").isJsonNull() ? null : variant.get("name").getAsString())
+                .build());
+    }
+
+    @NotNull
+    private static List<GenePmkb> createGene(@NotNull JsonObject variant) {
+        JsonObject gene = variant.getAsJsonObject("gene");
+
+        Set<String> keysgene = gene.keySet();
+        if (!EXPECTED_PMKB_GENE_ELEMENT_SIZES.contains(keysgene.size())) {
+            LOGGER.warn("Found " + keysgene.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_PMKB_GENE_ELEMENT_SIZES);
+            LOGGER.warn(keysgene);
+        }
+
+        List<GenePmkb> listGene = Lists.newArrayList();
+        listGene.add(ImmutableGenePmkb.builder()
+                .description(gene.get("description").isJsonNull() ? null : gene.getAsJsonPrimitive("description").getAsString())
+                .createdAt(gene.getAsJsonPrimitive("created_at").getAsString())
+                .updatedAt(gene.getAsJsonPrimitive("updated_at").getAsString())
+                .activeInd(gene.getAsJsonPrimitive("active_ind").getAsString())
+                .externalId(gene.getAsJsonPrimitive("external_id").getAsString())
+                .id(gene.getAsJsonPrimitive("id").getAsString())
+                .name(gene.getAsJsonPrimitive("name").getAsString())
+                .build());
+        return listGene;
+    }
+
+    @NotNull
+    private static Sage createSage(@NotNull JsonObject objectSage) {
+        return ImmutableSage.builder()
+                .entrezId(objectSage.getAsJsonPrimitive("entrez_id").getAsString())
+                .clinicalManifestation(objectSage.getAsJsonPrimitive("clinical_manifestation").getAsString())
+                .publicationUrl(objectSage.getAsJsonPrimitive("publication_url").getAsString())
+                .germlineOrSomatic(objectSage.getAsJsonPrimitive("germline_or_somatic").getAsString())
+                .evidenceLabel(objectSage.getAsJsonPrimitive("evidence_label").getAsString())
+                .drugLabels(objectSage.getAsJsonPrimitive("drug_labels").getAsString())
+                .responseType(objectSage.getAsJsonPrimitive("response_type").getAsString())
+                .gene(objectSage.getAsJsonPrimitive("gene").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static Sage createSageEmpty() {
+        return ImmutableSage.builder()
+                .entrezId(Strings.EMPTY)
+                .clinicalManifestation(Strings.EMPTY)
+                .publicationUrl(Strings.EMPTY)
+                .germlineOrSomatic(Strings.EMPTY)
+                .evidenceLabel(Strings.EMPTY)
+                .drugLabels(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
@@ -212,8 +531,10 @@ public final class ViccJsonReader {
                 .BX_ID_LOVD(objectBrca.getAsJsonPrimitive("BX_ID_LOVD").getAsString())
                 .Synonyms(objectBrca.getAsJsonPrimitive("Synonyms").getAsString())
                 .Gene_Symbol(objectBrca.getAsJsonPrimitive("Gene_Symbol").getAsString())
-                .Comment_on_clinical_significance_ENIGMA(objectBrca.getAsJsonPrimitive("Comment_on_clinical_significance_ENIGMA").getAsString())
-                .Missense_analysis_prior_probability_exLOVD(objectBrca.getAsJsonPrimitive("Missense_analysis_prior_probability_exLOVD").getAsString())
+                .Comment_on_clinical_significance_ENIGMA(objectBrca.getAsJsonPrimitive("Comment_on_clinical_significance_ENIGMA")
+                        .getAsString())
+                .Missense_analysis_prior_probability_exLOVD(objectBrca.getAsJsonPrimitive("Missense_analysis_prior_probability_exLOVD")
+                        .getAsString())
                 .Allele_number_FIN_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_FIN_ExAC").getAsString())
                 .Posterior_probability_exLOVD(objectBrca.getAsJsonPrimitive("Posterior_probability_exLOVD").getAsString())
                 .Polyphen_Score(objectBrca.getAsJsonPrimitive("Polyphen_Score").getAsString())
@@ -255,7 +576,8 @@ public final class ViccJsonReader {
                 .Genomic_Coordinate_hg37(objectBrca.getAsJsonPrimitive("Genomic_Coordinate_hg37").getAsString())
                 .Genomic_Coordinate_hg36(objectBrca.getAsJsonPrimitive("Genomic_Coordinate_hg36").getAsString())
                 .EUR_Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("EUR_Allele_frequency_1000_Genomes").getAsString())
-                .Number_of_family_member_carrying_mutation_BIC(objectBrca.getAsJsonPrimitive("Number_of_family_member_carrying_mutation_BIC").getAsString())
+                .Number_of_family_member_carrying_mutation_BIC(objectBrca.getAsJsonPrimitive("Number_of_family_member_carrying_mutation_BIC")
+                        .getAsString())
                 .Segregation_LR_exLOVD(objectBrca.getAsJsonPrimitive("Segregation_LR_exLOVD").getAsString())
                 .Allele_Frequency(objectBrca.getAsJsonPrimitive("Allele_Frequency").getAsString())
                 .Minor_allele_frequency_percent_ESP(objectBrca.getAsJsonPrimitive("Minor_allele_frequency_percent_ESP").getAsString())
@@ -287,7 +609,8 @@ public final class ViccJsonReader {
                 .Variant_in_exLOVD(objectBrca.getAsJsonPrimitive("Variant_in_exLOVD").getAsString())
                 .EA_Allele_Frequency_ESP(objectBrca.getAsJsonPrimitive("EA_Allele_Frequency_ESP").getAsString())
                 .HGVS_RNA(objectBrca.getAsJsonPrimitive("HGVS_RNA").getAsString())
-                .Clinical_significance_citations_ENIGMA(objectBrca.getAsJsonPrimitive("Clinical_significance_citations_ENIGMA").getAsString())
+                .Clinical_significance_citations_ENIGMA(objectBrca.getAsJsonPrimitive("Clinical_significance_citations_ENIGMA")
+                        .getAsString())
                 .Variant_effect_LOVD(objectBrca.getAsJsonPrimitive("Variant_effect_LOVD").getAsString())
                 .Polyphen_Prediction(objectBrca.getAsJsonPrimitive("Polyphen_Prediction").getAsString())
                 .Data_Release_id(objectBrca.getAsJsonPrimitive("Data_Release_id").getAsString())

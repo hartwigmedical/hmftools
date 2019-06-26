@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class QCFailReport implements PatientReport {
+
     @Override
     @NotNull
     public abstract SampleReport sampleReport();

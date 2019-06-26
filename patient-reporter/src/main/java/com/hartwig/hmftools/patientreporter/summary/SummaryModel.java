@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientreporter.summary;
 
 import java.util.Map;
-import java.util.Set;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,20 +22,21 @@ public class SummaryModel {
     }
 
     @NotNull
-    public Set<String> sizeSummarySamples() {
-        return sampleToSummaryMap.keySet();
-    }
-
-    public boolean sampleIdPresentInSummaryFile(@NotNull String sampleId) {
-        return sampleToSummaryMap.keySet().contains(sampleId);
-    }
-
-    @NotNull
-    public String extractSummarySampleId(@NotNull String sampleId) {
-        boolean sampleInFile = sampleIdPresentInSummaryFile(sampleId);
-        if (!sampleInFile) {
-            LOGGER.info("Could not find a summary for: " + sampleId);
+    public String findSummaryForSample(@NotNull String sample) {
+        boolean sampleExists = samplePresentInSummaries(sample);
+        if (!sampleExists && LimsSampleType.fromSampleId(sample) == LimsSampleType.WIDE) {
+            LOGGER.warn("Could not find a summary for WIDE sample: " + sample);
         }
-        return sampleInFile ? sampleToSummaryMap.get(sampleId) : Strings.EMPTY;
+        return sampleExists ? sampleToSummaryMap.get(sample) : Strings.EMPTY;
+    }
+
+    @VisibleForTesting
+    int summaryCount() {
+        return sampleToSummaryMap.keySet().size();
+    }
+
+    @VisibleForTesting
+    boolean samplePresentInSummaries(@NotNull String sample) {
+        return sampleToSummaryMap.containsKey(sample);
     }
 }

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,12 +67,12 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForFusion(@NotNull SimpleGeneFusion geneFusion, @Nullable String primaryTumorLocation,
+    public List<EvidenceItem> evidenceForFusion(@NotNull ReportableGeneFusion geneFusion, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
         for (ActionableFusion actionableFusion : fusionPairs) {
-            if (actionableFusion.fiveGene().equals(geneFusion.fiveGene()) && actionableFusion.threeGene().equals(geneFusion.threeGene())) {
+            if (actionableFusion.fiveGene().equals(geneFusion.geneStart()) && actionableFusion.threeGene().equals(geneFusion.geneEnd())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionPairs(actionableFusion);
                 evidenceBuilder.event(actionableFusion.fiveGene() + " - " + actionableFusion.threeGene() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableFusion.cancerType(), primaryTumorLocation));
@@ -81,9 +81,9 @@ public class FusionEvidenceAnalyzer {
         }
 
         for (ActionablePromiscuous actionablePromiscuousFive : promiscuousFive) {
-            if (actionablePromiscuousFive.gene().equals(geneFusion.fiveGene())) {
+            if (actionablePromiscuousFive.gene().equals(geneFusion.geneStart())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuous(actionablePromiscuousFive);
-                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.threeGene() + " fusion");
+                evidenceBuilder.event(actionablePromiscuousFive.gene() + " - " + geneFusion.geneEnd() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousFive.cancerType(),
                         primaryTumorLocation));
 
@@ -92,9 +92,9 @@ public class FusionEvidenceAnalyzer {
         }
 
         for (ActionablePromiscuous actionablePromiscuousThree : promiscuousThree) {
-            if (actionablePromiscuousThree.gene().equals(geneFusion.threeGene())) {
+            if (actionablePromiscuousThree.gene().equals(geneFusion.geneEnd())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableFusionsPromiscuous(actionablePromiscuousThree);
-                evidenceBuilder.event(geneFusion.fiveGene() + " - " + actionablePromiscuousThree.gene() + " fusion");
+                evidenceBuilder.event(geneFusion.geneStart() + " - " + actionablePromiscuousThree.gene() + " fusion");
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionablePromiscuousThree.cancerType(),
                         primaryTumorLocation));
 

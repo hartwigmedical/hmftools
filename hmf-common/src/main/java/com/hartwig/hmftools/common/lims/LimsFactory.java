@@ -115,12 +115,17 @@ public final class LimsFactory {
             final String analysisType = jsonSampleObject.get("analysis_type").getAsString();
             final String label = jsonSampleObject.get("label").getAsString();
 
-            // Filter on somatic to get rid of RNA samples, see also DEV-252
-            // We are not interested in research-labeled samples.
+            // DEV-252 - Filter on somatic to get rid of RNA samples
+            // Also, we are not interested in research-labeled samples.
             if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
                     final LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
-                    limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
+                    // DEV-785 - Samples can appear multiple times in LIMS under different barcodes.
+                    // We pick the barcode which has been sequenced by taking the one with a filled-in SOP.
+                    boolean hasSOP = !limsJsonSampleData.labSopVersions().equals("NA");
+                    if (hasSOP || !limsDataPerSample.containsKey(limsJsonSampleData.sampleId())) {
+                        limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
+                    }
                 } catch (JsonSyntaxException e) {
                     LOGGER.warn("Could not convert json element to LimsJsonSampleData: " + jsonSample.getValue() + " - message:"
                             + e.getMessage());

@@ -43,6 +43,7 @@ public interface SvVisualiserConfig
     String SINGLE_CHROMOSOME = "chromosome";
     String CNA = "cna";
     String EXON = "exon";
+    String SCALE_EXON = "scale_exons";
 
     @NotNull
     String sample();
@@ -72,6 +73,8 @@ public interface SvVisualiserConfig
 
     boolean debug();
 
+    boolean scaleExons();
+
     @Nullable
     Integer singleCluster();
 
@@ -95,6 +98,7 @@ public interface SvVisualiserConfig
         options.addOption(SINGLE_CHROMOSOME, true, "Only generate image for singe chromosome");
         options.addOption(CNA, true, "Location of copy number alterations (optional alternative to db)");
         options.addOption(EXON, true, "Location of exons");
+        options.addOption(SCALE_EXON, false, "Scale exon positions instead of interpolating them");
 
         return options;
     }
@@ -159,6 +163,7 @@ public interface SvVisualiserConfig
                 .debug(cmd.hasOption(DEBUG))
                 .singleCluster(cmd.hasOption(SINGLE_CLUSTER) ? Integer.valueOf(cmd.getOptionValue(SINGLE_CLUSTER)) : null)
                 .singleChromosome(cmd.hasOption(SINGLE_CHROMOSOME) ? cmd.getOptionValue(SINGLE_CHROMOSOME) : null)
+                .scaleExons(cmd.hasOption(SCALE_EXON))
                 .build();
     }
 

@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
@@ -209,7 +209,7 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample) {
+    public List<ReportableGeneFusion> readGeneFusions(@NotNull final String sample) {
         return structuralVariantFusionDAO.readGeneFusions(sample);
     }
 

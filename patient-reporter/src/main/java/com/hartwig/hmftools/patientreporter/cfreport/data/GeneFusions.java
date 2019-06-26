@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.hartwig.hmftools.common.fusions.KnownFusionsModel.*;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+
+import org.jetbrains.annotations.NotNull;
 
 public final class GeneFusions {
 
@@ -45,21 +42,5 @@ public final class GeneFusions {
     @NotNull
     public static String transcriptUrl(@NotNull final String transcriptField) {
         return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + transcriptField;
-    }
-
-    @NotNull
-    public static String sourceUrl(@NotNull String sourceName) {
-        switch (sourceName) {
-            case ONCOKB:
-                return "http://oncokb.org/#/";
-            case COSMIC:
-                return "https://cancer.sanger.ac.uk/cosmic";
-            case CGI:
-                return "https://www.cancergenomeinterpreter.org/biomarkers";
-            case CIVIC:
-                return "https://civicdb.org/browse/somaticVariants";
-            default:
-                return Strings.EMPTY;
-        }
     }
 }

@@ -8,15 +8,13 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.junit.Test;
 
 public class BachelorFileTest {
 
     private static final double EPSILON = 1.0e-10;
-    private static final String BACHELOR_FILE = Resources.getResource("test_run/bachelor/CPCT11111111T_germline_variants.csv").getPath();
+    private static final String BACHELOR_FILE = Resources.getResource("test_run/bachelor/sample_germline_variants.csv").getPath();
 
     @Test
     public void canReadTestBachelorFile() throws IOException {
@@ -27,13 +25,13 @@ public class BachelorFileTest {
         GermlineVariant variant = germlineVariants.get(0);
         assertTrue(variant.passFilter());
         assertEquals("BRCA1", variant.gene());
-        assertEquals("c.191G>A", variant.hgvsCodingImpact());
-        assertEquals("p.Cys64Tyr", variant.hgvsProteinImpact());
+        assertEquals("c.2019delA", variant.hgvsCodingImpact());
+        assertEquals("p.Glu673fs", variant.hgvsProteinImpact());
         assertEquals(20, variant.alleleReadCount());
-        assertEquals(90, variant.totalReadCount());
-        assertEquals(2.99, variant.adjustedCopyNumber(), EPSILON);
-        assertEquals(0.12, variant.adjustedVAF(), EPSILON);
-        assertEquals(1.07, variant.minorAllelePloidy(), EPSILON);
+        assertEquals(75, variant.totalReadCount());
+        assertEquals(1.99, variant.adjustedCopyNumber(), EPSILON);
+        assertEquals(-0.1, variant.adjustedVAF(), EPSILON);
+        assertEquals(0.0, variant.minorAllelePloidy(), EPSILON);
         assertFalse(variant.biallelic());
     }
 }

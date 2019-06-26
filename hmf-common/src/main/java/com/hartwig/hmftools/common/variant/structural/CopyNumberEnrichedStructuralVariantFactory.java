@@ -6,7 +6,6 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumber;
@@ -20,13 +19,10 @@ import org.jetbrains.annotations.Nullable;
 
 public final class CopyNumberEnrichedStructuralVariantFactory {
 
+    @NotNull
     private final PurityAdjuster purityAdjuster;
+    @NotNull
     private final Multimap<Chromosome, PurpleCopyNumber> copyNumbers;
-
-    public CopyNumberEnrichedStructuralVariantFactory(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        this(purityAdjuster, Multimaps.fromRegions(copyNumbers));
-    }
 
     public CopyNumberEnrichedStructuralVariantFactory(@NotNull final PurityAdjuster purityAdjuster,
             @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers) {
@@ -35,8 +31,7 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
     }
 
     @NotNull
-    public List<EnrichedStructuralVariant> enrich(@NotNull final List<StructuralVariant> variants) {
-
+    public List<EnrichedStructuralVariant> enrich(@NotNull List<StructuralVariant> variants) {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, copyNumbers, variants);
 
@@ -109,5 +104,4 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
 
         return ImmutableEnrichedStructuralVariantLeg.builder().from(leg);
     }
-
 }

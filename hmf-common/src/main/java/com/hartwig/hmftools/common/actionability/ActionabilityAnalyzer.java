@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEv
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -123,16 +123,16 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public Map<SimpleGeneFusion, List<EvidenceItem>> evidenceForFusions(@NotNull List<SimpleGeneFusion> fusions,
+    public Map<ReportableGeneFusion, List<EvidenceItem>> evidenceForFusions(@NotNull List<ReportableGeneFusion> fusions,
             @Nullable String primaryTumorLocation) {
-        Map<SimpleGeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
+        Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
 
-        Set<SimpleGeneFusion> uniqueFusionsOnActionableGenes = fusions.stream()
-                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.fiveGene()) || fusionAnalyzer.actionableGenes()
-                        .contains(fusion.threeGene()))
+        Set<ReportableGeneFusion> uniqueFusionsOnActionableGenes = fusions.stream()
+                .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.geneStart()) || fusionAnalyzer.actionableGenes()
+                        .contains(fusion.geneEnd()))
                 .collect(Collectors.toSet());
 
-        for (SimpleGeneFusion actionableFusion : uniqueFusionsOnActionableGenes) {
+        for (ReportableGeneFusion actionableFusion : uniqueFusionsOnActionableGenes) {
             evidencePerFusion.put(actionableFusion,
                     fusionAnalyzer.evidenceForFusion(actionableFusion, primaryTumorLocation, cancerTypeAnalyzer));
         }

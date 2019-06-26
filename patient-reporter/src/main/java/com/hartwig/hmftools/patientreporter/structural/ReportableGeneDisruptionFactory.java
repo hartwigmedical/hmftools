@@ -138,12 +138,11 @@ final class ReportableGeneDisruptionFactory {
     }
 
     private static class SvAndGeneKey {
-        @NotNull
         private final int variantId;
         @NotNull
         private final String gene;
 
-        private SvAndGeneKey(@NotNull final int variantId, @NotNull final String gene) {
+        private SvAndGeneKey(final int variantId, @NotNull final String gene) {
             this.variantId = variantId;
             this.gene = gene;
         }
@@ -162,7 +161,6 @@ final class ReportableGeneDisruptionFactory {
 
         @Override
         public int hashCode() {
-
             return Objects.hash(variantId, gene);
         }
     }

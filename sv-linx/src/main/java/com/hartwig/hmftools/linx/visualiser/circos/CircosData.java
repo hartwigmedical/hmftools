@@ -49,7 +49,8 @@ public class CircosData
     @NotNull
     private final Map<String, Integer> contigLengths;
 
-    public CircosData(@NotNull final List<Segment> unadjustedSegments,
+    public CircosData(boolean scaleExons,
+            @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons)
@@ -65,15 +66,20 @@ public class CircosData
         this.unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
-        // Note we do not add exons here because we want them interpolated.
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
         unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
         unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
         unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
-        unadjustedPositions.addAll(Span.allPositions(Exons.geneSpanPerChromosome(unadjustedExons)));
-//        unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
+        if (scaleExons)
+        {
+            unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
+        }
+        else
+        {
+            unadjustedPositions.addAll(Span.allPositions(Exons.geneSpanPerChromosome(unadjustedExons)));
+        }
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         final List<GenomePosition> scaledPositions = scalePosition.scaled();

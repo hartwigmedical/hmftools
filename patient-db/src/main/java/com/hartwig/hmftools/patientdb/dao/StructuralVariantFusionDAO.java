@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVBREAKEND;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
@@ -17,11 +16,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableSimpleGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.SimpleGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep13;
@@ -115,6 +115,7 @@ public class StructuralVariantFusionDAO
             // batch-insert transcripts since there can be many more than the batch size per sample
             if (transcripts.size() >= DB_BATCH_INSERT_SIZE || i == transcripts.size() - 1)
             {
+                @SuppressWarnings("unchecked")
                 final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
                 if (ids.size() != transcriptsList.size())
@@ -169,9 +170,9 @@ public class StructuralVariantFusionDAO
     }
 
     @NotNull
-    public final List<SimpleGeneFusion> readGeneFusions(@NotNull final String sample)
+    public final List<ReportableGeneFusion> readGeneFusions(@NotNull final String sample)
     {
-        Set<SimpleGeneFusion> simpleGeneFusions = Sets.newHashSet();
+        Set<ReportableGeneFusion> fusions = Sets.newHashSet();
 
         Svbreakend five = SVBREAKEND.as("five");
         Svbreakend three = SVBREAKEND.as("three");
@@ -186,13 +187,22 @@ public class StructuralVariantFusionDAO
 
         for (Record record : resultFiveGene)
         {
-            simpleGeneFusions.add(ImmutableSimpleGeneFusion.builder()
-                    .fiveGene(record.getValue(five.GENE))
-                    .threeGene(record.getValue(three.GENE))
-                    .build());
+            fusions.add(createFusionBuilder().geneStart(record.getValue(five.GENE)).geneEnd(record.getValue(three.GENE)).build());
         }
 
-        return Lists.newArrayList(simpleGeneFusions);
+        return Lists.newArrayList(fusions);
+    }
+
+    @NotNull
+    private static ImmutableReportableGeneFusion.Builder createFusionBuilder()
+    {
+        return ImmutableReportableGeneFusion.builder()
+                .geneContextStart(Strings.EMPTY)
+                .geneContextEnd(Strings.EMPTY)
+                .geneTranscriptStart(Strings.EMPTY)
+                .geneTranscriptEnd(Strings.EMPTY)
+                .ploidy(1D)
+                .source(Strings.EMPTY);
     }
 }
 

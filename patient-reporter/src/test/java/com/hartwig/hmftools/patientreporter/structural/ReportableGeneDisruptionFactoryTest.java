@@ -51,7 +51,6 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
-
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
         List<GeneCopyNumber> copyNumbers =
