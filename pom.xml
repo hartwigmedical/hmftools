@@ -14,7 +14,6 @@
         <module>api-clients</module>
         <module>ensembl-db</module>
         <module>patient-db</module>
-        <module>variant-annotator</module>
         <module>patient-reporter</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
@@ -53,7 +52,6 @@
 
         <hmf-bachelor.version>1.7</hmf-bachelor.version>
         <hmf-patient-db.version>3.23</hmf-patient-db.version>
-        <hmf-variant-annotation.version>2.15</hmf-variant-annotation.version>
         <hmf-sv-linx.version>1.0</hmf-sv-linx.version>
         <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
         <hmf-patient-reporter.version>7.0</hmf-patient-reporter.version>
@@ -156,11 +154,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
                 <version>${hmf-common.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>variant-annotator</artifactId>
-                <version>${hmf-variant-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
