@@ -55,13 +55,13 @@ class PatientReporter {
     @NotNull
     private final SequencedReportData sequencedReportData;
     @NotNull
-    private final SvAnalyzer svAnalyzerModel;
+    private final SvAnalyzer svAnalyzer;
 
     PatientReporter(@NotNull final BaseReportData baseReportData, @NotNull final SequencedReportData sequencedReportData,
-            @NotNull final SvAnalyzer svAnalyzerModel) {
+            @NotNull final SvAnalyzer svAnalyzer) {
         this.baseReportData = baseReportData;
         this.sequencedReportData = sequencedReportData;
-        this.svAnalyzerModel = svAnalyzerModel;
+        this.svAnalyzer = svAnalyzer;
     }
 
     @NotNull
@@ -89,7 +89,7 @@ class PatientReporter {
                         sequencedReportData.germlineReportingModel(),
                         baseReportData.limsModel().germlineReportingChoice(tumorSample));
 
-        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation, svAnalyzerModel);
+        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation);
         final ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
         final String clinicalSummary = sequencedReportData.summaryModel().findSummaryForSample(tumorSample);
@@ -228,11 +228,8 @@ class PatientReporter {
 
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull SvAnalyzer svAnalyzer) {
-        return svAnalyzer.run(sequencedReportData.panelGeneModel(),
-                copyNumberAnalysis.exomeGeneCopyNumbers(),
-                sequencedReportData.actionabilityAnalyzer(),
-                patientTumorLocation);
+            @Nullable PatientTumorLocation patientTumorLocation) {
+        return svAnalyzer.run(copyNumberAnalysis.exomeGeneCopyNumbers(), sequencedReportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull

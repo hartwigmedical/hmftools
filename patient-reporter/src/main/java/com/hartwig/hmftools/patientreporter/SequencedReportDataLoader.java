@@ -40,6 +40,7 @@ final class SequencedReportDataLoader {
                 HotspotEnrichment.fromHotspotsFile(hotspotTsv),
                 new IndexedFastaSequenceFile(new File(fastaFileLocation)),
                 BEDFileLoader.fromBedFile(highConfidenceBed),
-                germlineReportingModel, summaryModel);
+                germlineReportingModel,
+                summaryModel);
     }
 }
