@@ -23,7 +23,7 @@ public final class WholeGenomeDuplication {
         ListMultimap<Chromosome, PurpleCopyNumber> copyNumberMap = Multimaps.fromRegions(copyNumbers);
 
         int duplicatedAutosomes = 0;
-        for (Chromosome chromosome : copyNumberMap.keys()) {
+        for (Chromosome chromosome : copyNumberMap.keySet()) {
             if (chromosome.isAutosome() && Doubles.greaterOrEqual(averageMajorAllelePloidy(copyNumberMap.get(chromosome)),
                     MIN_AVERAGE_PLOIDY)) {
                 duplicatedAutosomes++;
