@@ -46,7 +46,7 @@ public final class PatientReporterTestUtil {
     private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/linx/sample.linx.disruptions.tsv").getPath();
 
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
-    private static final String SUMMARY_SAMPLES_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
+    private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -80,7 +80,7 @@ public final class PatientReporterTestUtil {
             DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
             GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
-            SummaryModel summaryModel = SummaryFile.buildFromCsv(SUMMARY_SAMPLES_CSV);
+            SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
             CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
             return ImmutableSequencedReportData.of(geneModel,
