@@ -171,7 +171,6 @@ class PatientReporter {
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf, @NotNull Gender gender,
             double purity, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-
         LOGGER.info("Loading somatic variants from {}", somaticVariantVcf);
         final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(),
                 sequencedReportData.somaticVariantEnrichment()).fromVCFFile(sample, somaticVariantVcf);
