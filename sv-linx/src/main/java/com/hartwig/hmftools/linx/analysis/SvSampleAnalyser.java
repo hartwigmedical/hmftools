@@ -413,7 +413,7 @@ public class SvSampleAnalyser {
             if(pseudoGene != null)
             {
                 mVisWriter.addGeneExonData(cluster.id(), pseudoGene.StableId, pseudoGene.GeneName,
-                        transcriptId, pseudoGene.chromosome(), "PSEUDO");
+                        transcriptId, 0, pseudoGene.chromosome(), "PSEUDO");
             }
         }
     }

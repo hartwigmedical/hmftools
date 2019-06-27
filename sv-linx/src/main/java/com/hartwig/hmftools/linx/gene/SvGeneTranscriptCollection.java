@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,7 +36,6 @@ public class SvGeneTranscriptCollection
 
     private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;// keyed by GeneId (aka StableId)
     private Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
-    private Map<String, List<EnsemblGeneData>> mChrReverseGeneDataMap; // order by gene end instead of start, for traversal in the reverse direction
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
     private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
@@ -48,7 +49,6 @@ public class SvGeneTranscriptCollection
     {
         mGeneTransExonDataMap = Maps.newHashMap();
         mChrGeneDataMap = Maps.newHashMap();
-        mChrReverseGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
@@ -1007,6 +1007,41 @@ public class SvGeneTranscriptCollection
         }
 
         return closestPosition;
+    }
+
+    public Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final String geneId, int transId)
+    {
+        Long[] domainPositions = {null, null};
+
+        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneId);
+
+        if(transExonDataList == null || transExonDataList.isEmpty())
+            return domainPositions;
+
+        for(final TranscriptExonData exonData : transExonDataList)
+        {
+            if(exonData.TransId == transId)
+            {
+                if(exonData.CodingStart == null || exonData.CodingEnd == null)
+                    break;
+
+
+                if(exonData.Strand == 1)
+                {
+                    domainPositions[SE_START] = exonData.CodingStart + 3 * proteinData.SeqStart;
+                    domainPositions[SE_END] = exonData.CodingStart + 3 * proteinData.SeqEnd;
+                }
+                else
+                {
+                    domainPositions[SE_START] = exonData.CodingEnd - 3 * proteinData.SeqEnd;
+                    domainPositions[SE_END] = exonData.CodingEnd - 3 * proteinData.SeqStart;
+                }
+
+                break;
+            }
+        }
+
+        return domainPositions;
     }
 
 }

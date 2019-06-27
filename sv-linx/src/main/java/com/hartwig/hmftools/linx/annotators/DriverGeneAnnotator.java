@@ -792,7 +792,7 @@ public class DriverGeneAnnotator
             }
 
             mVisWriter.addGeneExonData(refClusterId, region.geneID(), region.gene(),
-                    "", region.chromosome(), "DRIVER");
+                    "", 0, region.chromosome(), "DRIVER");
 
         }
         catch (final IOException e)

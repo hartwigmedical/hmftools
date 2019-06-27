@@ -1147,11 +1147,13 @@ public class FusionDisruptionAnalyser
 
             mVisWriter.addGeneExonData(clusterId,
                     fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName,
-                    fusion.upstreamTrans().StableId, fusion.upstreamTrans().parent().chromosome(), "FUSION");
+                    fusion.upstreamTrans().StableId, fusion.upstreamTrans().TransId,
+                    fusion.upstreamTrans().parent().chromosome(), "FUSION");
 
             mVisWriter.addGeneExonData(clusterId,
                     fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName,
-                    fusion.downstreamTrans().StableId, fusion.downstreamTrans().parent().chromosome(), "FUSION");
+                    fusion.downstreamTrans().StableId, fusion.downstreamTrans().TransId,
+                    fusion.downstreamTrans().parent().chromosome(), "FUSION");
         }
     }
 

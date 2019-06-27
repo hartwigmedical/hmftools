@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -122,7 +123,7 @@ public class VisualiserWriter
 
         writeVisualSvData(variants);
         writeVisualSegmentData(clusters);
-        writeGeneExonData();
+        writeGeneData();
         writeCopyNumberData(chrCnDataMap);
     }
 
@@ -310,20 +311,23 @@ public class VisualiserWriter
     }
 
 
-    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transcriptId,
+    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final String annotationType)
     {
-        mGeneData.add(new VisGeneData(clusterId, geneId, geneName, transcriptId, chromosome, annotationType));
+        mGeneData.add(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
     }
 
-    public void writeGeneExonData()
+    private void writeGeneData()
     {
         if(!mEnabled)
             return;
 
         List<VisGeneExonFile> geneExonList = Lists.newArrayList();
+        List<VisProteinDomainFile> proteinList = Lists.newArrayList();
 
-        // SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd
+        // exons: SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd
+
+        // protein domains: SampleId,ClusterId,Gene,Transcript,Start,End,Info
 
         // first remove duplicates from amongst the genes
         List<String> loggedGenes = Lists.newArrayList();
@@ -336,12 +340,32 @@ public class VisualiserWriter
             loggedGenes.add(geneData.GeneId);
 
             final List<TranscriptExonData> exonDataLst =
-                    mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TranscriptId);
+                    mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TransName);
 
             for (final TranscriptExonData exonData : exonDataLst)
             {
                 geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, exonData.TransName,
                         geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+            }
+
+            if(geneData.TransId > 0)
+            {
+                final List<TranscriptProteinData> transProteinData =
+                        mGeneTranscriptCollection.getTranscriptProteinDataMap().get(geneData.TransId);
+
+                if (transProteinData != null)
+                {
+                    for (final TranscriptProteinData proteinData : transProteinData)
+                    {
+                        final Long[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, geneData.GeneId, geneData.TransId);
+
+                        if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
+                        {
+                            proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, geneData.TransName,
+                                    domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
+                        }
+                    }
+                }
             }
         }
 
@@ -358,6 +382,7 @@ public class VisualiserWriter
             else
             {
                 VisGeneExonFile.write(VisGeneExonFile.generateFilename(mOutputDir, mSampleId), geneExonList);
+                VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mOutputDir, mSampleId), proteinList);
             }
         }
         catch (final IOException e)
