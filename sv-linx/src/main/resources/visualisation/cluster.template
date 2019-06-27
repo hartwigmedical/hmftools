@@ -20,6 +20,7 @@ show_tick_labels    = no
     label_radius     = (dims(ideogram,radius_inner)+dims(ideogram,radius_outer))/2-15
     label_size       = 30
     label_parallel   = yes
+    label_format     = eval( var(chr) =~ /hs([6]|[9])$/ ? var(label) . ".": var(label) )
 
 </ideogram>
 
