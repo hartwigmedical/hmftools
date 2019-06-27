@@ -32,12 +32,10 @@ public final class PatientReporterTestUtil {
     private static final String RVA_LOGO_PATH = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
+    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
-
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
-
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
     private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
@@ -56,10 +54,11 @@ public final class PatientReporterTestUtil {
 
     @NotNull
     public static BaseReportData testBaseReportData() {
-        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
-        final Lims lims = LimsFactory.empty();
-        final HospitalModel hospitalModel = HospitalModelFactory.empty();
-        return ImmutableBaseReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH, COMPANY_LOGO_PATH);
+        List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+        Lims lims = LimsFactory.empty();
+        HospitalModel hospitalModel = HospitalModelFactory.empty();
+
+        return ImmutableQCFailReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH, COMPANY_LOGO_PATH);
     }
 
     @NotNull
@@ -70,12 +69,15 @@ public final class PatientReporterTestUtil {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
 
-            return ImmutableSequencedReportData.of(geneModel,
-                    testActionabilityAnalyzer(),
-                    new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                    TreeMultimap.create(),
-                    germlineReportingModel,
-                    summaryModel);
+            return ImmutableSequencedReportData.builder()
+                    .from(testBaseReportData())
+                    .panelGeneModel(geneModel)
+                    .actionabilityAnalyzer(testActionabilityAnalyzer())
+                    .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))
+                    .highConfidenceRegions(TreeMultimap.create())
+                    .germlineReportingModel(germlineReportingModel)
+                    .summaryModel(summaryModel)
+                    .build();
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }

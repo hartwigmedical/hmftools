@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
-import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 
@@ -94,7 +93,7 @@ public class PatientReporterApplication {
             String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating qc-fail report for {}", tumorSample);
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
-            QCFailReporter reporter = ImmutableQCFailReporter.of(buildBaseReportData(cmd));
+            QCFailReporter reporter = new QCFailReporter(buildBaseReportData(cmd));
 
             QCFailReport report = reporter.run(tumorSample, reason, cmd.getOptionValue(COMMENTS));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
@@ -102,8 +101,8 @@ public class PatientReporterApplication {
         } else if (validInputForAnalysedSample(cmd)) {
             String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating patient report for {}", tumorSample);
-            SequencedReportData reporterData = buildReporterData(cmd);
-            PatientReporter reporter = new PatientReporter(buildBaseReportData(cmd), reporterData);
+            SequencedReportData sequencedReportData = buildSequencedReportData(cmd);
+            PatientReporter reporter = new PatientReporter(sequencedReportData);
 
             AnalysedPatientReport report = reporter.run(tumorSample,
                     cmd.getOptionValue(REF_SAMPLE),
@@ -147,17 +146,20 @@ public class PatientReporterApplication {
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
         LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
 
-        return ImmutableBaseReportData.of(patientTumorLocations,
-                lims,
-                hospitalModel,
-                cmd.getOptionValue(SIGNATURE),
-                cmd.getOptionValue(RVA_LOGO),
-                cmd.getOptionValue(COMPANY_LOGO));
+        return ImmutableQCFailReportData.builder()
+                .patientTumorLocations(patientTumorLocations)
+                .limsModel(lims)
+                .hospitalModel(hospitalModel)
+                .signaturePath(cmd.getOptionValue(SIGNATURE))
+                .logoRVAPath(cmd.getOptionValue(RVA_LOGO))
+                .logoCompanyPath(cmd.getOptionValue(COMPANY_LOGO))
+                .build();
     }
 
     @NotNull
-    private static SequencedReportData buildReporterData(@NotNull CommandLine cmd) throws IOException {
-        return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
+    private static SequencedReportData buildSequencedReportData(@NotNull CommandLine cmd) throws IOException {
+        return SequencedReportDataLoader.buildFromFiles(buildBaseReportData(cmd),
+                cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(HIGH_CONFIDENCE_BED),

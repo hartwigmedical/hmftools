@@ -57,13 +57,10 @@ class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
 
     @NotNull
-    private final BaseReportData baseReportData;
-    @NotNull
-    private final SequencedReportData sequencedReportData;
+    private final SequencedReportData reportData;
 
-    PatientReporter(@NotNull final BaseReportData baseReportData, @NotNull final SequencedReportData sequencedReportData) {
-        this.baseReportData = baseReportData;
-        this.sequencedReportData = sequencedReportData;
+    PatientReporter(@NotNull final SequencedReportData reportData) {
+        this.reportData = reportData;
     }
 
     @NotNull
@@ -72,12 +69,12 @@ class PatientReporter {
             @NotNull String linxDisruptionTsv, @Nullable String bachelorCsv, @NotNull String chordPredictionFile,
             @NotNull String circosFile, @Nullable String comments) throws IOException {
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData.patientTumorLocations(), tumorSample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(), tumorSample);
 
         SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
                 refSample,
-                baseReportData.limsModel(),
-                baseReportData.hospitalModel(),
+                reportData.limsModel(),
+                reportData.hospitalModel(),
                 patientTumorLocation);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
@@ -92,16 +89,16 @@ class PatientReporter {
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
-                        sequencedReportData.panelGeneModel().drupActionableGenes(),
+                        reportData.panelGeneModel().geneDriverCategoryMap(),
+                        reportData.panelGeneModel().drupActionableGenes(),
                         germlineVariantsToReport,
-                        sequencedReportData.germlineReportingModel(),
-                        baseReportData.limsModel().germlineReportingChoice(tumorSample));
+                        reportData.germlineReportingModel(),
+                        reportData.limsModel().germlineReportingChoice(tumorSample));
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
-        String clinicalSummary = sequencedReportData.summaryModel().findSummaryForSample(tumorSample);
+        String clinicalSummary = reportData.summaryModel().findSummaryForSample(tumorSample);
 
         List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
         allEvidenceItems.addAll(somaticVariantAnalysis.evidenceItems());
@@ -128,9 +125,9 @@ class PatientReporter {
                 svAnalysis.reportableDisruptions(),
                 circosFile,
                 Optional.ofNullable(comments),
-                baseReportData.signaturePath(),
-                baseReportData.logoRVAPath(),
-                baseReportData.logoCompanyPath());
+                reportData.signaturePath(),
+                reportData.logoRVAPath(),
+                reportData.logoCompanyPath());
 
         logReportToStdOut(report);
 
@@ -144,9 +141,9 @@ class PatientReporter {
 
         DecimalFormat percentageFormat = new DecimalFormat("#'%'");
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
-        LOGGER.info(" Purple purity {}", percentageFormat.format(purityContext.bestFit().purity() * 100));
+        LOGGER.info(" Purple purity: {}", percentageFormat.format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
-        LOGGER.info(" Purple status {}", purityContext.status());
+        LOGGER.info(" Purple status: {}", purityContext.status());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
 
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
@@ -154,8 +151,8 @@ class PatientReporter {
 
         return CopyNumberAnalyzer.run(purityContext,
                 exomeGeneCopyNumbers,
-                sequencedReportData.panelGeneModel(),
-                sequencedReportData.actionabilityAnalyzer(),
+                reportData.panelGeneModel(),
+                reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
 
@@ -166,12 +163,12 @@ class PatientReporter {
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
         List<EnrichedSomaticVariant> enrichedSomaticVariants =
-                enrich(variants, gender, purity, sequencedReportData.highConfidenceRegions(), sequencedReportData.refGenomeFastaFile());
+                enrich(variants, gender, purity, reportData.highConfidenceRegions(), reportData.refGenomeFastaFile());
 
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                sequencedReportData.panelGeneModel().somaticVariantGenes(),
-                sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
-                sequencedReportData.actionabilityAnalyzer(),
+                reportData.panelGeneModel().somaticVariantGenes(),
+                reportData.panelGeneModel().geneDriverCategoryMap(),
+                reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
 
@@ -199,15 +196,15 @@ class PatientReporter {
                 BachelorFile.loadBachelorFile(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
 
-        LimsGermlineReportingChoice germlineChoice = baseReportData.limsModel().germlineReportingChoice(sample);
+        LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sample);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
         } else {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    sequencedReportData.germlineReportingModel(),
-                    sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
+                    reportData.germlineReportingModel(),
+                    reportData.panelGeneModel().geneDriverCategoryMap(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport());
         }
@@ -225,7 +222,7 @@ class PatientReporter {
         return SvAnalyzer.run(fusions,
                 disruptions,
                 copyNumberAnalysis.exomeGeneCopyNumbers(),
-                sequencedReportData.actionabilityAnalyzer(),
+                reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
 

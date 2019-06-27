@@ -24,9 +24,9 @@ final class SequencedReportDataLoader {
     }
 
     @NotNull
-    static SequencedReportData buildFromFiles(@NotNull String knowledgebaseDir, @NotNull String drupGeneCsv,
-            @NotNull String fastaFileLocation, @NotNull String highConfidenceBed, @NotNull String germlineGenesCsv,
-            @NotNull String sampleSummaryCsv) throws IOException {
+    static SequencedReportData buildFromFiles(@NotNull BaseReportData baseReportData, @NotNull String knowledgebaseDir,
+            @NotNull String drupGeneCsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed,
+            @NotNull String germlineGenesCsv, @NotNull String sampleSummaryCsv) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
@@ -34,11 +34,14 @@ final class SequencedReportDataLoader {
         final SummaryModel summaryModel = SummaryFile.buildFromCsv(sampleSummaryCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
 
-        return ImmutableSequencedReportData.of(panelGeneModel,
-                actionabilityAnalyzer,
-                new IndexedFastaSequenceFile(new File(fastaFileLocation)),
-                BEDFileLoader.fromBedFile(highConfidenceBed),
-                germlineReportingModel,
-                summaryModel);
+        return ImmutableSequencedReportData.builder()
+                .from(baseReportData)
+                .panelGeneModel(panelGeneModel)
+                .actionabilityAnalyzer(actionabilityAnalyzer)
+                .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(fastaFileLocation)))
+                .highConfidenceRegions(BEDFileLoader.fromBedFile(highConfidenceBed))
+                .germlineReportingModel(germlineReportingModel)
+                .summaryModel(summaryModel)
+                .build();
     }
 }

@@ -6,30 +6,25 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.Lims;
 
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BaseReportData {
+public interface BaseReportData {
 
     @NotNull
-    public abstract List<PatientTumorLocation> patientTumorLocations();
+    List<PatientTumorLocation> patientTumorLocations();
 
     @NotNull
-    public abstract Lims limsModel();
+    Lims limsModel();
 
     @NotNull
-    public abstract HospitalModel hospitalModel();
+    HospitalModel hospitalModel();
 
     @NotNull
-    public abstract String signaturePath();
+    String signaturePath();
 
     @NotNull
-    public abstract String logoRVAPath();
+    String logoRVAPath();
 
     @NotNull
-    public abstract String logoCompanyPath();
+    String logoCompanyPath();
 }
