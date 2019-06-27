@@ -129,7 +129,7 @@ class AnalysedPatientReporter {
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
 
-        logReportToStdOut(report);
+        printReportState(report);
 
         return report;
     }
@@ -233,7 +233,7 @@ class AnalysedPatientReporter {
         return chord;
     }
 
-    private static void logReportToStdOut(@NotNull AnalysedPatientReport report) {
+    private static void printReportState(@NotNull AnalysedPatientReport report) {
         LocalDate tumorArrivalDate = report.sampleReport().tumorArrivalDate();
         String formattedTumorArrivalDate =
                 tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "?";
