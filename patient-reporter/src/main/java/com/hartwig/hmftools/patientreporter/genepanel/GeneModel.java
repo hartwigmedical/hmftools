@@ -28,9 +28,6 @@ public abstract class GeneModel {
     public abstract Set<String> drupActionableGenes();
 
     @NotNull
-    public abstract Set<String> disruptionGeneWhiteList();
-
-    @NotNull
     public abstract Map<String, DriverCategory> geneDriverCategoryMap();
 
     @Value.Derived
@@ -49,26 +46,5 @@ public abstract class GeneModel {
     @Value.Derived
     public boolean isAmplificationReportable(@NotNull String gene) {
         return significantlyAmplifiedGenes().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.ONCO;
-    }
-
-    @Value.Derived
-    @NotNull
-    public Set<String> disruptionGenes() {
-        Set<String> disruptionGenePanel = Sets.newHashSet();
-        for (String driverGene : somaticVariantDriverGenes()) {
-            if (geneDriverCategoryMap().get(driverGene) != DriverCategory.ONCO) {
-                disruptionGenePanel.add(driverGene);
-            }
-        }
-
-        for (String drupActionableGene : drupActionableGenes()) {
-            if (geneDriverCategoryMap().get(drupActionableGene) != DriverCategory.ONCO) {
-                disruptionGenePanel.add(drupActionableGene);
-            }
-        }
-
-        disruptionGenePanel.addAll(disruptionGeneWhiteList());
-
-        return disruptionGenePanel;
     }
 }
