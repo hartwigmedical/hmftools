@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -32,39 +31,34 @@ public final class TsgDrivers {
     }
 
     @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
+    private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
             @NotNull final List<EnrichedSomaticVariant> variants) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
-        long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
-        long sampleIndelCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0L);
+        final Map<VariantType, Long> variantTypeCountsBiallelic = variantTypeCount(SomaticVariant::biallelic, variants);
+        final Map<VariantType, Long> variantTypeCountsNonBiallelic = variantTypeCount(x -> !x.biallelic(), variants);
 
         final Map<String, List<EnrichedSomaticVariant>> codingVariants = codingVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
+            final DndsDriverGeneLikelihood likelihood = likelihoodsByGene.get(gene);
+
             final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
-            driverCatalog.add(geneDriver(sampleSNVCount, sampleIndelCount, likelihoodsByGene.get(gene), geneVariants));
+            driverCatalog.add(geneDriver(likelihood,
+                    geneVariants,
+                    variantTypeCounts,
+                    variantTypeCountsBiallelic,
+                    variantTypeCountsNonBiallelic));
         }
 
         return driverCatalog;
     }
 
     @NotNull
-    private static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
-            @NotNull final List<T> variants) {
-        Set<CodingEffect> suitableCodingEffects =
-                EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
-
-        return variants.stream()
-                .filter(x -> genes.contains(x.gene()))
-                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()))
-                .collect(Collectors.groupingBy(SomaticVariant::gene));
-    }
-
-    @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, long sampleIndelCount, @NotNull final DndsDriverGeneLikelihood likelihood,
-            @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+    static DriverCatalog geneDriver(@NotNull final DndsDriverGeneLikelihood likelihood,
+            @NotNull final List<EnrichedSomaticVariant> geneVariants, @NotNull final Map<VariantType, Long> standardCounts,
+            @NotNull final Map<VariantType, Long> biallelicCounts, @NotNull final Map<VariantType, Long> nonBiallelicCounts) {
         geneVariants.sort(new TsgImpactComparator());
 
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
@@ -96,12 +90,13 @@ public final class TsgDrivers {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 
-        if (geneVariants.stream().anyMatch(PurityAdjustedSomaticVariant::biallelic)) {
+        if (geneVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x))) {
             return builder.driver(DriverType.BIALLELIC).build();
         }
 
         final DndsDriverImpactLikelihood firstImpactLikelihood = impactLikelihood(likelihood, geneVariants.get(0));
-        final long firstVariantTypeCount = geneVariants.get(0).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
+        final long firstVariantTypeCount =
+                variantCount(likelihood.useBiallelic(), geneVariants.get(0), standardCounts, biallelicCounts, nonBiallelicCounts);
 
         if (geneVariants.size() == 1) {
             return builder.dndsLikelihood(firstImpactLikelihood.dndsLikelihood())
@@ -111,7 +106,8 @@ public final class TsgDrivers {
 
         // MultiHit
         final DndsDriverImpactLikelihood secondImpactLikelihood = impactLikelihood(likelihood, geneVariants.get(1));
-        final long secondVariantTypeCount = geneVariants.get(1).type() == VariantType.INDEL ? sampleIndelCount : sampleSNVCount;
+        final long secondVariantTypeCount =
+                variantCount(likelihood.useBiallelic(), geneVariants.get(1), standardCounts, biallelicCounts, nonBiallelicCounts);
 
         return builder.dndsLikelihood(Math.max(firstImpactLikelihood.dndsLikelihood(), secondImpactLikelihood.dndsLikelihood()))
                 .driverLikelihood(DriverCatalogFactory.probabilityDriverVariant(firstVariantTypeCount,
@@ -137,4 +133,32 @@ public final class TsgDrivers {
     private static double singleHit(long sampleCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
         return Doubles.positive(likelihood.dndsLikelihood()) ? DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood) : 0;
     }
+
+    @NotNull
+    private static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
+            @NotNull final List<T> variants) {
+        Set<CodingEffect> suitableCodingEffects =
+                EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
+
+        return variants.stream()
+                .filter(x -> genes.contains(x.gene()))
+                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()))
+                .collect(Collectors.groupingBy(SomaticVariant::gene));
+    }
+
+    private static long variantCount(boolean useBiallelic, @NotNull final SomaticVariant variant,
+            @NotNull final Map<VariantType, Long> standard, @NotNull final Map<VariantType, Long> biallelic,
+            @NotNull final Map<VariantType, Long> nonBiallelic) {
+        final Map<VariantType, Long> map;
+        if (!useBiallelic) {
+            map = standard;
+        } else if (variant.biallelic()) {
+            map = biallelic;
+        } else {
+            map = nonBiallelic;
+        }
+
+        return variant.type() == VariantType.INDEL ? map.getOrDefault(VariantType.INDEL, 0L) : map.getOrDefault(VariantType.SNP, 0L);
+    }
+
 }

@@ -85,10 +85,6 @@ public final class OncoDrivers {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 
-        if (codingVariants.stream().anyMatch(SomaticVariant::isNearHotspot)) {
-            return builder.driver(DriverType.NEAR_HOTSPOT).build();
-        }
-
         if (codingVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
             return builder.driver(DriverType.INFRAME).build();
         }

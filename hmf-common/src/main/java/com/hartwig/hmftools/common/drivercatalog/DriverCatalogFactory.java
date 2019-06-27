@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
@@ -24,7 +25,13 @@ public final class DriverCatalogFactory {
 
     @NotNull
     static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final List<T> variants) {
-        return variants.stream().collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
+        return variantTypeCount(t -> true, variants);
+    }
+
+    @NotNull
+    static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final Predicate<T> predicate,
+            @NotNull final List<T> variants) {
+        return variants.stream().filter(predicate).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
     }
 
     static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
