@@ -144,7 +144,7 @@ class PatientReporter {
 
         DecimalFormat percentageFormat = new DecimalFormat("#'%'");
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
-        LOGGER.info(" Purple purity {}", percentageFormat.format(purityContext.bestFit().purity()));
+        LOGGER.info(" Purple purity {}", percentageFormat.format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
         LOGGER.info(" Purple status {}", purityContext.status());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
@@ -248,11 +248,11 @@ class PatientReporter {
                 report.sampleReport().cancerSubTypeString());
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().purityShallowSeq());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
+        LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
 
         List<ReportableVariant> variantsWithNotify =
                 report.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().sampleId());
-        LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
         LOGGER.info(" Somatic variants to report: {}", report.reportableVariants().size());
         LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
         LOGGER.info(" Microsatellite Indels per Mb: {}", report.microsatelliteIndelsPerMb());
@@ -262,6 +262,7 @@ class PatientReporter {
         LOGGER.info(" Copy number events to report: {}", report.geneCopyNumbers().size());
         LOGGER.info(" Gene fusions to report : {}", report.geneFusions().size());
         LOGGER.info(" Gene disruptions to report : {}", report.geneDisruptions().size());
+
         LOGGER.info("Printing actionability results for {}", report.sampleReport().sampleId());
         LOGGER.info(" Tumor-specific evidence items found: {}", report.tumorSpecificEvidence().size());
         LOGGER.info(" Off-label evidence items found: {}", report.offLabelEvidence().size());
