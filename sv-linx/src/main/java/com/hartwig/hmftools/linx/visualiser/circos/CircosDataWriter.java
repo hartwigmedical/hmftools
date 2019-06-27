@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
@@ -64,6 +63,9 @@ public class CircosDataWriter
         final String exonPath = filePrefix + ".exon.circos";
         Files.write(new File(exonPath).toPath(), exons(exons));
 
+        final String exonRankPath = filePrefix + ".exon.rank.circos";
+        Files.write(new File(exonRankPath).toPath(), exonRank(exons));
+
         final String genePath = filePrefix + ".gene.circos";
         Files.write(new File(genePath).toPath(), genes(exons));
 
@@ -99,6 +101,8 @@ public class CircosDataWriter
 
         final String line = filePrefix + ".line_element.circos";
         Files.write(new File(line).toPath(), highlights(lineElements));
+
+
 
         final String distances = filePrefix + ".distance.circos";
         if (alterations.size() < 200)
@@ -136,6 +140,26 @@ public class CircosDataWriter
     }
 
     @NotNull
+    private List<String> exonRank(@NotNull final List<Exon> exons)
+    {
+        final List<String> result = Lists.newArrayList();
+        for (final Exon exon : exons)
+        {
+            long position = exon.start() + (exon.end() - exon.start()) / 2;
+
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
+                    .add(String.valueOf(position))
+                    .add(String.valueOf(position))
+                    .add(String.valueOf(exon.rank()))
+                    .toString();
+            result.add(exonString);
+
+        }
+
+        return result;
+    }
+
+    @NotNull
     private List<String> geneName(@NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
@@ -162,7 +186,7 @@ public class CircosDataWriter
 
     private static double geneNameLabelSize(@NotNull final String gene)
     {
-        double availablePixels = CircosConfigWriter.PIXELS * (CircosConfigWriter.EXON_OUTER_RADIUS - CircosConfigWriter.EXON_INNER_RADIUS);
+        double availablePixels = CircosConfigWriter.PIXELS * (1 - CircosConfigWriter.EXON_INNER_RADIUS);
         return Math.min(26, 4 + Math.floor(availablePixels / gene.length()));
     }
 
@@ -170,39 +194,14 @@ public class CircosDataWriter
     private List<String> exons(@NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        final Set<String> chromosome = exons.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
-        for (String contig : chromosome)
+        for (final GenomeRegion region : exons)
         {
-
-            final List<GenomeRegion> contigRegions = exons.stream()
-                    .filter(x -> x.chromosome().equals(contig))
-                    .map(x -> GenomeRegionFactory.create(x.chromosome(), x.start(), x.end()))
-                    .sorted()
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            for (int i = 0; i < contigRegions.size(); i++)
-            {
-                final GenomeRegion region = contigRegions.get(i);
-                final String exonString = new StringJoiner(DELIMITER).add(circosContig(region.chromosome()))
-                        .add(String.valueOf(region.start()))
-                        .add(String.valueOf(region.end()))
-                        .add(String.valueOf(1))
-                        .toString();
-                result.add(exonString);
-
-                if (i < contigRegions.size() - 1)
-                {
-                    final GenomeRegion next = contigRegions.get(i + 1);
-
-                    final String betweenString = new StringJoiner(DELIMITER).add(circosContig(region.chromosome()))
-                            .add(String.valueOf(region.end()))
-                            .add(String.valueOf(next.start()))
-                            .add(String.valueOf(0))
-                            .toString();
-                    //                    result.add(betweenString);
-                }
-            }
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(region.chromosome()))
+                    .add(String.valueOf(region.start()))
+                    .add(String.valueOf(region.end()))
+                    .add(String.valueOf(1))
+                    .toString();
+            result.add(exonString);
         }
 
         return result;

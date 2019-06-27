@@ -18,20 +18,22 @@ public class CircosConfigWriter
 
     static final double PIXELS = 1500;
 
+    private static final double EXON_RANK_INNER_RADIUS = 0.95;
+
+    static final double EXON_OUTER_RADIUS = 0.95;
     static final double EXON_INNER_RADIUS = 0.9;
-    static final double EXON_OUTER_RADIUS = 0.975;
 
+    private static final double GENE_OUTER_RADIUS = 0.95;
     private static final double GENE_INNER_RADIUS = 0.93;
-    private static final double GENE_OUTER_RADIUS = 0.945;
 
-    private static final double SEGMENT_INNER_RADIUS = 0.5;
     private static final double SEGMENT_OUTER_RADIUS = 0.875;
+    private static final double SEGMENT_INNER_RADIUS = 0.5;
 
-    private static final double MAP_INNER_RADIUS = 0.175;
     private static final double MAP_OUTER_RADIUS = 0.275;
+    private static final double MAP_INNER_RADIUS = 0.175;
 
-    private static final double CNA_INNER_RADIUS = 0.3;
     private static final double CNA_OUTER_RADIUS = 0.475;
+    private static final double CNA_INNER_RADIUS = 0.3;
 
     private final String sample;
     private final String configPath;
@@ -72,6 +74,8 @@ public class CircosConfigWriter
         final String template =
                 readResource("/visualisation/cluster.template")
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
+
+                        .replaceAll("SUBSTITUTE_EXON_RANK_INNER_RADIUS", String.valueOf(EXON_RANK_INNER_RADIUS))
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(EXON_INNER_RADIUS))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(EXON_OUTER_RADIUS))

@@ -84,6 +84,25 @@ chromosomes_display_default = yes
 <plots>
 
 	# -----------------------------------------------------------
+	# Exon Rank
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
+
+		r0 = SUBSTITUTE_EXON_RANK_INNER_RADIUSr
+		r1 = 1r
+
+		show_links   = no
+		label_size   = 24p
+		label_font   = mono
+		label_snuggle= yes
+
+		padding  = 0p
+		rpadding = 5p
+	</plot>
+
+	# -----------------------------------------------------------
 	# GENES Text
 	<plot>
 		type             = text
@@ -98,7 +117,7 @@ chromosomes_display_default = yes
 		label_font   = mono
 		label_snuggle= yes
 
-		padding  = 0p
+		padding  = -20p
 		rpadding = 0p
 	</plot>
 

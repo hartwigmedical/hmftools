@@ -21,17 +21,9 @@ import org.jetbrains.annotations.NotNull;
 public class CircosData
 {
     @NotNull
-    private final List<Segment> unadjustedSegments;
-    @NotNull
     private final List<Link> unadjustedLinks;
     @NotNull
     private final List<CopyNumberAlteration> unadjustedAlterations;
-    @NotNull
-    private final List<Exon> unadjustedExons;
-    @NotNull
-    private final List<GenomeRegion> unadjustedFragileSites;
-    @NotNull
-    private final List<GenomeRegion> unadjustedLineElements;
 
     @NotNull
     private final List<Segment> segments;
@@ -55,15 +47,12 @@ public class CircosData
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons)
     {
-        this.unadjustedSegments = unadjustedSegments;
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
-        this.unadjustedExons = unadjustedExons;
-
-        this.unadjustedFragileSites =
+        final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
 
-        this.unadjustedLineElements =
+        final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
@@ -95,12 +84,6 @@ public class CircosData
     }
 
     @NotNull
-    public List<Segment> unadjustedSegments()
-    {
-        return unadjustedSegments;
-    }
-
-    @NotNull
     public List<Link> unadjustedLinks()
     {
         return unadjustedLinks;
@@ -110,24 +93,6 @@ public class CircosData
     public List<CopyNumberAlteration> unadjustedAlterations()
     {
         return unadjustedAlterations;
-    }
-
-    @NotNull
-    public List<Exon> unadjustedExons()
-    {
-        return unadjustedExons;
-    }
-
-    @NotNull
-    public List<GenomeRegion> unadjustedFragileSites()
-    {
-        return unadjustedFragileSites;
-    }
-
-    @NotNull
-    public List<GenomeRegion> unadjustedLineElements()
-    {
-        return unadjustedLineElements;
     }
 
     @NotNull
