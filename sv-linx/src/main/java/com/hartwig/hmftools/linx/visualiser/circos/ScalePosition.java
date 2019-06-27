@@ -15,8 +15,10 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableLink;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableSegment;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
@@ -81,6 +83,12 @@ class ScalePosition
     }
 
     @NotNull
+    public List<Gene> scaleGene(@NotNull final List<Gene> genes)
+    {
+        return genes.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
+    @NotNull
     private Exon interpolate(@NotNull final Exon exon)
     {
         final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
@@ -130,10 +138,8 @@ class ScalePosition
     public List<Link> scaleLinks(@NotNull final List<Link> links)
     {
         final List<Link> results = Lists.newArrayList();
-
         for (final Link link : links)
         {
-
             try
             {
                 final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
@@ -169,6 +175,17 @@ class ScalePosition
     {
         return ImmutableCopyNumberAlteration.builder()
                 .from(victim)
+                .start(positionMap.get(victim.start()))
+                .end(positionMap.get(victim.end()))
+                .build();
+    }
+
+    @NotNull
+    private static Gene scale(@NotNull final Gene victim, @NotNull final Map<Long, Integer> positionMap)
+    {
+        return ImmutableGene.builder()
+                .from(victim)
+                .namePosition(positionMap.get(victim.namePosition()))
                 .start(positionMap.get(victim.start()))
                 .end(positionMap.get(victim.end()))
                 .build();

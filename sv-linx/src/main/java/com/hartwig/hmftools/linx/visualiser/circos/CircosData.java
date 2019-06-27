@@ -8,10 +8,13 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.Gene;
+import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
@@ -37,6 +40,8 @@ public class CircosData
     private final List<GenomeRegion> fragileSites;
     @NotNull
     private final List<GenomeRegion> lineElements;
+    @NotNull
+    private final List<Gene> genes;
 
     @NotNull
     private final Map<String, Integer> contigLengths;
@@ -55,6 +60,8 @@ public class CircosData
         final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
+        final List<Gene> unadjustedGenes = Genes.genes(unadjustedExons);
+
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
         unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
@@ -64,6 +71,7 @@ public class CircosData
         if (scaleExons)
         {
             unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
+            unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         }
         else
         {
@@ -80,7 +88,14 @@ public class CircosData
         fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         lineElements = scalePosition.scaleRegions(unadjustedLineElements);
         exons = scalePosition.interpolateExons(unadjustedExons);
+        genes = scalePosition.scaleGene(unadjustedGenes);
 
+    }
+
+    @NotNull
+    public List<Gene> genes()
+    {
+        return genes;
     }
 
     @NotNull

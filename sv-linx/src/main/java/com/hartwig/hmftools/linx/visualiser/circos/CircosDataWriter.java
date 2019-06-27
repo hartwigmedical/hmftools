@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
@@ -67,10 +68,10 @@ public class CircosDataWriter
         Files.write(new File(exonRankPath).toPath(), exonRank(exons));
 
         final String genePath = filePrefix + ".gene.circos";
-        Files.write(new File(genePath).toPath(), genes(exons));
+        Files.write(new File(genePath).toPath(), genes(data.genes()));
 
         final String geneNamePath = filePrefix + ".gene.name.circos";
-        Files.write(new File(geneNamePath).toPath(), geneName(exons));
+        Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
 
         final String textPath = filePrefix + ".text.circos";
         Files.write(new File(textPath).toPath(), createPositionText(debug, data.unadjustedLinks(), links, segments));
@@ -102,8 +103,6 @@ public class CircosDataWriter
         final String line = filePrefix + ".line_element.circos";
         Files.write(new File(line).toPath(), highlights(lineElements));
 
-
-
         final String distances = filePrefix + ".distance.circos";
         if (alterations.size() < 200)
         {
@@ -117,19 +116,14 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> genes(@NotNull final List<Exon> exons)
+    private List<String> genes(@NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
-        final Set<String> genes = exons.stream().map(Exon::gene).collect(Collectors.toSet());
-        for (final String gene : genes)
+        for (final Gene gene : genes)
         {
-            final List<Exon> geneExons = exons.stream().filter(x -> x.gene().equals(gene)).collect(toList());
-            long min = geneExons.stream().mapToLong(GenomeRegion::start).min().orElse(0);
-            long max = geneExons.stream().mapToLong(GenomeRegion::end).max().orElse(0);
-
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(geneExons.get(0).chromosome()))
-                    .add(String.valueOf(min))
-                    .add(String.valueOf(max))
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
+                    .add(String.valueOf(gene.start()))
+                    .add(String.valueOf(gene.end()))
                     .add(String.valueOf(1))
                     .toString();
             result.add(exonString);
@@ -160,7 +154,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> geneName(@NotNull final List<Exon> exons)
+    private List<String> oldGeneName(@NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
         final Set<String> genes = exons.stream().map(Exon::gene).collect(Collectors.toSet());
@@ -176,6 +170,26 @@ public class CircosDataWriter
                     .add(String.valueOf(min))
                     .add(String.valueOf(min))
                     .add(geneName)
+                    .add("label_size=" + labelSize + "p,rpadding=0r")
+                    .toString();
+            result.add(exonString);
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private List<String> geneName(@NotNull final List<Gene> genes)
+    {
+        final List<String> result = Lists.newArrayList();
+        for (final Gene gene : genes)
+        {
+            final double labelSize = geneNameLabelSize(gene.name());
+
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
+                    .add(String.valueOf(gene.namePosition()))
+                    .add(String.valueOf(gene.namePosition()))
+                    .add(gene.name())
                     .add("label_size=" + labelSize + "p,rpadding=0r")
                     .toString();
             result.add(exonString);
