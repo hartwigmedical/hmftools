@@ -4,9 +4,11 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -39,8 +41,8 @@ public interface SvVisualiserConfig
     String CIRCOS = "circos";
     String THREADS = "threads";
     String DEBUG = "debug";
-    String SINGLE_CLUSTER = "clusterId";
-    String SINGLE_CHROMOSOME = "chromosome";
+    String CLUSTERS = "clusterId";
+    String CHROMOSOMES = "chromosome";
     String CNA = "cna";
     String EXON = "exon";
     String SCALE_EXON = "scale_exons";
@@ -75,11 +77,11 @@ public interface SvVisualiserConfig
 
     boolean scaleExons();
 
-    @Nullable
-    Integer singleCluster();
+    @NotNull
+    List<Integer> clusters();
 
-    @Nullable
-    String singleChromosome();
+    @NotNull
+    List<String> chromosomes();
 
     @NotNull
     static Options createOptions()
@@ -94,10 +96,10 @@ public interface SvVisualiserConfig
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(DEBUG, false, "Enabled debug mode");
 
-        options.addOption(SINGLE_CLUSTER, true, "Only generate image for single cluster");
-        options.addOption(SINGLE_CHROMOSOME, true, "Only generate image for singe chromosome");
-        options.addOption(CNA, true, "Location of copy number alterations (optional alternative to db)");
-        options.addOption(EXON, true, "Location of exons");
+        options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
+        options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
+        options.addOption(CNA, true, "Path to copy number alterations");
+        options.addOption(EXON, true, "Path to exons");
         options.addOption(SCALE_EXON, false, "Scale exon positions instead of interpolating them");
 
         return options;
@@ -161,10 +163,45 @@ public interface SvVisualiserConfig
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))
                 .debug(cmd.hasOption(DEBUG))
-                .singleCluster(cmd.hasOption(SINGLE_CLUSTER) ? Integer.valueOf(cmd.getOptionValue(SINGLE_CLUSTER)) : null)
-                .singleChromosome(cmd.hasOption(SINGLE_CHROMOSOME) ? cmd.getOptionValue(SINGLE_CHROMOSOME) : null)
+                .clusters(clusters(cmd))
+                .chromosomes(chromosomes(cmd))
                 .scaleExons(cmd.hasOption(SCALE_EXON))
                 .build();
+    }
+
+    @NotNull
+    static List<Integer> clusters(@NotNull final CommandLine cmd) throws ParseException
+    {
+        List<Integer> result = Lists.newArrayList();
+        if (cmd.hasOption(CLUSTERS))
+        {
+            final String clusters = cmd.getOptionValue(CLUSTERS);
+            for (String clusterId : clusters.split(","))
+            {
+                try
+                {
+                    result.add(Integer.valueOf(clusterId));
+                } catch (NumberFormatException e)
+                {
+                    throw new ParseException(CLUSTERS + " should be comma separated integer values");
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+    @NotNull
+    static List<String> chromosomes(@NotNull final CommandLine cmd)
+    {
+        List<String> result = Lists.newArrayList();
+        if (cmd.hasOption(CHROMOSOMES))
+        {
+            final String contigs = cmd.getOptionValue(CHROMOSOMES);
+            Collections.addAll(result, contigs.split(","));
+        }
+        return result;
     }
 
     @NotNull

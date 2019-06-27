@@ -76,19 +76,10 @@ public class SvVisualiser implements AutoCloseable
     {
 
         final List<Future<Object>> futures = Lists.newArrayList();
-        if (config.singleCluster() != null || config.singleChromosome() != null)
+        if (!config.clusters().isEmpty() || !config.chromosomes().isEmpty())
         {
-
-            if (config.singleCluster() != null)
-            {
-                futures.add(executorService.submit(() -> runCluster(config.singleCluster(), false)));
-            }
-
-            if (config.singleChromosome() != null)
-            {
-                futures.add(executorService.submit(() -> runChromosome(config.singleChromosome())));
-            }
-
+            config.clusters().forEach(clusterId -> futures.add(executorService.submit(() -> runCluster(clusterId, false))));
+            config.chromosomes().forEach(chromosome -> futures.add(executorService.submit(() -> runChromosome(chromosome))));
         }
         else
         {
