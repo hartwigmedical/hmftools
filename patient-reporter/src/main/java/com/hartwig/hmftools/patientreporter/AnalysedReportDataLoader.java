@@ -18,13 +18,13 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-final class SequencedReportDataLoader {
+final class AnalysedReportDataLoader {
 
-    private SequencedReportDataLoader() {
+    private AnalysedReportDataLoader() {
     }
 
     @NotNull
-    static SequencedReportData buildFromFiles(@NotNull BaseReportData baseReportData, @NotNull String knowledgebaseDir,
+    static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
             @NotNull String drupGeneCsv, @NotNull String fastaFileLocation, @NotNull String highConfidenceBed,
             @NotNull String germlineGenesCsv, @NotNull String sampleSummaryCsv) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
@@ -34,8 +34,8 @@ final class SequencedReportDataLoader {
         final SummaryModel summaryModel = SummaryFile.buildFromCsv(sampleSummaryCsv);
         final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
 
-        return ImmutableSequencedReportData.builder()
-                .from(baseReportData)
+        return ImmutableAnalysedReportData.builder()
+                .from(reportData)
                 .panelGeneModel(panelGeneModel)
                 .actionabilityAnalyzer(actionabilityAnalyzer)
                 .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(fastaFileLocation)))

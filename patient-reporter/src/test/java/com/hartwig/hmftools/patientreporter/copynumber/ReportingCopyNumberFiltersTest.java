@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
 import static com.hartwig.hmftools.patientreporter.copynumber.ReportingCopyNumberFilters.includeInReport;
 
 import static org.junit.Assert.assertFalse;
@@ -20,7 +20,7 @@ public class ReportingCopyNumberFiltersTest {
 
     @Test
     public void canFilterForReportingCorrectly() {
-        GeneModel geneModel = testSequencedReportData().panelGeneModel();
+        GeneModel geneModel = testAnalysedReportData().panelGeneModel();
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
         String gene = "DOES_NOT_EXIST";

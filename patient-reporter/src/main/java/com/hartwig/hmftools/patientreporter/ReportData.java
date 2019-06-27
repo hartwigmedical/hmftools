@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.lims.Lims;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface BaseReportData {
+public interface ReportData {
 
     @NotNull
     List<PatientTumorLocation> patientTumorLocations();

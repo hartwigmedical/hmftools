@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -53,7 +53,7 @@ public final class ExampleAnalysisTestFactory {
         final double tumorMutationalBurden = 13.6324;
         final double microsatelliteIndelsPerMb = 0.1179;
 
-        final BaseReportData baseReportData = testBaseReportData();
+        final ReportData reportData = testReportData();
 
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -92,9 +92,9 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
-                baseReportData.signaturePath(),
-                baseReportData.logoRVAPath(),
-                baseReportData.logoCompanyPath());
+                reportData.signaturePath(),
+                reportData.logoRVAPath(),
+                reportData.logoCompanyPath());
     }
 
     @NotNull
@@ -106,7 +106,7 @@ public final class ExampleAnalysisTestFactory {
         final double tumorMutationalBurden = 13.6;
         final double microsatelliteIndelsPerMb = 0.1089;
 
-        final BaseReportData baseReportData = testBaseReportData();
+        final ReportData reportData = testReportData();
 
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -138,9 +138,9 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
-                baseReportData.signaturePath(),
-                baseReportData.logoRVAPath(),
-                baseReportData.logoCompanyPath());
+                reportData.signaturePath(),
+                reportData.logoRVAPath(),
+                reportData.logoCompanyPath());
     }
 
     @NotNull
@@ -152,7 +152,7 @@ public final class ExampleAnalysisTestFactory {
         final double tumorMutationalBurden = 13.6;
         final double microsatelliteIndelsPerMb = 0.1089;
 
-        final BaseReportData baseReportData = testBaseReportData();
+        final ReportData reportData = testReportData();
 
         final List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -184,9 +184,9 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
-                baseReportData.signaturePath(),
-                baseReportData.logoRVAPath(),
-                baseReportData.logoCompanyPath());
+                reportData.signaturePath(),
+                reportData.logoRVAPath(),
+                reportData.logoCompanyPath());
     }
 
     @NotNull

@@ -12,7 +12,10 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
+import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 
 import org.apache.commons.cli.CommandLine;
@@ -93,7 +96,7 @@ public class PatientReporterApplication {
             String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating qc-fail report for {}", tumorSample);
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
-            QCFailReporter reporter = new QCFailReporter(buildBaseReportData(cmd));
+            QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
             QCFailReport report = reporter.run(tumorSample, reason, cmd.getOptionValue(COMMENTS));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
@@ -101,8 +104,7 @@ public class PatientReporterApplication {
         } else if (validInputForAnalysedSample(cmd)) {
             String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating patient report for {}", tumorSample);
-            SequencedReportData sequencedReportData = buildSequencedReportData(cmd);
-            PatientReporter reporter = new PatientReporter(sequencedReportData);
+            AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
             AnalysedPatientReport report = reporter.run(tumorSample,
                     cmd.getOptionValue(REF_SAMPLE),
@@ -133,7 +135,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static BaseReportData buildBaseReportData(@NotNull CommandLine cmd) throws IOException {
+    private static QCFailReportData buildQCFailReportData(@NotNull CommandLine cmd) throws IOException {
         String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
@@ -157,8 +159,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static SequencedReportData buildSequencedReportData(@NotNull CommandLine cmd) throws IOException {
-        return SequencedReportDataLoader.buildFromFiles(buildBaseReportData(cmd),
+    private static AnalysedReportData buildAnalysedReportData(@NotNull CommandLine cmd) throws IOException {
+        return AnalysedReportDataLoader.buildFromFiles(buildQCFailReportData(cmd),
                 cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),

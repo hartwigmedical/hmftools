@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants.somatic;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,7 +39,7 @@ public class SomaticVariantAnalyzerTest {
         SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
                 Sets.newHashSet(RIGHT_GENE),
                 Maps.newHashMap(),
-                testSequencedReportData().actionabilityAnalyzer(),
+                testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
         assertEquals(2, analysis.tumorMutationalLoad());

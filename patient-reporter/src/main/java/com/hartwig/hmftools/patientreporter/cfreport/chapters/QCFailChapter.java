@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
@@ -10,6 +9,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;

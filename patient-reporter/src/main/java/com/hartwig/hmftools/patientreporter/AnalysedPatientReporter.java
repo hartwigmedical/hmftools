@@ -53,13 +53,13 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-class PatientReporter {
-    private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
+class AnalysedPatientReporter {
+    private static final Logger LOGGER = LogManager.getLogger(AnalysedPatientReporter.class);
 
     @NotNull
-    private final SequencedReportData reportData;
+    private final AnalysedReportData reportData;
 
-    PatientReporter(@NotNull final SequencedReportData reportData) {
+    AnalysedPatientReporter(@NotNull final AnalysedReportData reportData) {
         this.reportData = reportData;
     }
 

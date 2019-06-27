@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testSequencedReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -10,7 +10,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class PatientReporterTest {
+public class AnalysedPatientReporterTest {
 
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String TUMOR_SAMPLE = "sample";
@@ -27,7 +27,7 @@ public class PatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
-        PatientReporter reporter = new PatientReporter(testSequencedReportData());
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(testAnalysedReportData());
 
         assertNotNull(reporter.run(TUMOR_SAMPLE,
                 REF_SAMPLE,

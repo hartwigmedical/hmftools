@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testBaseReportData;
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,11 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
-import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
-import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 
 import org.apache.logging.log4j.util.Strings;
@@ -115,9 +115,9 @@ public class CFReportWriterTest {
                 reason,
                 QCFailStudy.CPCT,
                 Optional.empty(),
-                testBaseReportData().signaturePath(),
-                testBaseReportData().logoRVAPath(),
-                testBaseReportData().logoCompanyPath());
+                testReportData().signaturePath(),
+                testReportData().logoRVAPath(),
+                testReportData().logoCompanyPath());
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeQCFailReport(patientReport, filename);

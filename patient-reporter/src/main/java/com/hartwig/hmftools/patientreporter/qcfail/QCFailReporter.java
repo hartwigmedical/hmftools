@@ -4,9 +4,6 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
-import com.hartwig.hmftools.patientreporter.BaseReportData;
-import com.hartwig.hmftools.patientreporter.ImmutableQCFailReport;
-import com.hartwig.hmftools.patientreporter.QCFailReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 
@@ -16,9 +13,9 @@ import org.jetbrains.annotations.Nullable;
 public class QCFailReporter {
 
     @NotNull
-    private final BaseReportData reportData;
+    private final QCFailReportData reportData;
 
-    public QCFailReporter(@NotNull final BaseReportData reportData) {
+    public QCFailReporter(@NotNull final QCFailReportData reportData) {
         this.reportData = reportData;
     }
 
