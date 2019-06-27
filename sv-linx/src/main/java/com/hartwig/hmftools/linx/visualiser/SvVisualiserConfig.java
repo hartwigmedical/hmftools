@@ -15,6 +15,8 @@ import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
@@ -37,6 +39,7 @@ public interface SvVisualiserConfig
     String DATA_OUT = "data_out";
     String SAMPLE = "sample";
     String SEGMENT = "segment";
+    String PROTEIN_DOMAIN = "protein_domain";
     String LINK = "link";
     String CIRCOS = "circos";
     String THREADS = "threads";
@@ -58,6 +61,9 @@ public interface SvVisualiserConfig
 
     @NotNull
     List<CopyNumberAlteration> copyNumberAlterations();
+
+    @NotNull
+    List<ProteinDomain> proteinDomain();
 
     @NotNull
     List<Exon> exons();
@@ -92,6 +98,7 @@ public interface SvVisualiserConfig
         options.addOption(SAMPLE, true, "Sample name");
         options.addOption(SEGMENT, true, "Path to track file");
         options.addOption(LINK, true, "Path to link file");
+        options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file");
         options.addOption(CIRCOS, true, "Path to circos binary");
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(DEBUG, false, "Enabled debug mode");
@@ -117,6 +124,7 @@ public interface SvVisualiserConfig
         final String dataOutputDir = parameter(cmd, DATA_OUT, missingJoiner);
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
         final String exonPath = parameter(cmd, EXON, missingJoiner);
+        final String proteinDomainPath = parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
 
         final String missing = missingJoiner.toString();
         if (!missing.isEmpty())
@@ -129,6 +137,8 @@ public interface SvVisualiserConfig
         final List<Segment> segments = Segments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<CopyNumberAlteration> cna =
                 CopyNumberAlterations.read(cnaPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<ProteinDomain> proteinDomains =
+                ProteinDomains.readProteinDomains(proteinDomainPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
 
         if (segments.isEmpty() && links.isEmpty())
         {
@@ -159,6 +169,7 @@ public interface SvVisualiserConfig
                 .links(links)
                 .sample(sample)
                 .exons(exons)
+                .proteinDomain(proteinDomains)
                 .copyNumberAlterations(cna)
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))

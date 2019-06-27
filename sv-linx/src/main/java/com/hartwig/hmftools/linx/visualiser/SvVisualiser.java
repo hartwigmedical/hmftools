@@ -27,6 +27,7 @@ import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
@@ -142,7 +143,10 @@ public class SvVisualiser implements AutoCloseable
         final List<Exon> chromosomeExons =
                 config.exons().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons);
+        final List<ProteinDomain> chromosomeProteinDomains =
+                config.proteinDomain().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
+
+        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains);
     }
 
     @Nullable
@@ -179,11 +183,14 @@ public class SvVisualiser implements AutoCloseable
                         .debug() ? ".debug" : "");
 
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons);
+        final List<ProteinDomain> clusterProteinDomains =
+                config.proteinDomain().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains);
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
-            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons)
+            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons,
+            @NotNull final List<ProteinDomain> filteredProteinDomains)
             throws IOException, InterruptedException
     {
 
@@ -206,7 +213,8 @@ public class SvVisualiser implements AutoCloseable
         double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
 
-        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons);
+        final CircosData circosData =
+                new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
         confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
 

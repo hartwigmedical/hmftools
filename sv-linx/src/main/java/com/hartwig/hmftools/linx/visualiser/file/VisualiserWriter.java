@@ -361,7 +361,7 @@ public class VisualiserWriter
 
                         if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                         {
-                            proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, geneData.TransName,
+                            proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.Chromosome,
                                     domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                         }
                     }

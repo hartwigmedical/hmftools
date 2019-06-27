@@ -19,15 +19,17 @@ public class VisProteinDomainFile
     public final String SampleId;
     public final int ClusterId;
     public final String Transcript;
+    public final String Chromosome;
     public final long Start;
     public final long End;
     public final String Info;
 
-    public VisProteinDomainFile(final String sampleId, int clusterId, final String transcript, long start, long end, final String info)
+    public VisProteinDomainFile(final String sampleId, int clusterId, final String transcript, final String chromosome, long start, long end, final String info)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
         Transcript = transcript;
+        Chromosome = chromosome;
         Info = info;
         Start = start;
         End = end;
@@ -74,6 +76,7 @@ public class VisProteinDomainFile
                 .add("SampleId")
                 .add("ClusterId")
                 .add("Transcript")
+                .add("Chromosome")
                 .add("Start")
                 .add("End")
                 .add("Info")
@@ -87,6 +90,7 @@ public class VisProteinDomainFile
                 .add(String.valueOf(geData.SampleId))
                 .add(String.valueOf(geData.ClusterId))
                 .add(String.valueOf(geData.Transcript))
+                .add(String.valueOf(geData.Chromosome))
                 .add(String.valueOf(geData.Start))
                 .add(String.valueOf(geData.End))
                 .add(String.valueOf(geData.Info))
@@ -103,6 +107,7 @@ public class VisProteinDomainFile
         return new VisProteinDomainFile(
                 values[index++],
                 Integer.valueOf(values[index++]),
+                values[index++],
                 values[index++],
                 Long.valueOf(values[index++]),
                 Long.valueOf(values[index++]),

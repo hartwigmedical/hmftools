@@ -17,6 +17,7 @@ import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,6 +43,8 @@ public class CircosData
     private final List<GenomeRegion> lineElements;
     @NotNull
     private final List<Gene> genes;
+    @NotNull
+    private  final List<ProteinDomain> proteinDomains;
 
     @NotNull
     private final Map<String, Integer> contigLengths;
@@ -50,7 +53,8 @@ public class CircosData
             @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
-            @NotNull final List<Exon> unadjustedExons)
+            @NotNull final List<Exon> unadjustedExons,
+            @NotNull final List<ProteinDomain> unadjustedProteinDomains)
     {
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
@@ -70,6 +74,7 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
         if (scaleExons)
         {
+            unadjustedPositions.addAll(Span.allPositions(unadjustedProteinDomains));
             unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
             unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         }
@@ -87,8 +92,11 @@ public class CircosData
         alterations = scalePosition.scaleAlterations(unadjustedAlterations);
         fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         lineElements = scalePosition.scaleRegions(unadjustedLineElements);
-        exons = scalePosition.interpolateExons(unadjustedExons);
         genes = scalePosition.scaleGene(unadjustedGenes);
+
+        // Note the following *might* be interpolated
+        exons = scalePosition.interpolateExons(unadjustedExons);
+        proteinDomains = scalePosition.interpolateProteinDomains(unadjustedProteinDomains);
 
     }
 
