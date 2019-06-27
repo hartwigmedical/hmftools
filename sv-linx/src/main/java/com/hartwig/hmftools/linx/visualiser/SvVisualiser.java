@@ -209,16 +209,11 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
-        double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
-        double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains);
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData);
+        confWrite.writeConfig();
 
-        final CircosData circosData =
-                new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains);
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(circosData);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), confWrite).write(circosData);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),

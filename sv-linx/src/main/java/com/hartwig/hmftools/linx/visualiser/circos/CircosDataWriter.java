@@ -39,16 +39,17 @@ public class CircosDataWriter
 
     private final ColorPicker colorPicker;
     private final String filePrefix;
-    private final int maxTracks;
     private boolean debug;
+    private final CircosConfigWriter configWriter;
 
     public CircosDataWriter(final boolean debug, final ColorPicker colorPicker, @NotNull final String sample,
-            @NotNull final String outputDir, final int maxTracks)
+            @NotNull final String outputDir,
+            final CircosConfigWriter configWriter)
     {
         this.debug = debug;
         this.colorPicker = colorPicker;
+        this.configWriter = configWriter;
         this.filePrefix = outputDir + File.separator + sample;
-        this.maxTracks = maxTracks;
     }
 
     public void write(@NotNull final CircosData data) throws IOException
@@ -87,7 +88,7 @@ public class CircosDataWriter
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(contigLengths));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(maxTracks, segments, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(segments, links));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -154,7 +155,6 @@ public class CircosDataWriter
 
         return result;
     }
-
 
     @NotNull
     private List<String> exonRank(@NotNull final List<Exon> exons)
@@ -412,7 +412,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createConnectors(int maxTracks, @NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    private List<String> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
     {
         final List<String> result = Lists.newArrayList();
 
@@ -421,7 +421,7 @@ public class CircosDataWriter
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
 
-            final double r1 = CircosConfigWriter.svTrackRelative(maxTracks, segment.track());
+            final double r1 = configWriter.svTrackRelative(segment.track());
             int startLinkUsage = Links.linkTraverseCount(startPosition, links);
 
             if (startLinkUsage > 0)
@@ -460,7 +460,7 @@ public class CircosDataWriter
 
         }
 
-        double rTrack1 = CircosConfigWriter.svTrackRelative(maxTracks, 0);
+        double rTrack1 = configWriter.svTrackRelative(0);
         for (Link link : links)
         {
             if (link.connectorsOnly())
@@ -525,7 +525,7 @@ public class CircosDataWriter
             if (segment.track() > 0)
             {
 
-                double r0 = CircosConfigWriter.svTrackRelative(maxTracks, segment.track());
+                double r0 = configWriter.svTrackRelative(segment.track());
                 String r0String = "r0=" + r0 + "r";
                 double thickness = thicknessPixels(segment.traverseCount());
                 String r1String = "r1=" + r0 + "r+" + thickness + "p";

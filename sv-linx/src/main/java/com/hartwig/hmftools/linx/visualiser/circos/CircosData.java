@@ -44,10 +44,14 @@ public class CircosData
     @NotNull
     private final List<Gene> genes;
     @NotNull
-    private  final List<ProteinDomain> proteinDomains;
+    private final List<ProteinDomain> proteinDomains;
 
     @NotNull
     private final Map<String, Integer> contigLengths;
+
+    private final int maxTracks;
+    private final double maxCopyNumber;
+    private final double maxMinorAllelePloidy;
 
     public CircosData(boolean scaleExons,
             @NotNull final List<Segment> unadjustedSegments,
@@ -98,6 +102,29 @@ public class CircosData
         exons = scalePosition.interpolateExons(unadjustedExons);
         proteinDomains = scalePosition.interpolateProteinDomains(unadjustedProteinDomains);
 
+        maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
+        maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
+        maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+    }
+
+    public boolean displayGenes()
+    {
+        return !exons.isEmpty();
+    }
+
+    public int maxTracks()
+    {
+        return maxTracks;
+    }
+
+    public double maxCopyNumber()
+    {
+        return maxCopyNumber;
+    }
+
+    public double maxMinorAllelePloidy()
+    {
+        return maxMinorAllelePloidy;
     }
 
     @NotNull
