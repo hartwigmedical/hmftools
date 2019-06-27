@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -139,16 +140,18 @@ class PatientReporter {
     @NotNull
     private CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        final PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        LOGGER.info("Loaded purple purity data from {}", purplePurityTsv);
-        LOGGER.info(" Purple purity " + purityContext.bestFit().purity());
-        LOGGER.info(" Purple average tumor ploidy: " + purityContext.bestFit().ploidy());
-        LOGGER.info(" Purple status " + purityContext.status());
+        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
 
-        final List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
+        DecimalFormat percentageFormat = new DecimalFormat("#'%'");
+        LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
+        LOGGER.info(" Purple purity {}", percentageFormat.format(purityContext.bestFit().purity()));
+        LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
+        LOGGER.info(" Purple status {}", purityContext.status());
+        LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
+
+        List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        LOGGER.info("Analyzing purple copy numbers");
         return CopyNumberAnalyzer.run(purityContext,
                 exomeGeneCopyNumbers,
                 sequencedReportData.panelGeneModel(),
@@ -159,13 +162,12 @@ class PatientReporter {
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf, @NotNull Gender gender,
             double purity, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        final List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
+        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        final List<EnrichedSomaticVariant> enrichedSomaticVariants =
+        List<EnrichedSomaticVariant> enrichedSomaticVariants =
                 enrich(variants, gender, purity, sequencedReportData.highConfidenceRegions(), sequencedReportData.refGenomeFastaFile());
 
-        LOGGER.info("Analyzing somatic variants");
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 sequencedReportData.panelGeneModel().somaticVariantGenes(),
                 sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
@@ -176,10 +178,10 @@ class PatientReporter {
     @NotNull
     private static List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants, @NotNull Gender gender, double purity,
             @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile) {
-        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
-        final ClonalityFactory clonalityFactory = new ClonalityFactory(gender, purity, clonalPloidy);
+        double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
+        ClonalityFactory clonalityFactory = new ClonalityFactory(gender, purity, clonalPloidy);
 
-        final EnrichedSomaticVariantFactory enrichedSomaticFactory =
+        EnrichedSomaticVariantFactory enrichedSomaticFactory =
                 new EnrichedSomaticVariantFactory(highConfidenceRegions, refGenomeFastaFile, clonalityFactory);
 
         return enrichedSomaticFactory.enrich(variants);

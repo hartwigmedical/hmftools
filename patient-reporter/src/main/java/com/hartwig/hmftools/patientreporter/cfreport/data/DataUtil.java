@@ -20,12 +20,12 @@ public final class DataUtil {
     }
 
     @NotNull
-    public static String formatPercentage(final double percentage) {
+    public static String formatPercentage(double percentage) {
         return PERCENTAGE_FORMAT.format(percentage);
     }
 
     @NotNull
-    public static String formatDate(@Nullable final LocalDate date) {
+    public static String formatDate(@Nullable LocalDate date) {
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : "?";
     }

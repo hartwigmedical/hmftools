@@ -25,7 +25,7 @@ public final class ClonalityCutoffKernel {
         final KernelEstimator estimator = new KernelEstimator(0.001, KERNEL_BANDWIDTH);
         sample.forEach(x -> estimator.addValue(x, 1.0D));
 
-        LOGGER.info("Examining ploidy troughs for clonality cutoff");
+        LOGGER.debug("Examining ploidy troughs for clonality cutoff");
         final double[] ploidies = IntStream.rangeClosed(0, 100).mapToDouble(x -> x / 100d).toArray();
         final double[] densities = DoubleStream.of(ploidies).map(estimator::getProbability).toArray();
 
@@ -36,15 +36,15 @@ public final class ClonalityCutoffKernel {
             if (Doubles.lessThan(density, densities[i - 1]) && Doubles.lessThan(density, densities[i + 1])) {
                 final double ploidy = ploidies[i];
                 int troughCount = count(ploidy, sample);
-                LOGGER.info("Discovered trough at ploidy {} with count {}", ploidy, troughCount);
+                LOGGER.debug("Discovered trough at ploidy {} with count {}", ploidy, troughCount);
                 trough = ploidy;
             }
         }
 
         if (Doubles.isZero(trough)) {
-            LOGGER.info("Unable to find clonality cutoff.");
+            LOGGER.debug("Unable to find clonality cutoff.");
         } else {
-            LOGGER.info("Determined clonality cutoff at ploidy {}", trough);
+            LOGGER.debug("Determined clonality cutoff at ploidy {}", trough);
         }
 
         return trough;
