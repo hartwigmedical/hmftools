@@ -35,5 +35,4 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract SummaryModel summaryModel();
-
 }

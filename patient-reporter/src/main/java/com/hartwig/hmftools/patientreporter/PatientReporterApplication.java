@@ -15,7 +15,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReporter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
-import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -104,13 +103,15 @@ public class PatientReporterApplication {
             final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating patient report for {}", tumorSample);
             final SequencedReportData reporterData = buildReporterData(cmd);
-            final PatientReporter reporter = buildReporter(cmd, reporterData);
+            final PatientReporter reporter = new PatientReporter(buildBaseReportData(cmd), reporterData);
 
             final AnalysedPatientReport report = reporter.run(tumorSample,
                     cmd.getOptionValue(REF_SAMPLE),
                     cmd.getOptionValue(PURPLE_PURITY_TSV),
                     cmd.getOptionValue(PURPLE_GENE_CNV_TSV),
                     cmd.getOptionValue(SOMATIC_VARIANT_VCF),
+                    cmd.getOptionValue(LINX_FUSION_TSV),
+                    cmd.getOptionValue(LINX_DISRUPTION_TSV),
                     cmd.getOptionValue(BACHELOR_CSV),
                     cmd.getOptionValue(CHORD_PREDICTION_FILE),
                     cmd.getOptionValue(CIRCOS_FILE),
@@ -135,19 +136,16 @@ public class PatientReporterApplication {
     @NotNull
     private static BaseReportData buildBaseReportData(@NotNull CommandLine cmd) throws IOException {
         String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
-        LOGGER.info("Loading tumor location CSV from {}.", tumorLocationCsv);
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
-        LOGGER.info(" Loaded tumor locations for {} patients.", patientTumorLocations.size());
+        LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
 
         String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
-        LOGGER.info("Loading LIMS database from {}.", limsDirectory);
         final Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
-        LOGGER.info(" Loaded data for {} samples.", lims.sampleCount());
+        LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleCount(), limsDirectory);
 
         String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
-        LOGGER.info("Loading hospitals from {}.", hospitalsDirectory);
         final HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
-        LOGGER.info(" Loaded data for {} hospitals.", hospitalModel.hospitalCount());
+        LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
 
         return ImmutableBaseReportData.of(patientTumorLocations,
                 lims,
@@ -170,9 +168,7 @@ public class PatientReporterApplication {
     @NotNull
     private static PatientReporter buildReporter(@NotNull CommandLine cmd, @NotNull SequencedReportData sequencedReportData)
             throws IOException {
-        final SvAnalyzer svAnalyzer = SvAnalyzer.fromFiles(cmd.getOptionValue(LINX_FUSION_TSV), cmd.getOptionValue(LINX_DISRUPTION_TSV));
-
-        return new PatientReporter(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
+        return new PatientReporter(buildBaseReportData(cmd), sequencedReportData);
     }
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {

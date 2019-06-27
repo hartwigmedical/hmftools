@@ -27,6 +27,10 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -55,20 +59,17 @@ class PatientReporter {
     private final BaseReportData baseReportData;
     @NotNull
     private final SequencedReportData sequencedReportData;
-    @NotNull
-    private final SvAnalyzer svAnalyzer;
 
-    PatientReporter(@NotNull final BaseReportData baseReportData, @NotNull final SequencedReportData sequencedReportData,
-            @NotNull final SvAnalyzer svAnalyzer) {
+    PatientReporter(@NotNull final BaseReportData baseReportData, @NotNull final SequencedReportData sequencedReportData) {
         this.baseReportData = baseReportData;
         this.sequencedReportData = sequencedReportData;
-        this.svAnalyzer = svAnalyzer;
     }
 
     @NotNull
     public AnalysedPatientReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull String purplePurityTsv,
-            @NotNull String purpleGeneCnvTsv, @NotNull String somaticVariantVcf, @Nullable String bachelorCsv,
-            @NotNull String chordPredictionFile, @NotNull String circosFile, @Nullable String comments) throws IOException {
+            @NotNull String purpleGeneCnvTsv, @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv,
+            @NotNull String linxDisruptionTsv, @Nullable String bachelorCsv, @NotNull String chordPredictionFile,
+            @NotNull String circosFile, @Nullable String comments) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData.patientTumorLocations(), tumorSample);
 
@@ -96,7 +97,7 @@ class PatientReporter {
                         sequencedReportData.germlineReportingModel(),
                         baseReportData.limsModel().germlineReportingChoice(tumorSample));
 
-        SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation);
+        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
         String clinicalSummary = sequencedReportData.summaryModel().findSummaryForSample(tumorSample);
@@ -138,15 +139,14 @@ class PatientReporter {
     @NotNull
     private CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        LOGGER.info("Loading purple purity data from {}", purplePurityTsv);
         final PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        LOGGER.info("Loaded purple purity data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity " + purityContext.bestFit().purity());
         LOGGER.info(" Purple average tumor ploidy: " + purityContext.bestFit().ploidy());
         LOGGER.info(" Purple status " + purityContext.status());
 
-        LOGGER.info("Loading purple gene copynumber data from {}", purpleGeneCnvTsv);
         final List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
-        LOGGER.info(" Loaded {} gene copy numbers", exomeGeneCopyNumbers.size());
+        LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
         LOGGER.info("Analyzing purple copy numbers");
         return CopyNumberAnalyzer.run(purityContext,
@@ -159,11 +159,9 @@ class PatientReporter {
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf, @NotNull Gender gender,
             double purity, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        LOGGER.info("Loading somatic variants from {}", somaticVariantVcf);
         final List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
-        LOGGER.info(" {} PASS somatic variants loaded", variants.size());
+        LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        LOGGER.info("Enriching somatic variants");
         final List<EnrichedSomaticVariant> enrichedSomaticVariants =
                 enrich(variants, gender, purity, sequencedReportData.highConfidenceRegions(), sequencedReportData.refGenomeFastaFile());
 
@@ -191,14 +189,13 @@ class PatientReporter {
     private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sample, @Nullable String bachelorCsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis) throws IOException {
         if (bachelorCsv == null) {
-            LOGGER.info("Skipping germline analysis - no bachelor CSV passed. Presumably no pathogenic germline variants found.");
+            LOGGER.info("Skipping germline analysis - No bachelor CSV passed. Presumably no pathogenic germline variants found.");
             return Lists.newArrayList();
         }
 
-        LOGGER.info("Loading germline variants from {}", bachelorCsv);
         List<GermlineVariant> variants =
                 BachelorFile.loadBachelorFile(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
-        LOGGER.info(" {} PASS germline variants loaded", variants.size());
+        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
 
         LimsGermlineReportingChoice germlineChoice = baseReportData.limsModel().germlineReportingChoice(sample);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
@@ -215,15 +212,26 @@ class PatientReporter {
     }
 
     @NotNull
-    private SvAnalysis analyzeStructuralVariants(@NotNull CopyNumberAnalysis copyNumberAnalysis,
-            @Nullable PatientTumorLocation patientTumorLocation) {
-        return svAnalyzer.run(copyNumberAnalysis.exomeGeneCopyNumbers(), sequencedReportData.actionabilityAnalyzer(), patientTumorLocation);
+    private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
+            @NotNull CopyNumberAnalysis copyNumberAnalysis, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+        LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
+
+        List<ReportableDisruption> disruptions = ReportableDisruptionFile.read(linxDisruptionTsv);
+        LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxDisruptionTsv);
+
+        return SvAnalyzer.run(fusions,
+                disruptions,
+                copyNumberAnalysis.exomeGeneCopyNumbers(),
+                sequencedReportData.actionabilityAnalyzer(),
+                patientTumorLocation);
     }
 
     @NotNull
     private static ChordAnalysis analyzeChord(@NotNull String chordPredictionFile) throws IOException {
-        LOGGER.info("Loading CHORD analysis from {}", chordPredictionFile);
-        return ChordFileReader.read(chordPredictionFile);
+        ChordAnalysis chord = ChordFileReader.read(chordPredictionFile);
+        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionFile);
+        return chord;
     }
 
     private static void logReportToStdOut(@NotNull AnalysedPatientReport report) {
@@ -231,13 +239,13 @@ class PatientReporter {
         String formattedTumorArrivalDate =
                 tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "?";
 
-        LOGGER.info("Printing clinical & laboratory data for {}", report.sampleReport().sampleId());
+        LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().sampleId());
         LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);
-        LOGGER.info(" Primary tumor location: {} - {}",
+        LOGGER.info(" Primary tumor location: {} ({})",
                 report.sampleReport().primaryTumorLocationString(),
                 report.sampleReport().cancerSubTypeString());
-        LOGGER.info("Shallow seq purity: {}", report.sampleReport().purityShallowSeq());
-        LOGGER.info("Lab SOPs used: {}", report.sampleReport().labProcedures());
+        LOGGER.info(" Shallow seq purity: {}", report.sampleReport().purityShallowSeq());
+        LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
 
         List<ReportableVariant> variantsWithNotify =
                 report.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
@@ -255,7 +263,6 @@ class PatientReporter {
         LOGGER.info("Printing actionability results for {}", report.sampleReport().sampleId());
         LOGGER.info(" Tumor-specific evidence items found: {}", report.tumorSpecificEvidence().size());
         LOGGER.info(" Off-label evidence items found: {}", report.offLabelEvidence().size());
-        LOGGER.info(" Clinical trials matched to molecular profile: {}", report.clinicalTrials());
-
+        LOGGER.info(" Clinical trials matched to molecular profile: {}", report.clinicalTrials().size());
     }
 }
