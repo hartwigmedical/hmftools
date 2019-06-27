@@ -79,6 +79,12 @@ public class DriverGeneAnnotator
     private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
     private VisualiserWriter mVisWriter;
 
+    private static final String MATCH_INFO_TI = "TI";
+    private static final String MATCH_INFO_FB = "FB";
+    private static final String MATCH_INFO_DUP = "DUP";
+    private static final String MATCH_INFO_MIN = "MIN";
+    private static final String MATCH_INFO_LOH = "LOH";
+
     // temp
     private boolean mWriteMatchedGeneCopyNumber;
     private BufferedWriter mGCNFileWriter;
@@ -444,7 +450,7 @@ public class DriverGeneAnnotator
             // int startIndex = startBreakend.getChrPosIndex();
             // endBreakend = findDeletionBreakend(breakendList, startIndex);
 
-            driverGeneData.addSvBreakend(startBreakend, "MIN");
+            driverGeneData.addSvBreakend(startBreakend, MATCH_INFO_MIN);
         }
         else
         {
@@ -452,7 +458,7 @@ public class DriverGeneAnnotator
         }
 
         if(endBreakend != null)
-            driverGeneData.addSvBreakend(endBreakend, "MIN");
+            driverGeneData.addSvBreakend(endBreakend, MATCH_INFO_MIN);
 
         if(startBreakend != null && endBreakend != null)
             driverGeneData.setFullyMatched(true);
@@ -514,16 +520,16 @@ public class DriverGeneAnnotator
         // look to next event
         if(lohStartBreakend != null && lohEndBreakend != null)
         {
-            driverGeneData.addSvBreakend(lohStartBreakend, "LOH");
-            driverGeneData.addSvBreakend(lohEndBreakend, "LOH");
+            driverGeneData.addSvBreakend(lohStartBreakend, MATCH_INFO_LOH);
+            driverGeneData.addSvBreakend(lohEndBreakend, MATCH_INFO_LOH);
         }
         else if(lohStartBreakend != null)
         {
-            driverGeneData.addSvBreakend(lohStartBreakend, "LOH_" + matchedLohEvent.SegEnd);
+            driverGeneData.addSvBreakend(lohStartBreakend, MATCH_INFO_LOH + "_" + matchedLohEvent.SegEnd);
         }
         else if(lohEndBreakend != null)
         {
-            driverGeneData.addSvBreakend(lohEndBreakend, "LOH_" + matchedLohEvent.SegStart);
+            driverGeneData.addSvBreakend(lohEndBreakend, MATCH_INFO_LOH + "_" + matchedLohEvent.SegStart);
         }
         else if(matchedLohEvent != null)
         {
@@ -646,8 +652,7 @@ public class DriverGeneAnnotator
                         mSampleId, varStart.getCluster().id(), geneToStr(driverGene, region), varStart.posId(), varStart.type(),
                         varStart.copyNumber(true), varStart.copyNumberChange(true)));
 
-                driverGeneData.addSvBreakend(lowerBreakend, "SV");
-                driverGeneData.addSvBreakend(upperBreakend, "SV");
+                driverGeneData.addSvBreakendPair(lowerBreakend, upperBreakend, MATCH_INFO_DUP);
 
                 if(varStart.copyNumberChange(true) > maxCopyNumber)
                 {
@@ -676,8 +681,7 @@ public class DriverGeneAnnotator
                         varStart.posId(), varStart.copyNumber(beStart.usesStart()), varStart.copyNumberChange(beStart.usesStart()),
                         varEnd.posId(), varEnd.copyNumber(beEnd.usesStart()), varEnd.copyNumberChange(beEnd.usesStart())));
 
-                driverGeneData.addSvBreakend(beStart, "TI");
-                driverGeneData.addSvBreakend(beEnd, "TI");
+                driverGeneData.addSvBreakendPair(beStart, beEnd, MATCH_INFO_TI);
 
                 if (varStart.copyNumberChange(true) > maxCopyNumber)
                 {
@@ -697,7 +701,16 @@ public class DriverGeneAnnotator
         else
         {
             if(foldbackBreakend != null)
-                driverGeneData.addSvBreakend(foldbackBreakend, "FB");
+            {
+                SvVarData foldbackSv = foldbackBreakend.getSV();
+                SvBreakend otherBreakend = foldbackSv.isChainedFoldback() ?
+                        foldbackSv.getChainedFoldbackSv().getChainedFoldbackBreakend() : foldbackBreakend.getOtherBreakend();
+
+                if(otherBreakend != null)
+                {
+                    driverGeneData.addSvBreakendPair(foldbackBreakend, otherBreakend, MATCH_INFO_FB);
+                }
+            }
         }
 
         writeDriverData(driverGeneData);
@@ -733,7 +746,7 @@ public class DriverGeneAnnotator
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
                 mFileWriter.write("SampleId,Gene,GeneType,DriverType,DriverLikelihood");
-                mFileWriter.write(",FullyMatched,ClusterId,SvId,IsStart,MatchInfo");
+                mFileWriter.write(",FullyMatched,ClusterId,PairId,SvId,SvIsStart,SvPosition,MatchInfo");
                 mFileWriter.write(",SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN");
                 mFileWriter.newLine();
             }
@@ -748,8 +761,11 @@ public class DriverGeneAnnotator
             int refClusterId = -1;
 
             final List<SvBreakend> svBreakends = driverGeneData.getSvBreakends();
+            final List<String> svInfoList = driverGeneData.getSvInfoList();
+            final List<Integer> linkingIdList = driverGeneData.getLinkingIds();
 
-            int dataCount = max(1, max(svBreakends.size(), driverGeneData.getSvInfoList().size()));
+            int dataCount = max(1, max(svBreakends.size(), svInfoList.size()));
+            boolean useLinkingIds = (dataCount == linkingIdList.size());
 
             for(int i = 0; i < dataCount; ++i)
             {
@@ -759,7 +775,9 @@ public class DriverGeneAnnotator
                 int clusterId = -1;
                 String varId = "";
                 boolean svIsStart = false;
+                long position = -1;
                 String matchInfo = "";
+                int linkingId = -1;
 
                 if(i < svBreakends.size())
                 {
@@ -767,10 +785,15 @@ public class DriverGeneAnnotator
                     final SvBreakend breakend = svBreakends.get(i);
                     matchInfo = driverGeneData.getSvInfoList().get(i);
 
+                    if(useLinkingIds)
+                        linkingId = linkingIdList.get(i);
+
                     if(breakend == null)
                         break;
 
                     varId = breakend.getSV().id();
+                    svIsStart = breakend.usesStart();
+                    position = breakend.position();
                     refClusterId = breakend.getSV().getCluster().id();
                     clusterId = refClusterId;
                 }
@@ -779,12 +802,12 @@ public class DriverGeneAnnotator
                     matchInfo = driverGeneData.getSvInfoList().get(i);
                 }
 
-                writer.write(String.format(",%s,%d,%s,%s,%s", driverGeneData.fullyMatched(), clusterId, varId, svIsStart, matchInfo));
+                writer.write(String.format(",%s,%d,%d,%s,%s,%d,%s",
+                        driverGeneData.fullyMatched(), clusterId, linkingId, varId, svIsStart, position, matchInfo));
 
                 writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
                         mSamplePloidy, region.chromosome(), arm, geneCN != null ? geneCN.minCopyNumber() : -1,
-                        cnData[CENTROMERE_CN],
-                        arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
+                        cnData[CENTROMERE_CN], arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
 
                 writer.newLine();
             }

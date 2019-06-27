@@ -15,34 +15,44 @@ public class DriverGeneData
 
     private List<SvBreakend> mSvBreakends;
     private List<String> mSvInfo;
+    private List<Integer> mLinkingIds;
     private boolean mFullyMatched;
-    private boolean mMissedLohSVs;
 
     public DriverGeneData(final DriverCatalog driverGene, final HmfTranscriptRegion region, final GeneCopyNumber geneCN)
     {
         DriverGene = driverGene;
         Region = region;
         GeneCN = geneCN;
-        mMissedLohSVs = false;
         mFullyMatched = false;
 
         mSvBreakends = Lists.newArrayList();
         mSvInfo = Lists.newArrayList();
+        mLinkingIds = Lists.newArrayList();
     }
-
-    public void setMissedLohSVs(boolean toggle) { mMissedLohSVs = toggle; }
-    public boolean missedLohSVs() { return mMissedLohSVs; }
 
     public void setFullyMatched(boolean toggle) { mFullyMatched = toggle; }
     public boolean fullyMatched() { return mFullyMatched; }
 
     public final List<SvBreakend> getSvBreakends() { return mSvBreakends; }
     public final List<String> getSvInfoList() { return mSvInfo; }
+    public final List<Integer> getLinkingIds() { return mLinkingIds; }
 
     public void addSvBreakend(final SvBreakend breakend, final String info)
     {
         mSvBreakends.add(breakend);
         mSvInfo.add(info);
+    }
+
+    public void addSvBreakendPair(final SvBreakend breakend1, final SvBreakend breakend2, final String info)
+    {
+        mSvBreakends.add(breakend1);
+        mSvBreakends.add(breakend2);
+        mSvInfo.add(info);
+        mSvInfo.add(info);
+
+        int linkingId = mLinkingIds.size() / 2;
+        mLinkingIds.add(linkingId);
+        mLinkingIds.add(linkingId);
     }
 
     public void addMatchInfo(final String info)
