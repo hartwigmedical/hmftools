@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.StructuralVariantAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
@@ -114,26 +113,6 @@ public class FusionFinder
     }
 
     public final KnownFusionsModel getKnownFusionsModel() { return mKnownFusionsModel; }
-
-    public final List<GeneFusion> findFusions(final List<StructuralVariantAnnotation> annotations)
-    {
-        List<GeneFusion> fusions = Lists.newArrayList();
-
-        if(!mHasValidConfigData)
-            return fusions;
-
-        LOGGER.debug("finding fusions in {} annotations", annotations.size());
-
-        for (final StructuralVariantAnnotation annotation : annotations)
-        {
-            List<GeneFusion> svFusions = findFusions(annotation.start(), annotation.end(),
-                    true, false, null, true);
-
-            fusions.addAll(svFusions);
-        }
-
-        return fusions;
-    }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
@@ -736,18 +715,6 @@ public class FusionFinder
         catch (final IOException e)
         {
             LOGGER.error("error writing fusions: {}", e.toString());
-        }
-    }
-
-    public void writeFusions(final List<GeneFusion> fusions, final String sampleId, boolean hasMultipleSamples)
-    {
-        String fusionFileName = hasMultipleSamples ? "FUSIONS.csv" : sampleId + "_fusions.csv";
-
-        initialiseOutputFile(fusionFileName, "");
-
-        for (final GeneFusion fusion : fusions)
-        {
-            writeFusionData(fusion, sampleId);
         }
     }
 

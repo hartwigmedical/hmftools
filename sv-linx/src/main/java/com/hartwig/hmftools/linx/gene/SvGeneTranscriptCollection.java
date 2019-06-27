@@ -69,7 +69,6 @@ public class SvGeneTranscriptCollection
 
     public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
-    public final Map<String, List<EnsemblGeneData>> getChrReverseGeneDataMap() { return mChrReverseGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
     public Map<Integer,Long> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
 
@@ -139,7 +138,6 @@ public class SvGeneTranscriptCollection
         List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
 
         final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
-        // final List<EnsemblGeneData> geneRegionsReversed = mChrReverseGeneDataMap.get(chromosome);
 
         if(geneRegions == null)
             return geneAnnotations;
@@ -836,7 +834,7 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblData(boolean delayTranscriptLoading)
     {
-        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChrGeneDataMap, mChrReverseGeneDataMap))
+        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChrGeneDataMap))
             return false;
 
         if(!delayTranscriptLoading)

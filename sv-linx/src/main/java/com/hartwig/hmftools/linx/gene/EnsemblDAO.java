@@ -186,8 +186,7 @@ public class EnsemblDAO
     private static int GD_BAND = 7;
     private static int GD_SYN = 8;
 
-    public static boolean loadEnsemblGeneData(final String dataPath, Map<String,
-            List<EnsemblGeneData>> chrGeneDataMap, Map<String, List<EnsemblGeneData>> chrReverseGeneDataMap)
+    public static boolean loadEnsemblGeneData(final String dataPath, Map<String, List<EnsemblGeneData>> chrGeneDataMap)
     {
         String filename = dataPath;
 
@@ -211,7 +210,6 @@ public class EnsemblDAO
             line = fileReader.readLine(); // skip header
 
             List<EnsemblGeneData> geneList = null;
-            List<EnsemblGeneData> reverseGeneList = null;
             String currentChr = "";
             int geneCount = 0;
 
@@ -235,9 +233,7 @@ public class EnsemblDAO
                     if(geneList == null)
                     {
                         geneList = Lists.newArrayList();
-                        reverseGeneList = Lists.newArrayList();
                         chrGeneDataMap.put(chromosome, geneList);
-                        chrReverseGeneDataMap.put(chromosome, reverseGeneList);
                     }
                 }
 
@@ -246,29 +242,7 @@ public class EnsemblDAO
                 geneList.add(geneData);
                 ++geneCount;
 
-                // but also create a list ordered by GeneEnd
-                int index = 0;
-                for(; index < reverseGeneList.size(); ++index)
-                {
-                    final EnsemblGeneData rgd = reverseGeneList.get(index);
-
-                    if(geneData.GeneEnd < rgd.GeneEnd)
-                        break;
-                }
-
-                reverseGeneList.add(index, geneData);
-
                 line = fileReader.readLine();
-            }
-
-            // set indicies for the reverse list
-            for(Map.Entry<String, List<EnsemblGeneData>> entry : chrReverseGeneDataMap.entrySet())
-            {
-                final List<EnsemblGeneData> geneDataList = entry.getValue();
-                for(int index = 0; index < geneDataList.size(); ++index)
-                {
-                    geneDataList.get(index).setReverseListIndex(index);
-                }
             }
 
             LOGGER.debug("loaded {} gene records", geneCount);
