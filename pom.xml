@@ -51,11 +51,10 @@
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <hmf-bachelor.version>1.7</hmf-bachelor.version>
-        <hmf-patient-db.version>3.23</hmf-patient-db.version>
-        <hmf-sv-linx.version>1.0</hmf-sv-linx.version>
-        <hmf-sv-graphs.version>1.0</hmf-sv-graphs.version>
-        <hmf-patient-reporter.version>7.0</hmf-patient-reporter.version>
         <hmf-health-checker.version>3.0</hmf-health-checker.version>
+        <hmf-patient-db.version>3.23</hmf-patient-db.version>
+        <hmf-patient-reporter.version>7.0</hmf-patient-reporter.version>
+        <hmf-sv-linx.version>1.0</hmf-sv-linx.version>
 
         <amber.version>2.5</amber.version>
         <cobalt.version>1.7</cobalt.version>
@@ -159,11 +158,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>sv-linx</artifactId>
                 <version>${hmf-sv-linx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>sv-graphs</artifactId>
-                <version>${hmf-sv-graphs.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
