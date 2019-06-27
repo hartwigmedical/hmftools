@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,7 +47,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 class PatientReporter {
     private static final Logger LOGGER = LogManager.getLogger(PatientReporter.class);
@@ -68,19 +69,25 @@ class PatientReporter {
     public AnalysedPatientReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull String purplePurityTsv,
             @NotNull String purpleGeneCnvTsv, @NotNull String somaticVariantVcf, @Nullable String bachelorCsv,
             @NotNull String chordPredictionFile, @NotNull String circosFile, @Nullable String comments) throws IOException {
-        final PatientTumorLocation patientTumorLocation =
+        PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(baseReportData.patientTumorLocations(), tumorSample);
 
-        final CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
-        final SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(tumorSample,
+        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
+                refSample,
+                baseReportData.limsModel(),
+                baseReportData.hospitalModel(),
+                patientTumorLocation);
+
+        CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
+        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(tumorSample,
                 somaticVariantVcf,
                 copyNumberAnalysis.gender(),
                 copyNumberAnalysis.purity(),
                 patientTumorLocation);
-        final List<GermlineVariant> germlineVariantsToReport =
+        List<GermlineVariant> germlineVariantsToReport =
                 analyzeGermlineVariants(tumorSample, bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
-        final List<ReportableVariant> reportableVariants =
+        List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
@@ -89,42 +96,19 @@ class PatientReporter {
                         sequencedReportData.germlineReportingModel(),
                         baseReportData.limsModel().germlineReportingChoice(tumorSample));
 
-        final SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation);
-        final ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
+        SvAnalysis svAnalysis = analyzeStructuralVariants(copyNumberAnalysis, patientTumorLocation);
+        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
-        final String clinicalSummary = sequencedReportData.summaryModel().findSummaryForSample(tumorSample);
+        String clinicalSummary = sequencedReportData.summaryModel().findSummaryForSample(tumorSample);
 
-        LOGGER.info("Printing analysis results for {}:", tumorSample);
-        LOGGER.info(" Clinical summary present: " + (!clinicalSummary.isEmpty() ? "yes" : "no"));
-        LOGGER.info(" Somatic variants to report : " + somaticVariantAnalysis.variantsToReport().size());
-        LOGGER.info(" Germline variants to report: " + germlineVariantsToReport.size());
-        LOGGER.info("  Total number of reportable variants: " + reportableVariants.size());
-        LOGGER.info(" Microsatellite Indels per Mb: " + somaticVariantAnalysis.microsatelliteIndelsPerMb());
-        LOGGER.info(" Tumor mutational load: " + somaticVariantAnalysis.tumorMutationalLoad());
-        LOGGER.info(" Tumor mutational burden: " + somaticVariantAnalysis.tumorMutationalBurden());
-        LOGGER.info(" CHORD analysis HRD prediction: " + chordAnalysis.hrdValue());
-        LOGGER.info(" Copy number events to report: " + copyNumberAnalysis.reportableGeneCopyNumbers().size());
-        LOGGER.info(" Gene fusions to report : " + svAnalysis.reportableFusions().size());
-        LOGGER.info(" Gene disruptions to report : " + svAnalysis.reportableDisruptions().size());
-        LOGGER.info("Printing actionability results (including off-label trials):");
-        LOGGER.info(" Evidence items found based on variants: " + somaticVariantAnalysis.evidenceItems().size());
-        LOGGER.info(" Evidence items found based on copy numbers: " + copyNumberAnalysis.evidenceItems().size());
-        LOGGER.info(" Evidence items found based on fusions: " + svAnalysis.evidenceItems().size());
-
-        final List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
+        List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
         allEvidenceItems.addAll(somaticVariantAnalysis.evidenceItems());
         allEvidenceItems.addAll(copyNumberAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
-        final SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
-                refSample,
-                baseReportData.limsModel(),
-                baseReportData.hospitalModel(),
-                patientTumorLocation);
+        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 
-        final List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
-
-        return ImmutableAnalysedPatientReport.of(sampleReport,
+        AnalysedPatientReport report = ImmutableAnalysedPatientReport.of(sampleReport,
                 copyNumberAnalysis.hasReliablePurityFit(),
                 copyNumberAnalysis.purity(),
                 copyNumberAnalysis.ploidy(),
@@ -145,6 +129,10 @@ class PatientReporter {
                 baseReportData.signaturePath(),
                 baseReportData.logoRVAPath(),
                 baseReportData.logoCompanyPath());
+
+        logReportToStdOut(report);
+
+        return report;
     }
 
     @NotNull
@@ -172,8 +160,7 @@ class PatientReporter {
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf, @NotNull Gender gender,
             double purity, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         LOGGER.info("Loading somatic variants from {}", somaticVariantVcf);
-        final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(new PassingVariantFilter(),
-                sequencedReportData.somaticVariantEnrichment()).fromVCFFile(sample, somaticVariantVcf);
+        final List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info(" {} PASS somatic variants loaded", variants.size());
 
         LOGGER.info("Enriching somatic variants");
@@ -218,6 +205,7 @@ class PatientReporter {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
         } else {
+            LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
                     sequencedReportData.germlineReportingModel(),
                     sequencedReportData.panelGeneModel().geneDriverCategoryMap(),
@@ -236,5 +224,38 @@ class PatientReporter {
     private static ChordAnalysis analyzeChord(@NotNull String chordPredictionFile) throws IOException {
         LOGGER.info("Loading CHORD analysis from {}", chordPredictionFile);
         return ChordFileReader.read(chordPredictionFile);
+    }
+
+    private static void logReportToStdOut(@NotNull AnalysedPatientReport report) {
+        LocalDate tumorArrivalDate = report.sampleReport().tumorArrivalDate();
+        String formattedTumorArrivalDate =
+                tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "?";
+
+        LOGGER.info("Printing clinical & laboratory data for {}", report.sampleReport().sampleId());
+        LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);
+        LOGGER.info(" Primary tumor location: {} - {}",
+                report.sampleReport().primaryTumorLocationString(),
+                report.sampleReport().cancerSubTypeString());
+        LOGGER.info("Shallow seq purity: {}", report.sampleReport().purityShallowSeq());
+        LOGGER.info("Lab SOPs used: {}", report.sampleReport().labProcedures());
+
+        List<ReportableVariant> variantsWithNotify =
+                report.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
+        LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().sampleId());
+        LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
+        LOGGER.info(" Somatic variants to report: {}", report.reportableVariants().size());
+        LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
+        LOGGER.info(" Microsatellite Indels per Mb: {}", report.microsatelliteIndelsPerMb());
+        LOGGER.info(" Tumor mutational load: {}", report.tumorMutationalLoad());
+        LOGGER.info(" Tumor mutational burden: {}", report.tumorMutationalBurden());
+        LOGGER.info(" CHORD analysis HRD prediction: {}", report.chordAnalysis().hrdValue());
+        LOGGER.info(" Copy number events to report: {}", report.geneCopyNumbers().size());
+        LOGGER.info(" Gene fusions to report : {}", report.geneFusions().size());
+        LOGGER.info(" Gene disruptions to report : {}", report.geneDisruptions().size());
+        LOGGER.info("Printing actionability results for {}", report.sampleReport().sampleId());
+        LOGGER.info(" Tumor-specific evidence items found: {}", report.tumorSpecificEvidence().size());
+        LOGGER.info(" Off-label evidence items found: {}", report.offLabelEvidence().size());
+        LOGGER.info(" Clinical trials matched to molecular profile: {}", report.clinicalTrials());
+
     }
 }

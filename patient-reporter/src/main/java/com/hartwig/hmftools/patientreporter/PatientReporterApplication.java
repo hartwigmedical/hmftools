@@ -67,7 +67,6 @@ public class PatientReporterApplication {
     private static final String REF_SAMPLE = "ref_sample";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
-    private static final String HOTSPOT_TSV = "hotspot_tsv";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String SAMPLE_SUMMARY_CSV = "sample_summary_csv";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
@@ -134,7 +133,7 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static BaseReportData buildBaseReportData(@NotNull final CommandLine cmd) throws IOException {
+    private static BaseReportData buildBaseReportData(@NotNull CommandLine cmd) throws IOException {
         String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         LOGGER.info("Loading tumor location CSV from {}.", tumorLocationCsv);
         final List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
@@ -159,10 +158,9 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static SequencedReportData buildReporterData(@NotNull final CommandLine cmd) throws IOException {
+    private static SequencedReportData buildReporterData(@NotNull CommandLine cmd) throws IOException {
         return SequencedReportDataLoader.buildFromFiles(cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(DRUP_GENES_CSV),
-                cmd.getOptionValue(HOTSPOT_TSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(HIGH_CONFIDENCE_BED),
                 cmd.getOptionValue(GERMLINE_GENES_CSV),
@@ -170,14 +168,14 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static PatientReporter buildReporter(@NotNull final CommandLine cmd, @NotNull final SequencedReportData sequencedReportData)
+    private static PatientReporter buildReporter(@NotNull CommandLine cmd, @NotNull SequencedReportData sequencedReportData)
             throws IOException {
         final SvAnalyzer svAnalyzer = SvAnalyzer.fromFiles(cmd.getOptionValue(LINX_FUSION_TSV), cmd.getOptionValue(LINX_DISRUPTION_TSV));
 
         return new PatientReporter(buildBaseReportData(cmd), sequencedReportData, svAnalyzer);
     }
 
-    private static boolean validInputForAnalysedSample(@NotNull final CommandLine cmd) {
+    private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
         final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
@@ -190,7 +188,6 @@ public class PatientReporterApplication {
         final String refSample = cmd.getOptionValue(REF_SAMPLE);
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String drupGenesCsv = cmd.getOptionValue(DRUP_GENES_CSV);
-        final String hotspotTsv = cmd.getOptionValue(HOTSPOT_TSV);
         final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
         final String sampleSummaryCsv = cmd.getOptionValue(SAMPLE_SUMMARY_CSV);
         final String fastaFileLocation = cmd.getOptionValue(FASTA_FILE_LOCATION);
@@ -219,8 +216,6 @@ public class PatientReporterApplication {
             LOGGER.warn(KNOWLEDGEBASE_DIRECTORY + " has to be an existing directory: " + knowledgebaseDirectory);
         } else if (drupGenesCsv == null || !exists(drupGenesCsv)) {
             LOGGER.warn(DRUP_GENES_CSV + " has to be an existing file: " + drupGenesCsv);
-        } else if (hotspotTsv == null || !exists(hotspotTsv)) {
-            LOGGER.warn(HOTSPOT_TSV + " has to be an existing file: " + hotspotTsv);
         } else if (germlineGenesCsv == null || !exists(germlineGenesCsv)) {
             LOGGER.warn(GERMLINE_GENES_CSV + " has to be an existing file: " + germlineGenesCsv);
         } else if (sampleSummaryCsv == null || !exists(sampleSummaryCsv)) {
@@ -235,7 +230,7 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForQCFailReport(@NotNull final CommandLine cmd) {
+    private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
         final QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
         if (qcFailReason == QCFailReason.UNDEFINED) {
             LOGGER.warn(QC_FAIL_REASON + " has to be s, low_dna_yield, post_analysis_fail or shallow_seq.");
@@ -245,7 +240,7 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForReportWriter(@NotNull final CommandLine cmd) {
+    private static boolean validInputForReportWriter(@NotNull CommandLine cmd) {
         final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
         final String outputDirectory = cmd.getOptionValue(OUTPUT_DIRECTORY);
 
@@ -259,7 +254,7 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForBaseReportData(@NotNull final CommandLine cmd) {
+    private static boolean validInputForBaseReportData(@NotNull CommandLine cmd) {
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         final String hospitalDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
@@ -286,11 +281,11 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean exists(@NotNull final String path) {
+    private static boolean exists(@NotNull String path) {
         return Files.exists(new File(path).toPath());
     }
 
-    private static boolean isDirectory(@NotNull final String path) {
+    private static boolean isDirectory(@NotNull String path) {
         return Files.isDirectory(new File(path).toPath());
     }
 
@@ -327,7 +322,6 @@ public class PatientReporterApplication {
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
-        options.addOption(HOTSPOT_TSV, true, "Path towards a TSV containing known hotspot variants.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
         options.addOption(SAMPLE_SUMMARY_CSV, true, "Path towards a CSV containing the (clinical) summaries of the samples.");
 

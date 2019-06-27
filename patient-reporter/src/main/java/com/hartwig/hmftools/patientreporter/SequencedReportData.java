@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
@@ -24,9 +23,6 @@ public abstract class SequencedReportData {
 
     @NotNull
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();
-
-    @NotNull
-    public abstract SomaticEnrichment somaticVariantEnrichment();
 
     @NotNull
     public abstract IndexedFastaSequenceFile refGenomeFastaFile();
