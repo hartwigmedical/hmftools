@@ -155,6 +155,12 @@ public class CircosData
     }
 
     @NotNull
+    public List<ProteinDomain> proteinDomains()
+    {
+        return proteinDomains;
+    }
+
+    @NotNull
     public Map<String, Integer> contigLengths()
     {
         return contigLengths;

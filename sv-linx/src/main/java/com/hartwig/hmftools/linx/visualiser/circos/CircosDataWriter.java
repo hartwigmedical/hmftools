@@ -24,6 +24,7 @@ import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +61,9 @@ public class CircosDataWriter
         final List<GenomeRegion> fragileSites = data.fragileSites();
         final List<GenomeRegion> lineElements = data.lineElements();
         final List<Exon> exons = data.exons();
+
+        final String proteinDomainPath = filePrefix + ".protein_domain.circos";
+        Files.write(new File(proteinDomainPath).toPath(), proteinDomain(data.proteinDomains()));
 
         final String exonPath = filePrefix + ".exon.circos";
         Files.write(new File(exonPath).toPath(), exons(exons));
@@ -132,6 +136,25 @@ public class CircosDataWriter
 
         return result;
     }
+
+    @NotNull
+    private List<String> proteinDomain(@NotNull final List<ProteinDomain> proteinDomains)
+    {
+        final List<String> result = Lists.newArrayList();
+        for (final ProteinDomain proteinDomain : proteinDomains)
+        {
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(proteinDomain.chromosome()))
+                    .add(String.valueOf(proteinDomain.start()))
+                    .add(String.valueOf(proteinDomain.end()))
+                    .add(String.valueOf(1))
+                    .toString();
+            result.add(exonString);
+
+        }
+
+        return result;
+    }
+
 
     @NotNull
     private List<String> exonRank(@NotNull final List<Exon> exons)

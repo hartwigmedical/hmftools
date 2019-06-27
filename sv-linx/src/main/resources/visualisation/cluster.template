@@ -58,6 +58,14 @@ show_tick_labels    = no
     </highlight>
 
     <highlight>
+        file       = SUBSTITUTE_SAMPLE.protein_domain.circos
+        r0         = SUBSTITUTE_GENE_INNER_RADIUSr
+        r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
+        fill_color = red
+        z = 21
+    </highlight>
+
+    <highlight>
 		file = SUBSTITUTE_SAMPLE.segment.circos
         <rules>
             <rule>
