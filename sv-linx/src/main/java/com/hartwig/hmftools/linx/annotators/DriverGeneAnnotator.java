@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -278,8 +279,15 @@ public class DriverGeneAnnotator
             }
             else
             {
-                // treat DNDS and HOTSPOT as potentially biallelic events
-                annotateBiallelicEvent(driverGeneData);
+                if(driverGeneData.DriverGene.category() == ONCO)
+                {
+                    annotateAmplification(driverGeneData, breakendList);
+                    annotateSpanningSVs(driverGeneData, breakendList);
+                }
+                else
+                {
+                    annotateBiallelicEvent(driverGeneData);
+                }
             }
         }
 
@@ -354,70 +362,6 @@ public class DriverGeneAnnotator
                 minBreakend = breakend;
             }
         }
-
-        /*
-        for (int i = 0; i < breakendList.size(); ++i)
-        {
-            final SvBreakend breakend = breakendList.get(i);
-            final SvBreakend nextBreakend = i < breakendList.size() - 1 ? breakendList.get(i + 1) : null;
-
-            // find the 2 breakends straddling the start of the min-gene region, and compare their CNs in the -1 / upwards direction
-            if ((breakend.position() < geneCN.minRegionStart() && nextBreakend != null && nextBreakend.position() > geneCN.minRegionStart())
-            || (minBreakend == null && breakend.position() > geneCN.minRegionStart() && breakend.position() < geneCN.minRegionEnd()))
-            {
-                // take the lower of the copy numbers (upwards-facing)
-                if (nextBreakend == null || breakend.getCopyNumber(false) < nextBreakend.getCopyNumber(false)
-                || nextBreakend.position() >= geneCN.minRegionEnd())
-                {
-                    minBreakend = breakend;
-                }
-                else
-                {
-                    minBreakend = nextBreakend;
-                }
-            }
-            else if(minBreakend == null && nextBreakend == null)
-            {
-                // no more breakends to consider - does this breakend definitely contribute to the DEL?
-                minBreakend = breakend;
-            }
-            else if (breakend.position() >= geneCN.minRegionEnd())
-            {
-                if(minBreakend != null)
-                    break;
-
-                // some event beyond the gene caused loss so need to continue on until it's found
-
-                // for look for an LOH event starting from here
-                for (int j = i; j < breakendList.size(); ++j)
-                {
-                    final SvBreakend lohBreakend = breakendList.get(j);
-                    if (isLOHEvent(lohBreakend, false))
-                    {
-                        minBreakend = lohBreakend;
-                        isStartBreakend = false;
-                        break;
-                    }
-                }
-
-                if(minBreakend != null)
-                    break;
-
-                // otherwise select the first breakend facing away
-                if(breakend.orientation() == -1)
-                {
-                    minBreakend = breakend;
-                    break;
-                }
-            }
-            else if (breakend.position() > geneCN.minRegionStart())
-            {
-                // check for a lower CN from another breakend inside the gene region
-                if (breakend.getCopyNumber(false) < minBreakend.getCopyNumber(false))
-                    minBreakend = breakend;
-            }
-        }
-        */
 
         if(minBreakend == null)
         {
@@ -711,6 +655,41 @@ public class DriverGeneAnnotator
                     driverGeneData.addSvBreakendPair(foldbackBreakend, otherBreakend, MATCH_INFO_FB);
                 }
             }
+        }
+
+        writeDriverData(driverGeneData);
+    }
+
+    private void annotateSpanningSVs(final DriverGeneData driverGeneData, final List<SvBreakend> breakendList)
+    {
+        // make note of any SV which spans the gene
+
+        final HmfTranscriptRegion region = driverGeneData.Region;
+
+        for (int i = 0; i < breakendList.size(); ++i)
+        {
+            final SvBreakend breakend = breakendList.get(i);
+
+            if (!breakend.usesStart())
+                continue;
+
+            if (breakend.position() > region.end())
+                break;
+
+            final SvBreakend otherBreakend = breakend.getOtherBreakend();
+
+            if (otherBreakend == null || !otherBreakend.arm().equals(breakend.arm()) || !otherBreakend.chromosome()
+                    .equals(breakend.chromosome()))
+                continue;
+
+            if (otherBreakend.position() < region.start())
+                continue;
+
+            // check whether these breakends have been recorded already
+            if (driverGeneData.hasBreakend(breakend) || driverGeneData.hasBreakend(otherBreakend))
+                continue;
+
+            driverGeneData.addSvBreakendPair(breakend, otherBreakend, breakend.getSV().typeStr());
         }
 
         writeDriverData(driverGeneData);

@@ -60,4 +60,6 @@ public class DriverGeneData
         mSvInfo.add(info);
     }
 
+    public boolean hasBreakend(final SvBreakend breakend) { return mSvBreakends.contains(breakend); }
+
 }
