@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -55,7 +56,7 @@ public final class OncoDrivers {
             @NotNull final List<EnrichedSomaticVariant> variants) {
         return variants.stream()
                 .filter(x -> genes.contains(x.gene()))
-                .filter(x -> isMissense(x) || isInframeIndel(x))
+                .filter(x -> isMissense(x) || isInframeIndel(x) || x.hotspot() == Hotspot.HOTSPOT)
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 

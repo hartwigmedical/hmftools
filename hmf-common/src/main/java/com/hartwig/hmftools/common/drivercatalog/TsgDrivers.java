@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -142,7 +143,7 @@ public final class TsgDrivers {
 
         return variants.stream()
                 .filter(x -> genes.contains(x.gene()))
-                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()))
+                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()) || x.hotspot() == Hotspot.HOTSPOT)
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
