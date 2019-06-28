@@ -8,9 +8,9 @@ sample <- args[1]
 purpleDir <- args[2]
 plotDir   <- args[3]
 
-sample = "CPCT02010503T"
-purpleDir = "~/hmf/analysis/CPCT02010503T/purple"
-plotDir = "~/hmf/analysis/CPCT02010503T/purple/plot"
+#sample = "CPCT02010503T"
+#purpleDir = "~/hmf/analysis/CPCT02010503T/purple"
+#plotDir = "~/hmf/analysis/CPCT02010503T/purple/plot"
 
 purity_ploidy_range_plot <- function(range) {
 

@@ -14,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GeneModelFactory {
 
-    private static final Set<String> DISRUPTION_GENE_WHITE_LIST = Sets.newHashSet("ALK", "NTRK1", "NTRK2", "NTRK3", "RET", "ROS1", "NRG1");
-
     private GeneModelFactory() {
     }
 
@@ -45,7 +43,6 @@ public final class GeneModelFactory {
                 CNADrivers.amplificationTargets(),
                 CNADrivers.deletionTargets(),
                 drupActionabilityModel.actionableGenes(),
-                DISRUPTION_GENE_WHITE_LIST,
                 geneDriverCategoryMap);
     }
 }

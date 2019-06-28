@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.qcfail;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
+import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

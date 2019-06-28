@@ -4,15 +4,19 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
@@ -35,12 +39,13 @@ public interface SvVisualiserConfig
     String DATA_OUT = "data_out";
     String SAMPLE = "sample";
     String SEGMENT = "segment";
+    String PROTEIN_DOMAIN = "protein_domain";
     String LINK = "link";
     String CIRCOS = "circos";
     String THREADS = "threads";
     String DEBUG = "debug";
-    String SINGLE_CLUSTER = "clusterId";
-    String SINGLE_CHROMOSOME = "chromosome";
+    String CLUSTERS = "clusterId";
+    String CHROMOSOMES = "chromosome";
     String CNA = "cna";
     String EXON = "exon";
     String SCALE_EXON = "scale_exons";
@@ -56,6 +61,9 @@ public interface SvVisualiserConfig
 
     @NotNull
     List<CopyNumberAlteration> copyNumberAlterations();
+
+    @NotNull
+    List<ProteinDomain> proteinDomain();
 
     @NotNull
     List<Exon> exons();
@@ -75,11 +83,11 @@ public interface SvVisualiserConfig
 
     boolean scaleExons();
 
-    @Nullable
-    Integer singleCluster();
+    @NotNull
+    List<Integer> clusters();
 
-    @Nullable
-    String singleChromosome();
+    @NotNull
+    List<String> chromosomes();
 
     @NotNull
     static Options createOptions()
@@ -90,14 +98,15 @@ public interface SvVisualiserConfig
         options.addOption(SAMPLE, true, "Sample name");
         options.addOption(SEGMENT, true, "Path to track file");
         options.addOption(LINK, true, "Path to link file");
+        options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file");
         options.addOption(CIRCOS, true, "Path to circos binary");
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(DEBUG, false, "Enabled debug mode");
 
-        options.addOption(SINGLE_CLUSTER, true, "Only generate image for single cluster");
-        options.addOption(SINGLE_CHROMOSOME, true, "Only generate image for singe chromosome");
-        options.addOption(CNA, true, "Location of copy number alterations (optional alternative to db)");
-        options.addOption(EXON, true, "Location of exons");
+        options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
+        options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
+        options.addOption(CNA, true, "Path to copy number alterations");
+        options.addOption(EXON, true, "Path to exons");
         options.addOption(SCALE_EXON, false, "Scale exon positions instead of interpolating them");
 
         return options;
@@ -115,6 +124,7 @@ public interface SvVisualiserConfig
         final String dataOutputDir = parameter(cmd, DATA_OUT, missingJoiner);
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
         final String exonPath = parameter(cmd, EXON, missingJoiner);
+        final String proteinDomainPath = parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
 
         final String missing = missingJoiner.toString();
         if (!missing.isEmpty())
@@ -127,6 +137,8 @@ public interface SvVisualiserConfig
         final List<Segment> segments = Segments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<CopyNumberAlteration> cna =
                 CopyNumberAlterations.read(cnaPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<ProteinDomain> proteinDomains =
+                ProteinDomains.readProteinDomains(proteinDomainPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
 
         if (segments.isEmpty() && links.isEmpty())
         {
@@ -157,14 +169,50 @@ public interface SvVisualiserConfig
                 .links(links)
                 .sample(sample)
                 .exons(exons)
+                .proteinDomain(proteinDomains)
                 .copyNumberAlterations(cna)
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))
                 .debug(cmd.hasOption(DEBUG))
-                .singleCluster(cmd.hasOption(SINGLE_CLUSTER) ? Integer.valueOf(cmd.getOptionValue(SINGLE_CLUSTER)) : null)
-                .singleChromosome(cmd.hasOption(SINGLE_CHROMOSOME) ? cmd.getOptionValue(SINGLE_CHROMOSOME) : null)
+                .clusters(clusters(cmd))
+                .chromosomes(chromosomes(cmd))
                 .scaleExons(cmd.hasOption(SCALE_EXON))
                 .build();
+    }
+
+    @NotNull
+    static List<Integer> clusters(@NotNull final CommandLine cmd) throws ParseException
+    {
+        List<Integer> result = Lists.newArrayList();
+        if (cmd.hasOption(CLUSTERS))
+        {
+            final String clusters = cmd.getOptionValue(CLUSTERS);
+            for (String clusterId : clusters.split(","))
+            {
+                try
+                {
+                    result.add(Integer.valueOf(clusterId));
+                } catch (NumberFormatException e)
+                {
+                    throw new ParseException(CLUSTERS + " should be comma separated integer values");
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+    @NotNull
+    static List<String> chromosomes(@NotNull final CommandLine cmd)
+    {
+        List<String> result = Lists.newArrayList();
+        if (cmd.hasOption(CHROMOSOMES))
+        {
+            final String contigs = cmd.getOptionValue(CHROMOSOMES);
+            Collections.addAll(result, contigs.split(","));
+        }
+        return result;
     }
 
     @NotNull

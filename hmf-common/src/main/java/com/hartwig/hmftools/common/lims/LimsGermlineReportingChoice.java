@@ -18,7 +18,6 @@ public enum LimsGermlineReportingChoice {
             @NotNull String sampleId) {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (type == LimsSampleType.WIDE) {
-            LOGGER.info("Patient has given consent for: " + germlineReportingChoiceString);
             switch (germlineReportingChoiceString) {
                 case "2: Alle toevalsbevindingen":
                     return ALL;

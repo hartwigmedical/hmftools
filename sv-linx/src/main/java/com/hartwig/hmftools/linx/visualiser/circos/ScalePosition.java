@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -12,14 +13,19 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilderI;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableLink;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableSegment;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.apache.logging.log4j.LogManager;
@@ -71,23 +77,44 @@ class ScalePosition
     @NotNull
     public List<Segment> scaleSegments(@NotNull final List<Segment> segments)
     {
-        return segments.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+        return scale(segments, x -> ImmutableSegment.builder().from(x));
+    }
+
+    @NotNull
+    public List<CopyNumberAlteration> scaleAlterations(@NotNull final List<CopyNumberAlteration> segments)
+    {
+        return scale(segments, x -> ImmutableCopyNumberAlteration.builder().from(x));
+    }
+
+    @NotNull
+    public List<ProteinDomain> interpolateProteinDomains(@NotNull final List<ProteinDomain> exons)
+    {
+        return exons.stream().map(x -> interpolate(x, y -> ImmutableProteinDomain.builder().from(x))).collect(Collectors.toList());
     }
 
     @NotNull
     public List<Exon> interpolateExons(@NotNull final List<Exon> exons)
     {
-        return exons.stream().map(this::interpolate).collect(Collectors.toList());
+        return exons.stream().map(x -> interpolate(x, y -> ImmutableExon.builder().from(x))).collect(Collectors.toList());
     }
 
     @NotNull
-    private Exon interpolate(@NotNull final Exon exon)
+    public List<Gene> scaleGene(@NotNull final List<Gene> genes)
+    {
+        return genes.stream().map(x ->
+        {
+            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.chromosome());
+            return scale(x, y -> ImmutableGene.builder().from(y).namePosition(positionMap.get(y.namePosition())), positionMap);
+        }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilderI<T>> builderFunction)
     {
         final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
         assert (positionMap != null && !positionMap.isEmpty());
 
-        return ImmutableExon.builder()
-                .from(exon)
+        return builderFunction.apply(exon)
                 .start(interpolate(exon.start(), positionMap))
                 .end(interpolate(exon.end(), positionMap))
                 .build();
@@ -130,10 +157,8 @@ class ScalePosition
     public List<Link> scaleLinks(@NotNull final List<Link> links)
     {
         final List<Link> results = Lists.newArrayList();
-
         for (final Link link : links)
         {
-
             try
             {
                 final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
@@ -156,28 +181,6 @@ class ScalePosition
         }
 
         return results;
-    }
-
-    @NotNull
-    public List<CopyNumberAlteration> scaleAlterations(@NotNull final List<CopyNumberAlteration> links)
-    {
-        return links.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static CopyNumberAlteration scale(@NotNull final CopyNumberAlteration victim, @NotNull final Map<Long, Integer> positionMap)
-    {
-        return ImmutableCopyNumberAlteration.builder()
-                .from(victim)
-                .start(positionMap.get(victim.start()))
-                .end(positionMap.get(victim.end()))
-                .build();
-    }
-
-    @NotNull
-    private static Segment scale(@NotNull final Segment victim, @NotNull final Map<Long, Integer> positionMap)
-    {
-        return ImmutableSegment.builder().from(victim).start(positionMap.get(victim.start())).end(positionMap.get(victim.end())).build();
     }
 
     @NotNull
@@ -224,4 +227,18 @@ class ScalePosition
         return (int) Math.floor(Math.pow(Math.log10(distance), 3)) + 10;
     }
 
+    @NotNull
+    private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilderI<T>> builderFunction)
+    {
+        return inputs.stream().map(x -> scale(x, builderFunction, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilderI<T>> builderFunction,
+            @NotNull final Map<Long, Integer> positionMap)
+    {
+        return builderFunction.apply(victim)
+                .start(positionMap.get(victim.start()))
+                .end(positionMap.get(victim.end())).build();
+    }
 }

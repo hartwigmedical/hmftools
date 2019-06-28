@@ -27,6 +27,7 @@ import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
@@ -76,19 +77,10 @@ public class SvVisualiser implements AutoCloseable
     {
 
         final List<Future<Object>> futures = Lists.newArrayList();
-        if (config.singleCluster() != null || config.singleChromosome() != null)
+        if (!config.clusters().isEmpty() || !config.chromosomes().isEmpty())
         {
-
-            if (config.singleCluster() != null)
-            {
-                futures.add(executorService.submit(() -> runCluster(config.singleCluster(), false)));
-            }
-
-            if (config.singleChromosome() != null)
-            {
-                futures.add(executorService.submit(() -> runChromosome(config.singleChromosome())));
-            }
-
+            config.clusters().forEach(clusterId -> futures.add(executorService.submit(() -> runCluster(clusterId, false))));
+            config.chromosomes().forEach(chromosome -> futures.add(executorService.submit(() -> runChromosome(chromosome))));
         }
         else
         {
@@ -151,7 +143,10 @@ public class SvVisualiser implements AutoCloseable
         final List<Exon> chromosomeExons =
                 config.exons().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons);
+        final List<ProteinDomain> chromosomeProteinDomains =
+                config.proteinDomain().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
+
+        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains);
     }
 
     @Nullable
@@ -188,11 +183,14 @@ public class SvVisualiser implements AutoCloseable
                         .debug() ? ".debug" : "");
 
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons);
+        final List<ProteinDomain> clusterProteinDomains =
+                config.proteinDomain().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains);
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
-            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons)
+            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons,
+            @NotNull final List<ProteinDomain> filteredProteinDomains)
             throws IOException, InterruptedException
     {
 
@@ -211,15 +209,11 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        int maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
-        double maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
-        double maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains);
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData);
+        confWrite.writeConfig();
 
-        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons);
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath());
-        confWrite.writeConfig(circosData.contigLengths(), maxTracks, maxCopyNumber, maxMinorAllelePloidy);
-
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), maxTracks).write(circosData);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), confWrite).write(circosData);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),

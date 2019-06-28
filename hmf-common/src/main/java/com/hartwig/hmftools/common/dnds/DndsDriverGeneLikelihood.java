@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
+@Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DndsDriverGeneLikelihood {
 
@@ -15,6 +16,12 @@ public abstract class DndsDriverGeneLikelihood {
     public abstract DndsDriverImpactLikelihood missense();
 
     @NotNull
+    public abstract DndsDriverImpactLikelihood missenseBiallelic();
+
+    @NotNull
+    public abstract DndsDriverImpactLikelihood missenseNonBiallelic();
+
+    @NotNull
     public abstract DndsDriverImpactLikelihood nonsense();
 
     @NotNull
@@ -22,5 +29,9 @@ public abstract class DndsDriverGeneLikelihood {
 
     @NotNull
     public abstract DndsDriverImpactLikelihood indel();
+
+    public boolean useBiallelic() {
+        return !missense().equals(missenseBiallelic());
+    }
 
 }

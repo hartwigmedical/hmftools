@@ -13,7 +13,7 @@ public class SummaryFileTest {
     private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
     @Test
-    public void canLoadSummarySamplesCSV() throws IOException {
+    public void canLoadSampleSummariesCSV() throws IOException {
         SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
 
         assertEquals(1, summaryModel.summaryCount());

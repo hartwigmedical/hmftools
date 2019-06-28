@@ -2,7 +2,10 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Map;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverGeneLikelihood;
@@ -36,6 +39,8 @@ public class TsgDriversTest {
         geneLikelihood = ImmutableDndsDriverGeneLikelihood.builder()
                 .gene("TP53")
                 .missense(missenseLikelihood)
+                .missenseBiallelic(missenseLikelihood)
+                .missenseNonBiallelic(missenseLikelihood)
                 .nonsense(nonsenseLikelihood)
                 .splice(spliceLikelihood)
                 .indel(indelLikelihood)
@@ -50,7 +55,9 @@ public class TsgDriversTest {
 
     @Test
     public void testHotspotFirst() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(5161, 10000, geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense));
+        final Map<VariantType, Long> counts = countMap(5161, 10000);
+        final DriverCatalog victim =
+                TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense), counts, counts, counts);
         assertEquals(DriverType.HOTSPOT, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(1, victim.dndsLikelihood(), 0.01);
@@ -58,7 +65,8 @@ public class TsgDriversTest {
 
     @Test
     public void testBiallelicSecond() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(5161, 10000, geneLikelihood, Lists.newArrayList(biallelic, missense));
+        final Map<VariantType, Long> counts = countMap(5161, 10000);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(biallelic, missense), counts, counts, counts);
         assertEquals(DriverType.BIALLELIC, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
@@ -66,7 +74,8 @@ public class TsgDriversTest {
 
     @Test
     public void testSingleMissense() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(351610, 10000, geneLikelihood, Lists.newArrayList(missense));
+        final Map<VariantType, Long> counts = countMap(351610, 10000);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense), counts, counts, counts);
         assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(0.33, victim.driverLikelihood(), 0.01);
         assertEquals(0.87, victim.dndsLikelihood(), 0.01);
@@ -74,7 +83,8 @@ public class TsgDriversTest {
 
     @Test
     public void testMultiMissense() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(351610, 10000, geneLikelihood, Lists.newArrayList(missense, missense));
+        final Map<VariantType, Long> counts = countMap(351610, 10000);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, counts);
         assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(0.97, victim.driverLikelihood(), 0.01);
         assertEquals(0.87, victim.dndsLikelihood(), 0.01);
@@ -82,7 +92,8 @@ public class TsgDriversTest {
 
     @Test
     public void testSingleNonsense() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(351610, 10000, geneLikelihood, Lists.newArrayList(nonsense));
+        final Map<VariantType, Long> counts = countMap(351610, 10000);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(nonsense), counts, counts, counts);
         assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(0.74, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
@@ -90,7 +101,8 @@ public class TsgDriversTest {
 
     @Test
     public void testMixed() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(351610, 10000, geneLikelihood, Lists.newArrayList(missense, nonsense));
+        final Map<VariantType, Long> counts = countMap(351610, 10000);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, nonsense), counts, counts, counts);
         assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
@@ -98,7 +110,8 @@ public class TsgDriversTest {
 
     @Test
     public void testIndel() {
-        final DriverCatalog victim = TsgDrivers.geneDriver(351610, 10000, geneLikelihood, Lists.newArrayList(indel));
+        final Map<VariantType, Long> counts = countMap(351610, 10000);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(indel), counts, counts, counts);
         assertEquals(DriverType.DNDS, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(1, victim.dndsLikelihood(), 0.01);
@@ -114,7 +127,8 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot, double vaf) {
+    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot,
+            double vaf) {
         boolean biallelic = Doubles.greaterOrEqual(2 * vaf, 1.5);
         return SomaticVariantTestBuilderFactory.createEnriched()
                 .type(type)
@@ -125,5 +139,13 @@ public class TsgDriversTest {
                 .ploidy(2 * vaf)
                 .biallelic(biallelic)
                 .build();
+    }
+
+    @NotNull
+    private static Map<VariantType, Long> countMap(int snp, int indel) {
+        final Map<VariantType, Long> countMap = Maps.newHashMap();
+        countMap.put(VariantType.SNP, (long) snp);
+        countMap.put(VariantType.INDEL, (long) indel);
+        return countMap;
     }
 }

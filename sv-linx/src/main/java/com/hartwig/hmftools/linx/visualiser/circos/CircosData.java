@@ -8,12 +8,16 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.Gene;
+import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,17 +25,9 @@ import org.jetbrains.annotations.NotNull;
 public class CircosData
 {
     @NotNull
-    private final List<Segment> unadjustedSegments;
-    @NotNull
     private final List<Link> unadjustedLinks;
     @NotNull
     private final List<CopyNumberAlteration> unadjustedAlterations;
-    @NotNull
-    private final List<Exon> unadjustedExons;
-    @NotNull
-    private final List<GenomeRegion> unadjustedFragileSites;
-    @NotNull
-    private final List<GenomeRegion> unadjustedLineElements;
 
     @NotNull
     private final List<Segment> segments;
@@ -45,26 +41,34 @@ public class CircosData
     private final List<GenomeRegion> fragileSites;
     @NotNull
     private final List<GenomeRegion> lineElements;
+    @NotNull
+    private final List<Gene> genes;
+    @NotNull
+    private final List<ProteinDomain> proteinDomains;
 
     @NotNull
     private final Map<String, Integer> contigLengths;
+
+    private final int maxTracks;
+    private final double maxCopyNumber;
+    private final double maxMinorAllelePloidy;
 
     public CircosData(boolean scaleExons,
             @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
-            @NotNull final List<Exon> unadjustedExons)
+            @NotNull final List<Exon> unadjustedExons,
+            @NotNull final List<ProteinDomain> unadjustedProteinDomains)
     {
-        this.unadjustedSegments = unadjustedSegments;
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
-        this.unadjustedExons = unadjustedExons;
-
-        this.unadjustedFragileSites =
+        final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
 
-        this.unadjustedLineElements =
+        final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
+
+        final List<Gene> unadjustedGenes = Genes.genes(unadjustedExons);
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
@@ -74,7 +78,9 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
         if (scaleExons)
         {
+            unadjustedPositions.addAll(Span.allPositions(unadjustedProteinDomains));
             unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
+            unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         }
         else
         {
@@ -90,14 +96,41 @@ public class CircosData
         alterations = scalePosition.scaleAlterations(unadjustedAlterations);
         fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         lineElements = scalePosition.scaleRegions(unadjustedLineElements);
-        exons = scalePosition.interpolateExons(unadjustedExons);
+        genes = scalePosition.scaleGene(unadjustedGenes);
 
+        // Note the following *might* be interpolated
+        exons = scalePosition.interpolateExons(unadjustedExons);
+        proteinDomains = scalePosition.interpolateProteinDomains(unadjustedProteinDomains);
+
+        maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
+        maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
+        maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+    }
+
+    public boolean displayGenes()
+    {
+        return !exons.isEmpty();
+    }
+
+    public int maxTracks()
+    {
+        return maxTracks;
+    }
+
+    public double maxCopyNumber()
+    {
+        return maxCopyNumber;
+    }
+
+    public double maxMinorAllelePloidy()
+    {
+        return maxMinorAllelePloidy;
     }
 
     @NotNull
-    public List<Segment> unadjustedSegments()
+    public List<Gene> genes()
     {
-        return unadjustedSegments;
+        return genes;
     }
 
     @NotNull
@@ -110,24 +143,6 @@ public class CircosData
     public List<CopyNumberAlteration> unadjustedAlterations()
     {
         return unadjustedAlterations;
-    }
-
-    @NotNull
-    public List<Exon> unadjustedExons()
-    {
-        return unadjustedExons;
-    }
-
-    @NotNull
-    public List<GenomeRegion> unadjustedFragileSites()
-    {
-        return unadjustedFragileSites;
-    }
-
-    @NotNull
-    public List<GenomeRegion> unadjustedLineElements()
-    {
-        return unadjustedLineElements;
     }
 
     @NotNull
@@ -164,6 +179,12 @@ public class CircosData
     public List<GenomeRegion> lineElements()
     {
         return lineElements;
+    }
+
+    @NotNull
+    public List<ProteinDomain> proteinDomains()
+    {
+        return proteinDomains;
     }
 
     @NotNull

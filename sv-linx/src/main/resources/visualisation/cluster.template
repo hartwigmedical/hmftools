@@ -20,6 +20,7 @@ show_tick_labels    = no
     label_radius     = (dims(ideogram,radius_inner)+dims(ideogram,radius_outer))/2-15
     label_size       = 30
     label_parallel   = yes
+    label_format     = eval( var(chr) =~ /hs([6]|[9])$/ ? var(label) . ".": var(label) )
 
 </ideogram>
 
@@ -53,8 +54,16 @@ show_tick_labels    = no
         file       = SUBSTITUTE_SAMPLE.gene.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
-        fill_color = blue_a2
+        fill_color = blue
         z = 20
+    </highlight>
+
+    <highlight>
+        file       = SUBSTITUTE_SAMPLE.protein_domain.circos
+        r0         = SUBSTITUTE_GENE_INNER_RADIUSr
+        r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
+        fill_color = red
+        z = 21
     </highlight>
 
     <highlight>
@@ -84,6 +93,25 @@ chromosomes_display_default = yes
 <plots>
 
 	# -----------------------------------------------------------
+	# Exon Rank
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
+
+		r0 = SUBSTITUTE_EXON_RANK_INNER_RADIUSr
+		r1 = 1r
+
+		show_links   = no
+		label_size   = 24p
+		label_font   = mono
+		label_snuggle= yes
+
+		padding  = 0p
+		rpadding = 5p
+	</plot>
+
+	# -----------------------------------------------------------
 	# GENES Text
 	<plot>
 		type             = text
@@ -98,7 +126,7 @@ chromosomes_display_default = yes
 		label_font   = mono
 		label_snuggle= yes
 
-		padding  = 0p
+		padding  = -20p
 		rpadding = 0p
 	</plot>
 
@@ -354,3 +382,33 @@ chromosomes_display_default = yes
 </links>
 
 <<include etc/housekeeping.conf>>
+
+<colors>
+    chr1 = 128,125,186
+    chr2 = 145,142,179
+    chr3 = 161,159,173
+    chr4 = 179,176,166
+    chr5 = 196,193,160
+    chr6 = 213,210,153
+
+    chr7 = 230,228,147
+    chr8 = 202,218,138
+    chr9 = 175,209,129
+    chr10 = 147,199,120
+    chr11 = 120,190,111
+    chr12 = 92,180,102
+
+    chr13 = 65,171,93
+    chr14 = 65,166,110
+    chr15 = 65,162,128
+    chr16 = 65,158,145
+    chr17 = 65,154,163
+    chr18 = 65,150,180
+
+    chr19 = 66,146,198
+    chr20 = 76,142,196
+    chr21 = 86,139,194
+    chr22 = 97,135,192
+    chrX = 107,132,190
+    chrY = 117,128,188
+</colors>

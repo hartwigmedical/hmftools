@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SvAnalyzerTest {
@@ -24,25 +23,15 @@ public class SvAnalyzerTest {
 
     @Test
     public void canAnalyzeFusionsDisruptions() throws IOException {
-        SvAnalyzer testAnalyzer = buildTestAnalyzer();
+        List<ReportableGeneFusion> testFusions = Lists.newArrayList(createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
+        List<ReportableDisruption> testDisruptions = Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).build());
 
         List<GeneCopyNumber> geneCopyNumbers =
                 Lists.newArrayList(createTestCopyNumberBuilder().minCopyNumber(2D).maxCopyNumber(2D).gene(DISRUPTED_GENE).build());
-        SvAnalysis analysis = testAnalyzer.run(geneCopyNumbers, testActionabilityAnalyzer(), null);
+        SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, geneCopyNumbers, testActionabilityAnalyzer(), null);
 
         assertEquals(1, analysis.reportableFusions().size());
         assertEquals(1, analysis.reportableDisruptions().size());
         assertEquals(0, analysis.evidenceItems().size());
-    }
-
-    @NotNull
-    private static SvAnalyzer buildTestAnalyzer() {
-        List<ReportableGeneFusion> testFusions = Lists.newArrayList(
-                createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
-
-        List<ReportableDisruption> testDisruptions = Lists.newArrayList(
-                createTestDisruptionBuilder().gene(DISRUPTED_GENE).build());
-
-        return new SvAnalyzer(testFusions, testDisruptions);
     }
 }

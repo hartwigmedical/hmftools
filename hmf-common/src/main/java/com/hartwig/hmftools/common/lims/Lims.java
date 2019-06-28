@@ -149,7 +149,6 @@ public class Lims {
                 LOGGER.warn("BFX lims and lab status do not match for sample " + sampleId + "!");
             } else {
                 if (purityShallowExecuted) {
-                    LOGGER.info("Purity from shallow seq: " + shallowSeq.purityShallowSeq());
                     if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
                         return "below detection threshold";
                     } else {

@@ -53,10 +53,10 @@ public class OncoDriversTest {
     }
 
     @Test
-    public void favourNearHotspot() {
+    public void doNotFavourNearHotspot() {
         final DriverCatalog victim =
                 OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(frameshiftNearHotspot, inframe, missense));
-        assertEquals(DriverType.NEAR_HOTSPOT, victim.driver());
+        assertEquals(DriverType.INFRAME, victim.driver());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(UNADJUSTED_LIKELIHOOD, victim.dndsLikelihood(), 0.01);
     }

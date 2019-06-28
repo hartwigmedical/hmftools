@@ -15,11 +15,9 @@ import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
-import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
+import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
@@ -35,16 +33,10 @@ public final class PatientReporterTestUtil {
     private static final String RVA_LOGO_PATH = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
+    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
-
     private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
-    private static final String HOTSPOT_TSV = Resources.getResource("csv/hotspots.tsv").getPath();
-
-    private static final String LINX_FUSIONS_TSV = Resources.getResource("test_run/linx/sample.linx.fusions.tsv").getPath();
-    private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/linx/sample.linx.disruptions.tsv").getPath();
-
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
     private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
@@ -62,32 +54,31 @@ public final class PatientReporterTestUtil {
     }
 
     @NotNull
-    static SvAnalyzer testSvAnalyzerModel() throws IOException {
-        return SvAnalyzer.fromFiles(LINX_FUSIONS_TSV, LINX_DISRUPTIONS_TSV);
+    public static ReportData testReportData() {
+        List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+        Lims lims = LimsFactory.empty();
+        HospitalModel hospitalModel = HospitalModelFactory.empty();
+
+        return ImmutableQCFailReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH, COMPANY_LOGO_PATH);
     }
 
     @NotNull
-    public static BaseReportData testBaseReportData() {
-        final List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
-        final Lims lims = LimsFactory.empty();
-        final HospitalModel hospitalModel = HospitalModelFactory.empty();
-        return ImmutableBaseReportData.of(patientTumorLocations, lims, hospitalModel, SIGNATURE_PATH, RVA_LOGO_PATH, COMPANY_LOGO_PATH);
-    }
-
-    @NotNull
-    public static SequencedReportData testSequencedReportData() {
+    public static AnalysedReportData testAnalysedReportData() {
         try {
             DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
             GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
-            CompoundEnrichment compoundEnrichment = new CompoundEnrichment(HotspotEnrichment.fromHotspotsFile(HOTSPOT_TSV));
 
-            return ImmutableSequencedReportData.of(geneModel,
-                    testActionabilityAnalyzer(),
-                    compoundEnrichment,
-                    new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)),
-                    TreeMultimap.create(), germlineReportingModel, summaryModel);
+            return ImmutableAnalysedReportData.builder()
+                    .from(testReportData())
+                    .panelGeneModel(geneModel)
+                    .actionabilityAnalyzer(testActionabilityAnalyzer())
+                    .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))
+                    .highConfidenceRegions(TreeMultimap.create())
+                    .germlineReportingModel(germlineReportingModel)
+                    .summaryModel(summaryModel)
+                    .build();
         } catch (IOException exception) {
             throw new IllegalStateException("Could not generate test sequenced report data: " + exception.getMessage());
         }

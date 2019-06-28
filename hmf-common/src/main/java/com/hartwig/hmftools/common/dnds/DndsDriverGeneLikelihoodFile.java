@@ -19,24 +19,24 @@ class DndsDriverGeneLikelihoodFile {
     private static final String HEADER_PREFIX = "gene";
 
     @NotNull
-    public static Map<String, DndsDriverImpactLikelihood> fromOncoInputStream(@NotNull final InputStream genomeInputStream) {
-        return fromOncoLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
+    static Map<String, DndsDriverImpactLikelihood> fromSingleImpactInputStream(@NotNull final InputStream genomeInputStream) {
+        return fromSingleImpactLine(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    public static Map<String, DndsDriverGeneLikelihood> fromTsgInputStream(@NotNull final InputStream genomeInputStream) {
-        return fromTsgLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
+    static Map<String, ModifiableDndsDriverGeneLikelihood> fromMultiImpactInputStream(@NotNull final InputStream genomeInputStream) {
+        return fromMultiImpactLine(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static Map<String, DndsDriverGeneLikelihood> fromTsgLines(@NotNull final List<String> lines) {
-        Map<String, DndsDriverGeneLikelihood> result = Maps.newHashMap();
+    private static Map<String, ModifiableDndsDriverGeneLikelihood> fromMultiImpactLine(@NotNull final List<String> lines) {
+        Map<String, ModifiableDndsDriverGeneLikelihood> result = Maps.newHashMap();
         int i = 0;
         for (String line : lines) {
             i++;
             try {
                 if (!line.startsWith(HEADER_PREFIX)) {
-                    final DndsDriverGeneLikelihood entry = fromString(line);
+                    final ModifiableDndsDriverGeneLikelihood entry = fromString(line);
                     result.put(entry.gene(), entry);
                 }
             } catch (RuntimeException e) {
@@ -49,7 +49,7 @@ class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    private static Map<String, DndsDriverImpactLikelihood> fromOncoLines(@NotNull final List<String> lines) {
+    private static Map<String, DndsDriverImpactLikelihood> fromSingleImpactLine(@NotNull final List<String> lines) {
         Map<String, DndsDriverImpactLikelihood> result = Maps.newHashMap();
         int i = 0;
         for (String line : lines) {
@@ -79,15 +79,17 @@ class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    private static DndsDriverGeneLikelihood fromString(@NotNull final String line) {
+    private static ModifiableDndsDriverGeneLikelihood fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        final ImmutableDndsDriverGeneLikelihood.Builder builder = ImmutableDndsDriverGeneLikelihood.builder()
-                .gene(values[0])
-                .missense(fromString(1, values))
-                .nonsense(fromString(4, values))
-                .splice(fromString(7, values))
-                .indel(fromString(10, values));
+        DndsDriverImpactLikelihood missense = fromString(1, values);
 
-        return builder.build();
+        return ModifiableDndsDriverGeneLikelihood.create()
+                .setGene(values[0])
+                .setMissense(missense)
+                .setMissenseBiallelic(missense)
+                .setMissenseNonBiallelic(missense)
+                .setNonsense(fromString(4, values))
+                .setSplice(fromString(7, values))
+                .setIndel(fromString(10, values));
     }
 }

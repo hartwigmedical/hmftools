@@ -9,18 +9,14 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Exon implements GenomeRegion
+public abstract class Gene implements GenomeRegion
 {
-    public abstract static class Builder implements GenomeRegionBuilderI<Exon>
+    public abstract static class Builder implements GenomeRegionBuilderI<Gene>
     {
     }
 
-    public abstract String sampleId();
+    public abstract String name();
 
-    public abstract int clusterId();
-
-    public abstract String gene();
-
-    public abstract int rank();
+    public abstract long namePosition();
 
 }

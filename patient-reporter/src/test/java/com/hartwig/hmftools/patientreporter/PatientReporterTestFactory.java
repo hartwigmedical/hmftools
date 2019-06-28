@@ -146,5 +146,4 @@ public final class PatientReporterTestFactory {
         driverCategoryMapMatch.put(TSG, DriverCategory.TSG);
         return driverCategoryMapMatch;
     }
-
 }

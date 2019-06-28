@@ -9,30 +9,37 @@ import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class DriverCatalogFactoryTest {
 
     private static final double EPSILON = 0.0001;
 
+    private Map<String, DndsDriverGeneLikelihood> tsg;
+    private Map<String, DndsDriverImpactLikelihood> onco;
+
+    @Before
+    public void setup() {
+        onco = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
+        tsg = DndsDriverGeneLikelihoodSupplier.tsgLikelihood();
+    }
+
     @Test
     public void testHIST2H3DMissense() {
-        final Map<String, DndsDriverImpactLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        double value = DriverCatalogFactory.probabilityDriverVariant(27742, dnds.get("HIST2H3D"));
+        double value = DriverCatalogFactory.probabilityDriverVariant(27742, onco.get("HIST2H3D"));
         assertEquals(0.6065, value, EPSILON);
     }
 
     @Test
     public void testABL1Missense()  {
-        final Map<String, DndsDriverImpactLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.oncoLikelihood();
-        double value = DriverCatalogFactory.probabilityDriverVariant(996698, dnds.get("ABL1"));
-        assertEquals(0.00, value, EPSILON);
+        double value = DriverCatalogFactory.probabilityDriverVariant(996698, onco.get("ABL1"));
+        assertEquals(0.0009, value, EPSILON);
     }
 
     @Test
     public void testGATA3Indel()  {
-        final Map<String, DndsDriverGeneLikelihood> dnds = DndsDriverGeneLikelihoodSupplier.tsgLikelihood();
-        double value = DriverCatalogFactory.probabilityDriverVariant(587, dnds.get("GATA3").indel());
+        double value = DriverCatalogFactory.probabilityDriverVariant(587, tsg.get("GATA3").indel());
         assertEquals(0.9945, value, EPSILON);
     }
 
