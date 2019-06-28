@@ -25,13 +25,13 @@ show_tick_labels    = no
 </ideogram>
 
 <highlights>
+    z = 0
 
 	<highlight>
 		file       = SUBSTITUTE_SAMPLE.fragile.circos
 		r0         = SUBSTITUTE_CNA_INNER_RADIUSr
 		r1         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		fill_color = black_a5
-		z = 20
 	</highlight>
 
 	<highlight>
@@ -39,7 +39,6 @@ show_tick_labels    = no
 		r0         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		r1         = SUBSTITUTE_CNA_OUTER_RADIUSr
 		fill_color = black_a5
-		z = 20
 	</highlight>
 
 	<highlight>
@@ -47,7 +46,6 @@ show_tick_labels    = no
 		r0         = SUBSTITUTE_EXON_INNER_RADIUSr
 		r1         = SUBSTITUTE_EXON_OUTER_RADIUSr
 		fill_color = blue
-		z = 20
 	</highlight>
 
     <highlight>
@@ -55,15 +53,30 @@ show_tick_labels    = no
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
         fill_color = blue
-        z = 20
     </highlight>
 
     <highlight>
         file       = SUBSTITUTE_SAMPLE.protein_domain.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
-        fill_color = red
-        z = 21
+        stroke_thickness = 0
+
+        <rules>
+            <rule>
+                condition = true
+                color = white
+            </rule>
+        </rules>
+
+        z = 1
+    </highlight>
+
+
+    <highlight>
+        file       = SUBSTITUTE_SAMPLE.protein_domain.circos
+        r0         = SUBSTITUTE_GENE_INNER_RADIUSr
+        r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
+        z = 2
     </highlight>
 
     <highlight>
