@@ -63,7 +63,6 @@ public final class ReportableGeneFusionFile {
                 .add("geneContextEnd")
                 .add("geneTranscriptEnd")
                 .add("ploidy")
-                .add("source")
                 .toString();
     }
 
@@ -76,7 +75,6 @@ public final class ReportableGeneFusionFile {
                 .add(String.valueOf(fusion.geneContextEnd()))
                 .add(String.valueOf(fusion.geneTranscriptEnd()))
                 .add(DECIMAL_FORMAT.format(fusion.ploidy()))
-                .add(String.valueOf(fusion.source()))
                 .toString();
     }
 
@@ -94,7 +92,6 @@ public final class ReportableGeneFusionFile {
                 .geneContextEnd(values[index++])
                 .geneTranscriptEnd(values[index++])
                 .ploidy(Double.valueOf(values[index++]))
-                .source(values[index++])
                 .build();
     }
 

@@ -201,8 +201,7 @@ public class StructuralVariantFusionDAO
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
-                .ploidy(1D)
-                .source(Strings.EMPTY);
+                .ploidy(1D);
     }
 }
 

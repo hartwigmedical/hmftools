@@ -7,23 +7,23 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation.isUpstream;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_5P_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.calcPositionPhasing;
+
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -41,13 +41,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class FusionFinder
 {
-    public static final String FUSION_PAIRS_CSV = "fusion_pairs_csv";
-    public static final String PROMISCUOUS_FIVE_CSV = "promiscuous_five_csv";
-    public static final String PROMISCUOUS_THREE_CSV = "promiscuous_three_csv";
 
     private static final int EXON_THRESHOLD = 1;
 
-    private KnownFusionsModel mKnownFusionsModel;
+    private KnownFusionData mKnownFusionData;
     boolean mHasValidConfigData;
 
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
@@ -65,7 +62,7 @@ public class FusionFinder
         mGeneTranscriptCollection = geneTransCache;
         mOutputDir = outputDir;
 
-        mKnownFusionsModel = null;
+        mKnownFusionData = null;
         mHasValidConfigData = false;
 
         mFusionWriter = null;
@@ -84,20 +81,14 @@ public class FusionFinder
 
     private void initialise(@NotNull final CommandLine cmd)
     {
-        if(cmd.hasOption(FUSION_PAIRS_CSV) && cmd.hasOption(PROMISCUOUS_FIVE_CSV) && cmd.hasOption(PROMISCUOUS_THREE_CSV))
+        if(cmd.hasOption(FUSION_PAIRS_CSV) || cmd.hasOption(PROMISCUOUS_FIVE_CSV) || cmd.hasOption(PROMISCUOUS_THREE_CSV))
         {
-            try
-            {
-                mKnownFusionsModel = KnownFusionsModel.fromInputStreams(new FileInputStream(cmd.getOptionValue(FUSION_PAIRS_CSV)),
-                        new FileInputStream(cmd.getOptionValue(PROMISCUOUS_FIVE_CSV)),
-                        new FileInputStream(cmd.getOptionValue(PROMISCUOUS_THREE_CSV)));
+            mKnownFusionData = new KnownFusionData();
 
+            if(mKnownFusionData.loadFromFile(cmd))
+            {
                 LOGGER.debug("loaded known fusion data");
                 mHasValidConfigData = true;
-            }
-            catch (IOException e)
-            {
-                LOGGER.warn("no known fusion files loaded");
             }
         }
     }
@@ -112,7 +103,7 @@ public class FusionFinder
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
     }
 
-    public final KnownFusionsModel getKnownFusionsModel() { return mKnownFusionsModel; }
+    public final KnownFusionData getKnownFusionDatal() { return mKnownFusionData; }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
@@ -157,14 +148,7 @@ public class FusionFinder
                         if(geneFusion == null)
                             continue;
 
-                        if(mKnownFusionsModel != null)
-                        {
-                            geneFusion.setPrimarySource(mKnownFusionsModel.primarySource(
-                                    upstreamTrans.parent().synonyms(), downstreamTrans.parent().synonyms()));
-
-                            final String knownType = getKnownFusionType(upstreamTrans, downstreamTrans);
-                            geneFusion.setKnownFusionType(knownType);
-                        }
+                        geneFusion.setKnownFusionType(getKnownFusionType(upstreamTrans, downstreamTrans));
 
                         potentialFusions.add(geneFusion);
                     }
@@ -643,9 +627,36 @@ public class FusionFinder
 
     public String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
-        if(mHasValidConfigData && mKnownFusionsModel == null)
+        if(mHasValidConfigData && mKnownFusionData == null)
             return REPORTABLE_TYPE_KNOWN;
 
+        final String upGene = upTrans.parent().GeneName;
+        final String downGene = downTrans.parent().GeneName;
+
+        if(mKnownFusionData.hasKnownFusion(upGene, downGene))
+            return REPORTABLE_TYPE_KNOWN;
+
+        boolean fivePrimeMatch = mKnownFusionData.hasPromiscuousFiveGene(upGene);
+        boolean threePrimeMatch = mKnownFusionData.hasPromiscuousThreeGene(downGene);
+
+        boolean intergenicPromiscuousMatch = mKnownFusionData.intergenicPromiscuousMatch(upGene, downGene);
+
+        boolean intragenicPromiscuousMatch = mKnownFusionData.intragenicPromiscuousMatch(upGene, downGene)
+                && downTrans.ExonDownstream - upTrans.ExonUpstream > EXON_THRESHOLD;
+
+        if(intergenicPromiscuousMatch || intragenicPromiscuousMatch)
+        {
+            if (fivePrimeMatch && threePrimeMatch)
+                return REPORTABLE_TYPE_BOTH_PROM;
+            else if (fivePrimeMatch)
+                return REPORTABLE_TYPE_5P_PROM;
+            else if (threePrimeMatch)
+                return REPORTABLE_TYPE_3P_PROM;
+            else
+                return REPORTABLE_TYPE_NONE;
+        }
+
+        /*
         if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
             return REPORTABLE_TYPE_KNOWN;
 
@@ -668,6 +679,7 @@ public class FusionFinder
             else
                 return REPORTABLE_TYPE_NONE;
         }
+        */
 
         return REPORTABLE_TYPE_NONE;
     }
@@ -692,7 +704,7 @@ public class FusionFinder
 
                 mFusionWriter = createBufferedWriter(outputFilename, false);
 
-                mFusionWriter.write("SampleId,Reportable,KnownType,PrimarySource");
+                mFusionWriter.write("SampleId,Reportable,KnownType");
 
                 if(annotatationHeaders.isEmpty())
                     mFusionWriter.write(",ClusterId,ClusterCount,ClusterInfo");
@@ -780,8 +792,8 @@ public class FusionFinder
                 }
             }
 
-            writer.write(String.format("%s,%s,%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), fusion.primarySource(), annotationsStr));
+            writer.write(String.format("%s,%s,%s,%s",
+                    sampleId, fusion.reportable(), fusion.getKnownFusionType(), annotationsStr));
 
             // write upstream SV, transcript and exon info
             writer.write(

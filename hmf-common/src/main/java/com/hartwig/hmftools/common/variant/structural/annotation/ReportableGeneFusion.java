@@ -29,7 +29,4 @@ public abstract class ReportableGeneFusion {
 
     @Nullable
     public abstract Double ploidy();
-
-    @NotNull
-    public abstract String source();
 }

@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -597,7 +596,6 @@ public final class ExampleAnalysisTestFactory {
                 .geneTranscriptEnd("ENST00000406427")
                 .geneContextEnd("Intron 3")
                 .ploidy(0.4)
-                .source(KnownFusionsModel.CIVIC)
                 .build();
 
         ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
@@ -608,7 +606,6 @@ public final class ExampleAnalysisTestFactory {
                 .geneTranscriptEnd("ENST00000288602")
                 .geneContextEnd("Intron 8")
                 .ploidy(1D)
-                .source(KnownFusionsModel.ONCOKB)
                 .build();
 
         return Lists.newArrayList(fusion1, fusion2);

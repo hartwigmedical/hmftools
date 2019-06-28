@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
 import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
@@ -29,11 +31,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.fusions.KnownFusionsModel;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.linx.fusion.KnownFusionData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -513,7 +515,7 @@ public class RnaFusionMapper
         }
 
 
-        KnownFusionsModel refFusionData = mFusionFinder.getKnownFusionsModel();
+        KnownFusionData refFusionData = mFusionFinder.getKnownFusionDatal();
 
         if(refFusionData == null)
         {
@@ -521,17 +523,17 @@ public class RnaFusionMapper
             return;
         }
 
-        for(Pair<String,String> genePair : refFusionData.fusions().keySet())
+        for(final String[] genePair : refFusionData.knownPairs())
         {
-            if (genePair.getFirst().equals(rnaFusion.GeneUp) && genePair.getSecond().equals(rnaFusion.GeneDown))
+            if (genePair[FIVE_GENE].equals(rnaFusion.GeneUp) && genePair[THREE_GENE].equals(rnaFusion.GeneDown))
             {
                 rnaFusion.setKnownType(REPORTABLE_TYPE_KNOWN);
                 return;
             }
         }
 
-        boolean fivePrimeProm = refFusionData.fivePrimePromiscuousMatch(Lists.newArrayList(rnaFusion.GeneUp));
-        boolean threePrimeProm = refFusionData.threePrimePromiscuousMatch(Lists.newArrayList(rnaFusion.GeneDown));
+        boolean fivePrimeProm = refFusionData.hasPromiscuousFiveGene(rnaFusion.GeneUp);
+        boolean threePrimeProm = refFusionData.hasPromiscuousThreeGene(rnaFusion.GeneDown);
 
         if(fivePrimeProm && threePrimeProm)
         {

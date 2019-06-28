@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.markNonDisruptiv
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -970,16 +972,16 @@ public class FusionDisruptionAnalyser
 
     private void populateKnownFusionGenes()
     {
-        if(mFusionFinder.getKnownFusionsModel() == null)
+        if(mFusionFinder.getKnownFusionDatal() == null)
             return;
 
-        for(Pair<String,String> genePair : mFusionFinder.getKnownFusionsModel().fusions().keySet())
+        for(final String[] genePair : mFusionFinder.getKnownFusionDatal().knownPairs())
         {
-            if(!mKnownFusionGenes.contains(genePair.getFirst()))
-                mKnownFusionGenes.add(genePair.getFirst());
+            if(!mKnownFusionGenes.contains(genePair[FIVE_GENE]))
+                mKnownFusionGenes.add(genePair[FIVE_GENE]);
 
-            if(!mKnownFusionGenes.contains(genePair.getSecond()))
-                mKnownFusionGenes.add(genePair.getSecond());
+            if(!mKnownFusionGenes.contains(genePair[THREE_GENE]))
+                mKnownFusionGenes.add(genePair[THREE_GENE]);
         }
     }
 
@@ -1097,7 +1099,7 @@ public class FusionDisruptionAnalyser
                         .geneTranscriptEnd(fusion.downstreamTrans().StableId)
                         .geneContextEnd(context(fusion.downstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, true))
                         .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
-                        .source(fusion.primarySource()).build());
+                        .build());
             }
         }
 

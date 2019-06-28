@@ -49,9 +49,6 @@ public class GeneFusion
     public final String getKnownFusionType(){ return mKnownFusionType; }
     public void setKnownFusionType(final String type) { mKnownFusionType = type; }
 
-    public String primarySource() { return mPrimarySource; }
-    public void setPrimarySource(final String source) { mPrimarySource = source; }
-
     public boolean phaseMatched(){ return mPhaseMatched; }
     public boolean viable(){ return mViable; }
     public void setExonsSkipped(int exonsUp, int exonsDown)
