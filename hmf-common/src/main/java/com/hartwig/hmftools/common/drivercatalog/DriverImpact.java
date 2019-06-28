@@ -11,7 +11,9 @@ public enum DriverImpact {
     NONSENSE,
     SPLICE,
     INFRAME,
-    FRAMESHIFT;
+    FRAMESHIFT,
+    UNKNOWN;
+
 
     @NotNull
     public static DriverImpact select(@NotNull SomaticVariant variant) {
@@ -27,7 +29,7 @@ public enum DriverImpact {
             return INFRAME;
         }
 
-        throw new UnsupportedOperationException();
+        return UNKNOWN;
     }
 
     static boolean isFrameshift(SomaticVariant variant) {
