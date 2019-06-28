@@ -339,31 +339,32 @@ public class VisualiserWriter
 
             loggedGenes.add(geneData.GeneId);
 
-            final List<TranscriptExonData> exonDataLst =
+            final List<TranscriptExonData> exonDataList =
                     mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TransName);
 
-            for (final TranscriptExonData exonData : exonDataLst)
+            if(exonDataList == null || exonDataList.isEmpty())
+                continue;
+
+            for (final TranscriptExonData exonData : exonDataList)
             {
                 geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, exonData.TransName,
                         geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
             }
 
-            if(geneData.TransId > 0)
+            int transId = geneData.TransId > 0 ? geneData.TransId : exonDataList.get(0).TransId;
+
+            final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(transId);
+
+            if (transProteinData != null)
             {
-                final List<TranscriptProteinData> transProteinData =
-                        mGeneTranscriptCollection.getTranscriptProteinDataMap().get(geneData.TransId);
-
-                if (transProteinData != null)
+                for (final TranscriptProteinData proteinData : transProteinData)
                 {
-                    for (final TranscriptProteinData proteinData : transProteinData)
-                    {
-                        final Long[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, geneData.GeneId, geneData.TransId);
+                    final Long[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, exonDataList);
 
-                        if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
-                        {
-                            proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.Chromosome,
-                                    domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
-                        }
+                    if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
+                    {
+                        proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.Chromosome,
+                                domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                     }
                 }
             }

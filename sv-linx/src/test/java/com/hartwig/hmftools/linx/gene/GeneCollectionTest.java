@@ -3,7 +3,10 @@ package com.hartwig.hmftools.linx.gene;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.extractTranscriptExonData;
+import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.getProteinDomainPositions;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.setAlternativeTranscriptPhasings;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,6 +18,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 
 import org.junit.Test;
 
@@ -286,6 +290,72 @@ public class GeneCollectionTest
 
         setAlternativeTranscriptPhasings(trans, transExonList, position, posOrientation);
         assertEquals(0, trans.getAlternativePhasing().size());
+    }
+
+    @Test
+    public void testProteinDomainPositions()
+    {
+        List<TranscriptExonData> transExonList = Lists.newArrayList();
+
+        String transName = "ENST0001";
+        String geneId = "G0001";
+        int transId = 1;
+
+        long codingStart = 150;
+        long codingEnd = 550;
+        long transStart = 100;
+        long transEnd = 1000;
+
+        byte strand = (byte)1;
+
+        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
+                100, 200, 1, -1, 0, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
+                300, 400, 2, 0, 0, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
+                500, 600, 3, 0, -1, codingStart, codingEnd, ""));
+
+        TranscriptProteinData proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
+
+        Long[] domainPositions = getProteinDomainPositions(proteinData, transExonList);
+        assertEquals(165, (long)domainPositions[SE_START]);
+        assertEquals(515, (long)domainPositions[SE_END]);
+
+        // test again with a protein which starts after the first coding exon
+        proteinData = new TranscriptProteinData(transId, 0, 0, 55, 65, "hd");
+
+        domainPositions = getProteinDomainPositions(proteinData, transExonList);
+        assertEquals(515, (long)domainPositions[SE_START]);
+        assertEquals(545, (long)domainPositions[SE_END]);
+
+        // now on the reverse strand
+        strand = (byte)-1;
+
+        proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
+
+        transExonList.clear();
+
+        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
+                100, 200, 1, 0, -1, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
+                300, 400, 2, 0, 0, codingStart, codingEnd, ""));
+
+        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, strand, transStart, transEnd,
+                500, 600, 3, -1, 0, codingStart, codingEnd, ""));
+
+        domainPositions = getProteinDomainPositions(proteinData, transExonList);
+        assertEquals(185, (long)domainPositions[SE_START]);
+        assertEquals(535, (long)domainPositions[SE_END]);
+
+        proteinData = new TranscriptProteinData(transId, 0, 0, 55, 65, "hd");
+
+        domainPositions = getProteinDomainPositions(proteinData, transExonList);
+        assertEquals(155, (long)domainPositions[SE_START]);
+        assertEquals(185, (long)domainPositions[SE_END]);
+
     }
 
 }

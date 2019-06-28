@@ -1009,37 +1009,111 @@ public class SvGeneTranscriptCollection
         return closestPosition;
     }
 
-    public Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final String geneId, int transId)
+    public static Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final List<TranscriptExonData> transExonDataList)
     {
         Long[] domainPositions = {null, null};
 
-        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneId);
-
-        if(transExonDataList == null || transExonDataList.isEmpty())
+        if(transExonDataList.isEmpty())
             return domainPositions;
 
-        for(final TranscriptExonData exonData : transExonDataList)
+        Long codingStart = transExonDataList.get(0).CodingStart;
+        Long codingEnd = transExonDataList.get(0).CodingEnd;
+
+        if(codingStart == null || codingEnd == null)
+            return domainPositions;
+
+        int preProteinBases = proteinData.SeqStart * 3;
+        int proteinBases = (proteinData.SeqEnd - proteinData.SeqStart) * 3;
+
+        long proteinStart = -1;
+        long proteinEnd = -1;
+
+        if(transExonDataList.get(0).Strand == 1)
         {
-            if(exonData.TransId == transId)
+            for(int i = 0; i < transExonDataList.size(); ++i)
             {
-                if(exonData.CodingStart == null || exonData.CodingEnd == null)
-                    break;
+                final TranscriptExonData exonData = transExonDataList.get(i);
 
+                if(exonData.ExonEnd < codingStart)
+                    continue;
 
-                if(exonData.Strand == 1)
+                if(preProteinBases > 0)
                 {
-                    domainPositions[SE_START] = exonData.CodingStart + 3 * proteinData.SeqStart;
-                    domainPositions[SE_END] = exonData.CodingStart + 3 * proteinData.SeqEnd;
+                    long refStartPos = max(codingStart, exonData.ExonStart);
+                    long exonCodingBases = exonData.ExonEnd - refStartPos;
+
+                    if(exonCodingBases >= preProteinBases)
+                    {
+                        proteinStart = refStartPos + preProteinBases;
+                        preProteinBases = 0;
+                    }
+                    else
+                    {
+                        preProteinBases -= exonCodingBases;
+                        continue;
+                    }
+                }
+
+                long startPos = max(exonData.ExonStart, proteinStart);
+                long exonBases = exonData.ExonEnd - startPos;
+
+                if(exonBases >= proteinBases)
+                {
+                    proteinEnd = startPos + proteinBases;
+                    break;
                 }
                 else
                 {
-                    domainPositions[SE_START] = exonData.CodingEnd - 3 * proteinData.SeqEnd;
-                    domainPositions[SE_END] = exonData.CodingEnd - 3 * proteinData.SeqStart;
+                    proteinBases -= exonBases;
                 }
-
-                break;
             }
         }
+        else
+        {
+            for(int i = transExonDataList.size() - 1; i >= 0; --i)
+            {
+                final TranscriptExonData exonData = transExonDataList.get(i);
+
+                if(exonData.ExonStart > codingEnd)
+                    continue;
+
+                if(preProteinBases > 0)
+                {
+                    long refStartPos = min(codingEnd, exonData.ExonEnd);
+                    long exonCodingBases = refStartPos - exonData.ExonStart;
+
+                    if(exonCodingBases >= preProteinBases)
+                    {
+                        proteinEnd = refStartPos - preProteinBases;
+                        preProteinBases = 0;
+                    }
+                    else
+                    {
+                        preProteinBases -= exonCodingBases;
+                        continue;
+                    }
+                }
+
+                long startPos = min(exonData.ExonEnd, proteinEnd);
+                long exonBases = startPos - exonData.ExonStart;
+
+                if(exonBases >= proteinBases)
+                {
+                    proteinStart = startPos - proteinBases;
+                    break;
+                }
+                else
+                {
+                    proteinBases -= exonBases;
+                }
+            }
+        }
+
+        if(proteinEnd == -1 || proteinStart == -1)
+            return domainPositions;
+
+        domainPositions[SE_START] = proteinStart;
+        domainPositions[SE_END] = proteinEnd;
 
         return domainPositions;
     }
