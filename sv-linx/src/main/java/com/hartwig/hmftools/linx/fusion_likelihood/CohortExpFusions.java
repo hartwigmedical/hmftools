@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.setBuck
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.mergePhaseRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.DEFAULT_REGION_GRID_SIZE;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.nextTranscriptExons;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +33,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
@@ -207,12 +207,12 @@ public class CohortExpFusions
                 armGeneEndFirstList.add(index, geneRangeData);
 
                 // load from Ensembl transcript and exon data
-                final List<TranscriptExonData> transExonDataList = geneTransCache.getTransExonData(geneData.GeneId);
+                final List<TranscriptData> transDataList = geneTransCache.getTranscripts(geneData.GeneId);
 
-                if (transExonDataList == null)
+                if (transDataList == null)
                     continue;
 
-                generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+                generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
 
                 for(GenePhaseRegion region : geneRangeData.getPhaseRegions())
                 {
@@ -352,9 +352,9 @@ public class CohortExpFusions
                 geneEndFirstList.add(index, geneRangeData);
 
                 // load from Ensembl transcript and exon data
-                final List<TranscriptExonData> transExonDataList = geneTransCache.getTransExonData(geneData.GeneId);
+                final List<TranscriptData> transDataList = geneTransCache.getTranscripts(geneData.GeneId);
 
-                if (transExonDataList == null)
+                if (transDataList == null || transDataList.isEmpty())
                     continue;
 
                 /*
@@ -364,7 +364,7 @@ public class CohortExpFusions
                 }
                 */
 
-                generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+                generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
 
                 for(GenePhaseRegion region : geneRangeData.getPhaseRegions())
                 {
@@ -404,23 +404,20 @@ public class CohortExpFusions
     }
 
     public void generatePhaseRegions(
-            GeneRangeData geneRangeData, final List<TranscriptExonData> transExonDataList, final SvGeneTranscriptCollection geneTransCache)
+            GeneRangeData geneRangeData, final List<TranscriptData> transDataList, final SvGeneTranscriptCollection geneTransCache)
     {
         // convert each transcript's exons into a set of phase regions spanning each intronic section
         // also take each transcript and look for potential same-gene fusions
-        int teIndex = 0;
-        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-
         List<GenePhaseRegion> matchedTransRegions = Lists.newArrayList();
         List<GenePhaseRegion> phaseRegions = Lists.newArrayList();
         List<GenePhaseRegion> intronicPhaseRegions = Lists.newArrayList();
 
-        while (!transcriptExons.isEmpty())
+        for(TranscriptData transcript : transDataList)
         {
-            int transId = transcriptExons.get(0).TransId;
+            int transId = transcript.TransId;
             long precedingGeneSAPos = geneTransCache.findPrecedingGeneSpliceAcceptorPosition(transId);
 
-            List<GenePhaseRegion> transcriptRegions = createPhaseRegionsFromTranscript(geneRangeData.GeneData, transcriptExons, precedingGeneSAPos);
+            List<GenePhaseRegion> transcriptRegions = createPhaseRegionsFromTranscript(geneRangeData.GeneData, transcript, precedingGeneSAPos);
 
             transcriptRegions.forEach(x -> x.setTransId(transId));
 
@@ -432,9 +429,6 @@ public class CohortExpFusions
 
             // generateSameGeneCounts(geneRangeData, transcriptRegions);
             // generateSameGeneCounts(geneRangeData, transcriptRegions, matchedTransRegions);
-
-            teIndex += transcriptExons.size();
-            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
         }
 
         mergePhaseRegions(phaseRegions);
@@ -443,7 +437,7 @@ public class CohortExpFusions
     }
 
     public static List<GenePhaseRegion> createPhaseRegionsFromTranscript(
-            final EnsemblGeneData geneData, final List<TranscriptExonData> transcriptExons, long precSpliceAcceptorPos)
+            final EnsemblGeneData geneData, final TranscriptData transcript, long precSpliceAcceptorPos)
     {
         // 5-prime rules - must be post-promotor
         // 3-prime rules: must be coding and > 1 exon, needs to find first splice acceptor and then uses its phasing
@@ -451,40 +445,40 @@ public class CohortExpFusions
 
         List<GenePhaseRegion> transcriptRegions = Lists.newArrayList();
 
-        for (int i = 0; i < transcriptExons.size() - 1; ++i)
+        // skip single-exon transcripts since without an intronic section their fusion likelihood is negligible
+        if(transcript.exons().size() == 1)
+            return transcriptRegions;
+
+        for (int i = 0; i < transcript.exons().size() - 1; ++i)
         {
-            // skip single-exon transcripts since without an intronic section their fusion likelihood is negligible
-            if(transcriptExons.size() == 1)
-                break;
+            ExonData exonData = transcript.exons().get(i);
 
-            TranscriptExonData exonData = transcriptExons.get(i);
-
-            if (exonData.CodingStart == null)
+            if (transcript.CodingStart == null)
             {
                 // mark the whole transcript as a single UTR
                 GenePhaseRegion phaseRegion = new GenePhaseRegion(
-                        geneData.GeneId, exonData.TransStart, exonData.TransEnd, PHASE_NON_CODING);
+                        geneData.GeneId, transcript.TransStart, transcript.TransEnd, PHASE_NON_CODING);
 
                 transcriptRegions.add(phaseRegion);
                 break;
             }
 
-            TranscriptExonData nextExonData = transcriptExons.get(i+1);
+            ExonData nextExonData = transcript.exons().get(i+1);
 
-            if(geneData.Strand == 1 && nextExonData.ExonStart > exonData.CodingEnd)
+            if(geneData.Strand == 1 && nextExonData.ExonStart > transcript.CodingEnd)
                 break;
-            else if(geneData.Strand == -1 && exonData.ExonEnd < exonData.CodingStart)
+            else if(geneData.Strand == -1 && exonData.ExonEnd < transcript.CodingStart)
                 continue;
 
             // add an upstream gene region (only applicable for downstream fusion genes)
             // with a phase of -1 unless coding starts in the first exon or on the first base of the second exon
             if(precSpliceAcceptorPos > 0 && geneData.Strand == 1 && i == 0)
             {
-                int regionPhase = (exonData.CodingStart < exonData.ExonEnd) ? nextExonData.ExonPhase : -1;
+                int regionPhase = (transcript.CodingStart < exonData.ExonEnd) ? nextExonData.ExonPhase : -1;
 
-                long preDistance = max(exonData.TransStart - precSpliceAcceptorPos, 0);
+                long preDistance = max(transcript.TransStart - precSpliceAcceptorPos, 0);
                 long upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
-                long regionStart = exonData.TransStart - upstreamDistance;
+                long regionStart = transcript.TransStart - upstreamDistance;
                 long regionEnd = exonData.ExonStart - 1;
 
                 if(regionStart < regionEnd)
@@ -496,15 +490,15 @@ public class CohortExpFusions
                     transcriptRegions.add(phaseRegion);
                 }
             }
-            else if(precSpliceAcceptorPos > 0 && geneData.Strand == -1 && i == transcriptExons.size() - 2)
+            else if(precSpliceAcceptorPos > 0 && geneData.Strand == -1 && i == transcript.exons().size() - 2)
             {
-                int regionPhase = (exonData.CodingEnd > nextExonData.ExonStart) ? exonData.ExonPhase : -1;
+                int regionPhase = (transcript.CodingEnd > nextExonData.ExonStart) ? exonData.ExonPhase : -1;
 
                 long regionStart = nextExonData.ExonEnd + 1;
 
-                long preDistance = max(precSpliceAcceptorPos - exonData.TransEnd, 0);
+                long preDistance = max(precSpliceAcceptorPos - transcript.TransEnd, 0);
                 long upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
-                long regionEnd = nextExonData.TransEnd + upstreamDistance;
+                long regionEnd = transcript.TransEnd + upstreamDistance;
 
                 if(regionStart < regionEnd)
                 {

@@ -32,7 +32,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions;
 import com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion;
 import com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData;
@@ -55,8 +55,8 @@ public class FusionLikelihoodTest
 
         GeneRangeData geneRangeData = new GeneRangeData(geneData);
 
-        List<TranscriptExonData> transcriptsList = Lists.newArrayList();
-        List<TranscriptExonData> transExonDataList = Lists.newArrayList();
+        // List<TranscriptData> transcriptsList = Lists.newArrayList();
+        List<TranscriptData> transDataList = Lists.newArrayList();
 
         // 3 coding exons, with coding region starting and ending half way through them
 
@@ -64,13 +64,13 @@ public class FusionLikelihoodTest
 
         long[] exonStarts = new long[]{110, 130, 150, 170};
         int[] exonPhases = new int[]{-1, 1, 2, -1};
-        createTransExons(transcriptsList, geneId, transId++, strand, exonStarts, exonPhases, 10);
-        transExonDataList.addAll(transcriptsList);
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         // converts to 110-129 -1, 130-149 1, 150-169 2
 
         // first test phase creation by itself
-        List<GenePhaseRegion> phaseRegions = createPhaseRegionsFromTranscript(geneData, transcriptsList, 0);
+        List<GenePhaseRegion> phaseRegions = createPhaseRegionsFromTranscript(geneData, transData, 0);
 
         assertEquals(3, phaseRegions.size());
         assertTrue(hasPhaseRegion(phaseRegions, 110, 129, 10, 0));
@@ -78,13 +78,12 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(phaseRegions, 150, 169, 10000, 0));
 
         exonPhases = new int[]{0, 0, -1, -1};
-        transcriptsList.clear();
-        createTransExons(transcriptsList, geneId, transId++, strand, exonStarts, exonPhases, 10);
-        transExonDataList.addAll(transcriptsList);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         // converts to 110-129 0, 130-149 0
 
-        phaseRegions = createPhaseRegionsFromTranscript(geneData, transcriptsList, 0);
+        phaseRegions = createPhaseRegionsFromTranscript(geneData, transData, 0);
 
         assertEquals(2, phaseRegions.size());
         assertTrue(hasPhaseRegion(phaseRegions, 110, 129, 100, 0));
@@ -93,13 +92,12 @@ public class FusionLikelihoodTest
         // and a non-coding transcript
         exonStarts = new long[]{110, 170};
         exonPhases = new int[]{-1, -1};
-        transcriptsList.clear();
-        createTransExons(transcriptsList, geneId, transId++, strand, exonStarts, exonPhases, 10);
-        transExonDataList.addAll(transcriptsList);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         // converts to 110-179 -1
 
-        phaseRegions = createPhaseRegionsFromTranscript(geneData, transcriptsList, 0);
+        phaseRegions = createPhaseRegionsFromTranscript(geneData, transData, 0);
 
         assertEquals(1, phaseRegions.size());
         assertTrue(hasPhaseRegion(phaseRegions, 110, 180, 1, 0));
@@ -111,7 +109,7 @@ public class FusionLikelihoodTest
         List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
         likelihoodCalc.initialise(delLengths, 0);
 
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(4, phaseRegions.size());
 
@@ -122,10 +120,10 @@ public class FusionLikelihoodTest
 
         Map<Integer,Long> transSAMap = geneTransCache.getTransSpliceAcceptorPosDataMap();
 
-        transExonDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)60));
+        transDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)60));
 
         // test again but with a preceding gene region distance
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(5, phaseRegions.size());
 
@@ -138,17 +136,19 @@ public class FusionLikelihoodTest
 
         geneRangeData = new GeneRangeData(geneData);
 
-        transExonDataList.clear();
+        transDataList.clear();
 
         exonStarts = new long[]{10, 30, 50, 70};
         exonPhases = new int[]{-1, -1, 1, 2};
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         // converts to 41-60 1, 61-80 2
 
         exonStarts = new long[]{10, 30, 50, 70};
         exonPhases = new int[]{-1, 0, 0, -1};
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         // converts to 21-40 0, 41-60 0, 61-80 -1
 
@@ -158,11 +158,12 @@ public class FusionLikelihoodTest
 
         // converts to 20-80 -1 NC
 
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         transSAMap.clear();
 
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(4, phaseRegions.size());
 
@@ -171,17 +172,17 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(phaseRegions, 41, 60, 1101, 0));
         assertTrue(hasPhaseRegion(phaseRegions, 61, 80, 10011, 0));
 
-        transExonDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)100000));
+        transDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)100000));
 
         // test again but with a preceding gene region distance - will be capped at 10K
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();
         assertEquals(5, phaseRegions.size());
 
         assertTrue(hasPhaseRegion(phaseRegions, 81, 10080, 10010, 10010));
 
-        // now test with 3 transcripts each with the same exons but kept seperate for same-gene tests
-        transExonDataList.clear();
+        // now test with 3 transcripts each with the same exons but kept separate for same-gene tests
+        transDataList.clear();
 
         geneId = "G003";
         strand = 1;
@@ -191,15 +192,20 @@ public class FusionLikelihoodTest
 
         exonStarts = new long[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 1, 1, 1, -1};
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         exonStarts = new long[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 1, 1, 1, -1};
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
 
         transSAMap.clear();
 
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transDataList.add(transData);
+
+        likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
         // likelihoodCalc.generateSameGeneCounts(geneRangeData);
 
         geneRangeData.clearOverlapCounts();
@@ -506,10 +512,8 @@ public class FusionLikelihoodTest
         String geneId, geneName;
 
         int transId = 1;
-        long geneStart, geneEnd;
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
-        List<TranscriptExonData> transExonList = null;
 
         // for 3 chromosomes add 3 genes on one strand, 3 on the other at varying distances
         // for calculate simplicity make each intron distance 1000 bases
@@ -526,31 +530,21 @@ public class FusionLikelihoodTest
             {
                 byte strand = (j == 0) ? (byte)1 : (byte)-1;
 
-                transExonList = Lists.newArrayList();
                 geneId = geneName = String.format("ESNG%04d", geneIndex++);
-                createTransExons(transExonList, geneId, transId++, strand, geneExons1, new int[] {-1, 0, 1, 0, -1}, 100);
-                addTransExonData(geneTransCache, geneId, transExonList);
-                geneStart = transExonList.get(0).TransStart;
-                geneEnd = transExonList.get(transExonList.size() - 1).TransEnd;
-                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, geneStart, geneEnd));
+                TranscriptData transData = createTransExons(geneId, transId++, strand, geneExons1, new int[] {-1, 0, 1, 0, -1}, 100);
+                addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
+                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transData.TransStart, transData.TransEnd));
 
-                transExonList = Lists.newArrayList();
                 geneId = geneName = String.format("ESNG%04d", geneIndex++);
-                createTransExons(transExonList, geneId, transId++, strand, geneExons2, new int[] {-1, 0, -1}, 100);
-                addTransExonData(geneTransCache, geneId, transExonList);
-                geneStart = transExonList.get(0).TransStart;
-                geneEnd = transExonList.get(transExonList.size() - 1).TransEnd;
-                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, geneStart, geneEnd));
+                transData = createTransExons(geneId, transId++, strand, geneExons2, new int[] {-1, 0, -1}, 100);
+                addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
+                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transData.TransStart, transData.TransEnd));
 
                 // another transcript outside the DEL and DUP bucket length ranges
-                transExonList = Lists.newArrayList();
                 geneId = geneName = String.format("ESNG%04d", geneIndex++);
-                createTransExons(transExonList, geneId, transId++, strand, geneExons3, new int[] {-1, 0, -1}, 100);
-                addTransExonData(geneTransCache, geneId, transExonList);
-                geneStart = transExonList.get(0).TransStart;
-                geneEnd = transExonList.get(transExonList.size() - 1).TransEnd;
-                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, geneStart, geneEnd));
-
+                transData = createTransExons(geneId, transId++, strand, geneExons3, new int[] {-1, 0, -1}, 100);
+                addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
+                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transData.TransStart, transData.TransEnd));
             }
 
             addGeneData(geneTransCache, chromosome, geneList);

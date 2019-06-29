@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class GeneTestUtils
 {
@@ -30,9 +30,9 @@ public class GeneTestUtils
         return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd, "", "", "");
     }
 
-    public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptExonData> transExonList)
+    public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptData> transDataList)
     {
-        geneTransCache.getGeneExonDataMap().put(geneId, transExonList);
+        geneTransCache.getTranscriptDataMap().put(geneId, transDataList);
     }
 
     public static void addGeneData(SvGeneTranscriptCollection geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
@@ -40,11 +40,16 @@ public class GeneTestUtils
         geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
     }
 
-    public static void createTransExons(List<TranscriptExonData> transExonList, final String geneId, int transId, byte strand,
+    public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
             long[] exonStarts, int[] exonEndPhases, int exonLength)
     {
+        return createTransExons(geneId, transId, strand,exonStarts, exonEndPhases, exonLength, false);
+    }
+    public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
+            long[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
+    {
         if(exonStarts.length == 0 || exonStarts.length != exonEndPhases.length)
-            return;
+            return null;
 
         String transName = String.format("TRAN%04d", transId);
 
@@ -80,15 +85,23 @@ public class GeneTestUtils
             }
         }
 
+        TranscriptData transData = new TranscriptData(transId, transName, geneId, isCanonical, strand, transStart, transEnd,
+                codingStart, codingEnd, "");
+
+        List<ExonData> exons = Lists.newArrayList();
+
         for(int i = 0; i < exonCount; ++i)
         {
             long exonStart = exonStarts[i];
             long exonEnd = exonStarts[i] + exonLength;
             int exonRank = strand == 1 ? i + 1 : exonCount - i;
 
-            transExonList.add(new TranscriptExonData(geneId, transName, transId, false, strand, transStart, transEnd,
-                    exonStart, exonEnd, exonRank, exonPhases[i], exonEndPhases[i], codingStart, codingEnd, ""));
+            exons.add(new ExonData(transId, exonStart, exonEnd, exonRank, exonPhases[i], exonEndPhases[i]));
         }
+
+        transData.setExons(exons);
+
+        return transData;
 
     }
 

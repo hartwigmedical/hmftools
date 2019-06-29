@@ -24,11 +24,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
@@ -852,19 +853,19 @@ public class FusionFinder
     public boolean isTranscriptBreakendViableForRnaBoundary(final Transcript trans, boolean isUpstream, long breakendPosition,
             long rnaPosition, boolean exactRnaPosition)
     {
-        final List<TranscriptExonData> exonDataList = mGeneTranscriptCollection.getTranscriptExons(trans.parent().StableId, trans.StableId);
+        final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(trans.parent().StableId, trans.StableId);
 
-        if (exonDataList == null || exonDataList.isEmpty())
+        if (transData == null || transData.exons().isEmpty())
             return false;
 
         int strand = trans.parent().Strand;
 
         // first find the matching exon boundary for this RNA fusion boundary
-        for (int i = 0; i < exonDataList.size(); ++i)
+        for (int i = 0; i < transData.exons().size(); ++i)
         {
-            final TranscriptExonData exonData = exonDataList.get(i);
-            final TranscriptExonData prevExonData = i > 0 ? exonDataList.get(i - 1) : null;
-            final TranscriptExonData nextExonData = i < exonDataList.size() - 1 ? exonDataList.get(i + 1) : null;
+            final ExonData exonData = transData.exons().get(i);
+            final ExonData prevExonData = i > 0 ? transData.exons().get(i - 1) : null;
+            final ExonData nextExonData = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
             if (isUpstream)
             {

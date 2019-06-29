@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.IOException;
@@ -29,6 +28,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionTermination;
@@ -44,7 +44,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -59,7 +59,6 @@ import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -777,10 +776,10 @@ public class FusionDisruptionAnalyser
         // check all breakends which fall within the bounds of this transcript, including any which are exonic
         List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
 
-        List<TranscriptExonData> exonDataList = mGeneTransCollection.getTranscriptExons(transcript.parent().StableId, transcript.StableId);
+        // TranscriptData transData = mGeneTransCollection.getTranscriptData(transcript.parent().StableId, transcript.StableId);
 
-        if(exonDataList == null || exonDataList.isEmpty())
-            return null;
+        // if(transData == null || transData.exons().isEmpty())
+        //    return null;
 
         int totalBreakends = 0;
         int facingBreakends = 0;
@@ -844,17 +843,18 @@ public class FusionDisruptionAnalyser
                 .build();
     }
 
-    private FusionTermination checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
+    private FusionTermination checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript, final SvChain chain,
+            int linkIndex)
     {
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         // this includes subsequent links within the same chain and transcript
         SvLinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
         boolean traverseUp = startPair.getFirstBreakend() == breakend; // whether to search up or down the chain
 
-        List<TranscriptExonData> exonDataList = mGeneTransCollection.getTranscriptExons(transcript.parent().StableId, transcript.StableId);
+        // TranscriptData transData = mGeneTransCollection.getTranscriptData(transcript.parent().StableId, transcript.StableId);
 
-        if(exonDataList == null || exonDataList.isEmpty())
-            return null;
+        // if(transData == null || transData.exons().isEmpty())
+        //    return null;
 
         int totalBreakends = 0;
         int facingBreakends = 0;
@@ -933,35 +933,38 @@ public class FusionDisruptionAnalyser
             if(geneData.Strand == fusionDirection)
             {
                 // check whether a splice acceptor is encountered within this window
-                List<TranscriptExonData> transExonDataList = mGeneTransCollection.getTransExonData(geneData.GeneId);
+                List<TranscriptData> transDataList = mGeneTransCollection.getTranscripts(geneData.GeneId);
 
-                if(transExonDataList == null)
+                if(transDataList == null)
                     continue;
 
-                for(TranscriptExonData exonData : transExonDataList)
+                for(final TranscriptData transData : transDataList)
                 {
-                    if(exonData.ExonRank == 1)
-                        continue;
-
-                    if((geneData.Strand == 1 && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonStart)
-                    || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
+                    for (final ExonData exonData : transData.exons())
                     {
-                        // allow an exon to be fully traversed if the upstream transcript is pre-coding
-                        if(isPrecodingUpstream && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonEnd)
+                        if (exonData.ExonRank == 1)
+                            continue;
+
+                        if ((geneData.Strand == 1 && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonStart)
+                                || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
                         {
-                            if(geneData.Strand == 1 && (exonData.CodingStart == null || upperPos < exonData.CodingStart))
-                                continue;
-                            else if(geneData.Strand == -1 && (exonData.CodingEnd == null || lowerPos > exonData.CodingEnd))
-                                continue;
+                            // allow an exon to be fully traversed if the upstream transcript is pre-coding
+                            if (isPrecodingUpstream && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonEnd)
+                            {
+                                if (geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
+                                    continue;
+                                else if (geneData.Strand == -1 && (transData.CodingEnd == null || lowerPos > transData.CodingEnd))
+                                    continue;
+                            }
+
+                            /*
+                            LOGGER.debug("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
+                                    pair.toString(), fusionDirection, geneData.GeneName, exonData.TransName,
+                                    exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
+                            */
+
+                            return true;
                         }
-
-                        /*
-                        LOGGER.debug("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
-                                pair.toString(), fusionDirection, geneData.GeneName, exonData.TransName,
-                                exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
-                        */
-
-                        return true;
                     }
                 }
             }

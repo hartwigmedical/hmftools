@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.variant.structural.annotation;
 
 public class TranscriptExonData
 {
-    public final String GeneName;
+    public final String GeneId;
     public final String TransName;
     public final int TransId;
     public final boolean IsCanonical;
@@ -18,11 +18,11 @@ public class TranscriptExonData
     public final Long CodingEnd;
     public final String BioType;
 
-    public TranscriptExonData(final String geneName, final String transName, final int transId, final boolean isCanonical, final byte strand,
+    public TranscriptExonData(final String geneId, final String transName, final int transId, final boolean isCanonical, final byte strand,
             long transStart, long transEnd, long exonStart, long exonEnd, int exonRank, int exonPhase, int exonPhaseEnd, Long codingStart, Long codingEnd,
             String bioType)
     {
-        GeneName = geneName;
+        GeneId = geneId;
         TransName = transName;
         TransId = transId;
         IsCanonical = isCanonical;
@@ -39,20 +39,6 @@ public class TranscriptExonData
         BioType = bioType;
     }
 
-    public boolean sameExon(final TranscriptExonData other)
-    {
-        // checks if an exon is equal regardless of the transcript id
-        if(!GeneName.equals(other.GeneName) || Strand != other.Strand)
-            return false;
-
-        if(ExonStart != other.ExonStart || ExonEnd != other.ExonEnd)
-            return false;
-
-        if(ExonPhase != other.ExonPhase || ExonPhaseEnd != other.ExonPhaseEnd)
-            return false;
-
-        return true;
-    }
 
     public boolean overlaps(final TranscriptExonData other)
     {

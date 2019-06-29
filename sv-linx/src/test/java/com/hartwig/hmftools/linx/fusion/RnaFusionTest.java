@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.extractTranscriptExonData;
 
 import static org.junit.Assert.assertEquals;
@@ -16,7 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
@@ -38,51 +39,34 @@ public class RnaFusionTest
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
-        String chromosome2 = "1";
         geneList.add(createEnsemblGeneData(geneId2, geneName2, chromosome, -1, 10000, 20000));
 
         addGeneData(geneTransCache, chromosome, geneList);
 
-        List<TranscriptExonData> transExonList = Lists.newArrayList();
+        List<TranscriptData> transDataList = Lists.newArrayList();
 
-        String transName = "ENST0001";
         int transId = 1;
+        byte strand = 1;
 
-        long codingStart = 11550;
-        long codingEnd = 13550;
-        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, (byte)1, 10100, 19600,
-                10500, 10600, 1, -1, -1, codingStart, codingEnd, ""));
+        long[] exonStarts = new long[]{10500, 11500, 12500, 13500};
+        int[] exonPhases = new int[]{-1, 1, 2, -1};
 
-        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, (byte)1, 10100, 19600,
-                11500, 11600, 2, -1, 1, codingStart, codingEnd, ""));
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        String transName = transData.TransName;
+        transDataList.add(transData);
 
-        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, (byte)1, 10100, 19600,
-                12500, 12600, 3, 1, 2, codingStart, codingEnd, ""));
+        addTransExonData(geneTransCache, geneId, transDataList);
 
-        transExonList.add(new TranscriptExonData(geneId, transName, transId, true, (byte)1, 10100, 19600,
-                13500, 13600, 4, 2, -1, codingStart, codingEnd, ""));
+        transDataList = Lists.newArrayList();
 
+        strand = -1;
 
-        addTransExonData(geneTransCache, geneId, transExonList);
+        exonPhases = new int[]{-1, -1, -1, -1};
+        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        String transName2 = transData.TransName;
+        transDataList.add(transData);
 
-        String transName2 = "ENST0002";
-        int transId2 = 2;
-
-        transExonList = Lists.newArrayList();
-        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, (byte)-1, 10100, 19600,
-                10500, 10600, 4, -1, -1, null,null, ""));
-
-        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, (byte)-1, 10100, 19600,
-                11500, 11600, 3, -1, -1, null, null, ""));
-
-        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, (byte)-1, 10100, 19600,
-                12500, 12600, 2, -1, -1, null, null, ""));
-
-        transExonList.add(new TranscriptExonData(geneId2, transName2, transId2, true, (byte)-1, 10100, 19600,
-                13500, 13600, 1, -1, -1, null, null, ""));
-
-        addTransExonData(geneTransCache, geneId2, transExonList);
-
+        addTransExonData(geneTransCache, geneId2, transDataList);
 
         FusionFinder fusionAnalyser = new FusionFinder(null, geneTransCache, "");
 
@@ -91,10 +75,10 @@ public class RnaFusionTest
         long svPos1 = 12700;
         GeneAnnotation geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, svPos1, 1);
 
-        List<TranscriptExonData> transExonDataList = geneTransCache.getTranscriptExons(geneId, transName);
-        assertEquals(4, transExonDataList.size());
+        transData = geneTransCache.getTranscriptData(geneId, transName);
+        assertEquals(4, transData.exons().size());
 
-        Transcript trans = extractTranscriptExonData(transExonDataList, geneAnnot1.position(), geneAnnot1);
+        Transcript trans = extractTranscriptExonData(transData, geneAnnot1.position(), geneAnnot1);
 
         assertTrue(trans != null);
 
@@ -165,10 +149,10 @@ public class RnaFusionTest
         long svPos2 = 12700;
         GeneAnnotation geneAnnot2 = createGeneAnnotation(1, true, geneName2, geneId2, -1, chromosome, svPos2, -1);
 
-        transExonDataList = geneTransCache.getTranscriptExons(geneId2, transName2);
-        assertEquals(4, transExonDataList.size());
+        transData = geneTransCache.getTranscriptData(geneId2, transName2);
+        assertEquals(4, transData.exons().size());
 
-        Transcript trans2 = extractTranscriptExonData(transExonDataList, geneAnnot2.position(), geneAnnot2);
+        Transcript trans2 = extractTranscriptExonData(transData, geneAnnot2.position(), geneAnnot2);
 
         assertTrue(trans2 != null);
 

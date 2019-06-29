@@ -19,6 +19,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -41,6 +43,8 @@ public class EnsemblDAO
     private static String DB_PASS = "ensembl_pass";
 
     public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
+    public static String ENSEMBL_TRANSCRIPT_DATA_FILE = "ensembl_transcript_data.csv";
+    public static String ENSEMBL_EXON_DATA_FILE = "ensembl_exon_data.csv";
     public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
     public static String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
     public static String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
@@ -256,6 +260,17 @@ public class EnsemblDAO
         return true;
     }
 
+    /* R conversion code to split transcript and exon data
+
+    transExonData = read.csv('ensembl_trans_exon_data.csv')
+    write.csv(transExonData %>% select(TransId,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase),'ensembl_exon_data.csv', row.names=F,quote=F)
+    transcriptData = transExonData %>% group_by(TransId,Trans,GeneId,IsCanonical=(CanonicalTranscriptId==TransId),Strand,BioType,TransStart,TransEnd,CodingStart,CodingEnd) %>% count()
+    write.csv(transcriptData %>% select(TransId,TransName=Trans,GeneId,IsCanonical,Strand,BioType,TransStart,TransEnd,CodingStart,CodingEnd),
+          'ensembl_transcript_data.csv', row.names=F,quote=F)
+
+
+     */
+
     private void writeTranscriptExonData(final String outputFile)
     {
         LOGGER.info("caching transcript & exon data to {}", outputFile);
@@ -418,6 +433,106 @@ public class EnsemblDAO
             }
 
             LOGGER.debug("loaded {} gene records, {} exons", geneTransExonDataMap.size(), exonCount);
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load gene transcript exon data({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
+            List<String> restrictedGeneIds)
+    {
+        String filename = dataPath;
+
+        filename += ENSEMBL_TRANS_EXON_DATA_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl gene-exon data file({})", filename);
+                return false;
+            }
+
+            int exonCount = 0;
+            int transcriptCount = 0;
+            String currentGene = "";
+            TranscriptData currentTrans = null;
+            String lastSkippedGeneId = "";
+            List<TranscriptData> transDataList = null;
+            List<ExonData> exonDataList = null;
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                // parse CSV data
+                String[] items = line.split(",");
+
+                // check if still on the same variant
+                final String geneId = items[TE_GENE_ID];
+                int transId = Integer.parseInt(items[TE_TRANS_ID]);
+
+                if(lastSkippedGeneId.equals(geneId) || (!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId)))
+                {
+                    lastSkippedGeneId = geneId;
+                    line = fileReader.readLine();
+                    continue;
+                }
+
+                if(!geneId.equals(currentGene))
+                {
+                    currentGene = geneId;
+                    transDataList = Lists.newArrayList();
+                    transcriptDataMap.put(geneId, transDataList);
+                }
+
+                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
+                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+
+                if(currentTrans == null || currentTrans.TransId != transId)
+                {
+                    exonDataList = Lists.newArrayList();
+
+                    Long codingStart = !items[TE_CODING_START].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
+                    Long codingEnd = !items[TE_CODING_END].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
+                    int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
+                    boolean isCanonical = (canonicalTransId == transId);
+
+                    currentTrans = new TranscriptData(
+                            transId, items[TE_TRANS_NAME], geneId, isCanonical, Byte.parseByte(items[TE_STRAND]),
+                            Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
+                            codingStart, codingEnd, items[TE_BIOTYPE]);
+
+                    ++transcriptCount;
+
+                    currentTrans.setExons(exonDataList);
+                    transDataList.add(currentTrans);
+                }
+
+                ExonData exonData = new ExonData(
+                        transId, Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
+                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]));
+
+                exonDataList.add(exonData);
+                ++exonCount;
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.info("loaded {} genes with {} transcripts records and {} exons",
+                    transcriptDataMap.size(), transcriptCount, exonCount);
         }
         catch(IOException e)
         {

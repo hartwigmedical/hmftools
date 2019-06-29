@@ -21,7 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -339,19 +340,18 @@ public class VisualiserWriter
 
             loggedGenes.add(geneData.GeneId);
 
-            final List<TranscriptExonData> exonDataList =
-                    mGeneTranscriptCollection.getTranscriptExons(geneData.GeneId, geneData.TransName);
+            final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(geneData.GeneId, geneData.TransName);
 
-            if(exonDataList == null || exonDataList.isEmpty())
+            if(transData == null || transData.exons().isEmpty())
                 continue;
 
-            for (final TranscriptExonData exonData : exonDataList)
+            for (final ExonData exonData : transData.exons())
             {
-                geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, exonData.TransName,
+                geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
                         geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
             }
 
-            int transId = geneData.TransId > 0 ? geneData.TransId : exonDataList.get(0).TransId;
+            int transId = geneData.TransId > 0 ? geneData.TransId : transData.TransId;
 
             final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(transId);
 
@@ -359,7 +359,7 @@ public class VisualiserWriter
             {
                 for (final TranscriptProteinData proteinData : transProteinData)
                 {
-                    final Long[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, exonDataList);
+                    final Long[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, transData);
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {

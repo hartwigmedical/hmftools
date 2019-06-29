@@ -267,7 +267,7 @@ public class LikelihoodCalc
 
                         if(totalOverlap > 0)
                         {
-                            // Time,GeneId,GeneName,Strand,GeneStart,GeneEnd,GeneLength,RegionCount,CodingBases,
+                            // Time,GeneId,GeneName,Strand,GeneStart,GeneEnd,GeneLength,RegionCount,CodingBases,ProteinCoding,
                             // OtherGeneId,OtherGeneName,OtherGeneStart,OtherGeneEnd,OtherGeneLength,OtherRegionCount,OtherCodingBases,TotalOverlap
                             LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                                     gene.GeneData.GeneId, gene.GeneData.GeneName, gene.GeneData.Strand,

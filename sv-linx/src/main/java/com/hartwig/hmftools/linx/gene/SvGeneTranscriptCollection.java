@@ -22,9 +22,10 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +35,7 @@ public class SvGeneTranscriptCollection
 {
     private String mDataPath;
 
-    private Map<String, List<TranscriptExonData>> mGeneTransExonDataMap;// keyed by GeneId (aka StableId)
+    private Map<String, List<TranscriptData>> mTranscriptDataMap;
     private Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
@@ -47,7 +48,7 @@ public class SvGeneTranscriptCollection
 
     public SvGeneTranscriptCollection()
     {
-        mGeneTransExonDataMap = Maps.newHashMap();
+        mTranscriptDataMap = Maps.newHashMap();
         mChrGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
@@ -62,12 +63,7 @@ public class SvGeneTranscriptCollection
             mDataPath += File.separator;
     }
 
-    public boolean hasCachedEnsemblData()
-    {
-        return !mChrGeneDataMap.isEmpty() && !mGeneTransExonDataMap.isEmpty();
-    }
-
-    public final Map<String, List<TranscriptExonData>> getGeneExonDataMap() { return mGeneTransExonDataMap; }
+    public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
     public Map<Integer,Long> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
@@ -110,9 +106,9 @@ public class SvGeneTranscriptCollection
         }
     }
 
-    public List<TranscriptExonData> getTransExonData(final String geneId)
+    public List<TranscriptData> getTranscripts(final String geneId)
     {
-        return mGeneTransExonDataMap.get(geneId);
+        return mTranscriptDataMap.get(geneId);
     }
 
     public void populateGeneIdList(List<String> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
@@ -147,9 +143,9 @@ public class SvGeneTranscriptCollection
         // now look up relevant transcript and exon information
         for(final EnsemblGeneData geneData : matchedGenes)
         {
-            final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneData.GeneId);
+            final List<TranscriptData> transcriptDataList = mTranscriptDataMap.get(geneData.GeneId);
 
-            if (transExonDataList == null || transExonDataList.isEmpty())
+            if (transcriptDataList == null || transcriptDataList.isEmpty())
                 continue;
 
             GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneData.GeneName, geneData.GeneId,
@@ -159,18 +155,15 @@ public class SvGeneTranscriptCollection
 
             // collect up all the relevant exons for each unique transcript to analyse as a collection
 
-            int teIndex = 0;
-            List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-
-            while(!transcriptExons.isEmpty())
+            for(TranscriptData transData : transcriptDataList)
             {
-                Transcript transcript = extractTranscriptExonData(transcriptExons, position, currentGene);
+                Transcript transcript = extractTranscriptExonData(transData, position, currentGene);
 
                 if(transcript != null)
                 {
                     currentGene.addTranscript(transcript);
 
-                    setAlternativeTranscriptPhasings(transcript, transcriptExons, position, orientation);
+                    setAlternativeTranscriptPhasings(transcript, transData.exons(), position, orientation);
 
                     // annotate with preceding gene info if the up distance isn't set
                     if(transcript.exonDistanceUp() == -1)
@@ -178,9 +171,6 @@ public class SvGeneTranscriptCollection
                         setPrecedingGeneDistance(transcript, position);
                     }
                 }
-
-                teIndex += transcriptExons.size();
-                transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
             }
 
             geneAnnotations.add(currentGene);
@@ -215,53 +205,22 @@ public class SvGeneTranscriptCollection
         }
     }
 
-    public static List<TranscriptExonData> nextTranscriptExons(final List<TranscriptExonData> transExonDataList, int currentIndex)
+    public final TranscriptData getTranscriptData(final String geneId, final String transcriptId)
     {
-        List<TranscriptExonData> transcriptExons = Lists.newArrayList();
+        final List<TranscriptData> transDataList = mTranscriptDataMap.get(geneId);
 
-        if(currentIndex >= transExonDataList.size())
-            return transcriptExons;
+        if (transDataList == null || transDataList.isEmpty())
+            return null;
 
-        int transId = transExonDataList.get(currentIndex).TransId;
-
-        int j = currentIndex;
-        for(; j < transExonDataList.size(); ++j)
+        for(final TranscriptData transData : transDataList)
         {
-            if(transExonDataList.get(j).TransId != transId)
-                break;
-
-            transcriptExons.add(transExonDataList.get(j));
+            if(transcriptId.isEmpty() && transData.IsCanonical)
+                return transData;
+            else if(transData.TransName.equals(transcriptId))
+                return transData;
         }
 
-        return transcriptExons;
-    }
-
-    public final List<TranscriptExonData> getTranscriptExons(final String geneId, final String transcriptId)
-    {
-        List<TranscriptExonData> exonDataList = Lists.newArrayList();
-
-        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneId);
-
-        if (transExonDataList == null || transExonDataList.isEmpty())
-            return exonDataList;
-
-        int teIndex = 0;
-        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-
-        while(!transcriptExons.isEmpty())
-        {
-            final TranscriptExonData firstExon = transcriptExons.get(0);
-
-            if(transcriptId.isEmpty() && firstExon.IsCanonical)
-                return transcriptExons;
-            else if(firstExon.TransName.equals(transcriptId))
-                return transcriptExons;
-
-            teIndex += transcriptExons.size();
-            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-        }
-
-        return exonDataList;
+        return null;
     }
 
     public final List<EnsemblGeneData> findGenesByRegion(final String chromosome, long posStart, long posEnd)
@@ -279,22 +238,6 @@ public class SvGeneTranscriptCollection
         }
 
         return genesList;
-    }
-
-    public final String getCanonicalTranscriptId(final EnsemblGeneData geneData)
-    {
-        final List<TranscriptExonData> transExonDataList = mGeneTransExonDataMap.get(geneData.GeneId);
-
-        if (transExonDataList == null || transExonDataList.isEmpty())
-            return "";
-
-        for (final TranscriptExonData transData : transExonDataList)
-        {
-            if (transData.IsCanonical)
-                return transData.TransName;
-        }
-
-        return "";
     }
 
     private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList, int upstreamDistance)
@@ -339,13 +282,13 @@ public class SvGeneTranscriptCollection
                 if(gene.GeneEnd > refGene.GeneStart)
                     continue;
 
-                List<TranscriptExonData> transExonData = getTranscriptExons(gene.GeneId, "");
+                TranscriptData transData = getTranscriptData(gene.GeneId, "");
 
-                if(transExonData.size() <= 1)
+                if(transData == null || transData.exons().size() <= 1)
                     continue;
 
                 // otherwise taken the start of the last exon
-                TranscriptExonData lastExonData = transExonData.get(transExonData.size() - 1);
+                ExonData lastExonData = transData.exons().get(transData.exons().size() - 1);
                 return lastExonData.ExonStart;
             }
         }
@@ -361,13 +304,13 @@ public class SvGeneTranscriptCollection
                 if(gene.GeneStart < refGene.GeneEnd)
                     continue;
 
-                List<TranscriptExonData> transExonData = getTranscriptExons(gene.GeneId, "");
+                TranscriptData transData = getTranscriptData(gene.GeneId, "");
 
-                if(transExonData.size() <= 1)
+                if(transData == null || transData.exons().size() <= 1)
                     continue;
 
                 // otherwise taken the start of the last exon
-                TranscriptExonData lastExonData = transExonData.get(0);
+                ExonData lastExonData = transData.exons().get(0);
                 return lastExonData.ExonEnd;
             }
         }
@@ -375,12 +318,11 @@ public class SvGeneTranscriptCollection
         return -1;
     }
 
-    public static Transcript extractTranscriptExonData(final List<TranscriptExonData> transcriptExons, long position,
+    public static Transcript extractTranscriptExonData(final TranscriptData transData, long position,
             final GeneAnnotation geneAnnotation)
     {
-        int exonMax = transcriptExons.size();
-
-        final TranscriptExonData first = transcriptExons.get(0);
+        final List<ExonData> exonList = transData.exons();
+        int exonMax = exonList.size();
 
         boolean isForwardStrand = geneAnnotation.Strand == 1;
 
@@ -393,8 +335,8 @@ public class SvGeneTranscriptCollection
         boolean isCodingTypeOverride = false;
 
         // first check for a position outside the exon boundaries
-        final TranscriptExonData firstExon = transcriptExons.get(0);
-        final TranscriptExonData lastExon = transcriptExons.get(transcriptExons.size()-1);
+        final ExonData firstExon = exonList.get(0);
+        final ExonData lastExon = exonList.get(exonList.size()-1);
 
         // for forward-strand transcripts the current exon is downstream, the previous is upstream
         // and the end-phase is taken from the upstream previous exon, the phase from the current downstream exon
@@ -410,16 +352,16 @@ public class SvGeneTranscriptCollection
             if(isForwardStrand)
             {
                 // proceed to the next exon assuming its splice acceptor is required
-                final TranscriptExonData firstSpaExon = transcriptExons.size() > 1 ? transcriptExons.get(1) : firstExon;
+                final ExonData firstSpaExon = exonList.size() > 1 ? exonList.get(1) : firstExon;
                 downExonRank = firstSpaExon.ExonRank;
                 downExonPhase = firstSpaExon.ExonPhase;
                 nextDownDistance = firstSpaExon.ExonStart - position;
 
                 // correct the phasing if the next exon starts the coding region
-                if(firstSpaExon.CodingStart != null && firstSpaExon.ExonStart == firstSpaExon.CodingStart)
+                if(transData.CodingStart != null && firstSpaExon.ExonStart == transData.CodingStart)
                     downExonPhase = -1;
 
-                isCodingTypeOverride = firstSpaExon.CodingStart != null && firstSpaExon.ExonStart > firstSpaExon.CodingStart;
+                isCodingTypeOverride = transData.CodingStart != null && firstSpaExon.ExonStart > transData.CodingStart;
 
                 upExonRank = 0;
                 upExonPhase = -1;
@@ -434,15 +376,15 @@ public class SvGeneTranscriptCollection
         {
             if(!isForwardStrand)
             {
-                final TranscriptExonData firstSpaExon = transcriptExons.size() > 1 ? transcriptExons.get(transcriptExons.size()-2) : lastExon;
+                final ExonData firstSpaExon = exonList.size() > 1 ? exonList.get(exonList.size()-2) : lastExon;
                 downExonRank = firstSpaExon.ExonRank;
                 downExonPhase = firstSpaExon.ExonPhase;
                 nextDownDistance = position - lastExon.ExonEnd;
 
-                if(firstSpaExon.CodingEnd != null && firstSpaExon.ExonEnd == firstSpaExon.CodingEnd)
+                if(transData.CodingEnd != null && firstSpaExon.ExonEnd == transData.CodingEnd)
                     downExonPhase = -1;
 
-                isCodingTypeOverride = firstSpaExon.CodingEnd != null && firstSpaExon.ExonEnd < firstSpaExon.CodingEnd;
+                isCodingTypeOverride = transData.CodingEnd != null && firstSpaExon.ExonEnd < transData.CodingEnd;
 
                 upExonRank = 0;
                 upExonPhase = -1;
@@ -454,9 +396,9 @@ public class SvGeneTranscriptCollection
         }
         else
         {
-            for (int index = 0; index < transcriptExons.size(); ++index)
+            for (int index = 0; index < exonList.size(); ++index)
             {
-                final TranscriptExonData exonData = transcriptExons.get(index);
+                final ExonData exonData = exonList.get(index);
 
                 if (position >= exonData.ExonStart && position <= exonData.ExonEnd)
                 {
@@ -470,9 +412,9 @@ public class SvGeneTranscriptCollection
                     {
                         nextUpDistance = position - exonData.ExonStart;
 
-                        if(index < transcriptExons.size() - 1)
+                        if(index < exonList.size() - 1)
                         {
-                            final TranscriptExonData nextExonData = transcriptExons.get(index + 1);
+                            final ExonData nextExonData = exonList.get(index + 1);
                             nextDownDistance = nextExonData.ExonStart - position;
                         }
                     }
@@ -483,7 +425,7 @@ public class SvGeneTranscriptCollection
                         if(index > 1)
                         {
                             // first splice acceptor is the second exon (or later on)
-                            final TranscriptExonData prevExonData = transcriptExons.get(index - 1);
+                            final ExonData prevExonData = exonList.get(index - 1);
                             nextDownDistance = position - prevExonData.ExonEnd;
                         }
                     }
@@ -493,7 +435,7 @@ public class SvGeneTranscriptCollection
                 else if(position < exonData.ExonStart)
                 {
                     // position falls between this exon and the previous one
-                    final TranscriptExonData prevExonData = transcriptExons.get(index-1);
+                    final ExonData prevExonData = exonList.get(index-1);
 
                     if(isForwardStrand)
                     {
@@ -505,7 +447,7 @@ public class SvGeneTranscriptCollection
                         nextDownDistance = exonData.ExonStart - position;
                         nextUpDistance = position - prevExonData.ExonEnd;
 
-                        if(exonData.CodingStart != null && exonData.ExonStart == exonData.CodingStart)
+                        if(transData.CodingStart != null && exonData.ExonStart == transData.CodingStart)
                             downExonPhase = -1;
                     }
                     else
@@ -520,7 +462,7 @@ public class SvGeneTranscriptCollection
                         nextUpDistance = exonData.ExonStart - position;
                         nextDownDistance = position - prevExonData.ExonEnd;
 
-                        if(exonData.CodingEnd != null && prevExonData.ExonEnd == exonData.CodingEnd)
+                        if(transData.CodingEnd != null && prevExonData.ExonEnd == transData.CodingEnd)
                             downExonPhase = -1;
                     }
 
@@ -533,9 +475,9 @@ public class SvGeneTranscriptCollection
         // for the given position, determine how many coding bases occur prior to the position
         // in the direction of the transcript
 
-        boolean isCoding = first.CodingStart != null && first.CodingEnd != null;
-        long codingStart = first.CodingStart != null ? first.CodingStart : 0;
-        long codingEnd = first.CodingEnd != null ? first.CodingEnd : 0;
+        boolean isCoding = transData.CodingStart != null && transData.CodingEnd != null;
+        long codingStart = transData.CodingStart != null ? transData.CodingStart : 0;
+        long codingEnd = transData.CodingEnd != null ? transData.CodingEnd : 0;
         boolean inCodingRegion = false;
         boolean codingRegionEnded = false;
 
@@ -544,7 +486,7 @@ public class SvGeneTranscriptCollection
 
         if(isCoding)
         {
-            for (TranscriptExonData exonData : transcriptExons)
+            for (ExonData exonData : exonList)
             {
                 long exonStart = exonData.ExonStart;
                 long exonEnd = exonData.ExonEnd;
@@ -611,13 +553,13 @@ public class SvGeneTranscriptCollection
             }
         }
 
-        Transcript transcript = new Transcript(geneAnnotation, first.TransId, first.TransName,
+        Transcript transcript = new Transcript(geneAnnotation, transData.TransId, transData.TransName,
                 upExonRank, upExonPhase, downExonRank, downExonPhase,
                 (int)codingBases, (int)totalCodingBases,
-                exonMax, first.IsCanonical, first.TransStart, first.TransEnd,
-                first.CodingStart, first.CodingEnd);
+                exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd,
+                transData.CodingStart, transData.CodingEnd);
 
-        transcript.setBioType(first.BioType);
+        transcript.setBioType(transData.BioType);
         transcript.setExonDistances((int)nextUpDistance, (int)nextDownDistance);
 
         if(isCodingTypeOverride)
@@ -634,28 +576,28 @@ public class SvGeneTranscriptCollection
         // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
         int[] exonData = new int[EXON_RANK_MAX + 1];
 
-        final List<TranscriptExonData> exonDataList = getTranscriptExons(geneId, "");
+        final TranscriptData transData = getTranscriptData(geneId, "");
 
-        if (exonDataList == null || exonDataList.isEmpty())
+        if (transData == null || transData.exons().isEmpty())
             return exonData;
 
-        return getExonRankings(exonDataList, position);
+        return getExonRankings(transData.Strand, transData.exons(), position);
     }
 
-    public static int[] getExonRankings(final List<TranscriptExonData> exonDataList, long position)
+    public static int[] getExonRankings(int strand, final List<ExonData> exonDataList, long position)
     {
         int[] exonData = new int[EXON_RANK_MAX + 1];
 
         // first test a position outside the range of the exons
-        final TranscriptExonData firstExon = exonDataList.get(0);
-        final TranscriptExonData lastExon = exonDataList.get(exonDataList.size() - 1);
+        final ExonData firstExon = exonDataList.get(0);
+        final ExonData lastExon = exonDataList.get(exonDataList.size() - 1);
 
-        if((position < firstExon.ExonStart && firstExon.Strand == 1) || (position > lastExon.ExonEnd && lastExon.Strand == -1))
+        if((position < firstExon.ExonStart && strand == 1) || (position > lastExon.ExonEnd && strand == -1))
         {
             exonData[EXON_RANK_MIN] = 0;
             exonData[EXON_RANK_MAX] = 1;
         }
-        else if((position < firstExon.ExonStart && firstExon.Strand == -1) || (position > lastExon.ExonEnd && lastExon.Strand == 1))
+        else if((position < firstExon.ExonStart && strand == -1) || (position > lastExon.ExonEnd && strand == 1))
         {
             exonData[EXON_RANK_MIN] = exonDataList.size();
             exonData[EXON_RANK_MAX] = -1;
@@ -664,8 +606,8 @@ public class SvGeneTranscriptCollection
         {
             for(int i = 0; i < exonDataList.size(); ++i)
             {
-                final TranscriptExonData transExonData = exonDataList.get(i);
-                final TranscriptExonData nextTransExonData = i < exonDataList.size() - 1 ? exonDataList.get(i+1) : null;
+                final ExonData transExonData = exonDataList.get(i);
+                final ExonData nextTransExonData = i < exonDataList.size() - 1 ? exonDataList.get(i+1) : null;
 
                 if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
                 {
@@ -676,7 +618,7 @@ public class SvGeneTranscriptCollection
 
                 if(nextTransExonData != null && position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
                 {
-                    if(transExonData.Strand == 1)
+                    if(strand == 1)
                     {
                         exonData[EXON_RANK_MIN] = transExonData.ExonRank;
                         exonData[EXON_RANK_MAX] = nextTransExonData.ExonRank;
@@ -695,7 +637,7 @@ public class SvGeneTranscriptCollection
         return exonData;
     }
 
-    public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<TranscriptExonData> exonDataList,
+    public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<ExonData> exonDataList,
             long position, byte orientation)
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
@@ -709,7 +651,7 @@ public class SvGeneTranscriptCollection
 
         for(int i = 0; i < exonDataList.size(); ++i)
         {
-            final TranscriptExonData exonData = exonDataList.get(i);
+            final ExonData exonData = exonDataList.get(i);
 
             if(isUpstream == forwardStrand)
             {
@@ -761,27 +703,21 @@ public class SvGeneTranscriptCollection
     {
         List<Integer> transIdList = Lists.newArrayList();
 
-        List<TranscriptExonData> transExonDataList = getTransExonData(geneId);
+        List<TranscriptData> transDataList = getTranscripts(geneId);
 
-        if(transExonDataList == null || transExonDataList.isEmpty())
+        if(transDataList == null || transDataList.isEmpty())
             return transIdList;
 
-        int teIndex = 0;
-        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-
-        while(!transcriptExons.isEmpty())
+        for(final TranscriptData transData : transDataList)
         {
-            for(TranscriptExonData exonData : transcriptExons)
+            for(ExonData exonData : transData.exons())
             {
                 if(abs(exonData.ExonStart - position) <= 1 || abs(exonData.ExonEnd - position) <= 1)
                 {
-                    transIdList.add(exonData.TransId);
+                    transIdList.add(transData.TransId);
                     break;
                 }
             }
-
-            teIndex += transcriptExons.size();
-            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
         }
 
         return transIdList;
@@ -797,36 +733,31 @@ public class SvGeneTranscriptCollection
         String[] exonMatchData = new String[PSEUDO_GENE_DATA_EXON_LENGTH +1];
         exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = null;
 
-        List<TranscriptExonData> transExonDataList = getTransExonData(gene.StableId);
+        List<TranscriptData> transDataList = getTranscripts(gene.StableId);
 
-        int teIndex = 0;
-        List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
-
-        while (!transcriptExons.isEmpty())
+        for(final TranscriptData transData : transDataList)
         {
-            int exonCount = transcriptExons.size();
+            int exonCount = transData.exons().size();
+
             for (int i = 0; i < exonCount; ++i)
             {
-                final TranscriptExonData exonData = transcriptExons.get(i);
+                final ExonData exonData = transData.exons().get(i);
 
                 if(abs(exonData.ExonStart - posStart) > 1 || abs(exonData.ExonEnd - posEnd) > 1)
                     continue;
 
                 // found a match
-                if (exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] == null || exonData.IsCanonical)
+                if (exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] == null || transData.IsCanonical)
                 {
-                    exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = exonData.TransName;
+                    exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = transData.TransName;
                     exonMatchData[PSEUDO_GENE_DATA_EXON_RANK] = Integer.toString(exonData.ExonRank);
                     exonMatchData[PSEUDO_GENE_DATA_EXON_MAX] = Integer.toString(exonCount);
                     exonMatchData[PSEUDO_GENE_DATA_EXON_LENGTH] = Long.toString(exonData.ExonEnd - exonData.ExonStart);
 
-                    if (exonData.IsCanonical)
+                    if (transData.IsCanonical)
                         break;
                 }
             }
-
-            teIndex += transcriptExons.size();
-            transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
         }
 
         return exonMatchData;
@@ -839,7 +770,7 @@ public class SvGeneTranscriptCollection
 
         if(!delayTranscriptLoading)
         {
-            if (!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, Lists.newArrayList()))
+            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, Lists.newArrayList()))
                 return false;
 
             if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
@@ -863,19 +794,17 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblTranscriptData(final List<String> uniqueGeneIds)
     {
-        mGeneTransExonDataMap.clear();
-
-        if(!EnsemblDAO.loadTranscriptExonData(mDataPath, mGeneTransExonDataMap, uniqueGeneIds))
+        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, uniqueGeneIds))
             return false;
 
         List<Integer> uniqueTransIds = Lists.newArrayList();
 
-        for(List<TranscriptExonData> transExonList : mGeneTransExonDataMap.values())
+        for(List<TranscriptData> transDataList : mTranscriptDataMap.values())
         {
-            for(TranscriptExonData transExonData : transExonList)
+            for(TranscriptData transData : transDataList)
             {
-                if(!uniqueTransIds.contains(transExonData.TransId))
-                    uniqueTransIds.add(transExonData.TransId);
+                if(!uniqueTransIds.contains(transData.TransId))
+                    uniqueTransIds.add(transData.TransId);
             }
         }
 
@@ -885,7 +814,8 @@ public class SvGeneTranscriptCollection
         return EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds);
     }
 
-    public void createTranscriptPreGenePositionData(final Map<String, List<EnsemblGeneData>> chrGeneDataMap, final Map<String, List<TranscriptExonData>> geneTransExonDataMap)
+    public void createTranscriptPreGenePositionData(final Map<String, List<EnsemblGeneData>> chrGeneDataMap,
+            final Map<String, List<TranscriptData>> transcriptDataMap)
     {
         try
         {
@@ -934,21 +864,17 @@ public class SvGeneTranscriptCollection
                         continue;
 
                     // now set the preceding splice acceptor position for each transcript in this gene
-                    final List<TranscriptExonData> transExonDataList = geneTransExonDataMap.get(gene.GeneId);
+                    final List<TranscriptData> transDataList = transcriptDataMap.get(gene.GeneId);
 
-                    if (transExonDataList == null || transExonDataList.isEmpty())
+                    if (transDataList == null || transDataList.isEmpty())
                         continue;
 
-                    int teIndex = 0;
-                    List<TranscriptExonData> transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
 
-                    while (!transcriptExons.isEmpty())
+                    for(final TranscriptData transData : transDataList)
                     {
-                        final TranscriptExonData exonData = transcriptExons.get(0);
-                        long transStartPos = gene.Strand == 1 ? exonData.TransStart : exonData.TransEnd;
+                        long transStartPos = gene.Strand == 1 ? transData.TransStart : transData.TransEnd;
 
-                        long firstSpliceAcceptorPos =
-                                findFirstSpliceAcceptor(transStartPos, gene.Strand, proximateGenes, geneTransExonDataMap);
+                        long firstSpliceAcceptorPos = findFirstSpliceAcceptor(transStartPos, gene.Strand, proximateGenes, transcriptDataMap);
 
                         long distance = -1;
 
@@ -957,14 +883,11 @@ public class SvGeneTranscriptCollection
 
                         // cache value and continue
                         writer.write(String.format("%s,%d,%s,%d,%d,%d",
-                                gene.GeneId, exonData.TransId, exonData.TransName, transStartPos, firstSpliceAcceptorPos, distance));
+                                gene.GeneId, transData.TransId, transData.TransName, transStartPos, firstSpliceAcceptorPos, distance));
 
                         writer.newLine();
 
-                        mTransSpliceAcceptorPosDataMap.put(exonData.TransId, firstSpliceAcceptorPos);
-
-                        teIndex += transcriptExons.size();
-                        transcriptExons = nextTranscriptExons(transExonDataList, teIndex);
+                        mTransSpliceAcceptorPosDataMap.put(transData.TransId, firstSpliceAcceptorPos);
                     }
                 }
             }
@@ -979,29 +902,32 @@ public class SvGeneTranscriptCollection
     }
 
     private long findFirstSpliceAcceptor(
-            long transStartPos, int strand, final List<String> proximateGenes, final Map<String, List<TranscriptExonData>> geneTransExonDataMap)
+            long transStartPos, int strand, final List<String> proximateGenes, final Map<String, List<TranscriptData>> transDataMap)
     {
         long closestPosition = -1;
 
         for(final String geneId : proximateGenes)
         {
-            final List<TranscriptExonData> transExonDataList = geneTransExonDataMap.get(geneId);
+            final List<TranscriptData> transDataList = transDataMap.get(geneId);
 
-            if(transExonDataList.isEmpty())
+            if(transDataList.isEmpty())
                 continue;
 
-            for(final TranscriptExonData exonData : transExonDataList)
+            for(final TranscriptData transData : transDataList)
             {
-                // check if exon is upstream and if so record its position
-                if(strand == 1 && exonData.ExonEnd < transStartPos)
+                for (final ExonData exonData : transData.exons())
                 {
-                    if(closestPosition == -1 || exonData.ExonStart > closestPosition)
-                        closestPosition = exonData.ExonStart;
-                }
-                else if(strand == -1 && exonData.ExonStart > transStartPos)
-                {
-                    if(closestPosition == -1 || exonData.ExonEnd < closestPosition)
-                        closestPosition = exonData.ExonEnd;
+                    // check if exon is upstream and if so record its position
+                    if (strand == 1 && exonData.ExonEnd < transStartPos)
+                    {
+                        if (closestPosition == -1 || exonData.ExonStart > closestPosition)
+                            closestPosition = exonData.ExonStart;
+                    }
+                    else if (strand == -1 && exonData.ExonStart > transStartPos)
+                    {
+                        if (closestPosition == -1 || exonData.ExonEnd < closestPosition)
+                            closestPosition = exonData.ExonEnd;
+                    }
                 }
             }
         }
@@ -1009,15 +935,15 @@ public class SvGeneTranscriptCollection
         return closestPosition;
     }
 
-    public static Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final List<TranscriptExonData> transExonDataList)
+    public static Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final TranscriptData transData)
     {
         Long[] domainPositions = {null, null};
 
-        if(transExonDataList.isEmpty())
+        if(transData.exons().isEmpty())
             return domainPositions;
 
-        Long codingStart = transExonDataList.get(0).CodingStart;
-        Long codingEnd = transExonDataList.get(0).CodingEnd;
+        Long codingStart = transData.CodingStart;
+        Long codingEnd = transData.CodingEnd;
 
         if(codingStart == null || codingEnd == null)
             return domainPositions;
@@ -1028,11 +954,11 @@ public class SvGeneTranscriptCollection
         long proteinStart = -1;
         long proteinEnd = -1;
 
-        if(transExonDataList.get(0).Strand == 1)
+        if(transData.Strand == 1)
         {
-            for(int i = 0; i < transExonDataList.size(); ++i)
+            for(int i = 0; i < transData.exons().size(); ++i)
             {
-                final TranscriptExonData exonData = transExonDataList.get(i);
+                final ExonData exonData = transData.exons().get(i);
 
                 if(exonData.ExonEnd < codingStart)
                     continue;
@@ -1070,9 +996,9 @@ public class SvGeneTranscriptCollection
         }
         else
         {
-            for(int i = transExonDataList.size() - 1; i >= 0; --i)
+            for(int i = transData.exons().size() - 1; i >= 0; --i)
             {
-                final TranscriptExonData exonData = transExonDataList.get(i);
+                final ExonData exonData = transData.exons().get(i);
 
                 if(exonData.ExonStart > codingEnd)
                     continue;
