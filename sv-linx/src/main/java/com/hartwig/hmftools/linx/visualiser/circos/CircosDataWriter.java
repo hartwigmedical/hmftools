@@ -148,6 +148,7 @@ public class CircosDataWriter
                     .add(String.valueOf(proteinDomain.start()))
                     .add(String.valueOf(proteinDomain.end()))
                     .add(String.valueOf(1))
+                    .add("fill_color=red_a1,color=red_a1,name=" + proteinDomain.name().replace(' ','.'))
                     .toString();
             result.add(exonString);
 

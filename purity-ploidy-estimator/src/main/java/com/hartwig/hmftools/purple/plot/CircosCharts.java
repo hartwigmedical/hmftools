@@ -158,9 +158,6 @@ class CircosCharts {
         writeConfig(gender, "circos");
         writeConfig(gender, "input");
 
-        copyResourceToCircos("ideogram.conf");
-        copyResourceToCircos("ticks.conf");
-
         switch (refGenome) {
             case HG38:
                 copyResourceToCircos("gaps_hg38.txt" ,"gaps.txt");
