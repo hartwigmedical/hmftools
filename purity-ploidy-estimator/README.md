@@ -766,7 +766,7 @@ The second figure shows the output from PURPLE.
 
 A typical input figure is shown below:
 
-![Input CIRCOS](src/main/resources/readme/COLO829.input.png)
+![Input CIRCOS](src/main/resources/readme/COLO829T.input.png)
 
 The outer circle shows the COBALT ratios of the reference and tumor samples in green and blue respectively.
 Note the reference ratios are after GC and diploid normalization have been applied. 
@@ -776,7 +776,7 @@ The inner circle shows the raw AMBER BAF points in orange.
 
 A typical output figure is shown below:
 
-![Output CIRCOS](src/main/resources/readme/COLO829.circos.png)
+![Output CIRCOS](src/main/resources/readme/COLO829T.circos.png)
 
 The outer first circle shows the chromosomes. The darker shaded areas represent large gaps in the human reference genome:  i.e. regions of centromeres, heterochromatin & missing short arms.
 
@@ -811,31 +811,31 @@ The following 'sunrise' chart shows the range of scores of all examined solution
 Crosshairs identify the best purity / ploidy solution. 
 
 <p align="center">
-    <img src="src/main/resources/readme/COLO829.purity.range.png" width="500" alt="Purity Range">
+    <img src="src/main/resources/readme/COLO829T.purity.range.png" width="500" alt="Purity Range">
 </p>
 
 The contribution of each fitted segment to the final score of the best fit is shown in the following figure. 
 Each segment is divided into its major and minor allele ploidy. The area of each circle shows the weight (AMBER baf count) of each segment.
 
 <p align="center">
-  <img src="src/main/resources/readme/COLO829.fitted.segments.png" width="500" alt="Purity Range">
+  <img src="src/main/resources/readme/COLO829T.fitted.segments.png" width="500" alt="Purity Range">
 </p>
 
 The following figures shows the AMBER BAF count weighted distribution of copy number and minor allele ploidy throughout the fitted segments.
 Copy numbers are broken down by colour into their respective minor allele ploidy (MAP) while the minor allele ploidy figure is broken down by copy number. 
 
 <p align="center">
-  <img src="src/main/resources/readme/COLO829.copynumber.png" width="500" alt="Copy Number PDF">
+  <img src="src/main/resources/readme/COLO829T.copynumber.png" width="500" alt="Copy Number PDF">
 </p>
 
 <p align="center">
-  <img src="src/main/resources/readme/COLO829.map.png" width="500" alt="Minor Allele Ploidy PDF">
+  <img src="src/main/resources/readme/COLO829T.map.png" width="500" alt="Minor Allele Ploidy PDF">
 </p>
 
 If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant ploidy broken down by copy number:
 
 <p align="center">
-  <img src="src/main/resources/readme/COLO829.variant.png" width="500" alt="Somatic Variant Ploidy PDF">
+  <img src="src/main/resources/readme/COLO829T.variant.png" width="500" alt="Somatic Variant Ploidy PDF">
 </p>
 
 ## Performance Characteristics
