@@ -183,7 +183,7 @@ public class FusionLikelihood
 
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
 
-            writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand");
+            writer.write("GeneId,GeneName,Chromosome,Arm,GeneStart,GeneEnd,Strand,ProteinCoding");
             writer.write(",FivePrimeUTR,Phase0,Phase1,Phase2,NonCoding");
             writer.write(",FivePrimeUTRPG,Phase0PG,Phase1PG,Phase2PG");
             writer.write(",ShortInvRateUp,ShortInvRateDown,MedInvRateUp,MedInvRateDown");
@@ -207,9 +207,9 @@ public class FusionLikelihood
                     geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCounts, false));
                     geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCountsPreGene, true));
 
-                    writer.write(String.format("%s,%s,%s,%s,%d,%d,%d",
+                    writer.write(String.format("%s,%s,%s,%s,%d,%d,%d,%s",
                             geneData.GeneData.GeneId, geneData.GeneData.GeneName, geneData.GeneData.Chromosome, geneData.Arm,
-                            geneData.GeneData.GeneStart, geneData.GeneData.GeneEnd, geneData.GeneData.Strand));
+                            geneData.GeneData.GeneStart, geneData.GeneData.GeneEnd, geneData.GeneData.Strand, geneData.hasProteinCoding()));
 
                     writer.write(String.format(",%d,%d,%d,%d,%d",
                             phaseCounts[typeAsInt(PHASE_5P_UTR)], phaseCounts[typeAsInt(PHASE_0)], phaseCounts[typeAsInt(PHASE_1)],
@@ -319,7 +319,7 @@ public class FusionLikelihood
         writeGeneLikelihoodData(outputDir);
     }
 
-    public void generateGlobalStats(final String outputDir)
+    public void generateGlobalStats()
     {
         mCohortCalculator.generateGenePhasingCounts(mGeneTransCache, mRestrictedChromosomes, mRestrictedGeneIds);
         reportGeneOverlaps(mCohortCalculator.getChrGeneRangeDataMap());
@@ -512,8 +512,8 @@ public class FusionLikelihood
         if(restrictedGeneIds.size() <= 2)
             fusionLikelihood.setLogVerbose(true);
 
-        // fusionLikelihood.generateGlobalFusionCounts(outputDir);
-        fusionLikelihood.generateGlobalStats(outputDir);
+        fusionLikelihood.generateGlobalFusionCounts(outputDir);
+        // fusionLikelihood.generateGlobalStats(outputDir);
 
         LOGGER.info("Gene likelihood data generation complete");
     }

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NO
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
+import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
@@ -331,7 +332,96 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(regionsList, 100, 200, 10000, 0));
         assertTrue(hasPhaseRegion(regionsList, 201, 250, 11000, 0));
         assertTrue(hasPhaseRegion(regionsList, 251, 300, 1000, 0));
+    }
 
+    @Test
+    public void testPhaseSplitting()
+    {
+        GenePhaseRegion region1 = new GenePhaseRegion("G1", 100, 300, PHASE_0);
+        GenePhaseRegion region2 = new GenePhaseRegion("G2", 200, 400, PHASE_0);
+
+        List<GenePhaseRegion> regions1 = Lists.newArrayList(region1);
+        List<GenePhaseRegion> regions2 = Lists.newArrayList(region2);
+
+        splitOverlappingPhaseRegion(region1, 0, regions1, region2, 0, regions2);
+
+        assertEquals(100, region1.start());
+        assertEquals(250, region1.end());
+        assertEquals(1, regions1.size());
+        assertEquals(251, region2.start());
+        assertEquals(400, region2.end());
+        assertEquals(1, regions2.size());
+
+        region1 = new GenePhaseRegion("G1", 200, 400, PHASE_0);
+        region2 = new GenePhaseRegion("G2", 100, 300, PHASE_0);
+
+        splitOverlappingPhaseRegion(region1, 0, regions1, region2, 0, regions2);
+
+        assertEquals(251, region1.start());
+        assertEquals(400, region1.end());
+        assertEquals(1, regions1.size());
+        assertEquals(100, region2.start());
+        assertEquals(250, region2.end());
+        assertEquals(1, regions2.size());
+
+        // region 1 protein-coding, the other not
+        region1 = new GenePhaseRegion("G1", 100, 300, PHASE_0);
+        region2 = new GenePhaseRegion("G2", 200, 400, PHASE_0);
+        region1.setProteinCoding(true);
+
+        splitOverlappingPhaseRegion(region1, 0, regions1, region2, 0, regions2);
+
+        assertEquals(100, region1.start());
+        assertEquals(300, region1.end());
+        assertEquals(1, regions1.size());
+        assertEquals(301, region2.start());
+        assertEquals(400, region2.end());
+        assertEquals(1, regions2.size());
+
+        // one enclosing the other
+        region1 = new GenePhaseRegion("G1", 100, 400, PHASE_0);
+        region2 = new GenePhaseRegion("G2", 200, 300, PHASE_0);
+
+        splitOverlappingPhaseRegion(region1, 0, regions1, region2, 0, regions2);
+
+        assertEquals(100, region1.start());
+        assertEquals(250, region1.end());
+        assertEquals(2, regions1.size());
+        assertEquals(301, regions1.get(1).start());
+        assertEquals(400, regions1.get(1).end());
+
+        assertEquals(251, region2.start());
+        assertEquals(300, region2.end());
+        assertEquals(1, regions2.size());
+
+        region1 = new GenePhaseRegion("G1", 100, 400, PHASE_0);
+        region2 = new GenePhaseRegion("G2", 200, 300, PHASE_0);
+        region1.setProteinCoding(true);
+        regions1 = Lists.newArrayList(region1);
+        regions2 = Lists.newArrayList(region2);
+
+        splitOverlappingPhaseRegion(region1, 0, regions1, region2, 0, regions2);
+
+        assertEquals(100, region1.start());
+        assertEquals(400, region1.end());
+        assertTrue( regions2.isEmpty());
+
+        region1 = new GenePhaseRegion("G1", 100, 400, PHASE_0);
+        region2 = new GenePhaseRegion("G2", 200, 300, PHASE_0);
+        region2.setProteinCoding(true);
+        regions1 = Lists.newArrayList(region1);
+        regions2 = Lists.newArrayList(region2);
+
+        splitOverlappingPhaseRegion(region1, 0, regions1, region2, 0, regions2);
+        assertEquals(100, region1.start());
+        assertEquals(199, region1.end());
+        assertEquals(2, regions1.size());
+        assertEquals(301, regions1.get(1).start());
+        assertEquals(400, regions1.get(1).end());
+
+        assertEquals(200, region2.start());
+        assertEquals(300, region2.end());
+        assertEquals(1, regions2.size());
     }
 
     @Test
@@ -422,22 +512,71 @@ public class FusionLikelihoodTest
 
     }
 
+    /*
+    @Test
+    public void testSameGeneCounts()
+    {
+        EnsemblGeneData gene = createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
+        GeneRangeData geneData = new GeneRangeData(gene);
+
+        List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
+
+        List<GenePhaseRegion> transcriptRegions = Lists.newArrayList();
+
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 100, 199, PHASE_0));
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 300, 399, PHASE_0));
+
+        for(int i = 0; i < transcriptRegions.size(); ++i)
+        {
+            transcriptRegions.get(i).setTransId(0);
+        }
+
+        // second set of transcripts matches exactly and so won't be counted twice
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 100, 199, PHASE_0));
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 300, 399, PHASE_0));
+
+        for(int i = 2; i < transcriptRegions.size(); ++i)
+        {
+            transcriptRegions.get(i).setTransId(1);
+        }
+
+        // a third set which overlaps in part with the first set
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 100, 199, PHASE_0));
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 300, 399, PHASE_0));
+        transcriptRegions.add(new GenePhaseRegion(gene.GeneId, 500, 599, PHASE_0));
+
+        for(int i = 4; i < transcriptRegions.size(); ++i)
+        {
+            transcriptRegions.get(i).setTransId(2);
+        }
+
+        geneData.setTranscriptPhaseRegions(transcriptRegions);
+
+        CohortExpFusions likelihoodCalc = new CohortExpFusions();
+        likelihoodCalc.initialise(delLengths, 0);
+        likelihoodCalc.generateSameGeneCounts(geneData);
+
+        Long overlapCount = new Long((100 * 100) * 3);
+
+        assertEquals(1, geneData.getDelFusionBaseCounts().size());
+        assertEquals(overlapCount, geneData.getDelFusionBaseCounts().get(0));
+    }
+    */
+
     @Test
     public void testProximateFusionCounts()
     {
-        String geneId1 = "ESNG001";
-        EnsemblGeneData gene1 = createEnsemblGeneData(geneId1, "GEN1", "1", 1, 10000, 12000);
+        EnsemblGeneData gene1 = createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
         GeneRangeData lowerGene = new GeneRangeData(gene1);
 
-        String geneId2 = "ESNG002";
-        EnsemblGeneData gene2 = createEnsemblGeneData(geneId2, "GEN2", "1", 1, 10000, 12000);
-        GeneRangeData upperGene = new GeneRangeData(gene1);
+        EnsemblGeneData gene2 = createEnsemblGeneData("ESNG002", "GEN2", "1", 1, 10000, 12000);
+        GeneRangeData upperGene = new GeneRangeData(gene2);
 
         List<Long> delLengths = Lists.newArrayList((long)50, (long)400);
 
         // first test 2 regions where the overlap is full within one of the del buckets (the second one)
-        GenePhaseRegion lowerRegion = new GenePhaseRegion(geneId1, 100, 200, PHASE_1);
-        GenePhaseRegion upperRegion = new GenePhaseRegion(geneId2, 300, 400, PHASE_1);
+        GenePhaseRegion lowerRegion = new GenePhaseRegion(gene1.GeneId, 100, 200, PHASE_1);
+        GenePhaseRegion upperRegion = new GenePhaseRegion(gene2.GeneId, 300, 400, PHASE_1);
 
         Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
@@ -500,7 +639,8 @@ public class FusionLikelihoodTest
 
     }
     */
-    
+
+    /*
     @Test
     public void testIntegratedCounts()
     {
@@ -578,8 +718,8 @@ public class FusionLikelihoodTest
         assertEquals(2, geneData.getDelFusionBaseCounts().size());
 
         assertTrue(approxEqual(shortDelOverlap, geneData.getDelFusionBaseCounts().get(0), 0.01));
-
     }
+    */
 
     private boolean approxEqual(long bases1, long bases2, double allowPerc)
     {

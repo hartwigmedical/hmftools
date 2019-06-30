@@ -83,7 +83,7 @@ public class GeneRangeData
         mDupFusionBaseCounts.clear();
     }
 
-    public long codingBases()
+    public long phasedRegionTotal()
     {
         final boolean[] codingPhases = {false, false, true, true, true};
 
@@ -95,40 +95,9 @@ public class GeneRangeData
         return codingBases;
     }
 
-    public static final String PGD_DELIMITER = ",";
-    public static final String PPR_DELIMITER = ";";
-
-    public String toCsv()
+    public boolean hasProteinCoding()
     {
-        String outputStr = GeneData.GeneId + PGD_DELIMITER;
-
-        for(int i = 0; i < mPhaseRegions.size(); ++i)
-        {
-            if(i > 0)
-                outputStr += PPR_DELIMITER;
-
-            outputStr += mPhaseRegions.get(i).toCsv(false);
-        }
-
-        return outputStr;
+        return mPhaseRegions.stream().anyMatch(GenePhaseRegion::proteinCoding);
     }
 
-    public void loadRegionsFromCsv(final String inputStr)
-    {
-        final String[] regions = inputStr.split(PGD_DELIMITER);
-
-        if(regions.length != 2)
-            return;
-
-        final String[] phaseStrings = regions[0].split(PPR_DELIMITER);
-        final String[] phaseArrayStrings = regions[1].split(PPR_DELIMITER);
-
-        for(int i = 0; i < phaseStrings.length; ++i)
-        {
-            GenePhaseRegion region = GenePhaseRegion.fromCsv(GeneData.GeneId, phaseStrings[i], false);
-
-            if(region != null)
-                mPhaseRegions.add(region);
-        }
-    }
 }

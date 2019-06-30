@@ -63,7 +63,9 @@ public class PhaseRegionUtils
                  */
 
                 // if the region matches on combined phase exactly, then expand the existing region to cover both
-                if (region.getCombinedPhase() == newRegion.getCombinedPhase() && region.getCombinedPreGeneStatus() == newRegion.getCombinedPreGeneStatus())
+                if (region.getCombinedPhase() == newRegion.getCombinedPhase()
+                && region.getCombinedPreGeneStatus() == newRegion.getCombinedPreGeneStatus()
+                && region.proteinCoding() == newRegion.proteinCoding())
                 {
                     newRegion.setStart(min(region.start(), newRegion.start()));
                     newRegion.setEnd(max(region.end(), newRegion.end()));
@@ -82,6 +84,7 @@ public class PhaseRegionUtils
                 if (region.start() == newRegion.start() && region.end() == newRegion.end())
                 {
                     region.addPhases(newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus());
+                    region.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
                     newRegion.setEnd(newRegion.start()); // won't be added
                 }
@@ -101,20 +104,20 @@ public class PhaseRegionUtils
                 {
                     // existing region enclosed the new region
                     // split the outer region in 2 and make a combined inner region
-                    extraRegion = new GenePhaseRegion(region.GeneId, newRegion.end() + 1, region.end(),
-                            region.getPhaseArray(), region.getPreGenePhaseStatus());
+                    extraRegion = GenePhaseRegion.from(region, newRegion.end() + 1, region.end());
 
                     newRegion.addPhases(region.getPhaseArray(), region.getPreGenePhaseStatus());
+                    newRegion.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
                     region.setEnd(newRegion.start() - 1);
                 }
                 else if (newRegion.start() <= region.start() && newRegion.end() >= region.end())
                 {
                     // existing region falls within new region
-                    extraRegion = new GenePhaseRegion(newRegion.GeneId, region.end() + 1, newRegion.end(),
-                            newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus());
+                    extraRegion = GenePhaseRegion.from(newRegion, region.end() + 1, newRegion.end());
 
                     region.addPhases(newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus());
+                    region.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
                     newRegion.setEnd(region.start() - 1);
 
@@ -124,10 +127,10 @@ public class PhaseRegionUtils
                     // new region precedes and overlaps the existing
 
                     // create a new region for the overlapping section
-                    extraRegion = new GenePhaseRegion(newRegion.GeneId, region.start(), newRegion.end(),
-                            newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus());
+                    extraRegion = GenePhaseRegion.from(newRegion, region.start(), newRegion.end());
 
                     extraRegion.addPhases(region.getPhaseArray(), region.getPreGenePhaseStatus());
+                    extraRegion.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
                     long regionStart = newRegion.end() + 1;
                     long newRegionEnd = region.start() - 1;
@@ -139,10 +142,10 @@ public class PhaseRegionUtils
                 else if (region.start() <= newRegion.start())
                 {
                     // existing region precedes the new region
-                    extraRegion = new GenePhaseRegion(newRegion.GeneId, newRegion.start(), region.end(),
-                            newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus());
+                    extraRegion = GenePhaseRegion.from(newRegion, newRegion.start(), region.end());
 
                     extraRegion.addPhases(region.getPhaseArray(), region.getPreGenePhaseStatus());
+                    extraRegion.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
                     long regionEnd = newRegion.start() - 1;
                     long newRegionStart = region.end() + 1;
@@ -239,7 +242,8 @@ public class PhaseRegionUtils
             if(region1.end() == region2.start() - 1)
             {
                 if (region1.getCombinedPhase() == region2.getCombinedPhase()
-                && region1.getCombinedPreGeneStatus() == region2.getCombinedPreGeneStatus())
+                && region1.getCombinedPreGeneStatus() == region2.getCombinedPreGeneStatus()
+                && region1.proteinCoding() == region2.proteinCoding())
                 {
                     region1.setEnd(region2.end());
                     regions.remove(i + 1);
@@ -248,6 +252,141 @@ public class PhaseRegionUtils
             }
 
             ++i;
+        }
+    }
+
+    public static void splitOverlappingPhaseRegion(
+            GenePhaseRegion region1, int index1, final List<GenePhaseRegion> regions1,
+            GenePhaseRegion region2, int index2, final List<GenePhaseRegion> regions2)
+    {
+        // 2 regions overlap - if they both have the same protein-coding status, then split the overlapping region between them
+        // otherwise remove the overlap region from the non-protein-coding region
+        long overlapStart = max(region1.start(), region2.start());
+        long overlapEnd = min(region1.end(), region2.end());
+
+        long midBase = (overlapEnd + overlapStart) / 2;
+
+        boolean proteinCodingMatch = region1.proteinCoding() == region2.proteinCoding();
+
+        if(region1.start() < overlapStart && region1.end() > overlapEnd)
+        {
+            // region 1 encloses region 2 - if match on protein coding then split the region, otherwise remove one or the other
+            long regionEnd = region1.end();
+            if(proteinCodingMatch)
+            {
+                region1.setEnd(midBase);
+                region2.setStart(midBase + 1);
+            }
+            else if(region1.proteinCoding())
+            {
+                regions2.remove(index2);
+            }
+            else
+            {
+                region1.setEnd(overlapStart - 1);
+            }
+
+            regions1.add(index1 + 1, GenePhaseRegion.from(region1, overlapEnd + 1, regionEnd));
+        }
+        else if(region2.start() < overlapStart && region2.end() > overlapEnd)
+        {
+            long regionEnd = region2.end();
+            if(proteinCodingMatch)
+            {
+                region2.setEnd(midBase);
+                region1.setStart(midBase + 1);
+            }
+            else if(region2.proteinCoding())
+            {
+                regions1.remove(index1);
+            }
+            else
+            {
+                region2.setEnd(overlapStart - 1);
+            }
+
+            regions2.add(index2 + 1, GenePhaseRegion.from(region2, overlapEnd + 1, regionEnd));
+        }
+        else if(region1.start() < overlapStart)
+        {
+            if(proteinCodingMatch)
+            {
+                region1.setEnd(midBase);
+                region2.setStart(midBase + 1);
+            }
+            else if(region1.proteinCoding())
+            {
+                region2.setStart(overlapEnd + 1);
+            }
+            else
+            {
+                region1.setEnd(overlapStart - 1);
+            }
+        }
+        else if(region2.start() < overlapStart)
+        {
+            if(proteinCodingMatch)
+            {
+                region2.setEnd(midBase);
+                region1.setStart(midBase + 1);
+            }
+            else if(region2.proteinCoding())
+            {
+                region1.setStart(overlapEnd + 1);
+            }
+            else
+            {
+                region2.setEnd(overlapStart - 1);
+            }
+        }
+    }
+
+    public static void checkMatchedRegions(List<GenePhaseRegion> transcriptRegions, int startIndex, List<GenePhaseRegion> matchedTransRegions)
+    {
+        // if any transcript region has already been covered by a region in another transcript then reduce, split or remove it
+        if(matchedTransRegions.isEmpty())
+            return;
+
+        int index = startIndex;
+
+        while (index < transcriptRegions.size())
+        {
+            GenePhaseRegion newRegion = transcriptRegions.get(index);
+
+            for (final GenePhaseRegion region : matchedTransRegions)
+            {
+                if (!haveOverlap(region, newRegion, 0))
+                    continue;
+
+                if (region.start() <= newRegion.start() && region.end() >= newRegion.end())
+                {
+                    // fully covered so remove
+                    newRegion.setEnd(newRegion.start());
+                    break;
+                }
+                else if (newRegion.start() <= region.start() && newRegion.end() >= region.end())
+                {
+                    // split and add a new region after the existing
+                    GenePhaseRegion extraRegion = GenePhaseRegion.from(newRegion);
+                    extraRegion.setStart(region.end() + 1);
+                    transcriptRegions.add(extraRegion);
+
+                    newRegion.setEnd(region.start() - 1);
+                }
+                else if (newRegion.start() < region.start())
+                {
+                    newRegion.setEnd(region.start() - 1);
+                }
+                else if (newRegion.end() > region.end())
+                {
+                    newRegion.setStart(region.end() + 1);
+                }
+            }
+
+            if (newRegion.length() <= 1)
+                transcriptRegions.remove(index);
+            else
+                ++index;
         }
     }
 

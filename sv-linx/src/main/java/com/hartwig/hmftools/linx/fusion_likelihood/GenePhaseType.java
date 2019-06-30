@@ -37,4 +37,9 @@ public enum GenePhaseType
 
         return PHASE_5P_UTR;
     }
+
+    public static boolean isPhasedType(GenePhaseType type)
+    {
+        return type == PHASE_0 || type == PHASE_1 || type == PHASE_2;
+    }
 }

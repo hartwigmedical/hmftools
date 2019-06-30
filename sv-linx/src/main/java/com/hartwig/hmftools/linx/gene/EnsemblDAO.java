@@ -531,7 +531,7 @@ public class EnsemblDAO
                 line = fileReader.readLine();
             }
 
-            LOGGER.info("loaded {} genes with {} transcripts records and {} exons",
+            LOGGER.debug("loaded {} genes with {} transcripts records and {} exons",
                     transcriptDataMap.size(), transcriptCount, exonCount);
         }
         catch(IOException e)

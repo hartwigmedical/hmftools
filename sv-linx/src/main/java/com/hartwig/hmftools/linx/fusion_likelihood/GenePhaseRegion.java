@@ -34,6 +34,7 @@ public class GenePhaseRegion
 
     private boolean mHasOverlaps;
     private int mTransId;
+    private boolean mProteinCoding;
 
     public GenePhaseRegion(final String geneId, long start, long end, GenePhaseType phase)
     {
@@ -44,6 +45,7 @@ public class GenePhaseRegion
 
         mHasOverlaps = false;
         mTransId = 0;
+        mProteinCoding = false;
 
         mPhaseArray = new boolean[GenePhaseType.values().length];
         mPreGenePhaseStatus = new boolean[GenePhaseType.values().length];
@@ -66,9 +68,21 @@ public class GenePhaseRegion
         calcCombinedPhase();
     }
 
+    public static GenePhaseRegion from(final GenePhaseRegion other, long start, long end)
+    {
+        // copy with new region
+        GenePhaseRegion newRegion = new GenePhaseRegion(
+                other.GeneId, start, end, other.getPhaseArray(), other.getPreGenePhaseStatus());
+
+        newRegion.setProteinCoding(other.proteinCoding());
+
+        return newRegion;
+    }
+
     public static GenePhaseRegion from(final GenePhaseRegion other)
     {
-        return new GenePhaseRegion(other.GeneId, other.start(), other.end(), other.getPhaseArray(), other.getPreGenePhaseStatus());
+        // exact copy
+        return GenePhaseRegion.from(other, other.start(), other.end());
     }
 
     public void setPreGene(boolean toggle, GenePhaseType phase)
@@ -76,6 +90,9 @@ public class GenePhaseRegion
         mPreGenePhaseStatus[typeAsInt(phase)] = toggle;
         calcCombinedPhase();
     }
+
+    public void setProteinCoding(boolean toggle) { mProteinCoding = toggle; }
+    public boolean proteinCoding() { return mProteinCoding; }
 
     public void setHasOverlaps(boolean toggle) { mHasOverlaps = toggle; }
     public boolean hasOverlaps() { return mHasOverlaps; }
@@ -185,15 +202,9 @@ public class GenePhaseRegion
         return false;
     }
 
-    public boolean isAnyPreGene()
+    public boolean hasPhasedType()
     {
-        for(int i = 0; i < PHASE_MAX; ++i)
-        {
-            if(mPreGenePhaseStatus[i])
-                return true;
-        }
-
-        return false;
+        return hasPhase(PHASE_0) || hasPhase(PHASE_1) || hasPhase(PHASE_2);
     }
 
     public int getCombinedPhase() { return mCombinedPhase; }
@@ -270,83 +281,4 @@ public class GenePhaseRegion
         return String.format("range(%d - %d) len(%d) phases(%d) preGene(%d)",
                 mStart, mEnd, length(), mCombinedPhase, mCombinedPreGeneStatus);
     }
-
-
-    public static final String PD_DELIMITER = ":";
-
-    private static String boolToStr(boolean value) { return value ? "1" : "0"; }
-    private static boolean strToBool(final String value) { return value.equals("1"); }
-
-    public String toCsv(boolean useArray)
-    {
-        StringJoiner output = new StringJoiner(PD_DELIMITER);
-        output.add(String.valueOf(mStart));
-        output.add(String.valueOf(mEnd));
-
-        if(useArray)
-        {
-            for (int i = 0; i < PHASE_MAX; ++i)
-            {
-                output.add(boolToStr(mPhaseArray[i]));
-            }
-
-            for (int i = 0; i < PHASE_MAX; ++i)
-            {
-                output.add(boolToStr(mPreGenePhaseStatus[i]));
-            }
-        }
-        else
-        {
-            int phase = typeAsInt(Phase);
-            output.add(String.valueOf(phase));
-            output.add(boolToStr(mPreGenePhaseStatus[phase]));
-        }
-
-        return output.toString();
-    }
-
-    public static GenePhaseRegion fromCsv(final String geneId, final String inputStr, boolean useArray)
-    {
-        String[] items = inputStr.split(PD_DELIMITER);
-
-        int startEndItems = 2;
-
-        if(useArray)
-        {
-            if (items.length != startEndItems + PHASE_MAX * 2)
-                return null;
-        }
-        else
-        {
-            if(items.length != 4)
-                return null;
-        }
-
-        long start = Long.parseLong(items[0]);
-        long end = Long.parseLong(items[1]);
-
-        if(useArray)
-        {
-            boolean[] phases = new boolean[PHASE_MAX];
-            boolean[] status = new boolean[PHASE_MAX];
-
-            for (int i = 0; i < PHASE_MAX; ++i)
-            {
-                phases[i] = strToBool(items[i + startEndItems]);
-                status[i] = strToBool(items[i + startEndItems + PHASE_MAX]);
-            }
-
-            return new GenePhaseRegion(geneId, start, end, phases, status);
-        }
-        else
-        {
-            GenePhaseType phase = intAsType(Integer.parseInt(items[2]));
-            boolean preGene = strToBool(items[3]);
-
-            GenePhaseRegion region = new GenePhaseRegion(geneId, start, end, phase);
-            region.setPreGene(preGene, phase);
-            return region;
-        }
-    }
-
 }

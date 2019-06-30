@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_LENGTHS;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.TRANSCRIPT_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.mapExonPhase;
@@ -24,7 +25,9 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.setBucketLengthData;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
+import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkMatchedRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.mergePhaseRegions;
+import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
 import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.DEFAULT_REGION_GRID_SIZE;
 
 import java.util.List;
@@ -57,12 +60,6 @@ public class CohortExpFusions
     private int mGlobalLongDelDupInvCount;
     private long mArmLengthFactor;
 
-    private RegionAllocator mRegionAllocator;
-
-    // cache the total counts (expressed as a length) for each unique phase combination per chromosome
-    private Map<String, List<GenePhaseRegion>> mChrPhaseRegionsPosStrand;
-    private Map<String, List<GenePhaseRegion>> mChrPhaseRegionsNegStrand;
-
     private boolean mLogVerbose;
 
     public static int PRE_GENE_3P_DISTANCE = 10000;
@@ -80,15 +77,11 @@ public class CohortExpFusions
         mGeneIdRangeDataMap = null;
         mDelGenePairCounts = Maps.newHashMap();
         mDupGenePairCounts = Maps.newHashMap();
-        mChrPhaseRegionsPosStrand = Maps.newHashMap();
-        mChrPhaseRegionsNegStrand = Maps.newHashMap();
         mGlobalProximateCounts = Lists.newArrayList();
         mGlobalShortInvCount = 0;
         mGlobalLongDelDupInvCount = 0;
         mArmLengthFactor = 0;
         mLogVerbose = false;
-
-        mRegionAllocator = new RegionAllocator(DEFAULT_REGION_GRID_SIZE);
     }
 
     public final Map<String, List<GeneRangeData>> getChrGeneRangeDataMap() { return mChrGeneDataMap; }
@@ -167,8 +160,6 @@ public class CohortExpFusions
             List<GeneRangeData> chrGeneList = Lists.newArrayList();
             List<GeneRangeData> armGeneList = Lists.newArrayList();
             List<GeneRangeData> armGeneEndFirstList = Lists.newArrayList();
-            List<GenePhaseRegion> chrPhaseRegionsPosStrand = Lists.newArrayList();
-            List<GenePhaseRegion> chrPhaseRegionsNegStrand = Lists.newArrayList();
 
             String currentArm = "";
 
@@ -228,17 +219,6 @@ public class CohortExpFusions
                                 region.GeneId, region.start(), region.end(), region.getCombinedPhase());
                         continue;
                     }
-
-                    // add to the chromosome's summary phasing regions by strand, without concern for overlaps
-                    // across genes on the same strand
-                    if(geneData.Strand == 1)
-                    {
-                        addPhaseRegion(chrPhaseRegionsPosStrand, region);
-                    }
-                    else
-                    {
-                        addPhaseRegion(chrPhaseRegionsNegStrand, region);
-                    }
                 }
             }
 
@@ -246,9 +226,6 @@ public class CohortExpFusions
             {
                 processArmGenes(chromosome, currentArm, armGeneList, armGeneEndFirstList);
             }
-
-            mChrPhaseRegionsPosStrand.put(chromosome, chrPhaseRegionsPosStrand);
-            mChrPhaseRegionsNegStrand.put(chromosome, chrPhaseRegionsNegStrand);
 
             mChrGeneDataMap.put(chromosome, chrGeneList);
         }
@@ -263,48 +240,35 @@ public class CohortExpFusions
         LOGGER.info("chr({}) arm({}) processing {} genes", chromosome, arm, armGeneList.size());
 
         // mark all overlapping regions to avoid reallocation of base overlaps
-        markOverlappingRegions(chromosome, arm, armGeneList);
+        divideOverlappingRegions(chromosome, arm, armGeneList);
 
         for(int i = 0; i <= 0; ++i)
         {
             int strand = (i == 0) ? 1 : -1;
 
-            // reset the allocation tracker since the scope of its state is per arm and strand
-            if(mRegionAllocator.allocationCount() > 0)
-            {
-                LOGGER.info("chr({}) arm({}) clearing {} region allocations",
-                        chromosome, arm, armGeneList.size(), mRegionAllocator.allocationCount());
-            }
-
-            mRegionAllocator.reset();
+            List<GeneRangeData> geneDataList = strand == 1 ? armGeneList : armGeneEndFirstList;
 
             LOGGER.info("chr({}) arm({}) finding same-gene fusions", chromosome, arm);
 
-            for(GeneRangeData geneData : armGeneList)
+            for(GeneRangeData geneData : geneDataList)
             {
                 if(geneData.GeneData.Strand != strand)
                     continue;
 
-                generateSameGeneCounts(geneData);
+                if(geneData.hasProteinCoding())
+                {
+                    generateSameGeneCounts(geneData);
+                }
             }
 
             LOGGER.info("chr({}) arm({}) finding proximate fusions", chromosome, arm);
 
-            generateProximateCounts(armGeneList, strand);
+            generateProximateCounts(geneDataList, strand);
 
             LOGGER.info("chr({}) arm({}) finding non-proximate fusions", chromosome, arm);
 
-            generateNonProximateCounts(armGeneList, strand);
+            generateNonProximateCounts(geneDataList, strand);
         }
-
-        // check for INVs across both strands
-        if(mRegionAllocator.allocationCount() > 0)
-        {
-            LOGGER.info("chr({}) arm({}) clearing {} region allocations",
-                    chromosome, arm, armGeneList.size(), mRegionAllocator.allocationCount());
-        }
-
-        mRegionAllocator.reset();
 
         generateNonProximateCounts(armGeneList, 0);
     }
@@ -394,12 +358,6 @@ public class CohortExpFusions
                 }
 
             }
-
-            mChrPhaseRegionsPosStrand.put(chromosome, chrPhaseRegionsPosStrand);
-            mChrPhaseRegionsNegStrand.put(chromosome, chrPhaseRegionsNegStrand);
-
-            mChrGeneDataMap.put(chromosome, geneList);
-            // mChrReverseGeneDataMap.put(chromosome, geneEndFirstList);
         }
     }
 
@@ -408,7 +366,6 @@ public class CohortExpFusions
     {
         // convert each transcript's exons into a set of phase regions spanning each intronic section
         // also take each transcript and look for potential same-gene fusions
-        List<GenePhaseRegion> matchedTransRegions = Lists.newArrayList();
         List<GenePhaseRegion> phaseRegions = Lists.newArrayList();
         List<GenePhaseRegion> intronicPhaseRegions = Lists.newArrayList();
 
@@ -421,14 +378,12 @@ public class CohortExpFusions
 
             transcriptRegions.forEach(x -> x.setTransId(transId));
 
-            geneRangeData.setTranscriptPhaseRegions(transcriptRegions);
+            if(transcript.IsCanonical)
+                geneRangeData.setTranscriptPhaseRegions(transcriptRegions);
 
             // consolidate regions where phases and pre-gene status overlap
             transcriptRegions.stream().forEach(x -> checkAddCombinedGenePhaseRegion(x, phaseRegions));
             // transcriptRegions.stream().forEach(x -> combineGeneIntronicPhaseRegion(x, intronicPhaseRegions));
-
-            // generateSameGeneCounts(geneRangeData, transcriptRegions);
-            // generateSameGeneCounts(geneRangeData, transcriptRegions, matchedTransRegions);
         }
 
         mergePhaseRegions(phaseRegions);
@@ -448,6 +403,8 @@ public class CohortExpFusions
         // skip single-exon transcripts since without an intronic section their fusion likelihood is negligible
         if(transcript.exons().size() == 1)
             return transcriptRegions;
+
+        boolean proteinCoding = transcript.BioType.equals(TRANSCRIPT_PROTEIN_CODING);
 
         for (int i = 0; i < transcript.exons().size() - 1; ++i)
         {
@@ -528,6 +485,8 @@ public class CohortExpFusions
             transcriptRegions.add(phaseRegion);
         }
 
+        transcriptRegions.forEach(x -> x.setProteinCoding(proteinCoding));
+
         return transcriptRegions;
     }
 
@@ -543,113 +502,120 @@ public class CohortExpFusions
             }
         }
 
-        regions.add(new GenePhaseRegion("", 0, newRegion.length(),
-                newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus()));
+        regions.add(GenePhaseRegion.from(newRegion, 0, newRegion.length()));
     }
 
     public void generateSameGeneCounts(GeneRangeData geneData)
     {
+        // look for skipped or repeated exons within the same transcript and within phased regions
         final List<GenePhaseRegion> transcriptRegions = geneData.getTranscriptPhaseRegions();
+
+        if(transcriptRegions.isEmpty())
+            return;
 
         for (int i = 0; i < transcriptRegions.size(); ++i)
         {
             GenePhaseRegion region1 = transcriptRegions.get(i);
 
-            for (int j = i+1; j < transcriptRegions.size(); ++j)
+            if (!region1.hasPhasedType())
+                continue;
+
+            for (int j = i + 1; j < transcriptRegions.size(); ++j)
             {
                 GenePhaseRegion region2 = transcriptRegions.get(j);
 
-                if(region1.transId() != region2.transId())
+                if (region1.transId() != region2.transId())
                     break;
+
+                if (!region2.hasPhasedType())
+                    continue;
 
                 testProximatePhaseRegions(geneData, geneData, region1, region2);
             }
         }
     }
 
-    public void generateSameGeneCounts(GeneRangeData geneRangeData, final List<GenePhaseRegion> transcriptRegions,
-            List<GenePhaseRegion> matchedTransRegions)
+
+    public void generateSameGeneCountsMultiTranscript(GeneRangeData geneData)
     {
-        // look for same-gene fusions - first removing or shrinking any regions from this gene already used
+        // look for skipped or repeated exons within the same transcript and within phased regions
+        // RegionAllocator regionAllocator = new RegionAllocator(DEFAULT_REGION_GRID_SIZE);
+        List<GenePhaseRegion> matchedTransRegions = Lists.newArrayList();
 
-        // first reduce or remove any regions which overlap with those already causing a same-gene fusion
-        if(!matchedTransRegions.isEmpty())
+        final List<GenePhaseRegion> transcriptRegions = geneData.getTranscriptPhaseRegions();
+
+        if(transcriptRegions.isEmpty())
+            return;
+
+        int currentTranscriptId = transcriptRegions.get(0).transId();
+
+        int index = 0;
+
+        while(index < transcriptRegions.size())
         {
-            int index = 0;
-            while (index < transcriptRegions.size())
+            // process each transcript's phase regions in turn
+            for (int i = index; i < transcriptRegions.size(); ++i)
             {
-                GenePhaseRegion newRegion = transcriptRegions.get(index);
+                GenePhaseRegion region1 = transcriptRegions.get(i);
 
-                for (final GenePhaseRegion region : matchedTransRegions)
+                if(region1.transId() != currentTranscriptId)
                 {
-                    if (!haveOverlap(region, newRegion, 0))
+                    index = i;
+                    break;
+                }
+
+                if(!region1.hasPhasedType())
+                    continue;
+
+                for (int j = i+1; j < transcriptRegions.size(); ++j)
+                {
+                    GenePhaseRegion region2 = transcriptRegions.get(j);
+
+                    if(region1.transId() != region2.transId())
+                        break;
+
+                    if(!region2.hasPhasedType())
                         continue;
 
-                    if (region.start() <= newRegion.start() && region.end() >= newRegion.end())
+                    if(testProximatePhaseRegions(geneData, geneData, region1, region2))
                     {
-                        // fully covered so remove
-                        newRegion.setEnd(newRegion.start());
-                        break;
-                    }
-                    else if (newRegion.start() <= region.start() && newRegion.end() >= region.end())
-                    {
-                        // split and add a new region after the existing
-                        GenePhaseRegion extraRegion = GenePhaseRegion.from(newRegion);
-                        extraRegion.setStart(region.end() + 1);
-                        transcriptRegions.add(extraRegion);
+                        if(!matchedTransRegions.contains(region1))
+                            matchedTransRegions.add(region1);
 
-                        newRegion.setEnd(region.start() - 1);
-                    }
-                    else if (newRegion.start() < region.start())
-                    {
-                        newRegion.setEnd(region.start() - 1);
-                    }
-                    else if (newRegion.end() > region.end())
-                    {
-                        newRegion.setStart(region.end() + 1);
+                        if(!matchedTransRegions.contains(region2))
+                            matchedTransRegions.add(region2);
                     }
                 }
-
-                if (newRegion.length() <= 1)
-                    transcriptRegions.remove(index);
-                else
-                    ++index;
             }
-        }
 
-        // now look for candidate fusions within these transcript's remaining regions
-        for (int i = 0; i < transcriptRegions.size(); ++i)
-        {
-            GenePhaseRegion region1 = transcriptRegions.get(i);
+            if(index >= transcriptRegions.size())
+                break;
 
-            for (int j = i+1; j < transcriptRegions.size(); ++j)
-            {
-                GenePhaseRegion region2 = transcriptRegions.get(j);
-                if(testProximatePhaseRegions(geneRangeData, geneRangeData, region1, region2))
-                {
-                    if(!matchedTransRegions.contains(region1))
-                        matchedTransRegions.add(region1);
+            checkMatchedRegions(transcriptRegions, index, matchedTransRegions);
 
-                    if(!matchedTransRegions.contains(region2))
-                        matchedTransRegions.add(region2);
-                }
-            }
+            if(index >= transcriptRegions.size())
+                break;
+
+            currentTranscriptId = transcriptRegions.get(index).transId();
         }
     }
 
-    private void markOverlappingRegions(final String chromosome, final String arm, List<GeneRangeData> geneRangeList)
+    private void divideOverlappingRegions(final String chromosome, final String arm, List<GeneRangeData> geneRangeList)
     {
-        int overlaps = 0;
+        int phaseRegions = geneRangeList.stream().mapToInt(x -> x.getPhaseRegions().size()).sum();
+        int regionsRemoved = 0;
 
         // find all regions with an overlap, to later control their phase-match allocation
-        for (int lowerIndex = 0; lowerIndex < geneRangeList.size(); ++lowerIndex)
+        for (int lgIndex = 0; lgIndex < geneRangeList.size(); ++lgIndex)
         {
-            GeneRangeData lowerGene = geneRangeList.get(lowerIndex);
+            GeneRangeData lowerGene = geneRangeList.get(lgIndex);
+
+            List<GenePhaseRegion> lowerRegions = lowerGene.getPhaseRegions();
 
             // don't allow same-gene fusions (they are handled within a transcript), so start the index at the next gene
-            for (int upperIndex = lowerIndex + 1; upperIndex < geneRangeList.size(); ++upperIndex)
+            for (int ugIndex = lgIndex + 1; ugIndex < geneRangeList.size(); ++ugIndex)
             {
-                GeneRangeData upperGene = geneRangeList.get(upperIndex);
+                GeneRangeData upperGene = geneRangeList.get(ugIndex);
 
                 if (upperGene.GeneData.Strand != lowerGene.GeneData.Strand)
                     continue;
@@ -657,31 +623,70 @@ public class CohortExpFusions
                 if (!upperGene.Arm.equals(lowerGene.Arm))
                     break;
 
-                for (GenePhaseRegion lowerRegion : lowerGene.getPhaseRegions())
+                /*
+                if(lowerGene.GeneData.GeneId.equals("ENSG00000121236") && upperGene.GeneData.GeneId.equals("ENSG00000258588"))
                 {
-                    if(lowerRegion.hasOverlaps())
-                        continue;
+                    LOGGER.info("spec genes");
+                }
+                */
 
-                    for (GenePhaseRegion upperRegion : upperGene.getPhaseRegions())
+                List<GenePhaseRegion> upperRegions = upperGene.getPhaseRegions();
+
+                int lrIndex = 0;
+
+                while(lrIndex < lowerRegions.size())
+                {
+                    GenePhaseRegion lowerRegion = lowerRegions.get(lrIndex);
+
+                    int lrCount = lowerRegions.size();
+
+                    int urIndex = 0;
+
+                    while(urIndex < upperRegions.size())
                     {
-                        if(upperRegion.hasOverlaps())
-                            continue;
+                        GenePhaseRegion upperRegion = upperRegions.get(urIndex);
 
-                        if (!haveOverlap(lowerRegion, upperRegion, 0))
+                        if (!haveOverlap(lowerRegion, upperRegion, -PERMITTED_REGION_OVERLAP))
+                        {
+                            ++urIndex;
                             continue;
+                        }
 
-                        lowerRegion.setHasOverlaps(true);
-                        upperRegion.setHasOverlaps(true);
-                        ++overlaps;
+                        int urCount = upperRegions.size();
+
+                        if(lrIndex >= lowerRegions.size() || urIndex >= upperRegions.size())
+                        {
+                            LOGGER.error("genes({} & {}) index errors", lowerGene.GeneData.GeneId, upperGene.GeneData.GeneId);
+                            return;
+                        }
+
+                        splitOverlappingPhaseRegion(lowerRegion, lrIndex, lowerRegions, upperRegion, urIndex, upperRegions);
+
+                        // check for a region removed from either list
+                        if(urCount == upperRegions.size())
+                            ++urIndex;
+                        else
+                            ++regionsRemoved;
+
+                        if(lowerRegions.size() < lrCount)
+                        {
+                            ++regionsRemoved;
+                            break;
+                        }
                     }
+
+                    if(lrCount == lowerRegions.size())
+                        ++lrIndex;
                 }
             }
         }
 
-        if(overlaps > 0)
-        {
-            LOGGER.info("chr({}) arm({}) has {} overlapping regions", chromosome, arm, overlaps);
-        }
+        int newPhaseRegions = geneRangeList.stream().mapToInt(x -> x.getPhaseRegions().size()).sum();
+
+        int added = max(newPhaseRegions - phaseRegions + regionsRemoved, 0);
+
+        LOGGER.debug("chromosome({}) arm({}) dividing phase regions: initial({}) removed({}) added({}) final({})",
+                chromosome, arm, phaseRegions, regionsRemoved, added, newPhaseRegions);
     }
 
     public long getMaxBucketLength()
@@ -729,17 +734,6 @@ public class CohortExpFusions
                     for (GenePhaseRegion upperRegion : upperGene.getPhaseRegions())
                     {
                         testProximatePhaseRegions(lowerGene, upperGene, lowerRegion, upperRegion);
-
-                        /*
-                        if (!haveOverlap(lowerRegion, upperRegion, 0))
-                        {
-                            testProximatePhaseRegions(lowerGene, upperGene, lowerRegion, upperRegion);
-                        }
-                        else
-                        {
-                            testOverlappingProximateRegions(lowerGene, upperGene, lowerRegion, upperRegion);
-                        }
-                        */
                     }
                 }
             }
@@ -820,8 +814,6 @@ public class CohortExpFusions
                     // the downstream gene of the potential fusion cannot be non-coding
                     for (GenePhaseRegion region2 : gene2.getPhaseRegions())
                     {
-                        boolean hasOverlaps = region1.hasOverlaps() && region2.hasOverlaps();
-
                         boolean matchGene1AsUp = false;
                         boolean matchGene1AsDown = false;
 
@@ -847,8 +839,7 @@ public class CohortExpFusions
                         if(!matchGene1AsUp && !matchGene1AsDown)
                             continue;
 
-                        long regionOverlap = !hasOverlaps ? (region1.length() * region2.length()) :
-                                mRegionAllocator.allocateBases(region1.start(), region1.end(), region2.start(), region2.end());
+                        long regionOverlap = region1.length() * region2.length();
 
                         if(matchGene1AsUp)
                         {
@@ -869,6 +860,46 @@ public class CohortExpFusions
 
     private void generateRemoteCounts()
     {
+        // first tally up all phase counts per chromosome to then be used against all the others
+
+        // cache the total counts (expressed as a length) for each unique phase combination per chromosome
+        Map<String, List<GenePhaseRegion>> chrPhaseRegionsPosStrand = Maps.newHashMap();
+        Map<String, List<GenePhaseRegion>> chrPhaseRegionsNegStrand = Maps.newHashMap();
+
+        for(Map.Entry<String, List<GeneRangeData>> entry : mChrGeneDataMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            final List<GeneRangeData> geneList = entry.getValue();
+
+            if(geneList.isEmpty())
+                continue;
+
+            List<GenePhaseRegion> phaseRegionsPosStrand = Lists.newArrayList();
+            List<GenePhaseRegion> phaseRegionsNegStrand = Lists.newArrayList();
+
+            for(final GeneRangeData geneData : geneList)
+            {
+                for(GenePhaseRegion region : geneData.getPhaseRegions())
+                {
+                    // add to the chromosome's summary phasing regions by strand, without concern for overlaps
+                    // across genes on the same strand
+                    if(geneData.GeneData.Strand == 1)
+                    {
+                        addPhaseRegion(phaseRegionsPosStrand, region);
+                    }
+                    else
+                    {
+                        addPhaseRegion(phaseRegionsNegStrand, region);
+                    }
+                }
+            }
+
+            chrPhaseRegionsPosStrand.put(chromosome, phaseRegionsPosStrand);
+            chrPhaseRegionsNegStrand.put(chromosome, phaseRegionsNegStrand);
+        }
+
+        // now test each chromosome's genes against the sum across all others
         for (Map.Entry<String, List<GeneRangeData>> entry : mChrGeneDataMap.entrySet())
         {
             final String chromosome = entry.getKey();
@@ -883,7 +914,7 @@ public class CohortExpFusions
                 for (int j = 0; j <= 1; ++j)
                 {
                     final Map<String, List<GenePhaseRegion>> chrPhaseRegions =
-                            (j == 0) ? mChrPhaseRegionsPosStrand : mChrPhaseRegionsNegStrand;
+                            (j == 0) ? chrPhaseRegionsPosStrand : chrPhaseRegionsNegStrand;
 
                     for (Map.Entry<String, List<GenePhaseRegion>> chrEntry : chrPhaseRegions.entrySet())
                     {
@@ -915,14 +946,16 @@ public class CohortExpFusions
         }
     }
 
+    private static int PERMITTED_REGION_OVERLAP = 5;
+
     public boolean testProximatePhaseRegions(GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2)
     {
         // ignore overlapping regions for now since it's not clear whether a DUP or DEL would be required
-        if (haveOverlap(region1, region2, -1)) // allow bases with an exact base overlap through
+        if (haveOverlap(region1, region2, -PERMITTED_REGION_OVERLAP)) // allow bases with an exact base overlap through
             return false;
 
         // skip tiny overlaps
-        if(region1.length() < 5 || region2.length() < 5)
+        if(region1.length() < PERMITTED_REGION_OVERLAP || region2.length() < PERMITTED_REGION_OVERLAP)
             return false;
 
         // test for DEL and DUP fusion independently
@@ -956,13 +989,13 @@ public class CohortExpFusions
             if (!phaseMatched)
                 continue;
 
-            foundMatch = true;
-
             Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(
-                    mProximateBucketLengths, mRegionAllocator, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
+                    mProximateBucketLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
 
             if (!bucketOverlapCounts.isEmpty())
             {
+                foundMatch = true;
+
                 if (mLogVerbose)
                 {
                     LOGGER.debug("gene({}: {}) and gene({}: {}) matched-region lower({} -> {}) upper({} -> {}) phase({}):",
@@ -989,7 +1022,6 @@ public class CohortExpFusions
 
         return foundMatch;
     }
-
 
     public static final int BUCKET_MIN = 0;
     public static final int BUCKET_MAX = 1;
@@ -1032,101 +1064,6 @@ public class CohortExpFusions
         setBucketLengthData(bucketOverlapCounts, bucketIndex, overlapCount);
     }
 
-    public void testOverlappingProximateRegions(GeneRangeData lowerGene, GeneRangeData upperGene,
-            GenePhaseRegion lowerRegion, GenePhaseRegion upperRegion)
-    {
-        // preliminary check for a phase match before going to effort of splitting regions
-        if(!hasAnyPhaseMatch(lowerRegion, upperRegion, false) && !regionsPhaseMatched(lowerRegion, upperRegion)
-                && !hasAnyPhaseMatch(upperRegion, lowerRegion,false) && !regionsPhaseMatched(upperRegion, lowerRegion))
-        {
-            return;
-        }
-
-        long overlapStart = max(lowerRegion.start(), upperRegion.start());
-        long overlapEnd = min(lowerRegion.end(), upperRegion.end());
-
-        // first process the regions before and after the overlapping region
-        if(lowerRegion.start() < upperRegion.start())
-        {
-            GenePhaseRegion lowerSplit =
-                    new GenePhaseRegion(lowerRegion.GeneId, lowerRegion.start(), upperRegion.start(),
-                            lowerRegion.getPhaseArray(), lowerRegion.getPreGenePhaseStatus());
-
-            testProximatePhaseRegions(lowerGene, upperGene, lowerSplit, upperRegion);
-        }
-        else if(upperRegion.start() < lowerRegion.start())
-        {
-            GenePhaseRegion lowerSplit =
-                    new GenePhaseRegion(upperRegion.GeneId, upperRegion.start(), lowerRegion.start(),
-                            upperRegion.getPhaseArray(), upperRegion.getPreGenePhaseStatus());
-
-            testProximatePhaseRegions(upperGene, lowerGene, lowerSplit, lowerRegion);
-        }
-
-        if(lowerRegion.end() > upperRegion.end())
-        {
-            GenePhaseRegion upperSplit = new GenePhaseRegion(lowerRegion.GeneId, upperRegion.end(), lowerRegion.end(),
-                    lowerRegion.getPhaseArray(), lowerRegion.getPreGenePhaseStatus());
-
-            GenePhaseRegion lowerSplit =
-                    new GenePhaseRegion(upperRegion.GeneId, overlapStart, overlapEnd,
-                            upperRegion.getPhaseArray(), upperRegion.getPreGenePhaseStatus());
-
-            testProximatePhaseRegions(upperGene, lowerGene, lowerSplit, upperSplit);
-        }
-        else if(upperRegion.end() > lowerRegion.end())
-        {
-            GenePhaseRegion upperSplit = new GenePhaseRegion(upperRegion.GeneId, lowerRegion.end(), upperRegion.end(),
-                    upperRegion.getPhaseArray(), upperRegion.getPreGenePhaseStatus());
-
-            GenePhaseRegion lowerSplit =
-                    new GenePhaseRegion(lowerRegion.GeneId, overlapStart, overlapEnd,
-                            lowerRegion.getPhaseArray(), lowerRegion.getPreGenePhaseStatus());
-
-            testProximatePhaseRegions(lowerGene, upperGene, lowerSplit, upperSplit);
-        }
-
-        long minBucketLength = mProximateBucketLengths.get(0);
-
-        // next split the overlap into smaller chunks to proces these one by one
-
-        double segment = (overlapEnd - overlapStart) / 5.0;
-        long segmentSize = max((long)floor(segment), minBucketLength);
-
-        // break the regions up into non-overlapping pieces and process them one by one
-        List<GenePhaseRegion> lowerSplits = Lists.newArrayList();
-        List<GenePhaseRegion> upperSplits = Lists.newArrayList();
-
-        for(int i = 0; i < 5; ++i)
-        {
-            long regionStart = overlapStart + (i * segmentSize);
-            long regionEnd = regionStart + segmentSize;
-
-            if(regionEnd > overlapEnd)
-                break;
-
-            lowerSplits.add(new GenePhaseRegion(lowerRegion.GeneId, regionStart, regionEnd,
-                    lowerRegion.getPhaseArray(), lowerRegion.getPreGenePhaseStatus()));
-
-            upperSplits.add(new GenePhaseRegion(upperRegion.GeneId, regionStart, regionEnd,
-                    upperRegion.getPhaseArray(), upperRegion.getPreGenePhaseStatus()));
-        }
-
-        for(int i = 0; i < lowerSplits.size(); ++i)
-        {
-            GenePhaseRegion lowerSegment = lowerSplits.get(i);
-
-            for(int j = 0; j < upperSplits.size(); ++j)
-            {
-                if(i == j)
-                    continue;
-
-                GenePhaseRegion upperSegment = upperSplits.get(j);
-                testProximatePhaseRegions(lowerGene, upperGene, lowerSegment, upperSegment);
-            }
-        }
-    }
-
     public void generateProximateFusionCounts()
     {
         /*
@@ -1152,161 +1089,6 @@ public class CohortExpFusions
             findProximateFusions(entry.getValue(), -1);
         }
         */
-    }
-
-    public void generateNonProximateCounts_old()
-    {
-        // for each arm and each gene in that arm sum up the overlapping counts against all genes beyond the specified
-        // DEL and DUP max bucket length, and then all overlapping counts on remote arms
-        long proximateLimit = getMaxBucketLength();
-
-        for (Map.Entry<String, List<GeneRangeData>> entry : mChrGeneDataMap.entrySet())
-        {
-            final String chromosome = entry.getKey();
-
-            LOGGER.info("calculating local and remote overlap counts for chr({})", chromosome);
-
-            List<GeneRangeData> geneList = entry.getValue();
-
-            for(int i = 0; i < geneList.size(); ++i)
-            {
-                GeneRangeData gene1 = geneList.get(i);
-
-                /*
-                if(gene1.GeneData.GeneId.equals("ENSG00000189283"))
-                {
-                    LOGGER.info("specific gene: {}", gene1.GeneData.GeneId);
-                }
-                */
-
-                // determine the remote overlap count by comparing this gene's regions to all matching remote ones
-                for(int j = 0; j <= 1; ++j)
-                {
-                    final Map<String, List<GenePhaseRegion>> chrPhaseRegions =
-                            (j == 0) ? mChrPhaseRegionsPosStrand : mChrPhaseRegionsNegStrand;
-
-                    for (Map.Entry<String, List<GenePhaseRegion>> chrEntry : chrPhaseRegions.entrySet())
-                    {
-                        if (chrEntry.getKey().equals(chromosome)) // skip the same chromosome
-                            continue;
-
-                        final List<GenePhaseRegion> remoteRegions = chrEntry.getValue();
-
-                        for (GenePhaseRegion region : gene1.getPhaseRegions())
-                        {
-                            for (GenePhaseRegion remoteRegion : remoteRegions)
-                            {
-                                // test gene as an downstream vs all remote upstream phasing regions
-                                if (hasAnyPhaseMatch(remoteRegion, region, false) || regionsPhaseMatched(remoteRegion, region))
-                                {
-                                    gene1.addBaseOverlapCountDownstream(NON_PROX_TYPE_REMOTE, region.length() * remoteRegion.length());
-                                }
-
-                                // then as an upstream partner
-                                if (hasAnyPhaseMatch(region, remoteRegion, false) || regionsPhaseMatched(region, remoteRegion))
-                                {
-                                    gene1.addBaseOverlapCountUpstream(NON_PROX_TYPE_REMOTE, region.length() * remoteRegion.length());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // and now the local ones outside the DEL and DUP proximity lengths, ignoring any strand checking
-                // this is considering fusions between DUPs, DUPs or INVs
-                for(int j = i; j < geneList.size(); ++j)
-                {
-                    GeneRangeData gene2 = geneList.get(j);
-
-                    if(!gene1.ChromosomeArm.equals(gene2.ChromosomeArm))
-                        break;
-
-                    // find closest and furthest distance between these 2 genes
-                    long minDistance = min(abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart),
-                            abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneEnd));
-
-                    minDistance = min(minDistance, abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneEnd));
-                    minDistance = min(minDistance, abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneStart));
-
-                    long maxDistance = max(abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart),
-                            abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneEnd));
-
-                    maxDistance = max(maxDistance, abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneEnd));
-                    maxDistance = max(maxDistance, abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneStart));
-
-                    int type = -1;
-
-                    // assign the proximity to a category to build up global stats
-                    if (j > i && maxDistance > proximateLimit)
-                    {
-                        ++mGlobalLongDelDupInvCount;
-                        type = NON_PROX_TYPE_LONG_SAME_ARM;
-                    }
-                    else if(gene1.GeneData.Strand != gene2.GeneData.Strand)
-                    {
-                        if(maxDistance < SHORT_INV_BUCKET)
-                        {
-                            ++mGlobalShortInvCount;
-                            type = NON_PROX_TYPE_SHORT_INV;
-                        }
-                        else
-                        {
-                            type = NON_PROX_TYPE_MEDIUM_INV;
-                        }
-                    }
-                    else
-                    {
-                        // assign proximate genes to correct bucket length, same-genes will be counted here as well
-                        for (int b = 0; b < mProximateBucketLengths.size() - 1; ++b)
-                        {
-                            long minLength = mProximateBucketLengths.get(b);
-                            long maxLength = mProximateBucketLengths.get(b + 1);
-
-                            if (minDistance > maxLength || maxDistance < minLength)
-                                continue;
-
-                            mGlobalProximateCounts.set(b, mGlobalProximateCounts.get(b) + 1);
-                        }
-
-                        continue;
-                    }
-
-                    // calculate phasing overlap areas
-                    for (GenePhaseRegion region1 : gene1.getPhaseRegions())
-                    {
-                        // the downstream gene of the potential fusion cannot be non-coding
-                        for (GenePhaseRegion region2 : gene2.getPhaseRegions())
-                        {
-                            long regionOverlap = region1.length() * region2.length();
-
-                            if(hasAnyPhaseMatch(region1, region2, false))
-                            {
-                                gene1.addBaseOverlapCountUpstream(type, regionOverlap);
-                                gene1.addBaseOverlapCountDownstream(type, regionOverlap);
-
-                                gene2.addBaseOverlapCountUpstream(type, regionOverlap);
-                                gene2.addBaseOverlapCountDownstream(type, regionOverlap);
-                            }
-                            else
-                            {
-                                // check each direction in turn
-                                if (regionsPhaseMatched(region1, region2))
-                                {
-                                    gene1.addBaseOverlapCountUpstream(type, regionOverlap);
-                                    gene2.addBaseOverlapCountDownstream(type, regionOverlap);
-                                }
-
-                                if (regionsPhaseMatched(region2, region1))
-                                {
-                                    gene2.addBaseOverlapCountUpstream(type, regionOverlap);
-                                    gene1.addBaseOverlapCountDownstream(type, regionOverlap);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public void logGlobalCounts()
