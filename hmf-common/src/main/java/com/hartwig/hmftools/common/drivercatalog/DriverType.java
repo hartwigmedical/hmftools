@@ -8,5 +8,6 @@ public enum DriverType {
     AMP,
     DEL,
     PROMOTER,
+    NEAR_HOTSPOT, // TODO to be removed
     NONE
 }
