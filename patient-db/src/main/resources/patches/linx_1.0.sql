@@ -120,6 +120,8 @@ ALTER TABLE svFusion
     ADD domainsLost VARCHAR(255),
     ADD skippedExons INT;
 
+DROP TABLE structuralVariantDisruption;
+
 
 CREATE TABLE viralInsertion
 (   id int NOT NULL AUTO_INCREMENT,
