@@ -18,7 +18,7 @@ public abstract class GeneOncokb {
     @NotNull
     public abstract String hugoSymbol();
 
-    @NotNull
+    @Nullable
     public abstract String curatedRefSeq();
 
     @NotNull
@@ -30,7 +30,7 @@ public abstract class GeneOncokb {
     @NotNull
     public abstract String tsg();
 
-    @NotNull
+    @Nullable
     public abstract String curatedIsoform();
 
 }

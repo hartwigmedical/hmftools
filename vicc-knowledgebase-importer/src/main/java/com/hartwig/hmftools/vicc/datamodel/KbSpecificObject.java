@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface KbSpecificObject {

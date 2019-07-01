@@ -10,6 +10,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.vicc.datamodel.Association;
@@ -18,7 +19,9 @@ import com.hartwig.hmftools.vicc.datamodel.BRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
 import com.hartwig.hmftools.vicc.datamodel.BiologicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.ClinicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ConsequenceOncoKb;
+import com.hartwig.hmftools.vicc.datamodel.DrugAbstracts;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -33,7 +36,9 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart2;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBiologicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCgi;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableClinicalOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableConsequenceOncoKb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableDrugAbstracts;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
@@ -210,7 +215,13 @@ public final class ViccJsonReader {
             } else if (viccEntryObject.has("pmkb")) {
                 viccEntryBuilder.KbSpecificObject(createPmkb(objectPmkb));
             } else if (viccEntryObject.has("oncokb")) {
-                viccEntryBuilder.KbSpecificObject(createOncoKb());
+                LOGGER.info(objectOncokb);
+                if (objectOncokb.has("biological")) {
+                    viccEntryBuilder.KbSpecificObject(createOncoKbBiological(objectOncokb));
+                } else if (objectOncokb.has("clinical")) {
+                    viccEntryBuilder.KbSpecificObject(createOncoKbClinical(objectOncokb));
+                }
+
             }
             entries.add(viccEntryBuilder.build());
 
@@ -221,59 +232,93 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static Oncokb createOncoKb() {
-        return ImmutableOncokb.builder().biologicalPmkb(createBiologicalOncoKb()).build();
+    private static Oncokb createOncoKbBiological(@NotNull JsonObject objectOncoKb) {
+        return ImmutableOncokb.builder().biologicalOncoKb(createBiologicalOncoKb(objectOncoKb.getAsJsonObject("biological"))).build();
     }
 
     @NotNull
-    private static BiologicalOncoKb createBiologicalOncoKb() {
+    private static Oncokb createOncoKbClinical(@NotNull JsonObject objectOncoKb) {
+        return ImmutableOncokb.builder().clinicalOncoKb(createClinicalOncoKb(objectOncoKb.getAsJsonObject("clinical"))).build();
+    }
+
+    @NotNull
+    private static ClinicalOncoKb createClinicalOncoKb(@NotNull JsonObject objectClinical) {
+        return ImmutableClinicalOncoKb.builder()
+                .RefSeq(objectClinical.getAsJsonPrimitive("RefSeq").getAsString())
+                .level(objectClinical.getAsJsonPrimitive("level").getAsString())
+                .Isoform(objectClinical.getAsJsonPrimitive("Isoform").getAsString())
+                .variantOncokb(createVariantOncoKb(objectClinical.getAsJsonObject("variant")))
+                .entrezGeneID(objectClinical.getAsJsonPrimitive("Entrez Gene ID").getAsString())
+                .drugPmids(objectClinical.getAsJsonPrimitive("drugPmids").getAsString())
+                .cancerType(objectClinical.getAsJsonPrimitive("cancerType").getAsString())
+                .drug(objectClinical.getAsJsonPrimitive("drug").getAsString())
+                .gene(objectClinical.getAsJsonPrimitive("gene").getAsString())
+                .levelLabel(objectClinical.getAsJsonPrimitive("level_label").getAsString())
+                .drugAbstracts(createDrugsAbstracts(objectClinical.getAsJsonArray("drugAbstracts")))
+                .build();
+    }
+
+    @NotNull
+    private static List<DrugAbstracts> createDrugsAbstracts(@NotNull JsonArray arrayDrugsAbstracts) {
+        List<DrugAbstracts> listDrugsabstracts = Lists.newArrayList();
+        for (JsonElement drugAbstracts : arrayDrugsAbstracts) {
+            listDrugsabstracts.add(ImmutableDrugAbstracts.builder()
+                    .text(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("text").getAsString())
+                    .link(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
+                    .build());
+        }
+        return listDrugsabstracts;
+    }
+
+    @NotNull
+    private static BiologicalOncoKb createBiologicalOncoKb(@NotNull JsonObject objectBiological) {
         return ImmutableBiologicalOncoKb.builder()
-                .mutationEffectPmids(Strings.EMPTY)
-                .Isoform(Strings.EMPTY)
-                .variantOncokb(createVariantOncoKb())
-                .entrezGeneID(Strings.EMPTY)
-                .oncogenic(Strings.EMPTY)
-                .mutationEffect(Strings.EMPTY)
-                .RefSeq(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .mutationEffectAbstracts(Strings.EMPTY)
+                .mutationEffectPmids(objectBiological.getAsJsonPrimitive("mutationEffectPmids").getAsString())
+                .Isoform(objectBiological.getAsJsonPrimitive("Isoform").getAsString())
+                .variantOncokb(createVariantOncoKb(objectBiological.getAsJsonObject("variant")))
+                .entrezGeneID(objectBiological.getAsJsonPrimitive("Entrez Gene ID").getAsString())
+                .oncogenic(objectBiological.getAsJsonPrimitive("oncogenic").getAsString())
+                .mutationEffect(objectBiological.getAsJsonPrimitive("mutationEffect").getAsString())
+                .RefSeq(objectBiological.getAsJsonPrimitive("RefSeq").getAsString())
+                .gene(objectBiological.getAsJsonPrimitive("gene").getAsString())
+                .mutationEffectAbstracts(objectBiological.getAsJsonPrimitive("mutationEffectAbstracts").getAsString())
                 .build();
     }
 
     @NotNull
-    private static VariantOncokb createVariantOncoKb() {
+    private static VariantOncokb createVariantOncoKb(@NotNull JsonObject objectVariant) {
         return ImmutableVariantOncokb.builder()
-                .variantResidues(Strings.EMPTY)
-                .proteinStart(Strings.EMPTY)
-                .name(Strings.EMPTY)
-                .proteinEnd(Strings.EMPTY)
-                .refResidues(Strings.EMPTY)
-                .alteration(Strings.EMPTY)
-                .consequenceOncoKb(createConsequenceOncokb())
-                .geneOncokb(createGeneOncoKb())
+                .variantResidues(objectVariant.get("variantResidues").isJsonNull() ? null  : objectVariant.getAsJsonPrimitive("variantResidues").getAsString())
+                .proteinStart(objectVariant.getAsJsonPrimitive("proteinStart").getAsString())
+                .name(objectVariant.getAsJsonPrimitive("name").getAsString())
+                .proteinEnd(objectVariant.getAsJsonPrimitive("proteinEnd").getAsString())
+                .refResidues(objectVariant.get("refResidues").isJsonNull() ? null : objectVariant.getAsJsonPrimitive("refResidues").getAsString())
+                .alteration(objectVariant.getAsJsonPrimitive("alteration").getAsString())
+                .consequenceOncoKb(createConsequenceOncokb(objectVariant.getAsJsonObject("consequence")))
+                .geneOncokb(createGeneOncoKb(objectVariant.getAsJsonObject("gene")))
                 .build();
     }
 
     @NotNull
-    private static ConsequenceOncoKb createConsequenceOncokb() {
+    private static ConsequenceOncoKb createConsequenceOncokb(@NotNull JsonObject objectConsequence) {
         return ImmutableConsequenceOncoKb.builder()
-                .term(Strings.EMPTY)
-                .description(Strings.EMPTY)
-                .isGenerallyTruncating(Strings.EMPTY)
+                .term(objectConsequence.getAsJsonPrimitive("term").getAsString())
+                .description(objectConsequence.getAsJsonPrimitive("description").getAsString())
+                .isGenerallyTruncating(objectConsequence.getAsJsonPrimitive("isGenerallyTruncating").getAsString())
                 .build();
     }
 
     @NotNull
-    private static GeneOncokb createGeneOncoKb() {
+    private static GeneOncokb createGeneOncoKb(@NotNull JsonObject objectGene) {
         return ImmutableGeneOncokb.builder()
-                .oncogene(Strings.EMPTY)
-                .name(Strings.EMPTY)
-                .hugoSymbol(Strings.EMPTY)
-                .curatedRefSeq(Strings.EMPTY)
-                .entrezGeneId(Strings.EMPTY)
-                .geneAliases(Lists.newArrayList())
-                .tsg(Strings.EMPTY)
-                .curatedIsoform(Strings.EMPTY)
+                .oncogene(objectGene.getAsJsonPrimitive("oncogene").getAsString())
+                .name(objectGene.getAsJsonPrimitive("name").getAsString())
+                .hugoSymbol(objectGene.getAsJsonPrimitive("hugoSymbol").getAsString())
+                .curatedRefSeq(objectGene.get("curatedRefSeq").isJsonNull() ? null : objectGene.getAsJsonPrimitive("curatedRefSeq").getAsString())
+                .entrezGeneId(objectGene.getAsJsonPrimitive("entrezGeneId").getAsString())
+                .geneAliases(Lists.newArrayList(jsonArrayToStringList(objectGene.getAsJsonArray("geneAliases"))))
+                .tsg(objectGene.getAsJsonPrimitive("tsg").getAsString())
+                .curatedIsoform(objectGene.get("curatedIsoform").isJsonNull() ? null : objectGene.getAsJsonPrimitive("curatedIsoform").getAsString())
                 .build();
     }
 
