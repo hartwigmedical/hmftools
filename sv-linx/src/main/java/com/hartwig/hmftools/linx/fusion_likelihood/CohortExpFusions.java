@@ -65,7 +65,7 @@ public class CohortExpFusions
 
     public static int PRE_GENE_3P_DISTANCE = 10000;
     public static int SHORT_INV_BUCKET = 100000;
-    public static long MIN_BUCKET_LENGTH = 100;
+    public static int MIN_BUCKET_LENGTH = 100;
     public static final double GENOME_BASE_COUNT = 3e9;
     public static final double MIN_FUSION_RATE = 1e-12;
     public static final String GENE_PAIR_DELIM = "_";
@@ -513,11 +513,19 @@ public class CohortExpFusions
             return;
 
         // allow for
-        long geneLength = geneData.GeneData.GeneEnd - geneData.GeneData.GeneStart;
-        double rawBlockSize = pow(10, round(log10(geneLength))) * 0.01;
-        int blockSize = max(DEFAULT_REGION_GRID_SIZE, (int)rawBlockSize);
+        // long geneLength = geneData.GeneData.GeneEnd - geneData.GeneData.GeneStart;
+        // double rawBlockSize = pow(10, round(log10(geneLength))) * 0.01;
+        // int blockSize = DEFAULT_REGION_GRID_SIZE; // max(DEFAULT_REGION_GRID_SIZE, (int)rawBlockSize);
 
-        RegionAllocator regionAllocator = new RegionAllocator(blockSize);
+        int bucketLengths = mProximateBucketLengths.size() - 1;
+        RegionAllocator[] regionAllocators = new RegionAllocator[bucketLengths];
+
+        for(int i = 0; i < bucketLengths; ++i)
+        {
+            int blockSize = (int)(mProximateBucketLengths.get(i) / 10);
+            blockSize = max(blockSize, MIN_BUCKET_LENGTH);
+            regionAllocators[i] = new RegionAllocator(blockSize);
+        }
 
         for (int i = 0; i < transcriptRegions.size(); ++i)
         {
@@ -536,7 +544,7 @@ public class CohortExpFusions
                 if (!region2.hasPhasedType())
                     continue;
 
-                testProximatePhaseRegions(geneData, geneData, region1, region2, regionAllocator);
+                testProximatePhaseRegions(geneData, geneData, region1, region2, regionAllocators);
             }
         }
     }
@@ -897,7 +905,7 @@ public class CohortExpFusions
     }
 
     public boolean testProximatePhaseRegions(GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2,
-            RegionAllocator regionAllocator)
+            RegionAllocator[] regionAllocators)
     {
         // ignore overlapping regions for now since it's not clear whether a DUP or DEL would be required
         if (haveOverlap(region1, region2, -PERMITTED_REGION_OVERLAP)) // allow bases with an exact base overlap through
@@ -939,7 +947,7 @@ public class CohortExpFusions
                 continue;
 
             Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(
-                    mProximateBucketLengths, regionAllocator, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
+                    mProximateBucketLengths, regionAllocators, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
 
             if (!bucketOverlapCounts.isEmpty())
             {

@@ -42,7 +42,7 @@ public class LikelihoodCalc
     }
 
     public static Map<Integer, Long> calcOverlapBucketAreas(
-            final List<Long> bucketLengths, RegionAllocator regionAllocator,
+            final List<Long> bucketLengths, RegionAllocator[] regionAllocators,
             GeneRangeData lowerGene, GeneRangeData upperGene,
             GenePhaseRegion lowerRegion, GenePhaseRegion upperRegion, boolean isDel)
     {
@@ -80,9 +80,9 @@ public class LikelihoodCalc
             if(minBucketLen <= upperRegion.start() - lowerRegion.end() && maxBucketLen >= upperRegion.end() - lowerRegion.start())
             {
                 // no restriction on the overlap
-                if(regionAllocator != null)
+                if(regionAllocators != null)
                 {
-                    baseOverlapArea += regionAllocator.allocateBases(
+                    baseOverlapArea += regionAllocators[i].allocateBases(
                             lowerRegion.start(), lowerRegion.end(), upperRegion.start(), upperRegion.end(),
                             minBucketLen, maxBucketLen, true);
                 }
@@ -131,9 +131,9 @@ public class LikelihoodCalc
                 long actUpperStart = max(upperStart, lowerStart + minBucketLen);
                 long actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
 
-                if(regionAllocator != null)
+                if(regionAllocators != null)
                 {
-                    baseOverlapArea += regionAllocator.allocateBases(
+                    baseOverlapArea += regionAllocators[i].allocateBases(
                             lowerStart, lowerEnd, actUpperStart, actUpperEnd, minBucketLen, maxBucketLen, true);
                 }
                 else

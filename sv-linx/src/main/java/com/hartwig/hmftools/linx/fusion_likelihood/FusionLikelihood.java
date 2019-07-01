@@ -153,7 +153,7 @@ public class FusionLikelihood
             long endLength = Long.parseLong(startEnds[1]);
 
             // add a bucket from the min to the first specified length
-            bucketLengths.add(MIN_BUCKET_LENGTH);
+            bucketLengths.add((long)MIN_BUCKET_LENGTH);
 
             long bucketLength = startLength;
             while(bucketLength <= endLength)
