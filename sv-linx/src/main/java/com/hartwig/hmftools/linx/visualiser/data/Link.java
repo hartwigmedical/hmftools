@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +22,7 @@ public abstract class Link
 
     public abstract StructuralVariantType type();
 
-    public abstract String resolvedType();
+    public abstract ResolvedType resolvedType();
 
     public abstract String startChromosome();
 
@@ -48,12 +49,12 @@ public abstract class Link
 
     public boolean isSimpleSV()
     {
-        return resolvedType().equals("SimpleSV");
+        return resolvedType().isSimple();
     }
 
     public boolean isLineElement()
     {
-        return resolvedType().equals("Line");
+        return resolvedType() == ResolvedType.LINE;
     }
 
     public boolean isValidStart()

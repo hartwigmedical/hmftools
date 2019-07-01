@@ -22,7 +22,7 @@ public class VisSvDataFile
     public final int ChainId;
     public final int SvId;
     public final StructuralVariantType Type;
-    public final String ResolvedType;
+    public final com.hartwig.hmftools.linx.types.ResolvedType ResolvedType;
     public final String ChrStart;
     public final String InfoStart;
     public final String ChrEnd;
@@ -37,7 +37,7 @@ public class VisSvDataFile
     public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
 
     public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
-            StructuralVariantType type, final String resolvedType, final String chrStart, final String chrEnd, long posStart, long posEnd,
+            StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, final String chrStart, final String chrEnd, long posStart, long posEnd,
             byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, int traverseCount)
     {
         SampleId = sampleId;
@@ -148,7 +148,7 @@ public class VisSvDataFile
                 Integer.valueOf(values[index++]),
                 Integer.valueOf(values[index++]),
                 StructuralVariantType.valueOf(values[index++]),
-                values[index++],
+                com.hartwig.hmftools.linx.types.ResolvedType.valueOf(values[index++]),
                 values[index++],
                 values[index++],
                 Long.valueOf(values[index++]),

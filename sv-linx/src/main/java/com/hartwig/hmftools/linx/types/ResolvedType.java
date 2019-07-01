@@ -23,4 +23,12 @@ public enum ResolvedType
     SGL_PAIR_DEL,
     SGL_PAIR_DUP,
     SGL_PAIR_INS;
+
+    public boolean isSimple()
+    {
+        return (this == ResolvedType.DEL || this == ResolvedType.DUP || this == ResolvedType.INS
+                || this == SGL_PAIR_DEL || this == SGL_PAIR_DUP
+                || this == SGL_PAIR_INS);
+    }
+
 }

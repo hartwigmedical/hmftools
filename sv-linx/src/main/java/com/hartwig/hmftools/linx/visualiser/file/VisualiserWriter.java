@@ -150,7 +150,7 @@ public class VisualiserWriter
                 final SvBreakend beEnd = var.getBreakend(false);
 
                 svDataList.add(new VisSvDataFile(mSampleId, var.getCluster().id(), chainId, var.dbId(),
-                        var.type(), var.getCluster().getResolvedType().toString(),
+                        var.type(), var.getCluster().getResolvedType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(),beEnd != null ? beEnd.position() : 0,
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,

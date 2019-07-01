@@ -23,17 +23,17 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotatio
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleType;
+import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.addClusterReasons;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.checkClusterDuplicates;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
@@ -43,7 +43,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LINK_COUNT;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
@@ -62,16 +61,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.cn.SvCNData;
+import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLOH;
-import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.types.SvaConfig;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -210,7 +209,7 @@ public class ClusterAnalyser {
             if(!cluster.isResolved() && cluster.getResolvedType() != NONE)
             {
                 // any cluster with a long DEL or DUP not merged can now be marked as resolved
-                if(cluster.getSvCount() == 1 && isSimpleType(cluster.getResolvedType()))
+                if(cluster.getSvCount() == 1 && cluster.getResolvedType().isSimple())
                     cluster.setResolved(true, cluster.getResolvedType());
             }
 
