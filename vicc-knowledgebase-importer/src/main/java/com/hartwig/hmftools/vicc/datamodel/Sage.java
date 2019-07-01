@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Sage {
+public abstract class Sage implements KbSpecificObject {
 
     @NotNull
     public abstract String entrezId();

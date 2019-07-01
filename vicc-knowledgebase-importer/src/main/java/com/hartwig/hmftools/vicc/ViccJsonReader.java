@@ -100,10 +100,6 @@ public final class ViccJsonReader {
 
     private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
 
-
-
-
-
     private ViccJsonReader() {
     }
 
@@ -154,80 +150,68 @@ public final class ViccJsonReader {
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
 
-//            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
-//            if (viccEntryObject.has("cgi")) {
-//                Set<String> keysCgi = objectCgi.keySet();
-//
-//                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
-//                    LOGGER.warn(
-//                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
-//                    LOGGER.warn(keysCgi);
-//                }
-//                viccEntryBuilder.cgi(createCgi(objectCgi));
-//            } else {
-//                viccEntryBuilder.cgi(createCgiEmpty());
-//            }
-//
-//            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
-//            if (viccEntryObject.has("brca")) {
-//                Set<String> keysBRCA = objectBRCA.keySet();
-//                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
-//                    LOGGER.warn("Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected "
-//                            + EXPECTED_BRCA_ELEMENT_SIZES);
-//                    LOGGER.warn(keysBRCA);
-//                }
-//                viccEntryBuilder.brca(createBRCA(objectBRCA));
-//            } else {
-//                viccEntryBuilder.brca(createBRCAEmpty());
-//            }
-//
-//            JsonObject objectSage = viccEntryObject.getAsJsonObject("sage");
-//            if (viccEntryObject.has("sage")) {
-//                Set<String> keysSage = objectSage.keySet();
-//                if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
-//                    LOGGER.warn("Found " + keysSage.size() + " elements in a vicc entry rather than the expected "
-//                            + EXPECTED_SAGE_ELEMENT_SIZES);
-//                    LOGGER.warn(keysSage);
-//                }
-//                viccEntryBuilder.sage(createSage(objectSage));
-//            } else {
-//                viccEntryBuilder.sage(createSageEmpty());
-//
-//            }
-//
-//            JsonObject objectPmkb = viccEntryObject.getAsJsonObject("pmkb");
-//            if (viccEntryObject.has("pmkb")) {
-//                Set<String> keysPmkb = objectPmkb.keySet();
-//                if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
-//                    LOGGER.warn("Found " + keysPmkb.size() + " elements in a vicc entry rather than the expected "
-//                            + EXPECTED_PMKB_ELEMENT_SIZES);
-//                    LOGGER.warn(keysPmkb);
-//                }
-//                viccEntryBuilder.pmkb(createPmkb(objectPmkb));
-//            } else {
-//                viccEntryBuilder.pmkb(createPmkbEmpty());
-//
-//            }
-//
-//            JsonObject objectOncokb = viccEntryObject.getAsJsonObject("oncokb");
-//            if (viccEntryObject.has("oncokb")) {
-//                Set<String> keysOncokb = objectOncokb.keySet();
-//                if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
-//                    LOGGER.warn("Found " + keysOncokb.size() + " elements in a vicc entry rather than the expected "
-//                            + EXPECTED_ONCOKB_ELEMENT_SIZES);
-//                    LOGGER.warn(keysOncokb);
-//                }
-//                viccEntryBuilder.oncokb(createOncoKb());
-//            } else {
-//                viccEntryBuilder.oncokb(createOncoKb());
-//            }
-//            if (viccEntryObject.has("cgi")) {
-//                viccEntryBuilder.KbSpecificObject(createCgiEmpty());
-//
-//            } else if (viccEntryObject.has("brca")) {
-//                viccEntryBuilder.KbSpecificObject(createBRCAEmpty());
-//
-//            }
+            JsonObject objectCgi = viccEntryObject.getAsJsonObject("cgi");
+            if (viccEntryObject.has("cgi")) {
+                Set<String> keysCgi = objectCgi.keySet();
+
+                if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
+                    LOGGER.warn(
+                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
+                    LOGGER.warn(keysCgi);
+                }
+            }
+
+            JsonObject objectBRCA = viccEntryObject.getAsJsonObject("brca");
+            if (viccEntryObject.has("brca")) {
+                Set<String> keysBRCA = objectBRCA.keySet();
+                if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
+                    LOGGER.warn("Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_BRCA_ELEMENT_SIZES);
+                    LOGGER.warn(keysBRCA);
+                }
+            }
+
+            JsonObject objectSage = viccEntryObject.getAsJsonObject("sage");
+            if (viccEntryObject.has("sage")) {
+                Set<String> keysSage = objectSage.keySet();
+                if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
+                    LOGGER.warn("Found " + keysSage.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_SAGE_ELEMENT_SIZES);
+                    LOGGER.warn(keysSage);
+                }
+            }
+
+            JsonObject objectPmkb = viccEntryObject.getAsJsonObject("pmkb");
+            if (viccEntryObject.has("pmkb")) {
+                Set<String> keysPmkb = objectPmkb.keySet();
+                if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
+                    LOGGER.warn("Found " + keysPmkb.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_PMKB_ELEMENT_SIZES);
+                    LOGGER.warn(keysPmkb);
+                }
+            }
+
+            JsonObject objectOncokb = viccEntryObject.getAsJsonObject("oncokb");
+            if (viccEntryObject.has("oncokb")) {
+                Set<String> keysOncokb = objectOncokb.keySet();
+                if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
+                    LOGGER.warn("Found " + keysOncokb.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_ONCOKB_ELEMENT_SIZES);
+                    LOGGER.warn(keysOncokb);
+                }
+            }
+
+            if (viccEntryObject.has("cgi")) {
+                viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
+            } else if (viccEntryObject.has("brca")) {
+                viccEntryBuilder.KbSpecificObject(createBRCA(objectBRCA));
+            } else if (viccEntryObject.has("sage")) {
+                viccEntryBuilder.KbSpecificObject(createSage(objectSage));
+            } else if (viccEntryObject.has("pmkb")) {
+                viccEntryBuilder.KbSpecificObject(createPmkb(objectPmkb));
+            } else if (viccEntryObject.has("oncokb")) {
+                viccEntryBuilder.KbSpecificObject(createOncoKb());
+            }
             entries.add(viccEntryBuilder.build());
 
         }
@@ -294,61 +278,12 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static Pmkb createPmkbEmpty() {
-
-        return ImmutablePmkb.builder()
-                .tumor(Lists.newArrayList(ImmutableTumorPmkb.builder().id(Strings.EMPTY).name(Strings.EMPTY).build()))
-                .tissue(Lists.newArrayList(ImmutableTissuePmkb.builder().id(Strings.EMPTY).name(Strings.EMPTY).build()))
-                .variant(Lists.newArrayList(createVariantPmkbEmpty()))
-                .build();
-    }
-
-    @NotNull
-    private static VariantPmkb createVariantPmkbEmpty() {
-        return ImmutableVariantPmkb.builder()
-                .aminoAcidChange(Strings.EMPTY)
-                .germline(Strings.EMPTY)
-                .partnerGene(Strings.EMPTY)
-                .codons(Strings.EMPTY)
-                .description(Strings.EMPTY)
-                .exons(Strings.EMPTY)
-                .notes(Strings.EMPTY)
-                .cosmic(Strings.EMPTY)
-                .effect(Strings.EMPTY)
-                .cnvType(Strings.EMPTY)
-                .id(Strings.EMPTY)
-                .cytoband(Strings.EMPTY)
-                .variantType(Strings.EMPTY)
-                .dnaChange(Strings.EMPTY)
-                .coordinates(Strings.EMPTY)
-                .chromosomeBasedCnv(Strings.EMPTY)
-                .gene(Lists.newArrayList(ImmutableGenePmkb.builder()
-                        .description(Strings.EMPTY)
-                        .createdAt(Strings.EMPTY)
-                        .updatedAt(Strings.EMPTY)
-                        .activeInd(Strings.EMPTY)
-                        .externalId(Strings.EMPTY)
-                        .id(Strings.EMPTY)
-                        .name(Strings.EMPTY)
-                        .build()))
-                .transcript(Strings.EMPTY)
-                .descriptionType(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
-                .name(Strings.EMPTY)
-                .build();
-    }
-
-    @NotNull
     private static Pmkb createPmkb(@NotNull JsonObject objectPmkb) {
         JsonObject tumor = objectPmkb.getAsJsonObject("tumor");
         JsonArray tissue = objectPmkb.getAsJsonArray("tissues");
         JsonObject variant = objectPmkb.getAsJsonObject("variant");
 
-        return ImmutablePmkb.builder()
-                .tumor(createTumor(tumor))
-                .tissue(createTissue(tissue))
-                .variant(createVariantPmkb(variant))
-                .build();
+        return ImmutablePmkb.builder().tumor(createTumor(tumor)).tissue(createTissue(tissue)).variant(createVariantPmkb(variant)).build();
     }
 
     @NotNull
@@ -412,7 +347,9 @@ public final class ViccJsonReader {
                 .variantType(variant.get("variant_type").isJsonNull() ? null : variant.get("variant_type").getAsString())
                 .dnaChange(variant.get("dna_change").isJsonNull() ? null : variant.get("dna_change").getAsString())
                 .coordinates(variant.get("coordinates").isJsonNull() ? null : variant.get("coordinates").getAsString())
-                .chromosomeBasedCnv(variant.get("chromosome_based_cnv").isJsonNull() ? null : variant.get("chromosome_based_cnv").getAsString())
+                .chromosomeBasedCnv(variant.get("chromosome_based_cnv").isJsonNull()
+                        ? null
+                        : variant.get("chromosome_based_cnv").getAsString())
                 .gene(createGene(variant))
                 .transcript(variant.getAsJsonPrimitive("transcript").getAsString())
                 .descriptionType(variant.get("description_type").isJsonNull() ? null : variant.get("description_type").getAsString())
@@ -427,8 +364,8 @@ public final class ViccJsonReader {
 
         Set<String> keysgene = gene.keySet();
         if (!EXPECTED_PMKB_GENE_ELEMENT_SIZES.contains(keysgene.size())) {
-            LOGGER.warn("Found " + keysgene.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_PMKB_GENE_ELEMENT_SIZES);
+            LOGGER.warn(
+                    "Found " + keysgene.size() + " elements in a vicc entry rather than the expected " + EXPECTED_PMKB_GENE_ELEMENT_SIZES);
             LOGGER.warn(keysgene);
         }
 
@@ -456,20 +393,6 @@ public final class ViccJsonReader {
                 .drugLabels(objectSage.getAsJsonPrimitive("drug_labels").getAsString())
                 .responseType(objectSage.getAsJsonPrimitive("response_type").getAsString())
                 .gene(objectSage.getAsJsonPrimitive("gene").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static Sage createSageEmpty() {
-        return ImmutableSage.builder()
-                .entrezId(Strings.EMPTY)
-                .clinicalManifestation(Strings.EMPTY)
-                .publicationUrl(Strings.EMPTY)
-                .germlineOrSomatic(Strings.EMPTY)
-                .evidenceLabel(Strings.EMPTY)
-                .drugLabels(Strings.EMPTY)
-                .responseType(Strings.EMPTY)
-                .gene(Strings.EMPTY)
                 .build();
     }
 
@@ -628,189 +551,6 @@ public final class ViccJsonReader {
                 .Allele_number_SAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_SAS_ExAC").getAsString())
                 .Allele_number_AMR_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_AMR_ExAC").getAsString())
                 .DBID_LOVD(objectBrca.getAsJsonPrimitive("DBID_LOVD").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static BRCA createBRCAEmpty() {
-        return ImmutableBRCA.builder().brcApart1(createBRCAPart1Empty()).brcApart2(createBRCAPart2Empty()).build();
-    }
-
-    @NotNull
-    private static BRCApart1 createBRCAPart1Empty() {
-        return ImmutableBRCApart1.builder()
-                .Variant_frequency_LOVD(Strings.EMPTY)
-                .Allele_frequency_FIN_ExAC(Strings.EMPTY)
-                .ClinVarAccession_ENIGMA(Strings.EMPTY)
-                .Homozygous_count_AFR_ExAC(Strings.EMPTY)
-                .BX_ID_ExAC(Strings.EMPTY)
-                .Variant_in_LOVD(Strings.EMPTY)
-                .Allele_frequency_AFR_ExAC(Strings.EMPTY)
-                .Chr(Strings.EMPTY)
-                .BX_ID_ENIGMA(Strings.EMPTY)
-                .Co_occurrence_LR_exLOVD(Strings.EMPTY)
-                .Homozygous_count_EAS_ExAC(Strings.EMPTY)
-                .Submitter_ClinVar(Strings.EMPTY)
-                .Allele_frequency_EAS_ExAC(Strings.EMPTY)
-                .Hg37_End(Strings.EMPTY)
-                .Submitters_LOVD(Strings.EMPTY)
-                .Clinical_classification_BIC(Strings.EMPTY)
-                .Homozygous_count_NFE_ExAC(Strings.EMPTY)
-                .Allele_count_SAS_ExAC(Strings.EMPTY)
-                .Method_ClinVar(Strings.EMPTY)
-                .Allele_count_NFE_ExAC(Strings.EMPTY)
-                .Pathogenicity_all(Strings.EMPTY)
-                .Germline_or_Somatic_BIC(Strings.EMPTY)
-                .Homozygous_count_SAS_ExAC(Strings.EMPTY)
-                .BIC_Nomenclature(Strings.EMPTY)
-                .Assertion_method_ENIGMA(Strings.EMPTY)
-                .Literature_source_exLOVD(Strings.EMPTY)
-                .Change_Type_id(Strings.EMPTY)
-                .Collection_method_ENIGMA(Strings.EMPTY)
-                .Sum_family_LR_exLOVD(Strings.EMPTY)
-                .HGVS_cDNA_LOVD(Strings.EMPTY)
-                .Homozygous_count_FIN_ExAC(Strings.EMPTY)
-                .EAS_Allele_frequency_1000_Genomes(Strings.EMPTY)
-                .Ethnicity_BIC(Strings.EMPTY)
-                .Individuals_LOVD(Strings.EMPTY)
-                .Variant_in_ExAC(Strings.EMPTY)
-                .URL_ENIGMA(Strings.EMPTY)
-                .Allele_Origin_ClinVar(Strings.EMPTY)
-                .Allele_frequency_AMR_ExAC(Strings.EMPTY)
-                .Variant_in_1000_Genomes(Strings.EMPTY)
-                .AFR_Allele_frequency_1000_Genomes(Strings.EMPTY)
-                .BX_ID_exLOVD(Strings.EMPTY)
-                .Source(Strings.EMPTY)
-                .Condition_ID_value_ENIGMA(Strings.EMPTY)
-                .HGVS_Protein(Strings.EMPTY)
-                .Ref(Strings.EMPTY)
-                .Allele_number_AFR_ExAC(Strings.EMPTY)
-                .Allele_count_AFR_ExAC(Strings.EMPTY)
-                .BX_ID_LOVD(Strings.EMPTY)
-                .Synonyms(Strings.EMPTY)
-                .Gene_Symbol(Strings.EMPTY)
-                .Comment_on_clinical_significance_ENIGMA(Strings.EMPTY)
-                .Missense_analysis_prior_probability_exLOVD(Strings.EMPTY)
-                .Allele_number_FIN_ExAC(Strings.EMPTY)
-                .Posterior_probability_exLOVD(Strings.EMPTY)
-                .Polyphen_Score(Strings.EMPTY)
-                .Reference_Sequence(Strings.EMPTY)
-                .Allele_count_EAS_ExAC(Strings.EMPTY)
-                .Hg38_End(Strings.EMPTY)
-                .HGVS_cDNA(Strings.EMPTY)
-                .Functional_analysis_technique_LOVD(Strings.EMPTY)
-                .SAS_Allele_frequency_1000_Genomes(Strings.EMPTY)
-                .RNA_LOVD(Strings.EMPTY)
-                .Combined_prior_probablility_exLOVD(Strings.EMPTY)
-                .BX_ID_ClinVar(Strings.EMPTY)
-                .IARC_class_exLOVD(Strings.EMPTY)
-                .BX_ID_BIC(Strings.EMPTY)
-                .Sift_Prediction(Strings.EMPTY)
-                .Allele_number_NFE_ExAC(Strings.EMPTY)
-                .Allele_origin_ENIGMA(Strings.EMPTY)
-                .Allele_number_OTH_ExAC(Strings.EMPTY)
-                .Hg36_End(Strings.EMPTY)
-                .Allele_frequency_SAS_ExAC(Strings.EMPTY)
-                .Date_Last_Updated_ClinVar(Strings.EMPTY)
-                .Allele_number_EAS_ExAC(Strings.EMPTY)
-                .Allele_frequency_OTH_ExAC(Strings.EMPTY)
-                .Source_URL(Strings.EMPTY)
-                .SCV_ClinVar(Strings.EMPTY)
-                .Pathogenicity_expert(Strings.EMPTY)
-                .Allele_frequency_1000_Genomes(Strings.EMPTY)
-                .Functional_analysis_result_LOVD(Strings.EMPTY)
-                .AMR_Allele_frequency_1000_Genomes(Strings.EMPTY)
-                .Variant_in_ESP(Strings.EMPTY)
-                .Variant_in_BIC(Strings.EMPTY)
-                .Clinical_significance_ENIGMA(Strings.EMPTY)
-                .Max_Allele_Frequency(Strings.EMPTY)
-                .Allele_count_AMR_ExAC(Strings.EMPTY)
-                .Variant_in_ENIGMA(Strings.EMPTY)
-                .BX_ID_ESP(Strings.EMPTY)
-                .Patient_nationality_BIC(Strings.EMPTY)
-                .BX_ID_1000_Genomes(Strings.EMPTY)
-                .Genomic_Coordinate_hg37(Strings.EMPTY)
-                .Genomic_Coordinate_hg36(Strings.EMPTY)
-                .EUR_Allele_frequency_1000_Genomes(Strings.EMPTY)
-                .Number_of_family_member_carrying_mutation_BIC(Strings.EMPTY)
-                .Segregation_LR_exLOVD(Strings.EMPTY)
-                .Allele_Frequency(Strings.EMPTY)
-                .Minor_allele_frequency_percent_ESP(Strings.EMPTY)
-                .Allele_frequency_ExAC(Strings.EMPTY)
-                .Mutation_type_BIC(Strings.EMPTY)
-                .Assertion_method_citation_ENIGMA(Strings.EMPTY)
-                .Condition_ID_type_ENIGMA(Strings.EMPTY)
-                .Allele_count_OTH_ExAC(Strings.EMPTY)
-                .HGVS_protein_LOVD(Strings.EMPTY)
-                .Variant_in_ClinVar(Strings.EMPTY)
-                .Clinical_importance_BIC(Strings.EMPTY)
-                .Discordant(Strings.EMPTY)
-                .build();
-    }
-
-    @NotNull
-    private static BRCApart2 createBRCAPart2Empty() {
-        return ImmutableBRCApart2.builder()
-                .Allele_count_FIN_ExAC(Strings.EMPTY)
-                .Condition_category_ENIGMA(Strings.EMPTY)
-                .Allele_Frequency_ESP(Strings.EMPTY)
-                .Homozygous_count_OTH_ExAC(Strings.EMPTY)
-                .Genetic_origin_LOVD(Strings.EMPTY)
-                .id(Strings.EMPTY)
-                .Homozygous_count_AMR_ExAC(Strings.EMPTY)
-                .Clinical_Significance_ClinVar(Strings.EMPTY)
-                .AA_Allele_Frequency_ESP(Strings.EMPTY)
-                .Protein_Change(Strings.EMPTY)
-                .Variant_in_exLOVD(Strings.EMPTY)
-                .EA_Allele_Frequency_ESP(Strings.EMPTY)
-                .HGVS_RNA(Strings.EMPTY)
-                .Clinical_significance_citations_ENIGMA(Strings.EMPTY)
-                .Variant_effect_LOVD(Strings.EMPTY)
-                .Polyphen_Prediction(Strings.EMPTY)
-                .Data_Release_id(Strings.EMPTY)
-                .Hg37_Start(Strings.EMPTY)
-                .Hg36_Start(Strings.EMPTY)
-                .Sift_Score(Strings.EMPTY)
-                .Genomic_Coordinate_hg38(Strings.EMPTY)
-                .Alt(Strings.EMPTY)
-                .Literature_citation_BIC(Strings.EMPTY)
-                .Variant_haplotype_LOVD(Strings.EMPTY)
-                .Allele_frequency_NFE_ExAC(Strings.EMPTY)
-                .Hg38_Start(Strings.EMPTY)
-                .Pos(Strings.EMPTY)
-                .Date_last_evaluated_ENIGMA(Strings.EMPTY)
-                .Allele_number_SAS_ExAC(Strings.EMPTY)
-                .Allele_number_AMR_ExAC(Strings.EMPTY)
-                .DBID_LOVD(Strings.EMPTY)
-                .build();
-    }
-
-    @NotNull
-    private static Cgi createCgiEmpty() {
-        return ImmutableCgi.builder()
-                .targeting(Strings.EMPTY)
-                .source(Strings.EMPTY)
-                .cDNA(Lists.newArrayList())
-                .primary_tumor_type(Strings.EMPTY)
-                .individual_mutation(Lists.newArrayList())
-                .drugsFullName(Strings.EMPTY)
-                .curator(Strings.EMPTY)
-                .drug_family(Strings.EMPTY)
-                .alteration(Strings.EMPTY)
-                .drug(Strings.EMPTY)
-                .biomarker(Strings.EMPTY)
-                .gDNA(Lists.newArrayList())
-                .drug_status(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .transcript(Lists.newArrayList())
-                .strand(Lists.newArrayList())
-                .info(Lists.newArrayList())
-                .assay_type(Strings.EMPTY)
-                .alteration_type(Strings.EMPTY)
-                .region(Lists.newArrayList())
-                .evidence_level(Strings.EMPTY)
-                .association(Strings.EMPTY)
-                .metastatic_Tumor_Type(Strings.EMPTY)
                 .build();
     }
 

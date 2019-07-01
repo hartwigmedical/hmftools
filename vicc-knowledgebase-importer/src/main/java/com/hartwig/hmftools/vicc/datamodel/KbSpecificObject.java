@@ -1,13 +1,23 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface KbSpecificObject {
 
-    @NotNull
+    @Nullable
     Cgi cgi();
 
-    @NotNull
+    @Nullable
     BRCA brca();
+
+    @Nullable
+    Sage sage();
+
+    @Nullable
+    Pmkb pmkb();
+
+    @Nullable
+    Oncokb oncoKb();
 
 }
