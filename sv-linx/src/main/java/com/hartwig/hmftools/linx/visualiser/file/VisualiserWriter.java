@@ -51,6 +51,7 @@ public class VisualiserWriter
     private BufferedWriter mSegmentFileWriter;
     private BufferedWriter mCnFileWriter;
     private BufferedWriter mGeneFileWriter;
+    private BufferedWriter mProteinDomainFileWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
 
@@ -76,21 +77,25 @@ public class VisualiserWriter
     {
         try
         {
-            mSvFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SVS.csv", false);
+            mSvFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SVS.tsv", false);
             mSvFileWriter.write(VisSvDataFile.header());
             mSvFileWriter.newLine();
 
-            mSegmentFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SEGMENTS.csv", false);
+            mSegmentFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SEGMENTS.tsv", false);
             mSegmentFileWriter.write(VisSegmentFile.header());
             mSegmentFileWriter.newLine();
 
-            mCnFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_COPY_NUMBER.csv", false);
+            mCnFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_COPY_NUMBER.tsv", false);
             mCnFileWriter.write(VisCopyNumberFile.header());
             mCnFileWriter.newLine();
 
-            mGeneFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_GENE_EXONS.csv", false);
+            mGeneFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_GENE_EXONS.tsv", false);
             mGeneFileWriter.write(VisGeneExonFile.header());
             mGeneFileWriter.newLine();
+
+            mProteinDomainFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_PROTEIN_DOMAINS.tsv", false);
+            mProteinDomainFileWriter.write(VisProteinDomainFile.header());
+            mProteinDomainFileWriter.newLine();
         }
         catch(IOException e)
         {
@@ -104,6 +109,7 @@ public class VisualiserWriter
         closeBufferedWriter(mSegmentFileWriter);
         closeBufferedWriter(mCnFileWriter);
         closeBufferedWriter(mGeneFileWriter);
+        closeBufferedWriter(mProteinDomainFileWriter);
     }
 
     public void setGeneDataCollection(SvGeneTranscriptCollection geneTranscriptCollection)
@@ -335,6 +341,9 @@ public class VisualiserWriter
 
         for(final VisGeneData geneData : mGeneData)
         {
+            if(geneData.ClusterId < 0) // skip drivers not linked to a cluster
+                continue;
+
             if (loggedGenes.contains(geneData.GeneId))
                 continue;
 
@@ -363,7 +372,7 @@ public class VisualiserWriter
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {
-                        proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.Chromosome,
+                        proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
                                 domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                     }
                 }
@@ -378,6 +387,12 @@ public class VisualiserWriter
                 {
                     mGeneFileWriter.write(VisGeneExonFile.toString(data));
                     mGeneFileWriter.newLine();
+                }
+
+                for(final VisProteinDomainFile data : proteinList)
+                {
+                    mProteinDomainFileWriter.write(VisProteinDomainFile.toString(data));
+                    mProteinDomainFileWriter.newLine();
                 }
             }
             else

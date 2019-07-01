@@ -24,7 +24,8 @@ public class VisProteinDomainFile
     public final long End;
     public final String Info;
 
-    public VisProteinDomainFile(final String sampleId, int clusterId, final String transcript, final String chromosome, long start, long end, final String info)
+    public VisProteinDomainFile(final String sampleId, int clusterId, final String transcript,
+            final String chromosome, long start, long end, final String info)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
