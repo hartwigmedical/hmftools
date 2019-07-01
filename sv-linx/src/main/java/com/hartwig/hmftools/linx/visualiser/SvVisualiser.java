@@ -176,10 +176,10 @@ public class SvVisualiser implements AutoCloseable
             return null;
         }
 
-        final String resolvedType = clusterLinks.stream().findFirst().map(Link::resolvedType).orElse("Unknown");
+        final String resolvedTypeString = clusterLinks.stream().findFirst().map(Link::resolvedType).map(Enum::toString).orElse("Unknown");
 
         final String sample =
-                config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedType + ".sv" + clusterLinks.size() + (config
+                config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedTypeString + ".sv" + clusterLinks.size() + (config
                         .debug() ? ".debug" : "");
 
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());

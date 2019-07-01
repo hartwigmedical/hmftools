@@ -23,9 +23,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUP_DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
@@ -64,7 +61,7 @@ public class SvClassification
         if (resolvedType == LINE)
             return SUPER_TYPE_INSERTION;
 
-        if (isSimpleType(resolvedType))
+        if (resolvedType.isSimple())
             return SUPER_TYPE_SIMPLE;
 
         if(isFilteredResolvedType(resolvedType))
@@ -87,14 +84,7 @@ public class SvClassification
 
     public static boolean isSimpleSingleSV(final SvCluster cluster)
     {
-        return cluster.getSvCount() == 1 && isSimpleType(cluster.getResolvedType());
-    }
-
-    public static boolean isSimpleType(final ResolvedType resolvedType)
-    {
-        return (resolvedType == ResolvedType.DEL || resolvedType == ResolvedType.DUP || resolvedType == ResolvedType.INS
-            || resolvedType == SGL_PAIR_DEL || resolvedType == SGL_PAIR_DUP
-            || resolvedType == SGL_PAIR_INS);
+        return cluster.getSvCount() == 1 && cluster.getResolvedType().isSimple();
     }
 
     public static boolean isIncompleteType(final ResolvedType resolvedType)
@@ -106,7 +96,7 @@ public class SvClassification
     {
         ResolvedType resolvedType = cluster.getResolvedType();
 
-        if(isSimpleType(resolvedType))
+        if(resolvedType.isSimple())
         {
             if(cluster.getTypeCount(SGL) == 2)
                 return false;

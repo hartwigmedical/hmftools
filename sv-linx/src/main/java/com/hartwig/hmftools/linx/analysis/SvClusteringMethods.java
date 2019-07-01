@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.haveLinkedAssemblies;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
@@ -43,8 +42,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -477,7 +476,7 @@ public class SvClusteringMethods {
             return;
 
         // skip cluster-2s which resolved to a simple type and not long
-        if(cluster.isResolved() && isSimpleType(cluster.getResolvedType()))
+        if(cluster.isResolved() && cluster.getResolvedType().isSimple())
             return;
 
         for (final SvVarData var : cluster.getSVs())
@@ -492,7 +491,7 @@ public class SvClusteringMethods {
     private void markClusterLongDelDups(final SvCluster cluster)
     {
         // find and record any long DEL or DUP for merging, including long synthetic ones
-        if(cluster.isSyntheticType() && isSimpleType(cluster.getResolvedType()) && !cluster.isResolved()
+        if(cluster.isSyntheticType() && cluster.getResolvedType().isSimple() && !cluster.isResolved()
         && cluster.getSyntheticLength() >= mDelDupCutoffLength)
         {
             for (final SvVarData var : cluster.getSVs())
