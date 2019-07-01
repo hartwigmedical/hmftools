@@ -76,11 +76,11 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
         unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
+        unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         if (scaleExons)
         {
             unadjustedPositions.addAll(Span.allPositions(unadjustedProteinDomains));
             unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
-            unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         }
         else
         {
