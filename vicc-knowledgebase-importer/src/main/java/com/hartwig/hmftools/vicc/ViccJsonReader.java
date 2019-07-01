@@ -47,6 +47,11 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGenePmkb;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJax;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxIndications;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxMolecularProfile;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxReferences;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTherapy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
@@ -59,6 +64,11 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableTumorPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantOncokb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.Jax;
+import com.hartwig.hmftools.vicc.datamodel.JaxIndications;
+import com.hartwig.hmftools.vicc.datamodel.JaxMolecularProfile;
+import com.hartwig.hmftools.vicc.datamodel.JaxReferences;
+import com.hartwig.hmftools.vicc.datamodel.JaxTherapy;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Oncokb;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
@@ -111,8 +121,6 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
     private static final List<Integer> EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_GENE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
-
-
 
     private ViccJsonReader() {
     }
@@ -215,6 +223,8 @@ public final class ViccJsonReader {
                 }
             }
 
+            JsonObject objectJax = viccEntryObject.getAsJsonObject("jax");
+
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
             } else if (viccEntryObject.has("brca")) {
@@ -229,7 +239,8 @@ public final class ViccJsonReader {
                 } else if (objectOncokb.has("clinical")) {
                     viccEntryBuilder.KbSpecificObject(createOncoKbClinical(objectOncokb));
                 }
-
+            } else if (viccEntryObject.has("jax")) {
+                viccEntryBuilder.KbSpecificObject(createJax(objectJax));
             }
             entries.add(viccEntryBuilder.build());
 
@@ -237,6 +248,60 @@ public final class ViccJsonReader {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static Jax createJax(@NotNull JsonObject objectJax) {
+        return ImmutableJax.builder()
+                .responseType(objectJax.getAsJsonPrimitive("responseType").getAsString())
+                .approvalStatus(objectJax.getAsJsonPrimitive("approvalStatus").getAsString())
+                .molecularProfile(createMolecularProfile(objectJax.getAsJsonObject("molecularProfile")))
+                .therapy(createJaxTherapy(objectJax.getAsJsonObject("therapy")))
+                .evidenceType(objectJax.getAsJsonPrimitive("evidenceType").getAsString())
+                .indications(createJaxIndications(objectJax.getAsJsonObject("indication")))
+                .efficacyEvidence(objectJax.getAsJsonPrimitive("efficacyEvidence").getAsString())
+                .references(objectJax.get("references").isJsonNull() ? null : createJaxReferences(objectJax.getAsJsonArray("references")))
+                .id(objectJax.getAsJsonPrimitive("id").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static JaxMolecularProfile createMolecularProfile(@NotNull JsonObject objectMolecularProfile) {
+        return ImmutableJaxMolecularProfile.builder()
+                .profileName(objectMolecularProfile.getAsJsonPrimitive("profileName").getAsString())
+                .id(objectMolecularProfile.getAsJsonPrimitive("id").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static JaxTherapy createJaxTherapy(@NotNull JsonObject objectTherapy) {
+        return ImmutableJaxTherapy.builder()
+                .id(objectTherapy.getAsJsonPrimitive("id").getAsString())
+                .therapyName(objectTherapy.getAsJsonPrimitive("therapyName").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static JaxIndications createJaxIndications(@NotNull JsonObject objectIndications) {
+        return ImmutableJaxIndications.builder()
+                .source(objectIndications.getAsJsonPrimitive("source").getAsString())
+                .id(objectIndications.getAsJsonPrimitive("id").getAsString())
+                .name(objectIndications.getAsJsonPrimitive("name").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static List<JaxReferences> createJaxReferences(@NotNull JsonArray objectReferences) {
+        List<JaxReferences> listReferences = Lists.newArrayList();
+        for (JsonElement references : objectReferences) {
+            listReferences.add(ImmutableJaxReferences.builder()
+                    .url(references.getAsJsonObject().getAsJsonPrimitive("url").getAsString())
+                    .id(references.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .pubMedId(references.getAsJsonObject().get("pubMedId").isJsonNull() ? null :  references.getAsJsonObject().getAsJsonPrimitive("pubMedId").getAsString())
+                    .title(references.getAsJsonObject().getAsJsonPrimitive("title").getAsString())
+                    .build());
+        }
+        return listReferences;
     }
 
     @NotNull
@@ -325,11 +390,15 @@ public final class ViccJsonReader {
         }
 
         return ImmutableVariantOncokb.builder()
-                .variantResidues(objectVariant.get("variantResidues").isJsonNull() ? null  : objectVariant.getAsJsonPrimitive("variantResidues").getAsString())
+                .variantResidues(objectVariant.get("variantResidues").isJsonNull()
+                        ? null
+                        : objectVariant.getAsJsonPrimitive("variantResidues").getAsString())
                 .proteinStart(objectVariant.getAsJsonPrimitive("proteinStart").getAsString())
                 .name(objectVariant.getAsJsonPrimitive("name").getAsString())
                 .proteinEnd(objectVariant.getAsJsonPrimitive("proteinEnd").getAsString())
-                .refResidues(objectVariant.get("refResidues").isJsonNull() ? null : objectVariant.getAsJsonPrimitive("refResidues").getAsString())
+                .refResidues(objectVariant.get("refResidues").isJsonNull()
+                        ? null
+                        : objectVariant.getAsJsonPrimitive("refResidues").getAsString())
                 .alteration(objectVariant.getAsJsonPrimitive("alteration").getAsString())
                 .consequenceOncoKb(createConsequenceOncokb(objectVariant.getAsJsonObject("consequence")))
                 .geneOncokb(createGeneOncoKb(objectVariant.getAsJsonObject("gene")))
@@ -367,11 +436,15 @@ public final class ViccJsonReader {
                 .oncogene(objectGene.getAsJsonPrimitive("oncogene").getAsString())
                 .name(objectGene.getAsJsonPrimitive("name").getAsString())
                 .hugoSymbol(objectGene.getAsJsonPrimitive("hugoSymbol").getAsString())
-                .curatedRefSeq(objectGene.get("curatedRefSeq").isJsonNull() ? null : objectGene.getAsJsonPrimitive("curatedRefSeq").getAsString())
+                .curatedRefSeq(objectGene.get("curatedRefSeq").isJsonNull()
+                        ? null
+                        : objectGene.getAsJsonPrimitive("curatedRefSeq").getAsString())
                 .entrezGeneId(objectGene.getAsJsonPrimitive("entrezGeneId").getAsString())
                 .geneAliases(Lists.newArrayList(jsonArrayToStringList(objectGene.getAsJsonArray("geneAliases"))))
                 .tsg(objectGene.getAsJsonPrimitive("tsg").getAsString())
-                .curatedIsoform(objectGene.get("curatedIsoform").isJsonNull() ? null : objectGene.getAsJsonPrimitive("curatedIsoform").getAsString())
+                .curatedIsoform(objectGene.get("curatedIsoform").isJsonNull()
+                        ? null
+                        : objectGene.getAsJsonPrimitive("curatedIsoform").getAsString())
                 .build();
     }
 
