@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.PERMITTED_REGION_OVERLAP;
+import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasNoOverlappingRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_MAX;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.intAsType;
@@ -341,53 +343,25 @@ public class PhaseRegionUtils
         }
     }
 
-    public static void checkMatchedRegions(List<GenePhaseRegion> transcriptRegions, int startIndex, List<GenePhaseRegion> matchedTransRegions)
+    public static boolean overlapsOtherRegions(final GenePhaseRegion region, final List<GenePhaseRegion> regions,
+            boolean phaseMatch, double permittedOverlapPercent)
     {
-        // if any transcript region has already been covered by a region in another transcript then reduce, split or remove it
-        if(matchedTransRegions.isEmpty())
-            return;
-
-        int index = startIndex;
-
-        while (index < transcriptRegions.size())
+        for(final GenePhaseRegion otherRegion : regions)
         {
-            GenePhaseRegion newRegion = transcriptRegions.get(index);
+            if(!haveOverlap(region, otherRegion, PERMITTED_REGION_OVERLAP))
+                continue;
 
-            for (final GenePhaseRegion region : matchedTransRegions)
-            {
-                if (!haveOverlap(region, newRegion, 0))
-                    continue;
+            if(phaseMatch && region.getCombinedPhase() != otherRegion.getCombinedPhase())
+                continue;
 
-                if (region.start() <= newRegion.start() && region.end() >= newRegion.end())
-                {
-                    // fully covered so remove
-                    newRegion.setEnd(newRegion.start());
-                    break;
-                }
-                else if (newRegion.start() <= region.start() && newRegion.end() >= region.end())
-                {
-                    // split and add a new region after the existing
-                    GenePhaseRegion extraRegion = GenePhaseRegion.from(newRegion);
-                    extraRegion.setStart(region.end() + 1);
-                    transcriptRegions.add(extraRegion);
+            long overlap = min(region.end(), otherRegion.end()) - max(region.start(), otherRegion.start());
+            double overlapPerc = overlap / (double)max(region.length(), otherRegion.length());
 
-                    newRegion.setEnd(region.start() - 1);
-                }
-                else if (newRegion.start() < region.start())
-                {
-                    newRegion.setEnd(region.start() - 1);
-                }
-                else if (newRegion.end() > region.end())
-                {
-                    newRegion.setStart(region.end() + 1);
-                }
-            }
-
-            if (newRegion.length() <= 1)
-                transcriptRegions.remove(index);
-            else
-                ++index;
+            if(overlapPerc >= permittedOverlapPercent)
+                return true;
         }
+
+        return false;
     }
 
     public static boolean validateSimpleVsCombinedPhaseRegions(

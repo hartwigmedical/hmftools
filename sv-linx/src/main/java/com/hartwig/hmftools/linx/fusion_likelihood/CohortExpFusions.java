@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.fusion_likelihood;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -25,8 +26,8 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.setBucketLengthData;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
-import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkMatchedRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.mergePhaseRegions;
+import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.overlapsOtherRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
 import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.DEFAULT_REGION_GRID_SIZE;
 
@@ -292,8 +293,6 @@ public class CohortExpFusions
 
             List<GeneRangeData> geneList = Lists.newArrayList();
             List<GeneRangeData> geneEndFirstList = Lists.newArrayList();
-            List<GenePhaseRegion> chrPhaseRegionsPosStrand = Lists.newArrayList();
-            List<GenePhaseRegion> chrPhaseRegionsNegStrand = Lists.newArrayList();
 
             for(final EnsemblGeneData geneData :entry.getValue())
             {
@@ -344,19 +343,7 @@ public class CohortExpFusions
                                 region.GeneId, region.start(), region.end(), region.getCombinedPhase());
                         continue;
                     }
-
-                    // add to the chromosome's summary phasing regions by strand, without concern for overlaps
-                    // across genes on the same strand
-                    if(geneData.Strand == 1)
-                    {
-                        addPhaseRegion(chrPhaseRegionsPosStrand, region);
-                    }
-                    else
-                    {
-                        addPhaseRegion(chrPhaseRegionsNegStrand, region);
-                    }
                 }
-
             }
         }
     }
@@ -368,6 +355,7 @@ public class CohortExpFusions
         // also take each transcript and look for potential same-gene fusions
         List<GenePhaseRegion> phaseRegions = Lists.newArrayList();
         List<GenePhaseRegion> intronicPhaseRegions = Lists.newArrayList();
+        List<GenePhaseRegion> allTranscriptRegions = Lists.newArrayList();
 
         for(TranscriptData transcript : transDataList)
         {
@@ -378,13 +366,23 @@ public class CohortExpFusions
 
             transcriptRegions.forEach(x -> x.setTransId(transId));
 
-            if(transcript.IsCanonical)
-                geneRangeData.setTranscriptPhaseRegions(transcriptRegions);
+            // add the new transcript's set of regions only if they aren't a very close overlap with any existing regions of the same phase
+            for(GenePhaseRegion transRegion : transcriptRegions)
+            {
+                if(!overlapsOtherRegions(transRegion, allTranscriptRegions, true, 0.75))
+                    allTranscriptRegions.add(transRegion);
+            }
+
+            // only looking at canonical simplies the overlap logic but misses about 1/2 the actual same-gene fusions seen in prod
+            // if(transcript.IsCanonical)
+            //    geneRangeData.setTranscriptPhaseRegions(transcriptRegions);
 
             // consolidate regions where phases and pre-gene status overlap
             transcriptRegions.stream().forEach(x -> checkAddCombinedGenePhaseRegion(x, phaseRegions));
             // transcriptRegions.stream().forEach(x -> combineGeneIntronicPhaseRegion(x, intronicPhaseRegions));
         }
+
+        geneRangeData.setTranscriptPhaseRegions(allTranscriptRegions);
 
         mergePhaseRegions(phaseRegions);
         geneRangeData.setPhaseRegions(phaseRegions);
@@ -508,10 +506,18 @@ public class CohortExpFusions
     public void generateSameGeneCounts(GeneRangeData geneData)
     {
         // look for skipped or repeated exons within the same transcript and within phased regions
+        // use the region allocator to avoid double-counting the same 2 regions across different transcripts
         final List<GenePhaseRegion> transcriptRegions = geneData.getTranscriptPhaseRegions();
 
         if(transcriptRegions.isEmpty())
             return;
+
+        // allow for
+        long geneLength = geneData.GeneData.GeneEnd - geneData.GeneData.GeneStart;
+        double rawBlockSize = pow(10, round(log10(geneLength))) * 0.01;
+        int blockSize = max(DEFAULT_REGION_GRID_SIZE, (int)rawBlockSize);
+
+        RegionAllocator regionAllocator = new RegionAllocator(blockSize);
 
         for (int i = 0; i < transcriptRegions.size(); ++i)
         {
@@ -530,73 +536,8 @@ public class CohortExpFusions
                 if (!region2.hasPhasedType())
                     continue;
 
-                testProximatePhaseRegions(geneData, geneData, region1, region2);
+                testProximatePhaseRegions(geneData, geneData, region1, region2, regionAllocator);
             }
-        }
-    }
-
-
-    public void generateSameGeneCountsMultiTranscript(GeneRangeData geneData)
-    {
-        // look for skipped or repeated exons within the same transcript and within phased regions
-        // RegionAllocator regionAllocator = new RegionAllocator(DEFAULT_REGION_GRID_SIZE);
-        List<GenePhaseRegion> matchedTransRegions = Lists.newArrayList();
-
-        final List<GenePhaseRegion> transcriptRegions = geneData.getTranscriptPhaseRegions();
-
-        if(transcriptRegions.isEmpty())
-            return;
-
-        int currentTranscriptId = transcriptRegions.get(0).transId();
-
-        int index = 0;
-
-        while(index < transcriptRegions.size())
-        {
-            // process each transcript's phase regions in turn
-            for (int i = index; i < transcriptRegions.size(); ++i)
-            {
-                GenePhaseRegion region1 = transcriptRegions.get(i);
-
-                if(region1.transId() != currentTranscriptId)
-                {
-                    index = i;
-                    break;
-                }
-
-                if(!region1.hasPhasedType())
-                    continue;
-
-                for (int j = i+1; j < transcriptRegions.size(); ++j)
-                {
-                    GenePhaseRegion region2 = transcriptRegions.get(j);
-
-                    if(region1.transId() != region2.transId())
-                        break;
-
-                    if(!region2.hasPhasedType())
-                        continue;
-
-                    if(testProximatePhaseRegions(geneData, geneData, region1, region2))
-                    {
-                        if(!matchedTransRegions.contains(region1))
-                            matchedTransRegions.add(region1);
-
-                        if(!matchedTransRegions.contains(region2))
-                            matchedTransRegions.add(region2);
-                    }
-                }
-            }
-
-            if(index >= transcriptRegions.size())
-                break;
-
-            checkMatchedRegions(transcriptRegions, index, matchedTransRegions);
-
-            if(index >= transcriptRegions.size())
-                break;
-
-            currentTranscriptId = transcriptRegions.get(index).transId();
         }
     }
 
@@ -752,8 +693,6 @@ public class CohortExpFusions
             if(strandMatch != 0 && gene1.GeneData.Strand != strandMatch)
                 continue;
 
-            // and now the local ones outside the DEL and DUP proximity lengths, ignoring any strand checking
-            // this is considering fusions between DUPs, DUPs or INVs
             for(int j = i + 1; j < geneList.size(); ++j)
             {
                 GeneRangeData gene2 = geneList.get(j);
@@ -802,9 +741,13 @@ public class CohortExpFusions
                     {
                         type = NON_PROX_TYPE_SHORT_INV;
                     }
-                    else
+                    else if(maxDistance <= proximateLimit)
                     {
                         type = NON_PROX_TYPE_MEDIUM_INV;
+                    }
+                    else
+                    {
+                        type = NON_PROX_TYPE_LONG_SAME_ARM;
                     }
                 }
 
@@ -946,9 +889,15 @@ public class CohortExpFusions
         }
     }
 
-    private static int PERMITTED_REGION_OVERLAP = 5;
+    public static int PERMITTED_REGION_OVERLAP = 5;
 
     public boolean testProximatePhaseRegions(GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2)
+    {
+        return testProximatePhaseRegions(gene1, gene2, region1, region2, null);
+    }
+
+    public boolean testProximatePhaseRegions(GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2,
+            RegionAllocator regionAllocator)
     {
         // ignore overlapping regions for now since it's not clear whether a DUP or DEL would be required
         if (haveOverlap(region1, region2, -PERMITTED_REGION_OVERLAP)) // allow bases with an exact base overlap through
@@ -990,7 +939,7 @@ public class CohortExpFusions
                 continue;
 
             Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(
-                    mProximateBucketLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
+                    mProximateBucketLengths, regionAllocator, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
 
             if (!bucketOverlapCounts.isEmpty())
             {
