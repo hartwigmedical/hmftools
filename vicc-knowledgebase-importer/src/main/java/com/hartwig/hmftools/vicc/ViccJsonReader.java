@@ -122,6 +122,12 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_GENE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
 
+    private static final List<Integer> EXPECTED_JAX_ELEMENT_SIZES = Lists.newArrayList(9);
+    private static final List<Integer> EXPECTED_JAX_THERAPY_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_JAX_INDICATIONS_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_JAX_REFERENCES_ELEMENT_SIZES = Lists.newArrayList(4);
+    private static final List<Integer> EXPECTED_JAX_MOLECULAR_PROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
+
     private ViccJsonReader() {
     }
 
@@ -224,6 +230,14 @@ public final class ViccJsonReader {
             }
 
             JsonObject objectJax = viccEntryObject.getAsJsonObject("jax");
+            if (viccEntryObject.has("jax")) {
+                Set<String> keysJax = objectJax.keySet();
+                if (!EXPECTED_JAX_ELEMENT_SIZES.contains(keysJax.size())) {
+                    LOGGER.warn(
+                            "Found " + keysJax.size() + " elements in a vicc entry rather than the expected " + EXPECTED_JAX_ELEMENT_SIZES);
+                    LOGGER.warn(keysJax);
+                }
+            }
 
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
@@ -267,6 +281,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static JaxMolecularProfile createMolecularProfile(@NotNull JsonObject objectMolecularProfile) {
+        Set<String> keysMolecularProfile = objectMolecularProfile.keySet();
+        if (!EXPECTED_JAX_MOLECULAR_PROFILE_ELEMENT_SIZES.contains(keysMolecularProfile.size())) {
+            LOGGER.warn("Found " + keysMolecularProfile.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_JAX_MOLECULAR_PROFILE_ELEMENT_SIZES);
+            LOGGER.warn(keysMolecularProfile);
+        }
         return ImmutableJaxMolecularProfile.builder()
                 .profileName(objectMolecularProfile.getAsJsonPrimitive("profileName").getAsString())
                 .id(objectMolecularProfile.getAsJsonPrimitive("id").getAsString())
@@ -275,6 +295,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static JaxTherapy createJaxTherapy(@NotNull JsonObject objectTherapy) {
+        Set<String> keysTherapy = objectTherapy.keySet();
+        if (!EXPECTED_JAX_THERAPY_ELEMENT_SIZES.contains(keysTherapy.size())) {
+            LOGGER.warn("Found " + keysTherapy.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_JAX_THERAPY_ELEMENT_SIZES);
+            LOGGER.warn(keysTherapy);
+        }
         return ImmutableJaxTherapy.builder()
                 .id(objectTherapy.getAsJsonPrimitive("id").getAsString())
                 .therapyName(objectTherapy.getAsJsonPrimitive("therapyName").getAsString())
@@ -283,6 +309,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static JaxIndications createJaxIndications(@NotNull JsonObject objectIndications) {
+        Set<String> keysIndications = objectIndications.keySet();
+        if (!EXPECTED_JAX_INDICATIONS_SIZES.contains(keysIndications.size())) {
+            LOGGER.warn("Found " + keysIndications.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_JAX_INDICATIONS_SIZES);
+            LOGGER.warn(keysIndications);
+        }
         return ImmutableJaxIndications.builder()
                 .source(objectIndications.getAsJsonPrimitive("source").getAsString())
                 .id(objectIndications.getAsJsonPrimitive("id").getAsString())
@@ -294,10 +326,18 @@ public final class ViccJsonReader {
     private static List<JaxReferences> createJaxReferences(@NotNull JsonArray objectReferences) {
         List<JaxReferences> listReferences = Lists.newArrayList();
         for (JsonElement references : objectReferences) {
+             Set<String> keysReferences = references.getAsJsonObject().keySet();
+                    if (!EXPECTED_JAX_REFERENCES_ELEMENT_SIZES.contains(keysReferences.size())) {
+                        LOGGER.warn("Found " + keysReferences.size() + " elements in a vicc entry rather than the expected "
+                                + EXPECTED_JAX_REFERENCES_ELEMENT_SIZES);
+                        LOGGER.warn(keysReferences);
+                    }
             listReferences.add(ImmutableJaxReferences.builder()
                     .url(references.getAsJsonObject().getAsJsonPrimitive("url").getAsString())
                     .id(references.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .pubMedId(references.getAsJsonObject().get("pubMedId").isJsonNull() ? null :  references.getAsJsonObject().getAsJsonPrimitive("pubMedId").getAsString())
+                    .pubMedId(references.getAsJsonObject().get("pubMedId").isJsonNull()
+                            ? null
+                            : references.getAsJsonObject().getAsJsonPrimitive("pubMedId").getAsString())
                     .title(references.getAsJsonObject().getAsJsonPrimitive("title").getAsString())
                     .build());
         }
