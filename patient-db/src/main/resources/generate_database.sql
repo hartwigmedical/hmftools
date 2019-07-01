@@ -596,18 +596,6 @@ CREATE TABLE svBreakend
     INDEX(transcriptId)
 );
 
-DROP TABLE IF EXISTS structuralVariantDisruption;
-CREATE TABLE structuralVariantDisruption
-(   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    breakendId INT UNSIGNED NOT NULL,
-    isReported BOOLEAN NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(breakendId),
-    INDEX(sampleId)
-);
-
 DROP TABLE IF EXISTS svFusion;
 CREATE TABLE svFusion
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
