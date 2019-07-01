@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -114,10 +115,14 @@ public class SvVisualiser implements AutoCloseable
             return null;
         }
 
+        final Predicate<Link> linePredicate = x -> !x.isLineElement() || config.includeLineElements();
+        final Predicate<Link> chromosomePredicate = x -> x.startChromosome().equals(chromosome) || x.endChromosome().equals(chromosome);
+        final Predicate<Link> combinedPredicate = chromosomePredicate.and(linePredicate);
+
         final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
         final Set<Integer> clusterIds = config.links()
                 .stream()
-                .filter(x -> x.startChromosome().equals(chromosome) || x.endChromosome().equals(chromosome))
+                .filter(combinedPredicate)
                 .map(Link::clusterId)
                 .collect(toSet());
 

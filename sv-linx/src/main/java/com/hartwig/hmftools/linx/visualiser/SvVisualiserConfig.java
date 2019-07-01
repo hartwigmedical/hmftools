@@ -49,6 +49,7 @@ public interface SvVisualiserConfig
     String CNA = "cna";
     String EXON = "exon";
     String SCALE_EXON = "scale_exons";
+    String INCLUDE_LINE_ELEMENTS = "include_line_elements";
 
     @NotNull
     String sample();
@@ -83,6 +84,8 @@ public interface SvVisualiserConfig
 
     boolean scaleExons();
 
+    boolean includeLineElements();
+
     @NotNull
     List<Integer> clusters();
 
@@ -108,6 +111,7 @@ public interface SvVisualiserConfig
         options.addOption(CNA, true, "Path to copy number alterations");
         options.addOption(EXON, true, "Path to exons");
         options.addOption(SCALE_EXON, false, "Scale exon positions instead of interpolating them");
+        options.addOption(INCLUDE_LINE_ELEMENTS, false, "Include line elements in chromosome plots");
 
         return options;
     }
@@ -177,6 +181,7 @@ public interface SvVisualiserConfig
                 .clusters(clusters(cmd))
                 .chromosomes(chromosomes(cmd))
                 .scaleExons(cmd.hasOption(SCALE_EXON))
+                .includeLineElements(cmd.hasOption(INCLUDE_LINE_ELEMENTS))
                 .build();
     }
 
