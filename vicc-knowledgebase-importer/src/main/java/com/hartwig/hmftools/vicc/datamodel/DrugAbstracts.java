@@ -1,23 +1,17 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
-import java.util.List;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Pmkb implements KbSpecificObject {
+public abstract class DrugAbstracts {
 
     @NotNull
-    public abstract List<TumorPmkb> tumor();
+    public abstract String text();
 
     @NotNull
-    public abstract List<TissuePmkb> tissue();
-
-    @NotNull
-    public abstract List<VariantPmkb> variant();
-
+    public abstract String link();
 
 }
