@@ -62,7 +62,7 @@ public class VisualiserWriter
         mSampleId = "";
         mBatchOutput = isBatchOutput;
 
-        if(mBatchOutput)
+        if(mBatchOutput && mEnabled)
         {
             initialiseBatchOutputFiles();
         }
