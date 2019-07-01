@@ -22,9 +22,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportCluste
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.haveLinkedAssemblies;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_LINE;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_NONE;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
@@ -40,6 +37,9 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LINK_COUNT;
@@ -50,7 +50,6 @@ import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHE
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
@@ -208,7 +207,7 @@ public class ClusterAnalyser {
         // final clean-up and analysis
         for(SvCluster cluster : mClusters)
         {
-            if(!cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_NONE)
+            if(!cluster.isResolved() && cluster.getResolvedType() != NONE)
             {
                 // any cluster with a long DEL or DUP not merged can now be marked as resolved
                 if(cluster.getSvCount() == 1 && isSimpleType(cluster.getResolvedType()))
@@ -266,7 +265,7 @@ public class ClusterAnalyser {
         {
             // isSpecificCluster(cluster);
 
-            if (cluster.isResolved() && cluster.getResolvedType() != RESOLVED_TYPE_LINE)
+            if (cluster.isResolved() && cluster.getResolvedType() != LINE)
                 continue;
 
             // these are either already chained or no need to chain
@@ -294,7 +293,7 @@ public class ClusterAnalyser {
     private void dissolveSimpleGroups()
     {
         List<SvCluster> simpleGroups = mClusters.stream()
-                .filter(x -> x.getResolvedType() == RESOLVED_TYPE_SIMPLE_GRP)
+                .filter(x -> x.getResolvedType() == SIMPLE_GRP)
                 .collect(Collectors.toList());
 
         for(SvCluster cluster : simpleGroups)

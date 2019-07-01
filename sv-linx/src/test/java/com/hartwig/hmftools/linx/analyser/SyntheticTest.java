@@ -5,20 +5,18 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_COMPLEX;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_DEL;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_DUP;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_FB_INV_PAIR;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_INF;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_INV;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_PAIR_OTHER;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_DUP_DEL;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_DUP_PAIR;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_INV;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_RECIPROCAL_TRANS;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_SGL;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_UNBALANCED_TRANS;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
+import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
+import static com.hartwig.hmftools.linx.types.ResolvedType.INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUPS;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUP_DEL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
@@ -52,7 +50,7 @@ public class SyntheticTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_PAIR_OTHER);
+        assertTrue(cluster.getResolvedType() == PAIR_OTHER);
 
         // 1 pair of overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 100, 300, 1);
@@ -64,7 +62,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -82,7 +80,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -99,7 +97,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
 
@@ -117,7 +115,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -131,7 +129,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
 
@@ -149,7 +147,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(false) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(true) - var2.position(false));
 
@@ -174,7 +172,7 @@ public class SyntheticTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
 
@@ -188,7 +186,7 @@ public class SyntheticTest
         cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
     }
@@ -211,7 +209,7 @@ public class SyntheticTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(false));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(true));
 
@@ -228,7 +226,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -245,7 +243,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -259,7 +257,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
 
@@ -273,7 +271,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
 
@@ -287,7 +285,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(false));
         assertEquals(cluster.getSyntheticTILength(), var2.position(true) - var1.position(true));
 
@@ -301,7 +299,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
 
@@ -315,7 +313,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(false));
         assertEquals(cluster.getSyntheticTILength(), var2.position(true) - var1.position(true));
     }
@@ -339,7 +337,7 @@ public class SyntheticTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DEL);
+        assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(cluster.getSyntheticLength(), var3.position(true) - var1.position(true));
         assertEquals(400, cluster.getSyntheticTILength()); // takes the longest
 
@@ -359,7 +357,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_DUP);
+        assertTrue(cluster.getResolvedType() == DUP);
         assertTrue(cluster.isSyntheticType());
         assertEquals(cluster.getSyntheticLength(), var1.position(true) - var4.position(true));
         assertEquals(600, cluster.getSyntheticTILength()); // takes average
@@ -385,7 +383,7 @@ public class SyntheticTest
         assertEquals(2, cluster.getChains().size());
 
         assertTrue(!cluster.isResolved());
-        assertEquals(RESOLVED_TYPE_RECIPROCAL_DUP_PAIR, cluster.getResolvedType());
+        assertEquals(RECIP_DUPS, cluster.getResolvedType());
         assertTrue(cluster.isSyntheticType());
         assertEquals(0, cluster.getSyntheticLength());
         assertEquals(500, cluster.getSyntheticTILength());
@@ -407,7 +405,7 @@ public class SyntheticTest
         assertEquals(1, cluster.getChains().size());
 
         assertTrue(!cluster.isResolved());
-        assertEquals(RESOLVED_TYPE_FB_INV_PAIR, cluster.getResolvedType());
+        assertEquals(FB_INV_PAIR, cluster.getResolvedType());
         assertTrue(!cluster.isSyntheticType());
         assertEquals(var2.position(false) - var1.position(true), cluster.getSyntheticLength());
         assertEquals(var2.position(true) - var1.position(false), cluster.getSyntheticTILength());
@@ -428,7 +426,7 @@ public class SyntheticTest
         assertEquals(1, cluster.getChains().size());
 
         assertTrue(!cluster.isResolved());
-        assertEquals(RESOLVED_TYPE_RECIPROCAL_DUP_PAIR, cluster.getResolvedType());
+        assertEquals(RECIP_DUPS, cluster.getResolvedType());
         assertTrue(!cluster.isSyntheticType());
         assertEquals(var1.position(false) - var2.position(true), cluster.getSyntheticLength());
         assertEquals(var2.position(false) - var1.position(true), cluster.getSyntheticTILength());
@@ -454,7 +452,7 @@ public class SyntheticTest
         assertEquals(1, cluster.getChains().size());
 
         assertTrue(!cluster.isResolved());
-        assertEquals(RESOLVED_TYPE_RECIPROCAL_DUP_PAIR, cluster.getResolvedType());
+        assertEquals(RECIP_DUPS, cluster.getResolvedType());
         assertTrue(cluster.isSyntheticType());
         assertEquals(var2.position(true) - var3.position(true), cluster.getSyntheticLength());
         assertEquals(var4.position(true) - var1.position(true), cluster.getSyntheticTILength());
@@ -476,7 +474,7 @@ public class SyntheticTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_INV);
+        assertTrue(cluster.getResolvedType() == RECIP_INV);
         assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
 
@@ -496,7 +494,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_DUP_DEL);
+        assertTrue(cluster.getResolvedType() == RECIP_DUP_DEL);
 
         var2 = createBnd(tester.nextVarId(), "1", 2000, -1, "2", 1000, -1);
         var3 = createBnd(tester.nextVarId(), "1", 21000, 1, "2", 5000, -1);
@@ -514,7 +512,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_INV);
+        assertTrue(cluster.getResolvedType() == RECIP_INV);
         assertEquals(cluster.getSyntheticLength(), var4.position(true) - var1.position(true));
         assertEquals(cluster.getSyntheticTILength(), var3.position(true) - var2.position(true));
 
@@ -535,7 +533,7 @@ public class SyntheticTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS);
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
         assertEquals(cluster.getSyntheticLength(), 0);
         assertEquals(cluster.getSyntheticTILength(), 0);
 
@@ -549,7 +547,7 @@ public class SyntheticTest
         cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS);
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
         assertEquals(cluster.getSyntheticLength(), 0);
         assertEquals(cluster.getSyntheticTILength(), 0);
 
@@ -570,7 +568,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS);
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
         assertEquals(200, cluster.getSyntheticTILength()); // takes average
 
 
@@ -594,7 +592,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS);
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
         assertEquals(600, cluster.getSyntheticTILength()); // takes average
     }
 
@@ -615,7 +613,7 @@ public class SyntheticTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertFalse(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_UNBALANCED_TRANS);
+        assertTrue(cluster.getResolvedType() == UNBAL_TRANS);
         assertEquals(0, cluster.getSyntheticLength());
         assertEquals(200, cluster.getSyntheticTILength());
 
@@ -633,7 +631,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertFalse(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_INV);
+        assertTrue(cluster.getResolvedType() == INV);
         assertEquals(0, cluster.getSyntheticLength());
         assertEquals(500, cluster.getSyntheticTILength());
 
@@ -651,7 +649,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertFalse(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_SGL);
+        assertTrue(cluster.getResolvedType() == SGL);
         assertEquals(0, cluster.getSyntheticLength());
         assertEquals(500, cluster.getSyntheticTILength());
     }
@@ -673,7 +671,7 @@ public class SyntheticTest
         assertEquals(2, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.getClusters().get(0);
 
-        // assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_NONE);
+        // assertTrue(cluster.getResolvedType() == NONE);
 
         // 2 INVs but with a complex breakend in the middle of the TI
         var1 = createInv(tester.nextVarId(), "1", 100, 50000, 1);
@@ -691,7 +689,7 @@ public class SyntheticTest
         assertEquals(2, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
-        assertTrue(cluster.getResolvedType() == RESOLVED_TYPE_COMPLEX);
+        assertTrue(cluster.getResolvedType() == COMPLEX);
     }
 
     private void addAndCluster(SvTestHelper tester, SvVarData var1, SvVarData var2)

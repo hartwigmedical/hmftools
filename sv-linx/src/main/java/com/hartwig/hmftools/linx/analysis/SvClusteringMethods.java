@@ -12,25 +12,22 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.haveLinkedAssemblies;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_DEL;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_DUP;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_DUP_BE;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_INS;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_NONE;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_PAIR_OTHER;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_SGL_PAIR;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
 import static com.hartwig.hmftools.linx.types.SvLOH.LOH_NO_SV;
-import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
@@ -43,6 +40,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -110,17 +108,17 @@ public class SvClusteringMethods {
             SvCluster newCluster = new SvCluster(getNextClusterId());
             newCluster.addVariant(var);
 
-            String exclusionReason = "";
+            ResolvedType exclusionReason = NONE;
             if(var.type() != SGL)
             {
-                exclusionReason = RESOLVED_TYPE_DUP_BE;
+                exclusionReason = DUP_BE;
             }
             else
             {
                 exclusionReason = getSingleBreakendUnclusteredType(var);
 
-                if (exclusionReason == RESOLVED_TYPE_NONE)
-                    exclusionReason = RESOLVED_TYPE_DUP_BE;
+                if (exclusionReason == NONE)
+                    exclusionReason = DUP_BE;
             }
 
             newCluster.setResolved(true, exclusionReason);
@@ -353,15 +351,15 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
     }
 
-    private String getSingleBreakendUnclusteredType(final SvVarData var)
+    private ResolvedType getSingleBreakendUnclusteredType(final SvVarData var)
     {
         if(var.type() != SGL|| var.isNoneSegment())
-            return RESOLVED_TYPE_NONE;
+            return NONE;
 
         if(var.isEquivBreakend(true))
-            return RESOLVED_TYPE_DUP_BE;
+            return DUP_BE;
 
-        return RESOLVED_TYPE_NONE;
+        return NONE;
     }
 
     public void clearLOHBreakendData(final String sampleId)
@@ -674,9 +672,9 @@ public class SvClusteringMethods {
                 SvVarData otherVar = otherBreakend.getSV();
                 final SvCluster otherCluster = otherVar.getCluster();
 
-                final String resolvedType = canResolveWithSoloSingle(otherCluster, cluster);
+                ResolvedType resolvedType = canResolveWithSoloSingle(otherCluster, cluster);
 
-                if(resolvedType != RESOLVED_TYPE_NONE)
+                if(resolvedType != NONE)
                 {
                     otherCluster.mergeOtherCluster(cluster);
                     otherCluster.addClusterReason(CLUSTER_REASON_SOLO_SINGLE);
@@ -693,7 +691,7 @@ public class SvClusteringMethods {
         return foundMerges;
     }
 
-    private final String canResolveWithSoloSingle(SvCluster otherCluster, SvCluster soloSingleCluster)
+    private final ResolvedType canResolveWithSoloSingle(SvCluster otherCluster, SvCluster soloSingleCluster)
     {
         // 3 cases:
         // - 2 x SGLs could form a simple DEL or DUP
@@ -710,12 +708,12 @@ public class SvClusteringMethods {
             {
                 // either both must be NONEs or one be a SGL but without centromeric or telomeric support
                 if(otherCluster.isResolved())
-                    return RESOLVED_TYPE_NONE;
+                    return NONE;
 
-                String resolvedType = markSinglePairResolvedType(otherVar, soloSingle);
+                ResolvedType resolvedType = markSinglePairResolvedType(otherVar, soloSingle);
 
-                if(resolvedType == RESOLVED_TYPE_NONE)
-                    return RESOLVED_TYPE_NONE;
+                if(resolvedType == NONE)
+                    return NONE;
 
                 LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({})",
                         soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), resolvedType);
@@ -737,13 +735,13 @@ public class SvClusteringMethods {
                 }
                 else
                 {
-                    return RESOLVED_TYPE_NONE;
+                    return NONE;
                 }
 
                 double cnInconsistency = otherVar.ploidy() - otherVar.copyNumberChange(inconsistentOnStart);
 
                 if(round(cnInconsistency) != round(soloSingle.copyNumberChange(true)))
-                    return RESOLVED_TYPE_NONE;
+                    return NONE;
 
                 LOGGER.debug(String.format("cluster(%s) SV(%s) and cluster(%s) SV(%s) potentially resolve CN inconsistency(%.2f vs %.2f)",
                         soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(),
@@ -751,61 +749,61 @@ public class SvClusteringMethods {
 
                 addClusterReasons(soloSingle, otherVar, CLUSTER_REASON_SOLO_SINGLE);
 
-                return RESOLVED_TYPE_PAIR_OTHER;
+                return PAIR_OTHER;
             }
         }
         else
         {
-            return RESOLVED_TYPE_NONE;
+            return NONE;
         }
     }
 
-    public static String markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
+    public static ResolvedType markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
     {
         if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
-            return RESOLVED_TYPE_NONE;
+            return NONE;
 
         final SvBreakend breakend1 = sgl1.getBreakend(true);
         final SvBreakend breakend2 = sgl2.getBreakend(true);
 
         // to form a simple del or dup, they need to have different orientations
         if(breakend1.orientation() == breakend2.orientation())
-            return RESOLVED_TYPE_NONE;
+            return NONE;
 
         // check copy number consistency
         double cn1 = sgl2.copyNumberChange(true);
         double cn2 = sgl1.copyNumberChange(true);
 
         if(!copyNumbersEqual(cn1, cn2))
-            return RESOLVED_TYPE_NONE;
+            return NONE;
 
         boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
                 || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
 
         long length = abs(breakend1.position() - breakend2.position());
 
-        String resolvedType;
+        ResolvedType resolvedType = NONE;
 
         if(breakendsFace)
         {
             // a DUP if breakends are further than the anchor distance away, else an INS
             int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
             if(length >= minTiLength)
-                resolvedType = RESOLVED_TYPE_DUP;
+                resolvedType = SGL_PAIR_DUP;
             else
-                resolvedType = RESOLVED_TYPE_INS;
+                resolvedType = SGL_PAIR_INS;
         }
         else
         {
             // a DEL if the breakends are further than the min DEL length, else an INS
             if(length >= MIN_DEL_LENGTH)
-                resolvedType = RESOLVED_TYPE_DEL;
+                resolvedType = SGL_PAIR_DEL;
             else
-                resolvedType = RESOLVED_TYPE_INS;
+                resolvedType = SGL_PAIR_INS;
         }
 
         // mark these differently from those formed from normal SVs
-        return RESOLVED_TYPE_SGL_PAIR + "_" + resolvedType;
+        return resolvedType;
     }
 
     private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
@@ -948,7 +946,7 @@ public class SvClusteringMethods {
                     continue;
 
                 // first check for SGLs already marked for removal
-                if(var.type() == SGL && getSingleBreakendUnclusteredType(breakendList.get(i).getSV()) != RESOLVED_TYPE_NONE)
+                if(var.type() == SGL && getSingleBreakendUnclusteredType(breakendList.get(i).getSV()) != NONE)
                 {
                     if(!mExcludedSVs.contains(var))
                     {
@@ -1378,7 +1376,7 @@ public class SvClusteringMethods {
                 continue;
 
             if (otherCluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV
-            || otherCluster.getResolvedType() == RESOLVED_TYPE_LINE
+            || otherCluster.getResolvedType() == LINE
             || otherCluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
             || isFilteredResolvedType(otherCluster.getResolvedType()))
             {

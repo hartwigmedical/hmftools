@@ -69,6 +69,7 @@ import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvChain;
@@ -672,7 +673,7 @@ public class SvSampleAnalyser {
 
                 // isSpecificCluster(cluster);
 
-                String resolvedType = cluster.getResolvedType();
+                ResolvedType resolvedType = cluster.getResolvedType();
 
                 int inferredCount = cluster.getInferredTypeCount();
                 int sglCount = cluster.getTypeCount(SGL);
@@ -742,7 +743,7 @@ public class SvSampleAnalyser {
                             .resolvedType(superType)
                             .synthetic(cluster.isSyntheticType())
                             .subClonal(cluster.isSubclonal())
-                            .subType(cluster.getResolvedType())
+                            .subType(cluster.getResolvedType().toString())
                             .clusterCount(clusterSvCount)
                             .clusterDesc(cluster.getDesc())
                             .build());

@@ -3,14 +3,10 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
-import static java.lang.Math.abs;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_LINE;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.RESOLVED_TYPE_NONE;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.hasLowCNChangeSupport;
@@ -18,6 +14,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendM
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.SvChain.CM_CHAIN_MAX;
 import static com.hartwig.hmftools.linx.types.SvChain.CM_DB;
 import static com.hartwig.hmftools.linx.types.SvChain.CM_SHORT_DB;
@@ -51,7 +49,7 @@ public class SvCluster
     private int[] mTypeCounts;
 
     private boolean mIsResolved;
-    private String mResolvedType;
+    private ResolvedType mResolvedType;
 
     private List<String> mAnnotationList;
 
@@ -113,7 +111,7 @@ public class SvCluster
         mConsistencyCount = 0;
         mIsConsistent = false;
         mIsResolved = false;
-        mResolvedType = RESOLVED_TYPE_NONE;
+        mResolvedType = NONE;
         mSyntheticTILength = 0;
         mSyntheticLength = 0;
         mRequiresRecalc = true;
@@ -182,7 +180,7 @@ public class SvCluster
         if(!mHasLinkingLineElements)
         {
             mIsResolved = false;
-            mResolvedType = RESOLVED_TYPE_NONE;
+            mResolvedType = NONE;
         }
 
         mSyntheticTILength = 0;
@@ -430,7 +428,7 @@ public class SvCluster
         return mConsistencyCount;
     }
 
-    public void setResolved(boolean toggle, final String type)
+    public void setResolved(boolean toggle, final ResolvedType type)
     {
         mIsResolved = toggle;
         mResolvedType = type;
@@ -440,7 +438,7 @@ public class SvCluster
     }
 
     public boolean isResolved() { return mIsResolved; }
-    public final String getResolvedType() { return mResolvedType; }
+    public final ResolvedType getResolvedType() { return mResolvedType; }
 
     public void setSyntheticData(long length, long tiLength)
     {
@@ -582,7 +580,7 @@ public class SvCluster
     public void markAsLine()
     {
         mHasLinkingLineElements = true;
-        setResolved(true, RESOLVED_TYPE_LINE);
+        setResolved(true, LINE);
     }
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
