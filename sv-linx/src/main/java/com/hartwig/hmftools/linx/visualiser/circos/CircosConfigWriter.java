@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.StringJoiner;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -100,7 +102,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_OUTER_RADIUS", String.valueOf(CNA_OUTER_RADIUS))
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(cnaMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_GAIN_SPACING", String.valueOf(1d / cnaMaxTracks))
+                        .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))
@@ -117,4 +119,25 @@ public class CircosConfigWriter
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         return IOUtils.toString(reader);
     }
+
+    @NotNull
+    private static String cnaAxisPositions(int maxTracks) {
+        StringJoiner builder = new StringJoiner(",");
+
+        final double rel = 1d / maxTracks;
+        final Function<Integer, String> relString = i -> String.valueOf(Math.round(i * rel * 10000)/10000d) + "r";
+
+        for (int i = 1; i <= Math.min(9, maxTracks); i++) {
+            builder.add(relString.apply(i));
+        }
+
+        for (int i = 10; i <= maxTracks; i++) {
+            if (i % 10 == 0 ){
+                builder.add(relString.apply(i));
+            }
+        }
+
+        return builder.toString();
+    }
+
 }

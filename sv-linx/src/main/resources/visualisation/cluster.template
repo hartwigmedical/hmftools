@@ -188,7 +188,7 @@ chromosomes_display_default = yes
 			<axis>
 				color     = lgreen
 				thickness = 1
-				spacing   = SUBSTITUTE_CNA_GAIN_SPACINGr
+				position  = SUBSTITUTE_CNA_GAIN_AXIS_POSITION
 			</axis>
 		</axes>
 

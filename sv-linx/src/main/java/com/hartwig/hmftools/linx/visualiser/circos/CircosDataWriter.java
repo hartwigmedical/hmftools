@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -178,31 +177,6 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> oldGeneName(@NotNull final List<Exon> exons)
-    {
-        final List<String> result = Lists.newArrayList();
-        final Set<String> genes = exons.stream().map(Exon::gene).collect(Collectors.toSet());
-        for (final String gene : genes)
-        {
-            final List<Exon> geneExons = exons.stream().filter(x -> x.gene().equals(gene)).collect(toList());
-            long min = geneExons.stream().mapToLong(GenomeRegion::start).min().orElse(0);
-
-            final String geneName = geneExons.get(0).gene();
-            final double labelSize = geneNameLabelSize(geneName);
-
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(geneExons.get(0).chromosome()))
-                    .add(String.valueOf(min))
-                    .add(String.valueOf(min))
-                    .add(geneName)
-                    .add("label_size=" + labelSize + "p,rpadding=0r")
-                    .toString();
-            result.add(exonString);
-        }
-
-        return result;
-    }
-
-    @NotNull
     private List<String> geneName(@NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
@@ -232,12 +206,13 @@ public class CircosDataWriter
     private List<String> exons(@NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        for (final GenomeRegion region : exons)
+        for (final Exon exon : exons)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(region.chromosome()))
-                    .add(String.valueOf(region.start()))
-                    .add(String.valueOf(region.end()))
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
+                    .add(String.valueOf(exon.start()))
+                    .add(String.valueOf(exon.end()))
                     .add(String.valueOf(1))
+                    .add("gene=" + exon.gene() + ",rank=" + exon.rank())
                     .toString();
             result.add(exonString);
         }
