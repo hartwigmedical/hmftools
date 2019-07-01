@@ -105,6 +105,15 @@ public final class ViccJsonReader {
 
     private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
 
+    private static final List<Integer> EXPECTED_CLINICAL_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(11);
+    private static final List<Integer> EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_BIOLOGICAL_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(9);
+    private static final List<Integer> EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
+    private static final List<Integer> EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_GENE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
+
+
+
     private ViccJsonReader() {
     }
 
@@ -215,7 +224,6 @@ public final class ViccJsonReader {
             } else if (viccEntryObject.has("pmkb")) {
                 viccEntryBuilder.KbSpecificObject(createPmkb(objectPmkb));
             } else if (viccEntryObject.has("oncokb")) {
-                LOGGER.info(objectOncokb);
                 if (objectOncokb.has("biological")) {
                     viccEntryBuilder.KbSpecificObject(createOncoKbBiological(objectOncokb));
                 } else if (objectOncokb.has("clinical")) {
@@ -243,6 +251,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static ClinicalOncoKb createClinicalOncoKb(@NotNull JsonObject objectClinical) {
+        Set<String> keysClinical = objectClinical.keySet();
+        if (!EXPECTED_CLINICAL_ONCOKB_ELEMENT_SIZES.contains(keysClinical.size())) {
+            LOGGER.warn("Found " + keysClinical.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CLINICAL_ONCOKB_ELEMENT_SIZES);
+            LOGGER.warn(keysClinical);
+        }
         return ImmutableClinicalOncoKb.builder()
                 .RefSeq(objectClinical.getAsJsonPrimitive("RefSeq").getAsString())
                 .level(objectClinical.getAsJsonPrimitive("level").getAsString())
@@ -260,8 +274,16 @@ public final class ViccJsonReader {
 
     @NotNull
     private static List<DrugAbstracts> createDrugsAbstracts(@NotNull JsonArray arrayDrugsAbstracts) {
+
         List<DrugAbstracts> listDrugsabstracts = Lists.newArrayList();
         for (JsonElement drugAbstracts : arrayDrugsAbstracts) {
+            Set<String> keysBiological = drugAbstracts.getAsJsonObject().keySet();
+
+            if (!EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES.contains(keysBiological.size())) {
+                LOGGER.warn("Found " + keysBiological.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES);
+                LOGGER.warn(keysBiological);
+            }
             listDrugsabstracts.add(ImmutableDrugAbstracts.builder()
                     .text(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("text").getAsString())
                     .link(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
@@ -272,6 +294,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static BiologicalOncoKb createBiologicalOncoKb(@NotNull JsonObject objectBiological) {
+        Set<String> keysBiological = objectBiological.keySet();
+        if (!EXPECTED_BIOLOGICAL_ONCOKB_ELEMENT_SIZES.contains(keysBiological.size())) {
+            LOGGER.warn("Found " + keysBiological.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_BIOLOGICAL_ONCOKB_ELEMENT_SIZES);
+            LOGGER.warn(keysBiological);
+        }
+
         return ImmutableBiologicalOncoKb.builder()
                 .mutationEffectPmids(objectBiological.getAsJsonPrimitive("mutationEffectPmids").getAsString())
                 .Isoform(objectBiological.getAsJsonPrimitive("Isoform").getAsString())
@@ -287,6 +316,14 @@ public final class ViccJsonReader {
 
     @NotNull
     private static VariantOncokb createVariantOncoKb(@NotNull JsonObject objectVariant) {
+        Set<String> keysVariant = objectVariant.keySet();
+
+        if (!EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES.contains(keysVariant.size())) {
+            LOGGER.warn("Found " + keysVariant.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES);
+            LOGGER.warn(keysVariant);
+        }
+
         return ImmutableVariantOncokb.builder()
                 .variantResidues(objectVariant.get("variantResidues").isJsonNull() ? null  : objectVariant.getAsJsonPrimitive("variantResidues").getAsString())
                 .proteinStart(objectVariant.getAsJsonPrimitive("proteinStart").getAsString())
@@ -301,6 +338,14 @@ public final class ViccJsonReader {
 
     @NotNull
     private static ConsequenceOncoKb createConsequenceOncokb(@NotNull JsonObject objectConsequence) {
+        Set<String> keysConsequence = objectConsequence.keySet();
+
+        if (!EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES.contains(keysConsequence.size())) {
+            LOGGER.warn("Found " + keysConsequence.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES);
+            LOGGER.warn(keysConsequence);
+        }
+
         return ImmutableConsequenceOncoKb.builder()
                 .term(objectConsequence.getAsJsonPrimitive("term").getAsString())
                 .description(objectConsequence.getAsJsonPrimitive("description").getAsString())
@@ -310,6 +355,14 @@ public final class ViccJsonReader {
 
     @NotNull
     private static GeneOncokb createGeneOncoKb(@NotNull JsonObject objectGene) {
+        Set<String> keysGene = objectGene.keySet();
+
+        if (!EXPECTED_GENE_ONCOKB_ELEMENT_SIZES.contains(keysGene.size())) {
+            LOGGER.warn("Found " + keysGene.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_GENE_ONCOKB_ELEMENT_SIZES);
+            LOGGER.warn(keysGene);
+        }
+
         return ImmutableGeneOncokb.builder()
                 .oncogene(objectGene.getAsJsonPrimitive("oncogene").getAsString())
                 .name(objectGene.getAsJsonPrimitive("name").getAsString())
