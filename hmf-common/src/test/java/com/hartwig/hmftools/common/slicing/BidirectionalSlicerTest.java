@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 
@@ -21,9 +21,9 @@ public class BidirectionalSlicerTest {
     @Before
     public void setup() {
         final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
-        regionMap.put("X", GenomeRegionFactory.create("X", 100, 200));
-        regionMap.put("X", GenomeRegionFactory.create("X", 300, 400));
-        regionMap.put("Y", GenomeRegionFactory.create("Y", 500, 600));
+        regionMap.put("X", GenomeRegions.create("X", 100, 200));
+        regionMap.put("X", GenomeRegions.create("X", 300, 400));
+        regionMap.put("Y", GenomeRegions.create("Y", 500, 600));
 
         slicer = new BidirectionalSlicer(regionMap);
     }

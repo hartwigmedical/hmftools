@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class CobaltAccumulatorTest {
     }
 
     private void assertTumorCount(int expectedCount, long regionStart, long regionEnd, long... ratios) {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, regionStart, regionEnd);
+        final GenomeRegion region = GenomeRegions.create(CHROMOSOME, regionStart, regionEnd);
         final ObservedRegionFactory.CobaltAccumulator accumulator = new ObservedRegionFactory.CobaltAccumulator(WINDOW_SIZE, region);
         final GenomePositionSelector<CobaltRatio> selector = createSelector(ratios);
         selector.select(region, accumulator);

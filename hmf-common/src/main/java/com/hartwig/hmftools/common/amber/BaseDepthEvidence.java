@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +69,6 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
 
     @NotNull
     private static GenomeRegion asRegion(@NotNull final SAMRecord record) {
-        return GenomeRegionFactory.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
+        return GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
     }
 }

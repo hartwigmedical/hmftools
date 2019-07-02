@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ public class Exons
 
             final GenomeRegion currentGene = resultMap.computeIfAbsent(contig, x -> exon);
             final GenomeRegion newGene =
-                    GenomeRegionFactory.create(contig, Math.min(currentGene.start(), exon.start()), Math.max(currentGene.end(), exon
+                    GenomeRegions.create(contig, Math.min(currentGene.start(), exon.start()), Math.max(currentGene.end(), exon
                             .end()));
             resultMap.put(contig, newGene);
 

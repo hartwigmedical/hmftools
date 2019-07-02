@@ -8,9 +8,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gc.GCProfile;
 import com.hartwig.hmftools.common.gc.ImmutableGCProfile;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -23,7 +23,7 @@ public class GCAccumulatorTest {
 
     @Test
     public void testStandard() {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1001, 10000);
+        final GenomeRegion region = GenomeRegions.create(CHROMOSOME, 1001, 10000);
         final GCAccumulator victim = new GCAccumulator(region);
         final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.30), profile(4001, 0.31), profile(9001, 0.35));
         selector.select(region, victim);
@@ -32,7 +32,7 @@ public class GCAccumulatorTest {
 
     @Test
     public void testExcludeUnmappable() {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1001, 3000);
+        final GenomeRegion region = GenomeRegions.create(CHROMOSOME, 1001, 3000);
         final GCAccumulator victim = new GCAccumulator(region);
         final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), unmappableProfile(2001, 0.91));
         selector.select(region, victim);
@@ -41,7 +41,7 @@ public class GCAccumulatorTest {
 
     @Test
     public void testExcludeOverlapAtStart() {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1100, 3000);
+        final GenomeRegion region = GenomeRegions.create(CHROMOSOME, 1100, 3000);
         final GCAccumulator victim = new GCAccumulator(region);
         final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), profile(2001, 0.91));
         selector.select(region, victim);
@@ -50,7 +50,7 @@ public class GCAccumulatorTest {
 
     @Test
     public void testExcludeOverlapFromEnd() {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1001, 2999);
+        final GenomeRegion region = GenomeRegions.create(CHROMOSOME, 1001, 2999);
         final GCAccumulator victim = new GCAccumulator(region);
         final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), profile(2001, 0.91));
         selector.select(region, victim);
@@ -59,7 +59,7 @@ public class GCAccumulatorTest {
 
     @Test
     public void testExcludeFromBothEnds() {
-        final GenomeRegion region = GenomeRegionFactory.create(CHROMOSOME, 1100, 2999);
+        final GenomeRegion region = GenomeRegions.create(CHROMOSOME, 1100, 2999);
         final GCAccumulator victim = new GCAccumulator(region);
         final GenomeRegionSelector<GCProfile> selector = selector(profile(1001, 0.90), profile(2001, 0.91));
         selector.select(region, victim);

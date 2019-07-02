@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -38,10 +38,10 @@ public class RecoverStructuralVariantsTest {
 
     @Test
     public void testClosestRegion() {
-        final GenomeRegion start = GenomeRegionFactory.create("1", 1, 10000);
-        final GenomeRegion middle1 = GenomeRegionFactory.create("1", 10001, 20000);
-        final GenomeRegion middle2 = GenomeRegionFactory.create("1", 20001, 30000);
-        final GenomeRegion end = GenomeRegionFactory.create("1", 30001, 40000);
+        final GenomeRegion start = GenomeRegions.create("1", 1, 10000);
+        final GenomeRegion middle1 = GenomeRegions.create("1", 10001, 20000);
+        final GenomeRegion middle2 = GenomeRegions.create("1", 20001, 30000);
+        final GenomeRegion end = GenomeRegions.create("1", 30001, 40000);
         final List<GenomeRegion> regions = Lists.newArrayList(start, middle1, middle2, end);
 
         assertEquals(start, RecoverStructuralVariants.closest(1, regions));

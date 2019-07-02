@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.junit.Test;
 
@@ -18,15 +18,15 @@ public class RegionZipperTest {
 
     @Test
     public void testZipper() {
-        final List<GenomeRegion> primary = Lists.newArrayList(GenomeRegionFactory.create("1", 1, 100),
-                GenomeRegionFactory.create("1", 500, 1000),
-                GenomeRegionFactory.create("2", 500, 1000),
-                GenomeRegionFactory.create("4", 500, 1000));
+        final List<GenomeRegion> primary = Lists.newArrayList(GenomeRegions.create("1", 1, 100),
+                GenomeRegions.create("1", 500, 1000),
+                GenomeRegions.create("2", 500, 1000),
+                GenomeRegions.create("4", 500, 1000));
 
         final List<GenomeRegion> secondary = Lists.newArrayList(
-                GenomeRegionFactory.create("1", 500, 1000),
-                GenomeRegionFactory.create("2", 500, 1000),
-                GenomeRegionFactory.create("3", 500, 1000));
+                GenomeRegions.create("1", 500, 1000),
+                GenomeRegions.create("2", 500, 1000),
+                GenomeRegions.create("3", 500, 1000));
 
         new Expectations() {{
             handler.enterChromosome("1");

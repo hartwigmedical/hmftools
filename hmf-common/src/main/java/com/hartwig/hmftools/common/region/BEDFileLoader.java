@@ -38,7 +38,7 @@ public final class BEDFileLoader {
                 if (end < start) {
                     LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
                 } else {
-                    final GenomeRegion region = GenomeRegionFactory.create(chromosome, start, end);
+                    final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
                     if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
                         LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
                     } else {

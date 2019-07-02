@@ -12,8 +12,8 @@ public class GenomeRegionTest {
 
     @Test
     public void sortsAscending() {
-        final GenomeRegion first = GenomeRegionFactory.create("X", 100, 200);
-        final GenomeRegion last = GenomeRegionFactory.create("X", 300, 400);
+        final GenomeRegion first = GenomeRegions.create("X", 100, 200);
+        final GenomeRegion last = GenomeRegions.create("X", 300, 400);
 
         final SortedSet<GenomeRegion> sorted = Sets.newTreeSet();
         sorted.add(last);

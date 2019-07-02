@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +38,7 @@ public class Highlights
                 if (highlight.end() >= minTrackPosition && highlight.start() <= maxTrackPosition)
                 {
 
-                    result.add(GenomeRegionFactory.create(contig,
+                    result.add(GenomeRegions.create(contig,
                             Math.max(minTrackPosition, highlight.start()),
                             Math.min(maxTrackPosition, highlight.end())));
 
@@ -80,7 +80,7 @@ public class Highlights
             if (!line.startsWith(COMMENT) && !line.startsWith(HEADER))
             {
                 final String[] values = line.split(DELIMITER);
-                result.add(GenomeRegionFactory.create(values[0], Long.valueOf(values[1]), Long.valueOf(values[2])));
+                result.add(GenomeRegions.create(values[0], Long.valueOf(values[1]), Long.valueOf(values[2])));
 
             }
         }
