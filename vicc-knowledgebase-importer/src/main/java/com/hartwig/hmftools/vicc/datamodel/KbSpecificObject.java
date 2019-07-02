@@ -22,4 +22,7 @@ public interface KbSpecificObject {
     @Nullable
     Jax jax();
 
+    @Nullable
+    JaxTrials jaxTrials();
+
 }
