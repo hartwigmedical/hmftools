@@ -118,6 +118,12 @@ class CircosCharts {
             System.exit(1);
         }
 
+        final File finalFile = new File(config.plotDirectory() + File.separator + plotFileName);
+        if (!finalFile.exists()) {
+            LOGGER.fatal("Failed to create file {}", finalFile.toString());
+            System.exit(1);
+        }
+
         return null;
     }
 
