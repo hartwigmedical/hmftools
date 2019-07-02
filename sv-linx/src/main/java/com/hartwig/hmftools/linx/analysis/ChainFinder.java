@@ -135,16 +135,8 @@ public class ChainFinder
         mUseAllelePloidies = false;
     }
 
-    public void initialise(SvCluster cluster)
+    public void clear()
     {
-        mNextChainId = 0;
-        mLinkIndex = 0;
-        mCluster = cluster;
-        mHasReplication = mCluster.hasReplicatedSVs();
-        mIsValid = true;
-        mSkippedPair = false;
-
-        // critical that all state is cleared before the next run
         mAdjacentMatchingPairs.clear();
         mBreakendLastLinkIndexMap.clear();
         mChrAllelePloidies.clear();
@@ -158,6 +150,19 @@ public class ChainFinder
         mUnlinkedBreakendMap.clear();
         mUniquePairs.clear();
         mUnlinkedSVs.clear();
+    }
+
+    public void initialise(SvCluster cluster)
+    {
+        mNextChainId = 0;
+        mLinkIndex = 0;
+        mCluster = cluster;
+        mHasReplication = mCluster.hasReplicatedSVs();
+        mIsValid = true;
+        mSkippedPair = false;
+
+        // critical that all state is cleared before the next run
+        clear();
 
         mFoldbacks.addAll(mCluster.getFoldbacks());
     }

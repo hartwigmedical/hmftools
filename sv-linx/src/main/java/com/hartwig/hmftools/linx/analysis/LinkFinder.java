@@ -45,7 +45,7 @@ public class LinkFinder
         cluster.setAssemblyLinkedPairs(createAssemblyLinkedPairs(cluster));
     }
 
-    public List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
+    public static List<SvLinkedPair> createAssemblyLinkedPairs(SvCluster cluster)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
@@ -372,21 +372,4 @@ public class LinkFinder
         dbPair.first().setDBLink(dbPair, dbPair.firstLinkOnStart());
         dbPair.second().setDBLink(dbPair, dbPair.secondLinkOnStart());
     }
-
-    public static boolean arePairedDeletionBridges(final SvVarData var1, final SvVarData var2)
-    {
-        if(var1.getDBLink(true) == null || var1.getDBLink(false) == null
-        || var2.getDBLink(true) == null || var2.getDBLink(false) == null)
-        {
-            return false;
-        }
-
-        if(var1.getDBLink(true) == var2.getDBLink(true) && var1.getDBLink(false) == var2.getDBLink(false))
-            return true;
-        else if(var1.getDBLink(true) == var2.getDBLink(false) && var1.getDBLink(false) == var2.getDBLink(true))
-            return true;
-        else
-            return false;
-    }
-
 }

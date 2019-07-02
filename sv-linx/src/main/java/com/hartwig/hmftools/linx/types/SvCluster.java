@@ -662,18 +662,6 @@ public class SvCluster
             int svPloidy = var.getImpliedPloidy();
             maxAssembledMultiple = max(maxAssembledMultiple, var.getMaxAssembledBreakend());
 
-            // double calcCNChange = var.getRoundedCNChange();
-
-            /*
-            if(calcCNChange <= 0)
-            {
-                LOGGER.debug("cluster({}) has SV({}) with zero effective CN change: {}",
-                        mId, var.id(), String.format("start=%.2f end=%.2f p=%.2f pMax=%.2f pMin=%.2f",
-                                var.copyNumberChange(true), var.copyNumberChange(false),
-                                var.getSvData().ploidy(), var.ploidyMax(), var.ploidyMin()));
-            }
-            */
-
             if (mMinPloidy < 0 || svPloidy < mMinPloidy)
             {
                 mMinPloidy = svPloidy;

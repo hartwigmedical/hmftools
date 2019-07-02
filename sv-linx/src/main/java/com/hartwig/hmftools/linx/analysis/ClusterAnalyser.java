@@ -328,7 +328,7 @@ public class ClusterAnalyser {
             return;
 
         // use the relative copy number change to replicate some SVs within a cluster
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         // first establish the lowest copy number change
         double clusterMinPloidy = cluster.getMinPloidy();
@@ -495,8 +495,8 @@ public class ClusterAnalyser {
         }
 
         mChainFinder.formClusterChains(assembledLinksOnly);
+        mChainFinder.clear(); // release any refs to clusters and SVs
     }
-
 
     private boolean mergePloidyResolvingClusters(List<SvCluster> clusters)
     {
@@ -1519,11 +1519,6 @@ public class ClusterAnalyser {
         // checkSkippedLOHEvents();
 
         // annotateFoldbacks(mClusters); // unused for now
-
-        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-        {
-            mDmFinder.findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap());
-        }
     }
 
     private void reportClusterFeatures(final SvCluster cluster)
@@ -1542,6 +1537,10 @@ public class ClusterAnalyser {
             reportClusterRepRepairSegments(mSampleId, cluster);
         }
 
+        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+        {
+            mDmFinder.analyseCluster(mSampleId, cluster);
+        }
     }
 
     public void logStats()

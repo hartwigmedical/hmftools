@@ -118,11 +118,6 @@ public class SvTestHelper
         Analyser.getClusters().clear();
     }
 
-    public void mergeOnProximity()
-    {
-        ClusteringMethods.clusterByProximity(Analyser.getClusters());
-    }
-
     public final List<SvCluster> getClusters() { return Analyser.getClusters(); }
 
     public static SvVarData createSv(final String varId, final String chrStart, final String chrEnd,
