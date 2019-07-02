@@ -6,14 +6,15 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GenomeRegionBuilder {
+public class GenomeRegions
+{
 
     private final String chromosome;
     private final int minGap;
     @NotNull
     private final List<GenomeRegion> regions;
 
-    public GenomeRegionBuilder(@NotNull final String chromosome, final int minGap) {
+    public GenomeRegions(@NotNull final String chromosome, final int minGap) {
         this.chromosome = chromosome;
         this.minGap = minGap;
         this.regions = Lists.newArrayList();

@@ -9,13 +9,14 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class GenomeRegionBuilderTest {
+public class GenomeRegionsTest
+{
 
     private static final String CHROM = "1";
 
     @Test
     public void testAddPosition() {
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 1);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 1);
         final List<Long> positions = Lists.newArrayList(1L, 1L, 2L, 3L, 5L, 6L, 7L, 9L, 10L, 10L);
         Collections.shuffle(positions);
 
@@ -33,7 +34,7 @@ public class GenomeRegionBuilderTest {
     @Test
     public void testInsideMinGapInFront() {
 
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 100);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
         victim.addPosition(4900);
@@ -46,7 +47,7 @@ public class GenomeRegionBuilderTest {
     @Test
     public void testOutsideMinGapInFront() {
 
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 100);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
         victim.addPosition(4899);
@@ -59,7 +60,7 @@ public class GenomeRegionBuilderTest {
     @Test
     public void testJoinMinGapInFront() {
 
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 100);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
         victim.addPosition(4800);
@@ -72,7 +73,7 @@ public class GenomeRegionBuilderTest {
     @Test
     public void testInsideMinGapBehind() {
 
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 100);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
         victim.addPosition(5100);
@@ -85,7 +86,7 @@ public class GenomeRegionBuilderTest {
     @Test
     public void testOutsideMinGapBehind() {
 
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 100);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
         victim.addPosition(5101);
@@ -98,7 +99,7 @@ public class GenomeRegionBuilderTest {
     @Test
     public void testJoinMinGapBehind() {
 
-        final GenomeRegionBuilder victim = new GenomeRegionBuilder(CHROM, 100);
+        final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
         victim.addPosition(5200);

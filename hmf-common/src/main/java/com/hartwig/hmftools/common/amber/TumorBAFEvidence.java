@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,7 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
-        final GenomeRegionBuilder builder = new GenomeRegionBuilder(contig, typicalReadDepth);
+        final GenomeRegions builder = new GenomeRegions(contig, typicalReadDepth);
         for (BaseDepth bafRegion : baseDepths) {
             builder.addPosition(bafRegion.position());
         }
