@@ -9,9 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Oncokb implements KbSpecificObject {
 
     @Nullable
-    public abstract BiologicalOncoKb biologicalOncoKb();
+    public abstract OncoKbBiological oncoKbBiological();
 
     @Nullable
-    public abstract ClinicalOncoKb clinicalOncoKb();
+    public abstract OncoKbClinical oncoKbClinical();
 
 }

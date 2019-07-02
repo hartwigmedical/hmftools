@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ConsequenceOncoKb {
+public abstract class OncoKbConsequence {
 
     @NotNull
     public abstract String term();

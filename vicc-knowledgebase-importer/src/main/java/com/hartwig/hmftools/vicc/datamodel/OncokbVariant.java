@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantOncokb {
+public abstract class OncokbVariant {
 
     @Nullable
     public abstract String variantResidues();
@@ -27,8 +27,8 @@ public abstract class VariantOncokb {
     public abstract String alteration();
 
     @NotNull
-    public abstract ConsequenceOncoKb consequenceOncoKb();
+    public abstract OncoKbConsequence oncoKbConsequence();
 
     @NotNull
-    public abstract GeneOncokb geneOncokb();
+    public abstract OncokbGene oncokbGene();
 }
