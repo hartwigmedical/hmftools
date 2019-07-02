@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -53,6 +54,7 @@ public class CircosDataWriter
 
     public void write(@NotNull final CircosData data) throws IOException
     {
+
         final Map<String, Integer> contigLengths = data.contigLengths();
 
         final List<Segment> segments = data.segments();
@@ -140,14 +142,19 @@ public class CircosDataWriter
     @NotNull
     private List<String> proteinDomain(@NotNull final List<ProteinDomain> proteinDomains)
     {
+        final ProteinDomainColors domainColors =
+                new ProteinDomainColors(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
+
         final List<String> result = Lists.newArrayList();
         for (final ProteinDomain proteinDomain : proteinDomains)
         {
+            final String color = domainColors.rgb(proteinDomain.name());
+
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(proteinDomain.chromosome()))
                     .add(String.valueOf(proteinDomain.start()))
                     .add(String.valueOf(proteinDomain.end()))
                     .add(String.valueOf(1))
-                    .add("fill_color=red_a1,color=red_a1,name=" + proteinDomain.name().replace(' ','.'))
+                    .add("fill_color=" + color + ",name=" + proteinDomain.name().replace(' ', '.'))
                     .toString();
             result.add(exonString);
 
