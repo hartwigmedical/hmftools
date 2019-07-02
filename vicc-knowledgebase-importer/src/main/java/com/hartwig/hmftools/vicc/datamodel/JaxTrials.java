@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class JaxTrials {
+public abstract class JaxTrials implements KbSpecificObject {
 
     @NotNull
     public abstract List<JaxTrialsIndications> indications();
@@ -16,7 +16,7 @@ public abstract class JaxTrials {
     @NotNull
     public abstract String title();
 
-    @NotNull
+    @Nullable
     public abstract String gender();
 
     @NotNull

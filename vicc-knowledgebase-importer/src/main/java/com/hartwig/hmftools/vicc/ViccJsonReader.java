@@ -16,6 +16,11 @@ import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.BRCA;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrials;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsIndications;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsMolecularProfile;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsTherapies;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbConsequence;
@@ -26,6 +31,11 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbGene;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbTissue;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbTumor;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbVariant;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrials;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsIndications;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsMolecularProfile;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbClinical;
@@ -101,11 +111,14 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES = Lists.newArrayList(1, 2);
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
-    private static final List<Integer> EXPECTED_BRCA_ELEMENT_SIZES = Lists.newArrayList(137);
-    private static final List<Integer> EXPECTED_SAGE_ELEMENT_SIZES = Lists.newArrayList(8);
-    private static final List<Integer> EXPECTED_PMKB_ELEMENT_SIZES = Lists.newArrayList(3);
 
+    private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
+
+    private static final List<Integer> EXPECTED_BRCA_ELEMENT_SIZES = Lists.newArrayList(137);
+
+    private static final List<Integer> EXPECTED_SAGE_ELEMENT_SIZES = Lists.newArrayList(8);
+
+    private static final List<Integer> EXPECTED_PMKB_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_PMKB_TUMOR_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_PMKB_TISSUE_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_PMKB_VARIANT_ELEMENT_SIZES = Lists.newArrayList(21);
@@ -113,18 +126,25 @@ public final class ViccJsonReader {
 
     private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
 
-    private static final List<Integer> EXPECTED_CLINICAL_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(11);
-    private static final List<Integer> EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_BIOLOGICAL_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(9);
-    private static final List<Integer> EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
-    private static final List<Integer> EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_GENE_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(8);
+    private static final List<Integer> EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES = Lists.newArrayList(11);
+    private static final List<Integer> EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES = Lists.newArrayList(9);
+    private static final List<Integer> EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES = Lists.newArrayList(8);
+    private static final List<Integer> EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_ONCOKB_GENE_ELEMENT_SIZES = Lists.newArrayList(8);
 
     private static final List<Integer> EXPECTED_JAX_ELEMENT_SIZES = Lists.newArrayList(9);
     private static final List<Integer> EXPECTED_JAX_THERAPY_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_JAX_INDICATIONS_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_JAX_REFERENCES_ELEMENT_SIZES = Lists.newArrayList(4);
     private static final List<Integer> EXPECTED_JAX_MOLECULAR_PROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
+
+    private static final List<Integer> EXPECTED_JAX_TRIALS_ELEMENT_SIZES = Lists.newArrayList(11);
+    private static final List<Integer> EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
+
 
     private ViccJsonReader() {
     }
@@ -237,6 +257,17 @@ public final class ViccJsonReader {
                 }
             }
 
+            JsonObject objectJaxTrials = viccEntryObject.getAsJsonObject("jax_trials");
+
+            if (viccEntryObject.has("jax_trials")) {
+                Set<String> keysJaxTrials = objectJaxTrials.keySet();
+                if (!EXPECTED_JAX_TRIALS_ELEMENT_SIZES.contains(keysJaxTrials.size())) {
+                    LOGGER.warn("Found " + keysJaxTrials.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_JAX_TRIALS_ELEMENT_SIZES);
+                    LOGGER.warn(keysJaxTrials);
+                }
+            }
+
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
             } else if (viccEntryObject.has("brca")) {
@@ -253,6 +284,8 @@ public final class ViccJsonReader {
                 }
             } else if (viccEntryObject.has("jax")) {
                 viccEntryBuilder.KbSpecificObject(createJax(objectJax));
+            } else if (viccEntryObject.has("jax_trials")) {
+                viccEntryBuilder.KbSpecificObject(createJaxTrials(objectJaxTrials));
             }
             entries.add(viccEntryBuilder.build());
 
@@ -260,6 +293,101 @@ public final class ViccJsonReader {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static JaxTrials createJaxTrials(@NotNull JsonObject objectJaxTrials) {
+        return ImmutableJaxTrials.builder()
+                .indications(createJaxTrialsIndications(objectJaxTrials.getAsJsonArray("indications")))
+                .title(objectJaxTrials.getAsJsonPrimitive("title").getAsString())
+                .gender(objectJaxTrials.get("gender").isJsonNull() ? null:  objectJaxTrials.getAsJsonPrimitive("gender").getAsString())
+                .nctId(objectJaxTrials.getAsJsonPrimitive("nctId").getAsString())
+                .sponsors(objectJaxTrials.getAsJsonPrimitive("sponsors").getAsString())
+                .recruitment(objectJaxTrials.getAsJsonPrimitive("recruitment").getAsString())
+                .variantRequirements(objectJaxTrials.getAsJsonPrimitive("variantRequirements").getAsString())
+                .updateDate(objectJaxTrials.getAsJsonPrimitive("updateDate").getAsString())
+                .phase(objectJaxTrials.getAsJsonPrimitive("phase").getAsString())
+                .variantRequirementDetails(createJaxTrialsVariantRequirementsDetails(objectJaxTrials.getAsJsonArray(
+                        "variantRequirementDetails")))
+                .therapies(createJaxTrialsTherapies(objectJaxTrials.getAsJsonArray("therapies")))
+                .build();
+    }
+
+    @NotNull
+    private static List<JaxTrialsIndications> createJaxTrialsIndications(@NotNull JsonArray arrayIndications) {
+        List<JaxTrialsIndications> indicationsList = Lists.newArrayList();
+
+        for (JsonElement indications : arrayIndications) {
+            Set<String> keysIndications = indications.getAsJsonObject().keySet();
+            if (!EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES.contains(keysIndications.size())) {
+                LOGGER.warn("Found " + keysIndications.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES);
+                LOGGER.warn(keysIndications);
+            }
+            indicationsList.add(ImmutableJaxTrialsIndications.builder()
+                    .source(indications.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
+                    .id(indications.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .name(indications.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .build());
+        }
+        return indicationsList;
+    }
+
+    @NotNull
+    private static List<JaxTrialsVariantRequirementDetails> createJaxTrialsVariantRequirementsDetails(
+            @NotNull JsonArray arrarVariantRequirementDetails) {
+        List<JaxTrialsVariantRequirementDetails> variantRequirementDetailsList = Lists.newArrayList();
+        for (JsonElement variantRequirementDetails : arrarVariantRequirementDetails) {
+            Set<String> keysRequirementDetails = variantRequirementDetails.getAsJsonObject().keySet();
+            if (!EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES.contains(keysRequirementDetails.size())) {
+                LOGGER.warn("Found " + keysRequirementDetails.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES);
+                LOGGER.warn(keysRequirementDetails);
+            }
+            variantRequirementDetailsList.add(ImmutableJaxTrialsVariantRequirementDetails.builder()
+                    .molecularProfiles(createJaxTrialsMolecularProfile(variantRequirementDetails.getAsJsonObject()
+                            .getAsJsonObject("molecularProfile")))
+                    .requirementType(variantRequirementDetails.getAsJsonObject().getAsJsonPrimitive("requirementType").getAsString())
+                    .build());
+        }
+        return variantRequirementDetailsList;
+    }
+
+    @NotNull
+    private static List<JaxTrialsMolecularProfile> createJaxTrialsMolecularProfile(@NotNull JsonObject objectMolecularProfile) {
+        List<JaxTrialsMolecularProfile> molecularProfileList = Lists.newArrayList();
+
+        Set<String> keysMolecularProfile = objectMolecularProfile.keySet();
+        if (!EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES.contains(keysMolecularProfile.size())) {
+            LOGGER.warn("Found " + keysMolecularProfile.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES);
+            LOGGER.warn(keysMolecularProfile);
+        }
+
+        molecularProfileList.add(ImmutableJaxTrialsMolecularProfile.builder()
+                .profileName(objectMolecularProfile.getAsJsonPrimitive("profileName").getAsString())
+                .id(objectMolecularProfile.getAsJsonPrimitive("id").getAsString())
+                .build());
+        return molecularProfileList;
+    }
+
+    @NotNull
+    private static List<JaxTrialsTherapies> createJaxTrialsTherapies(@NotNull JsonArray arrayTherapies) {
+        List<JaxTrialsTherapies> jaxTrialsTherapiesList = Lists.newArrayList();
+        for (JsonElement therapies : arrayTherapies) {
+            Set<String> keysTherapies = therapies.getAsJsonObject().keySet();
+            if (!EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES.contains(keysTherapies.size())) {
+                LOGGER.warn("Found " + keysTherapies.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES);
+                LOGGER.warn(keysTherapies);
+            }
+
+            jaxTrialsTherapiesList.add(ImmutableJaxTrialsTherapies.builder()
+                    .id(therapies.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .therapyName(therapies.getAsJsonObject().getAsJsonPrimitive("therapyName").getAsString())
+                    .build());
+        }
+        return jaxTrialsTherapiesList;
     }
 
     @NotNull
@@ -324,12 +452,12 @@ public final class ViccJsonReader {
     private static List<JaxReferences> createJaxReferences(@NotNull JsonArray objectReferences) {
         List<JaxReferences> listReferences = Lists.newArrayList();
         for (JsonElement references : objectReferences) {
-             Set<String> keysReferences = references.getAsJsonObject().keySet();
-                    if (!EXPECTED_JAX_REFERENCES_ELEMENT_SIZES.contains(keysReferences.size())) {
-                        LOGGER.warn("Found " + keysReferences.size() + " elements in a vicc entry rather than the expected "
-                                + EXPECTED_JAX_REFERENCES_ELEMENT_SIZES);
-                        LOGGER.warn(keysReferences);
-                    }
+            Set<String> keysReferences = references.getAsJsonObject().keySet();
+            if (!EXPECTED_JAX_REFERENCES_ELEMENT_SIZES.contains(keysReferences.size())) {
+                LOGGER.warn("Found " + keysReferences.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_JAX_REFERENCES_ELEMENT_SIZES);
+                LOGGER.warn(keysReferences);
+            }
             listReferences.add(ImmutableJaxReferences.builder()
                     .url(references.getAsJsonObject().getAsJsonPrimitive("url").getAsString())
                     .id(references.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
@@ -355,9 +483,9 @@ public final class ViccJsonReader {
     @NotNull
     private static OncoKbClinical createClinicalOncoKb(@NotNull JsonObject objectClinical) {
         Set<String> keysClinical = objectClinical.keySet();
-        if (!EXPECTED_CLINICAL_ONCOKB_ELEMENT_SIZES.contains(keysClinical.size())) {
+        if (!EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES.contains(keysClinical.size())) {
             LOGGER.warn("Found " + keysClinical.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_CLINICAL_ONCOKB_ELEMENT_SIZES);
+                    + EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES);
             LOGGER.warn(keysClinical);
         }
         return ImmutableOncoKbClinical.builder()
@@ -382,9 +510,9 @@ public final class ViccJsonReader {
         for (JsonElement drugAbstracts : arrayDrugsAbstracts) {
             Set<String> keysBiological = drugAbstracts.getAsJsonObject().keySet();
 
-            if (!EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES.contains(keysBiological.size())) {
+            if (!EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES.contains(keysBiological.size())) {
                 LOGGER.warn("Found " + keysBiological.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES);
+                        + EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES);
                 LOGGER.warn(keysBiological);
             }
             listDrugsabstracts.add(ImmutableOncoKbDrugAbstracts.builder()
@@ -398,9 +526,9 @@ public final class ViccJsonReader {
     @NotNull
     private static OncoKbBiological createBiologicalOncoKb(@NotNull JsonObject objectBiological) {
         Set<String> keysBiological = objectBiological.keySet();
-        if (!EXPECTED_BIOLOGICAL_ONCOKB_ELEMENT_SIZES.contains(keysBiological.size())) {
+        if (!EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES.contains(keysBiological.size())) {
             LOGGER.warn("Found " + keysBiological.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_BIOLOGICAL_ONCOKB_ELEMENT_SIZES);
+                    + EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES);
             LOGGER.warn(keysBiological);
         }
 
@@ -421,9 +549,9 @@ public final class ViccJsonReader {
     private static OncokbVariant createVariantOncoKb(@NotNull JsonObject objectVariant) {
         Set<String> keysVariant = objectVariant.keySet();
 
-        if (!EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES.contains(keysVariant.size())) {
+        if (!EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
             LOGGER.warn("Found " + keysVariant.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_VARIANT_ONCOKB_ELEMENT_SIZES);
+                    + EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES);
             LOGGER.warn(keysVariant);
         }
 
@@ -447,9 +575,9 @@ public final class ViccJsonReader {
     private static OncoKbConsequence createConsequenceOncokb(@NotNull JsonObject objectConsequence) {
         Set<String> keysConsequence = objectConsequence.keySet();
 
-        if (!EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES.contains(keysConsequence.size())) {
+        if (!EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES.contains(keysConsequence.size())) {
             LOGGER.warn("Found " + keysConsequence.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_CONSEQUENCE_ONCOKB_ELEMENT_SIZES);
+                    + EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES);
             LOGGER.warn(keysConsequence);
         }
 
@@ -464,9 +592,9 @@ public final class ViccJsonReader {
     private static OncokbGene createGeneOncoKb(@NotNull JsonObject objectGene) {
         Set<String> keysGene = objectGene.keySet();
 
-        if (!EXPECTED_GENE_ONCOKB_ELEMENT_SIZES.contains(keysGene.size())) {
+        if (!EXPECTED_ONCOKB_GENE_ELEMENT_SIZES.contains(keysGene.size())) {
             LOGGER.warn("Found " + keysGene.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_GENE_ONCOKB_ELEMENT_SIZES);
+                    + EXPECTED_ONCOKB_GENE_ELEMENT_SIZES);
             LOGGER.warn(keysGene);
         }
 
