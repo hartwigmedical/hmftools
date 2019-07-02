@@ -14,7 +14,6 @@ data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_")
 
     override fun correct(): OncoKnownInput? {
         return when {
-            Alteration.contains("IGH-NKX2") && Gene == "NKX2-1" -> copy(Alteration = Alteration.replace("IGH-NKX2", "IGH-NKX2-1"))
             Alteration.contains("ROS1-CD74")                    -> copy(Alteration = Alteration.replace("ROS1-CD74", "CD74-ROS1"))
             Alteration.contains("RET-CCDC6")                    -> copy(Alteration = Alteration.replace("RET-CCDC6", "CCDC6-RET"))
             Alteration.contains("EP300-MOZ")                    -> copy(Alteration = Alteration.replace("EP300-MOZ", "KAT6A-EP300"))
