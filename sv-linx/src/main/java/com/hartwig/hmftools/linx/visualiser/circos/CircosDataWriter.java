@@ -33,6 +33,7 @@ public class CircosDataWriter
 {
 
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
+    private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
     private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
@@ -54,8 +55,8 @@ public class CircosDataWriter
 
     public void write(@NotNull final CircosData data) throws IOException
     {
-
         final Map<String, Integer> contigLengths = data.contigLengths();
+        int totalContigLength = data.totalContigLength();
 
         final List<Segment> segments = data.segments();
         final List<Link> links = data.links();
@@ -71,7 +72,7 @@ public class CircosDataWriter
         Files.write(new File(exonPath).toPath(), exons(exons));
 
         final String exonRankPath = filePrefix + ".exon.rank.circos";
-        Files.write(new File(exonRankPath).toPath(), exonRank(exons));
+        Files.write(new File(exonRankPath).toPath(), exonRank(totalContigLength, exons));
 
         final String genePath = filePrefix + ".gene.circos";
         Files.write(new File(genePath).toPath(), genes(data.genes()));
@@ -164,20 +165,23 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exonRank(@NotNull final List<Exon> exons)
+    private List<String> exonRank(int totalContigLength, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        for (final Exon exon : exons)
+        if (totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
         {
-            long position = exon.start() + (exon.end() - exon.start()) / 2;
+            for (final Exon exon : exons)
+            {
+                long position = exon.start() + (exon.end() - exon.start()) / 2;
 
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
-                    .add(String.valueOf(position))
-                    .add(String.valueOf(position))
-                    .add(String.valueOf(exon.rank()))
-                    .toString();
-            result.add(exonString);
+                final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
+                        .add(String.valueOf(position))
+                        .add(String.valueOf(position))
+                        .add(String.valueOf(exon.rank()))
+                        .toString();
+                result.add(exonString);
 
+            }
         }
 
         return result;

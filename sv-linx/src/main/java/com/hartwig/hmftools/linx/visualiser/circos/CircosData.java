@@ -193,6 +193,10 @@ public class CircosData
         return contigLengths;
     }
 
+    public int totalContigLength() {
+        return contigLengths().values().stream().mapToInt(x -> x).sum();
+    }
+
     @NotNull
     private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions)
     {
