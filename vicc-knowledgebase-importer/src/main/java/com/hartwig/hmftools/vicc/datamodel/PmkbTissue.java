@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TissuePmkb {
+public abstract class PmkbTissue {
 
     @NotNull
     public abstract String id();

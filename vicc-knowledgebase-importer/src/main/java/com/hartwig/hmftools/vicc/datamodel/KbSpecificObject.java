@@ -19,4 +19,7 @@ public interface KbSpecificObject {
     @Nullable
     Oncokb oncoKb();
 
+    @Nullable
+    Jax jax();
+
 }

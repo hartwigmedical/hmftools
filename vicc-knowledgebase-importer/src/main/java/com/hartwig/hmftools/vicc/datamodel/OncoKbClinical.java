@@ -41,7 +41,7 @@ public abstract class OncoKbClinical implements KbSpecificObject {
     public abstract String levelLabel();
 
     @NotNull
-    public abstract List<DrugAbstracts> drugAbstracts();
+    public abstract List<OncoKbDrugAbstracts> oncoKbDrugAbstracts();
 
 
 }

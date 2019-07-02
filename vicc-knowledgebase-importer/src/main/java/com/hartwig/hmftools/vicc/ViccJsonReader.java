@@ -19,13 +19,18 @@ import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbConsequence;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbDrugAbstracts;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncokbGene;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncokbVariant;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbGene;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbTissue;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbTumor;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkbVariant;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.DrugAbstracts;
+import com.hartwig.hmftools.vicc.datamodel.OncoKbDrugAbstracts;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -33,20 +38,18 @@ import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.OncokbGene;
-import com.hartwig.hmftools.vicc.datamodel.GenePmkb;
+import com.hartwig.hmftools.vicc.datamodel.PmkbGene;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCA;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableBRCApart2;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCgi;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableDrugAbstracts;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableGenePmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJax;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxIndications;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxMolecularProfile;
@@ -59,9 +62,6 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutablePmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableSage;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableTissuePmkb;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableTumorPmkb;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableVariantPmkb;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.Jax;
 import com.hartwig.hmftools.vicc.datamodel.JaxIndications;
@@ -72,13 +72,13 @@ import com.hartwig.hmftools.vicc.datamodel.Oncokb;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.Pmkb;
+import com.hartwig.hmftools.vicc.datamodel.PmkbTissue;
 import com.hartwig.hmftools.vicc.datamodel.Sage;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
-import com.hartwig.hmftools.vicc.datamodel.TissuePmkb;
-import com.hartwig.hmftools.vicc.datamodel.TumorPmkb;
+import com.hartwig.hmftools.vicc.datamodel.PmkbTumor;
 import com.hartwig.hmftools.vicc.datamodel.OncokbVariant;
-import com.hartwig.hmftools.vicc.datamodel.VariantPmkb;
+import com.hartwig.hmftools.vicc.datamodel.PmkbVariant;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
@@ -371,14 +371,14 @@ public final class ViccJsonReader {
                 .drug(objectClinical.getAsJsonPrimitive("drug").getAsString())
                 .gene(objectClinical.getAsJsonPrimitive("gene").getAsString())
                 .levelLabel(objectClinical.getAsJsonPrimitive("level_label").getAsString())
-                .drugAbstracts(createDrugsAbstracts(objectClinical.getAsJsonArray("drugAbstracts")))
+                .oncoKbDrugAbstracts(createDrugsAbstracts(objectClinical.getAsJsonArray("oncoKbDrugAbstracts")))
                 .build();
     }
 
     @NotNull
-    private static List<DrugAbstracts> createDrugsAbstracts(@NotNull JsonArray arrayDrugsAbstracts) {
+    private static List<OncoKbDrugAbstracts> createDrugsAbstracts(@NotNull JsonArray arrayDrugsAbstracts) {
 
-        List<DrugAbstracts> listDrugsabstracts = Lists.newArrayList();
+        List<OncoKbDrugAbstracts> listDrugsabstracts = Lists.newArrayList();
         for (JsonElement drugAbstracts : arrayDrugsAbstracts) {
             Set<String> keysBiological = drugAbstracts.getAsJsonObject().keySet();
 
@@ -387,7 +387,7 @@ public final class ViccJsonReader {
                         + EXPECTED_DRUGS_ABSTRACT_ONCOKB_ELEMENT_SIZES);
                 LOGGER.warn(keysBiological);
             }
-            listDrugsabstracts.add(ImmutableDrugAbstracts.builder()
+            listDrugsabstracts.add(ImmutableOncoKbDrugAbstracts.builder()
                     .text(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("text").getAsString())
                     .link(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
                     .build());
@@ -496,7 +496,7 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<TumorPmkb> createTumor(@NotNull JsonObject tumor) {
+    private static List<PmkbTumor> createTumor(@NotNull JsonObject tumor) {
         Set<String> keysTumor = tumor.keySet();
         if (!EXPECTED_PMKB_TUMOR_ELEMENT_SIZES.contains(keysTumor.size())) {
             LOGGER.warn("Found " + keysTumor.size() + " elements in a vicc entry rather than the expected "
@@ -504,8 +504,8 @@ public final class ViccJsonReader {
             LOGGER.warn(keysTumor);
         }
 
-        List<TumorPmkb> listTumor = Lists.newArrayList();
-        listTumor.add(ImmutableTumorPmkb.builder()
+        List<PmkbTumor> listTumor = Lists.newArrayList();
+        listTumor.add(ImmutablePmkbTumor.builder()
                 .id(tumor.getAsJsonPrimitive("id").getAsString())
                 .name(tumor.getAsJsonPrimitive("name").getAsString())
                 .build());
@@ -514,9 +514,9 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<TissuePmkb> createTissue(@NotNull JsonArray tissues) {
+    private static List<PmkbTissue> createTissue(@NotNull JsonArray tissues) {
 
-        List<TissuePmkb> listTissue = Lists.newArrayList();
+        List<PmkbTissue> listTissue = Lists.newArrayList();
         for (JsonElement tissue : tissues) {
             Set<String> keysTissue = tissue.getAsJsonObject().keySet();
             if (!EXPECTED_PMKB_TISSUE_ELEMENT_SIZES.contains(keysTissue.size())) {
@@ -524,7 +524,7 @@ public final class ViccJsonReader {
                         + EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
                 LOGGER.warn(keysTissue);
             }
-            listTissue.add(ImmutableTissuePmkb.builder()
+            listTissue.add(ImmutablePmkbTissue.builder()
                     .id(tissue.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .name(tissue.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
@@ -533,14 +533,14 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<VariantPmkb> createVariantPmkb(@NotNull JsonObject variant) {
+    private static List<PmkbVariant> createVariantPmkb(@NotNull JsonObject variant) {
         Set<String> keysVariant = variant.keySet();
         if (!EXPECTED_PMKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
             LOGGER.warn("Found " + keysVariant.size() + " elements in a vicc entry rather than the expected "
                     + EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
             LOGGER.warn(keysVariant);
         }
-        return Lists.newArrayList(ImmutableVariantPmkb.builder()
+        return Lists.newArrayList(ImmutablePmkbVariant.builder()
                 .aminoAcidChange(variant.get("amino_acid_change").isJsonNull() ? null : variant.get("amino_acid_change").getAsString())
                 .germline(variant.get("germline").isJsonNull() ? null : variant.get("germline").getAsString())
                 .partnerGene(variant.get("partner_gene").isJsonNull() ? null : variant.get("partner_gene").getAsString())
@@ -568,7 +568,7 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<GenePmkb> createGene(@NotNull JsonObject variant) {
+    private static List<PmkbGene> createGene(@NotNull JsonObject variant) {
         JsonObject gene = variant.getAsJsonObject("gene");
 
         Set<String> keysgene = gene.keySet();
@@ -578,8 +578,8 @@ public final class ViccJsonReader {
             LOGGER.warn(keysgene);
         }
 
-        List<GenePmkb> listGene = Lists.newArrayList();
-        listGene.add(ImmutableGenePmkb.builder()
+        List<PmkbGene> listGene = Lists.newArrayList();
+        listGene.add(ImmutablePmkbGene.builder()
                 .description(gene.get("description").isJsonNull() ? null : gene.getAsJsonPrimitive("description").getAsString())
                 .createdAt(gene.getAsJsonPrimitive("created_at").getAsString())
                 .updatedAt(gene.getAsJsonPrimitive("updated_at").getAsString())

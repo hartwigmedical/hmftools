@@ -11,13 +11,13 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Pmkb implements KbSpecificObject {
 
     @NotNull
-    public abstract List<TumorPmkb> tumor();
+    public abstract List<PmkbTumor> tumor();
 
     @NotNull
-    public abstract List<TissuePmkb> tissue();
+    public abstract List<PmkbTissue> tissue();
 
     @NotNull
-    public abstract List<VariantPmkb> variant();
+    public abstract List<PmkbVariant> variant();
 
 
 }

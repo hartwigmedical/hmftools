@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantPmkb {
+public abstract class PmkbVariant {
 
     @Nullable
     public abstract String aminoAcidChange();
@@ -59,7 +59,7 @@ public abstract class VariantPmkb {
     public abstract String chromosomeBasedCnv();
 
     @NotNull
-    public abstract List<GenePmkb> gene();
+    public abstract List<PmkbGene> gene();
 
     @Nullable
     public abstract String transcript();
