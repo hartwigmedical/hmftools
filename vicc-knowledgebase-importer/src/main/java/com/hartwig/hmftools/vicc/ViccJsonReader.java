@@ -145,6 +145,9 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
 
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(36);
+
+
 
     private ViccJsonReader() {
     }
@@ -265,6 +268,16 @@ public final class ViccJsonReader {
                     LOGGER.warn("Found " + keysJaxTrials.size() + " elements in a vicc entry rather than the expected "
                             + EXPECTED_JAX_TRIALS_ELEMENT_SIZES);
                     LOGGER.warn(keysJaxTrials);
+                }
+            }
+
+            JsonObject objectMolecularMatch = viccEntryObject.getAsJsonObject("molecularmatch");
+            if (viccEntryObject.has("molecularmatch")) {
+                Set<String> keysMolecularMatch = objectMolecularMatch.keySet();
+                if (!EXPECTED_MOLECULARMATCH_ELEMENT_SIZES.contains(keysMolecularMatch.size())) {
+                    LOGGER.warn("Found " + keysMolecularMatch.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_MOLECULARMATCH_ELEMENT_SIZES);
+                    LOGGER.warn(keysMolecularMatch);
                 }
             }
 

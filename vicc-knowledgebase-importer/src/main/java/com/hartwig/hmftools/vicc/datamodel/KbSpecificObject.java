@@ -25,4 +25,7 @@ public interface KbSpecificObject {
     @Nullable
     JaxTrials jaxTrials();
 
+    @Nullable
+    MolecularMatch molecularMatch();
+
 }
