@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ProteinDomainColors
 {
-    private static final float FIXED_HUE = 0.2f;
+    private static final float FIXED_HUE = 0.166f;
     private static final float SAT = 0.7f;
     private static final float BRIGHT = 0.8f;
 
