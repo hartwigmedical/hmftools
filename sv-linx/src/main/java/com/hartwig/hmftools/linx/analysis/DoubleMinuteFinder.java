@@ -46,9 +46,10 @@ public class DoubleMinuteFinder
 
     private String mOutputDir;
 
-    private static int DM_PLOIDY_THRESHOLD = 8;
-    private static double DM_FOLDBACK_PLOIDY_RATIO = 0.25;
-    private static double DM_PLOIDY_STEPWISE_RATIO = 0.5;
+    private static int PLOIDY_THRESHOLD = 8;
+    private static double FOLDBACK_PLOIDY_RATIO = 0.25;
+    private static double PLOIDY_STEPWISE_RATIO = 0.5;
+    private static double HIGH_PLOIDY_SV_RATIO = 0.8;
 
 
     // old constants
@@ -96,7 +97,7 @@ public class DoubleMinuteFinder
             clusterMaxPloidy = cluster.getMaxPloidy();
         }
 
-        if(clusterMaxPloidy < DM_PLOIDY_THRESHOLD)
+        if(clusterMaxPloidy < PLOIDY_THRESHOLD)
             return;
 
         // test step-wise nature of SVs for larger clusters
@@ -105,7 +106,7 @@ public class DoubleMinuteFinder
             int foldbackCount = cluster.getFoldbacks().size();
             double foldbackPotentialPloidy = pow(2, foldbackCount);
 
-            if(foldbackPotentialPloidy >= DM_FOLDBACK_PLOIDY_RATIO * clusterMaxPloidy)
+            if(foldbackPotentialPloidy >= FOLDBACK_PLOIDY_RATIO * clusterMaxPloidy)
             {
                 LOGGER.debug("cluster({}) maxPloidy(%s) foldbacks({}) invalidates DM",
                         cluster.id(), String.format("%.1f", clusterMaxPloidy), foldbackCount);
@@ -113,7 +114,7 @@ public class DoubleMinuteFinder
             }
 
             List<Integer> ploidyBuckets = Lists.newArrayList();
-            int maxBuckets = DM_PLOIDY_THRESHOLD;
+            int maxBuckets = PLOIDY_THRESHOLD;
 
             for (final SvVarData var : cluster.getSVs())
             {
@@ -127,7 +128,7 @@ public class DoubleMinuteFinder
                 }
             }
 
-            if (ploidyBuckets.size()/(double)DM_PLOIDY_THRESHOLD >= DM_PLOIDY_STEPWISE_RATIO)
+            if (ploidyBuckets.size()/(double) PLOIDY_THRESHOLD >= PLOIDY_STEPWISE_RATIO)
             {
                 LOGGER.debug("cluster({}) maxPloidy(%s) ploidyBuckets({}) invalidates DM",
                         cluster.id(), String.format("%.1f", clusterMaxPloidy), ploidyBuckets.size());
@@ -149,7 +150,7 @@ public class DoubleMinuteFinder
         {
             for (final SvVarData var : cluster.getSVs())
             {
-                if (var.ploidyMax() >= clusterMaxPloidy * 0.8)
+                if (var.ploidyMax() >= clusterMaxPloidy * HIGH_PLOIDY_SV_RATIO)
                     highPloidySVs.add(var);
             }
         }
