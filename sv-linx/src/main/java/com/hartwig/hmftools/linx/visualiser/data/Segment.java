@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilderI;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 
 import org.immutables.value.Value;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Segment implements GenomeRegion
 {
-    public abstract static class Builder implements GenomeRegionBuilderI<Segment>
+    public abstract static class Builder implements GenomeRegionBuilder<Segment>
     {
     }
 

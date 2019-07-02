@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilderI;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -109,7 +109,7 @@ class ScalePosition
     }
 
     @NotNull
-    private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilderI<T>> builderFunction)
+    private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
         final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
         assert (positionMap != null && !positionMap.isEmpty());
@@ -228,13 +228,13 @@ class ScalePosition
     }
 
     @NotNull
-    private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilderI<T>> builderFunction)
+    private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
         return inputs.stream().map(x -> scale(x, builderFunction, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
-    private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilderI<T>> builderFunction,
+    private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilder<T>> builderFunction,
             @NotNull final Map<Long, Integer> positionMap)
     {
         return builderFunction.apply(victim)
