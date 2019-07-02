@@ -152,7 +152,6 @@ public class SvCluster
     public int getSvCount(boolean includeReplicated) { return includeReplicated ? mReplicatedSVs.size() : mSVs.size(); }
 
     public final String getDesc() { return mDesc; }
-    public final void setDesc(final String desc) { mDesc = desc; }
 
     public final List<SvVarData> getSVs() { return mSVs; }
     public final List<SvVarData> getSVs(boolean includeReplicated) { return includeReplicated ? mReplicatedSVs : mSVs; }

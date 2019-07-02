@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateChai
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.calcNetCopyNumberChangeAcrossCluster;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.findPotentialDoubleMinuteClusters;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportClusterRepRepairSegments;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
@@ -80,7 +79,8 @@ public class ClusterAnalyser {
     private final SvaConfig mConfig;
     private SvClusteringMethods mClusteringMethods;
     private CnDataLoader mCnDataLoader;
-    private SvGeneTranscriptCollection mGeneCollection;
+    private SvGeneTranscriptCollection mGeneTransCache;
+    private DoubleMinuteFinder mDmFinder;
 
     String mSampleId;
     List<SvCluster> mClusters;
@@ -103,11 +103,12 @@ public class ClusterAnalyser {
         mConfig = config;
         mClusteringMethods = clusteringMethods;
         mCnDataLoader = null;
-        mGeneCollection = null;
+        mGeneTransCache = null;
         mClusters = Lists.newArrayList();
         mSampleId = "";
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
+        mDmFinder = new DoubleMinuteFinder();
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mUseAllelePloidies = false;
@@ -122,8 +123,15 @@ public class ClusterAnalyser {
     public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
         mCnDataLoader = cnAnalyser;
+        mDmFinder.setCopyNumberAnalyser(cnAnalyser);
     }
-    public void setGeneCollection(final SvGeneTranscriptCollection geneCollection) { mGeneCollection = geneCollection; }
+
+    public void setGeneCollection(final SvGeneTranscriptCollection geneTransCache)
+    {
+        mGeneTransCache = geneTransCache;
+        mDmFinder.setGeneTransCache(geneTransCache);
+    }
+
     public void setUseAllelePloidies(boolean toggle)
     {
         mChainFinder.setUseAllelePloidies(toggle);
@@ -376,7 +384,7 @@ public class ClusterAnalyser {
 
             for(int j = 1; j < svMultiple; ++j)
             {
-                SvVarData newVar = new SvVarData(var);
+                SvVarData newVar = new SvVarData(var, true);
                 cluster.addVariant(newVar);
             }
         }
@@ -1514,7 +1522,7 @@ public class ClusterAnalyser {
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
         {
-            findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap(), mCnDataLoader, mGeneCollection);
+            mDmFinder.findPotentialDoubleMinuteClusters(mSampleId, mClusteringMethods.getChrBreakendMap());
         }
     }
 

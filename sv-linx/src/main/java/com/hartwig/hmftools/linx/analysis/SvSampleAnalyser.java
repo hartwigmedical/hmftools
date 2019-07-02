@@ -504,6 +504,7 @@ public class SvSampleAnalyser {
                 final StructuralVariantData dbData = var.getSvData();
 
                 final SvArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+
                 final SvArmCluster armClusterEnd = !var.isNullBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
                 if(mSvFileWriter != null)

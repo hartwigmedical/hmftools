@@ -51,8 +51,8 @@ public class LinkingTest
         lp3.hasLinkClash(lp2);
 
         // test comparisons of various sorts
-        final SvVarData var6 = new SvVarData(var1);
-        final SvVarData var7 = new SvVarData(var2);
+        final SvVarData var6 = new SvVarData(var1, true);
+        final SvVarData var7 = new SvVarData(var2, true);
         SvLinkedPair lp4 = new SvLinkedPair(var6, var7, LINK_TYPE_TI, false, true);
 
         assertTrue(lp1.matches(lp4));

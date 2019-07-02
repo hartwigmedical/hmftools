@@ -153,13 +153,25 @@ public class SvVarData
         mCnDataPostEnd = null;
     }
 
-    public SvVarData(final SvVarData other)
+    public SvVarData(final SvVarData other, boolean isReplicated)
     {
         mSVData = other.getSvData();
 
         init();
 
-        mIdStr = other.getSvData().id() + "r";
+        if(isReplicated)
+        {
+            mIdStr = other.getSvData().id() + "r";
+            mIsReplicatedSv = true;
+            mReplicatedSv = other;
+            mClusterReason = other.getClusterReason();
+            mCluster = other.getCluster();
+        }
+        else
+        {
+            mIdStr = other.id();
+        }
+
         mArm[SE_START] = other.arm(true);
         mArm[SE_END] = other.arm(false);
 
@@ -185,10 +197,6 @@ public class SvVarData
 
         mAssemblyMatchType[SE_START] = other.getAssemblyMatchType(true);
         mAssemblyMatchType[SE_END] = other.getAssemblyMatchType(false);
-        mIsReplicatedSv = true;
-        mReplicatedSv = other;
-        mClusterReason = other.getClusterReason();
-        mCluster = other.getCluster();
     }
 
     public final String id() { return mIdStr; }
@@ -247,10 +255,7 @@ public class SvVarData
     }
 
     public final SvCluster getCluster() { return mCluster; }
-    public void setCluster(final SvCluster cluster)
-    {
-        mCluster = cluster;
-    }
+    public void setCluster(final SvCluster cluster) { mCluster = cluster; }
 
     public final long length()
     {
