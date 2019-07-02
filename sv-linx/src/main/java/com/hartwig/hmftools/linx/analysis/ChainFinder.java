@@ -74,18 +74,26 @@ public class ChainFinder
 {
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
-    private SvCluster mCluster;
+    private int mClusterId;
     private boolean mHasReplication;
+
+    // input state
+    private List<SvVarData> mUniqueSVs;
+    private List<SvVarData> mReplicatedSVs;
+    private List<SvVarData> mFoldbacks;
+    private boolean mIsClusterSubset;
+    private List<SvLinkedPair> mAssembledLinks;
+    private Map<String,List<SvBreakend>> mChrBreakendMap;
 
     // chaining state
     private List<SvLinkedPair> mSkippedPairs;
-    private List<SvVarData> mFoldbacks;
     private List<SvVarData> mComplexDupCandidates;
     private List<SvLinkedPair> mUniquePairs;
     private List<SvLinkedPair> mAdjacentMatchingPairs;
     private boolean mSkippedPair; // keep track of any excluded pair or SV without exiting the chaining routine
+    private double mValidAllelePloidySegmentPerc;
 
-    private List<SvChain> mPartialChains;
+    private List<SvChain> mChains;
     private int mNextChainId;
     private List<SvVarData> mUnlinkedSVs;
     private Map<SvBreakend,List<SvBreakend>> mUnlinkedBreakendMap;
@@ -109,12 +117,19 @@ public class ChainFinder
 
     public ChainFinder()
     {
+        mUniqueSVs = Lists.newArrayList();
+        mReplicatedSVs = Lists.newArrayList();
+        mFoldbacks = Lists.newArrayList();
+        mIsClusterSubset = false;
+        mAssembledLinks = Lists.newArrayList();
+        mChrBreakendMap = null;
+
         mAdjacentMatchingPairs = Lists.newArrayList();
         mBreakendLastLinkIndexMap = Maps.newHashMap();
         mChrAllelePloidies = Maps.newHashMap();
         mComplexDupCandidates = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
-        mPartialChains = Lists.newArrayList();
+        mChains = Lists.newArrayList();
         mSkippedPairs = Lists.newArrayList();
         mSvBreakendPossibleLinks = Maps.newHashMap();
         mSvOriginalReplicationMap = Maps.newHashMap();
@@ -137,12 +152,20 @@ public class ChainFinder
 
     public void clear()
     {
+        mClusterId = -1;
+        mUniqueSVs.clear();
+        mReplicatedSVs.clear();
+        mFoldbacks.clear();
+        mIsClusterSubset = false;
+        mAssembledLinks.clear();
+        mChrBreakendMap = null;
+
         mAdjacentMatchingPairs.clear();
         mBreakendLastLinkIndexMap.clear();
         mChrAllelePloidies.clear();
         mComplexDupCandidates.clear();
         mFoldbacks.clear();
-        mPartialChains.clear();
+        mChains.clear();
         mSkippedPairs.clear();
         mSvBreakendPossibleLinks.clear();
         mSvOriginalReplicationMap.clear();
@@ -150,21 +173,78 @@ public class ChainFinder
         mUnlinkedBreakendMap.clear();
         mUniquePairs.clear();
         mUnlinkedSVs.clear();
+
+        mNextChainId = 0;
+        mLinkIndex = 0;
+        mIsValid = true;
+        mSkippedPair = false;
+        mValidAllelePloidySegmentPerc = 0;
     }
 
     public void initialise(SvCluster cluster)
     {
-        mNextChainId = 0;
-        mLinkIndex = 0;
-        mCluster = cluster;
-        mHasReplication = mCluster.hasReplicatedSVs();
-        mIsValid = true;
-        mSkippedPair = false;
-
         // critical that all state is cleared before the next run
         clear();
 
-        mFoldbacks.addAll(mCluster.getFoldbacks());
+        mClusterId = cluster.id();
+        mUniqueSVs.addAll(cluster.getSVs());
+        mReplicatedSVs.addAll(cluster.getSVs(true));
+        mFoldbacks.addAll(cluster.getFoldbacks());
+        mAssembledLinks.addAll(cluster.getAssemblyLinkedPairs());
+        mChrBreakendMap = cluster.getChrBreakendMap();
+        mHasReplication = cluster.hasReplicatedSVs();
+        mIsClusterSubset = false;
+    }
+
+    public void initialise(SvCluster cluster, final List<SvVarData> svList)
+    {
+        mIsClusterSubset = true;
+        mClusterId = cluster.id();
+
+        mChrBreakendMap = Maps.newHashMap();
+
+        for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        {
+            final List<SvBreakend> breakendList = Lists.newArrayList();
+
+            for (final SvBreakend breakend : entry.getValue())
+            {
+                if (svList.contains(breakend.getSV()))
+                    breakendList.add(breakend);
+            }
+
+            if (!breakendList.isEmpty())
+            {
+                mChrBreakendMap.put(entry.getKey(), breakendList);
+            }
+        }
+
+        for(SvVarData var : svList)
+        {
+            mReplicatedSVs.add(var);
+
+            if(var.isReplicatedSv())
+            {
+                mHasReplication = true;
+                continue;
+            }
+
+            mUniqueSVs.add(var);
+
+            if(var.isFoldback() && mFoldbacks.contains(var))
+                mFoldbacks.add(var);
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                for (SvLinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
+                {
+                    if(svList.contains(link.getOtherSV(var)))
+                    {
+                        mAssembledLinks.add(link);
+                    }
+                }
+            }
+        }
     }
 
     public void setLogVerbose(boolean toggle)
@@ -183,24 +263,19 @@ public class ChainFinder
             mMaxPossibleLinks = max(maxLinks, 2);
     }
 
+    public final List<SvChain> getChains() { return mChains; }
+    public double getValidAllelePloidySegmentPerc() { return mValidAllelePloidySegmentPerc; }
+
     public void formClusterChains(boolean assembledLinksOnly)
     {
-        List<SvVarData> svList = Lists.newArrayList(mCluster.getSVs(true));
-
-        if(svList.size() < 2)
+        if(mReplicatedSVs.size() < 2)
             return;
 
-        mCluster.getChains().clear();
-
-        if (mCluster.getSvCount() >= 4)
+        if (mUniqueSVs.size() >= 4)
         {
             LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({} rep={})",
-                    mCluster.id(), mCluster.getAssemblyLinkedPairs().size(), mCluster.getSvCount(), mCluster.getSvCount(true));
+                    mClusterId, mAssembledLinks.size(), mUniqueSVs.size(), mReplicatedSVs.size());
         }
-
-        // mLogWorking = isSpecificCluster(mCluster);
-
-        // isSpecificCluster(mCluster);
 
         buildChains(assembledLinksOnly);
 
@@ -218,27 +293,30 @@ public class ChainFinder
             }
 
             LOGGER.debug("cluster({}) chaining finished: chains({} links={}) unlinked SVs({} unique={}) breakends({} reps={}) validAllelePerc({})",
-                    mCluster.id(), mPartialChains.size(), mLinkIndex, mUnlinkedSVs.size(), uniqueUnlinkedSVs.size(),
-                    mUnlinkedBreakendMap.size(), breakendCount, String.format("%.2f", mCluster.getValidAllelePloidySegmentPerc()));
+                    mClusterId, mChains.size(), mLinkIndex, mUnlinkedSVs.size(), uniqueUnlinkedSVs.size(),
+                    mUnlinkedBreakendMap.size(), breakendCount, String.format("%.2f", mValidAllelePloidySegmentPerc));
         }
 
         if(!mIsValid)
         {
-            LOGGER.warn("cluster({}) chain finding failed", mCluster.id());
+            LOGGER.warn("cluster({}) chain finding failed", mClusterId);
             return;
         }
+    }
 
+    public void addChains(SvCluster cluster)
+    {
         // add these chains to the cluster, but skip any which are identical to existing ones,
         // which can happen for clusters with replicated SVs
-        mPartialChains.stream().forEach(chain -> checkAddNewChain(chain));
+        mChains.stream().forEach(chain -> checkAddNewChain(chain, cluster));
 
-        for(int i = 0; i < mCluster.getChains().size(); ++i)
+        for(int i = 0; i < cluster.getChains().size(); ++i)
         {
-            final SvChain chain = mCluster.getChains().get(i);
+            final SvChain chain = cluster.getChains().get(i);
 
             if(LOGGER.isDebugEnabled())
             {
-                LOGGER.debug("cluster({}) added chain({}) with {} linked pairs:", mCluster.id(), chain.id(), chain.getLinkCount());
+                LOGGER.debug("cluster({}) added chain({}) with {} linked pairs:", mClusterId, chain.id(), chain.getLinkCount());
                 chain.logLinks();
             }
 
@@ -246,23 +324,23 @@ public class ChainFinder
         }
     }
 
-    private void checkAddNewChain(final SvChain newChain)
+    private void checkAddNewChain(final SvChain newChain, SvCluster cluster)
     {
-        if(!mHasReplication || mCluster.getChains().isEmpty())
+        if(!mHasReplication || cluster.getChains().isEmpty())
         {
-            mCluster.addChain(newChain, false);
+            cluster.addChain(newChain, false);
             return;
         }
 
         // any identical chains will have their replicated SVs entirely removed
-        for(final SvChain chain : mCluster.getChains())
+        for(final SvChain chain : cluster.getChains())
         {
             if(chain.identicalChain(newChain))
             {
                 boolean allReplicatedSVs = newChain.getSvCount(false) == 0;
 
                 LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({}) all replicated({})",
-                        mCluster.id(), newChain.id(), chain.id(), allReplicatedSVs);
+                        mClusterId, newChain.id(), chain.id(), allReplicatedSVs);
 
                 chain.addToReplicationCount();
 
@@ -271,7 +349,7 @@ public class ChainFinder
                 {
                     for (final SvVarData var : newChain.getSvList())
                     {
-                        mCluster.removeReplicatedSv(var);
+                        cluster.removeReplicatedSv(var);
                     }
                 }
 
@@ -279,7 +357,7 @@ public class ChainFinder
             }
         }
 
-        mCluster.addChain(newChain, false);
+        cluster.addChain(newChain, false);
     }
 
     private void buildChains(boolean assembledLinksOnly)
@@ -291,8 +369,6 @@ public class ChainFinder
 
         if(assembledLinksOnly)
             return;
-
-        // isSpecificCluster(mCluster);
 
         setSvReplicationCounts();
 
@@ -326,7 +402,7 @@ public class ChainFinder
 
                 if (iterationsWithoutNewLinks > 5)
                 {
-                    LOGGER.error("cluster({}) 5 iterations without adding a new link", mCluster.id());
+                    LOGGER.error("cluster({}) 5 iterations without adding a new link", mClusterId);
                     mIsValid = false;
                     break;
                 }
@@ -784,7 +860,7 @@ public class ChainFinder
             for (final SvVarData var : maxRepSVs)
             {
                 log(LOG_LEVEL_VERBOSE, String.format("cluster(%s) removing high-replicated SV(%s %s)",
-                        mCluster.id(), var.posId(), var.type()));
+                        mClusterId, var.posId(), var.type()));
 
                 mSvReplicationMap.remove(var);
             }
@@ -1002,7 +1078,7 @@ public class ChainFinder
         SvBreakend unlinkedBeSecond = null;
         final SvLinkedPair newPair;
 
-        if(!mHasReplication) //  && !mCluster.requiresReplication()
+        if(!mHasReplication)
         {
             newPair = pair;
         }
@@ -1017,7 +1093,7 @@ public class ChainFinder
                 // tolerate missed assembly links while a more robust approach is determined for ploidy discrepancies
                 if(pair.isAssembled())
                 {
-                    LOGGER.warn("cluster({}) missed assembly link", mCluster.id());
+                    LOGGER.warn("cluster({}) missed assembly link", mClusterId);
                     return false;
                 }
 
@@ -1038,7 +1114,7 @@ public class ChainFinder
 
         boolean linkClosesChain = false;
 
-        for(SvChain chain : mPartialChains)
+        for(SvChain chain : mChains)
         {
             // test this link against each ends to the chain
             boolean addToStart = false;
@@ -1156,7 +1232,7 @@ public class ChainFinder
                 return false; // skip this link for now
 
             SvChain chain = new SvChain(mNextChainId++);
-            mPartialChains.add(chain);
+            mChains.add(chain);
             chain.addLink(newPair, true);
             pairToChain[SE_START] = true;
             pairToChain[SE_END] = true;
@@ -1208,21 +1284,19 @@ public class ChainFinder
 
     private void addAssemblyLinksToChains()
     {
-        List<SvLinkedPair> assemblyLinkedPairs = mCluster.getAssemblyLinkedPairs();
-
-        if(assemblyLinkedPairs.isEmpty())
+        if(mAssembledLinks.isEmpty())
             return;
 
         mLinkReason = "ASMB";
 
-        for(SvLinkedPair pair : assemblyLinkedPairs)
+        for(SvLinkedPair pair : mAssembledLinks)
         {
             addPairToChain(pair);
         }
 
-        if(!mPartialChains.isEmpty())
+        if(!mChains.isEmpty())
         {
-            LOGGER.debug("created {} partial chains from {} assembly links", mPartialChains.size(), assemblyLinkedPairs.size());
+            LOGGER.debug("created {} partial chains from {} assembly links", mChains.size(), mAssembledLinks.size());
         }
     }
 
@@ -1433,12 +1507,10 @@ public class ChainFinder
         if(!mHasReplication)
             return;
 
-        final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
-
         int totalSegCount = 0;
         int totalValidSegCount = 0;
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
@@ -1486,7 +1558,7 @@ public class ChainFinder
         }
 
         LOGGER.debug("cluster({}) chromosomes({}) AP totalSegments({} valid={})",
-                mCluster.id(), chrBreakendMap.size(), totalSegCount, totalValidSegCount);
+                mClusterId, mChrBreakendMap.size(), totalSegCount, totalValidSegCount);
     }
 
     private boolean calculateNoneClusterSegmentPloidies(final String chromosome, double[][] allelePloidies,
@@ -1627,8 +1699,7 @@ public class ChainFinder
             allelePloidies[i][AP_DATA_VALID] = AP_IS_VALID;
         }
 
-        double validSectionPercent = validSegments / (double)segmentCount;
-        mCluster.setValidAllelePloidySegmentPerc(validSectionPercent);
+        mValidAllelePloidySegmentPerc = validSegments / (double)segmentCount;
 
         return true;
     }
@@ -1684,9 +1755,7 @@ public class ChainFinder
             }
         }
 
-        final Map<String,List<SvBreakend>> chrBreakendMap = mCluster.getChrBreakendMap();
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
@@ -1842,7 +1911,7 @@ public class ChainFinder
         }
 
         // begin from immediately after the last added index and try to add another X possible links
-        final List<SvBreakend> breakendList = mCluster.getChrBreakendMap().get(breakend.chromosome());
+        final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
         final double[][] allelePloidies = mChrAllelePloidies.get(breakend.chromosome());
 
         boolean hasValidAP = mUseAllelePloidies && hasValidAllelePloidyData(breakend, allelePloidies);
@@ -1991,7 +2060,7 @@ public class ChainFinder
         // check whether the other breakend satisfies the same ploidy comparison criteria
         SvBreakend otherBreakend = var.getBreakend(!lowerPloidyBreakend.usesStart());
 
-        final List<SvBreakend> breakendList = mCluster.getChrBreakendMap().get(otherBreakend.chromosome());
+        final List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
 
         boolean traverseUp = otherBreakend.orientation() == -1;
         int index = otherBreakend.getClusterChrPosIndex();
@@ -2051,7 +2120,7 @@ public class ChainFinder
         if(!mHasReplication)
             return;
 
-        for(final SvVarData var : mCluster.getSVs())
+        for(final SvVarData var : mUniqueSVs)
         {
             if(var.getReplicatedCount() > 0)
             {
@@ -2068,7 +2137,7 @@ public class ChainFinder
     private void setUnlinkedBreakends()
     {
         // make a cache of all unchained breakends in those of replicated SVs
-        for(final SvVarData var : mCluster.getSVs(true))
+        for(final SvVarData var : mReplicatedSVs)
         {
             for (int be = SE_START; be <= SE_END; ++be)
             {
@@ -2092,7 +2161,7 @@ public class ChainFinder
             }
         }
 
-        mUnlinkedSVs.addAll(mCluster.getSVs(true));
+        mUnlinkedSVs.addAll(mReplicatedSVs);
     }
 
     private List<SvVarData> getMaxReplicationSVs()
@@ -2126,15 +2195,15 @@ public class ChainFinder
     private void reconcileChains()
     {
         int index1 = 0;
-        while(index1 < mPartialChains.size())
+        while(index1 < mChains.size())
         {
-            SvChain chain1 = mPartialChains.get(index1);
+            SvChain chain1 = mChains.get(index1);
 
             boolean chainsMerged = false;
 
-            for (int index2 = index1 + 1; index2 < mPartialChains.size(); ++index2)
+            for (int index2 = index1 + 1; index2 < mChains.size(); ++index2)
             {
-                SvChain chain2 = mPartialChains.get(index2);
+                SvChain chain2 = mChains.get(index2);
 
                 for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
@@ -2167,7 +2236,7 @@ public class ChainFinder
                                 }
                             }
 
-                            mPartialChains.remove(index2);
+                            mChains.remove(index2);
 
                             chainsMerged = true;
                             break;
@@ -2211,13 +2280,13 @@ public class ChainFinder
         if(!LOGGER.isDebugEnabled())
             return;
 
-        if(!mHasReplication || mCluster.getSvCount() < 100)
+        if(!mHasReplication || mUniqueSVs.size() < 100)
             return;
 
         if((mLinkIndex % 100) == 0)
         {
             LOGGER.debug("cluster({}) chaining progress: SVs({}) partialChains({}) unlinked(SVs={} breakends={}) replicatedSVs({})",
-                    mCluster.id(), mCluster.getSvCount(), mPartialChains.size(), mUnlinkedSVs.size(),
+                    mClusterId, mUniqueSVs.size(), mChains.size(), mUnlinkedSVs.size(),
                     mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
     }
@@ -2234,7 +2303,7 @@ public class ChainFinder
             if(breakendList == null)
             {
                 LOGGER.error("cluster({}) runIndex({}): breakend({}) has {} possible pairs but no available breakends",
-                        mCluster.id(), mLinkIndex, breakend.toString(), entry.getValue().size());
+                        mClusterId, mLinkIndex, breakend.toString(), entry.getValue().size());
 
                 mIsValid = false;
             }
@@ -2288,7 +2357,7 @@ public class ChainFinder
             }
         }
 
-        LOGGER.debug("cluster({}) culled {} possible pairs", mCluster.id(), culledPairs);
+        LOGGER.debug("cluster({}) culled {} possible pairs", mClusterId, culledPairs);
     }
 
 }

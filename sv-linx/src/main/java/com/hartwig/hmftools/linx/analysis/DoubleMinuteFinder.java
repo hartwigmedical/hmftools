@@ -155,7 +155,7 @@ public class DoubleMinuteFinder
             }
         }
 
-        final SvChain dmChain = createDMChain(highPloidySVs);
+        final SvChain dmChain = createDMChain(cluster, highPloidySVs);
 
         if (!isSingleDup && dmChain != null && dmChain.getSvCount() == highPloidySVs.size())
         {
@@ -663,7 +663,7 @@ public class DoubleMinuteFinder
         double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
         double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
 
-        final SvChain chain = isComplete ? createDMChain(dmSVList) : null;
+        final SvChain chain = isComplete ? createDMChain(null, dmSVList) : null;
 
         long dmChainLength = chain != null ? chain.getLength(true) : 0;
 
@@ -723,7 +723,7 @@ public class DoubleMinuteFinder
         return genesStr;
     }
 
-    private final SvChain createDMChain(List<SvVarData> dmSVList)
+    private final SvChain createDMChain(SvCluster cluster, List<SvVarData> dmSVList)
     {
         if(dmSVList.size() == 1)
         {
@@ -738,6 +738,7 @@ public class DoubleMinuteFinder
             return chain;
         }
 
+        /*
         // create a temporary cluster and try to chain it
         SvCluster dmCluster = new SvCluster(0);
 
@@ -750,12 +751,18 @@ public class DoubleMinuteFinder
         dmCluster.setAssemblyLinkedPairs(LinkFinder.createAssemblyLinkedPairs(dmCluster));
 
         mChainFinder.initialise(dmCluster);
+        mChainFinder.initialise(dmCluster);
+        */
+
+        mChainFinder.initialise(cluster, dmSVList);
         mChainFinder.formClusterChains(false);
 
-        if(dmCluster.getChains().size() != 1)
+        if(mChainFinder.getChains().size() != 1)
             return null;
 
-        return dmCluster.getChains().get(0);
+        SvChain chain = mChainFinder.getChains().get(0);
+        mChainFinder.clear();
+        return chain;
     }
 
     private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;

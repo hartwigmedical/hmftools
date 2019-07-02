@@ -483,10 +483,7 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
-        mChainFinder.initialise(cluster);
-
         // isSpecificCluster(cluster);
-
         if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount(true) > mConfig.ChainingSvLimit)
         {
             LOGGER.info("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
@@ -494,7 +491,11 @@ public class ClusterAnalyser {
             return;
         }
 
+        cluster.getChains().clear();
+        mChainFinder.initialise(cluster);
         mChainFinder.formClusterChains(assembledLinksOnly);
+        mChainFinder.addChains(cluster);
+        cluster.setValidAllelePloidySegmentPerc(mChainFinder.getValidAllelePloidySegmentPerc());
         mChainFinder.clear(); // release any refs to clusters and SVs
     }
 
