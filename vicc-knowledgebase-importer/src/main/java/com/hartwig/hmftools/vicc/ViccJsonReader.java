@@ -180,7 +180,7 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
 
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(36);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(35, 36, 37, 39, 40, 41);
 
     private ViccJsonReader() {
     }
@@ -362,7 +362,9 @@ public final class ViccJsonReader {
                 .regulatoryBodyApproved(objectMolecularMatch.getAsJsonPrimitive("regulatoryBodyApproved").getAsString())
                 .version(objectMolecularMatch.getAsJsonPrimitive("version").getAsString())
                 .includeMutation1(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeMutation1")))
-                .guidelineBody(objectMolecularMatch.getAsJsonPrimitive("guidelineBody").getAsString())
+                .guidelineBody(!objectMolecularMatch.has("guidelineBody")
+                        ? null
+                        : objectMolecularMatch.getAsJsonPrimitive("guidelineBody").getAsString())
                 .regulatoryBody(objectMolecularMatch.getAsJsonPrimitive("regulatoryBody").getAsString())
                 .customer(objectMolecularMatch.getAsJsonPrimitive("customer").getAsString())
                 .direction(objectMolecularMatch.getAsJsonPrimitive("direction").getAsString())
@@ -386,27 +388,29 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static MolecularMatchTherapeuticContext createTherapeuticContext(@NotNull JsonArray arrayTherapeuticContext) {
-        MolecularMatchTherapeuticContext therapeuticContexts = ImmutableMolecularMatchTherapeuticContext.builder().build();
-        for (JsonElement therapeuticContext: arrayTherapeuticContext) {
-            therapeuticContexts = ImmutableMolecularMatchTherapeuticContext.builder()
+    private static List<MolecularMatchTherapeuticContext> createTherapeuticContext(@NotNull JsonArray arrayTherapeuticContext) {
+        List<MolecularMatchTherapeuticContext> therapeuticContextList = Lists.newArrayList();
+        for (JsonElement therapeuticContext : arrayTherapeuticContext) {
+            therapeuticContextList.add(ImmutableMolecularMatchTherapeuticContext.builder()
                     .facet(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
                     .suppress(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .valid(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
                     .name(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .build();
+                    .build());
         }
-        return therapeuticContexts;
+        return therapeuticContextList;
     }
 
     @NotNull
-    private static MolecularMatchClassification createClassification(@NotNull JsonArray objectClassifications) {
-        MolecularMatchClassification classifications = ImmutableMolecularMatchClassification.builder().build();
-        for (JsonElement classification: objectClassifications) {
-            classifications = ImmutableMolecularMatchClassification.builder()
+    private static List<MolecularMatchClassification> createClassification(@NotNull JsonArray objectClassifications) {
+        List<MolecularMatchClassification> classificationList = Lists.newArrayList();
+        for (JsonElement classification : objectClassifications) {
+            classificationList.add(ImmutableMolecularMatchClassification.builder()
                     .end(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("End")))
                     .classification(classification.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
-                    .classificationOverride(classification.getAsJsonObject().getAsJsonPrimitive("classificationOverride").getAsString())
+                    .classificationOverride(classification.getAsJsonObject().get("classificationOverride").isJsonNull()
+                            ? null
+                            : classification.getAsJsonObject().getAsJsonPrimitive("classificationOverride").getAsString())
                     .start(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Start")))
                     .chr(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Chr")))
                     .geneSymbol(classification.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
@@ -415,53 +419,68 @@ public final class ViccJsonReader {
                     .description(classification.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .priority(classification.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
                     .NucleotideChange(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("NucleotideChange")))
-                    .parents(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("parents")))
                     .drugsExperimentalCount(classification.getAsJsonObject().getAsJsonPrimitive("drugsExperimentalCount").getAsString())
                     .exon(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Exon")))
-                    .drugsApprovedOffLabelCount(classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOffLabelCount").getAsString())
+                    .drugsApprovedOffLabelCount(classification.getAsJsonObject()
+                            .getAsJsonPrimitive("drugsApprovedOffLabelCount")
+                            .getAsString())
                     .exonicFunc(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("ExonicFunc")))
                     .popFreqMax(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("PopFreqMax")))
-                    .copyNumberType(classification.getAsJsonObject().getAsJsonPrimitive("copyNumberType").getAsString())
+                    .copyNumberType(classification.getAsJsonObject().get("copyNumberType").isJsonNull()
+                            ? null
+                            : classification.getAsJsonObject().getAsJsonPrimitive("copyNumberType").getAsString())
                     .publicationCount(classification.getAsJsonObject().getAsJsonPrimitive("publicationCount").getAsString())
-                    .transcript(classification.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .transcript(classification.getAsJsonObject().get("transcript").isJsonNull()
+                            ? null
+                            : classification.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .dbSNP(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("dbSNP")))
                     .alt(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Alt")))
                     .name(classification.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .rootTerm(classification.getAsJsonObject().getAsJsonPrimitive("rootTerm").getAsString())
                     .sources(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("sources")))
-                    .drugsApprovedOnLabelCount(classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOnLabelCount").getAsString())
+                    .drugsApprovedOnLabelCount(classification.getAsJsonObject()
+                            .getAsJsonPrimitive("drugsApprovedOnLabelCount")
+                            .getAsString())
                     .trialCount(classification.getAsJsonObject().getAsJsonPrimitive("trialCount").getAsString())
                     .alias(classification.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
                     .COSMIC_ID(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("COSMIC_ID")))
                     .transcripts(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("transcripts")))
-                    .build();
+                    .build());
 
         }
-        return classifications;
+        return classificationList;
 
     }
+
     @NotNull
     private static List<MolecularMatchTags> createTags(@NotNull JsonArray arrayTags) {
         List<MolecularMatchTags> tagsList = Lists.newArrayList();
-        for (JsonElement tags: arrayTags) {
+        for (JsonElement tags : arrayTags) {
             tagsList.add(ImmutableMolecularMatchTags.builder()
                     .priority(tags.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
-                    .compositeKey(tags.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .compositeKey(!tags.getAsJsonObject().has("compositeKey")
+                            ? null
+                            : tags.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
                     .suppress(tags.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .filterType(tags.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
                     .term(tags.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
-                    .primary(tags.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
+                    .primary(!tags.getAsJsonObject().has("primary")
+                            ? null
+                            : tags.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
                     .facet(tags.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
-                    .valid(tags.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
-                    .custom(tags.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .valid(!tags.getAsJsonObject().has("valid") ? null : tags.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
+                    .custom(!tags.getAsJsonObject().has("custom")
+                            ? null
+                            : tags.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
                     .build());
         }
         return tagsList;
     }
+
     @NotNull
     private static List<MolecularMatchTierExplanation> createTierExplanation(@NotNull JsonArray arrarTierExplanation) {
         List<MolecularMatchTierExplanation> tierExplanationList = Lists.newArrayList();
-        for (JsonElement tierExplanation: arrarTierExplanation) {
+        for (JsonElement tierExplanation : arrarTierExplanation) {
             tierExplanationList.add(ImmutableMolecularMatchTierExplanation.builder()
                     .tier(tierExplanation.getAsJsonObject().getAsJsonPrimitive("tier").getAsString())
                     .step(tierExplanation.getAsJsonObject().getAsJsonPrimitive("step").getAsString())
@@ -471,11 +490,12 @@ public final class ViccJsonReader {
         }
         return tierExplanationList;
     }
+
     @NotNull
     private static List<MolecularMatchVariantInfo> createVariantInfo(@NotNull JsonArray arrayVariantInfo) {
         List<MolecularMatchVariantInfo> variantInfoList = Lists.newArrayList();
 
-        for (JsonElement variantInfo: arrayVariantInfo){
+        for (JsonElement variantInfo : arrayVariantInfo) {
             variantInfoList.add(ImmutableMolecularMatchVariantInfo.builder()
                     .classification(variantInfo.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
                     .name(variantInfo.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
@@ -487,7 +507,7 @@ public final class ViccJsonReader {
                     .gene(variantInfo.getAsJsonObject().getAsJsonPrimitive("gene").getAsString())
                     .transcript(variantInfo.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .popFreqMax(variantInfo.getAsJsonObject().getAsJsonPrimitive("popFreqMax").getAsString())
-            .build());
+                    .build());
         }
         return variantInfoList;
     }
@@ -495,23 +515,36 @@ public final class ViccJsonReader {
     @NotNull
     private static List<MolecularMatchLocations> createLocations(@NotNull JsonArray arrayLocations) {
         List<MolecularMatchLocations> locationsList = Lists.newArrayList();
-        for (JsonElement locations: arrayLocations) {
+        for (JsonElement locations : arrayLocations) {
             locationsList.add(ImmutableMolecularMatchLocations.builder()
-                    .aminoAcidChange(locations.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
-                    .intronNumber(locations.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
-                    .exonNumber(locations.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
+                    .aminoAcidChange(!locations.getAsJsonObject().has("amino_acid_change")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
+                    .intronNumber(!locations.getAsJsonObject().has("intronNumber")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
+                    .exonNumber(!locations.getAsJsonObject().has("exonNumber")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
                     .stop(locations.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
                     .start(locations.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
                     .chr(locations.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
-                    .strand(locations.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
-                    .alt(locations.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
-                    .referenceGenome(locations.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
-                    .ref(locations.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
-                    .cdna(locations.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
+                    .strand(!locations.getAsJsonObject().has("strand")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
+                    .alt(!locations.getAsJsonObject().has("alt")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
+                    .referenceGenome(!locations.getAsJsonObject().has("referenceGenome")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
+                    .ref(!locations.getAsJsonObject().has("ref") ? null : locations.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .cdna(!locations.getAsJsonObject().has("cdna") ? null :locations.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .build());
         }
         return locationsList;
     }
+
     @NotNull
     private static MolecularMatchAst createAst(@NotNull JsonObject objectAst) {
         return ImmutableMolecularMatchAst.builder()
@@ -525,7 +558,7 @@ public final class ViccJsonReader {
     @NotNull
     private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
         return ImmutableMolecularMatchAstLeft.builder()
-                .raw(objectLeft.getAsJsonPrimitive("raw").getAsString())
+                .raw(!objectLeft.getAsJsonPrimitive("raw").isJsonNull() ? null :objectLeft.getAsJsonPrimitive("raw").getAsString())
                 .type(objectLeft.getAsJsonPrimitive("type").getAsString())
                 .value(objectLeft.getAsJsonPrimitive("value").getAsString())
                 .build();
@@ -540,6 +573,7 @@ public final class ViccJsonReader {
                 .build();
 
     }
+
     @NotNull
     private static List<MolecularMatchSource> createSource(@NotNull JsonArray arraySources) {
         List<MolecularMatchSource> sourcesList = Lists.newArrayList();
@@ -548,11 +582,15 @@ public final class ViccJsonReader {
                     .name(source.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .suppress(source.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .pubId(source.getAsJsonObject().getAsJsonPrimitive("pubId").getAsString())
-                    .subType(source.getAsJsonObject().getAsJsonPrimitive("subType").getAsString())
+                    .subType(!source.getAsJsonObject().has("subType")
+                            ? null
+                            : source.getAsJsonObject().getAsJsonPrimitive("subType").getAsString())
                     .valid(source.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
                     .link(source.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
                     .year(source.getAsJsonObject().getAsJsonPrimitive("year").getAsString())
-                    .trialId(source.getAsJsonObject().getAsJsonPrimitive("trialId").getAsString())
+                    .trialId(!source.getAsJsonObject().has("trialId")
+                            ? null
+                            : source.getAsJsonObject().getAsJsonPrimitive("trialId").getAsString())
                     .type(source.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .id(source.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .build());
@@ -571,10 +609,14 @@ public final class ViccJsonReader {
                     .suppress(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .filterType(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
                     .term(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
-                    .primary(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
+                    .primary(!criteriaUnmet.getAsJsonObject().has("primary")
+                            ? null
+                            : criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
                     .facet(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
                     .valid(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
-                    .custom(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .custom(!criteriaUnmet.getAsJsonObject().has("custom")
+                            ? null
+                            : criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
                     .build());
         }
         return criteriaUnmetList;
@@ -590,8 +632,12 @@ public final class ViccJsonReader {
                     .percent(prevelance.getAsJsonObject().getAsJsonPrimitive("percent").getAsString())
                     .studyId(prevelance.getAsJsonObject().getAsJsonPrimitive("studyId").getAsString())
                     .samples(prevelance.getAsJsonObject().getAsJsonPrimitive("samples").getAsString())
-                    .molecular(prevelance.getAsJsonObject().getAsJsonPrimitive("molecular").getAsString())
-                    .condition(prevelance.getAsJsonObject().getAsJsonPrimitive("condition").getAsString())
+                    .molecular(!prevelance.getAsJsonObject().has("molecular")
+                            ? null
+                            : prevelance.getAsJsonObject().getAsJsonPrimitive("molecular").getAsString())
+                    .condition(!prevelance.getAsJsonObject().has("condition")
+                            ? null
+                            : prevelance.getAsJsonObject().getAsJsonPrimitive("condition").getAsString())
                     .build());
         }
         return prevalenceList;
@@ -604,18 +650,16 @@ public final class ViccJsonReader {
         for (JsonElement mutation : arrayMutations) {
             mutationList.add(ImmutableMolecularMatchMutations.builder()
                     .transcriptConsequence(createTranscriptConsequence(mutation.getAsJsonObject().getAsJsonArray("transcriptConsequence")))
-                    .longestTranscript(mutation.getAsJsonObject().getAsJsonPrimitive("longestTranscript").getAsString())
                     .description(mutation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .mutationType(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
                     .src(mutation.getAsJsonObject().getAsJsonPrimitive("_src").getAsString())
                     .sources(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("sources")))
                     .synonyms(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("synonyms")))
-                    .parents(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("parents")))
                     .gRch37Location(createGRCH37Location(mutation.getAsJsonObject().getAsJsonArray("GRCh37_location")))
-                    .uniprotTranscript(mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
+                    .uniprotTranscript(!mutation.getAsJsonObject().has("uniprotTranscript") ? null : mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
                     .geneSymbol(mutation.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
                     .pathology(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("pathology")))
-                    .transcript(mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .transcript(!mutation.getAsJsonObject().has("transcript") ? null : mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .id(mutation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .cDNA(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
                     .name(mutation.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
@@ -627,37 +671,49 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static MolecularMatchGRch37Location createGRCH37Location(@NotNull JsonArray arrayLocation) {
-        MolecularMatchGRch37Location mutation = ImmutableMolecularMatchGRch37Location.builder().build();
-        for (JsonElement location: arrayLocation) {
-            mutation = ImmutableMolecularMatchGRch37Location.builder()
+    private static List<MolecularMatchGRch37Location> createGRCH37Location(@NotNull JsonArray arrayLocation) {
+        List<MolecularMatchGRch37Location> gRch37LocationList = Lists.newArrayList();
+
+        for (JsonElement location : arrayLocation) {
+            gRch37LocationList.add(ImmutableMolecularMatchGRch37Location.builder()
                     .compositeKey(location.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
-                    .ref(location.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .ref(location.getAsJsonObject().get("ref").isJsonNull()
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
                     .stop(location.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
                     .start(location.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
                     .chr(location.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
-                    .alt(location.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
+                    .alt(location.getAsJsonObject().get("alt").isJsonNull()
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
                     .validated(location.getAsJsonObject().getAsJsonPrimitive("validated").getAsString())
                     .transcriptConsequences(createConsequencesGRCH37(location.getAsJsonObject().getAsJsonArray("transcript_consequences")))
                     .strand(location.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
-                    .build();
+                    .build());
         }
-        return mutation;
+        return gRch37LocationList;
 
     }
 
     @NotNull
-    private static List<MolecularMatchTranscriptConsequencesGRCH37> createConsequencesGRCH37(@NotNull JsonArray arrayTranscriptConsequence) {
+    private static List<MolecularMatchTranscriptConsequencesGRCH37> createConsequencesGRCH37(
+            @NotNull JsonArray arrayTranscriptConsequence) {
         List<MolecularMatchTranscriptConsequencesGRCH37> transcriptConsequencesGRCH37List = Lists.newArrayList();
-        for (JsonElement transcriptConsequences: arrayTranscriptConsequence) {
+        for (JsonElement transcriptConsequences : arrayTranscriptConsequence) {
             transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCH37.builder()
-                    .aminoAcidChange(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
+                    .aminoAcidChange(transcriptConsequences.getAsJsonObject().get("amino_acid_change").isJsonNull()
+                            ? null
+                            : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
                     .txSites(jsonArrayToStringList(transcriptConsequences.getAsJsonObject().getAsJsonArray("txSites")))
-                    .exonNumber(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
-                    .intronNumber(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
+                    .exonNumber(transcriptConsequences.getAsJsonObject().get("exonNumber").isJsonNull()
+                            ? null
+                            : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
+                    .intronNumber(transcriptConsequences.getAsJsonObject().get("intronNumber").isJsonNull()
+                            ? null
+                            : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
                     .transcript(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .cdna(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
-            .build());
+                    .build());
         }
         return transcriptConsequencesGRCH37List;
     }
@@ -666,12 +722,18 @@ public final class ViccJsonReader {
     private static List<MolecularMatchTranscriptConsequence> createTranscriptConsequence(@NotNull JsonArray arrayTranscriptConsequence) {
         List<MolecularMatchTranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
 
-        for (JsonElement transcriptConsequence: arrayTranscriptConsequence) {
+        for (JsonElement transcriptConsequence : arrayTranscriptConsequence) {
             transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
-                    .aminoAcidChange(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
+                    .aminoAcidChange(transcriptConsequence.getAsJsonObject().get("amino_acid_change").isJsonNull()
+                            ? null
+                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
                     .compositeKey(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
-                    .intronNumber(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
-                    .exonNumber(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
+                    .intronNumber(transcriptConsequence.getAsJsonObject().get("intronNumber").isJsonNull()
+                            ? null
+                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
+                    .exonNumber(transcriptConsequence.getAsJsonObject().get("exonNumber").isJsonNull()
+                            ? null
+                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
                     .suppress(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .stop(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
                     .custom(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
@@ -682,7 +744,7 @@ public final class ViccJsonReader {
                     .transcript(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .cdna(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
-            .build());
+                    .build());
         }
         return transcriptConsequenceList;
     }

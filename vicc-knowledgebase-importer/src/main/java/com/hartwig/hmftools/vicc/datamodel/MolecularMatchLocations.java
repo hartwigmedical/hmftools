@@ -8,13 +8,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchLocations {
 
-    @NotNull
+    @Nullable
     public abstract String aminoAcidChange();
 
-    @NotNull
+    @Nullable
     public abstract String intronNumber();
 
-    @NotNull
+    @Nullable
     public abstract String exonNumber();
 
     @NotNull
@@ -26,18 +26,18 @@ public abstract class MolecularMatchLocations {
     @NotNull
     public abstract String chr();
 
-    @NotNull
+    @Nullable
     public abstract String strand();
 
-    @NotNull
+    @Nullable
     public abstract String alt();
 
-    @NotNull
+    @Nullable
     public abstract String referenceGenome();
 
-    @NotNull
+    @Nullable
     public abstract String ref();
 
-    @NotNull
+    @Nullable
     public abstract String cdna();
 }

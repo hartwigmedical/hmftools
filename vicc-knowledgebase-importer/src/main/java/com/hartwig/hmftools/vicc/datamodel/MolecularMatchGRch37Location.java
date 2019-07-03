@@ -13,7 +13,7 @@ public abstract class MolecularMatchGRch37Location {
     @NotNull
     public abstract String compositeKey();
 
-    @NotNull
+    @Nullable
     public abstract String ref();
 
     @NotNull
@@ -25,7 +25,7 @@ public abstract class MolecularMatchGRch37Location {
     @NotNull
     public abstract String chr();
 
-    @NotNull
+    @Nullable
     public abstract String alt();
 
     @NotNull

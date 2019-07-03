@@ -16,7 +16,7 @@ public abstract class MolecularMatchClassification {
     @NotNull
     public abstract String classification();
 
-    @NotNull
+    @Nullable
     public abstract String classificationOverride();
 
     @NotNull
@@ -44,9 +44,6 @@ public abstract class MolecularMatchClassification {
     public abstract List<String> NucleotideChange();
 
     @NotNull
-    public abstract List<String> parents();
-
-    @NotNull
     public abstract String drugsExperimentalCount();
 
     @NotNull
@@ -61,13 +58,13 @@ public abstract class MolecularMatchClassification {
     @NotNull
     public abstract List<String> popFreqMax();
 
-    @NotNull
+    @Nullable
     public abstract String copyNumberType();
 
     @NotNull
     public abstract String publicationCount();
 
-    @NotNull
+    @Nullable
     public abstract String transcript();
 
     @NotNull

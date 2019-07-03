@@ -17,7 +17,7 @@ public abstract class MolecularMatchSource {
     @NotNull
     public abstract String pubId();
 
-    @NotNull
+    @Nullable
     public abstract String subType();
 
     @NotNull
@@ -29,7 +29,7 @@ public abstract class MolecularMatchSource {
     @NotNull
     public abstract String year();
 
-    @NotNull
+    @Nullable
     public abstract String trialId();
 
     @NotNull

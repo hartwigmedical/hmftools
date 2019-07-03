@@ -8,16 +8,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchTranscriptConsequence {
 
-    @NotNull
+    @Nullable
     public abstract String aminoAcidChange();
 
     @NotNull
     public abstract String compositeKey();
 
-    @NotNull
+    @Nullable
     public abstract String intronNumber();
 
-    @NotNull
+    @Nullable
     public abstract String exonNumber();
 
     @NotNull

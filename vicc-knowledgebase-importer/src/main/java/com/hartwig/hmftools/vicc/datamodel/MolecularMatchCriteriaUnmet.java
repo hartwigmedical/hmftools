@@ -23,7 +23,7 @@ public abstract class MolecularMatchCriteriaUnmet {
     @NotNull
     public abstract String term();
 
-    @NotNull
+    @Nullable
     public abstract String primary();
 
     @NotNull
@@ -32,6 +32,6 @@ public abstract class MolecularMatchCriteriaUnmet {
     @NotNull
     public abstract String valid();
 
-    @NotNull
+    @Nullable
     public abstract String custom();
 }

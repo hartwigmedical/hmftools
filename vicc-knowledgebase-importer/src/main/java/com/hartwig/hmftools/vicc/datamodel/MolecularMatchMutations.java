@@ -10,11 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchMutations {
 
-    @NotNull
+    @Nullable
     public abstract List<MolecularMatchTranscriptConsequence> transcriptConsequence();
-
-    @NotNull
-    public abstract String longestTranscript();
 
     @NotNull
     public abstract String description();
@@ -32,12 +29,9 @@ public abstract class MolecularMatchMutations {
     public abstract List<String> synonyms();
 
     @NotNull
-    public abstract List<String> parents();
+    public abstract List<MolecularMatchGRch37Location> gRch37Location();
 
-    @NotNull
-    public abstract MolecularMatchGRch37Location gRch37Location();
-
-    @NotNull
+    @Nullable
     public abstract String uniprotTranscript();
 
     @NotNull
@@ -46,7 +40,7 @@ public abstract class MolecularMatchMutations {
     @NotNull
     public abstract List<String> pathology();
 
-    @NotNull
+    @Nullable
     public abstract String transcript();
 
     @NotNull

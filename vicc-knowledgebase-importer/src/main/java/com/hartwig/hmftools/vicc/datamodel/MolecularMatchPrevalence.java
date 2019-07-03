@@ -20,9 +20,9 @@ public abstract class MolecularMatchPrevalence {
     @NotNull
     public abstract String samples();
 
-    @NotNull
+    @Nullable
     public abstract String molecular();
 
-    @NotNull
+    @Nullable
     public abstract String condition();
 }

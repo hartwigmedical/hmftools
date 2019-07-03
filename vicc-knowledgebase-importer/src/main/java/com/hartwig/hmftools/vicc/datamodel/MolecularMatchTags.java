@@ -11,7 +11,7 @@ public abstract class MolecularMatchTags {
     @NotNull
     public abstract String priority();
 
-    @NotNull
+    @Nullable
     public abstract String compositeKey();
 
     @NotNull
@@ -23,15 +23,15 @@ public abstract class MolecularMatchTags {
     @NotNull
     public abstract String term();
 
-    @NotNull
+    @Nullable
     public abstract String primary();
 
     @NotNull
     public abstract String facet();
 
-    @NotNull
+    @Nullable
     public abstract String valid();
 
-    @NotNull
+    @Nullable
     public abstract String custom();
 }
