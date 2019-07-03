@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.Ignore;
 
+@Ignore
 public class FusedExonsTest
 {
-    @Test
+    @Ignore
     public void testStuff() throws IOException
     {
         final List<Fusion> fusions = Fusions.fromFile("/Users/jon/hmf/analysis/CPCT02390005T/CPCT02390005T.linx.fusions_detailed.csv")
