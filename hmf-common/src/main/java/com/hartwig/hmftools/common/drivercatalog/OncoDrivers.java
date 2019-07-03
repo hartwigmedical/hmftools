@@ -62,8 +62,8 @@ public final class OncoDrivers {
 
     @NotNull
     static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
-            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> codingVariants) {
-        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(codingVariants);
+            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
         long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
         long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
@@ -80,13 +80,14 @@ public final class OncoDrivers {
                 .splice(spliceVariants)
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
+                .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .driver(missenseVariants > 0 ? DriverType.DNDS : DriverType.NONE);
 
-        if (codingVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
+        if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
             return builder.driver(DriverType.HOTSPOT).build();
         }
 
-        if (codingVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
+        if (geneVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
             return builder.driver(DriverType.INFRAME).build();
         }
 

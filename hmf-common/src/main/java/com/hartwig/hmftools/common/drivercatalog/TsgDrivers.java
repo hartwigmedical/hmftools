@@ -85,6 +85,7 @@ public final class TsgDrivers {
                 .splice(spliceVariants)
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
+                .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .driver(DriverType.DNDS);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {

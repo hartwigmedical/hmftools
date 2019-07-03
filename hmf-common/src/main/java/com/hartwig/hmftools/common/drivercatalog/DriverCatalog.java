@@ -31,4 +31,6 @@ public interface DriverCatalog {
 
     long frameshift();
 
+    boolean biallelic();
+
 }

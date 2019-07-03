@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep13;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -35,7 +35,7 @@ class DriverCatalogDAO {
         deleteForSample(sample);
 
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep13 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.GENE,
                     DRIVERCATALOG.CATEGORY,
@@ -47,13 +47,14 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.SPLICE,
                     DRIVERCATALOG.INFRAME,
                     DRIVERCATALOG.FRAMESHIFT,
+                    DRIVERCATALOG.BIALLELIC,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep13 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
         //noinspection unchecked
         inserter.values(sample,
@@ -67,6 +68,7 @@ class DriverCatalogDAO {
                 entry.splice(),
                 entry.inframe(),
                 entry.frameshift(),
+                entry.biallelic(),
                 timestamp);
     }
 
@@ -92,6 +94,7 @@ class DriverCatalogDAO {
                     .splice(record.getValue(DRIVERCATALOG.SPLICE))
                     .inframe(record.getValue(DRIVERCATALOG.INFRAME))
                     .frameshift(record.getValue(DRIVERCATALOG.FRAMESHIFT))
+                    .biallelic(record.getValue(DRIVERCATALOG.BIALLELIC) != 0)
                     .build();
 
             dcList.add(driverCatalog);

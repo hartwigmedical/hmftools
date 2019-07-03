@@ -110,6 +110,7 @@ public class OncoDriversTest {
                 .canonicalCodingEffect(codingEffect)
                 .repeatCount(repeatCount)
                 .hotspot(hotspot)
+                .biallelic(false)
                 .build();
     }
 }

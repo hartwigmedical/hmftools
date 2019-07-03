@@ -713,6 +713,7 @@ CREATE TABLE driverCatalog
     splice int NOT NULL,
     frameshift int NOT NULL,
     inframe int NOT NULL,
+    biallelic BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(gene)
