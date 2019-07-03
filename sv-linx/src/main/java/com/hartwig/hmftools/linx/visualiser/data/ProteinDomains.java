@@ -42,7 +42,7 @@ public class ProteinDomains
         final GenomeRegion downGeneRegion =
                 GenomeRegions.create(fusion.chromosomeDown(), Math.min(downGeneStart, downGeneEnd), Math.max(downGeneStart, downGeneEnd));
 
-        final long additionalDownOffset = finalDownExon.geneStart() - 1;
+        final long additionalDownOffset = finalDownExon.geneStart();
 
         for (ProteinDomain unadjustedDomain : proteinDomains)
         {
@@ -93,12 +93,12 @@ public class ProteinDomains
 
     private static long start(int strand, long offset, GenomeRegion region)
     {
-        return strand < 0 ? offset - region.end() + 1 : region.start() - offset + 1;
+        return strand < 0 ? offset - region.end() : region.start() - offset;
     }
 
     private static long end(int strand, long offset, GenomeRegion region)
     {
-        return strand < 0 ? offset - region.start() + 1 : region.end() - offset + 1;
+        return strand < 0 ? offset - region.start() : region.end() - offset;
     }
 
     public static void write(@NotNull final String fileName, @NotNull final ProteinDomainColors colors,

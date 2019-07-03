@@ -38,6 +38,7 @@ public class FusedExons
 
         final String fusionName = fusion.geneUp() + "_" + fusion.geneDown();
         final long upGeneOffset = offset(fusion.strandUp(), firstUpstreamExon);
+        final long upGeneStart = start(fusion.strandUp(), upGeneOffset, firstUpstreamExon);
         final long upGeneEnd = convert(fusion.strandUp(), upGeneOffset, fusion.positionUp());
 
         final ImmutableFusedExon.Builder upFusedExonBuilder = ImmutableFusedExon.builder()
@@ -47,7 +48,7 @@ public class FusedExons
                 .chromosome(fusion.chromosomeUp())
                 .unadjustedGeneStart(fusion.strandUp() < 0 ? firstUpstreamExon.end() : firstUpstreamExon.start())
                 .gene(fusion.geneUp())
-                .geneStart(1)
+                .geneStart(upGeneStart)
                 .geneEnd(upGeneEnd);
 
         for (final Exon exon : upStreamExons)
@@ -154,14 +155,14 @@ public class FusedExons
     }
 
     private static long start(int strand, long offset, GenomeRegion region) {
-        return strand < 0 ? offset - region.end() + 1 : region.start() - offset + 1;
+        return strand < 0 ? offset - region.end(): region.start() - offset;
     }
 
     private static long end(int strand, long offset, GenomeRegion region) {
-        return strand < 0 ? offset - region.start() + 1 : region.end() - offset + 1;
+        return strand < 0 ? offset - region.start() : region.end() - offset;
     }
 
     private static long convert(int strand, long offset, long position) {
-        return strand < 0 ? offset - position + 1 : position - offset + 1;
+        return strand < 0 ? offset - position : position - offset;
     }
 }
