@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -10,7 +14,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusedExons
 {
+    private static final String DELIMITER = "\t";
     private static final Comparator<Exon> RANKED = Comparator.comparingInt(Exon::rank);
+
+    public static void write(@NotNull final String fileName, @NotNull final List<FusedExon> fusedExons) throws IOException
+    {
+        Files.write(new File(fileName).toPath(), toLines(fusedExons));
+    }
 
     @NotNull
     public static List<FusedExon> fusedExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
@@ -47,7 +57,7 @@ public class FusedExons
                         .start(exonStart)
                         .end(Math.min(exonEnd, upGeneEnd))
                         .rank(exon.rank())
-                        .incomplete(exonEnd > upGeneEnd)
+                        .truncated(exonEnd > upGeneEnd)
                         .build();
                 result.add(fusedExon);
             }
@@ -74,7 +84,7 @@ public class FusedExons
                         .start(Math.max(exonStart, downGeneStart))
                         .end(exonEnd)
                         .rank(exon.rank())
-                        .incomplete(exonStart < downGeneStart)
+                        .truncated(exonStart < downGeneStart)
                         .build();
                 result.add(fusedExon);
             }
@@ -82,6 +92,50 @@ public class FusedExons
         }
 
         return result;
+    }
+
+    @NotNull
+    static List<String> toLines(@NotNull final List<FusedExon> exons)
+    {
+        final List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        exons.stream().map(FusedExons::toString).forEach(lines::add);
+        return lines;
+    }
+
+    @NotNull
+    private static String header()
+    {
+        return new StringJoiner(DELIMITER).add("sampleId")
+                .add("clusterId")
+                .add("fusion")
+                .add("gene")
+                .add("geneStart")
+                .add("geneEnd")
+                .add("chromosome")
+                .add("start")
+                .add("end")
+                .add("rank")
+                .add("truncated")
+                .toString();
+    }
+
+    @NotNull
+    private static String toString(@NotNull final FusedExon exon)
+    {
+        return new StringJoiner(DELIMITER)
+                .add(exon.sampleId())
+                .add(String.valueOf(exon.clusterId()))
+                .add(String.valueOf(exon.fusion()))
+                .add(String.valueOf(exon.gene()))
+                .add(String.valueOf(exon.geneStart()))
+                .add(String.valueOf(exon.geneEnd()))
+                .add(String.valueOf(exon.chromosome()))
+                .add(String.valueOf(exon.start()))
+                .add(String.valueOf(exon.end()))
+                .add(String.valueOf(exon.rank()))
+                .add(String.valueOf(exon.truncated()))
+                .toString();
     }
 
 }

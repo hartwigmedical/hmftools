@@ -29,6 +29,6 @@ public abstract class FusedExon implements GenomeRegion
 
     public abstract int rank();
 
-    public abstract boolean incomplete();
+    public abstract boolean truncated();
 
 }
