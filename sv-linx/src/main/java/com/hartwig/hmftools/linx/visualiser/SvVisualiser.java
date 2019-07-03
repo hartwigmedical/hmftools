@@ -225,7 +225,7 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains);
+        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains, filteredFusions);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData);
         confWrite.writeConfig();
 

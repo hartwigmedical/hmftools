@@ -31,6 +31,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
+    private static final String SINGLE_BLUE = "(107,174,214)";
+    private static final String SINGLE_RED = "(214,144,107)";
+
 
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
@@ -69,13 +72,13 @@ public class CircosDataWriter
         Files.write(new File(proteinDomainPath).toPath(), proteinDomain(data.proteinDomains()));
 
         final String exonPath = filePrefix + ".exon.circos";
-        Files.write(new File(exonPath).toPath(), exons(exons));
+        Files.write(new File(exonPath).toPath(), exons(data.downStreamGenes(), exons));
 
         final String exonRankPath = filePrefix + ".exon.rank.circos";
         Files.write(new File(exonRankPath).toPath(), exonRank(totalContigLength, exons));
 
         final String genePath = filePrefix + ".gene.circos";
-        Files.write(new File(genePath).toPath(), genes(data.genes()));
+        Files.write(new File(genePath).toPath(), genes(data.downStreamGenes(), data.genes()));
 
         final String geneNamePath = filePrefix + ".gene.name.circos";
         Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
@@ -123,7 +126,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> genes(@NotNull final List<Gene> genes)
+    private List<String> genes(@NotNull final Set<String> downGenes, @NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
         for (final Gene gene : genes)
@@ -132,6 +135,7 @@ public class CircosDataWriter
                     .add(String.valueOf(gene.start()))
                     .add(String.valueOf(gene.end()))
                     .add(String.valueOf(1))
+                    .add("fill_color=" + (downGenes.contains(gene.name()) ? SINGLE_RED : SINGLE_BLUE))
                     .toString();
             result.add(exonString);
 
@@ -214,7 +218,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exons(@NotNull final List<Exon> exons)
+    private List<String> exons(@NotNull final Set<String> downGenes, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
         for (final Exon exon : exons)
@@ -223,7 +227,7 @@ public class CircosDataWriter
                     .add(String.valueOf(exon.start()))
                     .add(String.valueOf(exon.end()))
                     .add(String.valueOf(1))
-                    .add("gene=" + exon.gene() + ",rank=" + exon.rank())
+                    .add("fill_color=" + (downGenes.contains(exon.gene()) ? SINGLE_RED : SINGLE_BLUE))
                     .toString();
             result.add(exonString);
         }
