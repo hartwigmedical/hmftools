@@ -23,6 +23,8 @@ public abstract class FusedExon implements GenomeRegion
 
     public abstract String gene();
 
+    public abstract long unadjustedGeneStart();
+
     public abstract long geneStart();
 
     public abstract long geneEnd();

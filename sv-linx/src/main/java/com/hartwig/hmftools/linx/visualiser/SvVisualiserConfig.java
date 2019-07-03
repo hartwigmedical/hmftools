@@ -13,6 +13,8 @@ import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.Fusion;
+import com.hartwig.hmftools.linx.visualiser.data.Fusions;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
@@ -40,6 +42,7 @@ public interface SvVisualiserConfig
     String SAMPLE = "sample";
     String SEGMENT = "segment";
     String PROTEIN_DOMAIN = "protein_domain";
+    String FUSION = "fusion";
     String LINK = "link";
     String CIRCOS = "circos";
     String THREADS = "threads";
@@ -65,6 +68,9 @@ public interface SvVisualiserConfig
 
     @NotNull
     List<ProteinDomain> proteinDomain();
+
+    @NotNull
+    List<Fusion> fusions();
 
     @NotNull
     List<Exon> exons();
@@ -102,6 +108,7 @@ public interface SvVisualiserConfig
         options.addOption(SEGMENT, true, "Path to track file");
         options.addOption(LINK, true, "Path to link file");
         options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file");
+        options.addOption(FUSION, true, "Path to fusion file");
         options.addOption(CIRCOS, true, "Path to circos binary");
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(DEBUG, false, "Enabled debug mode");
@@ -129,6 +136,7 @@ public interface SvVisualiserConfig
         final String circos = parameter(cmd, CIRCOS, missingJoiner);
         final String exonPath = parameter(cmd, EXON, missingJoiner);
         final String proteinDomainPath = parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
+        final String fusionPath = parameter(cmd, FUSION, missingJoiner);
 
         final String missing = missingJoiner.toString();
         if (!missing.isEmpty())
@@ -136,6 +144,7 @@ public interface SvVisualiserConfig
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
+        final List<Fusion> fusions = Fusions.fromFile(fusionPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Link> links = Links.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Exon> exons = Exons.readExons(exonPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Segment> segments = Segments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
@@ -174,6 +183,7 @@ public interface SvVisualiserConfig
                 .sample(sample)
                 .exons(exons)
                 .proteinDomain(proteinDomains)
+                .fusions(fusions)
                 .copyNumberAlterations(cna)
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))

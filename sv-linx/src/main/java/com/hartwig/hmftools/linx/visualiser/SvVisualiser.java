@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -22,10 +23,12 @@ import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
+import com.hartwig.hmftools.linx.visualiser.circos.FusionsDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
@@ -151,7 +154,8 @@ public class SvVisualiser implements AutoCloseable
         final List<ProteinDomain> chromosomeProteinDomains =
                 config.proteinDomain().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains);
+        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains, Collections
+                .emptyList());
     }
 
     @Nullable
@@ -188,16 +192,23 @@ public class SvVisualiser implements AutoCloseable
                         .debug() ? ".debug" : "");
 
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        final List<ProteinDomain> clusterProteinDomains =
-                config.proteinDomain().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains);
+        final List<ProteinDomain> clusterProteinDomains =  config.proteinDomain().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Fusion> clusterFusions =  config.fusions().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions);
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
-            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons,
-            @NotNull final List<ProteinDomain> filteredProteinDomains)
+            @NotNull final List<Link> links,
+            @NotNull final List<Segment> filteredSegments,
+            @NotNull final List<Exon> filteredExons,
+            @NotNull final List<ProteinDomain> filteredProteinDomains,
+            @NotNull final List<Fusion> filteredFusions)
             throws IOException, InterruptedException
     {
+
+        final Set<String> fusionGenes = Sets.newHashSet();
+        filteredFusions.forEach(x -> {fusionGenes.add(x.geneUp()); fusionGenes.add(x.geneDown());});
+
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
@@ -219,6 +230,7 @@ public class SvVisualiser implements AutoCloseable
         confWrite.writeConfig();
 
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), confWrite).write(circosData);
+        new FusionsDataWriter(sample, config.outputConfPath()).write(filteredFusions, filteredExons, filteredProteinDomains);
 
         final String outputPlotName = sample + ".png";
         return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),

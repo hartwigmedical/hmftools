@@ -11,7 +11,7 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-class Fusions
+public class Fusions
 {
     private static final String SEPARATOR = ",";
 

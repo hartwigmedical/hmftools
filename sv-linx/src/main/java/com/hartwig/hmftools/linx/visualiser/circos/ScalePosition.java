@@ -17,9 +17,11 @@ import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableLink;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
@@ -105,6 +107,18 @@ class ScalePosition
         {
             Map<Long, Integer> positionMap = chromosomePositionMap.get(x.chromosome());
             return scale(x, y -> ImmutableGene.builder().from(y).namePosition(positionMap.get(y.namePosition())), positionMap);
+        }).collect(Collectors.toList());
+    }
+
+    public List<FusedExon> scaleFusedExon(@NotNull final List<FusedExon> exons)
+    {
+        return exons.stream().map(x ->
+        {
+            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.chromosome());
+            return scale(x, y -> ImmutableFusedExon.builder()
+                    .from(y)
+                    .geneStart(positionMap.get(y.geneStart()))
+                    .geneEnd(positionMap.get(y.geneEnd())), positionMap);
         }).collect(Collectors.toList());
     }
 

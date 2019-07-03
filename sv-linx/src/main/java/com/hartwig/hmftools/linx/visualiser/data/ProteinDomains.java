@@ -1,15 +1,72 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import java.awt.Color;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.linx.visualiser.circos.ProteinDomainColors;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ProteinDomains
 {
+
+    private static final String DELIMITER = "\t";
+
+    @NotNull
+    public static List<ProteinDomain> fusedProteinDomains(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons,
+            @NotNull final List<ProteinDomain> proteinDomains)
+    {
+        final List<ProteinDomain> result = Lists.newArrayList();
+        final long upGeneStart = fusedExons.get(0).unadjustedGeneStart();
+        final long upGeneEnd = fusion.positionUp();
+
+        final FusedExon firstDownExon = fusedExons.stream().filter(x -> x.gene().equals(fusion.geneDown())).findFirst().get();
+        final FusedExon finalDownExon = fusedExons.get(fusedExons.size() - 1);
+        final long downGeneStart = fusion.positionDown();
+        final long downGeneEnd = downGeneStart + finalDownExon.end() - firstDownExon.start();
+
+        final GenomeRegion upGeneRegion =
+                GenomeRegions.create(fusion.chromosomeUp(), Math.min(upGeneStart, upGeneEnd), Math.max(upGeneStart, upGeneEnd));
+        final GenomeRegion downGeneRegion =
+                GenomeRegions.create(fusion.chromosomeDown(), Math.min(downGeneStart, downGeneEnd), Math.max(downGeneStart, downGeneEnd));
+
+        final long additionalDownOffset = finalDownExon.geneStart() - 1;
+
+        for (ProteinDomain unadjustedDomain : proteinDomains)
+        {
+            if (unadjustedDomain.overlaps(upGeneRegion))
+            {
+                ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
+                        .start(start(fusion.strandUp(), upGeneStart, unadjustedDomain))
+                        .end(end(fusion.strandUp(), upGeneStart, unadjustedDomain))
+                        .build();
+
+                result.add(domain);
+            }
+
+            if (unadjustedDomain.overlaps(downGeneRegion))
+            {
+                ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
+                        .start(start(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset)
+                        .end(end(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset)
+                        .build();
+
+                result.add(domain);
+            }
+
+        }
+
+        return result;
+    }
 
     @NotNull
     public static List<ProteinDomain> readProteinDomains(@NotNull final String fileName) throws IOException
@@ -29,6 +86,62 @@ public class ProteinDomains
                 .name(file.Info)
                 .build();
 
+    }
+
+    private static long start(int strand, long offset, GenomeRegion region)
+    {
+        return strand < 0 ? offset - region.end() + 1 : region.start() - offset + 1;
+    }
+
+    private static long end(int strand, long offset, GenomeRegion region)
+    {
+        return strand < 0 ? offset - region.start() + 1 : region.end() - offset + 1;
+    }
+
+    public static void write(@NotNull final String fileName, @NotNull final ProteinDomainColors colors,
+            @NotNull final List<ProteinDomain> domains) throws IOException
+    {
+        Files.write(new File(fileName).toPath(), toLines(colors, domains));
+    }
+
+    @NotNull
+    static List<String> toLines(@NotNull final ProteinDomainColors colors, @NotNull final List<ProteinDomain> domains)
+    {
+        final List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        domains.stream().map(x -> toString(colors, x)).forEach(lines::add);
+        return lines;
+    }
+
+    @NotNull
+    private static String header()
+    {
+        return new StringJoiner(DELIMITER).add("sampleId")
+                .add("clusterId")
+                .add("chromosome")
+                .add("start")
+                .add("end")
+                .add("name")
+                .add("color")
+                .toString();
+    }
+
+    @NotNull
+    private static String toString(@NotNull final ProteinDomainColors colors, @NotNull final ProteinDomain domain)
+    {
+        return new StringJoiner(DELIMITER)
+                .add(domain.sampleId())
+                .add(String.valueOf(domain.clusterId()))
+                .add(String.valueOf(domain.chromosome()))
+                .add(String.valueOf(domain.start()))
+                .add(String.valueOf(domain.end()))
+                .add(String.valueOf(domain.name()))
+                .add(hexColor(colors.color(domain.name())))
+                .toString();
+    }
+
+    private static String hexColor(@NotNull Color color) {
+        return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
     }
 
 }
