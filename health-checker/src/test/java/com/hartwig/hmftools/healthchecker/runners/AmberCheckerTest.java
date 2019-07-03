@@ -12,6 +12,7 @@ import com.hartwig.hmftools.healthchecker.result.QCValueType;
 import org.junit.Test;
 
 public class AmberCheckerTest {
+
     private static final String AMBER_DIRECTORY = Resources.getResource("amber").getPath();
 
     @Test

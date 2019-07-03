@@ -12,6 +12,7 @@ import com.hartwig.hmftools.healthchecker.result.QCValueType;
 import org.junit.Test;
 
 public class MetricsCheckerTest {
+
     private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
 
     @Test
@@ -22,7 +23,7 @@ public class MetricsCheckerTest {
         assertEquals(4, values.size());
         for (QCValue value : values) {
             if (value.type() == QCValueType.REF_COVERAGE_10X) {
-                assertEquals("0.98379", value.value());
+                assertEquals("0.98261", value.value());
             } else if (value.type() == QCValueType.REF_COVERAGE_20X) {
                 assertEquals("0.980701", value.value());
             } else if (value.type() == QCValueType.TUMOR_COVERAGE_30X) {
@@ -41,7 +42,7 @@ public class MetricsCheckerTest {
         assertEquals(2, values.size());
         for (QCValue value : values) {
             if (value.type() == QCValueType.REF_COVERAGE_10X) {
-                assertEquals("0.98379", value.value());
+                assertEquals("0.98261", value.value());
             } else if (value.type() == QCValueType.REF_COVERAGE_20X) {
                 assertEquals("0.980701", value.value());
             }
