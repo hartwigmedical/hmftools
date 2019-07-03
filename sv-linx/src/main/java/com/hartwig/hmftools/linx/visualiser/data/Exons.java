@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +16,25 @@ import org.jetbrains.annotations.NotNull;
 
 public class Exons
 {
+
+    private static final Comparator<Exon> RANKED = Comparator.comparingInt(Exon::rank);
+
+
+    @NotNull
+    public static List<Exon> upstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    {
+        return exons.stream()
+                .filter(x -> x.gene().equals(fusion.geneUp()))
+                .sorted(RANKED)
+                .filter(x -> x.rank() <= fusion.exonUp())
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static List<Exon> downstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    {
+        return exons.stream().filter(x -> x.gene().equals(fusion.geneDown())).sorted(RANKED).filter(x -> x.rank() >= fusion.exonDown()).collect(Collectors.toList());
+    }
 
     public static Collection<GenomeRegion> geneSpanPerChromosome(@NotNull final List<Exon> exons)
     {
