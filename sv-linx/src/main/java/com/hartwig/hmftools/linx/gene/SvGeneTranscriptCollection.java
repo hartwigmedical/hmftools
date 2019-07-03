@@ -225,15 +225,28 @@ public class SvGeneTranscriptCollection
 
     public final List<EnsemblGeneData> findGenesByRegion(final String chromosome, long posStart, long posEnd)
     {
+        // find genes if any of their transcripts are within this position
         List<EnsemblGeneData> genesList = Lists.newArrayList();
 
         final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
 
         for(final EnsemblGeneData geneData : geneDataList)
         {
-            if(posStart <= geneData.GeneStart && posEnd >= geneData.GeneEnd)
+            if(posStart > geneData.GeneEnd || posEnd < geneData.GeneStart)
+                continue;
+
+            final List<TranscriptData> transList = mTranscriptDataMap.get(geneData.GeneId);
+
+            if(transList == null || transList.isEmpty())
+                continue;
+
+            for(final TranscriptData transData : transList)
             {
-                genesList.add(geneData);
+                if (posStart <= transData.TransStart && posEnd >= transData.TransEnd)
+                {
+                    genesList.add(geneData);
+                    break;
+                }
             }
         }
 

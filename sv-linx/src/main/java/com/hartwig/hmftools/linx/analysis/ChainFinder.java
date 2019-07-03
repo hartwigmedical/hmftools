@@ -85,6 +85,9 @@ public class ChainFinder
     private List<SvLinkedPair> mAssembledLinks;
     private Map<String,List<SvBreakend>> mChrBreakendMap;
 
+    // links a breakend to its position in a chromosome's breakend list - only applicable if a subset of SVs are being chained
+    private Map<SvBreakend,Integer> mSubsetBreakendClusterIndexMap;
+
     // chaining state
     private List<SvLinkedPair> mSkippedPairs;
     private List<SvVarData> mComplexDupCandidates;
@@ -125,6 +128,7 @@ public class ChainFinder
         mChrBreakendMap = null;
 
         mAdjacentMatchingPairs = Lists.newArrayList();
+        mSubsetBreakendClusterIndexMap = Maps.newHashMap();
         mBreakendLastLinkIndexMap = Maps.newHashMap();
         mChrAllelePloidies = Maps.newHashMap();
         mComplexDupCandidates = Lists.newArrayList();
@@ -161,6 +165,7 @@ public class ChainFinder
         mChrBreakendMap = null;
 
         mAdjacentMatchingPairs.clear();
+        mSubsetBreakendClusterIndexMap.clear();
         mBreakendLastLinkIndexMap.clear();
         mChrAllelePloidies.clear();
         mComplexDupCandidates.clear();
@@ -210,7 +215,10 @@ public class ChainFinder
             for (final SvBreakend breakend : entry.getValue())
             {
                 if (svList.contains(breakend.getSV()))
+                {
+                    mSubsetBreakendClusterIndexMap.put(breakend, breakendList.size());
                     breakendList.add(breakend);
+                }
             }
 
             if (!breakendList.isEmpty())
@@ -1554,7 +1562,7 @@ public class ChainFinder
                 }
             }
 
-            calculateClusterSegmentPloidies(chromosome, allelePloidies);
+            calculateClusterSegmentPloidies(allelePloidies);
         }
 
         LOGGER.debug("cluster({}) chromosomes({}) AP totalSegments({} valid={})",
@@ -1660,7 +1668,7 @@ public class ChainFinder
         return true;
     }
 
-    private boolean calculateClusterSegmentPloidies(final String chromosome, double[][] allelePloidies)
+    private boolean calculateClusterSegmentPloidies(double[][] allelePloidies)
     {
         // first establish the non-disrupted B ploidy across all segments
         double bNonClusterPloidyMin = allelePloidies[0][B_NON_DIS_AP];
@@ -1717,12 +1725,22 @@ public class ChainFinder
         if(allelePloidies == null)
             return false;
 
-        if(allelePloidies.length < breakend.getClusterChrPosIndex())
+        int breakendIndex = getBreakendClusterChromosomeIndex(breakend);
+        if(allelePloidies.length < breakendIndex)
             return false;
 
-        final double[] beAllelePloidies = allelePloidies[breakend.getClusterChrPosIndex()];
+        final double[] beAllelePloidies = allelePloidies[breakendIndex];
 
         return beAllelePloidies[AP_DATA_VALID] == AP_IS_VALID;
+    }
+
+    private int getBreakendClusterChromosomeIndex(final SvBreakend breakend)
+    {
+        if(!mIsClusterSubset)
+            return breakend.getClusterChrPosIndex();
+
+        Integer index = mSubsetBreakendClusterIndexMap.get(breakend);
+        return index != null ? index : -1;
     }
 
     private void determinePossibleLinks()
@@ -1842,7 +1860,7 @@ public class ChainFinder
                         mSvBreakendPossibleLinks.put(upperBreakend, upperPairs);
 
                         // create an entry at the upper breakend's start point to indicate it hasn't begun its search
-                        mBreakendLastLinkIndexMap.put(upperBreakend, upperBreakend.getClusterChrPosIndex());
+                        mBreakendLastLinkIndexMap.put(upperBreakend, getBreakendClusterChromosomeIndex(upperBreakend));
                     }
 
                     upperPairs.add(0, newPair); // add to front since always nearer than the one prior
@@ -1863,7 +1881,7 @@ public class ChainFinder
 
                     if(lowerValidAP && hasValidAllelePloidyData(upperBreakend, allelePloidies))
                     {
-                        double clusterAP = allelePloidies[upperBreakend.getClusterChrPosIndex()][CLUSTER_AP];
+                        double clusterAP = allelePloidies[getBreakendClusterChromosomeIndex(upperBreakend)][CLUSTER_AP];
 
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {
@@ -1887,7 +1905,7 @@ public class ChainFinder
 
         for(SvBreakend breakend : reverseFoldbackBreakends)
         {
-            mBreakendLastLinkIndexMap.put(breakend, breakend.getClusterChrPosIndex());
+            mBreakendLastLinkIndexMap.put(breakend, getBreakendClusterChromosomeIndex(breakend));
             addMorePossibleLinks(breakend, false);
         }
     }
@@ -2010,13 +2028,13 @@ public class ChainFinder
 
             if(hasValidAP && hasValidAllelePloidyData(otherBreakend, allelePloidies))
             {
-                double clusterAP = allelePloidies[otherBreakend.getClusterChrPosIndex()][CLUSTER_AP];
+                double clusterAP = allelePloidies[getBreakendClusterChromosomeIndex(otherBreakend)][CLUSTER_AP];
 
                 if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                 {
                     // this lower breakend cannot match with anything futher upstream
                     log(LOG_LEVEL_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
-                            breakend.getClusterChrPosIndex(), breakend.toString(), index, otherBreakend.toString(), clusterAP));
+                            getBreakendClusterChromosomeIndex(breakend), breakend.toString(), index, otherBreakend.toString(), clusterAP));
 
                     lastIndexValid = false;
                     break;
@@ -2063,7 +2081,7 @@ public class ChainFinder
         final List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
 
         boolean traverseUp = otherBreakend.orientation() == -1;
-        int index = otherBreakend.getClusterChrPosIndex();
+        int index = getBreakendClusterChromosomeIndex(otherBreakend);
 
         while(true)
         {

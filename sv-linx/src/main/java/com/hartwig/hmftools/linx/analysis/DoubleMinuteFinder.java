@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.analysis;
 
+import static java.lang.Math.floor;
+import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -48,9 +50,9 @@ public class DoubleMinuteFinder
 
     private static int PLOIDY_THRESHOLD = 8;
     private static double FOLDBACK_PLOIDY_RATIO = 0.25;
-    private static double PLOIDY_STEPWISE_RATIO = 0.5;
+    private static double PLOIDY_STEPWISE_FACTOR = 0.8;
     private static double HIGH_PLOIDY_SV_RATIO = 0.8;
-
+    private static double ADJACENT_PLOIDY_RATIO = 2.3;
 
     // old constants
     private static double DM_PLOIDY_MIN_RATIO = 2.3;
@@ -82,6 +84,7 @@ public class DoubleMinuteFinder
 
         double clusterMaxPloidy = 1;
         boolean isSingleDup = (cluster.getSvCount() == 1);
+        int svCount = cluster.getSvCount();
 
         if(isSingleDup)
         {
@@ -101,37 +104,47 @@ public class DoubleMinuteFinder
             return;
 
         // test step-wise nature of SVs for larger clusters
-        if(cluster.getSvCount() >= 4)
+        if(svCount >= 4)
         {
             int foldbackCount = cluster.getFoldbacks().size();
             double foldbackPotentialPloidy = pow(2, foldbackCount);
 
             if(foldbackPotentialPloidy >= FOLDBACK_PLOIDY_RATIO * clusterMaxPloidy)
             {
-                LOGGER.debug("cluster({}) maxPloidy(%s) foldbacks({}) invalidates DM",
+                LOGGER.debug("cluster({}) maxPloidy({}) foldbacks({}) invalidates DM",
                         cluster.id(), String.format("%.1f", clusterMaxPloidy), foldbackCount);
                 return;
             }
 
             List<Integer> ploidyBuckets = Lists.newArrayList();
-            int maxBuckets = PLOIDY_THRESHOLD;
+            int maxPermittedBuckets = calcMaxBuckets(svCount, clusterMaxPloidy);
 
             for (final SvVarData var : cluster.getSVs())
             {
-                int ploidyBucketMin = ploidyToPloidyBucket(var.ploidyMin(), clusterMaxPloidy, maxBuckets);
-                int ploidyBucketMax = ploidyToPloidyBucket(var.ploidyMax(), clusterMaxPloidy, maxBuckets);
+                int ploidyBucketMin = (int)round(var.ploidyMin());
+                int ploidyBucketMax = (int)round(var.ploidyMax());
 
-                if (!ploidyBuckets.contains(ploidyBucketMin) && !ploidyBuckets.contains(ploidyBucketMax))
+                boolean matched = false;
+                for(Integer ploidyBucket : ploidyBuckets)
+                {
+                    if(ploidyBucketMin <= ploidyBucket && ploidyBucketMax >= ploidyBucket)
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if (!matched)
                 {
                     int avgPloidyBucket = (int)round((ploidyBucketMin + ploidyBucketMax) * 0.5);
                     ploidyBuckets.add(avgPloidyBucket);
                 }
             }
 
-            if (ploidyBuckets.size()/(double) PLOIDY_THRESHOLD >= PLOIDY_STEPWISE_RATIO)
+            if (ploidyBuckets.size() > maxPermittedBuckets)
             {
-                LOGGER.debug("cluster({}) maxPloidy(%s) ploidyBuckets({}) invalidates DM",
-                        cluster.id(), String.format("%.1f", clusterMaxPloidy), ploidyBuckets.size());
+                LOGGER.debug("cluster({}) maxPloidy({}) ploidyBuckets({}) vs max({}) invalidates DM",
+                        cluster.id(), String.format("%.1f", clusterMaxPloidy), ploidyBuckets.size(), maxPermittedBuckets);
                 return;
             }
         }
@@ -155,32 +168,141 @@ public class DoubleMinuteFinder
             }
         }
 
-        final SvChain dmChain = createDMChain(cluster, highPloidySVs);
+        // test high-ploidy breakends vs their adjacent CN segment for an expected drop unless next to an SV in the same cluster
+        int invalidAdjacentCnSegments = 0;
 
-        if (!isSingleDup && dmChain != null && dmChain.getSvCount() == highPloidySVs.size())
+        for(SvVarData var : highPloidySVs)
         {
-            // check whether the chain could form a loop
-            SvBreakend chainStart = dmChain.getOpenBreakend(true);
-            SvBreakend chainEnd = dmChain.getOpenBreakend(false);
-
-            if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend()
-            && areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart(), false))
+            for (int se = SE_START; se <= SE_END; ++se)
             {
-                fullyChained = true;
+                if(se == SE_END && var.isNullBreakend())
+                    continue;
+
+                final SvBreakend breakend = var.getBreakend(isStart(se));
+
+                // ignore if this breakend is next to another in the same cluster
+                if(!breakendAdjacentToSameCluster(breakend, cluster))
+                {
+                    double adjacentMap = getAdjacentMajorAllelePloidy(breakend);
+
+                    if(Double.isNaN(adjacentMap))
+                        continue;
+
+                    // check the major allele ploidy outside this breakend
+                    if(var.ploidyMin() < adjacentMap * ADJACENT_PLOIDY_RATIO)
+                    {
+                        ++invalidAdjacentCnSegments;
+                    }
+                }
             }
         }
 
-            reportPotentialGroup(sampleId, cluster, highPloidySVs, fullyChained, dmChain);
+        final SvChain dmChain = createDMChain(cluster, highPloidySVs);
+
+        if (!isSingleDup && dmChain != null && dmChain.getSvCount() == highPloidySVs.size() && dmChain.isClosedLoop())
+        {
+            fullyChained = true;
+        }
+
+        reportPotentialGroup(sampleId, cluster, highPloidySVs, invalidAdjacentCnSegments, fullyChained, dmChain);
     }
 
-    private static int ploidyToPloidyBucket(double ploidy, double maxPloidy, int bucketsCount)
+    private boolean breakendAdjacentToSameCluster(final SvBreakend breakend, final SvCluster cluster)
     {
-        int ploidyBucket = (int) (round(ploidy / maxPloidy * bucketsCount));
-        return min(max(ploidyBucket, 0), bucketsCount);
+        final List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(breakend.chromosome());
+
+        if(breakendList == null || breakendList.isEmpty())
+            return false;
+
+        int clusterIndex = breakend.getClusterChrPosIndex();
+        int chromosomeIndex = breakend.getChrPosIndex();
+
+        if(breakend.orientation() == 1)
+        {
+            if(clusterIndex >= breakendList.size() - 1)
+                return false;
+
+            int nextChromosomeIndex = breakendList.get(clusterIndex + 1).getChrPosIndex();
+            return (nextChromosomeIndex == chromosomeIndex + 1);
+        }
+        else
+        {
+            if(chromosomeIndex == 0 || clusterIndex == 0)
+                return false;
+
+            int prevChromosomeIndex = breakendList.get(clusterIndex - 1).getChrPosIndex();
+            return (prevChromosomeIndex == chromosomeIndex - 1);
+        }
+    }
+
+    private static int calcMaxBuckets(int svCount, double maxPloidy)
+    {
+        double expectedBuckets = log(svCount) * log(maxPloidy) * PLOIDY_STEPWISE_FACTOR;
+        return min(svCount,(int)round(expectedBuckets));
+    }
+
+    private final SvChain createDMChain(SvCluster cluster, List<SvVarData> dmSVList)
+    {
+        if(dmSVList.size() == 1)
+        {
+            // special case creating a chain out of a DUP
+            SvChain chain = new SvChain(0);
+            final SvVarData var = dmSVList.get(0);
+            if(var.type() != DUP)
+                return null;
+
+            SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
+            chain.addLink(pair, true);
+            return chain;
+        }
+
+        /*
+        // create a temporary cluster and try to chain it
+        SvCluster dmCluster = new SvCluster(0);
+
+        for(SvVarData var : dmSVList)
+        {
+            SvVarData copySV = new SvVarData(var, false);
+            dmCluster.addVariant(copySV);
+        }
+
+        dmCluster.setAssemblyLinkedPairs(LinkFinder.createAssemblyLinkedPairs(dmCluster));
+
+        mChainFinder.initialise(dmCluster);
+        mChainFinder.initialise(dmCluster);
+        */
+
+        mChainFinder.initialise(cluster, dmSVList);
+        mChainFinder.formClusterChains(false);
+
+        if(mChainFinder.getChains().size() != 1)
+            return null;
+
+        SvChain chain = mChainFinder.getChains().get(0);
+
+        // check whether the chain could form a loop
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend())
+        {
+            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart(), false))
+            {
+                SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd, LINK_TYPE_TI);
+
+                if (chain.linkWouldCloseChain(pair))
+                {
+                    chain.addLink(pair, true);
+                }
+            }
+        }
+
+        mChainFinder.clear();
+        return chain;
     }
 
     private void reportPotentialGroup(final String sampleId, final SvCluster cluster, List<SvVarData> highPloidySVs,
-            boolean fullyChained, SvChain chain)
+            int invalidAdjacentCnSegments, boolean fullyChained, SvChain chain)
     {
         cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
 
@@ -215,7 +337,8 @@ public class DoubleMinuteFinder
         double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
         double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
 
-        long dmChainLength = chain != null ? chain.getLength(true) : 0;
+        long dmChainLength = chain != null ? chain.getLength(false) : 0;
+        int chainSvCount = chain != null ? chain.getSvCount() : 0;
 
         // get amplified genes list by looking at all section traversed by this chain or breakends with genes in them?
         String amplifiedGenesStr = chain != null ? getAmplifiedGenesList(chain) : "";
@@ -236,20 +359,48 @@ public class DoubleMinuteFinder
             chromosomeStr = appendStr(chromosomeStr, chr, ';');
         }
 
-        // SampleId,ClusterId,ClusterDesc,ResolvedType,SamplePurity,SamplePloidy,IsComplete,GroupCount,SvTypes,SvInfo,Chromosomes,DMPosStart,DMPosEnd,
-        // MaxDMCopyNumber,MinDMPloidy,SVOverlapCount,DMLength,AmplifiedGenes
+        // SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount,SamplePurity,SamplePloidy,DMSvCount,DMSvTypes,InvalidCnSegments,
+        // FullyChained,ChainLength,ChainCount,SvIds,Chromosomes,DupPosStart,DupPosEnd,
+        // MaxCopyNumber,MinPloidy,AmpGenes
 
-        String infoStr = String.format("%s,%d,%s,%s,%.2f,%.2f,%s,%d,%s",
-                sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(),
-                samplePurity, samplePloidy, fullyChained, highPloidySVs.size(), dmTypesStr);
+        String infoStr = String.format("%s,%d,%s,%s,%d",
+                sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount());
 
-        infoStr += String.format(",%s,%s,%d,%d,%.2f,%.2f,%d,%s",
+        infoStr += String.format(",%.2f,%.2f,%d,%s,%d,%s,%d,%d",
+                samplePurity, samplePloidy, highPloidySVs.size(), dmTypesStr, invalidAdjacentCnSegments,
+                fullyChained, dmChainLength, chainSvCount);
+
+        infoStr += String.format(",%s,%s,%d,%d,%.2f,%.2f,%s",
                 svIds, chromosomeStr, posStart, posEnd,
-                maxDMCopyNumber, minDMPloidy, dmChainLength, amplifiedGenesStr);
+                maxDMCopyNumber, minDMPloidy, amplifiedGenesStr);
 
         LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
     }
 
+    private final String getAmplifiedGenesList(final SvChain chain)
+    {
+        if(mGeneTransCache == null)
+            return "";
+
+        String genesStr = "";
+        for(SvLinkedPair pair : chain.getLinkedPairs())
+        {
+            String chromosome = pair.chromosome();
+
+            List<EnsemblGeneData> genesList = mGeneTransCache.findGenesByRegion(
+                    chromosome, pair.getBreakend(true).position(), pair.getBreakend(false).position());
+
+            if(genesList.isEmpty())
+                continue;
+
+            for(final EnsemblGeneData geneData : genesList)
+            {
+                genesStr = appendStr(genesStr, geneData.GeneName, ';');
+            }
+        }
+
+        return genesStr;
+    }
 
     // old method vs2
     public void findPotentialDoubleMinuteClusters(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -664,7 +815,6 @@ public class DoubleMinuteFinder
         double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
 
         final SvChain chain = isComplete ? createDMChain(null, dmSVList) : null;
-
         long dmChainLength = chain != null ? chain.getLength(true) : 0;
 
         // get amplified genes list by looking at all section traversed by this chain or breakends with genes in them?
@@ -696,73 +846,6 @@ public class DoubleMinuteFinder
                 maxDMCopyNumber, minDMPloidy, overlappedCount, dmChainLength, amplifiedGenesStr);
 
         LOGGER.info("POTENTIAL_DM_DATA: {}", infoStr);
-    }
-
-    private final String getAmplifiedGenesList(final SvChain chain)
-    {
-        if(mGeneTransCache == null)
-            return "";
-
-        String genesStr = "";
-        for(SvLinkedPair pair : chain.getLinkedPairs())
-        {
-            String chromosome = pair.chromosome();
-
-            List<EnsemblGeneData> genesList = mGeneTransCache.findGenesByRegion(
-                    chromosome, pair.getBreakend(true).position(), pair.getBreakend(false).position());
-
-            if(genesList.isEmpty())
-                continue;
-
-            for(final EnsemblGeneData geneData : genesList)
-            {
-                genesStr = appendStr(genesStr, geneData.GeneName, ';');
-            }
-        }
-
-        return genesStr;
-    }
-
-    private final SvChain createDMChain(SvCluster cluster, List<SvVarData> dmSVList)
-    {
-        if(dmSVList.size() == 1)
-        {
-            // special case creating a chain out of a DUP
-            SvChain chain = new SvChain(0);
-            final SvVarData var = dmSVList.get(0);
-            if(var.type() != DUP)
-                return null;
-
-            SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
-            chain.addLink(pair, true);
-            return chain;
-        }
-
-        /*
-        // create a temporary cluster and try to chain it
-        SvCluster dmCluster = new SvCluster(0);
-
-        for(SvVarData var : dmSVList)
-        {
-            SvVarData copySV = new SvVarData(var, false);
-            dmCluster.addVariant(copySV);
-        }
-
-        dmCluster.setAssemblyLinkedPairs(LinkFinder.createAssemblyLinkedPairs(dmCluster));
-
-        mChainFinder.initialise(dmCluster);
-        mChainFinder.initialise(dmCluster);
-        */
-
-        mChainFinder.initialise(cluster, dmSVList);
-        mChainFinder.formClusterChains(false);
-
-        if(mChainFinder.getChains().size() != 1)
-            return null;
-
-        SvChain chain = mChainFinder.getChains().get(0);
-        mChainFinder.clear();
-        return chain;
     }
 
     private static double DOUBLE_MINUTE_PLOIDY_THRESHOLD = 8;

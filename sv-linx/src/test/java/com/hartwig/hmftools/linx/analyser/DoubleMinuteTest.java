@@ -61,12 +61,19 @@ public class DoubleMinuteTest
 
         // 1 s100 -> 6 e600-500s -> 4 s1500-100e -> 3 s200-2000e -> 5 s2100-2200e -> 2 e2500-1200s -> 1 e1000
 
-        final SvVarData var1 = createTestSv("1","1","1",100,1000,-1,-1, INV,10);
-        final SvVarData var2 = createTestSv("2","1","1",1200,2500,1,1, INV,10);
-        final SvVarData var3 = createTestSv("3","1","2",2000,200,-1,1, BND,10);
-        final SvVarData var4 = createTestSv("4","1","2",1500,100,1,-1, BND,10);
-        final SvVarData var5 = createTestSv("5","1","1",2100,2200,1,1, DEL,1);
-        final SvVarData var6 = createTestSv("6","1","1",500,600,-1,1, DUP,2);
+        final SvVarData var1 = createTestSv("1","1","1",10100,11000,-1,-1, INV,10);
+        final SvVarData var2 = createTestSv("2","1","1",11200,12500,1,1, INV,10);
+        final SvVarData var3 = createTestSv("3","1","2",12000,10200,-1,1, BND,10);
+        final SvVarData var4 = createTestSv("4","1","2",11500,10100,1,-1, BND,10);
+        final SvVarData var5 = createTestSv("5","1","1",12100,12200,1,1, DEL,1);
+        final SvVarData var6 = createTestSv("6","1","1",10500,10600,-1,1, DUP,2);
+
+        // unrelated SVs at either end of the cluster
+        final SvVarData other1 = createTestSv("7","1","1",100,200,1,-1, DEL,1);
+        final SvVarData other2 = createTestSv("8","1","1",20000,20100,1,-1, DEL,1);
+        final SvVarData other3 = createTestSv("9","2","2",20100,20100,1,-1, DEL,1);
+
+        tester.AllVariants.add(other1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -74,6 +81,9 @@ public class DoubleMinuteTest
         tester.AllVariants.add(var4);
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
+
+        tester.AllVariants.add(other2);
+        tester.AllVariants.add(other3);
         tester.preClusteringInit();
 
         tester.addCopyNumberData();
@@ -82,9 +92,18 @@ public class DoubleMinuteTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
+        boolean matched = false;
+
+        for(final SvCluster cluster : tester.Analyser.getClusters())
+        {
+            if (cluster.getSvCount() == 6 && cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM))
+            {
+                matched = true;
+                break;
+            }
+        }
+
+        assertTrue(matched);
     }
 
     @Test

@@ -425,7 +425,7 @@ public class SvTestHelper
                     }
                 }
 
-                SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
+                SvCNData[] cnDataPair = svIdCnDataMap.get(var.dbId());
 
                 if(cnDataPair == null)
                 {

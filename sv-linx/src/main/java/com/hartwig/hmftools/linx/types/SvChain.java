@@ -62,7 +62,10 @@ public class SvChain {
             mLinkedPairs.add(pair);
 
             mSvList.add(pair.first());
-            mSvList.add(pair.second());
+
+            if(!mSvList.contains(pair.second()))
+                mSvList.add(pair.second());
+
             return;
         }
 
@@ -280,12 +283,16 @@ public class SvChain {
             final SvBreakend chainStart = getOpenBreakend(true);
             final SvBreakend chainEnd = getOpenBreakend(false);
 
-            if(mLinkedPairs.size() == 1 && chainEnd.getSV() == chainStart.getSV()) // skip the special single DUP case
-                return length;
-
-            if (chainStart.chromosome().equals(chainEnd.chromosome()))
+            if(chainEnd != null && chainStart != null)
             {
-                length += abs(chainStart.position() - chainEnd.position());
+                // skip the special single DUP case
+                if (mLinkedPairs.size() == 1 && chainEnd.getSV() == chainStart.getSV())
+                    return length;
+
+                if (chainStart.chromosome().equals(chainEnd.chromosome()))
+                {
+                    length += abs(chainStart.position() - chainEnd.position());
+                }
             }
         }
 
