@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -60,7 +61,8 @@ public class SvClusteringMethods {
 
     private Map<String, double[]> mChromosomeCopyNumberMap; // p-arm telomere, centromere and q-arm telemore CN data
 
-    private long mDelDupCutoffLength;
+    private long mDelCutoffLength;
+    private long mDupCutoffLength;
     private int mProximityDistance;
 
     public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
@@ -82,7 +84,8 @@ public class SvClusteringMethods {
     {
         mNextClusterId = 0;
 
-        mDelDupCutoffLength = 0;
+        mDelCutoffLength = 0;
+        mDupCutoffLength = 0;
         mProximityDistance = proximityLength;
 
         mChrBreakendMap = new HashMap();
@@ -97,7 +100,8 @@ public class SvClusteringMethods {
     public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mChromosomeCopyNumberMap = data; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
-    public long getDelDupCutoffLength() { return mDelDupCutoffLength; }
+    public long getDupCutoffLength() { return mDelCutoffLength; }
+    public long getDelCutoffLength() { return mDupCutoffLength; }
     public int getProximityDistance() { return mProximityDistance; }
 
     public void clusterExcludedVariants(List<SvCluster> clusters)
@@ -491,12 +495,15 @@ public class SvClusteringMethods {
     private void markClusterLongDelDups(final SvCluster cluster)
     {
         // find and record any long DEL or DUP for merging, including long synthetic ones
-        if(cluster.isSyntheticType() && cluster.getResolvedType().isSimple() && !cluster.isResolved()
-        && cluster.getSyntheticLength() >= mDelDupCutoffLength)
+        if(cluster.isSyntheticType() && cluster.getResolvedType().isSimple() && !cluster.isResolved())
         {
-            for (final SvVarData var : cluster.getSVs())
+            if ((cluster.getResolvedType() == ResolvedType.DEL && cluster.getSyntheticLength() >= mDelCutoffLength)
+            || (cluster.getResolvedType() == ResolvedType.DUP && cluster.getSyntheticLength() >= mDupCutoffLength))
             {
-                cluster.registerLongDelDup(var);
+                for (final SvVarData var : cluster.getSVs())
+                {
+                    cluster.registerLongDelDup(var);
+                }
             }
         }
 
@@ -504,7 +511,10 @@ public class SvClusteringMethods {
         {
             for(final SvVarData var : cluster.getSVs())
             {
-                if((var.type() == DUP || var.type() == DEL) && var.length() >= mDelDupCutoffLength && !var.isCrossArm())
+                if(var.isCrossArm())
+                    continue;
+
+                if(exceedsDupDelCutoffLength(var.type(), var.length()))
                 {
                     cluster.registerLongDelDup(var);
                 }
@@ -594,6 +604,16 @@ public class SvClusteringMethods {
         return clusters.size() < initClusterCount;
     }
 
+    public boolean exceedsDupDelCutoffLength(StructuralVariantType type, long length)
+    {
+        if(type == DEL)
+            return length > mDelCutoffLength;
+        else if(type == DUP)
+            return length > mDupCutoffLength;
+        else
+            return false;
+    }
+
     private boolean mergeOnUnresolvedSingles(List<SvCluster> clusters)
     {
         // merge clusters with 1 unresolved single with the following rules:
@@ -625,11 +645,17 @@ public class SvClusteringMethods {
                 SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 SvBreakend nextBreakend = (i < breakendCount - 1) ? breakendList.get(i + 1) : null;
 
-                if(prevBreakend != null && prevBreakend.getSV().isSimpleType() && prevBreakend.getSV().length() < mDelDupCutoffLength)
+                if(prevBreakend != null && prevBreakend.getSV().isSimpleType()
+                && !exceedsDupDelCutoffLength(prevBreakend.getSV().type(), prevBreakend.getSV().length()))
+                {
                     prevBreakend = null;
+                }
 
-                if(nextBreakend != null && nextBreakend.getSV().isSimpleType() && nextBreakend.getSV().length() < mDelDupCutoffLength)
+                if(nextBreakend != null && nextBreakend.getSV().isSimpleType()
+                && !exceedsDupDelCutoffLength(nextBreakend.getSV().type(), nextBreakend.getSV().length()))
+                {
                     nextBreakend = null;
+                }
 
                 // additionally check that breakend after the next one isn't a closer SGL to the next breakend,
                 // which would invalidate this one being the nearest neighbour
@@ -810,9 +836,11 @@ public class SvClusteringMethods {
 
     public void setSimpleVariantLengths(final String sampleId)
     {
-        mDelDupCutoffLength = 0;
+        mDelCutoffLength = 0;
+        mDupCutoffLength = 0;
 
-        List<Long> lengthsList = Lists.newArrayList();
+        List<Long> delLengthsList = Lists.newArrayList();
+        List<Long> dupLengthsList = Lists.newArrayList();
 
         int simpleArmCount = 0;
 
@@ -871,7 +899,10 @@ public class SvClusteringMethods {
                         continue;
                 }
 
-                lengthsList.add(var.length());
+                if(var.type() == DEL)
+                    delLengthsList.add(var.length());
+                else if(var.type() == DUP)
+                    dupLengthsList.add(var.length());
             }
 
             // LOGGER.debug("sample({}) chr({}) svCount({} delDups({})", sampleId, chromosome, breakendList.size(), armCount);
@@ -879,17 +910,25 @@ public class SvClusteringMethods {
 
         int trimCount = (int)round(simpleArmCount / (double)MAX_ARM_COUNT * DEL_DUP_LENGTH_TRIM_COUNT);
 
-        if(lengthsList.size() > trimCount)
+        if(delLengthsList.size() > trimCount)
         {
-            Collections.sort(lengthsList);
-            int lengthIndex = lengthsList.size() - trimCount - 1; // 10 items, index 0 - 9, exclude 5 - 9, select 9
-            mDelDupCutoffLength = lengthsList.get(lengthIndex);
+            Collections.sort(delLengthsList);
+            int lengthIndex = delLengthsList.size() - trimCount - 1; // 10 items, index 0 - 9, exclude 5 - 9, select 9
+            mDelCutoffLength = delLengthsList.get(lengthIndex);
         }
 
-        mDelDupCutoffLength = min(max(mDelDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
+        if(dupLengthsList.size() > trimCount)
+        {
+            Collections.sort(dupLengthsList);
+            int lengthIndex = dupLengthsList.size() - trimCount - 1;
+            mDupCutoffLength = dupLengthsList.get(lengthIndex);
+        }
 
-        LOGGER.debug("sample({}) simple dels and dups: count({}) cutoff-length({}) simpleArms({}) trimCount({})",
-                sampleId, lengthsList.size(), mDelDupCutoffLength, simpleArmCount, trimCount);
+        mDelCutoffLength = min(max(mDelCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
+        mDupCutoffLength = min(max(mDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
+
+        LOGGER.debug("sample({}) simple dels count({}) cutoff-length({}), dups count({}) cutoff-length({}) simpleArms({}) trimCount({})",
+                sampleId, delLengthsList.size(), mDelCutoffLength, dupLengthsList.size(), mDupCutoffLength, simpleArmCount, trimCount);
     }
 
     public void populateChromosomeBreakendMap(final List<SvVarData> allVariants)

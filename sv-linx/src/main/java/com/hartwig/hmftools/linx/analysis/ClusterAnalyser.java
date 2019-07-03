@@ -319,7 +319,8 @@ public class ClusterAnalyser {
 
     private void setClusterResolvedState(SvCluster cluster, boolean isFinal)
     {
-        SvClassification.setClusterResolvedState(cluster, isFinal, mClusteringMethods.getDelDupCutoffLength(), mConfig.ProximityDistance);
+        SvClassification.setClusterResolvedState(cluster, isFinal,
+                mClusteringMethods.getDelCutoffLength(), mClusteringMethods.getDupCutoffLength(), mConfig.ProximityDistance);
     }
 
     public void applyCopyNumberReplication(SvCluster cluster)
@@ -398,7 +399,7 @@ public class ClusterAnalyser {
         // merge if one cluster has footprints which overlap unresolved complex SVs
         // merge clusters which resolve another's LOH DUP
 
-        long longDelDupCutoffLength = mClusteringMethods.getDelDupCutoffLength();
+        long longDelDupCutoffLength = max(mClusteringMethods.getDelCutoffLength(), mClusteringMethods.getDupCutoffLength());
 
         // first collect the clusters for which these complex rules apply
         List<SvCluster> complexClusters = mClusters.stream()

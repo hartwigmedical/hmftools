@@ -127,7 +127,7 @@ public class SvClassification
     }
 
     public static void setClusterResolvedState(
-            SvCluster cluster, boolean isFinal, long delDupLongThreshold, int proximityThreshold)
+            SvCluster cluster, boolean isFinal, long longDelThreshold, long longDupThreshold, int proximityThreshold)
     {
         if(cluster.getResolvedType() != NONE)
             return;
@@ -143,7 +143,7 @@ public class SvClassification
         {
             if(cluster.getSvCount() == 2 && (cluster.getTypeCount(DEL) + cluster.getTypeCount(DUP) == 2) && cluster.getTypeCount(DEL) != 2)
             {
-                markSyntheticDelDups(cluster, delDupLongThreshold);
+                markSyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
 
                 if(cluster.getResolvedType() != NONE)
                     return;
@@ -152,7 +152,7 @@ public class SvClassification
             boolean hasLongSVs = false;
             for(SvVarData var : cluster.getSVs())
             {
-                if(var.length() >= delDupLongThreshold)
+                if((var.type() == DEL && var.length() >= longDelThreshold) || (var.type() == DUP && var.length() >= longDupThreshold))
                 {
                     hasLongSVs = true;
                     break;
@@ -178,7 +178,7 @@ public class SvClassification
             return;
         }
 
-        markSyntheticTypes(cluster, delDupLongThreshold, proximityThreshold);
+        markSyntheticTypes(cluster, longDelThreshold, longDupThreshold, proximityThreshold);
 
         if(cluster.getResolvedType() != NONE)
             return;
@@ -230,7 +230,7 @@ public class SvClassification
         return true;
     }
 
-    public static void markSyntheticTypes(SvCluster cluster, long delDupLongThreshold, int proximityThreshold)
+    public static void markSyntheticTypes(SvCluster cluster, long longDelThreshold, long longDupThreshold, int proximityThreshold)
     {
         if(cluster.getTypeCount(SGL) == 0)
         {
@@ -244,7 +244,7 @@ public class SvClassification
             if (cluster.getResolvedType() != NONE)
                 return;
 
-            markSyntheticDelDups(cluster, delDupLongThreshold);
+            markSyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
         }
         else if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getTypeCount(SGL) == 2)
         {
@@ -261,7 +261,7 @@ public class SvClassification
         }
     }
 
-    public static void markSyntheticDelDups(SvCluster cluster, long delDupLongThreshold)
+    public static void markSyntheticDelDups(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
         if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getTypeCount(SGL) > 0)
             return;
@@ -333,8 +333,17 @@ public class SvClassification
         LOGGER.debug("cluster({}) chain(links=({} len={} tiLen(longest={} avg={}) synLen({}) marked as {}",
                 cluster.id(), chain.getLinkCount(), totalChainLength, longestTILength, avgTiLength, syntheticLength, resolvedType);
 
-        boolean setResolved = (syntheticLength < delDupLongThreshold) && (longTICount == 0);
-        cluster.setResolved(setResolved, resolvedType);
+        boolean withinLongThreshold = false;
+
+        if(resolvedType == ResolvedType.DEL)
+            withinLongThreshold = syntheticLength < longDelThreshold;
+        else if(resolvedType == ResolvedType.DUP || resolvedType == RECIP_DUPS)
+            withinLongThreshold = syntheticLength < longDupThreshold;
+        else
+            withinLongThreshold = syntheticLength < max(longDelThreshold,longDupThreshold);
+
+        boolean resolved = withinLongThreshold && (longTICount == 0);
+        cluster.setResolved(resolved, resolvedType);
         cluster.setSyntheticData(syntheticLength, longestTILength);
 
         if(resolvedType == RECIP_DUPS)
