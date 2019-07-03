@@ -4,20 +4,18 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class HomLossEvent
 {
-    public final String SampleId;
     public final String Chromosome;
     public final long PosStart;
     public final long PosEnd;
     public final String SegStart;
     public final String SegEnd;
-    public final int StartSV; // the SV data's ID
+    public final int StartSV; // the DB SvId
     public final int EndSV;
 
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
 
     public HomLossEvent(
-            final String sampleId,
             final String chr,
             final long posStart,
             final long posEnd,
@@ -26,7 +24,6 @@ public class HomLossEvent
             final int startSV,
             final int endSV)
     {
-        SampleId = sampleId;
         Chromosome = chr;
         PosStart = posStart;
         PosEnd = posEnd;
@@ -45,6 +42,12 @@ public class HomLossEvent
             mBreakendStart = breakend;
         else
             mBreakendEnd = breakend;
+    }
+
+    public void clearBreakends()
+    {
+        mBreakendStart = null;
+        mBreakendEnd= null;
     }
 
     public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }

@@ -277,7 +277,7 @@ public class ClusterAnnotations
         for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
         {
             final SvBreakend breakend = breakendList.get(i);
-            final SvCluster otherCluster = breakend.getSV().getCluster();
+            final SvCluster otherCluster = breakend.getCluster();
 
             if (otherCluster == cluster || otherCluster.isResolved())
                 continue;
@@ -311,12 +311,12 @@ public class ClusterAnnotations
                 final SvBreakend breakend = breakendList.get(i);
                 int distance = (int)(lowerBreakend.position() - breakend.position());
 
-                if (breakend.getSV().getCluster() == cluster)
+                if (breakend.getCluster() == cluster)
                 {
                     nextSvData[NEXT_CLUSTERED_SV_DISTANCE] = distance;
                     break;
                 }
-                else if(!isFilteredResolvedType(breakend.getSV().getCluster().getResolvedType()))
+                else if(!isFilteredResolvedType(breakend.getCluster().getResolvedType()))
                 {
                     if(nextSvData[NEXT_SV_DISTANCE] == -1)
                         nextSvData[NEXT_SV_DISTANCE] = distance;
@@ -332,7 +332,7 @@ public class ClusterAnnotations
 
                 int distance = (int)(breakend.position() - upperBreakend.position());
 
-                if (breakend.getSV().getCluster() == cluster)
+                if (breakend.getCluster() == cluster)
                 {
                     if (nextSvData[NEXT_CLUSTERED_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_CLUSTERED_SV_DISTANCE])
                     {
@@ -341,7 +341,7 @@ public class ClusterAnnotations
 
                     break;
                 }
-                else if(!isFilteredResolvedType(breakend.getSV().getCluster().getResolvedType()))
+                else if(!isFilteredResolvedType(breakend.getCluster().getResolvedType()))
                 {
                     if(nextSvData[NEXT_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_SV_DISTANCE])
                         nextSvData[NEXT_SV_DISTANCE] = distance;
@@ -919,7 +919,7 @@ public class ClusterAnnotations
                     if (nextBreakend.orientation() == fbBreakend.orientation())
                         continue;
 
-                    final SvCluster nextCluster = nextBreakend.getSV().getCluster();
+                    final SvCluster nextCluster = nextBreakend.getCluster();
 
                     if (nextCluster == cluster || processedClusters.contains(nextCluster))
                         continue;

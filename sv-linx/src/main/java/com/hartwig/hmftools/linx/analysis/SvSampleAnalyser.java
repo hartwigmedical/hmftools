@@ -38,7 +38,6 @@ import static com.hartwig.hmftools.linx.types.SvChain.CM_OVERLAPPING_TI;
 import static com.hartwig.hmftools.linx.types.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
@@ -157,11 +156,12 @@ public class SvSampleAnalyser {
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
+
     public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
         mCnDataLoader = cnAnalyser;
         mAnalyser.setCnDataLoader(cnAnalyser);
-        mClusteringMethods.setSampleLohData(mCnDataLoader.getSampleLohData());
+        mClusteringMethods.setSampleCnEventData(mCnDataLoader.getLohData(), mCnDataLoader.getHomLossData());
         mClusteringMethods.setChrCopyNumberMap(mCnDataLoader.getChrCopyNumberMap());
     }
 
@@ -169,17 +169,14 @@ public class SvSampleAnalyser {
 
     private void clearState()
     {
-        mClusteringMethods.clearLOHBreakendData(mSampleId);
+        if(mSampleId.isEmpty())
+            return;
+
+        // no longer required since list items are purged by their owner
+        // mClusteringMethods.clearLOHBreakendData(mSampleId);
 
         // reduce maps with already processed sample data for the larger data sources
-        if(!mSampleId.isEmpty())
-        {
-            if (mCnDataLoader.getSampleSvPloidyCalcMap() != null)
-                mCnDataLoader.getSampleSvPloidyCalcMap().remove(mSampleId); // shrink the data source to make future look-ups faster
-
-            if (mClusteringMethods.getSampleLohData() != null)
-                mClusteringMethods.getSampleLohData().remove(mSampleId);
-        }
+        mCnDataLoader.clearState(mSampleId);
 
         mSampleId = "";
         mAllVariants.clear();
@@ -199,7 +196,7 @@ public class SvSampleAnalyser {
         // look-up and cache relevant CN data into each SV
         setSvCopyNumberData(
                 mAllVariants,
-                mCnDataLoader.getSampleSvPloidyCalcMap().get(mSampleId),
+                mCnDataLoader.getSvPloidyCalcMap(),
                 mCnDataLoader.getSvIdCnDataMap(),
                 mCnDataLoader.getChrCnDataMap());
 

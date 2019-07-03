@@ -786,7 +786,7 @@ public class FusionDisruptionAnalyser
         int disruptedExons = 0;
         long minDistance = -1;
 
-        final SvCluster cluster = breakend.getSV().getCluster();
+        final SvCluster cluster = breakend.getCluster();
 
         int index = breakend.getChrPosIndex();
 

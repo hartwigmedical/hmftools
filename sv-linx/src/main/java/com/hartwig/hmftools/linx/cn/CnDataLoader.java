@@ -54,9 +54,9 @@ public class CnDataLoader
     private Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private PurityContext mPurityContext;
 
-    private Map<String, List<LohEvent>> mSampleLohData;
-    private Map<String, List<HomLossEvent>> mSampleHomLossData;
-    private Map<String, Map<Integer,double[]>> mSampleSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
+    private List<LohEvent> mLohEventData;
+    private List<HomLossEvent> mHomLossData;
+    private Map<Integer,double[]> mSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
     private Map<String, double[]> mChrEndsCNMap; // telemore and centromere CN values
 
     public static double MIN_LOH_CN = 0.5;
@@ -64,7 +64,7 @@ public class CnDataLoader
 
     private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
-    public CnDataLoader(final String purpleDataPath, final String outputPath, DatabaseAccess dbAccess)
+    public CnDataLoader(final String purpleDataPath, DatabaseAccess dbAccess)
     {
         if(purpleDataPath.endsWith(File.separator))
             mPurpleDataPath = purpleDataPath;
@@ -77,16 +77,16 @@ public class CnDataLoader
         mCnRecords = Lists.newArrayList();
         mChrEndsCNMap = Maps.newHashMap();
         mSvIdCnDataMap = Maps.newHashMap();
-        mSampleSvPloidyCalcMap = Maps.newHashMap();
+        mSvPloidyCalcMap = Maps.newHashMap();
         mPurityContext = null;
-        mSampleLohData = Maps.newHashMap();
-        mSampleHomLossData = Maps.newHashMap();
+        mLohEventData = Lists.newArrayList();
+        mHomLossData = Lists.newArrayList();
         mRecordId = 0;
     }
 
-    public final Map<String,Map<Integer,double[]>> getSampleSvPloidyCalcMap() { return mSampleSvPloidyCalcMap; }
-    public final Map<String, List<LohEvent>> getSampleLohData() { return mSampleLohData; }
-    public final Map<String, List<HomLossEvent>> getSampleHomLossData() { return mSampleHomLossData; }
+    public final Map<Integer,double[]> getSvPloidyCalcMap() { return mSvPloidyCalcMap; }
+    public final List<LohEvent> getLohData() { return mLohEventData; }
+    public final List<HomLossEvent> getHomLossData() { return mHomLossData; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChrEndsCNMap; }
     public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
     public final Map<Integer,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
@@ -111,6 +111,15 @@ public class CnDataLoader
         findLohEvents(sampleId);
 
         reaclcAdjustedPloidy(sampleId);
+    }
+
+    public void clearState(final String sampleId)
+    {
+        // shrink the data source to make future look-ups faster
+        // and to release references to other SV objects (eg SvBreakend)
+        mSvPloidyCalcMap.clear();
+        mLohEventData.clear();
+        mHomLossData.clear();
     }
 
     private void loadCopyNumberData(final String sampleId)
@@ -285,14 +294,8 @@ public class CnDataLoader
 
     private void findLohEvents(final String sampleId)
     {
-        mSampleLohData.clear();
-        mSampleHomLossData.clear();
-
-        List<LohEvent> lohEventList = Lists.newArrayList();
-        mSampleLohData.put(sampleId, lohEventList);
-
-        List<HomLossEvent> homLossList = Lists.newArrayList();
-        mSampleHomLossData.put(sampleId, homLossList);
+        mLohEventData.clear();
+        mHomLossData.clear();
 
         // walk through the CN records looking for any loss of hetrozygosity, defined as a change in the actual baf to zero
         // and when CN rises back above this level, consider the section ended
@@ -338,7 +341,7 @@ public class CnDataLoader
                     StructuralVariantData svData = findSvData (cnData, 1);
                     StructuralVariantData nextSvData = nextCnData != null ? findSvData (nextCnData, -1) : null;
 
-                    HomLossEvent homLoss = new HomLossEvent(sampleId, chromosome, cnData.StartPos, cnData.EndPos,
+                    HomLossEvent homLoss = new HomLossEvent(chromosome, cnData.StartPos, cnData.EndPos,
                             cnData.SegStart, cnData.SegEnd,
                             svData != null ? svData.id() : CN_DATA_NO_SV,
                             nextSvData != null ? nextSvData.id() : CN_DATA_NO_SV);
@@ -346,7 +349,7 @@ public class CnDataLoader
                     LOGGER.debug("chromosome({}) HOM-loss at positions({} -> {}) segments({} - {})",
                             chromosome, homLoss.PosStart, homLoss.PosEnd, homLoss.SegStart, homLoss.SegEnd);
 
-                    homLossList.add(homLoss);
+                    mHomLossData.add(homLoss);
                 }
 
                 if (isLohSection || lohOnStartTelomere)
@@ -383,7 +386,7 @@ public class CnDataLoader
                         if (lohOnStartTelomere || totalLoss)
                         {
                             // LOH section invalidated
-                            processLOHData(lohEventList, sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
+                            processLOHData(sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
                                     lohSegments, false, !totalLoss);
 
                             lohOnStartTelomere = false;
@@ -392,7 +395,7 @@ public class CnDataLoader
                         else
                         {
                             // log all relevant data for this completed section
-                            lohSVsMatchedCount += processLOHData(lohEventList, sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
+                            lohSVsMatchedCount += processLOHData(sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
                                     lohSegments, false, true);
                             ++lohSectionCount;
                         }
@@ -402,7 +405,7 @@ public class CnDataLoader
                     else if (cnData.matchesSegment(TELOMERE, false))
                     {
                         // rest of arm was lost so no linking SV for LOH section - but still record the event
-                        processLOHData(lohEventList, sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
+                        processLOHData(sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
                                 lohSegments, true, true);
                         reset = true;
                     }
@@ -456,7 +459,7 @@ public class CnDataLoader
                             // check for segments ending on telomere
                             if (cnData.matchesSegment(TELOMERE, false))
                             {
-                                processLOHData(lohEventList, sampleId, chromosome, lohStartCnData, lohStartCnData, priorCN, lohMinCN,
+                                processLOHData(sampleId, chromosome, lohStartCnData, lohStartCnData, priorCN, lohMinCN,
                                         lohSegments, true, true);
                                 reset = true;
                             }
@@ -511,7 +514,7 @@ public class CnDataLoader
             return null;
     }
 
-    private int processLOHData(List<LohEvent> lohDataList, final String sampleId, final String chr, SvCNData startData, SvCNData endData,
+    private int processLOHData(final String sampleId, final String chr, SvCNData startData, SvCNData endData,
             double lastMinCN, double lohMinCN, int segCount, boolean incomplete, boolean isValid)
     {
 
@@ -585,7 +588,7 @@ public class CnDataLoader
         }
 
         LohEvent lohData = new LohEvent(
-                sampleId, chr,
+                chr,
                 startData.StartPos, incomplete ? endData.EndPos : endData.StartPos,
                 startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart,
                 lastMinCN, startData.minorAllelePloidy(), endData.minorAllelePloidy(),
@@ -594,7 +597,7 @@ public class CnDataLoader
                 endSvData != null ? endSvData.id() : CN_DATA_NO_SV,
                 isValid);
 
-        lohDataList.add(lohData);
+        mLohEventData.add(lohData);
 
         return (startSvData != null && endSvData != null) ? 1 : 0;
     }
@@ -677,10 +680,7 @@ public class CnDataLoader
 
     private void reaclcAdjustedPloidy(final String sampleId)
     {
-        mSampleSvPloidyCalcMap.clear();
-
-        Map<Integer,double[]> svDataMap = Maps.newHashMap();
-        mSampleSvPloidyCalcMap.put(sampleId, svDataMap);
+        mSvPloidyCalcMap.clear();
 
         for (Map.Entry<Integer, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
         {
@@ -759,7 +759,7 @@ public class CnDataLoader
                 ploidyUncertainty = 0;
 
             double[] ploidyCalcs = {ploidyEstimate, ploidyUncertainty};
-            svDataMap.put(svData.id(), ploidyCalcs);
+            mSvPloidyCalcMap.put(svData.id(), ploidyCalcs);
 
         }
     }

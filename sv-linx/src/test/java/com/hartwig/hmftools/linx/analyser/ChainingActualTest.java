@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -167,16 +168,15 @@ public class ChainingActualTest
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
-        Map<String, List<LohEvent>> lohDataMap = new HashMap();
         List<LohEvent> lohData = Lists.newArrayList();
 
-        lohData.add(new LohEvent(tester.SampleId, "18", 23601785, 23577410,
+        lohData.add(new LohEvent( "18", 23601785, 23577410,
                 "BND", "BND", 1, 1, 1, 0, 1, 1,
                 var1.dbId(), var4.dbId(), true));
 
-        lohDataMap.put(tester.SampleId, lohData);
+        List<HomLossEvent> homLossData = Lists.newArrayList();
 
-        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+        tester.ClusteringMethods.setSampleCnEventData(lohData, homLossData);
 
         tester.preClusteringInit();
 

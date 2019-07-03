@@ -5,7 +5,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class LohEvent
 {
-    public final String SampleId;
     public final String Chromosome;
     public final long PosStart;
     public final long PosEnd;
@@ -17,7 +16,7 @@ public class LohEvent
     public final double MinCN;
     public final int SegCount;
     public final long Length;
-    public final int StartSV; // the SV data's ID
+    public final int StartSV; // the DB SvId
     public final int EndSV;
     public final boolean IsValid;
 
@@ -27,7 +26,6 @@ public class LohEvent
     public final static int CN_DATA_NO_SV = -1;
 
     public LohEvent(
-            final String sampleId,
             final String chr,
             final long posStart,
             final long posEnd,
@@ -43,7 +41,6 @@ public class LohEvent
             final int endSV,
             boolean isValid)
     {
-        SampleId = sampleId;
         Chromosome = chr;
         PosStart = posStart;
         PosEnd = posEnd;
@@ -69,6 +66,12 @@ public class LohEvent
             mBreakendStart = breakend;
         else
             mBreakendEnd = breakend;
+    }
+
+    public void clearBreakends()
+    {
+        mBreakendStart = null;
+        mBreakendEnd= null;
     }
 
     public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }

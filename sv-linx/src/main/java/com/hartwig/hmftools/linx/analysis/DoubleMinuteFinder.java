@@ -946,7 +946,7 @@ public class DoubleMinuteFinder
 
                 for(final SvBreakend breakend : breakendList)
                 {
-                    if(breakend.getSV().getCluster() == cluster)
+                    if(breakend.getCluster() == cluster)
                         continue;
 
                     if(breakend.ploidy() * DOUBLE_MINUTE_PLOIDY_GAP_RATIO >= minPloidyAboveThreshold)

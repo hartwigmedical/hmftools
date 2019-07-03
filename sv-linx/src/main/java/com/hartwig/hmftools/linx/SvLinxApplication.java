@@ -83,7 +83,7 @@ public class SvLinxApplication
             svaConfig.setSampleIds(samplesList);
         }
 
-        CnDataLoader cnDataLoader = new CnDataLoader(svaConfig.PurpleDataPath, svaConfig.OutputDataPath, dbAccess);
+        CnDataLoader cnDataLoader = new CnDataLoader(svaConfig.PurpleDataPath, dbAccess);
 
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
 
@@ -139,8 +139,10 @@ public class SvLinxApplication
 
         if(driverGeneAnnotator != null)
         {
-            driverGeneAnnotator.setLohData(cnDataLoader.getSampleLohData());
-            driverGeneAnnotator.setChrCopyNumberMap(cnDataLoader.getChrCopyNumberMap());
+            driverGeneAnnotator.setCopyNumberData(
+                    cnDataLoader.getChrCopyNumberMap(),
+                    cnDataLoader.getLohData(),
+                    cnDataLoader.getHomLossData());
         }
 
         PerformanceCounter prefCounter = new PerformanceCounter("SVA Total");

@@ -57,8 +57,10 @@ public class SvTestHelper
 
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);
-        CnDataLoader = new CnDataLoader("", "", null);
+        CnDataLoader = new CnDataLoader( "", null);
         Analyser.setCnDataLoader(CnDataLoader);
+        ClusteringMethods.setSampleCnEventData(CnDataLoader.getLohData(), CnDataLoader.getHomLossData());
+        ClusteringMethods.setChrCopyNumberMap(CnDataLoader.getChrCopyNumberMap());
 
         Analyser.setRunValidationChecks(true);
 
@@ -443,7 +445,7 @@ public class SvTestHelper
 
         setSvCopyNumberData(
                 AllVariants,
-                CnDataLoader.getSampleSvPloidyCalcMap().get(SampleId),
+                CnDataLoader.getSvPloidyCalcMap(),
                 CnDataLoader.getSvIdCnDataMap(),
                 CnDataLoader.getChrCnDataMap());
 

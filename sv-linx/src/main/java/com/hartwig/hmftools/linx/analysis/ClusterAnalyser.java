@@ -555,7 +555,7 @@ public class ClusterAnalyser {
                         if(nextBreakend.orientation() == breakend.orientation())
                             continue;
 
-                        SvCluster nextCluster = nextBreakend.getSV().getCluster();
+                        SvCluster nextCluster = nextBreakend.getCluster();
                         if(nextCluster == cluster)
                             break;
 
@@ -656,7 +656,7 @@ public class ClusterAnalyser {
                         continue;
 
                     // it's possible that the breakends for this LOH are not clustered, eg if one is LINE
-                    if(lohBreakend.getSV().getCluster() != lohCluster)
+                    if(lohBreakend.getCluster() != lohCluster)
                         continue;
 
                     // walk towards the LOH from the other end of this DUP to see if it can find a resolving event within the cluster
@@ -700,7 +700,7 @@ public class ClusterAnalyser {
                         if(nextBreakend.orientation() == otherBreakend.orientation())
                             continue;
 
-                        SvCluster otherCluster = nextBreakend.getSV().getCluster();
+                        SvCluster otherCluster = nextBreakend.getCluster();
 
                         if(otherCluster == lohCluster)
                             break; // own cluster resolves this LOH breakend
@@ -826,7 +826,7 @@ public class ClusterAnalyser {
                             if (nextBreakend.arm() != arm)
                                 break;
 
-                            SvCluster otherCluster = nextBreakend.getSV().getCluster();
+                            SvCluster otherCluster = nextBreakend.getCluster();
 
                             if (otherCluster.isResolved() || otherCluster == cluster || mergedClusters.contains(otherCluster))
                                 continue;
@@ -978,7 +978,7 @@ public class ClusterAnalyser {
                 SvBreakend nextBreakend = getNextUnresolvedBreakend(foldbackBreakend, breakendList);
 
                 if (nextBreakend == null || nextBreakend.orientation() == foldbackBreakend.orientation()
-                || nextBreakend.getSV().getCluster() != otherCluster)
+                || nextBreakend.getCluster() != otherCluster)
                     continue;
 
                 if (abs(nextBreakend.position() - foldbackBreakend.position()) > MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE)
@@ -1010,14 +1010,14 @@ public class ClusterAnalyser {
         // select the next breakend after this foldback if it's in a different, unresolved cluster
         boolean traverseUp = foldbackBreakend.orientation() == -1;
         int startIndex = traverseUp ? foldbackBreakend.getChrPosIndex() + 1 : foldbackBreakend.getChrPosIndex() - 1;
-        final SvCluster fbCluster = foldbackBreakend.getSV().getCluster();
+        final SvCluster fbCluster = foldbackBreakend.getCluster();
 
         int index = startIndex;
 
         while(index >= 0 && index < breakendList.size())
         {
             final SvBreakend breakend = breakendList.get(index);
-            final SvCluster cluster = breakend.getSV().getCluster();
+            final SvCluster cluster = breakend.getCluster();
 
             if(!cluster.isResolved())
             {
@@ -1173,7 +1173,7 @@ public class ClusterAnalyser {
                         if(otherBreakend.orientation() == lowerBreakend.orientation())
                             continue;
 
-                        final SvCluster otherCluster = otherBreakend.getSV().getCluster();
+                        final SvCluster otherCluster = otherBreakend.getCluster();
 
                         if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
                             continue;

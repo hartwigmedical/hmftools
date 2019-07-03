@@ -232,7 +232,7 @@ public class RnaFusionData
     private void setFusionClusterInfo(final SvBreakend breakend, boolean isUpstream, SvChain matchingChain)
     {
         // data: ClusterId;ClusterCount;ChainId;ChainCount
-        SvCluster cluster = breakend.getSV().getCluster();
+        SvCluster cluster = breakend.getCluster();
 
         SvChain chain = matchingChain != null ? matchingChain : cluster.findChain(breakend.getSV());
 

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -216,28 +217,25 @@ public class MergeRuleTest
         tester.AllVariants.add(var10);
         // tester.AllVariants.add(var11);
 
-        Map<String, List<LohEvent>> lohDataMap = new HashMap();
-        List<LohEvent> lohData = Lists.newArrayList();
+        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
 
-        lohData.add(new LohEvent(tester.SampleId, "1", 10000, 20000,
+        lohData.add(new LohEvent("1", 10000, 20000,
                 "DEL", "DUP", 1, 1, 1, 0, 1, 10000,
                 var1.dbId(), var2.dbId(), true));
 
-        lohData.add(new LohEvent(tester.SampleId, "1", 50000, 60000,
+        lohData.add(new LohEvent("1", 50000, 60000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 19000,
                 var2.dbId(), var1.dbId(), true));
 
-        lohData.add(new LohEvent(tester.SampleId, "1", 110000, 120000,
+        lohData.add(new LohEvent("1", 110000, 120000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 10000,
                 var6.dbId(), var5.dbId(), true));
 
-        lohData.add(new LohEvent(tester.SampleId, "2", 20000, 30000,
+        lohData.add(new LohEvent("2", 20000, 30000,
                 "BND", "DUP", 1, 1, 1, 0, 1, 10000,
                 var4.dbId(), var9.dbId(), true));
 
-        lohDataMap.put(tester.SampleId, lohData);
-
-        tester.ClusteringMethods.setSampleLohData(lohDataMap);
+        // tester.ClusteringMethods.setSampleCnEventData(lohData, homLossData);
 
         tester.preClusteringInit();
 

@@ -35,10 +35,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -55,7 +55,8 @@ public class SvClusteringMethods {
     private int mNextClusterId;
 
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
-    private Map<String, List<LohEvent>> mSampleLohData;
+    private List<LohEvent> mLohEventList;
+    private List<HomLossEvent> mHomLossList;
     private List<SvVarData> mExcludedSVs; // eg duplicate breakends
 
     private Map<String, double[]> mChromosomeCopyNumberMap; // p-arm telomere, centromere and q-arm telemore CN data
@@ -90,13 +91,20 @@ public class SvClusteringMethods {
         mChrBreakendMap = new HashMap();
         mChromosomeCopyNumberMap = new HashMap();
         mExcludedSVs = Lists.newArrayList();
-        mSampleLohData = null;
+        mLohEventList = null;
+        mHomLossList = null;
     }
 
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public final Map<String, List<LohEvent>> getSampleLohData() { return mSampleLohData; }
+    public final List<LohEvent> getLohEventList() { return mLohEventList; }
     public int getNextClusterId() { return mNextClusterId++; }
-    public void setSampleLohData(final Map<String, List<LohEvent>> data) { mSampleLohData = data; }
+
+    public void setSampleCnEventData(final List<LohEvent> lohEvents, List<HomLossEvent> homLossEvents)
+    {
+        mLohEventList = lohEvents;
+        mHomLossList = homLossEvents;
+    }
+
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mChromosomeCopyNumberMap = data; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
     public long getDupCutoffLength() { return mDelCutoffLength; }
@@ -334,7 +342,8 @@ public class SvClusteringMethods {
             ++iterations;
         }
 
-        mergeOnLOHEvents(sampleId, clusters);
+        associateBreakendCnEvents(sampleId, clusters);
+        mergeOnLOHEvents(clusters);
 
         if(clusters.size() < initClusterCount)
         {
@@ -366,90 +375,133 @@ public class SvClusteringMethods {
 
     public void clearLOHBreakendData(final String sampleId)
     {
-        if(mSampleLohData == null || sampleId.isEmpty())
-            return;
-
-        List<LohEvent> lohList = mSampleLohData.get(sampleId);
-
-        if(lohList == null)
-            return;
-
-        for(final LohEvent lohEvent : lohList)
+        if(mLohEventList != null)
         {
-            lohEvent.setBreakend(null, true);
-            lohEvent.setBreakend(null, false);
+            mLohEventList.forEach(x -> x.clearBreakends());
+        }
+
+        if(mHomLossList != null)
+        {
+            mHomLossList.forEach(x -> x.clearBreakends());
         }
     }
 
-    private void mergeOnLOHEvents(final String sampleId, List<SvCluster> clusters)
+    private void associateBreakendCnEvents(final String sampleId, List<SvCluster> clusters)
     {
-        if(mSampleLohData == null)
-            return;
-
-        // first extract all the SVs from the LOH events
-        List<LohEvent> lohList = mSampleLohData.get(sampleId);
-
-        if(lohList == null)
-            return;
-
-        // note that LOH-breakend links are established here and then must be tidied up once the same is complete
+        // search for breakends that match LOH and Hom-loss events
+        // note that LOH-breakend links are established here and then must be tidied up once the sample is complete
 
         String currentChromosome = "";
         List<SvBreakend> breakendList = null;
 
-        for(final LohEvent lohEvent : lohList)
+        int missedEvents = 0;
+
+        if(mLohEventList != null && !mLohEventList.isEmpty())
         {
-            if(lohEvent.StartSV == CN_DATA_NO_SV && lohEvent.EndSV == CN_DATA_NO_SV)
-                continue;
-
-            SvCluster lohClusterStart = null;
-            SvVarData lohSvStart = null;
-            SvCluster lohClusterEnd = null;
-            SvVarData lohSvEnd = null;
-
-            // use the breakend table to find matching SVs
-            if(breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
+            for (final LohEvent lohEvent : mLohEventList)
             {
-                breakendList = mChrBreakendMap.get(lohEvent.Chromosome);
-                currentChromosome = lohEvent.Chromosome;
-            }
+                if (lohEvent.StartSV == CN_DATA_NO_SV && lohEvent.EndSV == CN_DATA_NO_SV)
+                    continue;
 
-            if(breakendList == null)
-                continue;
-
-            for(final SvBreakend breakend : breakendList)
-            {
-                if(breakend.orientation() == 1 && breakend.getSV().dbId() == lohEvent.StartSV)
+                // use the breakend table to find matching SVs
+                if (breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
                 {
-                    lohClusterStart = breakend.getSV().getCluster();
-                    lohSvStart = breakend.getSV();
-                    lohClusterStart.addLohEvent(lohEvent);
-                    lohEvent.setBreakend(breakend, true);
+                    breakendList = mChrBreakendMap.get(lohEvent.Chromosome);
+                    currentChromosome = lohEvent.Chromosome;
                 }
 
-                if(breakend.orientation() == -1 && breakend.getSV().dbId() == lohEvent.EndSV)
+                if (breakendList == null)
+                    continue;
+
+                for (final SvBreakend breakend : breakendList)
                 {
-                    lohClusterEnd = breakend.getSV().getCluster();
+                    if (breakend.orientation() == 1 && breakend.getSV().dbId() == lohEvent.StartSV)
+                    {
+                        lohEvent.setBreakend(breakend, true);
+                        breakend.getCluster().addLohEvent(lohEvent);
+                    }
 
-                    if(!lohClusterEnd.getLohEvents().contains(lohEvent))
-                        lohClusterEnd.addLohEvent(lohEvent);
+                    if (breakend.orientation() == -1 && breakend.getSV().dbId() == lohEvent.EndSV)
+                    {
+                        lohEvent.setBreakend(breakend, false);
+                        breakend.getCluster().addLohEvent(lohEvent);
+                    }
 
-                    lohSvEnd = breakend.getSV();
-                    lohEvent.setBreakend(breakend, false);
+                    if (lohEvent.matchedBothSVs())
+                        break;
                 }
 
-                if(lohEvent.matchedBothSVs())
-                    break;
-            }
+                if (lohEvent.StartSV != CN_DATA_NO_SV && lohEvent.getBreakend(true) == null)
+                    ++missedEvents;
 
+                if (lohEvent.EndSV != CN_DATA_NO_SV && lohEvent.getBreakend(false) == null)
+                    ++missedEvents;
+            }
+        }
+
+        if(mHomLossList != null && !mHomLossList.isEmpty())
+        {
+            for (HomLossEvent homLossEvent : mHomLossList)
+            {
+                if (homLossEvent.StartSV == CN_DATA_NO_SV && homLossEvent.EndSV == CN_DATA_NO_SV)
+                    continue;
+
+                breakendList = mChrBreakendMap.get(homLossEvent.Chromosome);
+
+                if (breakendList == null)
+                    continue;
+
+                for (final SvBreakend breakend : breakendList)
+                {
+                    if (breakend.orientation() == 1 && breakend.getSV().dbId() == homLossEvent.StartSV)
+                    {
+                        homLossEvent.setBreakend(breakend, true);
+                        // breakend.getCluster().addHomLossEvent(homLossEvent);
+                    }
+
+                    if (breakend.orientation() == -1 && breakend.getSV().dbId() == homLossEvent.EndSV)
+                    {
+                        homLossEvent.setBreakend(breakend, false);
+                        // breakend.getCluster().addHomLossEvent(homLossEvent);
+                    }
+
+                    if (homLossEvent.matchedBothSVs())
+                        break;
+                }
+
+                if (homLossEvent.StartSV != CN_DATA_NO_SV && homLossEvent.getBreakend(true) == null)
+                    ++missedEvents;
+
+                if (homLossEvent.EndSV != CN_DATA_NO_SV && homLossEvent.getBreakend(false) == null)
+                    ++missedEvents;
+            }
+        }
+
+        if(missedEvents > 0)
+        {
+            LOGGER.warn("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
+        }
+    }
+
+    private void mergeOnLOHEvents(List<SvCluster> clusters)
+    {
+        if(mLohEventList.isEmpty() && mHomLossList.isEmpty())
+            return;
+
+        for(final LohEvent lohEvent : mLohEventList)
+        {
             if(!lohEvent.IsValid)
                 continue; // cannot be used for clustering
 
-            if(lohClusterEnd == null || lohClusterStart == null)
-            {
-                // LOGGER.error("sample({}) start varId({}) not found in any cluster", sampleId, lohEvent.StartSV);
+            if(lohEvent.getBreakend(true) == null || lohEvent.getBreakend(false) == null)
                 continue;
-            }
+
+            SvBreakend breakendStart = lohEvent.getBreakend(true);
+            SvCluster lohClusterStart = breakendStart.getCluster();
+            SvVarData lohSvStart = breakendStart.getSV();
+            SvBreakend breakendEnd = lohEvent.getBreakend(false);
+            SvCluster lohClusterEnd = breakendEnd.getCluster();
+            SvVarData lohSvEnd = breakendEnd.getSV();
 
             if(lohClusterStart == lohClusterEnd)
                 continue;
@@ -660,7 +712,7 @@ public class SvClusteringMethods {
                 if(nextBreakend != null && i < breakendCount - 2)
                 {
                     final SvBreakend followingBreakend = breakendList.get(i + 2);
-                    final SvCluster followingCluster = followingBreakend.getSV().getCluster();
+                    final SvCluster followingCluster = followingBreakend.getCluster();
 
                     if(followingCluster.getSvCount() == 1 && followingBreakend.getSV().type() == SGL && !followingCluster.isResolved())
                     {

@@ -34,6 +34,8 @@ public class SvBreakend {
     public final SvVarData getSV() { return mSV; }
     public final SvVarData getOrigSV() { return mSV.getOrigSV(); }
     public final SvBreakend getOrigBreakend() { return getOrigSV().getBreakend(mUsesStart); }
+    public final SvCluster getCluster() { return mSV.getCluster(); }
+
     public final String chromosome() { return mChromosome; }
     public final String arm() { return mArm; }
     public final String getChrArm() { return mChrArm; }

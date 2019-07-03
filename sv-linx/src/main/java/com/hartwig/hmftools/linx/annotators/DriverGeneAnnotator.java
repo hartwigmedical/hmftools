@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,6 +38,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.DriverGeneData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -74,8 +74,8 @@ public class DriverGeneAnnotator
     // references only
     private String mSampleId;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
-    private Map<String, List<LohEvent>> mSampleLohMap;
-    private List<LohEvent> mSampleLOHData;
+    private List<LohEvent> mLohEventList;
+    private List<HomLossEvent> mHomLossList;
     private Map<String, double[]> mChrCopyNumberMap;
     private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
     private VisualiserWriter mVisWriter;
@@ -97,7 +97,6 @@ public class DriverGeneAnnotator
 
         mDriverCatalog = Lists.newArrayList();
         mGeneCopyNumberData = Lists.newArrayList();
-        mSampleLOHData = Lists.newArrayList();
         mDriverGeneDataList = Lists.newArrayList();
         mSampleGeneCopyNumberMap = new HashMap();
         mChrCopyNumberMap = null;
@@ -130,8 +129,16 @@ public class DriverGeneAnnotator
         return true;
     }
 
-    public void setLohData(final Map<String, List<LohEvent>> lohData) { mSampleLohMap = lohData; }
-    public void setChrCopyNumberMap(Map<String, double[]> chrCopyNumberMap) { mChrCopyNumberMap = chrCopyNumberMap; }
+    public void setCopyNumberData(
+            final Map<String, double[]> chrCopyNumberMap,
+            final List<LohEvent> lohData,
+            final List<HomLossEvent> homLossData)
+    {
+        mLohEventList = lohData;
+        mHomLossList = homLossData;
+        mChrCopyNumberMap = chrCopyNumberMap;
+    }
+
     public void setSamplePloidy(double ploidy)
     {
         mSamplePloidy = ploidy;
@@ -233,9 +240,6 @@ public class DriverGeneAnnotator
 
         loadGeneCopyNumberData(sampleId);
 
-        mSampleLOHData.clear();
-        mSampleLOHData.addAll(mSampleLohMap.get(sampleId));
-
         // Handle each of the 3 applicable types: DEL, BIALLELIC and AMP
         for (final DriverCatalog driverGene : mDriverCatalog)
         {
@@ -288,7 +292,6 @@ public class DriverGeneAnnotator
             }
         }
 
-        mSampleLOHData.clear();
         mChrBreakendMap = null;
 
         mPerfCounter.stop();
@@ -380,7 +383,7 @@ public class DriverGeneAnnotator
             {
                 final SvBreakend breakend = breakendList.get(index);
 
-                if(breakend.orientation() == -1 && breakend.getSV().getCluster() == startBreakend.getSV().getCluster())
+                if(breakend.orientation() == -1 && breakend.getCluster() == startBreakend.getCluster())
                 {
                     endBreakend = breakend;
                     break;
@@ -411,7 +414,7 @@ public class DriverGeneAnnotator
         LohEvent matchedLohEvent = null;
         if(startBreakend != null && endBreakend != null)
         {
-            for (final LohEvent lohEvent : mSampleLOHData)
+            for (final LohEvent lohEvent : mLohEventList)
             {
                 if(!lohEvent.Chromosome.equals(startBreakend.chromosome()))
                     continue;
@@ -490,7 +493,7 @@ public class DriverGeneAnnotator
         final GeneCopyNumber geneCN = driverGeneData.GeneCN;
 
         // for biallelic events, find the straddling LOH event
-        for (final LohEvent lohEvent : mSampleLOHData)
+        for (final LohEvent lohEvent : mLohEventList)
         {
             if(!lohEvent.Chromosome.equals(geneCN.chromosome()))
                 continue;
@@ -770,7 +773,7 @@ public class DriverGeneAnnotator
                     varId = breakend.getSV().id();
                     svIsStart = breakend.usesStart();
                     position = breakend.position();
-                    refClusterId = breakend.getSV().getCluster().id();
+                    refClusterId = breakend.getCluster().id();
                     clusterId = refClusterId;
                 }
                 else if(i < driverGeneData.getSvInfoList().size())
