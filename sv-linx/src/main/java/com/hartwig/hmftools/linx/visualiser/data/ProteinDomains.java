@@ -49,6 +49,7 @@ public class ProteinDomains
             if (unadjustedDomain.overlaps(upGeneRegion))
             {
                 ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
+                        .chromosome(fusion.name())
                         .start(start(fusion.strandUp(), upGeneStart, unadjustedDomain))
                         .end(end(fusion.strandUp(), upGeneStart, unadjustedDomain))
                         .build();
@@ -59,6 +60,7 @@ public class ProteinDomains
             if (unadjustedDomain.overlaps(downGeneRegion))
             {
                 ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
+                        .chromosome(fusion.name())
                         .start(start(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset)
                         .end(end(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset)
                         .build();

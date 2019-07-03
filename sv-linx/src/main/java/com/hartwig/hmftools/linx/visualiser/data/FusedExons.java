@@ -36,7 +36,6 @@ public class FusedExons
 
         final Exon firstUpstreamExon = upStreamExons.get(0);
 
-        final String fusionName = fusion.geneUp() + "_" + fusion.geneDown();
         final long upGeneOffset = offset(fusion.strandUp(), firstUpstreamExon);
         final long upGeneStart = start(fusion.strandUp(), upGeneOffset, firstUpstreamExon);
         final long upGeneEnd = convert(fusion.strandUp(), upGeneOffset, fusion.positionUp());
@@ -44,7 +43,7 @@ public class FusedExons
         final ImmutableFusedExon.Builder upFusedExonBuilder = ImmutableFusedExon.builder()
                 .sampleId(fusion.sampleId())
                 .clusterId(fusion.clusterId())
-                .fusion(fusionName)
+                .fusion(fusion.name())
                 .chromosome(fusion.chromosomeUp())
                 .unadjustedGeneStart(fusion.strandUp() < 0 ? firstUpstreamExon.end() : firstUpstreamExon.start())
                 .gene(fusion.geneUp())

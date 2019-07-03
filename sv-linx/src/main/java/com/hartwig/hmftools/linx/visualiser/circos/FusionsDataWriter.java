@@ -40,10 +40,10 @@ public class FusionsDataWriter
             final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
             for (FusedExon fusedExon : fusedExons)
             {
-                unadjustedPositions.add(GenomePositions.create(fusedExon.chromosome(), fusedExon.geneStart()));
-                unadjustedPositions.add(GenomePositions.create(fusedExon.chromosome(), fusedExon.geneEnd()));
-                unadjustedPositions.add(GenomePositions.create(fusedExon.chromosome(), fusedExon.start()));
-                unadjustedPositions.add(GenomePositions.create(fusedExon.chromosome(), fusedExon.end()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.geneStart()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.geneEnd()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.start()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.end()));
             }
 
             for (ProteinDomain proteinDomain : fusedProteinDomain)

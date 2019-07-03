@@ -114,7 +114,7 @@ class ScalePosition
     {
         return exons.stream().map(x ->
         {
-            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.chromosome());
+            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.fusion());
             return scale(x, y -> ImmutableFusedExon.builder()
                     .from(y)
                     .geneStart(positionMap.get(y.geneStart()))
