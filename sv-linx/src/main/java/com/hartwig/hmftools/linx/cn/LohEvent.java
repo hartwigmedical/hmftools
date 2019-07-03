@@ -19,7 +19,6 @@ public class LohEvent
     public final long Length;
     public final int StartSV; // the SV data's ID
     public final int EndSV;
-    public final boolean Skipped;
     public final boolean IsValid;
 
     private SvBreakend mBreakendStart;
@@ -42,7 +41,6 @@ public class LohEvent
             final long length,
             final int startSV,
             final int endSV,
-            boolean skipped,
             boolean isValid)
     {
         SampleId = sampleId;
@@ -59,7 +57,6 @@ public class LohEvent
         Length = length;
         StartSV = startSV;
         EndSV = endSV;
-        Skipped = skipped;
         IsValid = isValid;
 
         mBreakendStart = null;

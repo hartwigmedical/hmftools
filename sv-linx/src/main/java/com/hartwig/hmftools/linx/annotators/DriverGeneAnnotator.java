@@ -234,10 +234,7 @@ public class DriverGeneAnnotator
         loadGeneCopyNumberData(sampleId);
 
         mSampleLOHData.clear();
-        List<LohEvent> sampleLohEvents = mSampleLohMap.get(sampleId);
-
-        if (sampleLohEvents != null)
-            mSampleLOHData.addAll(sampleLohEvents.stream().filter(x -> !x.Skipped).collect(Collectors.toList()));
+        mSampleLOHData.addAll(mSampleLohMap.get(sampleId));
 
         // Handle each of the 3 applicable types: DEL, BIALLELIC and AMP
         for (final DriverCatalog driverGene : mDriverCatalog)

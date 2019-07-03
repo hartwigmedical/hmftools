@@ -172,7 +172,7 @@ public class ChainingActualTest
 
         lohData.add(new LohEvent(tester.SampleId, "18", 23601785, 23577410,
                 "BND", "BND", 1, 1, 1, 0, 1, 1,
-                var1.dbId(), var4.dbId(), false, true));
+                var1.dbId(), var4.dbId(), true));
 
         lohDataMap.put(tester.SampleId, lohData);
 
