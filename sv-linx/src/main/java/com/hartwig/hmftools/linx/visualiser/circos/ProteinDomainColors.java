@@ -13,24 +13,32 @@ import org.jetbrains.annotations.NotNull;
 
 public class ProteinDomainColors
 {
+
+    // Top 10 were selected with the following query:
+    //
+    // proteinDomain = read.table(file = "~/hmf/analysis/fusions/SVA_VIS_PROTEIN_DOMAINS.tsv", sep = "\t", header = T) %>%
+    //     select(Transcript, Info) %>% distinct() %>%
+    //     group_by(Info) %>% count() %>% ungroup() %>%
+    //     top_n(10, n) %>% arrange(-n)
+
     private static final float FIXED_HUE = 0.166f;
     private static final float SAT = 0.7f;
     private static final float BRIGHT = 0.8f;
 
     private final Map<String, Color> proteinColorMap = Maps.newLinkedHashMap();
 
-    public ProteinDomainColors(final Set<String> proteinDomains)
+    ProteinDomainColors(@NotNull final Set<String> proteinDomains)
     {
-        proteinColorMap.put("Cadherin", getFixedColor(0));
-        proteinColorMap.put("Epidermal growth factor-like domain", getFixedColor(1));
-        proteinColorMap.put("LDLR class B repeat", getFixedColor(2));
-        proteinColorMap.put("Low-density lipoprotein (LDL) receptor class A repeat", getFixedColor(3));
-        proteinColorMap.put("Zinc finger; C2H2", getFixedColor(4));
-        proteinColorMap.put("Protein kinase domain", getFixedColor(5));
-        proteinColorMap.put("Immunoglobulin-like domain", getFixedColor(6));
-        proteinColorMap.put("Fibronectin type III", getFixedColor(7));
-        proteinColorMap.put("Sushi/SCR/CCP domain", getFixedColor(8));
-        proteinColorMap.put("Zinc finger; PHD-finger", getFixedColor(9));
+        proteinColorMap.put("Protein kinase domain", getFixedColor(0));
+        proteinColorMap.put("Immunoglobulin-like domain", getFixedColor(1));
+        proteinColorMap.put("Zinc finger; C2H2", getFixedColor(2));
+        proteinColorMap.put("Zinc finger; RING-type", getFixedColor(3));
+        proteinColorMap.put("Pleckstrin homology domain", getFixedColor(4));
+        proteinColorMap.put("RNA recognition motif domain", getFixedColor(5));
+        proteinColorMap.put("SH2 domain", getFixedColor(6));
+        proteinColorMap.put("Ankyrin repeat", getFixedColor(7));
+        proteinColorMap.put("Ankyrin repeat-containing domain", getFixedColor(8));
+        proteinColorMap.put("Fibronectin type III", getFixedColor(9));
 
         final List<String> newProteinDomains =
                 proteinDomains.stream().filter(x -> !proteinColorMap.keySet().contains(x)).collect(Collectors.toList());
@@ -43,14 +51,15 @@ public class ProteinDomainColors
     }
 
     @NotNull
-    public String rgb(@NotNull final String proteinDomain) {
+    public String rgb(@NotNull final String proteinDomain)
+    {
         final Color color = color(proteinDomain);
         return "(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ",0.8)";
     }
 
-
     @NotNull
-    public Color color(@NotNull final String proteinDomain) {
+    public Color color(@NotNull final String proteinDomain)
+    {
         return proteinColorMap.get(proteinDomain);
     }
 
