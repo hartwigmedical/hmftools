@@ -74,7 +74,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract String ampcap();
 
     @NotNull
-    public abstract List<MolecularMatchAst> asts();
+    public abstract MolecularMatchAst asts();
 
     @NotNull
     public abstract List<MolecularMatchVariantInfo> variantInfo();
@@ -117,6 +117,5 @@ public abstract class MolecularMatch implements KbSpecificObject {
 
     @NotNull
     public abstract List<String> includeGene0();
-
 
 }

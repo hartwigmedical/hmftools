@@ -21,6 +21,23 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsIndications;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsMolecularProfile;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsVariantRequirementDetails;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatch;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAst;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstLeft;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRight;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchClassification;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchCriteriaUnmet;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchGRch37Location;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchLocations;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchMutations;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchPrevalence;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchSource;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTags;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTherapeuticContext;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTierExplanation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTranscriptConsequence;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTranscriptConsequencesGRCH37;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbConsequence;
@@ -36,6 +53,23 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsIndications;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsMolecularProfile;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAst;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstLeft;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRight;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchClassification;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchCriteriaUnmet;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchGRch37Location;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchLocations;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchMutations;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchPrevalence;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchSource;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTags;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTherapeuticContext;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTierExplanation;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTranscriptConsequence;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTranscriptConsequencesGRCH37;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbClinical;
@@ -95,6 +129,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.omg.CORBA.PRIVATE_MEMBER;
 
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
@@ -146,8 +181,6 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
 
     private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(36);
-
-
 
     private ViccJsonReader() {
     }
@@ -299,6 +332,8 @@ public final class ViccJsonReader {
                 viccEntryBuilder.KbSpecificObject(createJax(objectJax));
             } else if (viccEntryObject.has("jax_trials")) {
                 viccEntryBuilder.KbSpecificObject(createJaxTrials(objectJaxTrials));
+            } else if (viccEntryObject.has("molecularmatch")) {
+                viccEntryBuilder.KbSpecificObject(createMolecularMatch(objectMolecularMatch));
             }
             entries.add(viccEntryBuilder.build());
 
@@ -309,11 +344,355 @@ public final class ViccJsonReader {
     }
 
     @NotNull
+    private static MolecularMatch createMolecularMatch(@NotNull JsonObject objectMolecularMatch) {
+        return ImmutableMolecularMatch.builder()
+                .criteriaUnmet(createCriteriaUnmet(objectMolecularMatch.getAsJsonArray("criteriaUnmet")))
+                .prevalences(createPrevalence(objectMolecularMatch.getAsJsonArray("prevalence")))
+                .score(objectMolecularMatch.getAsJsonPrimitive("_score").getAsString())
+                .autoGenerateNarrative(objectMolecularMatch.getAsJsonPrimitive("autoGenerateNarrative").getAsString())
+                .mutations(createMutations(objectMolecularMatch.getAsJsonArray("mutations")))
+                .sources(createSource(objectMolecularMatch.getAsJsonArray("sources")))
+                .clinicalSignificance(objectMolecularMatch.getAsJsonPrimitive("clinicalSignificance").getAsString())
+                .id(objectMolecularMatch.getAsJsonPrimitive("id").getAsString())
+                .includeCondition0(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeCondition0")))
+                .includeCondition1(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeCondition1")))
+                .uniqueKey(objectMolecularMatch.getAsJsonPrimitive("uniqueKey").getAsString())
+                .civic(objectMolecularMatch.getAsJsonPrimitive("civic").getAsString())
+                .hashKey(objectMolecularMatch.getAsJsonPrimitive("hashKey").getAsString())
+                .regulatoryBodyApproved(objectMolecularMatch.getAsJsonPrimitive("regulatoryBodyApproved").getAsString())
+                .version(objectMolecularMatch.getAsJsonPrimitive("version").getAsString())
+                .includeMutation1(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeMutation1")))
+                .guidelineBody(objectMolecularMatch.getAsJsonPrimitive("guidelineBody").getAsString())
+                .regulatoryBody(objectMolecularMatch.getAsJsonPrimitive("regulatoryBody").getAsString())
+                .customer(objectMolecularMatch.getAsJsonPrimitive("customer").getAsString())
+                .direction(objectMolecularMatch.getAsJsonPrimitive("direction").getAsString())
+                .ampcap(objectMolecularMatch.getAsJsonPrimitive("ampcap").getAsString())
+                .asts(createAst(objectMolecularMatch.getAsJsonObject("ast")))
+                .variantInfo(createVariantInfo(objectMolecularMatch.getAsJsonArray("variantInfo")))
+                .tier(objectMolecularMatch.getAsJsonPrimitive("tier").getAsString())
+                .tierExplanation(createTierExplanation(objectMolecularMatch.getAsJsonArray("tierExplanation")))
+                .mvld(objectMolecularMatch.getAsJsonPrimitive("mvld").getAsString())
+                .tags(createTags(objectMolecularMatch.getAsJsonArray("tags")))
+                .criteriaMet(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("criteriaMet")))
+                .biomarkerClass(objectMolecularMatch.getAsJsonPrimitive("biomarkerClass").getAsString())
+                .classification(createClassification(objectMolecularMatch.getAsJsonArray("classifications")))
+                .includeDrug1(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeDrug1")))
+                .therapeuticContext(createTherapeuticContext(objectMolecularMatch.getAsJsonArray("therapeuticContext")))
+                .sixtier(objectMolecularMatch.getAsJsonPrimitive("sixtier").getAsString())
+                .narrative(objectMolecularMatch.getAsJsonPrimitive("narrative").getAsString())
+                .expression(objectMolecularMatch.getAsJsonPrimitive("expression").getAsString())
+                .includeGene0(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeGene0")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchTherapeuticContext createTherapeuticContext(@NotNull JsonArray arrayTherapeuticContext) {
+        MolecularMatchTherapeuticContext therapeuticContexts = ImmutableMolecularMatchTherapeuticContext.builder().build();
+        for (JsonElement therapeuticContext: arrayTherapeuticContext) {
+            therapeuticContexts = ImmutableMolecularMatchTherapeuticContext.builder()
+                    .facet(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
+                    .suppress(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
+                    .valid(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
+                    .name(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .build();
+        }
+        return therapeuticContexts;
+    }
+
+    @NotNull
+    private static MolecularMatchClassification createClassification(@NotNull JsonArray objectClassifications) {
+        MolecularMatchClassification classifications = ImmutableMolecularMatchClassification.builder().build();
+        for (JsonElement classification: objectClassifications) {
+            classifications = ImmutableMolecularMatchClassification.builder()
+                    .end(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("End")))
+                    .classification(classification.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
+                    .classificationOverride(classification.getAsJsonObject().getAsJsonPrimitive("classificationOverride").getAsString())
+                    .start(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Start")))
+                    .chr(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Chr")))
+                    .geneSymbol(classification.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
+                    .pathology(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("pathology")))
+                    .ref(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Ref")))
+                    .description(classification.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .priority(classification.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
+                    .NucleotideChange(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("NucleotideChange")))
+                    .parents(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("parents")))
+                    .drugsExperimentalCount(classification.getAsJsonObject().getAsJsonPrimitive("drugsExperimentalCount").getAsString())
+                    .exon(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Exon")))
+                    .drugsApprovedOffLabelCount(classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOffLabelCount").getAsString())
+                    .exonicFunc(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("ExonicFunc")))
+                    .popFreqMax(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("PopFreqMax")))
+                    .copyNumberType(classification.getAsJsonObject().getAsJsonPrimitive("copyNumberType").getAsString())
+                    .publicationCount(classification.getAsJsonObject().getAsJsonPrimitive("publicationCount").getAsString())
+                    .transcript(classification.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .dbSNP(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("dbSNP")))
+                    .alt(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Alt")))
+                    .name(classification.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .rootTerm(classification.getAsJsonObject().getAsJsonPrimitive("rootTerm").getAsString())
+                    .sources(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("sources")))
+                    .drugsApprovedOnLabelCount(classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOnLabelCount").getAsString())
+                    .trialCount(classification.getAsJsonObject().getAsJsonPrimitive("trialCount").getAsString())
+                    .alias(classification.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
+                    .COSMIC_ID(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("COSMIC_ID")))
+                    .transcripts(jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("transcripts")))
+                    .build();
+
+        }
+        return classifications;
+
+    }
+    @NotNull
+    private static List<MolecularMatchTags> createTags(@NotNull JsonArray arrayTags) {
+        List<MolecularMatchTags> tagsList = Lists.newArrayList();
+        for (JsonElement tags: arrayTags) {
+            tagsList.add(ImmutableMolecularMatchTags.builder()
+                    .priority(tags.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
+                    .compositeKey(tags.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .suppress(tags.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
+                    .filterType(tags.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
+                    .term(tags.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
+                    .primary(tags.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
+                    .facet(tags.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
+                    .valid(tags.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
+                    .custom(tags.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .build());
+        }
+        return tagsList;
+    }
+    @NotNull
+    private static List<MolecularMatchTierExplanation> createTierExplanation(@NotNull JsonArray arrarTierExplanation) {
+        List<MolecularMatchTierExplanation> tierExplanationList = Lists.newArrayList();
+        for (JsonElement tierExplanation: arrarTierExplanation) {
+            tierExplanationList.add(ImmutableMolecularMatchTierExplanation.builder()
+                    .tier(tierExplanation.getAsJsonObject().getAsJsonPrimitive("tier").getAsString())
+                    .step(tierExplanation.getAsJsonObject().getAsJsonPrimitive("step").getAsString())
+                    .message(tierExplanation.getAsJsonObject().getAsJsonPrimitive("message").getAsString())
+                    .success(tierExplanation.getAsJsonObject().getAsJsonPrimitive("success").getAsString())
+                    .build());
+        }
+        return tierExplanationList;
+    }
+    @NotNull
+    private static List<MolecularMatchVariantInfo> createVariantInfo(@NotNull JsonArray arrayVariantInfo) {
+        List<MolecularMatchVariantInfo> variantInfoList = Lists.newArrayList();
+
+        for (JsonElement variantInfo: arrayVariantInfo){
+            variantInfoList.add(ImmutableMolecularMatchVariantInfo.builder()
+                    .classification(variantInfo.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
+                    .name(variantInfo.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .consequences(jsonArrayToStringList(variantInfo.getAsJsonObject().getAsJsonArray("consequences")))
+                    .fusions(jsonArrayToStringList(variantInfo.getAsJsonObject().getAsJsonArray("fusions")))
+                    .locations(createLocations(variantInfo.getAsJsonObject().getAsJsonArray("locations")))
+                    .geneFusionPartner(variantInfo.getAsJsonObject().getAsJsonPrimitive("geneFusionPartner").getAsString())
+                    .COSMIC_ID(variantInfo.getAsJsonObject().getAsJsonPrimitive("COSMIC_ID").getAsString())
+                    .gene(variantInfo.getAsJsonObject().getAsJsonPrimitive("gene").getAsString())
+                    .transcript(variantInfo.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .popFreqMax(variantInfo.getAsJsonObject().getAsJsonPrimitive("popFreqMax").getAsString())
+            .build());
+        }
+        return variantInfoList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchLocations> createLocations(@NotNull JsonArray arrayLocations) {
+        List<MolecularMatchLocations> locationsList = Lists.newArrayList();
+        for (JsonElement locations: arrayLocations) {
+            locationsList.add(ImmutableMolecularMatchLocations.builder()
+                    .aminoAcidChange(locations.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
+                    .intronNumber(locations.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
+                    .exonNumber(locations.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
+                    .stop(locations.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
+                    .start(locations.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
+                    .chr(locations.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
+                    .strand(locations.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
+                    .alt(locations.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
+                    .referenceGenome(locations.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
+                    .ref(locations.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .cdna(locations.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
+                    .build());
+        }
+        return locationsList;
+    }
+    @NotNull
+    private static MolecularMatchAst createAst(@NotNull JsonObject objectAst) {
+        return ImmutableMolecularMatchAst.builder()
+                .operator(objectAst.getAsJsonPrimitive("operator").getAsString())
+                .right(createRight(objectAst.getAsJsonObject("right")))
+                .type(objectAst.getAsJsonPrimitive("type").getAsString())
+                .left(createLeft(objectAst.getAsJsonObject("left")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
+        return ImmutableMolecularMatchAstLeft.builder()
+                .raw(objectLeft.getAsJsonPrimitive("raw").getAsString())
+                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
+                .value(objectLeft.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
+        return ImmutableMolecularMatchAstRight.builder()
+                .raw(objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(objectRight.getAsJsonPrimitive("value").getAsString())
+                .build();
+
+    }
+    @NotNull
+    private static List<MolecularMatchSource> createSource(@NotNull JsonArray arraySources) {
+        List<MolecularMatchSource> sourcesList = Lists.newArrayList();
+        for (JsonElement source : arraySources) {
+            sourcesList.add(ImmutableMolecularMatchSource.builder()
+                    .name(source.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .suppress(source.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
+                    .pubId(source.getAsJsonObject().getAsJsonPrimitive("pubId").getAsString())
+                    .subType(source.getAsJsonObject().getAsJsonPrimitive("subType").getAsString())
+                    .valid(source.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
+                    .link(source.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
+                    .year(source.getAsJsonObject().getAsJsonPrimitive("year").getAsString())
+                    .trialId(source.getAsJsonObject().getAsJsonPrimitive("trialId").getAsString())
+                    .type(source.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
+                    .id(source.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .build());
+        }
+        return sourcesList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchCriteriaUnmet> createCriteriaUnmet(@NotNull JsonArray arrayCriteriaUnmet) {
+        List<MolecularMatchCriteriaUnmet> criteriaUnmetList = Lists.newArrayList();
+
+        for (JsonElement criteriaUnmet : arrayCriteriaUnmet) {
+            criteriaUnmetList.add(ImmutableMolecularMatchCriteriaUnmet.builder()
+                    .priority(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
+                    .compositeKey(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .suppress(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
+                    .filterType(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
+                    .term(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
+                    .primary(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
+                    .facet(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
+                    .valid(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
+                    .custom(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .build());
+        }
+        return criteriaUnmetList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchPrevalence> createPrevalence(@NotNull JsonArray arrayPrevelance) {
+        List<MolecularMatchPrevalence> prevalenceList = Lists.newArrayList();
+
+        for (JsonElement prevelance : arrayPrevelance) {
+            prevalenceList.add(ImmutableMolecularMatchPrevalence.builder()
+                    .count(prevelance.getAsJsonObject().getAsJsonPrimitive("count").getAsString())
+                    .percent(prevelance.getAsJsonObject().getAsJsonPrimitive("percent").getAsString())
+                    .studyId(prevelance.getAsJsonObject().getAsJsonPrimitive("studyId").getAsString())
+                    .samples(prevelance.getAsJsonObject().getAsJsonPrimitive("samples").getAsString())
+                    .molecular(prevelance.getAsJsonObject().getAsJsonPrimitive("molecular").getAsString())
+                    .condition(prevelance.getAsJsonObject().getAsJsonPrimitive("condition").getAsString())
+                    .build());
+        }
+        return prevalenceList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchMutations> createMutations(@NotNull JsonArray arrayMutations) {
+        List<MolecularMatchMutations> mutationList = Lists.newArrayList();
+
+        for (JsonElement mutation : arrayMutations) {
+            mutationList.add(ImmutableMolecularMatchMutations.builder()
+                    .transcriptConsequence(createTranscriptConsequence(mutation.getAsJsonObject().getAsJsonArray("transcriptConsequence")))
+                    .longestTranscript(mutation.getAsJsonObject().getAsJsonPrimitive("longestTranscript").getAsString())
+                    .description(mutation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .mutationType(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
+                    .src(mutation.getAsJsonObject().getAsJsonPrimitive("_src").getAsString())
+                    .sources(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("sources")))
+                    .synonyms(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("synonyms")))
+                    .parents(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("parents")))
+                    .gRch37Location(createGRCH37Location(mutation.getAsJsonObject().getAsJsonArray("GRCh37_location")))
+                    .uniprotTranscript(mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
+                    .geneSymbol(mutation.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
+                    .pathology(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("pathology")))
+                    .transcript(mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .id(mutation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .cDNA(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
+                    .name(mutation.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .build());
+
+        }
+        return mutationList;
+
+    }
+
+    @NotNull
+    private static MolecularMatchGRch37Location createGRCH37Location(@NotNull JsonArray arrayLocation) {
+        MolecularMatchGRch37Location mutation = ImmutableMolecularMatchGRch37Location.builder().build();
+        for (JsonElement location: arrayLocation) {
+            mutation = ImmutableMolecularMatchGRch37Location.builder()
+                    .compositeKey(location.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .ref(location.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .stop(location.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
+                    .start(location.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
+                    .chr(location.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
+                    .alt(location.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
+                    .validated(location.getAsJsonObject().getAsJsonPrimitive("validated").getAsString())
+                    .transcriptConsequences(createConsequencesGRCH37(location.getAsJsonObject().getAsJsonArray("transcript_consequences")))
+                    .strand(location.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
+                    .build();
+        }
+        return mutation;
+
+    }
+
+    @NotNull
+    private static List<MolecularMatchTranscriptConsequencesGRCH37> createConsequencesGRCH37(@NotNull JsonArray arrayTranscriptConsequence) {
+        List<MolecularMatchTranscriptConsequencesGRCH37> transcriptConsequencesGRCH37List = Lists.newArrayList();
+        for (JsonElement transcriptConsequences: arrayTranscriptConsequence) {
+            transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCH37.builder()
+                    .aminoAcidChange(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
+                    .txSites(jsonArrayToStringList(transcriptConsequences.getAsJsonObject().getAsJsonArray("txSites")))
+                    .exonNumber(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
+                    .intronNumber(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
+                    .transcript(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .cdna(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
+            .build());
+        }
+        return transcriptConsequencesGRCH37List;
+    }
+
+    @NotNull
+    private static List<MolecularMatchTranscriptConsequence> createTranscriptConsequence(@NotNull JsonArray arrayTranscriptConsequence) {
+        List<MolecularMatchTranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
+
+        for (JsonElement transcriptConsequence: arrayTranscriptConsequence) {
+            transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
+                    .aminoAcidChange(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
+                    .compositeKey(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .intronNumber(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
+                    .exonNumber(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString())
+                    .suppress(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
+                    .stop(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
+                    .custom(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .start(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
+                    .chr(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
+                    .strand(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
+                    .validated(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("validated").getAsString())
+                    .transcript(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .cdna(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
+                    .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
+            .build());
+        }
+        return transcriptConsequenceList;
+    }
+
+    @NotNull
     private static JaxTrials createJaxTrials(@NotNull JsonObject objectJaxTrials) {
         return ImmutableJaxTrials.builder()
                 .indications(createJaxTrialsIndications(objectJaxTrials.getAsJsonArray("indications")))
                 .title(objectJaxTrials.getAsJsonPrimitive("title").getAsString())
-                .gender(objectJaxTrials.get("gender").isJsonNull() ? null:  objectJaxTrials.getAsJsonPrimitive("gender").getAsString())
+                .gender(objectJaxTrials.get("gender").isJsonNull() ? null : objectJaxTrials.getAsJsonPrimitive("gender").getAsString())
                 .nctId(objectJaxTrials.getAsJsonPrimitive("nctId").getAsString())
                 .sponsors(objectJaxTrials.getAsJsonPrimitive("sponsors").getAsString())
                 .recruitment(objectJaxTrials.getAsJsonPrimitive("recruitment").getAsString())
