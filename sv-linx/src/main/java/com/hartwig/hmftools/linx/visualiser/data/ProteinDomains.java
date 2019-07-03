@@ -22,10 +22,13 @@ public class ProteinDomains
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<ProteinDomain> fusedProteinDomains(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons,
-            @NotNull final List<ProteinDomain> proteinDomains)
+    public static List<ProteinDomain> fusedProteinDomains(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons, @NotNull final List<ProteinDomain> proteinDomains)
     {
         final List<ProteinDomain> result = Lists.newArrayList();
+        if (fusedExons.isEmpty()) {
+            return result;
+        }
+
         final long upGeneStart = fusedExons.get(0).unadjustedGeneStart();
         final long upGeneEnd = fusion.positionUp();
 

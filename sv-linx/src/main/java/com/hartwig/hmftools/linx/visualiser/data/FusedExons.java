@@ -30,6 +30,9 @@ public class FusedExons
 
         final List<Exon> upStreamExons = upstreamExons(fusion, exons);
         final List<Exon> downStreamExons = downstreamExons(fusion, exons);
+        if (upStreamExons.isEmpty() || downStreamExons.isEmpty()) {
+            return result;
+        }
 
         final Exon firstUpstreamExon = upStreamExons.get(0);
 
@@ -58,7 +61,7 @@ public class FusedExons
                         .start(exonStart)
                         .end(Math.min(exonEnd, upGeneEnd))
                         .rank(exon.rank())
-                        .truncated(exonEnd > upGeneEnd)
+                        .skipped(false) // TODO: Check exon skipped field
                         .build();
                 result.add(fusedExon);
             }
@@ -75,8 +78,12 @@ public class FusedExons
                 .geneStart(downGeneStart)
                 .geneEnd(downGeneEnd);
 
-        for (final Exon exon : downStreamExons)
+        boolean intronicToExonicFusion = fusion.regionTypeUp().equals("Intronic") && fusion.regionTypeDown().equals("Exonic");
+
+        for (int i = 0; i < downStreamExons.size(); i++)
         {
+            final Exon exon = downStreamExons.get(i);
+
             final long exonStart = start(fusion.strandDown(), downGeneOffset, exon) + upGeneEnd;
             final long exonEnd = end(fusion.strandDown(), downGeneOffset, exon) + upGeneEnd;
 
@@ -86,7 +93,7 @@ public class FusedExons
                         .start(Math.max(exonStart, downGeneStart))
                         .end(exonEnd)
                         .rank(exon.rank())
-                        .truncated(exonStart < downGeneStart)
+                        .skipped(exon.rank() == 1 || (i == 0 && intronicToExonicFusion)) // TODO: Check exon skipped field
                         .build();
                 result.add(fusedExon);
             }
@@ -95,6 +102,7 @@ public class FusedExons
 
         return result;
     }
+
 
     @NotNull
     static List<String> toLines(@NotNull final List<FusedExon> exons)
@@ -136,7 +144,7 @@ public class FusedExons
                 .add(String.valueOf(exon.start()))
                 .add(String.valueOf(exon.end()))
                 .add(String.valueOf(exon.rank()))
-                .add(String.valueOf(exon.truncated()))
+                .add(String.valueOf(exon.skipped()))
                 .toString();
     }
 
