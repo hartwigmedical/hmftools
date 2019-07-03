@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PER
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.SvClassification;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +63,7 @@ public class SvCluster
     private List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
     private Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
     private List<SvVarData> mUnchainedSVs; // includes replicated SVs
-    private List<SvLOH> mLohEvents;
+    private List<LohEvent> mLohEvents;
     private String mClusteringReasons;
 
     // for synthetic DELs and DUPs
@@ -283,13 +284,13 @@ public class SvCluster
     public boolean requiresReplication() { return mRequiresReplication; }
     public void setRequiresReplication(boolean toggle) { mRequiresReplication = toggle; }
 
-    public void addLohEvent(final SvLOH lohEvent)
+    public void addLohEvent(final LohEvent lohEvent)
     {
         if(!mLohEvents.contains(lohEvent))
             mLohEvents.add(lohEvent);
     }
 
-    public final List<SvLOH> getLohEvents() { return mLohEvents; }
+    public final List<LohEvent> getLohEvents() { return mLohEvents; }
 
     public List<SvChain> getChains() { return mChains; }
 

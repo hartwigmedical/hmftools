@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_AFTER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_AFTER;
@@ -26,14 +24,12 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_CT;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
@@ -44,9 +40,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
@@ -54,10 +47,9 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -1308,11 +1300,11 @@ public class ClusterAnnotations
         return pairs;
     }
 
-    public void checkSkippedLOHEvents(final String sampleId, final Map<String, List<SvLOH>> lohDataMap,
+    public void checkSkippedLOHEvents(final String sampleId, final Map<String, List<LohEvent>> lohDataMap,
             final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        List<SvLOH> lohList = lohDataMap.get(sampleId);
-        List<SvLOH> unmatchedLohList = Lists.newArrayList();
+        List<LohEvent> lohList = lohDataMap.get(sampleId);
+        List<LohEvent> unmatchedLohList = Lists.newArrayList();
 
         if(lohList != null)
             unmatchedLohList.addAll(lohList.stream().filter(x -> x.Skipped).collect(Collectors.toList()));
@@ -1323,7 +1315,7 @@ public class ClusterAnnotations
         int index = 0;
         while(index < unmatchedLohList.size())
         {
-            final SvLOH lohEvent = unmatchedLohList.get(index);
+            final LohEvent lohEvent = unmatchedLohList.get(index);
 
             boolean matched = false;
             long lohLength = lohEvent.PosEnd - lohEvent.PosStart;
@@ -1423,7 +1415,7 @@ public class ClusterAnnotations
             LOGGER.info("sample({}) has matched({}) unmatched({}) skipped LOH events",
                     sampleId, matchedLohCount, unmatchedLohList.size());
 
-            for(final SvLOH lohEvent : unmatchedLohList)
+            for(final LohEvent lohEvent : unmatchedLohList)
             {
                 LOGGER.info("unmatched LOH: chr({}) breaks({} -> {}, len={}) SV start({} {}) end({} {}) {} SV",
                         lohEvent.Chromosome, lohEvent.PosStart, lohEvent.PosEnd, lohEvent.PosEnd - lohEvent.PosStart,

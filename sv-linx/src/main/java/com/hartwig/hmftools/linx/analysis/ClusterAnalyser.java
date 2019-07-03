@@ -43,7 +43,6 @@ import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -66,7 +65,7 @@ import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.types.SvaConfig;
@@ -636,12 +635,12 @@ public class ClusterAnalyser {
             if(mergedClusters.contains(lohCluster)) // if this has LOH events they will have been added to the parent cluster
                 continue;
 
-            List<SvLOH> lohEvents = lohCluster.getLohEvents();
+            List<LohEvent> lohEvents = lohCluster.getLohEvents();
 
             int lohIndex = 0; // used since merging another cluster can add more LOH events
             while(lohIndex < lohEvents.size())
             {
-                SvLOH lohEvent = lohEvents.get(lohIndex);
+                LohEvent lohEvent = lohEvents.get(lohIndex);
 
                 if(!lohEvent.IsValid)
                 {

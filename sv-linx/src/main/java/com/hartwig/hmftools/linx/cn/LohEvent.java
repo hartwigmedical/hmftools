@@ -1,13 +1,12 @@
-package com.hartwig.hmftools.linx.types;
+package com.hartwig.hmftools.linx.cn;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 
-public class SvLOH
+public class LohEvent
 {
     public final String SampleId;
     public final String Chromosome;
-    public final int CnIdStart;
-    public final int CnIdEnd;
     public final long PosStart;
     public final long PosEnd;
     public final String SegStart;
@@ -26,13 +25,11 @@ public class SvLOH
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
 
-    public final static int LOH_NO_SV = -1;
+    public final static int CN_DATA_NO_SV = -1;
 
-    public SvLOH(
+    public LohEvent(
             final String sampleId,
             final String chr,
-            int cnIdStart,
-            final int cnIdEnd,
             final long posStart,
             final long posEnd,
             final String segStart,
@@ -50,8 +47,6 @@ public class SvLOH
     {
         SampleId = sampleId;
         Chromosome = chr;
-        CnIdStart = cnIdStart;
-        CnIdEnd = cnIdEnd;
         PosStart = posStart;
         PosEnd = posEnd;
         SegStart = segStart;

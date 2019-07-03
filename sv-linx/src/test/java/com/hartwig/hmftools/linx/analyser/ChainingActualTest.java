@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
@@ -25,10 +23,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ChainingActualTest
@@ -170,10 +167,10 @@ public class ChainingActualTest
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
-        Map<String, List<SvLOH>> lohDataMap = new HashMap();
-        List<SvLOH> lohData = Lists.newArrayList();
+        Map<String, List<LohEvent>> lohDataMap = new HashMap();
+        List<LohEvent> lohData = Lists.newArrayList();
 
-        lohData.add(new SvLOH(tester.SampleId, "18", 1, 2, 23601785, 23577410,
+        lohData.add(new LohEvent(tester.SampleId, "18", 23601785, 23577410,
                 "BND", "BND", 1, 1, 1, 0, 1, 1,
                 var1.dbId(), var4.dbId(), false, true));
 

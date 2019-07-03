@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
-import static com.hartwig.hmftools.linx.types.SvLOH.LOH_NO_SV;
+import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -38,12 +38,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
@@ -56,7 +55,7 @@ public class SvClusteringMethods {
     private int mNextClusterId;
 
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
-    private Map<String, List<SvLOH>> mSampleLohData;
+    private Map<String, List<LohEvent>> mSampleLohData;
     private List<SvVarData> mExcludedSVs; // eg duplicate breakends
 
     private Map<String, double[]> mChromosomeCopyNumberMap; // p-arm telomere, centromere and q-arm telemore CN data
@@ -95,9 +94,9 @@ public class SvClusteringMethods {
     }
 
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public final Map<String, List<SvLOH>> getSampleLohData() { return mSampleLohData; }
+    public final Map<String, List<LohEvent>> getSampleLohData() { return mSampleLohData; }
     public int getNextClusterId() { return mNextClusterId++; }
-    public void setSampleLohData(final Map<String, List<SvLOH>> data) { mSampleLohData = data; }
+    public void setSampleLohData(final Map<String, List<LohEvent>> data) { mSampleLohData = data; }
     public void setChrCopyNumberMap(final Map<String, double[]> data) { mChromosomeCopyNumberMap = data; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
     public long getDupCutoffLength() { return mDelCutoffLength; }
@@ -370,14 +369,14 @@ public class SvClusteringMethods {
         if(mSampleLohData == null || sampleId.isEmpty())
             return;
 
-        List<SvLOH> lohList = mSampleLohData.get(sampleId);
+        List<LohEvent> lohList = mSampleLohData.get(sampleId);
 
         if(lohList == null)
             return;
 
         lohList = lohList.stream().filter(x -> !x.Skipped).collect(Collectors.toList());
 
-        for(final SvLOH lohEvent : lohList)
+        for(final LohEvent lohEvent : lohList)
         {
             lohEvent.setBreakend(null, true);
             lohEvent.setBreakend(null, false);
@@ -390,7 +389,7 @@ public class SvClusteringMethods {
             return;
 
         // first extract all the SVs from the LOH events
-        List<SvLOH> lohList = mSampleLohData.get(sampleId);
+        List<LohEvent> lohList = mSampleLohData.get(sampleId);
 
         if(lohList == null)
             return;
@@ -402,9 +401,9 @@ public class SvClusteringMethods {
         String currentChromosome = "";
         List<SvBreakend> breakendList = null;
 
-        for(final SvLOH lohEvent : lohList)
+        for(final LohEvent lohEvent : lohList)
         {
-            if(lohEvent.StartSV == LOH_NO_SV && lohEvent.EndSV == LOH_NO_SV)
+            if(lohEvent.StartSV == CN_DATA_NO_SV && lohEvent.EndSV == CN_DATA_NO_SV)
                 continue;
 
             SvCluster lohClusterStart = null;

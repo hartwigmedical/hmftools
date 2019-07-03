@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REA
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,10 +21,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class MergeRuleTest
@@ -218,22 +216,22 @@ public class MergeRuleTest
         tester.AllVariants.add(var10);
         // tester.AllVariants.add(var11);
 
-        Map<String, List<SvLOH>> lohDataMap = new HashMap();
-        List<SvLOH> lohData = Lists.newArrayList();
+        Map<String, List<LohEvent>> lohDataMap = new HashMap();
+        List<LohEvent> lohData = Lists.newArrayList();
 
-        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 10000, 20000,
+        lohData.add(new LohEvent(tester.SampleId, "1", 10000, 20000,
                 "DEL", "DUP", 1, 1, 1, 0, 1, 10000,
                 var1.dbId(), var2.dbId(), false, true));
 
-        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 50000, 60000,
+        lohData.add(new LohEvent(tester.SampleId, "1", 50000, 60000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 19000,
                 var2.dbId(), var1.dbId(), false, true));
 
-        lohData.add(new SvLOH(tester.SampleId, "1", 1, 2, 110000, 120000,
+        lohData.add(new LohEvent(tester.SampleId, "1", 110000, 120000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 10000,
                 var6.dbId(), var5.dbId(), false, true));
 
-        lohData.add(new SvLOH(tester.SampleId, "2", 1, 2, 20000, 30000,
+        lohData.add(new LohEvent(tester.SampleId, "2", 20000, 30000,
                 "BND", "DUP", 1, 1, 1, 0, 1, 10000,
                 var4.dbId(), var9.dbId(), false, true));
 

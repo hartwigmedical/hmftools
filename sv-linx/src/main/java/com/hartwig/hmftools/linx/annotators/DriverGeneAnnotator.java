@@ -43,7 +43,7 @@ import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.DriverGeneData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.SvLOH;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
@@ -74,8 +74,8 @@ public class DriverGeneAnnotator
     // references only
     private String mSampleId;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
-    private Map<String, List<SvLOH>> mSampleLohMap;
-    private List<SvLOH> mSampleLOHData;
+    private Map<String, List<LohEvent>> mSampleLohMap;
+    private List<LohEvent> mSampleLOHData;
     private Map<String, double[]> mChrCopyNumberMap;
     private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
     private VisualiserWriter mVisWriter;
@@ -130,7 +130,7 @@ public class DriverGeneAnnotator
         return true;
     }
 
-    public void setLohData(final Map<String, List<SvLOH>> lohData) { mSampleLohMap = lohData; }
+    public void setLohData(final Map<String, List<LohEvent>> lohData) { mSampleLohMap = lohData; }
     public void setChrCopyNumberMap(Map<String, double[]> chrCopyNumberMap) { mChrCopyNumberMap = chrCopyNumberMap; }
     public void setSamplePloidy(double ploidy)
     {
@@ -234,7 +234,7 @@ public class DriverGeneAnnotator
         loadGeneCopyNumberData(sampleId);
 
         mSampleLOHData.clear();
-        List<SvLOH> sampleLohEvents = mSampleLohMap.get(sampleId);
+        List<LohEvent> sampleLohEvents = mSampleLohMap.get(sampleId);
 
         if (sampleLohEvents != null)
             mSampleLOHData.addAll(sampleLohEvents.stream().filter(x -> !x.Skipped).collect(Collectors.toList()));
@@ -411,10 +411,10 @@ public class DriverGeneAnnotator
         SvBreakend lohStartBreakend = null;
         SvBreakend lohEndBreakend = null;
 
-        SvLOH matchedLohEvent = null;
+        LohEvent matchedLohEvent = null;
         if(startBreakend != null && endBreakend != null)
         {
-            for (final SvLOH lohEvent : mSampleLOHData)
+            for (final LohEvent lohEvent : mSampleLOHData)
             {
                 if(!lohEvent.Chromosome.equals(startBreakend.chromosome()))
                     continue;
@@ -493,7 +493,7 @@ public class DriverGeneAnnotator
         final GeneCopyNumber geneCN = driverGeneData.GeneCN;
 
         // for biallelic events, find the straddling LOH event
-        for (final SvLOH lohEvent : mSampleLOHData)
+        for (final LohEvent lohEvent : mSampleLOHData)
         {
             if(!lohEvent.Chromosome.equals(geneCN.chromosome()))
                 continue;
