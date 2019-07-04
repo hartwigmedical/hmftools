@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS phenotypeType;
 DROP TABLE IF EXISTS environmentalContext;
 DROP TABLE IF EXISTS approvedCountry;
 DROP TABLE IF EXISTS taxonomy;
+DROP TABLE IF EXISTS sage;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -237,4 +238,19 @@ CREATE TABLE taxonomy
     superClass varchar(225) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (environmentalContextsId) REFERENCES environmentalContext(id)
+);
+
+CREATE TABLE sage
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    entrezId varchar(255),
+    clinicalManifestation varchar(255),
+    publicationUrl varchar(255),
+    germlineOrSomatic varchar(255),
+    evidenceLabel varchar(255),
+    drugLabel varchar(255),
+    responseType varchar(255),
+    gene varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
