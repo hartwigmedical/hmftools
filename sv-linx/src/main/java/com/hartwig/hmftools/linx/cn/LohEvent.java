@@ -79,7 +79,7 @@ public class LohEvent
     public void clearBreakends()
     {
         mBreakendStart = null;
-        mBreakendEnd= null;
+        mBreakendEnd = null;
     }
 
     public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
@@ -109,10 +109,32 @@ public class LohEvent
     public boolean isValid() { return mIsValid; }
     public void setIsValid(boolean toggle) { mIsValid = toggle; }
 
-    public boolean wholeArmLoss()
+    public boolean armLoss()
     {
-        return (SegStart.equals(TELOMERE.toString()) || SegStart.equals(CENTROMERE.toString()))
-            && (SegEnd.equals(TELOMERE.toString()) || SegEnd.equals(CENTROMERE.toString()));
+        if(SegStart.equals(TELOMERE.toString()) && SegEnd.equals(CENTROMERE.toString()))
+            return true;
+
+        if(SegStart.equals(CENTROMERE.toString()) && SegEnd.equals(TELOMERE.toString()))
+            return true;
+
+        return false;
+    }
+
+    public boolean chromosomeLoss()
+    {
+        return SegStart.equals(TELOMERE.toString()) && SegEnd.equals(TELOMERE.toString());
+    }
+
+    public boolean wholeArmLoss() { return armLoss() || chromosomeLoss(); }
+
+    public boolean isSvEvent() { return StartSV != CN_DATA_NO_SV || EndSV != CN_DATA_NO_SV; }
+    public boolean doubleSvEvent() { return StartSV != CN_DATA_NO_SV && EndSV != CN_DATA_NO_SV; }
+
+    public String toString()
+    {
+        return String.format("chr({}) segs({} -> {}) pos({} -> {}) SVs({} & {})",
+                Chromosome, SegStart, SegEnd, PosStart, PosEnd,
+                mBreakendStart != null ? mBreakendStart.getSV().id() : "none", mBreakendEnd != null ? mBreakendEnd.getSV().id() : "none");
     }
 
 }

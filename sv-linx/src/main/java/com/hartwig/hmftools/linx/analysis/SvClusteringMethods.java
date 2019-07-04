@@ -406,7 +406,7 @@ public class SvClusteringMethods {
         {
             for (final LohEvent lohEvent : mLohEventList)
             {
-                if (lohEvent.StartSV == CN_DATA_NO_SV && lohEvent.EndSV == CN_DATA_NO_SV)
+                if (!lohEvent.isSvEvent())
                     continue;
 
                 // use the breakend table to find matching SVs
@@ -776,13 +776,6 @@ public class SvClusteringMethods {
                     ++index2;
                     continue;
                 }
-
-                /*
-                if(cluster1.id() == 596 && cluster2.id() == 600)
-                {
-                    LOGGER.debug("se");
-                }
-                */
 
                 List<SvVarData> cluster2Svs = Lists.newArrayList();
                 cluster2Svs.addAll(cluster2.getLongDelDups());

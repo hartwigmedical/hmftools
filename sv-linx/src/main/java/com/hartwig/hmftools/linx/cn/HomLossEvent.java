@@ -60,4 +60,10 @@ public class HomLossEvent
         return matchedBothSVs() && mBreakendStart.getCluster() == mBreakendEnd.getCluster();
     }
 
+    public String toString()
+    {
+        return String.format("chr({}) segs({} -> {}) pos({} -> {}) SVs({} & {})",
+                Chromosome, SegStart, SegEnd, PosStart, PosEnd,
+                mBreakendStart != null ? mBreakendStart.getSV().id() : "none", mBreakendEnd != null ? mBreakendEnd.getSV().id() : "none");
+    }
 }

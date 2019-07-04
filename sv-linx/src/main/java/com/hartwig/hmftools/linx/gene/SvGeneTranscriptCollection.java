@@ -40,6 +40,7 @@ public class SvGeneTranscriptCollection
     private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
     private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
+    private Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
 
     // the distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
@@ -53,6 +54,7 @@ public class SvGeneTranscriptCollection
         mEnsemblProteinDataMap = Maps.newHashMap();
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
+        mGeneNameIdMap = Maps.newHashMap();
     }
 
     public void setDataPath(final String dataPath)
@@ -70,6 +72,9 @@ public class SvGeneTranscriptCollection
 
     public final EnsemblGeneData getGeneDataByName(final String geneName)
     {
+        if(!mGeneNameIdMap.isEmpty())
+            return mGeneNameIdMap.get(geneName);
+
         return getGeneData(geneName, true);
     }
 
@@ -97,11 +102,28 @@ public class SvGeneTranscriptCollection
 
     public void createGeneIdDataMap()
     {
+        if(!mGeneDataMap.isEmpty())
+            return;
+
         for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
         {
             for(final EnsemblGeneData geneData : entry.getValue())
             {
                 mGeneDataMap.put(geneData.GeneId, geneData);
+            }
+        }
+    }
+
+    public void createGeneNameIdMap()
+    {
+        if(!mGeneNameIdMap.isEmpty())
+            return;
+
+        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
+        {
+            for(final EnsemblGeneData geneData : entry.getValue())
+            {
+                mGeneNameIdMap.put(geneData.GeneName, geneData);
             }
         }
     }
