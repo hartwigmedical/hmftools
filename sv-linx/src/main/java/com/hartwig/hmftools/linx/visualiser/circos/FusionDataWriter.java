@@ -33,7 +33,7 @@ public class FusionDataWriter
         for (Fusion fusion : fusions)
         {
             final List<FusedExon> fusedExons = FusedExons.fusedExons(fusion, exons);
-            final List<ProteinDomain> fusedProteinDomain = ProteinDomains.fusedProteinDomains(fusion, fusedExons, proteinDomains);
+            final List<ProteinDomain> fusedProteinDomain = ProteinDomains.proteinDomainsInFusion(fusion, fusedExons, proteinDomains);
 
             final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
             for (FusedExon fusedExon : fusedExons)

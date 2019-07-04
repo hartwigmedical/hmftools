@@ -30,7 +30,8 @@ public class Fusions
         for (int i = 1; i < lines.size(); i++)
         {
             Fusion fusion = fromLine(map, lines.get(i));
-            if (fusion.reportable()) {
+            if (fusion.reportable())
+            {
                 result.add(fusion);
             }
         }

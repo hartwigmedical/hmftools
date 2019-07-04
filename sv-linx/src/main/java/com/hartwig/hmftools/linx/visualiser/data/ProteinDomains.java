@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,11 +22,18 @@ public class ProteinDomains
 
     private static final String DELIMITER = "\t";
 
+    public static List<ProteinDomain> proteinDomainsInGenes(@NotNull final List<Gene> genes, @NotNull final List<ProteinDomain> proteinDomains)
+    {
+        final Predicate<ProteinDomain> matchesGene = domain -> genes.stream().anyMatch(gene -> gene.overlaps(domain));
+        return proteinDomains.stream().filter(matchesGene).collect(Collectors.toList());
+    }
+
     @NotNull
-    public static List<ProteinDomain> fusedProteinDomains(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons, @NotNull final List<ProteinDomain> proteinDomains)
+    public static List<ProteinDomain> proteinDomainsInFusion(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons, @NotNull final List<ProteinDomain> proteinDomains)
     {
         final List<ProteinDomain> result = Lists.newArrayList();
-        if (fusedExons.isEmpty()) {
+        if (fusedExons.isEmpty())
+        {
             return result;
         }
 
@@ -152,7 +160,8 @@ public class ProteinDomains
                 .toString();
     }
 
-    private static String hexColor(@NotNull Color color) {
+    private static String hexColor(@NotNull Color color)
+    {
         return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
     }
 
