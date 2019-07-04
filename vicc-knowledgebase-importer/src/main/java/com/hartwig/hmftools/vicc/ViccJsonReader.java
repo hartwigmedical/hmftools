@@ -558,7 +558,6 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
-        LOGGER.info(objectUser.get("organization"));
         return ImmutableCivicUser.builder()
                 .username(objectUser.getAsJsonPrimitive("username").getAsString())
                 .areaOfExpertise(objectUser.get("area_of_expertise").isJsonNull() ? null : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
