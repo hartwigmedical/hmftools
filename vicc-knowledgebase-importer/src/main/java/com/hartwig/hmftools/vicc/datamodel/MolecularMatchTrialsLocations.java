@@ -11,52 +11,52 @@ public abstract class MolecularMatchTrialsLocations {
     @NotNull
     public abstract String status();
 
-    @NotNull
+    @Nullable
     public abstract String city();
 
-    @NotNull
+    @Nullable
     public abstract String valid();
 
-    @NotNull
+    @Nullable
     public abstract String zip();
 
-    @NotNull
+    @Nullable
     public abstract String created();
 
-    @NotNull
+    @Nullable
     public abstract String country();
 
-    @NotNull
+    @Nullable
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract String lastUpdated();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchTrialsContact contact();
 
-    @NotNull
+    @Nullable
     public abstract String state();
 
-    @NotNull
+    @Nullable
     public abstract String street();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchTrialsLocation location();
 
-    @NotNull
+    @Nullable
     public abstract String po_box();
 
-    @NotNull
+    @Nullable
     public abstract String failedGeocode();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchTrialsGeo geo();
 
-    @NotNull
+    @Nullable
     public abstract String validMessage();
 
-    @NotNull
+    @Nullable
     public abstract String name();
 
 }

@@ -31,6 +31,8 @@ public class ViccJsonToSQLImporter {
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
 
+        LOGGER.info("DONE!");
+
 //        ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
 //
 //        viccDAO.deleteAll();

@@ -366,14 +366,15 @@ public final class ViccJsonReader {
     private static MolecularMatchTrials createMolecularMatchTrials(@NotNull JsonObject objectMolecularMatchTrials) {
         return ImmutableMolecularMatchTrials.builder()
                 .status(objectMolecularMatchTrials.getAsJsonPrimitive("status").getAsString())
-                .startDate(objectMolecularMatchTrials.getAsJsonPrimitive("startDate").getAsString())
                 .title(objectMolecularMatchTrials.getAsJsonPrimitive("title").getAsString())
                 .molecularAlterations(jsonArrayToStringList(objectMolecularMatchTrials.getAsJsonArray("molecularAlterations")))
                 .score(objectMolecularMatchTrials.getAsJsonPrimitive("_score").getAsString())
                 .intervation(createMolecularMatchTrialsIntervations(objectMolecularMatchTrials.getAsJsonArray("interventions")))
                 .locations(createMolecularMatchTrialsLocations(objectMolecularMatchTrials.getAsJsonArray("locations")))
-                .briefTitle(objectMolecularMatchTrials.getAsJsonPrimitive("briefTitle").getAsString())
-                .overallContact(createMolecularMatchTrialsOverallContact(objectMolecularMatchTrials.getAsJsonObject("overallContact")))
+                .briefTitle(objectMolecularMatchTrials.get("briefTitle").isJsonNull() ? null :  objectMolecularMatchTrials.getAsJsonPrimitive("briefTitle").getAsString())
+                .overallContact(objectMolecularMatchTrials.get("overallContact").isJsonNull()
+                        ? null
+                        : createMolecularMatchTrialsOverallContact(objectMolecularMatchTrials.getAsJsonObject("overallContact")))
                 .link(objectMolecularMatchTrials.getAsJsonPrimitive("link").getAsString())
                 .phase(objectMolecularMatchTrials.getAsJsonPrimitive("phase").getAsString())
                 .tags(createMolecularMatchTrialsTags(objectMolecularMatchTrials.getAsJsonArray("tags")))
@@ -385,25 +386,53 @@ public final class ViccJsonReader {
     @NotNull
     private static List<MolecularMatchTrialsLocations> createMolecularMatchTrialsLocations(@NotNull JsonArray arrayLocations) {
         List<MolecularMatchTrialsLocations> locationsList = Lists.newArrayList();
-        for (JsonElement location: arrayLocations) {
+        for (JsonElement location : arrayLocations) {
             locationsList.add(ImmutableMolecularMatchTrialsLocations.builder()
                     .status(location.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
-                    .city(location.getAsJsonObject().getAsJsonPrimitive("city").getAsString())
-                    .valid(location.getAsJsonObject().getAsJsonPrimitive("_valid").getAsString())
-                    .zip(location.getAsJsonObject().getAsJsonPrimitive("zip").getAsString())
-                    .created(location.getAsJsonObject().getAsJsonPrimitive("created").getAsString())
-                    .country(location.getAsJsonObject().getAsJsonPrimitive("country").getAsString())
-                    .id(location.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .lastUpdated(location.getAsJsonObject().getAsJsonPrimitive("lastUpdated").getAsString())
-                    .contact(createMolecularMatchTrialsContact(location.getAsJsonObject().getAsJsonObject("contact")))
-                    .state(location.getAsJsonObject().getAsJsonPrimitive("state").getAsString())
-                    .street(location.getAsJsonObject().getAsJsonPrimitive("street").getAsString())
-                    .location(createMolecularMatchTrialsLocation(location.getAsJsonObject().getAsJsonObject("location")))
-                    .po_box(location.getAsJsonObject().getAsJsonPrimitive("po_box").getAsString())
-                    .failedGeocode(location.getAsJsonObject().getAsJsonPrimitive("failedGeocode").getAsString())
-                    .geo(createMolecularMatchTrialsGeo(location.getAsJsonObject().getAsJsonObject("geo")))
-                    .validMessage(location.getAsJsonObject().getAsJsonPrimitive("_validMessage").getAsString())
-                    .name(location.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .city(!location.getAsJsonObject().has("city")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("city").getAsString())
+                    .valid(!location.getAsJsonObject().has("_valid")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("_valid").getAsString())
+                    .zip(!location.getAsJsonObject().has("zip") ? null : location.getAsJsonObject().getAsJsonPrimitive("zip").getAsString())
+                    .created(!location.getAsJsonObject().has("created")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("created").getAsString())
+                    .country(!location.getAsJsonObject().has("country")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("country").getAsString())
+                    .id(!location.getAsJsonObject().has("id") ? null : location.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .lastUpdated(!location.getAsJsonObject().has("lastUpdated")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("lastUpdated").getAsString())
+                    .contact(!location.getAsJsonObject().has("contact")
+                            ? null
+                            : createMolecularMatchTrialsContact(location.getAsJsonObject().getAsJsonObject("contact")))
+                    .state(!location.getAsJsonObject().has("state")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("state").getAsString())
+                    .street(!location.getAsJsonObject().has("street")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("street").getAsString())
+                    .location(!location.getAsJsonObject().has("location") || location.getAsJsonObject().get("location").isJsonNull()
+                            ? null
+                            : createMolecularMatchTrialsLocation(location.getAsJsonObject().getAsJsonObject("location")))
+                    .po_box(!location.getAsJsonObject().has("po_box")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("po_box").getAsString())
+                    .failedGeocode(!location.getAsJsonObject().has("failedGeocode")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("failedGeocode").getAsString())
+                    .geo(!location.getAsJsonObject().has("geo")
+                            ? null
+                            : createMolecularMatchTrialsGeo(location.getAsJsonObject().getAsJsonObject("geo")))
+                    .validMessage(!location.getAsJsonObject().has("_validMessage")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("_validMessage").getAsString())
+                    .name(!location.getAsJsonObject().has("name")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
         }
         return locationsList;
@@ -428,15 +457,16 @@ public final class ViccJsonReader {
     @NotNull
     private static MolecularMatchTrialsContact createMolecularMatchTrialsContact(@NotNull JsonObject contactObject) {
         return ImmutableMolecularMatchTrialsContact.builder()
-                .phone(contactObject.getAsJsonPrimitive("phone").getAsString())
-                .name(contactObject.getAsJsonPrimitive("name").getAsString())
-                .email(contactObject.getAsJsonPrimitive("email").getAsString())
+                .phone(!contactObject.has("phone") ? null : contactObject.getAsJsonPrimitive("phone").getAsString())
+                .name(!contactObject.has("name") ? null : contactObject.getAsJsonPrimitive("name").getAsString())
+                .email(!contactObject.has("email") ? null : contactObject.getAsJsonPrimitive("email").getAsString())
                 .build();
     }
+
     @NotNull
     private static List<MolecularMatchTrialsTags> createMolecularMatchTrialsTags(@NotNull JsonArray arrayTags) {
         List<MolecularMatchTrialsTags> tagsList = Lists.newArrayList();
-        for (JsonElement tag: arrayTags) {
+        for (JsonElement tag : arrayTags) {
             tagsList.add(ImmutableMolecularMatchTrialsTags.builder()
                     .facet(tag.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
                     .compositeKey(tag.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
@@ -445,7 +475,7 @@ public final class ViccJsonReader {
                     .term(tag.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
                     .custom(tag.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
                     .priority(tag.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
-                    .alias(tag.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
+                    .alias(!tag.getAsJsonObject().has("alias") ? null : tag.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
                     .build());
         }
         return tagsList;
@@ -454,19 +484,24 @@ public final class ViccJsonReader {
     @NotNull
     private static MolecularMatchTrialsOverallContact createMolecularMatchTrialsOverallContact(@NotNull JsonObject overallContactObject) {
         return ImmutableMolecularMatchTrialsOverallContact.builder()
-                .phone(overallContactObject.getAsJsonPrimitive("phone").getAsString())
-                .last_name(overallContactObject.getAsJsonPrimitive("last_name").getAsString())
-                .email(overallContactObject.getAsJsonPrimitive("email").getAsString())
-                .affiliation(overallContactObject.getAsJsonPrimitive("affiliation").getAsString())
+                .phone(!overallContactObject.has("phone") || overallContactObject.get("phone").isJsonNull()
+                        ? null
+                        : overallContactObject.getAsJsonPrimitive("phone").getAsString())
+                .last_name(!overallContactObject.has("last_name") ? null : overallContactObject.getAsJsonPrimitive("last_name").getAsString())
+                .email(!overallContactObject.has("email") ? null : overallContactObject.getAsJsonPrimitive("email").getAsString())
+                .affiliation(!overallContactObject.has("affiliation") || overallContactObject.get("affiliation").isJsonNull()
+                        ? null
+                        : overallContactObject.getAsJsonPrimitive("affiliation").getAsString())
                 .build();
     }
+
     @NotNull
     private static List<MolecularMatchTrialsIntervation> createMolecularMatchTrialsIntervations(@NotNull JsonArray intervationsArray) {
         List<MolecularMatchTrialsIntervation> molecularMatchTrialsIntervationList = Lists.newArrayList();
-        for (JsonElement intervation: intervationsArray) {
+        for (JsonElement intervation : intervationsArray) {
             molecularMatchTrialsIntervationList.add(ImmutableMolecularMatchTrialsIntervation.builder()
-            .intervention_name(intervation.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
-            .build());
+                    .intervention_name(!intervation.getAsJsonObject().has("intervention_name") ? null : intervation.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
+                    .build());
         }
         return molecularMatchTrialsIntervationList;
     }
@@ -666,8 +701,12 @@ public final class ViccJsonReader {
                     .referenceGenome(!locations.getAsJsonObject().has("referenceGenome")
                             ? null
                             : locations.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
-                    .ref(!locations.getAsJsonObject().has("ref") ? null : locations.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
-                    .cdna(!locations.getAsJsonObject().has("cdna") ? null :locations.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
+                    .ref(!locations.getAsJsonObject().has("ref")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .cdna(!locations.getAsJsonObject().has("cdna")
+                            ? null
+                            : locations.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .build());
         }
         return locationsList;
@@ -686,7 +725,7 @@ public final class ViccJsonReader {
     @NotNull
     private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
         return ImmutableMolecularMatchAstLeft.builder()
-                .raw(!objectLeft.getAsJsonPrimitive("raw").isJsonNull() ? null :objectLeft.getAsJsonPrimitive("raw").getAsString())
+                .raw(!objectLeft.getAsJsonPrimitive("raw").isJsonNull() ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
                 .type(objectLeft.getAsJsonPrimitive("type").getAsString())
                 .value(objectLeft.getAsJsonPrimitive("value").getAsString())
                 .build();
@@ -784,10 +823,14 @@ public final class ViccJsonReader {
                     .sources(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("sources")))
                     .synonyms(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("synonyms")))
                     .gRch37Location(createGRCH37Location(mutation.getAsJsonObject().getAsJsonArray("GRCh37_location")))
-                    .uniprotTranscript(!mutation.getAsJsonObject().has("uniprotTranscript") ? null : mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
+                    .uniprotTranscript(!mutation.getAsJsonObject().has("uniprotTranscript")
+                            ? null
+                            : mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
                     .geneSymbol(mutation.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
                     .pathology(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("pathology")))
-                    .transcript(!mutation.getAsJsonObject().has("transcript") ? null : mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+                    .transcript(!mutation.getAsJsonObject().has("transcript")
+                            ? null
+                            : mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .id(mutation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .cDNA(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
                     .name(mutation.getAsJsonObject().getAsJsonPrimitive("name").getAsString())

@@ -14,9 +14,6 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     public abstract String status();
 
     @NotNull
-    public abstract String startDate();
-
-    @NotNull
     public abstract String title();
 
     @NotNull
@@ -31,10 +28,10 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     @NotNull
     public abstract List<MolecularMatchTrialsLocations> locations();
 
-    @NotNull
+    @Nullable
     public abstract String briefTitle();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchTrialsOverallContact overallContact();
 
     @NotNull

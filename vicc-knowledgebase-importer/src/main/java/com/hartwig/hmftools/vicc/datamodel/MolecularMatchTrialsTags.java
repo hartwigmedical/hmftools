@@ -29,6 +29,6 @@ public abstract class MolecularMatchTrialsTags {
     @NotNull
     public abstract String priority();
 
-    @NotNull
+    @Nullable
     public abstract String alias();
 }
