@@ -11,9 +11,9 @@ public abstract class CivicPublicationDate {
     @NotNull
     public abstract String year();
 
-    @NotNull
+    @Nullable
     public abstract String day();
 
-    @NotNull
+    @Nullable
     public abstract String month();
 }

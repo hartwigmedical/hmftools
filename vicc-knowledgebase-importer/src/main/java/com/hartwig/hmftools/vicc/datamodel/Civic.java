@@ -19,7 +19,7 @@ public abstract class Civic implements KbSpecificObject {
     @NotNull
     public abstract List<CivicVariantTypes> variantTypes();
 
-    @NotNull
+    @Nullable
     public abstract String civicActionabilityScore();
 
     @NotNull
@@ -31,7 +31,7 @@ public abstract class Civic implements KbSpecificObject {
     @NotNull
     public abstract List<String> variantAliases();
 
-    @NotNull
+    @Nullable
     public abstract String alleleRegistryId();
 
     @NotNull
@@ -42,9 +42,6 @@ public abstract class Civic implements KbSpecificObject {
 
     @NotNull
     public abstract List<CivicEvidenceItems> evidenceItem();
-
-    @NotNull
-    public abstract List<String> sources();
 
     @NotNull
     public abstract String entrezId();

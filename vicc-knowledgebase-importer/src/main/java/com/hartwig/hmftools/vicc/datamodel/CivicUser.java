@@ -11,7 +11,7 @@ public abstract class CivicUser {
     @NotNull
     public abstract String username();
 
-    @NotNull
+    @Nullable
     public abstract String areaOfExpertise();
 
     @NotNull
@@ -35,7 +35,7 @@ public abstract class CivicUser {
     @NotNull
     public abstract CivicAvatars avatars();
 
-    @NotNull
+    @Nullable
     public abstract String acceptedLicense();
 
     @NotNull
@@ -68,6 +68,6 @@ public abstract class CivicUser {
     @NotNull
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract String signupComplete();
 }

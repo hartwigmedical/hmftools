@@ -13,7 +13,7 @@ public abstract class CivicSource {
     @NotNull
     public abstract String status();
 
-    @NotNull
+    @Nullable
     public abstract String openAccess();
 
     @NotNull
@@ -25,7 +25,7 @@ public abstract class CivicSource {
     @NotNull
     public abstract String citation();
 
-    @NotNull
+    @Nullable
     public abstract String pmc_I();
 
     @NotNull

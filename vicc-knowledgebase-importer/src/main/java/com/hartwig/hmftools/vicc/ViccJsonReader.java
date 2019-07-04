@@ -409,15 +409,14 @@ public final class ViccJsonReader {
                 .variantGroups(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_groups")))
                 .entrezName(objectCivic.getAsJsonPrimitive("entrez_name").getAsString())
                 .variantTypes(createVariantTypes(objectCivic.getAsJsonArray("variant_types")))
-                .civicActionabilityScore(objectCivic.getAsJsonPrimitive("civic_actionability_score").getAsString())
+                .civicActionabilityScore(objectCivic.get("civic_actionability_score").isJsonNull() ? null : objectCivic.getAsJsonPrimitive("civic_actionability_score").getAsString())
                 .clinvarEntries(jsonArrayToStringList(objectCivic.getAsJsonArray("clinvar_entries")))
                 .lifecycleActions(createLifeCycleActions(objectCivic.getAsJsonObject("lifecycle_actions")))
                 .variantAliases(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_aliases")))
-                .alleleRegistryId(objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
+                .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull() ? null : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
                 .geneId(objectCivic.getAsJsonPrimitive("gene_id").getAsString())
                 .name(objectCivic.getAsJsonPrimitive("name").getAsString())
                 .evidenceItem(createEvidenceitems(objectCivic.getAsJsonArray("evidence_items")))
-                .sources(jsonArrayToStringList(objectCivic.getAsJsonArray("sources")))
                 .entrezId(objectCivic.getAsJsonPrimitive("entrez_id").getAsString())
                 .assertions(jsonArrayToStringList(objectCivic.getAsJsonArray("assertions")))
                 .hgvs_expressions(jsonArrayToStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
@@ -431,13 +430,13 @@ public final class ViccJsonReader {
     @NotNull
     private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
         return ImmutableCivicCoordinates.builder()
-                .chromosome2(objectCoordinates.getAsJsonPrimitive("chromosome2").getAsString())
-                .referenceBases(objectCoordinates.getAsJsonPrimitive("reference_bases").getAsString())
-                .start2(objectCoordinates.getAsJsonPrimitive("start2").getAsString())
-                .variantBases(objectCoordinates.getAsJsonPrimitive("variant_bases").getAsString())
+                .chromosome2(objectCoordinates.get("chromosome2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("chromosome2").getAsString())
+                .referenceBases(objectCoordinates.get("reference_bases").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("reference_bases").getAsString())
+                .start2(objectCoordinates.get("start2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("start2").getAsString())
+                .variantBases(objectCoordinates.get("variant_bases").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("variant_bases").getAsString())
                 .stop(objectCoordinates.getAsJsonPrimitive("stop").getAsString())
-                .stop2(objectCoordinates.getAsJsonPrimitive("stop2").getAsString())
-                .representativeTranscript2(objectCoordinates.getAsJsonPrimitive("representative_transcript2").getAsString())
+                .stop2(objectCoordinates.get("stop2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("stop2").getAsString())
+                .representativeTranscript2(objectCoordinates.get("representative_transcript2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("representative_transcript2").getAsString())
                 .start(objectCoordinates.getAsJsonPrimitive("start").getAsString())
                 .representativeTranscript(objectCoordinates.getAsJsonPrimitive("representative_transcript").getAsString())
                 .ensemblVersion(objectCoordinates.getAsJsonPrimitive("ensembl_version").getAsString())
@@ -452,8 +451,8 @@ public final class ViccJsonReader {
         for (JsonElement evideneItem: evidenceItemsArray) {
             evidenceItemsList.add(ImmutableCivicEvidenceItems.builder()
                     .status(evideneItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
-                    .rating(evideneItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
-                    .drugInteractionType(evideneItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
+                    .rating(evideneItem.getAsJsonObject().get("rating").isJsonNull() ? null : evideneItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
+                    .drugInteractionType(evideneItem.getAsJsonObject().get("drug_interaction_type").isJsonNull() ? null : evideneItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
                     .description(evideneItem.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .openChangeCount(evideneItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
                     .evidenceType(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
@@ -477,11 +476,11 @@ public final class ViccJsonReader {
     private static CivicSource createSource(@NotNull JsonObject objectSource) {
         return ImmutableCivicSource.builder()
                 .status(objectSource.getAsJsonPrimitive("status").getAsString())
-                .openAccess(objectSource.getAsJsonPrimitive("open_access").getAsString())
+                .openAccess(objectSource.get("open_access").isJsonNull() ? null : objectSource.getAsJsonPrimitive("open_access").getAsString())
                 .name(objectSource.getAsJsonPrimitive("name").getAsString())
                 .journal(objectSource.getAsJsonPrimitive("journal").getAsString())
                 .citation(objectSource.getAsJsonPrimitive("citation").getAsString())
-                .pmc_I(objectSource.getAsJsonPrimitive("pmc_id").getAsString())
+                .pmc_I(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
                 .fullJournalTitle(objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
                 .sourceUrl(objectSource.getAsJsonPrimitive("source_url").getAsString())
                 .clinicalTrials(jsonArrayToStringList(objectSource.getAsJsonArray("clinical_trials")))
@@ -496,8 +495,8 @@ public final class ViccJsonReader {
     private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
         return ImmutableCivicPublicationDate.builder()
                 .year(objectPublicationDate.getAsJsonPrimitive("year").getAsString())
-                .day(objectPublicationDate.getAsJsonPrimitive("day").getAsString())
-                .month(objectPublicationDate.getAsJsonPrimitive("month").getAsString())
+                .day(!objectPublicationDate.has("day")? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
+                .month(!objectPublicationDate.has("month") ? null : objectPublicationDate.getAsJsonPrimitive("month").getAsString())
                 .build();
     }
 
@@ -517,7 +516,7 @@ public final class ViccJsonReader {
         List<CivicDrugs> drugsList = Lists.newArrayList();
         for (JsonElement drug: arrayDrugs) {
             drugsList.add(ImmutableCivicDrugs.builder()
-                    .pubchemId(drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
+                    .pubchemId(drug.getAsJsonObject().get("pubchem_id").isJsonNull() ? null : drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
                     .id(drug.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .name(drug.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
             .build());
@@ -559,9 +558,10 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
+        LOGGER.info(objectUser.get("organization"));
         return ImmutableCivicUser.builder()
                 .username(objectUser.getAsJsonPrimitive("username").getAsString())
-                .areaOfExpertise(objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
+                .areaOfExpertise(objectUser.get("area_of_expertise").isJsonNull() ? null : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
                 .organization(createOrganization(objectUser.getAsJsonObject("organization")))
                 .twitterHandle(objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
                 .name(objectUser.getAsJsonPrimitive("name").getAsString())
@@ -569,7 +569,7 @@ public final class ViccJsonReader {
                 .url(objectUser.getAsJsonPrimitive("url").getAsString())
                 .createdAt(objectUser.getAsJsonPrimitive("created_at").getAsString())
                 .avatars(createAvatars(objectUser.getAsJsonObject("avatars")))
-                .acceptedLicense(objectUser.getAsJsonPrimitive("accepted_license").getAsString())
+                .acceptedLicense(objectUser.get("accepted_license").isJsonNull() ? null : objectUser.getAsJsonPrimitive("accepted_license").getAsString())
                 .affiliation(objectUser.getAsJsonPrimitive("affiliation").getAsString())
                 .avatarUrl(objectUser.getAsJsonPrimitive("avatar_url").getAsString())
                 .role(objectUser.getAsJsonPrimitive("role").getAsString())
@@ -580,7 +580,7 @@ public final class ViccJsonReader {
                 .lastSeenAt(objectUser.getAsJsonPrimitive("last_seen_at").getAsString())
                 .featuredExpert(objectUser.getAsJsonPrimitive("featured_expert").getAsString())
                 .id(objectUser.getAsJsonPrimitive("id").getAsString())
-                .signupComplete(objectUser.getAsJsonPrimitive("signup_complete").getAsString())
+                .signupComplete(objectUser.get("signup_complete").isJsonNull() ? null : objectUser.getAsJsonPrimitive("signup_complete").getAsString())
                 .build();
     }
 
