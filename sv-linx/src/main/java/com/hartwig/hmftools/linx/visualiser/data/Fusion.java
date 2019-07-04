@@ -13,6 +13,8 @@ public abstract class Fusion
 
     public abstract int clusterId();
 
+    public abstract boolean reportable();
+
     @NotNull
     public abstract String geneUp();
 

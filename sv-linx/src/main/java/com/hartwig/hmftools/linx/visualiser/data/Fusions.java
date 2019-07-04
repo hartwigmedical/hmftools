@@ -29,7 +29,10 @@ public class Fusions
         final List<Fusion> result = Lists.newArrayList();
         for (int i = 1; i < lines.size(); i++)
         {
-            result.add(fromLine(map, lines.get(i)));
+            Fusion fusion = fromLine(map, lines.get(i));
+            if (fusion.reportable()) {
+                result.add(fusion);
+            }
         }
 
         return result;
@@ -56,6 +59,7 @@ public class Fusions
         String[] values = line.split(SEPARATOR);
         return ImmutableFusion.builder()
                 .sampleId(values[map.get("SampleId")])
+                .reportable(Boolean.valueOf(values[map.get("Reportable")]))
                 .clusterId(Integer.valueOf(values[map.get("ClusterId")]))
                 .chromosomeUp(values[map.get("ChrUp")])
                 .positionUp(Long.valueOf(values[map.get("PosUp")]))
