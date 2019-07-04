@@ -26,10 +26,10 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     public abstract String score();
 
     @NotNull
-    public abstract MolecularMatchTrialsIntervation intervation();
+    public abstract List<MolecularMatchTrialsIntervation> intervation();
 
     @NotNull
-    public abstract MolecularMatchTrialsLocations locations();
+    public abstract List<MolecularMatchTrialsLocations> locations();
 
     @NotNull
     public abstract String briefTitle();

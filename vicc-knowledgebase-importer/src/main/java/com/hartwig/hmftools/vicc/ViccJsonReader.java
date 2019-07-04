@@ -37,6 +37,14 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTherapeuticCon
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTranscriptConsequencesGRCH37;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrials;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsContact;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsGeo;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsIntervation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsLocation;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsLocations;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsOverallContact;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchTrialsTags;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableOncoKbClinical;
@@ -69,6 +77,14 @@ import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTranscriptConsequencesGRCH37;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrials;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsContact;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsGeo;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsLocation;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsLocations;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsOverallContact;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsTags;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
@@ -129,7 +145,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.omg.CORBA.PRIVATE_MEMBER;
 
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
@@ -314,6 +329,8 @@ public final class ViccJsonReader {
                 }
             }
 
+            JsonObject objectMolecularMatchTrials = viccEntryObject.getAsJsonObject("molecularmatch_trials");
+
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
             } else if (viccEntryObject.has("brca")) {
@@ -334,6 +351,8 @@ public final class ViccJsonReader {
                 viccEntryBuilder.KbSpecificObject(createJaxTrials(objectJaxTrials));
             } else if (viccEntryObject.has("molecularmatch")) {
                 viccEntryBuilder.KbSpecificObject(createMolecularMatch(objectMolecularMatch));
+            } else if (viccEntryObject.has("molecularmatch_trials")) {
+                viccEntryBuilder.KbSpecificObject(createMolecularMatchTrials(objectMolecularMatchTrials));
             }
             entries.add(viccEntryBuilder.build());
 
@@ -341,6 +360,115 @@ public final class ViccJsonReader {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static MolecularMatchTrials createMolecularMatchTrials(@NotNull JsonObject objectMolecularMatchTrials) {
+        return ImmutableMolecularMatchTrials.builder()
+                .status(objectMolecularMatchTrials.getAsJsonPrimitive("status").getAsString())
+                .startDate(objectMolecularMatchTrials.getAsJsonPrimitive("startDate").getAsString())
+                .title(objectMolecularMatchTrials.getAsJsonPrimitive("title").getAsString())
+                .molecularAlterations(jsonArrayToStringList(objectMolecularMatchTrials.getAsJsonArray("molecularAlterations")))
+                .score(objectMolecularMatchTrials.getAsJsonPrimitive("_score").getAsString())
+                .intervation(createMolecularMatchTrialsIntervations(objectMolecularMatchTrials.getAsJsonArray("interventions")))
+                .locations(createMolecularMatchTrialsLocations(objectMolecularMatchTrials.getAsJsonArray("locations")))
+                .briefTitle(objectMolecularMatchTrials.getAsJsonPrimitive("briefTitle").getAsString())
+                .overallContact(createMolecularMatchTrialsOverallContact(objectMolecularMatchTrials.getAsJsonObject("overallContact")))
+                .link(objectMolecularMatchTrials.getAsJsonPrimitive("link").getAsString())
+                .phase(objectMolecularMatchTrials.getAsJsonPrimitive("phase").getAsString())
+                .tags(createMolecularMatchTrialsTags(objectMolecularMatchTrials.getAsJsonArray("tags")))
+                .id(objectMolecularMatchTrials.getAsJsonPrimitive("id").getAsString())
+                .studyType(objectMolecularMatchTrials.getAsJsonPrimitive("studyType").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static List<MolecularMatchTrialsLocations> createMolecularMatchTrialsLocations(@NotNull JsonArray arrayLocations) {
+        List<MolecularMatchTrialsLocations> locationsList = Lists.newArrayList();
+        for (JsonElement location: arrayLocations) {
+            locationsList.add(ImmutableMolecularMatchTrialsLocations.builder()
+                    .status(location.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
+                    .city(location.getAsJsonObject().getAsJsonPrimitive("city").getAsString())
+                    .valid(location.getAsJsonObject().getAsJsonPrimitive("_valid").getAsString())
+                    .zip(location.getAsJsonObject().getAsJsonPrimitive("zip").getAsString())
+                    .created(location.getAsJsonObject().getAsJsonPrimitive("created").getAsString())
+                    .country(location.getAsJsonObject().getAsJsonPrimitive("country").getAsString())
+                    .id(location.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .lastUpdated(location.getAsJsonObject().getAsJsonPrimitive("lastUpdated").getAsString())
+                    .contact(createMolecularMatchTrialsContact(location.getAsJsonObject().getAsJsonObject("contact")))
+                    .state(location.getAsJsonObject().getAsJsonPrimitive("state").getAsString())
+                    .street(location.getAsJsonObject().getAsJsonPrimitive("street").getAsString())
+                    .location(createMolecularMatchTrialsLocation(location.getAsJsonObject().getAsJsonObject("location")))
+                    .po_box(location.getAsJsonObject().getAsJsonPrimitive("po_box").getAsString())
+                    .failedGeocode(location.getAsJsonObject().getAsJsonPrimitive("failedGeocode").getAsString())
+                    .geo(createMolecularMatchTrialsGeo(location.getAsJsonObject().getAsJsonObject("geo")))
+                    .validMessage(location.getAsJsonObject().getAsJsonPrimitive("_validMessage").getAsString())
+                    .name(location.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .build());
+        }
+        return locationsList;
+    }
+
+    @NotNull
+    private static MolecularMatchTrialsGeo createMolecularMatchTrialsGeo(@NotNull JsonObject geoObject) {
+        return ImmutableMolecularMatchTrialsGeo.builder()
+                .lat(geoObject.getAsJsonPrimitive("lat").getAsString())
+                .lon(geoObject.getAsJsonPrimitive("lon").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchTrialsLocation createMolecularMatchTrialsLocation(@NotNull JsonObject locationObject) {
+        return ImmutableMolecularMatchTrialsLocation.builder()
+                .type(locationObject.getAsJsonPrimitive("type").getAsString())
+                .coordinates(jsonArrayToStringList(locationObject.getAsJsonArray("coordinates")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchTrialsContact createMolecularMatchTrialsContact(@NotNull JsonObject contactObject) {
+        return ImmutableMolecularMatchTrialsContact.builder()
+                .phone(contactObject.getAsJsonPrimitive("phone").getAsString())
+                .name(contactObject.getAsJsonPrimitive("name").getAsString())
+                .email(contactObject.getAsJsonPrimitive("email").getAsString())
+                .build();
+    }
+    @NotNull
+    private static List<MolecularMatchTrialsTags> createMolecularMatchTrialsTags(@NotNull JsonArray arrayTags) {
+        List<MolecularMatchTrialsTags> tagsList = Lists.newArrayList();
+        for (JsonElement tag: arrayTags) {
+            tagsList.add(ImmutableMolecularMatchTrialsTags.builder()
+                    .facet(tag.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
+                    .compositeKey(tag.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .suppress(tag.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
+                    .filterType(tag.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
+                    .term(tag.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
+                    .custom(tag.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .priority(tag.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
+                    .alias(tag.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
+                    .build());
+        }
+        return tagsList;
+    }
+
+    @NotNull
+    private static MolecularMatchTrialsOverallContact createMolecularMatchTrialsOverallContact(@NotNull JsonObject overallContactObject) {
+        return ImmutableMolecularMatchTrialsOverallContact.builder()
+                .phone(overallContactObject.getAsJsonPrimitive("phone").getAsString())
+                .last_name(overallContactObject.getAsJsonPrimitive("last_name").getAsString())
+                .email(overallContactObject.getAsJsonPrimitive("email").getAsString())
+                .affiliation(overallContactObject.getAsJsonPrimitive("affiliation").getAsString())
+                .build();
+    }
+    @NotNull
+    private static List<MolecularMatchTrialsIntervation> createMolecularMatchTrialsIntervations(@NotNull JsonArray intervationsArray) {
+        List<MolecularMatchTrialsIntervation> molecularMatchTrialsIntervationList = Lists.newArrayList();
+        for (JsonElement intervation: intervationsArray) {
+            molecularMatchTrialsIntervationList.add(ImmutableMolecularMatchTrialsIntervation.builder()
+            .intervention_name(intervation.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
+            .build());
+        }
+        return molecularMatchTrialsIntervationList;
     }
 
     @NotNull

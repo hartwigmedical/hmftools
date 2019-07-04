@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +14,7 @@ public abstract class MolecularMatchTrialsLocation {
     public abstract String type();
 
     @NotNull
-    public abstract MolecularMatchTrialsCoordinates coordinates();
+    public abstract List<String> coordinates();
 
 
 }
