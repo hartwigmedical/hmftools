@@ -13,10 +13,10 @@ public abstract class CivicEvidenceItems {
     @NotNull
     public abstract String status();
 
-    @NotNull
+    @Nullable
     public abstract String rating();
 
-    @NotNull
+    @Nullable
     public abstract String drugInteractionType();
 
     @NotNull

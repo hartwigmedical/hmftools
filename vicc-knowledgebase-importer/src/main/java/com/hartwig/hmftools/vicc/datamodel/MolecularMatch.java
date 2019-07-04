@@ -44,7 +44,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract String uniqueKey();
 
     @NotNull
-    public abstract String civic();
+    public abstract String civicValue();
 
     @NotNull
     public abstract String hashKey();

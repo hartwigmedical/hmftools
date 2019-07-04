@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPETYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PROVENANCE;
 import static com.hartwig.hmftools.vicc.database.Tables.PUBLICATIONURL;
+import static com.hartwig.hmftools.vicc.database.Tables.SAGE;
 import static com.hartwig.hmftools.vicc.database.Tables.SEQUENCEONTOLOGY;
 import static com.hartwig.hmftools.vicc.database.Tables.SYNONYM;
 import static com.hartwig.hmftools.vicc.database.Tables.TAG;
@@ -36,8 +37,10 @@ import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
+import com.hartwig.hmftools.vicc.datamodel.Sage;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -84,6 +87,27 @@ public class ViccDAO {
         writeFeatureNames(id, viccEntry.featureNames());
         writeFeatures(id, viccEntry.features());
         writeAssociation(id, viccEntry.association());
+        writeKbSpecificObject(id, viccEntry.KbSpecificObject());
+    }
+
+    private void writeKbSpecificObject(int viccEntryId, @NotNull KbSpecificObject object) {
+        if (object instanceof Sage) {
+            Sage sage = (Sage) object;
+            context.insertInto(SAGE,
+                    SAGE.ENTREZID,
+                    SAGE.CLINICALMANIFESTATION,
+                    SAGE.PUBLICATIONURL,
+                    SAGE.GERMLINEORSOMATIC,
+                    SAGE.EVIDENCELABEL,
+                    SAGE.DRUGLABEL,
+                    SAGE.RESPONSETYPE,
+                    SAGE.GENE, SAGE.VICCENTRYID)
+                    .values(sage.entrezId(),
+                            sage.clinicalManifestation(),
+                            sage.publicationUrl(),
+                            sage.germlineOrSomatic(),
+                            sage.evidenceLabel(), sage.drugLabels(), sage.responseType(), sage.gene(), viccEntryId).execute();
+        }
     }
 
     private void writeAssociation(int viccEntryId, @NotNull Association association) {
@@ -95,7 +119,8 @@ public class ViccDAO {
                 ASSOCIATION.DRUGLABEL,
                 ASSOCIATION.SOURCELINK,
                 ASSOCIATION.DESCRIPTION,
-                ASSOCIATION.ONCOGENIC, ASSOCIATION.VICCENTRYID)
+                ASSOCIATION.ONCOGENIC,
+                ASSOCIATION.VICCENTRYID)
                 .values(association.variantName(),
                         association.evidenceLevel(),
                         association.evidenceLabel(),
@@ -103,7 +128,8 @@ public class ViccDAO {
                         association.drugLabels(),
                         association.sourceLink(),
                         association.description(),
-                        association.oncogenic(), viccEntryId)
+                        association.oncogenic(),
+                        viccEntryId)
                 .returning(ASSOCIATION.ID)
                 .fetchOne()
                 .getValue(ASSOCIATION.ID);
@@ -159,19 +185,15 @@ public class ViccDAO {
 
     private void writeApprovedCountries(int environmentalContextsId, @NotNull List<String> approvedCountries) {
         for (String approvesCountry : approvedCountries) {
-            context.insertInto(APPROVEDCOUNTRY,
-                    APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME,
-                    APPROVEDCOUNTRY.ENVIRONMENTALCONTEXTSID).values(approvesCountry, environmentalContextsId).execute();
+            context.insertInto(APPROVEDCOUNTRY, APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME, APPROVEDCOUNTRY.ENVIRONMENTALCONTEXTSID)
+                    .values(approvesCountry, environmentalContextsId)
+                    .execute();
         }
     }
 
     private void writePhenotype(int associationId, @Nullable Phenotype phenotype) {
         if (phenotype != null) {
-            int id = context.insertInto(PHENOTYPE,
-                    PHENOTYPE.DESCRIPTION,
-                    PHENOTYPE.FAMILY,
-                    PHENOTYPE.IDPHENOTYPE,
-                    PHENOTYPE.ASSOCIATIONID)
+            int id = context.insertInto(PHENOTYPE, PHENOTYPE.DESCRIPTION, PHENOTYPE.FAMILY, PHENOTYPE.IDPHENOTYPE, PHENOTYPE.ASSOCIATIONID)
                     .values(phenotype.description(), phenotype.family(), phenotype.id(), associationId)
                     .returning(PHENOTYPE.ID)
                     .fetchOne()
@@ -195,9 +217,9 @@ public class ViccDAO {
     private void writePublicationsUrls(int associationId, @Nullable List<String> publicationsUrls) {
         if (publicationsUrls != null) {
             for (String publicationUrl : publicationsUrls) {
-                context.insertInto(PUBLICATIONURL,
-                        PUBLICATIONURL.URLOFPUBLICATION,
-                        PUBLICATIONURL.ASSOCIATIONID).values(publicationUrl, associationId).execute();
+                context.insertInto(PUBLICATIONURL, PUBLICATIONURL.URLOFPUBLICATION, PUBLICATIONURL.ASSOCIATIONID)
+                        .values(publicationUrl, associationId)
+                        .execute();
             }
         }
     }
@@ -225,10 +247,9 @@ public class ViccDAO {
     }
 
     private void writeEvidenceType(int evidenceId, @NotNull EvidenceType evidenceType) {
-        context.insertInto(EVIDENCETYPE,
-                EVIDENCETYPE.SOURCENAME,
-                EVIDENCETYPE.IDEVIDENCETYPE,
-                EVIDENCETYPE.EVIDENCEID).values(evidenceType.sourceName(), evidenceType.id(), evidenceId).execute();
+        context.insertInto(EVIDENCETYPE, EVIDENCETYPE.SOURCENAME, EVIDENCETYPE.IDEVIDENCETYPE, EVIDENCETYPE.EVIDENCEID)
+                .values(evidenceType.sourceName(), evidenceType.id(), evidenceId)
+                .execute();
     }
 
     private void writeFeatures(int viccEntryId, @NotNull List<Feature> features) {
@@ -272,18 +293,14 @@ public class ViccDAO {
 
     private void writeProvenance(int featureId, @NotNull List<String> provenances) {
         for (String provenance : provenances) {
-            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCENAME, PROVENANCE.FEATUREID)
-                    .values(provenance, featureId)
-                    .execute();
+            context.insertInto(PROVENANCE, PROVENANCE.PROVENANCENAME, PROVENANCE.FEATUREID).values(provenance, featureId).execute();
         }
     }
 
     private void writeSynonyms(int featureId, @Nullable List<String> synonyms) {
         if (synonyms != null) {
             for (String synonym : synonyms) {
-                context.insertInto(SYNONYM, SYNONYM.SYNONYMNAME, SYNONYM.FEATUREID)
-                        .values(synonym, featureId)
-                        .execute();
+                context.insertInto(SYNONYM, SYNONYM.SYNONYMNAME, SYNONYM.FEATUREID).values(synonym, featureId).execute();
             }
         }
     }
@@ -291,9 +308,7 @@ public class ViccDAO {
     private void writeLinks(int featureId, @Nullable List<String> links) {
         if (links != null) {
             for (String link : links) {
-                context.insertInto(LINK, LINK.LINKNAME, LINK.FEATUREID)
-                        .values(link, featureId)
-                        .execute();
+                context.insertInto(LINK, LINK.LINKNAME, LINK.FEATUREID).values(link, featureId).execute();
             }
         }
     }
@@ -393,5 +408,6 @@ public class ViccDAO {
         context.deleteFrom(APPROVEDCOUNTRY).execute();
         context.deleteFrom(TAXONOMY).execute();
         context.deleteFrom(VICCENTRY).execute();
+        context.deleteFrom(SAGE).execute();
     }
 }

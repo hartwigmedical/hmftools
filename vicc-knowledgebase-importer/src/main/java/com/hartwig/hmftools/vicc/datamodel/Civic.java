@@ -2,8 +2,6 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +19,7 @@ public abstract class Civic implements KbSpecificObject {
     @NotNull
     public abstract List<CivicVariantTypes> variantTypes();
 
-    @NotNull
+    @Nullable
     public abstract String civicActionabilityScore();
 
     @NotNull
@@ -33,11 +31,8 @@ public abstract class Civic implements KbSpecificObject {
     @NotNull
     public abstract List<String> variantAliases();
 
-    @NotNull
+    @Nullable
     public abstract String alleleRegistryId();
-
-    @NotNull
-    public abstract String provisionalValues();
 
     @NotNull
     public abstract String geneId();
@@ -46,10 +41,7 @@ public abstract class Civic implements KbSpecificObject {
     public abstract String name();
 
     @NotNull
-    public abstract List<EvidenceItem> evidenceItem();
-
-    @NotNull
-    public abstract List<String> sources();
+    public abstract List<CivicEvidenceItems> evidenceItem();
 
     @NotNull
     public abstract String entrezId();

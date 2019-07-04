@@ -8,25 +8,25 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CivicCoordinates {
 
-    @NotNull
+    @Nullable
     public abstract String chromosome2();
 
-    @NotNull
+    @Nullable
     public abstract String referenceBases();
 
-    @NotNull
+    @Nullable
     public abstract String start2();
 
-    @NotNull
+    @Nullable
     public abstract String variantBases();
 
     @NotNull
     public abstract String stop();
 
-    @NotNull
+    @Nullable
     public abstract String stop2();
 
-    @NotNull
+    @Nullable
     public abstract String representativeTranscript2();
 
     @NotNull
