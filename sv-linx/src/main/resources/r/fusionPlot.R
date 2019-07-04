@@ -34,7 +34,10 @@ plot_fusion <- function(fusedGenes, fusedExons, fusedProteinDomains) {
   if (nrow(fusedProteinDomains) > 0) {
     p1 = p1 + geom_rect(data = fusedProteinDomains, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5, fill = name), position = "identity", stat = "identity", alpha = 0.8)
   }
-  
+
+  # Want the segment break to appear on top of the protein domains
+  p1 = p1 + geom_segment(data = fusedGenes %>% filter(upGene), mapping = aes(x = end, y = -0.1, xend = end, yend = 1.1))
+
   return (p1)
 }
 
@@ -42,7 +45,7 @@ singleBlue = "#6baed6"
 singleRed = "#d6906b"
 
 clusterProteinDomains = read.table(clusterProteinDomainPath, sep = '\t', header = T, comment.char = "$", stringsAsFactors = F) %>%
-  mutate(name = gsub("domain", "", name))
+  mutate(name = gsub(" domain", "", name))
 clusterFusedExons = read.table(clusterFusedExonPath, sep = '\t', header = T, stringsAsFactors = F) %>% 
   mutate(
     upGene = ifelse(startsWith(fusion, gene), T, F), 
@@ -68,7 +71,6 @@ for (selectedFusion in unique(clusterFusedExons$fusion)) {
 }
 
 fusionPlotListCount = length(fusionPlotList)
-
 pFusions = plot_grid(plotlist = fusionPlotList, ncol = 1)
 pCircos <- ggdraw() + draw_image(circosPicturePath)
 

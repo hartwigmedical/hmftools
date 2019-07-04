@@ -29,7 +29,8 @@ public class ProteinDomains
             return result;
         }
 
-        final long upGeneStart = fusedExons.get(0).unadjustedGeneStart();
+        final FusedExon firstUpGene = fusedExons.get(0);
+        final long upGeneStart = firstUpGene.unadjustedGeneStart();
         final long upGeneEnd = fusion.positionUp();
 
         final FusedExon firstDownExon = fusedExons.stream().filter(x -> x.gene().equals(fusion.geneDown())).findFirst().get();
@@ -48,10 +49,13 @@ public class ProteinDomains
         {
             if (unadjustedDomain.overlaps(upGeneRegion))
             {
+                long unconstrainedStart = start(fusion.strandUp(), upGeneStart, unadjustedDomain);
+                long unconstrainedEnd = end(fusion.strandUp(), upGeneStart, unadjustedDomain);
+
                 ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
-                        .start(start(fusion.strandUp(), upGeneStart, unadjustedDomain))
-                        .end(end(fusion.strandUp(), upGeneStart, unadjustedDomain))
+                        .start(Math.max(unconstrainedStart, firstUpGene.geneStart()))
+                        .end(Math.min(unconstrainedEnd, firstUpGene.geneEnd()))
                         .build();
 
                 result.add(domain);
@@ -59,10 +63,13 @@ public class ProteinDomains
 
             if (unadjustedDomain.overlaps(downGeneRegion))
             {
+                long unconstrainedStart = start(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset;
+                long unconstrainedEnd = end(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset;
+
                 ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
-                        .start(start(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset)
-                        .end(end(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset)
+                        .start(Math.max(unconstrainedStart, finalDownExon.geneStart()))
+                        .end(Math.min(unconstrainedEnd, finalDownExon.geneEnd()))
                         .build();
 
                 result.add(domain);
