@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.circos.CircosFileWriter;
 import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
@@ -35,17 +35,11 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.util.CollectionUtil;
-
 class CircosCharts {
-
-    private static final Logger LOGGER = LogManager.getLogger(CircosCharts.class);
 
     private static final int MAX_PLOT_POINTS = 25000;
 
@@ -73,7 +67,6 @@ class CircosCharts {
             @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
             throws IOException, ExecutionException, InterruptedException {
 
-
         writeConfig(gender);
         writeCopyNumbers(copyNumber);
         writeEnrichedSomatics(somaticVariants);
@@ -96,45 +89,18 @@ class CircosCharts {
 
     @Nullable
     private Object generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException {
-        final File errorFile = file(type, "error");
-        final File outputFile = file(type, "out");
-        final String plotFileName = tumorSample + "." + type + ".png";
+        CircosExecution execution = new CircosExecution(executable);
 
-        final String[] command = new String[8];
-        command[0] = executable;
-        command[1] = "-nosvg";
-        command[2] = "-conf";
-        command[3] = confFile(type).getAbsolutePath();
-        command[4] = "-outputdir";
-        command[5] = new File(config.plotDirectory()).getAbsolutePath();
-        command[6] = "-outputfile";
-        command[7] = plotFileName;
+        final String inputConfig = confFile(type);
+        final String outputPath = config.plotDirectory();
+        final String outputFile = tumorSample + "." + type + ".png";
 
-        LOGGER.info(
-                String.format("Generating " + type.toUpperCase() + " via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
-        int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
-        if (result != 0) {
-            LOGGER.fatal("Fatal error creating circos plot. Examine error file " +  errorFile.toString() + " for details.");
-            System.exit(1);
-        }
-
-        final File finalFile = new File(config.plotDirectory() + File.separator + plotFileName);
-        if (!finalFile.exists()) {
-            LOGGER.fatal("Failed to create file {}", finalFile.toString());
-            System.exit(1);
-        }
-
-        return null;
+        return execution.generateCircos(inputConfig, outputPath, outputFile, config.circosDirectory());
     }
 
     @NotNull
-    private File confFile(@NotNull final String type) {
-        return file(type, "conf");
-    }
-
-    @NotNull
-    private File file(@NotNull final String type, @NotNull final String extension) {
-        return new File(baseCircosTumorSample + "." + type + "." + extension);
+    private String confFile(@NotNull final String type) {
+        return baseCircosTumorSample + "." + type + "." + "conf";
     }
 
     private void writeStructuralVariants(@NotNull final List<StructuralVariant> structuralVariants) throws IOException {
@@ -180,7 +146,7 @@ class CircosCharts {
         content = content.replaceAll("SAMPLE", tumorSample);
         content = content.replaceAll("REFERENCE", referenceSample);
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
-        Files.write(confFile(type).toPath(), content.getBytes(charset));
+        Files.write(new File(confFile(type)).toPath(), content.getBytes(charset));
     }
 
     private void copyResourceToCircos(@NotNull final String name) throws IOException {
