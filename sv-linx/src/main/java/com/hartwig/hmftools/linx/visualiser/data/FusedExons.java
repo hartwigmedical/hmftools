@@ -126,7 +126,7 @@ public class FusedExons
                 .add("start")
                 .add("end")
                 .add("rank")
-                .add("truncated")
+                .add("skipped")
                 .toString();
     }
 
