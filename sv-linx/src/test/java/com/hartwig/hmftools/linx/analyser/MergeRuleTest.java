@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createIns;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
@@ -186,6 +187,7 @@ public class MergeRuleTest
         SvVarData var1 = createBnd("1", "1", 1000, 1, "2", 100, 1);
         SvVarData var2 = createBnd("2", "1", 100000, -1, "3", 100, 1);
 
+        // 2x hom-loss events both clustered
         SvVarData var3 = createDel("3", "1", 6500, 6600);
         SvVarData var4 = createBnd("4", "1", 20000, 1, "5", 200, 1);
         SvVarData var5 = createBnd("5", "1", 22000, -1, "5", 100, -1);
@@ -218,18 +220,22 @@ public class MergeRuleTest
 
         assertEquals(3, tester.Analyser.getClusters().size());
 
-        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var2)));
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
+        assertTrue(cluster != null);
+        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
 
-        // scenario 2: hom-loss event clustered because LOH is clustered
+        // scenario 2: multiple hom-loss events clustered because LOH is clustered
         tester.clearClustersAndSVs();
 
         var1 = createDel("1", "1", 1000, 100000);
         var2 = createBnd("2", "1", 10000, 1, "2", 100, 1);
         var3 = createBnd("3", "1", 20000, -1, "3", 100, 1);
+        var4 = createBnd("4", "1", 30000, 1, "4", 100, 1);
+        var5 = createBnd("5", "1", 40000, -1, "5", 100, 1);
 
         lohData.clear();
 
-        lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var2.position(false),
+        lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var1.position(false),
                 "DEL", "DEL", 2, 1, 1, 1, 1, 99000, var1.dbId(), var1.dbId());
 
         lohData.add(lohEvent);
@@ -238,6 +244,50 @@ public class MergeRuleTest
 
         homLossData.add(new HomLossEvent(var2.chromosome(true), var2.position(true), var3.position(true),
                 var2.typeStr(), var3.typeStr(), var2.dbId(), var3.dbId()));
+
+        homLossData.add(new HomLossEvent(var4.chromosome(true), var4.position(true), var5.position(true),
+                var4.typeStr(), var5.typeStr(), var4.dbId(), var5.dbId()));
+
+        lohEvent.addHomLossEvents(homLossData);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(3, tester.Analyser.getClusters().size());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
+        assertTrue(cluster != null);
+        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var4, var5));
+        assertTrue(cluster != null);
+        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+
+
+        // scenario 3: hom-loss event overlaps a LOH
+        tester.clearClustersAndSVs();
+
+        var1 = createDel("1", "1", 10000, 30000);
+        var2 = createBnd("2", "1", 20000, 1, "2", 100, 1);
+        var3 = createBnd("3", "1", 40000, -1, "3", 100, 1);
+
+        lohData.clear();
+
+        lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var3.position(true),
+                var1.typeStr(), var3.typeStr(), 2, 1, 1, 1, 1, 20000, var1.dbId(), var3.dbId());
+
+        lohData.add(lohEvent);
+
+        homLossData.clear();
+
+        homLossData.add(new HomLossEvent(var2.chromosome(true), var2.position(true), var1.position(false),
+                var2.typeStr(), var1.typeStr(), var2.dbId(), var1.dbId()));
 
         lohEvent.addHomLossEvents(homLossData);
 
@@ -248,9 +298,49 @@ public class MergeRuleTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(2, tester.Analyser.getClusters().size());
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
+        assertTrue(cluster != null);
+        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
 
-        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var3)));
+        // again but with more SVs involved
+        tester.clearClustersAndSVs();
+
+        var1 = createDel("1", "1", 10000, 30000);
+        var2 = createDel("2", "1", 40000, 60000);
+        var3 = createBnd("3", "1", 20000, 1, "2", 100, 1);
+        var4 = createBnd("4", "1", 50000, -1, "3", 100, 1);
+
+        lohData.clear();
+
+        lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var2.position(false),
+                var1.typeStr(), var2.typeStr(), 2, 1, 1, 1, 1, 20000, var1.dbId(), var2.dbId());
+
+        lohData.add(lohEvent);
+
+        homLossData.clear();
+
+        homLossData.add(new HomLossEvent(var2.chromosome(true), var3.position(true), var1.position(false),
+                var3.typeStr(), var1.typeStr(), var3.dbId(), var1.dbId()));
+
+        homLossData.add(new HomLossEvent(var2.chromosome(true), var2.position(true), var4.position(true),
+                var2.typeStr(), var4.typeStr(), var2.dbId(), var4.dbId()));
+
+        lohEvent.addHomLossEvents(homLossData);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var3, var4));
+        assertTrue(cluster != null);
+        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+
+
+
     }
 
     @Test

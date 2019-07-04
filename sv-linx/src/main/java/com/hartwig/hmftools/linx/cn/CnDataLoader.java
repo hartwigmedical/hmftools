@@ -113,7 +113,7 @@ public class CnDataLoader
         reaclcAdjustedPloidy(sampleId);
     }
 
-    public void clearState(final String sampleId)
+    public void clearState()
     {
         // shrink the data source to make future look-ups faster
         // and to release references to other SV objects (eg SvBreakend)
@@ -288,7 +288,7 @@ public class CnDataLoader
         return false;
     }
 
-    // private static String SPECIFIC_CHR = "12";
+    // private static String SPECIFIC_CHR = "10";
     private static String SPECIFIC_CHR = "";
     private static int REMOTE_SV_DISTANCE = 1000000;
 
@@ -400,7 +400,7 @@ public class CnDataLoader
                         {
                             // log all relevant data for this completed section
                             lohSVsMatchedCount += processLOHData(sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
-                                    lohSegments, false, null);
+                                    lohSegments, false, lohHomLossEvents);
                             ++lohSectionCount;
                         }
 
@@ -410,7 +410,7 @@ public class CnDataLoader
                     {
                         // rest of arm was lost so no linking SV for LOH section - but still record the event
                         processLOHData(sampleId, chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
-                                lohSegments, true, null);
+                                lohSegments, true, lohHomLossEvents);
                         reset = true;
                     }
                     else if (cnData.CopyNumber < TOTAL_CN_LOSS)
@@ -603,7 +603,8 @@ public class CnDataLoader
                 startSvData != null ? startSvData.id() : CN_DATA_NO_SV,
                 endSvData != null ? endSvData.id() : CN_DATA_NO_SV);
 
-        lohData.addHomLossEvents(lohHomLossEvents);
+        if(lohHomLossEvents != null)
+            lohData.addHomLossEvents(lohHomLossEvents);
 
         mLohEventData.add(lohData);
 

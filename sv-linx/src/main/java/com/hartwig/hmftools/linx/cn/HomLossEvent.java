@@ -54,4 +54,10 @@ public class HomLossEvent
 
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
     public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
+
+    public boolean clustered()
+    {
+        return matchedBothSVs() && mBreakendStart.getCluster() == mBreakendEnd.getCluster();
+    }
+
 }

@@ -259,6 +259,11 @@ public class SvTestHelper
 
     public boolean hasClusterWithSVs(final List<SvVarData> svList)
     {
+        return findClusterWithSVs(svList) != null;
+    }
+
+    public final SvCluster findClusterWithSVs(final List<SvVarData> svList)
+    {
         for(final SvCluster cluster : Analyser.getClusters())
         {
             if(cluster.getSvCount() != svList.size())
@@ -276,10 +281,10 @@ public class SvTestHelper
             }
 
             if(hasAll)
-                return true;
+                return cluster;
         }
 
-        return false;
+        return null;
     }
 
     public void setDefaultPloidyCalcData()

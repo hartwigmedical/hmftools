@@ -175,9 +175,6 @@ public class SvSampleAnalyser {
         // no longer required since list items are purged by their owner
         // mClusteringMethods.clearLOHBreakendData(mSampleId);
 
-        // reduce maps with already processed sample data for the larger data sources
-        mCnDataLoader.clearState(mSampleId);
-
         mSampleId = "";
         mAllVariants.clear();
     }

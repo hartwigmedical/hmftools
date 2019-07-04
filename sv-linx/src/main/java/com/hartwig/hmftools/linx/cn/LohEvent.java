@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.cn;
 
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -84,11 +87,6 @@ public class LohEvent
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
     public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
 
-    public boolean matchesSegment(SegmentSupport segment, boolean isStart)
-    {
-        return isStart ? SegStart.equals(segment.toString()) : SegEnd.equals(segment.toString());
-    }
-
     public void addHomLossEvents(final List<HomLossEvent> events)
     {
         mHomLossEvents.addAll(events);
@@ -103,7 +101,18 @@ public class LohEvent
         return mHomLossEvents.stream().anyMatch(x -> !x.matchedBothSVs() || !x.sameSV());
     }
 
+    public boolean clustered()
+    {
+        return matchedBothSVs() && mBreakendStart.getCluster() == mBreakendEnd.getCluster();
+    }
+
     public boolean isValid() { return mIsValid; }
     public void setIsValid(boolean toggle) { mIsValid = toggle; }
+
+    public boolean wholeArmLoss()
+    {
+        return (SegStart.equals(TELOMERE.toString()) || SegStart.equals(CENTROMERE.toString()))
+            && (SegEnd.equals(TELOMERE.toString()) || SegEnd.equals(CENTROMERE.toString()));
+    }
 
 }
