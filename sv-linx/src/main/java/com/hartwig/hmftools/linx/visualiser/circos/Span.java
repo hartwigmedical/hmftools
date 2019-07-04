@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,7 +44,7 @@ public class Span
             long max =
                     positions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomePosition::position).max().orElse(0);
 
-            result.add(GenomeRegionFactory.create(chromosome, min, max));
+            result.add(GenomeRegions.create(chromosome, min, max));
         }
 
         Collections.sort(result);
@@ -62,7 +62,7 @@ public class Span
             long min = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::start).min().orElse(0);
             long max = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::end).max().orElse(0);
 
-            result.add(GenomeRegionFactory.create(chromosome, min, max));
+            result.add(GenomeRegions.create(chromosome, min, max));
         }
 
         Collections.sort(result);

@@ -14,10 +14,11 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep14;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -35,11 +36,12 @@ class DriverCatalogDAO {
         deleteForSample(sample);
 
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep14 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.GENE,
-                    DRIVERCATALOG.CATEGORY,
                     DRIVERCATALOG.DRIVER,
+                    DRIVERCATALOG.CATEGORY,
+                    DRIVERCATALOG.LIKELIHOODMETHOD,
                     DRIVERCATALOG.DNDSLIKELIHOOD,
                     DRIVERCATALOG.DRIVERLIKELIHOOD,
                     DRIVERCATALOG.MISSENSE,
@@ -47,19 +49,21 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.SPLICE,
                     DRIVERCATALOG.INFRAME,
                     DRIVERCATALOG.FRAMESHIFT,
+                    DRIVERCATALOG.BIALLELIC,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
         //noinspection unchecked
         inserter.values(sample,
                 entry.gene(),
-                entry.category(),
                 entry.driver(),
+                entry.category(),
+                entry.likelihoodMethod(),
                 DatabaseUtil.decimal(entry.dndsLikelihood()),
                 DatabaseUtil.decimal(entry.driverLikelihood()),
                 entry.missense(),
@@ -67,6 +71,7 @@ class DriverCatalogDAO {
                 entry.splice(),
                 entry.inframe(),
                 entry.frameshift(),
+                entry.biallelic(),
                 timestamp);
     }
 
@@ -83,8 +88,9 @@ class DriverCatalogDAO {
         for (Record record : result) {
             final DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
-                    .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
+                    .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
+                    .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
                     .dndsLikelihood(record.getValue(DRIVERCATALOG.DNDSLIKELIHOOD))
                     .missense(record.getValue(DRIVERCATALOG.MISSENSE))
@@ -92,6 +98,7 @@ class DriverCatalogDAO {
                     .splice(record.getValue(DRIVERCATALOG.SPLICE))
                     .inframe(record.getValue(DRIVERCATALOG.INFRAME))
                     .frameshift(record.getValue(DRIVERCATALOG.FRAMESHIFT))
+                    .biallelic(record.getValue(DRIVERCATALOG.BIALLELIC) != 0)
                     .build();
 
             dcList.add(driverCatalog);

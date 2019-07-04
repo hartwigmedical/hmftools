@@ -19,4 +19,16 @@ public interface KbSpecificObject {
     @Nullable
     Oncokb oncoKb();
 
+    @Nullable
+    Jax jax();
+
+    @Nullable
+    JaxTrials jaxTrials();
+
+    @Nullable
+    MolecularMatch molecularMatch();
+
+    @Nullable
+    MolecularMatchTrials molecularMatchTrials();
+
 }

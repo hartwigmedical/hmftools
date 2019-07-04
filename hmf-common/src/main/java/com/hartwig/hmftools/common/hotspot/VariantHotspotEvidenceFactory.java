@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
@@ -309,8 +309,8 @@ public class VariantHotspotEvidenceFactory {
     @NotNull
     private List<GenomeRegion> asRegions(@NotNull final Set<VariantHotspot> allHotspots) {
 
-        final Map<String, GenomeRegionBuilder> builders = Maps.newHashMap();
-        allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegionBuilder(key, DEFAULT_TYPICAL_READ_LENGTH))
+        final Map<String, GenomeRegions> builders = Maps.newHashMap();
+        allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegions(key, DEFAULT_TYPICAL_READ_LENGTH))
                 .addPosition(x.position()));
 
         final List<GenomeRegion> results = Lists.newArrayList();

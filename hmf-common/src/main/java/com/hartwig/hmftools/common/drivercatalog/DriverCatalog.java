@@ -17,6 +17,9 @@ public interface DriverCatalog {
     @NotNull
     DriverType driver();
 
+    @NotNull
+    LikelihoodMethod likelihoodMethod();
+
     double driverLikelihood();
 
     double dndsLikelihood();
@@ -30,5 +33,7 @@ public interface DriverCatalog {
     long inframe();
 
     long frameshift();
+
+    boolean biallelic();
 
 }

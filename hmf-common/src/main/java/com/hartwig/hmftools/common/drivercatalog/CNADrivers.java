@@ -59,7 +59,9 @@ public class CNADrivers {
                         .dndsLikelihood(0)
                         .driverLikelihood(1)
                         .driver(DriverType.AMP)
+                        .likelihoodMethod(LikelihoodMethod.AMP)
                         .category(tsGenes.contains(x) ? DriverCategory.TSG : DriverCategory.ONCO)
+                        .biallelic(false)
                         .build())
                 .collect(Collectors.toList());
     }
@@ -81,7 +83,9 @@ public class CNADrivers {
                         .dndsLikelihood(0)
                         .driverLikelihood(1)
                         .driver(DriverType.DEL)
+                        .likelihoodMethod(LikelihoodMethod.DEL)
                         .category(oncoGenes.contains(x) ? DriverCategory.ONCO : DriverCategory.TSG)
+                        .biallelic(true)
                         .build())
                 .collect(Collectors.toList());
     }

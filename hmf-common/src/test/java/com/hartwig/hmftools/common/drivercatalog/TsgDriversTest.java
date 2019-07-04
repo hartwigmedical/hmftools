@@ -58,7 +58,7 @@ public class TsgDriversTest {
         final Map<VariantType, Long> counts = countMap(5161, 10000);
         final DriverCatalog victim =
                 TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense), counts, counts, counts);
-        assertEquals(DriverType.HOTSPOT, victim.driver());
+        assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(1, victim.dndsLikelihood(), 0.01);
     }
@@ -67,7 +67,7 @@ public class TsgDriversTest {
     public void testBiallelicSecond() {
         final Map<VariantType, Long> counts = countMap(5161, 10000);
         final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(biallelic, missense), counts, counts, counts);
-        assertEquals(DriverType.BIALLELIC, victim.driver());
+        assertEquals(LikelihoodMethod.BIALLELIC, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
     }
@@ -76,7 +76,7 @@ public class TsgDriversTest {
     public void testSingleMissense() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
         final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense), counts, counts, counts);
-        assertEquals(DriverType.DNDS, victim.driver());
+        assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.33, victim.driverLikelihood(), 0.01);
         assertEquals(0.87, victim.dndsLikelihood(), 0.01);
     }
@@ -85,7 +85,7 @@ public class TsgDriversTest {
     public void testMultiMissense() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
         final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, counts);
-        assertEquals(DriverType.DNDS, victim.driver());
+        assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.97, victim.driverLikelihood(), 0.01);
         assertEquals(0.87, victim.dndsLikelihood(), 0.01);
     }
@@ -94,7 +94,7 @@ public class TsgDriversTest {
     public void testSingleNonsense() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
         final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(nonsense), counts, counts, counts);
-        assertEquals(DriverType.DNDS, victim.driver());
+        assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.74, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
     }
@@ -103,7 +103,7 @@ public class TsgDriversTest {
     public void testMixed() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
         final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, nonsense), counts, counts, counts);
-        assertEquals(DriverType.DNDS, victim.driver());
+        assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
     }
@@ -112,7 +112,7 @@ public class TsgDriversTest {
     public void testIndel() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
         final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(indel), counts, counts, counts);
-        assertEquals(DriverType.DNDS, victim.driver());
+        assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(1, victim.dndsLikelihood(), 0.01);
     }

@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -40,9 +40,9 @@ public class GenomePositionSelectorTest {
 
     @Before
     public void setup() {
-        region1 = GenomeRegionFactory.create("1", 200, 300);
-        region2 = GenomeRegionFactory.create("1", 400, 500);
-        region3 = GenomeRegionFactory.create("2", 1, 100);
+        region1 = GenomeRegions.create("1", 200, 300);
+        region2 = GenomeRegions.create("1", 400, 500);
+        region3 = GenomeRegions.create("2", 1, 100);
 
         inRegion1a = GenomePositions.create("1", 200);
         inRegion1b = GenomePositions.create("1", 250);
@@ -126,7 +126,7 @@ public class GenomePositionSelectorTest {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region2, inRegion2);
         assertRegion(listSelector, region3, inRegion3);
-        assertRegion(listSelector, GenomeRegionFactory.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
+        assertRegion(listSelector, GenomeRegions.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
     }
 
     @Test
@@ -135,7 +135,7 @@ public class GenomePositionSelectorTest {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region3, inRegion3);
-        assertRegion(listSelector, GenomeRegionFactory.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
+        assertRegion(listSelector, GenomeRegions.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
     }
 
     @Test

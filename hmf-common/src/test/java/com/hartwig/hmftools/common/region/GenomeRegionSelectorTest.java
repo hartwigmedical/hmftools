@@ -19,11 +19,11 @@ public class GenomeRegionSelectorTest {
     private GenomeRegionSelector<GenomeRegion> standardSelector;
     private GenomeRegionSelector<GenomeRegion> chromosomeSelector;
 
-    private final GenomeRegion region1 = GenomeRegionFactory.create("1", 1, 100);
-    private final GenomeRegion region2 = GenomeRegionFactory.create("1", 101, 200);
-    private final GenomeRegion region3 = GenomeRegionFactory.create("2", 301, 400);
-    private final GenomeRegion region4 = GenomeRegionFactory.create("2", 501, 600);
-    private final GenomeRegion region5 = GenomeRegionFactory.create("3", 601, 700);
+    private final GenomeRegion region1 = GenomeRegions.create("1", 1, 100);
+    private final GenomeRegion region2 = GenomeRegions.create("1", 101, 200);
+    private final GenomeRegion region3 = GenomeRegions.create("2", 301, 400);
+    private final GenomeRegion region4 = GenomeRegions.create("2", 501, 600);
+    private final GenomeRegion region5 = GenomeRegions.create("3", 601, 700);
 
     @Before
     public void setup() {

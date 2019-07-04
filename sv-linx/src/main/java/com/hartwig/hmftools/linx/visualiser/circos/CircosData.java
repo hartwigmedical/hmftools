@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -13,6 +15,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
@@ -24,42 +27,36 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosData
 {
-    @NotNull
+    private final List<Exon> exons;
+    private final List<Link> links;
+    private final List<Gene> genes;
+    private final List<Segment> segments;
+    private final List<GenomeRegion> lineElements;
+    private final List<GenomeRegion> fragileSites;
+    private final List<ProteinDomain> proteinDomains;
+    private final List<CopyNumberAlteration> alterations;
+
     private final List<Link> unadjustedLinks;
-    @NotNull
     private final List<CopyNumberAlteration> unadjustedAlterations;
 
-    @NotNull
-    private final List<Segment> segments;
-    @NotNull
-    private final List<Link> links;
-    @NotNull
-    private final List<CopyNumberAlteration> alterations;
-    @NotNull
-    private final List<Exon> exons;
-    @NotNull
-    private final List<GenomeRegion> fragileSites;
-    @NotNull
-    private final List<GenomeRegion> lineElements;
-    @NotNull
-    private final List<Gene> genes;
-    @NotNull
-    private final List<ProteinDomain> proteinDomains;
-
-    @NotNull
     private final Map<String, Integer> contigLengths;
+
+    private final Set<String> downStreamGenes;
 
     private final int maxTracks;
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
+
 
     public CircosData(boolean scaleExons,
             @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons,
-            @NotNull final List<ProteinDomain> unadjustedProteinDomains)
+            @NotNull final List<ProteinDomain> unadjustedProteinDomains,
+            @NotNull final List<Fusion> fusions)
     {
+        this.downStreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
         final List<GenomeRegion> unadjustedFragileSites =
@@ -105,6 +102,11 @@ public class CircosData
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+    }
+
+    public Set<String> downStreamGenes()
+    {
+        return downStreamGenes;
     }
 
     public boolean displayGenes()
@@ -191,6 +193,10 @@ public class CircosData
     public Map<String, Integer> contigLengths()
     {
         return contigLengths;
+    }
+
+    public int totalContigLength() {
+        return contigLengths().values().stream().mapToInt(x -> x).sum();
     }
 
     @NotNull

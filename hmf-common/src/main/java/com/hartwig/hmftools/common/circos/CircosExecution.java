@@ -43,6 +43,12 @@ public class CircosExecution {
             System.exit(1);
         }
 
+        final File finalFile = new File(outputPath + File.separator + outputFile);
+        if (!finalFile.exists()) {
+            LOGGER.fatal("Failed to create file {}", finalFile.toString());
+            System.exit(1);
+        }
+
         return null;
     }
 

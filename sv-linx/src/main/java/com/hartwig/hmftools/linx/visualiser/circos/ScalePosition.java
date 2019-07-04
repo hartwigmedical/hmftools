@@ -13,13 +13,15 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilderI;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableLink;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
@@ -108,8 +110,20 @@ class ScalePosition
         }).collect(Collectors.toList());
     }
 
+    public List<FusedExon> scaleFusedExon(@NotNull final List<FusedExon> exons)
+    {
+        return exons.stream().map(x ->
+        {
+            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.fusion());
+            return scale(x, y -> ImmutableFusedExon.builder()
+                    .from(y)
+                    .geneStart(positionMap.get(y.geneStart()))
+                    .geneEnd(positionMap.get(y.geneEnd())), positionMap);
+        }).collect(Collectors.toList());
+    }
+
     @NotNull
-    private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilderI<T>> builderFunction)
+    private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
         final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
         assert (positionMap != null && !positionMap.isEmpty());
@@ -186,7 +200,7 @@ class ScalePosition
     @NotNull
     private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final Map<Long, Integer> positionMap)
     {
-        return GenomeRegionFactory.create(region.chromosome(), positionMap.get(region.start()), positionMap.get(region.end()));
+        return GenomeRegions.create(region.chromosome(), positionMap.get(region.start()), positionMap.get(region.end()));
     }
 
     @VisibleForTesting
@@ -228,13 +242,13 @@ class ScalePosition
     }
 
     @NotNull
-    private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilderI<T>> builderFunction)
+    private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
         return inputs.stream().map(x -> scale(x, builderFunction, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
-    private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilderI<T>> builderFunction,
+    private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilder<T>> builderFunction,
             @NotNull final Map<Long, Integer> positionMap)
     {
         return builderFunction.apply(victim)

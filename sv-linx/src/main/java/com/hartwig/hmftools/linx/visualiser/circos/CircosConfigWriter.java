@@ -69,7 +69,7 @@ public class CircosConfigWriter
             throws IOException
     {
         int chromosomeCount = circosData.contigLengths().size();
-        int totalContigLength = circosData.contigLengths().values().stream().mapToInt(x -> x).sum();
+        int totalContigLength = circosData.totalContigLength();
 
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.maxCopyNumber() - 2)));
         double cnaMiddleRadius = CNA_INNER_RADIUS + 2 * (CNA_OUTER_RADIUS - CNA_INNER_RADIUS) / (cnaMaxTracks + 2);

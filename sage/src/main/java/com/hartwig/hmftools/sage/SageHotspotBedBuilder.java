@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
@@ -68,7 +68,7 @@ public class SageHotspotBedBuilder {
         LOGGER.info("Merging oncogene coding regions with known hotspot locations");
         final List<String> bedResult = Lists.newArrayList();
         for (HumanChromosome chromosome : HumanChromosome.values()) {
-            final GenomeRegionBuilder builder = new GenomeRegionBuilder(chromosome.toString(), 1);
+            final GenomeRegions builder = new GenomeRegions(chromosome.toString(), 1);
 
             final List<HmfTranscriptRegion> chromosomeRegions =
                     geneRegions.containsKey(chromosome) ? geneRegions.get(chromosome) : emptyList();
@@ -89,7 +89,7 @@ public class SageHotspotBedBuilder {
     }
 
     @NotNull
-    private static GenomeRegionBuilder addCodingRegions(@NotNull final GenomeRegionBuilder builder, @NotNull final HmfTranscriptRegion gene) {
+    private static GenomeRegions addCodingRegions(@NotNull final GenomeRegions builder, @NotNull final HmfTranscriptRegion gene) {
         for (HmfExonRegion exon : gene.exome()) {
             for (long position = exon.start(); position <= exon.end(); position++) {
                 if (position >= gene.codingStart() && position <= gene.codingEnd()) {
@@ -102,7 +102,7 @@ public class SageHotspotBedBuilder {
     }
 
     @NotNull
-    static GenomeRegionBuilder addVariantHotspot(@NotNull final GenomeRegionBuilder builder, @NotNull final VariantHotspot hotspot) {
+    static GenomeRegions addVariantHotspot(@NotNull final GenomeRegions builder, @NotNull final VariantHotspot hotspot) {
         for (int i = 0; i < Math.min(hotspot.ref().length(), hotspot.alt().length()); i++) {
             builder.addPosition(hotspot.position() + i);
         }

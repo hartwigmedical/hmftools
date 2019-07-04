@@ -1,4 +1,3 @@
-
 ALTER TABLE structuralVariant
     ADD COLUMN svId INT NOT NULL AFTER modified,
     CHANGE adjustedStartAF adjustedAFStart DOUBLE PRECISION,
@@ -82,7 +81,6 @@ CREATE TABLE svLink
     INDEX(clusterId)
 );
 
-
 RENAME TABLE structuralVariantBreakend TO svBreakend;
 
 ALTER TABLE svBreakend
@@ -120,6 +118,7 @@ ALTER TABLE svFusion
     ADD domainsLost VARCHAR(255),
     ADD skippedExons INT;
 
+DROP TABLE structuralVariantDisruption;
 
 CREATE TABLE viralInsertion
 (   id int NOT NULL AUTO_INCREMENT,
@@ -132,5 +131,3 @@ CREATE TABLE viralInsertion
     INDEX(sampleId),
     INDEX(svId)
 );
-
-

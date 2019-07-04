@@ -66,6 +66,7 @@ show_tick_labels    = no
             <rule>
                 condition = true
                 color = white
+                fill_color = white
             </rule>
         </rules>
 
@@ -77,6 +78,8 @@ show_tick_labels    = no
         file       = SUBSTITUTE_SAMPLE.protein_domain.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
+        color      = black
+        stroke_thickness = 1
         z = 2
     </highlight>
 

@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
@@ -50,7 +50,7 @@ public class FragileSiteAnnotator
                 if(items.length < CSV_REQUIRED_FIELDS)
                     continue;
 
-                final GenomeRegion genomeRegion = GenomeRegionFactory.create(items[0], Long.parseLong(items[1]), Long.parseLong(items[2]));
+                final GenomeRegion genomeRegion = GenomeRegions.create(items[0], Long.parseLong(items[1]), Long.parseLong(items[2]));
                 mFragileSites.add(genomeRegion);
             }
 

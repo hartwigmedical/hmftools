@@ -77,6 +77,7 @@ public final class TsgDrivers {
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(likelihood.gene())
+                .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
                 .dndsLikelihood(maxDndsLikelihood)
@@ -85,14 +86,15 @@ public final class TsgDrivers {
                 .splice(spliceVariants)
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
-                .driver(DriverType.DNDS);
+                .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
+                .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
-            return builder.driver(DriverType.HOTSPOT).build();
+            return builder.likelihoodMethod(LikelihoodMethod.HOTSPOT).build();
         }
 
         if (geneVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x))) {
-            return builder.driver(DriverType.BIALLELIC).build();
+            return builder.likelihoodMethod(LikelihoodMethod.BIALLELIC).build();
         }
 
         final DndsDriverImpactLikelihood firstImpactLikelihood = impactLikelihood(likelihood, geneVariants.get(0));

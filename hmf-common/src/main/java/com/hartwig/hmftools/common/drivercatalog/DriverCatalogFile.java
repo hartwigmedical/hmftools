@@ -53,8 +53,9 @@ public class DriverCatalogFile {
     @NotNull
     private static String header() {
         return new StringJoiner(DELIMITER, "", "").add("gene")
-                .add("category")
                 .add("driver")
+                .add("category")
+                .add("likelihoodMethod")
                 .add("driverLikelihood")
                 .add("dndsLikelihood")
                 .add("missense")
@@ -62,14 +63,16 @@ public class DriverCatalogFile {
                 .add("splice")
                 .add("inframe")
                 .add("frameshift")
+                .add("biallelic")
                 .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final DriverCatalog ratio) {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.gene()))
-                .add(String.valueOf(ratio.category()))
                 .add(String.valueOf(ratio.driver()))
+                .add(String.valueOf(ratio.category()))
+                .add(String.valueOf(ratio.likelihoodMethod()))
                 .add(FORMAT.format(ratio.driverLikelihood()))
                 .add(FORMAT.format(ratio.dndsLikelihood()))
                 .add(String.valueOf(ratio.missense()))
@@ -77,6 +80,7 @@ public class DriverCatalogFile {
                 .add(String.valueOf(ratio.splice()))
                 .add(String.valueOf(ratio.inframe()))
                 .add(String.valueOf(ratio.frameshift()))
+                .add(String.valueOf(ratio.biallelic()))
                 .toString();
     }
 
@@ -85,15 +89,17 @@ public class DriverCatalogFile {
         String[] values = line.split(DELIMITER);
         ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(values[0])
-                .category(DriverCategory.valueOf(values[1]))
-                .driver(DriverType.valueOf(values[2]))
-                .driverLikelihood(Double.valueOf(values[3]))
-                .dndsLikelihood(Double.valueOf(values[4]))
-                .missense(Long.valueOf(values[5]))
-                .nonsense(Long.valueOf(values[6]))
-                .splice(Long.valueOf(values[7]))
-                .inframe(Long.valueOf(values[8]))
-                .frameshift(Long.valueOf(values[9]));
+                .driver(DriverType.valueOf(values[1]))
+                .category(DriverCategory.valueOf(values[2]))
+                .likelihoodMethod(LikelihoodMethod.valueOf(values[3]))
+                .driverLikelihood(Double.valueOf(values[4]))
+                .dndsLikelihood(Double.valueOf(values[5]))
+                .missense(Long.valueOf(values[6]))
+                .nonsense(Long.valueOf(values[7]))
+                .splice(Long.valueOf(values[8]))
+                .inframe(Long.valueOf(values[9]))
+                .frameshift(Long.valueOf(values[10]))
+                .biallelic(Boolean.valueOf(values[11]));
 
         return builder.build();
     }

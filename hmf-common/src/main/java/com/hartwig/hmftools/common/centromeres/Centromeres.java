@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionFactory;
+import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +45,7 @@ public class Centromeres {
 
     private static void addCentromere(@NotNull final Map<String, GenomeRegion> map, @NotNull final String chromosome, final long start,
             final long end) {
-        map.put(chromosome, GenomeRegionFactory.create(chromosome, start, end));
+        map.put(chromosome, GenomeRegions.create(chromosome, start, end));
     }
 
 }

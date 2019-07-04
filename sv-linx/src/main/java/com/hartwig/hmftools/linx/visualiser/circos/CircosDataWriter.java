@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -30,8 +31,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
+    private static final String SINGLE_BLUE = "(107,174,214)";
+    private static final String SINGLE_RED = "(214,144,107)";
+
 
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
+    private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
     private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
@@ -54,6 +59,7 @@ public class CircosDataWriter
     public void write(@NotNull final CircosData data) throws IOException
     {
         final Map<String, Integer> contigLengths = data.contigLengths();
+        int totalContigLength = data.totalContigLength();
 
         final List<Segment> segments = data.segments();
         final List<Link> links = data.links();
@@ -66,13 +72,13 @@ public class CircosDataWriter
         Files.write(new File(proteinDomainPath).toPath(), proteinDomain(data.proteinDomains()));
 
         final String exonPath = filePrefix + ".exon.circos";
-        Files.write(new File(exonPath).toPath(), exons(exons));
+        Files.write(new File(exonPath).toPath(), exons(data.downStreamGenes(), exons));
 
         final String exonRankPath = filePrefix + ".exon.rank.circos";
-        Files.write(new File(exonRankPath).toPath(), exonRank(exons));
+        Files.write(new File(exonRankPath).toPath(), exonRank(totalContigLength, exons));
 
         final String genePath = filePrefix + ".gene.circos";
-        Files.write(new File(genePath).toPath(), genes(data.genes()));
+        Files.write(new File(genePath).toPath(), genes(data.downStreamGenes(), data.genes()));
 
         final String geneNamePath = filePrefix + ".gene.name.circos";
         Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
@@ -120,7 +126,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> genes(@NotNull final List<Gene> genes)
+    private List<String> genes(@NotNull final Set<String> downGenes, @NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
         for (final Gene gene : genes)
@@ -129,6 +135,7 @@ public class CircosDataWriter
                     .add(String.valueOf(gene.start()))
                     .add(String.valueOf(gene.end()))
                     .add(String.valueOf(1))
+                    .add("fill_color=" + (downGenes.contains(gene.name()) ? SINGLE_RED : SINGLE_BLUE))
                     .toString();
             result.add(exonString);
 
@@ -140,14 +147,19 @@ public class CircosDataWriter
     @NotNull
     private List<String> proteinDomain(@NotNull final List<ProteinDomain> proteinDomains)
     {
+        final ProteinDomainColors domainColors =
+                new ProteinDomainColors(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
+
         final List<String> result = Lists.newArrayList();
         for (final ProteinDomain proteinDomain : proteinDomains)
         {
+            final String color = domainColors.rgb(proteinDomain.name());
+
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(proteinDomain.chromosome()))
                     .add(String.valueOf(proteinDomain.start()))
                     .add(String.valueOf(proteinDomain.end()))
                     .add(String.valueOf(1))
-                    .add("fill_color=red_a1,color=red_a1,name=" + proteinDomain.name().replace(' ','.'))
+                    .add("fill_color=" + color + ",name=" + proteinDomain.name().replace(' ', '.'))
                     .toString();
             result.add(exonString);
 
@@ -157,20 +169,23 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exonRank(@NotNull final List<Exon> exons)
+    private List<String> exonRank(int totalContigLength, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        for (final Exon exon : exons)
+        if (totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
         {
-            long position = exon.start() + (exon.end() - exon.start()) / 2;
+            for (final Exon exon : exons)
+            {
+                long position = exon.start() + (exon.end() - exon.start()) / 2;
 
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
-                    .add(String.valueOf(position))
-                    .add(String.valueOf(position))
-                    .add(String.valueOf(exon.rank()))
-                    .toString();
-            result.add(exonString);
+                final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
+                        .add(String.valueOf(position))
+                        .add(String.valueOf(position))
+                        .add(String.valueOf(exon.rank()))
+                        .toString();
+                result.add(exonString);
 
+            }
         }
 
         return result;
@@ -203,7 +218,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exons(@NotNull final List<Exon> exons)
+    private List<String> exons(@NotNull final Set<String> downGenes, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
         for (final Exon exon : exons)
@@ -212,7 +227,7 @@ public class CircosDataWriter
                     .add(String.valueOf(exon.start()))
                     .add(String.valueOf(exon.end()))
                     .add(String.valueOf(1))
-                    .add("gene=" + exon.gene() + ",rank=" + exon.rank())
+                    .add("fill_color=" + (downGenes.contains(exon.gene()) ? SINGLE_RED : SINGLE_BLUE))
                     .toString();
             result.add(exonString);
         }

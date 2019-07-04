@@ -3,7 +3,10 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.linx.visualiser.data.Genes.genes;
+
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -22,13 +25,18 @@ import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
+import com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter;
+import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Fusion;
+import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.Segments;
 
@@ -151,7 +159,8 @@ public class SvVisualiser implements AutoCloseable
         final List<ProteinDomain> chromosomeProteinDomains =
                 config.proteinDomain().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains);
+        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains, Collections
+                .emptyList());
     }
 
     @Nullable
@@ -184,20 +193,30 @@ public class SvVisualiser implements AutoCloseable
         final String resolvedTypeString = clusterLinks.stream().findFirst().map(Link::resolvedType).map(Enum::toString).orElse("Unknown");
 
         final String sample =
-                config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedTypeString + ".sv" + clusterLinks.size() + (config
-                        .debug() ? ".debug" : "");
+                config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedTypeString + ".sv" + clusterLinks.size() + (
+                        config
+                                .debug()
+                                ? ".debug"
+                                : "");
 
         final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
         final List<ProteinDomain> clusterProteinDomains =
                 config.proteinDomain().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains);
+        final List<Fusion> clusterFusions = config.fusions().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions);
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
-            @NotNull final List<Link> links, @NotNull final List<Segment> filteredSegments, @NotNull final List<Exon> filteredExons,
-            @NotNull final List<ProteinDomain> filteredProteinDomains)
+            @NotNull final List<Link> links,
+            @NotNull final List<Segment> filteredSegments,
+            @NotNull final List<Exon> filteredExons,
+            @NotNull final List<ProteinDomain> filteredProteinDomains,
+            @NotNull final List<Fusion> filteredFusions)
             throws IOException, InterruptedException
     {
+
+        final List<ProteinDomain> proteinDomainsInFusionGenes =
+                fusionProteinDomains(filteredExons, filteredFusions, filteredProteinDomains);
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
         positionsToCover.addAll(Links.allPositions(links));
@@ -214,17 +233,41 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData = new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains);
+        final CircosData circosData =
+                new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, proteinDomainsInFusionGenes, filteredFusions);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData);
         confWrite.writeConfig();
 
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), confWrite).write(circosData);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
+        final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
                 config.outputPlotPath(),
                 outputPlotName,
                 config.outputConfPath());
+
+        final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, proteinDomainsInFusionGenes);
+        if (!fusionDataWriter.finalExons().isEmpty())
+        {
+            fusionDataWriter.write(sample, config.outputConfPath());
+            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR();
+        }
+
+        return circosResult;
+    }
+
+    @NotNull
+    private static List<ProteinDomain> fusionProteinDomains(@NotNull final List<Exon> filteredExons,
+            @NotNull final List<Fusion> filteredFusions, @NotNull final List<ProteinDomain> filteredProteinDomains)
+    {
+        final Set<String> fusionGeneNames = Sets.newHashSet();
+        filteredFusions.forEach(x ->
+        {
+            fusionGeneNames.add(x.geneUp());
+            fusionGeneNames.add(x.geneDown());
+        });
+        final List<Gene> fusionGenes = genes(filteredExons.stream().filter(x -> fusionGeneNames.contains(x.gene())).collect(toList()));
+        return ProteinDomains.proteinDomainsInGenes(fusionGenes, filteredProteinDomains);
     }
 
     @NotNull

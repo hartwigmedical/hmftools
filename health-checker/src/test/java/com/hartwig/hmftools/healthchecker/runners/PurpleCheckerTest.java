@@ -12,6 +12,7 @@ import com.hartwig.hmftools.healthchecker.result.QCValueType;
 import org.junit.Test;
 
 public class PurpleCheckerTest {
+
     private static final String PURPLE_DIRECTORY = Resources.getResource("purple").getPath();
 
     @Test
