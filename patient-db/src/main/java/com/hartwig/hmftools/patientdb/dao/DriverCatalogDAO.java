@@ -12,12 +12,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep13;
+import org.jooq.InsertValuesStep14;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -35,9 +36,10 @@ class DriverCatalogDAO {
         deleteForSample(sample);
 
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep13 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep14 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.GENE,
+                    DRIVERCATALOG.DRIVER,
                     DRIVERCATALOG.CATEGORY,
                     DRIVERCATALOG.LIKELIHOODMETHOD,
                     DRIVERCATALOG.DNDSLIKELIHOOD,
@@ -54,11 +56,12 @@ class DriverCatalogDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep13 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
         //noinspection unchecked
         inserter.values(sample,
                 entry.gene(),
+                entry.driver(),
                 entry.category(),
                 entry.likelihoodMethod(),
                 DatabaseUtil.decimal(entry.dndsLikelihood()),
@@ -85,6 +88,7 @@ class DriverCatalogDAO {
         for (Record record : result) {
             final DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
+                    .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))

@@ -77,6 +77,7 @@ public final class TsgDrivers {
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(likelihood.gene())
+                .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
                 .dndsLikelihood(maxDndsLikelihood)

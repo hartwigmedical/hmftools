@@ -15,6 +15,9 @@ public interface DriverCatalog {
     DriverCategory category();
 
     @NotNull
+    DriverType driver();
+
+    @NotNull
     LikelihoodMethod likelihoodMethod();
 
     double driverLikelihood();

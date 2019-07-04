@@ -72,6 +72,7 @@ public final class OncoDrivers {
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(gene)
+                .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
                 .dndsLikelihood(missenseVariants > 0 ? missenseLikelihood.dndsLikelihood() : 0)

@@ -9,6 +9,8 @@ import org.junit.Ignore;
 @Ignore
 public class FusedExonsTest
 {
+    // TODO: DELETE
+
     @Ignore
     public void testStuff() throws IOException
     {
@@ -26,7 +28,7 @@ public class FusedExonsTest
 
         final List<ProteinDomain> domains = ProteinDomains.readProteinDomains("/Users/jon/hmf/analysis/CPCT02390005T/CPCT02390005T.linx.vis_protein_domain.tsv");
 
-        List<ProteinDomain> fusedDomain = ProteinDomains.fusedProteinDomains(fusions.get(0), fused, domains);
+        List<ProteinDomain> fusedDomain = ProteinDomains.proteinDomainsInFusion(fusions.get(0), fused, domains);
         for (ProteinDomain proteinDomain : fusedDomain)
         {
             System.out.println(proteinDomain);
