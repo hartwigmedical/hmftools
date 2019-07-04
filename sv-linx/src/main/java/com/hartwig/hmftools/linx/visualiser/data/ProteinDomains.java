@@ -22,14 +22,18 @@ public class ProteinDomains
 
     private static final String DELIMITER = "\t";
 
-    public static List<ProteinDomain> proteinDomainsInGenes(@NotNull final List<Gene> genes, @NotNull final List<ProteinDomain> proteinDomains)
+    public static List<ProteinDomain> proteinDomainsInGenes(@NotNull final List<Gene> genes,
+            @NotNull final List<ProteinDomain> proteinDomains)
     {
         final Predicate<ProteinDomain> matchesGene = domain -> genes.stream().anyMatch(gene -> gene.overlaps(domain));
         return proteinDomains.stream().filter(matchesGene).collect(Collectors.toList());
     }
 
+
+
     @NotNull
-    public static List<ProteinDomain> proteinDomainsInFusion(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons, @NotNull final List<ProteinDomain> proteinDomains)
+    public static List<ProteinDomain> proteinDomainsInFusion(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons,
+            @NotNull final List<ProteinDomain> proteinDomains)
     {
         final List<ProteinDomain> result = Lists.newArrayList();
         if (fusedExons.isEmpty())
@@ -37,19 +41,11 @@ public class ProteinDomains
             return result;
         }
 
-        final FusedExon firstUpGene = fusedExons.get(0);
-        final long upGeneStart = firstUpGene.unadjustedGeneStart();
-        final long upGeneEnd = fusion.positionUp();
+        final FusedExon firstUpExon = fusedExons.get(0);
+        final GenomeRegion upGeneRegion = upGeneRegion(fusion, firstUpExon);
 
-        final FusedExon firstDownExon = fusedExons.stream().filter(x -> x.gene().equals(fusion.geneDown())).findFirst().get();
         final FusedExon finalDownExon = fusedExons.get(fusedExons.size() - 1);
-        final long downGeneStart = fusion.positionDown();
-        final long downGeneEnd = downGeneStart + finalDownExon.end() - firstDownExon.start();
-
-        final GenomeRegion upGeneRegion =
-                GenomeRegions.create(fusion.chromosomeUp(), Math.min(upGeneStart, upGeneEnd), Math.max(upGeneStart, upGeneEnd));
-        final GenomeRegion downGeneRegion =
-                GenomeRegions.create(fusion.chromosomeDown(), Math.min(downGeneStart, downGeneEnd), Math.max(downGeneStart, downGeneEnd));
+        final GenomeRegion downGeneRegion = downGeneRegion(fusion, finalDownExon);
 
         final long additionalDownOffset = finalDownExon.geneStart();
 
@@ -57,13 +53,13 @@ public class ProteinDomains
         {
             if (unadjustedDomain.overlaps(upGeneRegion))
             {
-                long unconstrainedStart = start(fusion.strandUp(), upGeneStart, unadjustedDomain);
-                long unconstrainedEnd = end(fusion.strandUp(), upGeneStart, unadjustedDomain);
+                long unconstrainedStart = start(fusion.strandUp(), upGeneRegion.start(), unadjustedDomain);
+                long unconstrainedEnd = end(fusion.strandUp(), upGeneRegion.start(), unadjustedDomain);
 
                 ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
-                        .start(Math.max(unconstrainedStart, firstUpGene.geneStart()))
-                        .end(Math.min(unconstrainedEnd, firstUpGene.geneEnd()))
+                        .start(Math.max(unconstrainedStart, firstUpExon.geneStart()))
+                        .end(Math.min(unconstrainedEnd, firstUpExon.geneEnd()))
                         .build();
 
                 result.add(domain);
@@ -71,8 +67,8 @@ public class ProteinDomains
 
             if (unadjustedDomain.overlaps(downGeneRegion))
             {
-                long unconstrainedStart = start(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset;
-                long unconstrainedEnd = end(fusion.strandDown(), downGeneStart, unadjustedDomain) + additionalDownOffset;
+                long unconstrainedStart = start(fusion.strandDown(), downGeneRegion.start(), unadjustedDomain) + additionalDownOffset;
+                long unconstrainedEnd = end(fusion.strandDown(), downGeneRegion.start(), unadjustedDomain) + additionalDownOffset;
 
                 ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
@@ -86,6 +82,25 @@ public class ProteinDomains
         }
 
         return result;
+    }
+
+    @NotNull
+    private static GenomeRegion upGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon firstUpGene)
+    {
+        final long upGeneStart = Math.min(fusion.positionUp(), firstUpGene.unadjustedGeneStart());
+        final long upGeneEnd = Math.max(fusion.positionUp(), firstUpGene.unadjustedGeneStart());
+
+        return GenomeRegions.create(fusion.chromosomeUp(), upGeneStart, upGeneEnd);
+    }
+
+    @NotNull
+    private static GenomeRegion downGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon finalDownExon)
+    {
+        final long downGeneLength = finalDownExon.geneEnd() - finalDownExon.geneStart();
+        final long downGeneStart = fusion.strandDown() < 0 ? fusion.positionDown() - downGeneLength : fusion.positionDown();
+        final long downGeneEnd = fusion.strandDown() < 0 ? fusion.positionDown() : fusion.positionDown() + downGeneLength;
+
+        return GenomeRegions.create(fusion.chromosomeDown(), downGeneStart, downGeneEnd);
     }
 
     @NotNull
