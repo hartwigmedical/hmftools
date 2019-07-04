@@ -23,7 +23,8 @@ import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
-import com.hartwig.hmftools.linx.visualiser.circos.FusionsDataWriter;
+import com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter;
+import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
@@ -230,13 +231,20 @@ public class SvVisualiser implements AutoCloseable
         confWrite.writeConfig();
 
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), confWrite).write(circosData);
-        new FusionsDataWriter(sample, config.outputConfPath()).write(filteredFusions, filteredExons, filteredProteinDomains);
 
         final String outputPlotName = sample + ".png";
-        return new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
+        final Object circosResult =  new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
                 config.outputPlotPath(),
                 outputPlotName,
                 config.outputConfPath());
+
+        final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
+        if (!fusionDataWriter.finalExons().isEmpty()) {
+            fusionDataWriter.write(sample, config.outputConfPath());
+            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR();
+        }
+
+        return circosResult;
     }
 
     @NotNull

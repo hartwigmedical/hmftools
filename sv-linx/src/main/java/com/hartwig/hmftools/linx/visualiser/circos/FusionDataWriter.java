@@ -17,20 +17,18 @@ import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FusionsDataWriter
+public class FusionDataWriter
 {
-    private final String filePrefix;
+    private final List<FusedExon> finalExons;
+    private final List<ProteinDomain> finalProteinDomains;
+    private final ProteinDomainColors domainColors;
 
-    public FusionsDataWriter(@NotNull final String sample, @NotNull final String outputDir)
+    public FusionDataWriter(@NotNull final List<Fusion> fusions,
+            @NotNull final List<Exon> exons,
+            @NotNull final List<ProteinDomain> proteinDomains)
     {
-        this.filePrefix = outputDir + File.separator + sample;
-    }
-
-    public void write(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons,
-            @NotNull final List<ProteinDomain> proteinDomains) throws IOException
-    {
-        final List<FusedExon> finalExons = Lists.newArrayList();
-        final List<ProteinDomain> finalProteinDomains = Lists.newArrayList();
+        this.finalExons = Lists.newArrayList();
+        this.finalProteinDomains = Lists.newArrayList();
 
         for (Fusion fusion : fusions)
         {
@@ -58,11 +56,23 @@ public class FusionsDataWriter
 
         }
 
+        domainColors =
+                new ProteinDomainColors(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
+    }
+
+    public void write(@NotNull final String sample, @NotNull final String outputDir)
+            throws IOException
+    {
+        String filePrefix = outputDir + File.separator + sample;
+
         FusedExons.write(filePrefix + ".fusions.tsv", finalExons);
 
-        final ProteinDomainColors domainColors =
-                new ProteinDomainColors(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
         ProteinDomains.write(filePrefix + ".protein_domains.tsv", domainColors, finalProteinDomains);
+    }
+
+    public List<FusedExon> finalExons()
+    {
+        return finalExons;
     }
 
 }
