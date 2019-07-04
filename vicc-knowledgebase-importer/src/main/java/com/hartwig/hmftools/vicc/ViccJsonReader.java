@@ -790,7 +790,7 @@ public final class ViccJsonReader {
                 .includeCondition0(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeCondition0")))
                 .includeCondition1(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeCondition1")))
                 .uniqueKey(objectMolecularMatch.getAsJsonPrimitive("uniqueKey").getAsString())
-                .civic(objectMolecularMatch.getAsJsonPrimitive("civic").getAsString())
+                .civicValue(objectMolecularMatch.getAsJsonPrimitive("civic").getAsString())
                 .hashKey(objectMolecularMatch.getAsJsonPrimitive("hashKey").getAsString())
                 .regulatoryBodyApproved(objectMolecularMatch.getAsJsonPrimitive("regulatoryBodyApproved").getAsString())
                 .version(objectMolecularMatch.getAsJsonPrimitive("version").getAsString())

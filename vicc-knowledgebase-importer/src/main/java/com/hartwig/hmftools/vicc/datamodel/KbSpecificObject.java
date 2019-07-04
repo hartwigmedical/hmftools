@@ -31,4 +31,7 @@ public interface KbSpecificObject {
     @Nullable
     MolecularMatchTrials molecularMatchTrials();
 
+    @Nullable
+    Civic civic();
+
 }
