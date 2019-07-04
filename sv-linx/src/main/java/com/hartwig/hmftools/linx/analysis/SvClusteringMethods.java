@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -71,6 +72,7 @@ public class SvClusteringMethods {
 
     public static String CLUSTER_REASON_PROXIMITY = "Prox";
     public static String CLUSTER_REASON_LOH = "LOH";
+    public static String CLUSTER_REASON_HOM_LOSS = "HomLoss";
     public static String CLUSTER_REASON_COMMON_ARMS = "ComArm";
     public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
@@ -485,39 +487,158 @@ public class SvClusteringMethods {
 
     private void mergeOnLOHEvents(List<SvCluster> clusters)
     {
-        if(mLohEventList.isEmpty() && mHomLossList.isEmpty())
+        if (mLohEventList.isEmpty() && mHomLossList.isEmpty())
             return;
 
-        for(final LohEvent lohEvent : mLohEventList)
+        for (final LohEvent lohEvent : mLohEventList)
         {
-            if(!lohEvent.IsValid)
+            if (!lohEvent.matchedBothSVs() || lohEvent.hasIncompleteHomLossEvents())
                 continue; // cannot be used for clustering
 
-            if(lohEvent.getBreakend(true) == null || lohEvent.getBreakend(false) == null)
+            SvBreakend lohBeStart = lohEvent.getBreakend(true);
+            SvCluster lohClusterStart = lohBeStart.getCluster();
+            SvVarData lohSvStart = lohBeStart.getSV();
+            SvBreakend lohBeEnd = lohEvent.getBreakend(false);
+            SvCluster lohClusterEnd = lohBeEnd.getCluster();
+            SvVarData lohSvEnd = lohBeEnd.getSV();
+
+            if (lohClusterStart != lohClusterEnd)
+            {
+                if (!lohClusterStart.hasLinkingLineElements() && !lohClusterEnd.hasLinkingLineElements())
+                {
+                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event: SVs({} and {}) length({})",
+                            lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),
+                            lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
+
+                    addClusterReasons(lohSvStart, lohSvEnd, CLUSTER_REASON_LOH);
+                    lohClusterStart.addClusterReason(CLUSTER_REASON_LOH);
+
+                    lohClusterStart.mergeOtherCluster(lohClusterEnd);
+                    clusters.remove(lohClusterEnd);
+                }
+            }
+        }
+
+        // search for LOH events which aren't clustered but which contain a hom-loss event which is
+        // (other than simple DELs) which already will have been handled
+        for (final LohEvent lohEvent : mLohEventList)
+        {
+            if (!lohEvent.matchedBothSVs() || !lohEvent.hasIncompleteHomLossEvents())
                 continue;
 
-            SvBreakend breakendStart = lohEvent.getBreakend(true);
-            SvCluster lohClusterStart = breakendStart.getCluster();
-            SvVarData lohSvStart = breakendStart.getSV();
-            SvBreakend breakendEnd = lohEvent.getBreakend(false);
-            SvCluster lohClusterEnd = breakendEnd.getCluster();
-            SvVarData lohSvEnd = breakendEnd.getSV();
+            // already clustered - search for a hom-loss event contained within this LOH that isn't clustered
+            if(lohEvent.getBreakend(true).getCluster() == lohEvent.getBreakend(false).getCluster())
+            {
+                List<HomLossEvent> unclusteredHomLossEvents = mHomLossList.stream()
+                        .filter(HomLossEvent::matchedBothSVs)
+                        .filter(x -> !x.sameSV())
+                        .filter(x -> x.Chromosome.equals(lohEvent.Chromosome))
+                        .filter(x -> x.PosStart >= lohEvent.PosStart)
+                        .filter(x -> x.PosEnd >= lohEvent.PosEnd)
+                        .filter(x -> x.getBreakend(true).getCluster() != x.getBreakend(false).getCluster())
+                        .collect(Collectors.toList());
 
-            if(lohClusterStart == lohClusterEnd)
+                if(unclusteredHomLossEvents.size() == 1)
+                {
+                    final HomLossEvent homLoss = unclusteredHomLossEvents.get(0);
+                    SvBreakend homLossBeStart = homLoss.getBreakend(true);
+                    SvBreakend homLossBeEnd = homLoss.getBreakend(false);
+
+                    SvCluster cluster = homLossBeStart.getCluster();
+                    SvCluster otherCluster = homLossBeEnd.getCluster();
+
+                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on hom-loss({}: {} -> {}) inside LOH event({} -> {})",
+                            cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount(),
+                            homLoss.Chromosome, homLoss.PosStart, homLoss.PosEnd, lohEvent.PosStart, lohEvent.PosEnd);
+
+                    addClusterReasons(homLossBeStart.getSV(), homLossBeEnd.getSV(), CLUSTER_REASON_HOM_LOSS);
+                    cluster.addClusterReason(CLUSTER_REASON_HOM_LOSS);
+
+                    cluster.mergeOtherCluster(otherCluster);
+                    clusters.remove(otherCluster);
+                }
+
                 continue;
+            }
 
-            if(lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
+            if (lohEvent.getBreakend(true).getCluster().hasLinkingLineElements()
+            || lohEvent.getBreakend(false).getCluster().hasLinkingLineElements())
+            {
                 continue;
+            }
 
-            LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event: SVs({} and {}) length({})",
-                    lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),
-                    lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
+            boolean hasIncompleteHomLossEvent = false;
 
-            addClusterReasons(lohSvStart, lohSvEnd, CLUSTER_REASON_LOH);
-            lohClusterStart.addClusterReason(CLUSTER_REASON_LOH);
+            for(final HomLossEvent homLossEvent : mHomLossList)
+            {
+                if(!homLossEvent.Chromosome.equals(lohEvent.Chromosome))
+                    continue;
 
-            lohClusterStart.mergeOtherCluster(lohClusterEnd);
-            clusters.remove(lohClusterEnd);
+                if(homLossEvent.PosStart > lohEvent.PosEnd || homLossEvent.PosEnd < lohEvent.PosStart)
+                    continue;
+
+                if(!homLossEvent.matchedBothSVs())
+                {
+                    hasIncompleteHomLossEvent = true;
+                    break;
+                }
+
+                if(homLossEvent.sameSV())
+                    continue;
+
+                if(homLossEvent.getBreakend(true).getCluster() == homLossEvent.getBreakend(false).getCluster())
+                    continue;
+            }
+
+            if(!hasIncompleteHomLossEvent)
+            {
+                // all hom-loss events involving more than 1 SV were clustered, so clustered the LOH SVs
+                SvBreakend lohBeStart = lohEvent.getBreakend(true);
+                SvBreakend lohBeEnd = lohEvent.getBreakend(false);
+
+                SvCluster cluster = lohBeStart.getCluster();
+                SvCluster otherCluster = lohBeEnd.getCluster();
+
+                lohEvent.setIsValid(true);
+
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on no unclustered hom-loss events",
+                        cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount());
+
+                addClusterReasons(lohBeStart.getSV(), lohBeEnd.getSV(), CLUSTER_REASON_HOM_LOSS);
+                cluster.addClusterReason(CLUSTER_REASON_HOM_LOSS);
+
+                cluster.mergeOtherCluster(otherCluster);
+                clusters.remove(otherCluster);
+            }
+
+            // search for a hom-loss event contained within this LOH that isn't clustered
+            List<HomLossEvent> unclusteredHomLossEvents = mHomLossList.stream()
+                    .filter(HomLossEvent::matchedBothSVs)
+                    .filter(x -> !x.sameSV())
+                    .filter(x -> x.PosStart >= lohEvent.PosStart)
+                    .filter(x -> x.PosEnd >= lohEvent.PosEnd)
+                    .filter(x -> x.getBreakend(true).getCluster() != x.getBreakend(false).getCluster())
+                    .collect(Collectors.toList());
+
+            if(unclusteredHomLossEvents.size() == 1)
+            {
+                final HomLossEvent homLoss = unclusteredHomLossEvents.get(0);
+                SvBreakend homLossBeStart = homLoss.getBreakend(true);
+                SvBreakend homLossBeEnd = homLoss.getBreakend(false);
+
+                SvCluster cluster = homLossBeStart.getCluster();
+                SvCluster otherCluster = homLossBeEnd.getCluster();
+
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on hom-loss({}: {} -> {}) inside LOH event({} -> {})",
+                        cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount(),
+                        homLoss.Chromosome, homLoss.StartSV, homLoss.EndSV, lohEvent.StartSV, lohEvent.EndSV);
+
+                addClusterReasons(homLossBeStart.getSV(), homLossBeEnd.getSV(), CLUSTER_REASON_HOM_LOSS);
+                cluster.addClusterReason(CLUSTER_REASON_HOM_LOSS);
+
+                cluster.mergeOtherCluster(otherCluster);
+                clusters.remove(otherCluster);
+            }
         }
     }
 

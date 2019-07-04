@@ -168,16 +168,13 @@ public class ChainingActualTest
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
-        List<LohEvent> lohData = Lists.newArrayList();
+        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
 
         lohData.add(new LohEvent( "18", 23601785, 23577410,
                 "BND", "BND", 1, 1, 1, 0, 1, 1,
-                var1.dbId(), var4.dbId(), true));
+                var1.dbId(), var4.dbId()));
 
-        List<HomLossEvent> homLossData = Lists.newArrayList();
-
-        tester.ClusteringMethods.setSampleCnEventData(lohData, homLossData);
-
+        tester.ClusteringMethods.setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();

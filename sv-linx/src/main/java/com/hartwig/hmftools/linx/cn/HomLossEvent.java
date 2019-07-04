@@ -53,5 +53,5 @@ public class HomLossEvent
     public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
 
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
-
+    public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
 }

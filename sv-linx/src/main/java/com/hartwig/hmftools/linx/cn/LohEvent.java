@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.cn;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
@@ -18,8 +21,10 @@ public class LohEvent
     public final long Length;
     public final int StartSV; // the DB SvId
     public final int EndSV;
-    public final boolean IsValid;
 
+    private final List<HomLossEvent> mHomLossEvents;
+
+    private boolean mIsValid;
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
 
@@ -38,8 +43,7 @@ public class LohEvent
             final int segCount,
             final long length,
             final int startSV,
-            final int endSV,
-            boolean isValid)
+            final int endSV)
     {
         Chromosome = chr;
         PosStart = posStart;
@@ -54,10 +58,11 @@ public class LohEvent
         Length = length;
         StartSV = startSV;
         EndSV = endSV;
-        IsValid = isValid;
 
         mBreakendStart = null;
         mBreakendEnd = null;
+        mHomLossEvents = Lists.newArrayList();
+        mIsValid = true;
     }
 
     public void setBreakend(final SvBreakend breakend, boolean isStart)
@@ -77,10 +82,28 @@ public class LohEvent
     public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
 
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
+    public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
 
     public boolean matchesSegment(SegmentSupport segment, boolean isStart)
     {
         return isStart ? SegStart.equals(segment.toString()) : SegEnd.equals(segment.toString());
     }
+
+    public void addHomLossEvents(final List<HomLossEvent> events)
+    {
+        mHomLossEvents.addAll(events);
+
+        mIsValid = !hasIncompleteHomLossEvents();
+    }
+
+    public final List<HomLossEvent> getHomLossEvents() { return mHomLossEvents; }
+
+    public boolean hasIncompleteHomLossEvents()
+    {
+        return mHomLossEvents.stream().anyMatch(x -> !x.matchedBothSVs() || !x.sameSV());
+    }
+
+    public boolean isValid() { return mIsValid; }
+    public void setIsValid(boolean toggle) { mIsValid = toggle; }
 
 }

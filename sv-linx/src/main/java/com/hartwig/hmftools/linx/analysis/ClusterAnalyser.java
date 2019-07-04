@@ -642,7 +642,7 @@ public class ClusterAnalyser {
             {
                 LohEvent lohEvent = lohEvents.get(lohIndex);
 
-                if(!lohEvent.IsValid)
+                if(!lohEvent.isValid())
                 {
                     ++lohIndex;
                     continue;

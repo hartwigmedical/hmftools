@@ -175,7 +175,82 @@ public class MergeRuleTest
 
         assertTrue(inv3.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
         assertTrue(sgl2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
+    }
 
+    @Test
+    public void testLohHomLossEventMerge()
+    {
+        SvTestHelper tester = new SvTestHelper();
+
+        // scenario 1: LOH containing all clustered HOM-loss events should also be clustered
+        SvVarData var1 = createBnd("1", "1", 1000, 1, "2", 100, 1);
+        SvVarData var2 = createBnd("2", "1", 100000, -1, "3", 100, 1);
+
+        SvVarData var3 = createDel("3", "1", 6500, 6600);
+        SvVarData var4 = createBnd("4", "1", 20000, 1, "5", 200, 1);
+        SvVarData var5 = createBnd("5", "1", 22000, -1, "5", 100, -1);
+
+        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
+
+        LohEvent lohEvent = new LohEvent("1", 1000, 100000, "BND", "BND",
+                2, 1, 1, 1, 1, 99000, var1.dbId(), var2.dbId());
+
+        lohData.add(lohEvent);
+
+        List<HomLossEvent> homLossData = tester.CnDataLoader.getHomLossData();
+
+        homLossData.add(new HomLossEvent(var3.chromosome(true), var3.position(true), var3.position(false),
+                var3.typeStr(), var3.typeStr(), var3.dbId(), var3.dbId()));
+
+        homLossData.add(new HomLossEvent(var4.chromosome(true), var4.position(true), var5.position(true),
+                var4.typeStr(), var5.typeStr(), var4.dbId(), var5.dbId()));
+
+        lohEvent.addHomLossEvents(homLossData);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(3, tester.Analyser.getClusters().size());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var2)));
+
+        // scenario 2: hom-loss event clustered because LOH is clustered
+        tester.clearClustersAndSVs();
+
+        var1 = createDel("1", "1", 1000, 100000);
+        var2 = createBnd("2", "1", 10000, 1, "2", 100, 1);
+        var3 = createBnd("3", "1", 20000, -1, "3", 100, 1);
+
+        lohData.clear();
+
+        lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var2.position(false),
+                "DEL", "DEL", 2, 1, 1, 1, 1, 99000, var1.dbId(), var1.dbId());
+
+        lohData.add(lohEvent);
+
+        homLossData.clear();
+
+        homLossData.add(new HomLossEvent(var2.chromosome(true), var2.position(true), var3.position(true),
+                var2.typeStr(), var3.typeStr(), var2.dbId(), var3.dbId()));
+
+        lohEvent.addHomLossEvents(homLossData);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(2, tester.Analyser.getClusters().size());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var3)));
     }
 
     @Test
@@ -215,27 +290,24 @@ public class MergeRuleTest
         tester.AllVariants.add(var8);
         tester.AllVariants.add(var9);
         tester.AllVariants.add(var10);
-        // tester.AllVariants.add(var11);
 
         List<LohEvent> lohData = tester.CnDataLoader.getLohData();
 
         lohData.add(new LohEvent("1", 10000, 20000,
                 "DEL", "DUP", 1, 1, 1, 0, 1, 10000,
-                var1.dbId(), var2.dbId(), true));
+                var1.dbId(), var2.dbId()));
 
         lohData.add(new LohEvent("1", 50000, 60000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 19000,
-                var2.dbId(), var1.dbId(), true));
+                var2.dbId(), var1.dbId()));
 
         lohData.add(new LohEvent("1", 110000, 120000,
                 "DUP", "DEL", 1, 1, 1, 0, 1, 10000,
-                var6.dbId(), var5.dbId(), true));
+                var6.dbId(), var5.dbId()));
 
         lohData.add(new LohEvent("2", 20000, 30000,
                 "BND", "DUP", 1, 1, 1, 0, 1, 10000,
-                var4.dbId(), var9.dbId(), true));
-
-        // tester.ClusteringMethods.setSampleCnEventData(lohData, homLossData);
+                var4.dbId(), var9.dbId()));
 
         tester.preClusteringInit();
 

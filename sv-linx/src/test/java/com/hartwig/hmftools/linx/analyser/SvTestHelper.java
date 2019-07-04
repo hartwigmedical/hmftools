@@ -257,6 +257,31 @@ public class SvTestHelper
         return var;
     }
 
+    public boolean hasClusterWithSVs(final List<SvVarData> svList)
+    {
+        for(final SvCluster cluster : Analyser.getClusters())
+        {
+            if(cluster.getSvCount() != svList.size())
+                continue;
+
+            boolean hasAll = true;
+
+            for(final SvVarData var : svList)
+            {
+                if(!cluster.getSVs().contains(var))
+                {
+                    hasAll = false;
+                    break;
+                }
+            }
+
+            if(hasAll)
+                return true;
+        }
+
+        return false;
+    }
+
     public void setDefaultPloidyCalcData()
     {
         AllVariants.stream().forEach(x -> x.setPloidyRecalcData(x.getSvData().ploidy(), x.getSvData().ploidy()));

@@ -425,7 +425,7 @@ public class DriverGeneAnnotator
                     SvBreakend lohStart = lohEvent.getBreakend(true);
                     SvBreakend lohEnd = lohEvent.getBreakend(false);
 
-                    if(!lohEvent.IsValid || lohStart == startBreakend || lohEnd == endBreakend)
+                    if(!lohEvent.isValid() || lohStart == startBreakend || lohEnd == endBreakend)
                     {
                         // the LOH event was likely confused by 2 overlapping DELs
                         if(lohStart == startBreakend && lohEnd != null && lohEnd != endBreakend && lohEnd.getSV().type() == DEL)
