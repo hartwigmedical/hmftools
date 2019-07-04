@@ -37,16 +37,13 @@ public abstract class Civic implements KbSpecificObject {
     public abstract String alleleRegistryId();
 
     @NotNull
-    public abstract String provisionalValues();
-
-    @NotNull
     public abstract String geneId();
 
     @NotNull
     public abstract String name();
 
     @NotNull
-    public abstract List<EvidenceItem> evidenceItem();
+    public abstract List<CivicEvidenceItems> evidenceItem();
 
     @NotNull
     public abstract List<String> sources();

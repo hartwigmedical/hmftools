@@ -16,6 +16,38 @@ import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.BRCA;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart1;
 import com.hartwig.hmftools.vicc.datamodel.BRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.Civic;
+import com.hartwig.hmftools.vicc.datamodel.CivicAvatars;
+import com.hartwig.hmftools.vicc.datamodel.CivicCoordinates;
+import com.hartwig.hmftools.vicc.datamodel.CivicDisease;
+import com.hartwig.hmftools.vicc.datamodel.CivicDrugs;
+import com.hartwig.hmftools.vicc.datamodel.CivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.CivicLastCommentedOn;
+import com.hartwig.hmftools.vicc.datamodel.CivicLastModified;
+import com.hartwig.hmftools.vicc.datamodel.CivicLastReviewed;
+import com.hartwig.hmftools.vicc.datamodel.CivicLifecycleActions;
+import com.hartwig.hmftools.vicc.datamodel.CivicOrganization;
+import com.hartwig.hmftools.vicc.datamodel.CivicProfileImage;
+import com.hartwig.hmftools.vicc.datamodel.CivicPublicationDate;
+import com.hartwig.hmftools.vicc.datamodel.CivicSource;
+import com.hartwig.hmftools.vicc.datamodel.CivicUser;
+import com.hartwig.hmftools.vicc.datamodel.CivicVariantTypes;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivic;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicAvatars;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicCoordinates;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicDisease;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicDrugs;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicLastCommentedOn;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicLastModified;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicLastReviewed;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicLifecycleActions;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicOrganization;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicProfileImage;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicPublicationDate;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicSource;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicUser;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicVariantTypes;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrials;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsIndications;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsMolecularProfile;
@@ -197,6 +229,12 @@ public final class ViccJsonReader {
 
     private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(35, 36, 37, 39, 40, 41);
 
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES = Lists.newArrayList(1);
+
+
+    private static final List<Integer> EXPECTED_CIVIC_ELEMENT_SIZES = Lists.newArrayList(1);
+
+
     private ViccJsonReader() {
     }
 
@@ -330,6 +368,7 @@ public final class ViccJsonReader {
             }
 
             JsonObject objectMolecularMatchTrials = viccEntryObject.getAsJsonObject("molecularmatch_trials");
+            JsonObject objectCivic = viccEntryObject.getAsJsonObject("civic");
 
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
@@ -353,6 +392,8 @@ public final class ViccJsonReader {
                 viccEntryBuilder.KbSpecificObject(createMolecularMatch(objectMolecularMatch));
             } else if (viccEntryObject.has("molecularmatch_trials")) {
                 viccEntryBuilder.KbSpecificObject(createMolecularMatchTrials(objectMolecularMatchTrials));
+            } else if (viccEntryObject.has("civic")) {
+                viccEntryBuilder.KbSpecificObject(createCivic(objectCivic));
             }
             entries.add(viccEntryBuilder.build());
 
@@ -360,6 +401,235 @@ public final class ViccJsonReader {
         reader.close();
 
         return entries;
+    }
+
+    @NotNull
+    private static Civic createCivic(@NotNull JsonObject objectCivic) {
+        return ImmutableCivic.builder()
+                .variantGroups(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_groups")))
+                .entrezName(objectCivic.getAsJsonPrimitive("entrez_name").getAsString())
+                .variantTypes(createVariantTypes(objectCivic.getAsJsonArray("variant_types")))
+                .civicActionabilityScore(objectCivic.getAsJsonPrimitive("civic_actionability_score").getAsString())
+                .clinvarEntries(jsonArrayToStringList(objectCivic.getAsJsonArray("clinvar_entries")))
+                .lifecycleActions(createLifeCycleActions(objectCivic.getAsJsonObject("lifecycle_actions")))
+                .variantAliases(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_aliases")))
+                .alleleRegistryId(objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
+                .geneId(objectCivic.getAsJsonPrimitive("gene_id").getAsString())
+                .name(objectCivic.getAsJsonPrimitive("name").getAsString())
+                .evidenceItem(createEvidenceitems(objectCivic.getAsJsonArray("evidence_items")))
+                .sources(jsonArrayToStringList(objectCivic.getAsJsonArray("sources")))
+                .entrezId(objectCivic.getAsJsonPrimitive("entrez_id").getAsString())
+                .assertions(jsonArrayToStringList(objectCivic.getAsJsonArray("assertions")))
+                .hgvs_expressions(jsonArrayToStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
+                .coordinates(createCoordinates(objectCivic.getAsJsonObject("coordinates")))
+                .type(objectCivic.getAsJsonPrimitive("type").getAsString())
+                .id(objectCivic.getAsJsonPrimitive("id").getAsString())
+                .description(objectCivic.getAsJsonPrimitive("description").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
+        return ImmutableCivicCoordinates.builder()
+                .chromosome2(objectCoordinates.getAsJsonPrimitive("chromosome2").getAsString())
+                .referenceBases(objectCoordinates.getAsJsonPrimitive("reference_bases").getAsString())
+                .start2(objectCoordinates.getAsJsonPrimitive("start2").getAsString())
+                .variantBases(objectCoordinates.getAsJsonPrimitive("variant_bases").getAsString())
+                .stop(objectCoordinates.getAsJsonPrimitive("stop").getAsString())
+                .stop2(objectCoordinates.getAsJsonPrimitive("stop2").getAsString())
+                .representativeTranscript2(objectCoordinates.getAsJsonPrimitive("representative_transcript2").getAsString())
+                .start(objectCoordinates.getAsJsonPrimitive("start").getAsString())
+                .representativeTranscript(objectCoordinates.getAsJsonPrimitive("representative_transcript").getAsString())
+                .ensemblVersion(objectCoordinates.getAsJsonPrimitive("ensembl_version").getAsString())
+                .chromosome(objectCoordinates.getAsJsonPrimitive("chromosome").getAsString())
+                .referenceBuild(objectCoordinates.getAsJsonPrimitive("reference_build").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static List<CivicEvidenceItems> createEvidenceitems(@NotNull JsonArray evidenceItemsArray) {
+        List<CivicEvidenceItems> evidenceItemsList = Lists.newArrayList();
+        for (JsonElement evideneItem: evidenceItemsArray) {
+            evidenceItemsList.add(ImmutableCivicEvidenceItems.builder()
+                    .status(evideneItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
+                    .rating(evideneItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
+                    .drugInteractionType(evideneItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
+                    .description(evideneItem.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .openChangeCount(evideneItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
+                    .evidenceType(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
+                    .drugs(createDrugs(evideneItem.getAsJsonObject().getAsJsonArray("drugs")))
+                    .variantOrigin(evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
+                    .disease(createDiseases(evideneItem.getAsJsonObject().getAsJsonObject("disease")))
+                    .source(createSource(evideneItem.getAsJsonObject().getAsJsonObject("source")))
+                    .evidenceDirection(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_direction").getAsString())
+                    .variantId(evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_id").getAsString())
+                    .clinicalSignificance(evideneItem.getAsJsonObject().getAsJsonPrimitive("clinical_significance").getAsString())
+                    .evidenceLevel(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_level").getAsString())
+                    .type(evideneItem.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
+                    .id(evideneItem.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .name(evideneItem.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+            .build());
+        }
+        return evidenceItemsList;
+    }
+
+    @NotNull
+    private static CivicSource createSource(@NotNull JsonObject objectSource) {
+        return ImmutableCivicSource.builder()
+                .status(objectSource.getAsJsonPrimitive("status").getAsString())
+                .openAccess(objectSource.getAsJsonPrimitive("open_access").getAsString())
+                .name(objectSource.getAsJsonPrimitive("name").getAsString())
+                .journal(objectSource.getAsJsonPrimitive("journal").getAsString())
+                .citation(objectSource.getAsJsonPrimitive("citation").getAsString())
+                .pmc_I(objectSource.getAsJsonPrimitive("pmc_id").getAsString())
+                .fullJournalTitle(objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
+                .sourceUrl(objectSource.getAsJsonPrimitive("source_url").getAsString())
+                .clinicalTrials(jsonArrayToStringList(objectSource.getAsJsonArray("clinical_trials")))
+                .pubmedId(objectSource.getAsJsonPrimitive("pubmed_id").getAsString())
+                .isReview(objectSource.getAsJsonPrimitive("is_review").getAsString())
+                .publicationDate(createPublicationDate(objectSource.getAsJsonObject("publication_date")))
+                .id(objectSource.getAsJsonPrimitive("id").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
+        return ImmutableCivicPublicationDate.builder()
+                .year(objectPublicationDate.getAsJsonPrimitive("year").getAsString())
+                .day(objectPublicationDate.getAsJsonPrimitive("day").getAsString())
+                .month(objectPublicationDate.getAsJsonPrimitive("month").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
+        return ImmutableCivicDisease.builder()
+                .doid(objectDisease.getAsJsonPrimitive("doid").getAsString())
+                .url(objectDisease.getAsJsonPrimitive("url").getAsString())
+                .displayName(objectDisease.getAsJsonPrimitive("display_name").getAsString())
+                .id(objectDisease.getAsJsonPrimitive("id").getAsString())
+                .name(objectDisease.getAsJsonPrimitive("name").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static List<CivicDrugs> createDrugs(@NotNull JsonArray arrayDrugs) {
+        List<CivicDrugs> drugsList = Lists.newArrayList();
+        for (JsonElement drug: arrayDrugs) {
+            drugsList.add(ImmutableCivicDrugs.builder()
+                    .pubchemId(drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
+                    .id(drug.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .name(drug.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+            .build());
+        }
+        return drugsList;
+    }
+    @NotNull
+    private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
+        return ImmutableCivicLifecycleActions.builder()
+                .lastCommentedOn(createLastCommentOn(objectLifeCycleActions.getAsJsonObject("last_commented_on")))
+                .lastModified(createLastModified(objectLifeCycleActions.getAsJsonObject("last_modified")))
+                .lastReviewed(createLastReviewed(objectLifeCycleActions.getAsJsonObject("last_reviewed")))
+                .build();
+    }
+
+    @NotNull
+    private static CivicLastCommentedOn createLastCommentOn(@NotNull JsonObject objectLastCommned) {
+        return ImmutableCivicLastCommentedOn.builder()
+                .timestamp(objectLastCommned.getAsJsonPrimitive("timestamp").getAsString())
+                .user(createCivicUser(objectLastCommned.getAsJsonObject("user")))
+                .build();
+    }
+
+    @NotNull
+    private static CivicLastModified createLastModified(@NotNull JsonObject objectLastModified) {
+        return ImmutableCivicLastModified.builder()
+                .timestamp(objectLastModified.getAsJsonPrimitive("timestamp").getAsString())
+                .user(createCivicUser(objectLastModified.getAsJsonObject("user")))
+                .build();
+    }
+
+    @NotNull
+    private static CivicLastReviewed createLastReviewed(@NotNull JsonObject objectLastReviewed) {
+        return ImmutableCivicLastReviewed.builder()
+                .timestamp(objectLastReviewed.getAsJsonPrimitive("timestamp").getAsString())
+                .user(createCivicUser(objectLastReviewed.getAsJsonObject("user")))
+                .build();
+    }
+
+    @NotNull
+    private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
+        return ImmutableCivicUser.builder()
+                .username(objectUser.getAsJsonPrimitive("username").getAsString())
+                .areaOfExpertise(objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
+                .organization(createOrganization(objectUser.getAsJsonObject("organization")))
+                .twitterHandle(objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
+                .name(objectUser.getAsJsonPrimitive("name").getAsString())
+                .bio(objectUser.getAsJsonPrimitive("bio").getAsString())
+                .url(objectUser.getAsJsonPrimitive("url").getAsString())
+                .createdAt(objectUser.getAsJsonPrimitive("created_at").getAsString())
+                .avatars(createAvatars(objectUser.getAsJsonObject("avatars")))
+                .acceptedLicense(objectUser.getAsJsonPrimitive("accepted_license").getAsString())
+                .affiliation(objectUser.getAsJsonPrimitive("affiliation").getAsString())
+                .avatarUrl(objectUser.getAsJsonPrimitive("avatar_url").getAsString())
+                .role(objectUser.getAsJsonPrimitive("role").getAsString())
+                .facebookProfile(objectUser.getAsJsonPrimitive("facebook_profile").getAsString())
+                .linkedinProfile(objectUser.getAsJsonPrimitive("linkedin_profile").getAsString())
+                .orcid(objectUser.getAsJsonPrimitive("orcid").getAsString())
+                .displayName(objectUser.getAsJsonPrimitive("display_name").getAsString())
+                .lastSeenAt(objectUser.getAsJsonPrimitive("last_seen_at").getAsString())
+                .featuredExpert(objectUser.getAsJsonPrimitive("featured_expert").getAsString())
+                .id(objectUser.getAsJsonPrimitive("id").getAsString())
+                .signupComplete(objectUser.getAsJsonPrimitive("signup_complete").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static CivicOrganization createOrganization(@NotNull JsonObject objectOrganization) {
+        return ImmutableCivicOrganization.builder()
+                .url(objectOrganization.getAsJsonPrimitive("url").getAsString())
+                .id(objectOrganization.getAsJsonPrimitive("id").getAsString())
+                .profileImage(createProfileImage(objectOrganization.getAsJsonObject("profile_image")))
+                .description(objectOrganization.getAsJsonPrimitive("description").getAsString())
+                .name(objectOrganization.getAsJsonPrimitive("name").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static CivicProfileImage createProfileImage(@NotNull JsonObject objectProfileImage) {
+        return ImmutableCivicProfileImage.builder()
+                .x32(objectProfileImage.getAsJsonPrimitive("x32").getAsString())
+                .x256(objectProfileImage.getAsJsonPrimitive("x256").getAsString())
+                .x14(objectProfileImage.getAsJsonPrimitive("x14").getAsString())
+                .x64(objectProfileImage.getAsJsonPrimitive("x64").getAsString())
+                .x128(objectProfileImage.getAsJsonPrimitive("x128").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static CivicAvatars createAvatars(@NotNull JsonObject objectAvatars) {
+        return ImmutableCivicAvatars.builder()
+                .x32(objectAvatars.getAsJsonPrimitive("x32").getAsString())
+                .x14(objectAvatars.getAsJsonPrimitive("x14").getAsString())
+                .x64(objectAvatars.getAsJsonPrimitive("x64").getAsString())
+                .x128(objectAvatars.getAsJsonPrimitive("x128").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static List<CivicVariantTypes> createVariantTypes(@NotNull JsonArray arrayvariantTypes) {
+        List<CivicVariantTypes> civicVariantTypesList = Lists.newArrayList();
+        for (JsonElement variantTypes: arrayvariantTypes) {
+            civicVariantTypesList.add(ImmutableCivicVariantTypes.builder()
+                    .displayName(variantTypes.getAsJsonObject().getAsJsonPrimitive("display_name").getAsString())
+                    .description(variantTypes.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .url(variantTypes.getAsJsonObject().getAsJsonPrimitive("url").getAsString())
+                    .soId(variantTypes.getAsJsonObject().getAsJsonPrimitive("so_id").getAsString())
+                    .id(variantTypes.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .name(variantTypes.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+            .build());
+        }
+        return civicVariantTypesList;
     }
 
     @NotNull
