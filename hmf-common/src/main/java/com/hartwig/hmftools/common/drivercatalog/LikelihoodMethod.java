@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-public enum DriverType {
+public enum LikelihoodMethod
+{
     BIALLELIC,
     HOTSPOT,
     INFRAME,

@@ -86,14 +86,14 @@ public final class TsgDrivers {
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
-                .driver(DriverType.DNDS);
+                .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
-            return builder.driver(DriverType.HOTSPOT).build();
+            return builder.likelihoodMethod(LikelihoodMethod.HOTSPOT).build();
         }
 
         if (geneVariants.stream().anyMatch(x -> x.biallelic() && !DriverImpact.isMissense(x))) {
-            return builder.driver(DriverType.BIALLELIC).build();
+            return builder.likelihoodMethod(LikelihoodMethod.BIALLELIC).build();
         }
 
         final DndsDriverImpactLikelihood firstImpactLikelihood = impactLikelihood(likelihood, geneVariants.get(0));

@@ -30,7 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -269,11 +269,11 @@ public class DriverGeneAnnotator
                 continue;
             }
 
-            if (driverGene.driver() == DriverType.DEL)
+            if (driverGene.likelihoodMethod() == LikelihoodMethod.DEL)
             {
                 annotateDeleteEvent(driverGeneData, breakendList);
             }
-            else if (driverGene.driver() == DriverType.AMP)
+            else if (driverGene.likelihoodMethod() == LikelihoodMethod.AMP)
             {
                 annotateAmplification(driverGeneData, breakendList);
             }
@@ -698,7 +698,7 @@ public class DriverGeneAnnotator
     private static final String geneToStr(DriverCatalog driverGene, HmfTranscriptRegion region)
     {
         return String.format("%s: %s %s:%d-%d",
-                driverGene.driver(), driverGene.gene(), region.chromosome(), region.start(), region.end());
+                driverGene.likelihoodMethod(), driverGene.gene(), region.chromosome(), region.start(), region.end());
     }
 
     private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
@@ -724,7 +724,7 @@ public class DriverGeneAnnotator
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Gene,GeneType,DriverType,DriverLikelihood");
+                mFileWriter.write("SampleId,Gene,GeneType,LikelihoodMethod,DriverLikelihood");
                 mFileWriter.write(",FullyMatched,ClusterId,PairId,SvId,SvIsStart,SvPosition,MatchInfo");
                 mFileWriter.write(",SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN");
                 mFileWriter.newLine();
@@ -749,7 +749,7 @@ public class DriverGeneAnnotator
             for(int i = 0; i < dataCount; ++i)
             {
                 writer.write(String.format("%s,%s,%s,%s,%.4f",
-                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.driverLikelihood()));
+                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.likelihoodMethod(), driverGene.driverLikelihood()));
 
                 int clusterId = -1;
                 String varId = "";
@@ -760,7 +760,7 @@ public class DriverGeneAnnotator
 
                 if(i < svBreakends.size())
                 {
-                    // SampleId,Gene,GeneType,DriverType,DriverLikelihood,ClusterId,SvId,IsStart,MatchInfo,SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN
+                    // SampleId,Gene,GeneType,LikelihoodMethod,DriverLikelihood,ClusterId,SvId,IsStart,MatchInfo,SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN
                     final SvBreakend breakend = svBreakends.get(i);
                     matchInfo = driverGeneData.getSvInfoList().get(i);
 

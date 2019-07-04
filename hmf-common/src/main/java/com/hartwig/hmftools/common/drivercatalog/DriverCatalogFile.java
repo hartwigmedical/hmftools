@@ -54,7 +54,7 @@ public class DriverCatalogFile {
     private static String header() {
         return new StringJoiner(DELIMITER, "", "").add("gene")
                 .add("category")
-                .add("driver")
+                .add("likelihoodMethod")
                 .add("driverLikelihood")
                 .add("dndsLikelihood")
                 .add("missense")
@@ -70,7 +70,7 @@ public class DriverCatalogFile {
     private static String toString(@NotNull final DriverCatalog ratio) {
         return new StringJoiner(DELIMITER).add(String.valueOf(ratio.gene()))
                 .add(String.valueOf(ratio.category()))
-                .add(String.valueOf(ratio.driver()))
+                .add(String.valueOf(ratio.likelihoodMethod()))
                 .add(FORMAT.format(ratio.driverLikelihood()))
                 .add(FORMAT.format(ratio.dndsLikelihood()))
                 .add(String.valueOf(ratio.missense()))
@@ -88,7 +88,7 @@ public class DriverCatalogFile {
         ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .gene(values[0])
                 .category(DriverCategory.valueOf(values[1]))
-                .driver(DriverType.valueOf(values[2]))
+                .likelihoodMethod(LikelihoodMethod.valueOf(values[2]))
                 .driverLikelihood(Double.valueOf(values[3]))
                 .dndsLikelihood(Double.valueOf(values[4]))
                 .missense(Long.valueOf(values[5]))

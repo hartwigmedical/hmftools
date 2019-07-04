@@ -12,8 +12,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -39,7 +39,7 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.GENE,
                     DRIVERCATALOG.CATEGORY,
-                    DRIVERCATALOG.DRIVER,
+                    DRIVERCATALOG.LIKELIHOODMETHOD,
                     DRIVERCATALOG.DNDSLIKELIHOOD,
                     DRIVERCATALOG.DRIVERLIKELIHOOD,
                     DRIVERCATALOG.MISSENSE,
@@ -60,7 +60,7 @@ class DriverCatalogDAO {
         inserter.values(sample,
                 entry.gene(),
                 entry.category(),
-                entry.driver(),
+                entry.likelihoodMethod(),
                 DatabaseUtil.decimal(entry.dndsLikelihood()),
                 DatabaseUtil.decimal(entry.driverLikelihood()),
                 entry.missense(),
@@ -86,7 +86,7 @@ class DriverCatalogDAO {
             final DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
-                    .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
+                    .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
                     .dndsLikelihood(record.getValue(DRIVERCATALOG.DNDSLIKELIHOOD))
                     .missense(record.getValue(DRIVERCATALOG.MISSENSE))

@@ -81,14 +81,14 @@ public final class OncoDrivers {
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
-                .driver(missenseVariants > 0 ? DriverType.DNDS : DriverType.NONE);
+                .likelihoodMethod(missenseVariants > 0 ? LikelihoodMethod.DNDS : LikelihoodMethod.NONE);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {
-            return builder.driver(DriverType.HOTSPOT).build();
+            return builder.likelihoodMethod(LikelihoodMethod.HOTSPOT).build();
         }
 
         if (geneVariants.stream().anyMatch(OncoDrivers::isInframeIndel)) {
-            return builder.driver(DriverType.INFRAME).build();
+            return builder.likelihoodMethod(LikelihoodMethod.INFRAME).build();
         }
 
         final double driverLikelihood =

@@ -28,10 +28,9 @@ public class DriverCatalogFileTest {
     @NotNull
     private static DriverCatalog createRandomScore(@NotNull Random random) {
         return ImmutableDriverCatalog.builder()
-
                 .gene("" + random.nextLong())
                 .category(DriverCategory.values()[random.nextInt(DriverCategory.values().length)])
-                .driver(DriverType.values()[random.nextInt(DriverType.values().length)])
+                .likelihoodMethod(LikelihoodMethod.values()[random.nextInt(LikelihoodMethod.values().length)])
                 .driverLikelihood(nextDouble(random))
                 .dndsLikelihood(nextDouble(random))
                 .missense(random.nextLong())
