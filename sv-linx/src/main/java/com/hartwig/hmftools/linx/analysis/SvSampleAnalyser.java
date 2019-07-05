@@ -470,8 +470,11 @@ public class SvSampleAnalyser {
             // gene & replication info
             mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd");
 
+            // repeat class info
+            mSvFileWriter.write(",RepeatClass,RepeatType,VirusName");
+
             // extra copy number info
-            mSvFileWriter.write(",ActBafStartPrev,ActBafStartPost,ActBafEndPrev,ActBafEndPost");
+            // mSvFileWriter.write(",ActBafStartPrev,ActBafStartPost,ActBafEndPrev,ActBafEndPost");
 
             mSvFileWriter.newLine();
         }
@@ -592,10 +595,26 @@ public class SvSampleAnalyser {
                             var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
                             var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
 
+                    // RepeatClass,RepeatType,VirusName
+                    String virusName = "";
+
+                    if(mViralInsertAnnotator != null)
+                    {
+                        final String[] viralInsertData = mViralInsertAnnotator.matchesViralInsert(var);
+
+                        if(viralInsertData != null)
+                            virusName = viralInsertData[VH_NAME];
+                    }
+
+                    mSvFileWriter.write(String.format(",%s,%s,%s",
+                            dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(), virusName));
+
+                    /*
                     mSvFileWriter.write(String.format(",%.2f,%,2f,%,2f,%,2f",
                             var.getBreakend(true).actualBaf(true), var.getBreakend(true).actualBaf(false),
                             !var.isNullBreakend() ? var.getBreakend(false).actualBaf(true) : 0,
                             !var.isNullBreakend() ? var.getBreakend(false).actualBaf(false) : 0));
+                    */
 
                     mSvFileWriter.newLine();
                 }

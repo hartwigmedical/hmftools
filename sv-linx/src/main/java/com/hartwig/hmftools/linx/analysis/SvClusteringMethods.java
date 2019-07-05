@@ -46,8 +46,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
-import com.sun.jmx.snmp.SnmpVarBind;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
