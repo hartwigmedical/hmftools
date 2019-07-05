@@ -46,17 +46,16 @@ show_tick_labels    = no
 		file       = SUBSTITUTE_SAMPLE.exon.circos
 		r0         = SUBSTITUTE_EXON_INNER_RADIUSr
 		r1         = SUBSTITUTE_EXON_OUTER_RADIUSr
-		fill_color = blue
 	</highlight>
 
     <highlight>
         file       = SUBSTITUTE_SAMPLE.gene.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
-        fill_color = blue
     </highlight>
 
     <highlight>
+        z          = 1
         file       = SUBSTITUTE_SAMPLE.protein_domain.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
@@ -69,18 +68,16 @@ show_tick_labels    = no
                 fill_color = white
             </rule>
         </rules>
-
-        z = 1
     </highlight>
 
 
     <highlight>
+        z          = 2
         file       = SUBSTITUTE_SAMPLE.protein_domain.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
         color      = black
         stroke_thickness = 1
-        z = 2
     </highlight>
 
     <highlight>

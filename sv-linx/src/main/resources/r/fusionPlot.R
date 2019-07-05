@@ -46,18 +46,17 @@ singleRed = "#d6906b"
 
 clusterProteinDomains = read.table(clusterProteinDomainPath, sep = '\t', header = T, comment.char = "$", stringsAsFactors = F) %>%
   mutate(name = gsub(" domain", "", name))
-clusterFusedExons = read.table(clusterFusedExonPath, sep = '\t', header = T, stringsAsFactors = F) %>% 
-  mutate(
-    upGene = ifelse(startsWith(fusion, gene), T, F), 
-    color = ifelse(upGene, singleBlue, singleRed))
-
+clusterFusedExons = read.table(clusterFusedExonPath, sep = '\t', header = T, stringsAsFactors = F)
 
 fusionPlotList = list()
 for (selectedFusion in unique(clusterFusedExons$fusion)) {
   cat ("Processing", selectedFusion, "\n")
 
   fusedExons = clusterFusedExons %>%
-    filter(fusion == selectedFusion)
+    filter(fusion == selectedFusion) %>%
+    mutate(
+      upGene = ifelse(startsWith(fusion, gene) & rank == row_number(), T, F),
+      color = ifelse(upGene, singleBlue, singleRed))
   
   fusedGenes = fusedExons %>% 
     filter(fusion == selectedFusion) %>%
