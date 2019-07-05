@@ -24,6 +24,11 @@ public class VisProteinDomainFile
     public final long End;
     public final String Info;
 
+    public static final String PD_FIVE_PRIME_UTR = "5-Prime UTR";
+    public static final String PD_THREE_PRIME_UTR = "3-Prime UTR";
+    public static final String PD_NON_CODING = "Non Coding";
+
+
     public VisProteinDomainFile(final String sampleId, int clusterId, final String transcript,
             final String chromosome, long start, long end, final String info)
     {

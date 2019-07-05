@@ -171,7 +171,7 @@ public class SvGeneTranscriptCollection
                 continue;
 
             GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneData.GeneName, geneData.GeneId,
-                    geneData.Strand, geneData.Synonyms, geneData.EntrezIds, geneData.KaryotypeBand);
+                    geneData.Strand, geneData.Synonyms, geneData.KaryotypeBand);
 
             currentGene.setGeneData(geneData);
 

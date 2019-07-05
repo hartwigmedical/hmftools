@@ -657,31 +657,6 @@ public class FusionFinder
                 return REPORTABLE_TYPE_NONE;
         }
 
-        /*
-        if(mKnownFusionsModel.exactMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms()))
-            return REPORTABLE_TYPE_KNOWN;
-
-        boolean intergenicPromiscuousMatch = mKnownFusionsModel.intergenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms());
-
-        boolean intragenicPromiscuousMatch = (mKnownFusionsModel.intragenicPromiscuousMatch(upTrans.parent().synonyms(), downTrans.parent().synonyms())
-                && downTrans.ExonDownstream - upTrans.ExonUpstream > EXON_THRESHOLD);
-
-        if(intergenicPromiscuousMatch || intragenicPromiscuousMatch)
-        {
-            boolean fivePrimeMatch = mKnownFusionsModel.fivePrimePromiscuousMatch(upTrans.parent().synonyms());
-            boolean threePrimeMatch = mKnownFusionsModel.threePrimePromiscuousMatch(downTrans.parent().synonyms());
-
-            if (fivePrimeMatch && threePrimeMatch)
-                return REPORTABLE_TYPE_BOTH_PROM;
-            else if (fivePrimeMatch)
-                return REPORTABLE_TYPE_5P_PROM;
-            else if (threePrimeMatch)
-                return REPORTABLE_TYPE_3P_PROM;
-            else
-                return REPORTABLE_TYPE_NONE;
-        }
-        */
-
         return REPORTABLE_TYPE_NONE;
     }
 

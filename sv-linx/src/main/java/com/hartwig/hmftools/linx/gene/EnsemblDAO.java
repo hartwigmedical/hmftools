@@ -226,8 +226,7 @@ public class EnsemblDAO
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
-                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]),
-                        items[GD_ENTREZ], items[GD_BAND], items[GD_SYN]);
+                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]), items[GD_BAND], items[GD_SYN]);
 
                 if(!currentChr.equals(chromosome))
                 {

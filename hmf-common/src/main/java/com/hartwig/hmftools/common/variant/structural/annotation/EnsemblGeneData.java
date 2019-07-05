@@ -14,7 +14,6 @@ public class EnsemblGeneData
     public final byte Strand;
     public final long GeneStart;
     public final long GeneEnd;
-    public final List<Integer> EntrezIds;
     public final String KaryotypeBand;
     public final List<String> Synonyms;
 
@@ -22,7 +21,7 @@ public class EnsemblGeneData
     private int mReverseListIndex;
 
     public EnsemblGeneData(String geneId, String geneName, String chromosome, byte strand, long geneStart, long geneEnd,
-            String entrezIds, String karyotypeBand, String synonyms)
+            String karyotypeBand, String synonyms)
     {
         GeneId = geneId;
         GeneName = geneName;
@@ -33,16 +32,6 @@ public class EnsemblGeneData
         KaryotypeBand = karyotypeBand;
 
         Synonyms = Arrays.stream(synonyms.split(";")).collect(Collectors.toList());
-
-        if(!entrezIds.equalsIgnoreCase("NULL"))
-        {
-            String[] entrezIdStr = entrezIds.split(";");
-            EntrezIds = Arrays.stream(entrezIdStr).filter(x -> !x.isEmpty()).map(x -> Integer.parseInt(x)).collect(Collectors.toList());
-        }
-        else
-        {
-            EntrezIds = Lists.newArrayList();
-        }
 
         mListIndex= -1;
         mReverseListIndex = -1;

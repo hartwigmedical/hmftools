@@ -12,6 +12,9 @@ import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_FIVE_PRIME_UTR;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_NON_CODING;
+import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_THREE_PRIME_UTR;
 import static com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile.INFO_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile.INFO_TYPE_NORMAL;
 
@@ -337,19 +340,19 @@ public class VisualiserWriter
         // protein domains: SampleId,ClusterId,Gene,Transcript,Start,End,Info
 
         // first remove duplicates from amongst the genes
-        List<String> loggedGenes = Lists.newArrayList();
+        List<String> loggedTranscripts = Lists.newArrayList();
 
         for(final VisGeneData geneData : mGeneData)
         {
             if(geneData.ClusterId < 0) // skip drivers not linked to a cluster
                 continue;
 
-            if (loggedGenes.contains(geneData.GeneId))
+            final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(geneData.GeneId, geneData.TransName);
+
+            if (loggedTranscripts.contains(transData.TransName))
                 continue;
 
-            loggedGenes.add(geneData.GeneId);
-
-            final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(geneData.GeneId, geneData.TransName);
+            loggedTranscripts.add(transData.TransName);
 
             if(transData == null || transData.exons().isEmpty())
                 continue;
@@ -376,6 +379,33 @@ public class VisualiserWriter
                                 domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                     }
                 }
+            }
+
+            // show the 5' and 3' UTR or non-coding regions as 'protein domains'
+            if(transData.CodingEnd != null && transData.CodingEnd != null)
+            {
+                long fivePrimeUtrStart = transData.Strand == 1 ? transData.TransStart : transData.CodingEnd + 1;
+                long fivePrimeUtrEnd = transData.Strand == 1 ? transData.CodingStart - 1 : transData.TransEnd;
+
+                long threePrimeUtrStart = transData.Strand == 1 ? transData.CodingEnd + 1 : transData.TransStart;
+                long threePrimeUtrEnd = transData.Strand == 1 ? transData.TransEnd : transData.CodingStart - 1;
+
+                if(fivePrimeUtrStart < fivePrimeUtrEnd)
+                {
+                    proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                            fivePrimeUtrStart, fivePrimeUtrEnd, PD_FIVE_PRIME_UTR));
+                }
+
+                if(threePrimeUtrStart < threePrimeUtrEnd)
+                {
+                    proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                            threePrimeUtrStart, threePrimeUtrEnd, PD_THREE_PRIME_UTR));
+                }
+            }
+            else
+            {
+                proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                        transData.TransStart, transData.TransEnd, PD_NON_CODING));
             }
         }
 

@@ -14,11 +14,10 @@ public class GeneTestUtils
             final String chromosome, long position, int orientation)
     {
         List<String> synonyms = Lists.newArrayList();
-        List<Integer> entrezIds = Lists.newArrayList();
         String karyotypeBand = "";
 
 
-        GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, synonyms, entrezIds, karyotypeBand);
+        GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, synonyms, karyotypeBand);
         gene.setPositionalData(chromosome, position, (byte)orientation);
 
         return gene;
@@ -27,7 +26,7 @@ public class GeneTestUtils
     // Ensembl data types
     public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, long geneStart, long geneEnd)
     {
-        return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd, "", "", "");
+        return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd,  "", "");
     }
 
     public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptData> transDataList)

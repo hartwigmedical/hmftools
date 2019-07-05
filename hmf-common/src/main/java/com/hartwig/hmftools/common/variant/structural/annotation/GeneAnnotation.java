@@ -26,8 +26,6 @@ public class GeneAnnotation {
     @NotNull
     private final List<String> mSynonyms;
     @NotNull
-    private final List<Integer> mEntrezIds;
-    @NotNull
     private final String mKaryotypeBand;
 
     private StructuralVariantType mSvType;
@@ -38,7 +36,7 @@ public class GeneAnnotation {
     private String mInsertSequence;
 
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
-            final int strand, final List<String> synonyms, final List<Integer> entrezIds, final String karyotypeBand)
+            final int strand, final List<String> synonyms, final String karyotypeBand)
     {
         GeneName = geneName;
         StableId = stableId;
@@ -57,7 +55,6 @@ public class GeneAnnotation {
         mInsertSequence = "";
 
         mSynonyms = synonyms;
-        mEntrezIds = entrezIds;
         mKaryotypeBand = karyotypeBand;
     }
 
@@ -108,10 +105,6 @@ public class GeneAnnotation {
 
     public List<String> synonyms() {
         return ImmutableList.copyOf(mSynonyms);
-    }
-
-    public List<Integer> entrezIds() {
-        return mEntrezIds;
     }
 
     public String karyotypeBand() {
