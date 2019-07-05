@@ -108,6 +108,7 @@ public class ClusterAnalyser {
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
         mDmFinder = new DoubleMinuteFinder();
+        mDmFinder.setOutputDir(mConfig.OutputDataPath);
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mUseAllelePloidies = false;
@@ -1542,6 +1543,11 @@ public class ClusterAnalyser {
         {
             mDmFinder.analyseCluster(mSampleId, cluster);
         }
+    }
+
+    public void close()
+    {
+        mDmFinder.close();
     }
 
     public void logStats()

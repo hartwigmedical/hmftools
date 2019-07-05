@@ -918,6 +918,7 @@ public class SvSampleAnalyser {
 
             mAnalyser.logStats();
         }
-    }
 
+        mAnalyser.close();
+    }
 }

@@ -115,12 +115,13 @@ public class DoubleMinuteTest
         tester.logVerbose(true);
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
-        SvVarData var1 = createTestSv("1","1","1",100,1000,-1,-1, INV,1);
-        SvVarData var2 = createTestSv("2","1","1",1200,2500,1,1, INV,3);
-        SvVarData var3 = createTestSv("3","1","1",2000,200,-1,1, INV,8);
-        SvVarData var4 = createTestSv("4","1","1",1500,100,1,-1, DUP,12);
-        SvVarData var5 = createTestSv("5","1","1",2100,2200,1,1, DEL,16);
-        SvVarData var6 = createTestSv("6","1","1",500,600,-1,1, DUP,20);
+        // a cluster with a set of 2 foldbacks which control the ploidies
+        SvVarData var1 = createTestSv("1","1","1",400,500,-1,-1, INV,1);
+        SvVarData var2 = createTestSv("2","1","1",5000,5200,1,1, INV,2);
+        SvVarData var3 = createTestSv("3","1","1",1000,1200,-1,-1, INV,2);
+        SvVarData var4 = createTestSv("4","1","1",2000,2200,1,1, INV,3);
+        SvVarData var5 = createTestSv("5","1","1",2100,2200,1,1, DEL,8);
+        SvVarData var6 = createTestSv("6","1","1",100,6000,-1,1, DUP,8);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -138,34 +139,6 @@ public class DoubleMinuteTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
-
-        tester.clearClustersAndSVs();
-
-        // now a cluster with a set of 2 foldbacks which control the ploidies
-        var1 = createTestSv("1","1","1",400,500,-1,-1, INV,1);
-        var2 = createTestSv("2","1","1",5000,5200,1,1, INV,2);
-        var3 = createTestSv("3","1","1",1000,1200,-1,-1, INV,2);
-        var4 = createTestSv("4","1","1",2000,2200,1,1, INV,3);
-        var5 = createTestSv("5","1","1",2100,2200,1,1, DEL,8);
-        var6 = createTestSv("6","1","1",100,6000,-1,1, DUP,8);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
-        tester.preClusteringInit();
-
-        tester.addCopyNumberData();
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
         assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
 
     }
