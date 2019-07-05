@@ -54,7 +54,7 @@ public class FusedExons
         {
             final GenomeRegion convertedExon = convertRegion(fusion.strandUp(), upGeneRegion, exon);
 
-            if (exon.start() <= upGeneRegion.end())
+            if (upGeneRegion.overlaps(exon))
             {
                 final FusedExon fusedExon = upFusedExonBuilder
                         .start(convertedExon.start())
@@ -84,7 +84,7 @@ public class FusedExons
             final Exon exon = downStreamExons.get(i);
             final GenomeRegion convertedExon = convertRegion(fusion.strandDown(), downGeneRegion, exon);
 
-            if (exon.end() > downGeneRegion.start())
+            if (downGeneRegion.overlaps(exon))
             {
                 final FusedExon fusedExon = downFusedExonBuilder
                         .start(convertedExon.start() + convertedUpGeneRegion.end())
