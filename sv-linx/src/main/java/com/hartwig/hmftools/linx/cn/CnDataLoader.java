@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.types.SvaConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.io.File;
@@ -707,6 +708,13 @@ public class CnDataLoader
             {
                 svData = getSvDataById(svId);
             }
+
+            /*
+            if(svId == Integer.parseInt(SPECIFIC_SV_ID))
+            {
+                LOGGER.debug("spec SV({})", svId);
+            }
+            */
 
             final SvCNData cnStartPrevData = getCNSegment(cnStartData.Chromosome,  cnStartData.getIndex() - 1);
 
