@@ -196,9 +196,9 @@ public class FusedExons
         else
         {
             start = region.start() - reference.start();
-            end = region.end() - reference.start();
+            end = Math.min(reference.end(), region.end()) - reference.start();
         }
 
-        return GenomeRegions.create(region.chromosome(), start, end);
+        return GenomeRegions.create(region.chromosome(), Math.max(0, start), end);
     }
 }
