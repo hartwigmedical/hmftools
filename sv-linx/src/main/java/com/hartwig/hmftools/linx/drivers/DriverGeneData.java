@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.annotators;
+package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;

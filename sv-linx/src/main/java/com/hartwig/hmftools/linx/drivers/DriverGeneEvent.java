@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.annotators;
+package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.annotators;
+package com.hartwig.hmftools.linx.drivers;
 
 public enum DriverEventType
 {

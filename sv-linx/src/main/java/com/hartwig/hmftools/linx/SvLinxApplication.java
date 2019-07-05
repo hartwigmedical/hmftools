@@ -19,7 +19,7 @@ import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvaConfig;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
-import com.hartwig.hmftools.linx.annotators.DriverGeneAnnotator;
+import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
