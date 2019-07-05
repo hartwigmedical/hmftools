@@ -80,10 +80,10 @@ public class ProteinDomains
     @NotNull
     private static GenomeRegion upGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon firstUpGene)
     {
-        final long upGeneStart = Math.min(fusion.positionUp(), firstUpGene.unadjustedGeneStart());
-        final long upGeneEnd = Math.max(fusion.positionUp(), firstUpGene.unadjustedGeneStart());
+        final long upGeneLength = firstUpGene.geneEnd() - firstUpGene.geneStart();
+        final long upGeneStart = fusion.strandUp() < 0 ? fusion.positionUp() : fusion.positionUp() - upGeneLength;
 
-        return GenomeRegions.create(fusion.chromosomeUp(), upGeneStart, upGeneEnd);
+        return GenomeRegions.create(fusion.chromosomeUp(), upGeneStart, upGeneStart + upGeneLength);
     }
 
     @NotNull
@@ -91,9 +91,8 @@ public class ProteinDomains
     {
         final long downGeneLength = finalDownExon.geneEnd() - finalDownExon.geneStart();
         final long downGeneStart = fusion.strandDown() < 0 ? fusion.positionDown() - downGeneLength : fusion.positionDown();
-        final long downGeneEnd = fusion.strandDown() < 0 ? fusion.positionDown() : fusion.positionDown() + downGeneLength;
 
-        return GenomeRegions.create(fusion.chromosomeDown(), downGeneStart, downGeneEnd);
+        return GenomeRegions.create(fusion.chromosomeDown(), downGeneStart, downGeneStart + downGeneLength);
     }
 
     @NotNull
@@ -115,7 +114,6 @@ public class ProteinDomains
                 .build();
 
     }
-
 
     public static void write(@NotNull final String fileName, @NotNull final ProteinDomainColors colors,
             @NotNull final List<ProteinDomain> domains) throws IOException
