@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static com.hartwig.hmftools.linx.visualiser.data.FusedExons.convertRegion;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +31,6 @@ public class ProteinDomains
         return proteinDomains.stream().filter(matchesGene).collect(Collectors.toList());
     }
 
-
-
     @NotNull
     public static List<ProteinDomain> proteinDomainsInFusion(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons,
             @NotNull final List<ProteinDomain> proteinDomains)
@@ -47,19 +47,15 @@ public class ProteinDomains
         final FusedExon finalDownExon = fusedExons.get(fusedExons.size() - 1);
         final GenomeRegion downGeneRegion = downGeneRegion(fusion, finalDownExon);
 
-        final long additionalDownOffset = finalDownExon.geneStart();
-
         for (ProteinDomain unadjustedDomain : proteinDomains)
         {
             if (unadjustedDomain.overlaps(upGeneRegion))
             {
-                long unconstrainedStart = start(fusion.strandUp(), upGeneRegion.start(), unadjustedDomain);
-                long unconstrainedEnd = end(fusion.strandUp(), upGeneRegion.start(), unadjustedDomain);
-
-                ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
+                final GenomeRegion convertedDomain = convertRegion(fusion, upGeneRegion, unadjustedDomain);
+                final ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
-                        .start(Math.max(unconstrainedStart, firstUpExon.geneStart()))
-                        .end(Math.min(unconstrainedEnd, firstUpExon.geneEnd()))
+                        .start(Math.max(convertedDomain.start(), firstUpExon.geneStart()))
+                        .end(Math.min(convertedDomain.end(), firstUpExon.geneEnd()))
                         .build();
 
                 result.add(domain);
@@ -67,18 +63,15 @@ public class ProteinDomains
 
             if (unadjustedDomain.overlaps(downGeneRegion))
             {
-                long unconstrainedStart = start(fusion.strandDown(), downGeneRegion.start(), unadjustedDomain) + additionalDownOffset;
-                long unconstrainedEnd = end(fusion.strandDown(), downGeneRegion.start(), unadjustedDomain) + additionalDownOffset;
-
-                ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
+                final GenomeRegion convertedDomain = convertRegion(fusion, downGeneRegion, unadjustedDomain);
+                final ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
-                        .start(Math.max(unconstrainedStart, finalDownExon.geneStart()))
-                        .end(Math.min(unconstrainedEnd, finalDownExon.geneEnd()))
+                        .start(Math.max(convertedDomain.start() + firstUpExon.geneEnd(), finalDownExon.geneStart()))
+                        .end(Math.min(convertedDomain.end() + firstUpExon.geneEnd(), finalDownExon.geneEnd()))
                         .build();
 
                 result.add(domain);
             }
-
         }
 
         return result;
@@ -123,15 +116,6 @@ public class ProteinDomains
 
     }
 
-    private static long start(int strand, long offset, GenomeRegion region)
-    {
-        return strand < 0 ? offset - region.end() : region.start() - offset;
-    }
-
-    private static long end(int strand, long offset, GenomeRegion region)
-    {
-        return strand < 0 ? offset - region.start() : region.end() - offset;
-    }
 
     public static void write(@NotNull final String fileName, @NotNull final ProteinDomainColors colors,
             @NotNull final List<ProteinDomain> domains) throws IOException
