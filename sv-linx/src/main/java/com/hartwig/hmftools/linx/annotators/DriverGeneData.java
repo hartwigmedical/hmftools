@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.annotators;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class DriverGeneData
     public final EnsemblGeneData GeneData;
     public final TranscriptData TransData;
     public final GeneCopyNumber GeneCN;
+    public final String Arm;
 
     private final List<DriverGeneEvent> mEvents;
 
@@ -28,6 +30,8 @@ public class DriverGeneData
         GeneData = geneData;
         TransData = transData;
         GeneCN = geneCN;
+
+        Arm = getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
 
         mEvents = Lists.newArrayList();
     }

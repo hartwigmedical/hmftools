@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
@@ -10,14 +11,11 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.DriverEventType.GAIN;
+import static com.hartwig.hmftools.linx.annotators.DriverEventType.GAIN_ARM;
+import static com.hartwig.hmftools.linx.annotators.DriverEventType.GAIN_CHR;
 import static com.hartwig.hmftools.linx.annotators.DriverEventType.LOH;
 import static com.hartwig.hmftools.linx.annotators.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.linx.annotators.DriverEventType.LOH_CHR;
-import static com.hartwig.hmftools.linx.annotators.DriverGeneData.SV_DRIVER_TYPE_DEL;
-import static com.hartwig.hmftools.linx.annotators.DriverGeneData.SV_DRIVER_TYPE_DUP;
-import static com.hartwig.hmftools.linx.annotators.DriverGeneData.SV_DRIVER_TYPE_FB;
-import static com.hartwig.hmftools.linx.annotators.DriverGeneData.SV_DRIVER_TYPE_LOH;
-import static com.hartwig.hmftools.linx.annotators.DriverGeneData.SV_DRIVER_TYPE_TI;
 import static com.hartwig.hmftools.linx.annotators.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
 import static com.hartwig.hmftools.linx.annotators.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.linx.annotators.DriverGeneEvent.SV_DRIVER_TYPE_DUP;
@@ -236,9 +234,16 @@ public class DriverGeneAnnotator
 
         loadGeneCopyNumberData(sampleId);
 
-        // create an object to collect up all info about these drivers
+        // types handled:
+        // - TSG biallelic point mutations
+        // - AMPs
+        // - DELs
+
         for (final DriverCatalog driverGene : mDriverCatalog)
         {
+            if(!driverTypeHandled(driverGene))
+                continue;
+
             final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(driverGene.gene());
 
             if (geneData == null)
@@ -261,7 +266,6 @@ public class DriverGeneAnnotator
             mDriverGeneDataList.add(dgData);
 
             if(dgData.DriverData.category() == TSG && dgData.DriverData.driver() == DriverType.DEL)
-            // if (driverGene.likelihoodMethod() == LikelihoodMethod.DEL)
             {
                 if(dgData.DriverData.likelihoodMethod() == LikelihoodMethod.DEL)
                 {
@@ -272,7 +276,7 @@ public class DriverGeneAnnotator
                     annotateBiallelicEvent(dgData);
                 }
             }
-            else if (dgData.DriverData.category() == ONCO) // likelihoodMethod() == LikelihoodMethod.AMP
+            else if (dgData.DriverData.category() == ONCO)
             {
                 final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneData.Chromosome);
 
@@ -290,6 +294,20 @@ public class DriverGeneAnnotator
         mChrBreakendMap = null;
 
         mPerfCounter.stop();
+    }
+
+    private boolean driverTypeHandled(final DriverCatalog driverGene)
+    {
+        if(driverGene.category() == TSG && driverGene.driver() == DriverType.DEL)
+            return true;
+
+        if(driverGene.category() == TSG && driverGene.likelihoodMethod() == LikelihoodMethod.BIALLELIC)
+            return true;
+
+        if(driverGene.category() == ONCO && driverGene.driver() == DriverType.AMP)
+            return true;
+
+        return false;
     }
 
     private void annotateDeleteEvent(final DriverGeneData dgData)
@@ -332,7 +350,8 @@ public class DriverGeneAnnotator
                 }
                 else if(lohEvent.isSvEvent())
                 {
-                    DriverGeneEvent event = new DriverGeneEvent(LOH_ARM);
+                    // call SV + rest of arm loss an LOH as well
+                    DriverGeneEvent event = new DriverGeneEvent(LOH);
                     event.setLohEvent(lohEvent);
                     event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_ARM_SV);
                     dgData.addEvent(event);
@@ -354,11 +373,14 @@ public class DriverGeneAnnotator
                 // allow there to be more than one?
                 if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
                 {
+                    LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by hom-loss({})",
+                            dgData.GeneData.GeneName, minRegionStart, minRegionEnd, homLoss);
+
                     // DEL covers the whole gene or extends to end of arm
                     DriverGeneEvent event = new DriverGeneEvent(DriverEventType.DEL);
                     event.setHomLossEvent(homLoss);
 
-                    // one or both breakendscan be null if not matched
+                    // one or both breakends can be null if not matched
                     event.addSvBreakendPair(homLoss.getBreakend(true), homLoss.getBreakend(false), SV_DRIVER_TYPE_DEL);
                     dgData.addEvent(event);
                     break;
@@ -426,6 +448,37 @@ public class DriverGeneAnnotator
 
     private void annotateAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
     {
+        annotateArmAmplification(dgData);
+        annotateBreakendAmplification(dgData, breakendList);
+    }
+
+    private void annotateArmAmplification(final DriverGeneData dgData)
+    {
+        // check for an arm or whole chromosome amplified above the sample ploidy
+        if(mSamplePloidy == 0)
+            return;
+
+        double[] cnData = mChrCopyNumberMap.get(dgData.GeneData.Chromosome);
+
+        double telomereCopyNumber = min(cnData[P_ARM_TELOMERE_CN], cnData[Q_ARM_TELOMERE_CN]);
+
+        double armCopyNumber = min(cnData[CENTROMERE_CN],
+                dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]);
+
+        double chromosomeCopyNumber = min(cnData[CENTROMERE_CN], telomereCopyNumber);
+
+        if(chromosomeCopyNumber/mSamplePloidy > 2)
+        {
+            dgData.addEvent(new DriverGeneEvent(GAIN_CHR));
+        }
+        else if(armCopyNumber/mSamplePloidy > 2)
+        {
+            dgData.addEvent(new DriverGeneEvent(GAIN_ARM));
+        }
+    }
+
+    private void annotateBreakendAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
+    {
         // find the cause - DUP, foldback, otherwise assume whole-chromatid duplication
 
         // trying to find the breakends which amplify this gene
@@ -439,6 +492,7 @@ public class DriverGeneAnnotator
         SvVarData maxSvStart = null;
         SvVarData maxSvEnd = null;
         SvBreakend foldbackBreakend = null;
+        List<Integer> reportedClusters = Lists.newArrayList();
 
         for (int i = 0; i < breakendList.size(); ++i)
         {
@@ -495,6 +549,10 @@ public class DriverGeneAnnotator
                 continue;
             }
 
+            // only report on each cluster once
+            if(reportedClusters.contains(varStart.getCluster().id()))
+                continue;
+
             // look for the first TI which overlaps the gene region
             List<SvLinkedPair> tiPairs = varStart.getLinkedPairs(breakend.usesStart());
 
@@ -515,6 +573,8 @@ public class DriverGeneAnnotator
                 DriverGeneEvent event = new DriverGeneEvent(GAIN);
                 event.addSvBreakendPair(beStart, beEnd, SV_DRIVER_TYPE_TI);
                 dgData.addEvent(event);
+
+                reportedClusters.add(varStart.getCluster().id());
 
                 if (varStart.copyNumberChange(true) > maxCopyNumber)
                 {
@@ -570,8 +630,8 @@ public class DriverGeneAnnotator
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Gene,GeneType,LikelihoodMethod");
-                mFileWriter.write(",FullyMatched,Type,ClusterId,ClusterCount,ResolvedType");
+                mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod");
+                mFileWriter.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
                 mFileWriter.write(",PosStart,PosEnd,SvIdStart,SvIdEnd,MatchInfo");
                 mFileWriter.write(",SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN");
                 mFileWriter.newLine();
@@ -582,22 +642,21 @@ public class DriverGeneAnnotator
             final DriverCatalog driverGene = dgData.DriverData;
             final EnsemblGeneData geneData = dgData.GeneData;
             double[] cnData = mChrCopyNumberMap.get(geneData.Chromosome);
-            final String arm = getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
-            final GeneCopyNumber geneCN = dgData.GeneCN;
             int refClusterId = -1;
 
             for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
                 final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
 
-                writer.write(String.format("%s,%s,%s,%s,%s,%s",
-                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.likelihoodMethod(),
+                writer.write(String.format("%s,%s,%s,%s,%s,%s,%s",
+                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.likelihoodMethod(),
                         dgData.fullyMatched(), driverEvent.Type));
 
                 final SvCluster cluster = driverEvent.getCluster();
 
                 if(cluster != null)
                 {
+                    refClusterId = cluster.id();
                     writer.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
                 }
                 else
@@ -617,8 +676,8 @@ public class DriverGeneAnnotator
 
 
                 writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
-                        mSamplePloidy, geneData.Chromosome, arm, geneCN != null ? geneCN.minCopyNumber() : -1,
-                        cnData[CENTROMERE_CN], arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
+                        mSamplePloidy, geneData.Chromosome, dgData.Arm, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
+                        cnData[CENTROMERE_CN], dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
 
                 writer.newLine();
             }

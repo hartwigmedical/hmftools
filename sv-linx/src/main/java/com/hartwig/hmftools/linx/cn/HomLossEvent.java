@@ -62,7 +62,7 @@ public class HomLossEvent
 
     public String toString()
     {
-        return String.format("chr({}) segs({} -> {}) pos({} -> {}) SVs({} & {})",
+        return String.format("chr(%s) segs(%s -> %s) pos(%d -> %d) SVs(%s & %s)",
                 Chromosome, SegStart, SegEnd, PosStart, PosEnd,
                 mBreakendStart != null ? mBreakendStart.getSV().id() : "none", mBreakendEnd != null ? mBreakendEnd.getSV().id() : "none");
     }
