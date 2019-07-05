@@ -70,7 +70,6 @@ public class FusedExons
         final GenomeRegion downGeneRegion = downGeneRegion(fusion, finalDownExon);
         final GenomeRegion convertedDownGeneRegion = convertRegion(fusion, downGeneRegion, downGeneRegion);
 
-
         final ImmutableFusedExon.Builder downFusedExonBuilder = ImmutableFusedExon.builder().from(upFusedExonBuilder.build())
                 .chromosome(fusion.chromosomeDown())
                 .unadjustedGeneStart(fusion.positionDown())
@@ -84,7 +83,6 @@ public class FusedExons
         {
             final Exon exon = downStreamExons.get(i);
             final GenomeRegion convertedExon = convertRegion(fusion, downGeneRegion, exon);
-
 
             if (exon.end() > downGeneRegion.start())
             {
@@ -146,7 +144,6 @@ public class FusedExons
                 .toString();
     }
 
-
     @NotNull
     private static GenomeRegion upGeneRegion(@NotNull final Fusion fusion, @NotNull final Exon firstUpGene)
     {
@@ -156,15 +153,27 @@ public class FusedExons
     }
 
     @NotNull
-    private static GenomeRegion downGeneRegion(@NotNull final Fusion fusion, @NotNull final Exon finalDownGene)
+    static Gene downGeneRegion(@NotNull final Fusion fusion, @NotNull final Exon finalDownGene)
     {
-        return fusion.strandUp() < 0
-                ? GenomeRegions.create(finalDownGene.chromosome(), finalDownGene.start(), fusion.positionDown())
-                : GenomeRegions.create(finalDownGene.chromosome(), fusion.positionDown(), finalDownGene.end());
+        return fusion.strandUp() < 0 ?
+                ImmutableGene.builder()
+                        .chromosome(finalDownGene.chromosome())
+                        .start(finalDownGene.start())
+                        .end(fusion.positionDown())
+                        .namePosition(fusion.positionDown() + 1)
+                        .name(fusion.geneDown())
+                        .build() :
+                ImmutableGene.builder()
+                        .chromosome(finalDownGene.chromosome())
+                        .start(fusion.positionDown())
+                        .end(finalDownGene.end())
+                        .namePosition(fusion.positionDown() - 1)
+                        .name(fusion.geneDown())
+                        .build();
     }
 
     @NotNull
-    static GenomeRegion convertRegion(@NotNull final Fusion fusion, @NotNull final GenomeRegion gene,  @NotNull final GenomeRegion region)
+    static GenomeRegion convertRegion(@NotNull final Fusion fusion, @NotNull final GenomeRegion gene, @NotNull final GenomeRegion region)
     {
 
         final long start;

@@ -14,6 +14,24 @@ public class Genes
 {
 
     @NotNull
+    public static List<Gene> downstreamGene(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons)
+    {
+        final List<Gene> result = Lists.newArrayList();
+
+        for (Fusion fusion : fusions)
+        {
+            final List<Exon> fusionExons = Exons.downstreamExons(fusion, exons);
+            if (!fusionExons.isEmpty())
+            {
+                result.add(FusedExons.downGeneRegion(fusion, fusionExons.get(fusionExons.size() - 1)));
+            }
+
+        }
+
+        return result;
+    }
+
+    @NotNull
     public static List<Gene> genes(@NotNull final List<Exon> exons)
     {
         final List<Gene> result = Lists.newArrayList();

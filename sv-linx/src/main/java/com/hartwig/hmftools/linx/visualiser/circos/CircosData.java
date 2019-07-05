@@ -41,12 +41,12 @@ public class CircosData
 
     private final Map<String, Integer> contigLengths;
 
-    private final Set<String> downStreamGenes;
+    private final Set<String> upstreamGenes;
+    private final Set<String> downstreamGenes;
 
     private final int maxTracks;
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
-
 
     public CircosData(boolean scaleExons,
             @NotNull final List<Segment> unadjustedSegments,
@@ -56,7 +56,8 @@ public class CircosData
             @NotNull final List<ProteinDomain> unadjustedProteinDomains,
             @NotNull final List<Fusion> fusions)
     {
-        this.downStreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
+        this.upstreamGenes = fusions.stream().map(Fusion::geneUp).collect(toSet());
+        this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
         final List<GenomeRegion> unadjustedFragileSites =
@@ -104,9 +105,16 @@ public class CircosData
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
     }
 
-    public Set<String> downStreamGenes()
+    @NotNull
+    public Set<String> upstreamGenes()
     {
-        return downStreamGenes;
+        return upstreamGenes;
+    }
+
+    @NotNull
+    public Set<String> downstreamGenes()
+    {
+        return downstreamGenes;
     }
 
     public boolean displayGenes()
@@ -195,7 +203,8 @@ public class CircosData
         return contigLengths;
     }
 
-    public int totalContigLength() {
+    public int totalContigLength()
+    {
         return contigLengths().values().stream().mapToInt(x -> x).sum();
     }
 

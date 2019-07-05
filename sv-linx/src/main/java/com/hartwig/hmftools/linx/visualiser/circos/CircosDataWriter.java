@@ -14,6 +14,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -33,6 +34,7 @@ public class CircosDataWriter
 {
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
+    private static final String SINGLE_GREEN = "(107,214,148)";
 
 
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
@@ -58,6 +60,11 @@ public class CircosDataWriter
 
     public void write(@NotNull final CircosData data) throws IOException
     {
+        final Map<String, String> geneColorMap = Maps.newHashMap();
+        data.genes().forEach(x -> geneColorMap.put(x.name(), SINGLE_GREEN));
+        data.upstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_BLUE));
+        data.downstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_RED));
+
         final Map<String, Integer> contigLengths = data.contigLengths();
         int totalContigLength = data.totalContigLength();
 
@@ -72,13 +79,13 @@ public class CircosDataWriter
         Files.write(new File(proteinDomainPath).toPath(), proteinDomain(data.proteinDomains()));
 
         final String exonPath = filePrefix + ".exon.circos";
-        Files.write(new File(exonPath).toPath(), exons(data.downStreamGenes(), exons));
+        Files.write(new File(exonPath).toPath(), exons(geneColorMap, exons));
 
         final String exonRankPath = filePrefix + ".exon.rank.circos";
         Files.write(new File(exonRankPath).toPath(), exonRank(totalContigLength, exons));
 
         final String genePath = filePrefix + ".gene.circos";
-        Files.write(new File(genePath).toPath(), genes(data.downStreamGenes(), data.genes()));
+        Files.write(new File(genePath).toPath(), genes(geneColorMap, data.genes()));
 
         final String geneNamePath = filePrefix + ".gene.name.circos";
         Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
@@ -126,7 +133,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> genes(@NotNull final Set<String> downGenes, @NotNull final List<Gene> genes)
+    private List<String> genes(@NotNull final Map<String, String> geneColours, @NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
         for (final Gene gene : genes)
@@ -135,7 +142,7 @@ public class CircosDataWriter
                     .add(String.valueOf(gene.start()))
                     .add(String.valueOf(gene.end()))
                     .add(String.valueOf(1))
-                    .add("fill_color=" + (downGenes.contains(gene.name()) ? SINGLE_RED : SINGLE_BLUE))
+                    .add("fill_color=" + geneColours.get(gene.name()))
                     .toString();
             result.add(exonString);
 
@@ -218,7 +225,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exons(@NotNull final Set<String> downGenes, @NotNull final List<Exon> exons)
+    private List<String> exons(@NotNull final Map<String, String> geneColours, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
         for (final Exon exon : exons)
@@ -227,7 +234,7 @@ public class CircosDataWriter
                     .add(String.valueOf(exon.start()))
                     .add(String.valueOf(exon.end()))
                     .add(String.valueOf(1))
-                    .add("fill_color=" + (downGenes.contains(exon.gene()) ? SINGLE_RED : SINGLE_BLUE))
+                    .add("fill_color=" + geneColours.get(exon.gene()))
                     .toString();
             result.add(exonString);
         }
