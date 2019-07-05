@@ -51,7 +51,7 @@ public class ProteinDomains
         {
             if (unadjustedDomain.overlaps(upGeneRegion))
             {
-                final GenomeRegion convertedDomain = convertRegion(fusion, upGeneRegion, unadjustedDomain);
+                final GenomeRegion convertedDomain = convertRegion(fusion.strandUp(), upGeneRegion, unadjustedDomain);
                 final ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
                         .start(Math.max(convertedDomain.start(), firstUpExon.geneStart()))
@@ -63,7 +63,7 @@ public class ProteinDomains
 
             if (unadjustedDomain.overlaps(downGeneRegion))
             {
-                final GenomeRegion convertedDomain = convertRegion(fusion, downGeneRegion, unadjustedDomain);
+                final GenomeRegion convertedDomain = convertRegion(fusion.strandDown(), downGeneRegion, unadjustedDomain);
                 final ProteinDomain domain = ImmutableProteinDomain.builder().from(unadjustedDomain)
                         .chromosome(fusion.name())
                         .start(Math.max(convertedDomain.start() + firstUpExon.geneEnd(), finalDownExon.geneStart()))
