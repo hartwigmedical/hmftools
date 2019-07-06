@@ -27,6 +27,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ChainingActualTest
@@ -146,6 +147,7 @@ public class ChainingActualTest
         assertEquals(10, chain.getLinkCount());
     }
 
+    @Ignore
     @Test
     public void testActualSimpleChaining1()
     {

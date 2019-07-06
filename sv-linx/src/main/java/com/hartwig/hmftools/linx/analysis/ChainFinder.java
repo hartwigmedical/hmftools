@@ -275,6 +275,7 @@ public class ChainFinder
 
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
     public void setUseAllelePloidies(boolean toggle) { mUseAllelePloidies = toggle; }
+
     public void setMaxPossibleLinks(int maxLinks)
     {
         if(maxLinks == 0)
@@ -1771,6 +1772,7 @@ public class ChainFinder
         // identify potential complex DUP candidates along the way
         // for the special case of foldbacks, add every possible link they can make
 
+        /*
         List<SvBreakend> reverseFoldbackBreakends = Lists.newArrayList();
 
         for(SvVarData foldback : mFoldbacks)
@@ -1791,6 +1793,7 @@ public class ChainFinder
                 }
             }
         }
+        */
 
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
@@ -1858,15 +1861,13 @@ public class ChainFinder
                     SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI,
                             lowerBreakend.usesStart(), upperBreakend.usesStart());
 
-                    if(getSvReplicationCount(lowerSV) == getSvReplicationCount(upperSV))
-                    {
-                        matchedPloidy = true;
+                    // if(getSvReplicationCount(lowerSV) == getSvReplicationCount(upperSV))
+                        // matchedPloidy = true;
 
-                        // make note of any pairs formed from adjacent facing breakends
-                        if(j == i + 1)
-                        {
-                            mAdjacentMatchingPairs.add(newPair);
-                        }
+                    // make note of any pairs formed from adjacent facing breakends
+                    if(j == i + 1 && getSvReplicationCount(lowerSV) == getSvReplicationCount(upperSV))
+                    {
+                        mAdjacentMatchingPairs.add(newPair);
                     }
 
                     lowerPairs.add(newPair);
@@ -1879,7 +1880,7 @@ public class ChainFinder
                         mSvBreakendPossibleLinks.put(upperBreakend, upperPairs);
 
                         // create an entry at the upper breakend's start point to indicate it hasn't begun its search
-                        mBreakendLastLinkIndexMap.put(upperBreakend, getBreakendClusterChromosomeIndex(upperBreakend));
+                        // mBreakendLastLinkIndexMap.put(upperBreakend, getBreakendClusterChromosomeIndex(upperBreakend));
                     }
 
                     upperPairs.add(0, newPair); // add to front since always nearer than the one prior
@@ -1912,172 +1913,25 @@ public class ChainFinder
                         }
                     }
 
+                    /* currently disabled
                     if(matchedPloidy && exceedsMaxPossibleLinks(lowerPairs.size()) && !lowerIsFoldback)
                     {
                         // more possible links could be craeted, but pause adding any more for now
                         mBreakendLastLinkIndexMap.put(lowerBreakend, j);
                         break;
                     }
+                    */
                 }
             }
         }
 
+        /*
         for(SvBreakend breakend : reverseFoldbackBreakends)
         {
             mBreakendLastLinkIndexMap.put(breakend, getBreakendClusterChromosomeIndex(breakend));
             addMorePossibleLinks(breakend, false);
         }
-    }
-
-    private boolean exceedsMaxPossibleLinks(int linkCount)
-    {
-        return mMaxPossibleLinks > 0 && linkCount >= mMaxPossibleLinks;
-    }
-
-    private boolean addMorePossibleLinks(SvBreakend breakend, boolean applyMax)
-    {
-        Integer lastIndex = mBreakendLastLinkIndexMap.get(breakend);
-
-        if(lastIndex == null || lastIndex < 0)
-            return false;
-
-        if(getUnlinkedBreakendCount(breakend) == 0)
-        {
-            mBreakendLastLinkIndexMap.remove(breakend);
-            return false;
-        }
-
-        // begin from immediately after the last added index and try to add another X possible links
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
-
-        final double[][] allelePloidies = mChrAllelePloidies.get(breakend.chromosome());
-
-        boolean hasValidAP = mUseAllelePloidies && hasValidAllelePloidyData(breakend, allelePloidies);
-
-        List<SvLinkedPair> possiblePairs = mSvBreakendPossibleLinks.get(breakend);
-
-        if(possiblePairs == null)
-            return false;
-
-        boolean traverseUp = breakend.orientation() == -1;
-        int index = lastIndex;
-
-        boolean matchedPloidy = false;
-        int linksAdded = 0;
-        boolean lastIndexValid = true;
-        while (true)
-        {
-            index += traverseUp ? 1 : -1;
-
-            if(index < 0 || index >= breakendList.size())
-            {
-                lastIndexValid = false;
-                break;
-            }
-
-            final SvBreakend otherBreakend = breakendList.get(index);
-
-            if(otherBreakend.orientation() == breakend.orientation())
-                continue;
-
-            if(otherBreakend.getSV() == breakend.getSV())
-                continue;
-
-            if(getUnlinkedBreakendCount(otherBreakend) == 0)
-                continue;
-
-            long distance = abs(otherBreakend.position() - breakend.position());
-            int minTiLength = getMinTemplatedInsertionLength(breakend, otherBreakend);
-
-            if(distance < minTiLength)
-                continue;
-
-            List<SvLinkedPair> otherPairs = mSvBreakendPossibleLinks.get(otherBreakend);
-
-            if(otherPairs == null)
-                continue;
-
-            // record the possible link
-            SvBreakend lowerBreakend = breakend.orientation() == -1 ? breakend : otherBreakend;
-            SvBreakend upperBreakend = breakend.orientation() == 1 ? breakend : otherBreakend;
-            final SvVarData lowerSV = lowerBreakend.getSV();
-            final SvVarData upperSV = upperBreakend.getSV();
-
-            SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI,
-                    lowerBreakend.usesStart(), upperBreakend.usesStart());
-
-            // check link hasn't already been added (which can happen if added from the other breakend)
-            boolean skipPair = false;
-
-            for(SvLinkedPair existingPair : possiblePairs)
-            {
-                if(existingPair.matches(newPair))
-                {
-                    skipPair = true;
-                    break;
-                }
-            }
-
-            if(skipPair)
-                continue;
-
-            for(SvLinkedPair existingPair : otherPairs)
-            {
-                if(existingPair.matches(newPair))
-                {
-                    skipPair = true;
-                    break;
-                }
-            }
-
-            if(skipPair)
-                continue;
-
-            // check for a clash against existing pairs
-            if(isOppositeMatchVsExisting(newPair))
-                continue;
-
-            ++linksAdded;
-            possiblePairs.add(newPair);
-            otherPairs.add(newPair);
-
-            if(!matchedPloidy)
-            {
-                matchedPloidy = getSvReplicationCount(lowerSV) == getSvReplicationCount(upperSV);
-            }
-
-            if(hasValidAP && hasValidAllelePloidyData(otherBreakend, allelePloidies))
-            {
-                double clusterAP = allelePloidies[getBreakendClusterChromosomeIndex(otherBreakend)][CLUSTER_AP];
-
-                if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
-                {
-                    // this lower breakend cannot match with anything futher upstream
-                    log(LOG_LEVEL_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
-                            getBreakendClusterChromosomeIndex(breakend), breakend.toString(), index, otherBreakend.toString(), clusterAP));
-
-                    lastIndexValid = false;
-                    break;
-                }
-            }
-
-            if(applyMax && matchedPloidy && exceedsMaxPossibleLinks(possiblePairs.size()))
-            {
-                break;
-            }
-        }
-
-        if(lastIndexValid)
-        {
-            // make note of the last location tested for adding a new possible link
-            mBreakendLastLinkIndexMap.put(breakend, index);
-        }
-        else
-        {
-            mBreakendLastLinkIndexMap.remove(breakend);
-        }
-
-        return linksAdded > 0;
+        */
     }
 
     private void checkIsComplexDupSV(SvBreakend lowerPloidyBreakend, SvBreakend higherPloidyBreakend)
@@ -2348,6 +2202,161 @@ public class ChainFinder
         }
 
         return mIsValid;
+    }
+
+    private boolean exceedsMaxPossibleLinks(int linkCount)
+    {
+        return mMaxPossibleLinks > 0 && linkCount >= mMaxPossibleLinks;
+    }
+
+    private boolean addMorePossibleLinks(SvBreakend breakend, boolean applyMax)
+    {
+        return false;
+
+        /*
+        Integer lastIndex = mBreakendLastLinkIndexMap.get(breakend);
+
+        if(lastIndex == null || lastIndex < 0)
+            return false;
+
+        if(getUnlinkedBreakendCount(breakend) == 0)
+        {
+            mBreakendLastLinkIndexMap.remove(breakend);
+            return false;
+        }
+
+        // begin from immediately after the last added index and try to add another X possible links
+        final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
+
+        final double[][] allelePloidies = mChrAllelePloidies.get(breakend.chromosome());
+
+        boolean hasValidAP = mUseAllelePloidies && hasValidAllelePloidyData(breakend, allelePloidies);
+
+        List<SvLinkedPair> possiblePairs = mSvBreakendPossibleLinks.get(breakend);
+
+        if(possiblePairs == null)
+            return false;
+
+        boolean traverseUp = breakend.orientation() == -1;
+        int index = lastIndex;
+
+        boolean matchedPloidy = false;
+        int linksAdded = 0;
+        boolean lastIndexValid = true;
+        while (true)
+        {
+            index += traverseUp ? 1 : -1;
+
+            if(index < 0 || index >= breakendList.size())
+            {
+                lastIndexValid = false;
+                break;
+            }
+
+            final SvBreakend otherBreakend = breakendList.get(index);
+
+            if(otherBreakend.orientation() == breakend.orientation())
+                continue;
+
+            if(otherBreakend.getSV() == breakend.getSV())
+                continue;
+
+            if(getUnlinkedBreakendCount(otherBreakend) == 0)
+                continue;
+
+            long distance = abs(otherBreakend.position() - breakend.position());
+            int minTiLength = getMinTemplatedInsertionLength(breakend, otherBreakend);
+
+            if(distance < minTiLength)
+                continue;
+
+            List<SvLinkedPair> otherPairs = mSvBreakendPossibleLinks.get(otherBreakend);
+
+            if(otherPairs == null)
+                continue;
+
+            // record the possible link
+            SvBreakend lowerBreakend = breakend.orientation() == -1 ? breakend : otherBreakend;
+            SvBreakend upperBreakend = breakend.orientation() == 1 ? breakend : otherBreakend;
+            final SvVarData lowerSV = lowerBreakend.getSV();
+            final SvVarData upperSV = upperBreakend.getSV();
+
+            SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI,
+                    lowerBreakend.usesStart(), upperBreakend.usesStart());
+
+            // check link hasn't already been added (which can happen if added from the other breakend)
+            boolean skipPair = false;
+
+            for(SvLinkedPair existingPair : possiblePairs)
+            {
+                if(existingPair.matches(newPair))
+                {
+                    skipPair = true;
+                    break;
+                }
+            }
+
+            if(skipPair)
+                continue;
+
+            for(SvLinkedPair existingPair : otherPairs)
+            {
+                if(existingPair.matches(newPair))
+                {
+                    skipPair = true;
+                    break;
+                }
+            }
+
+            if(skipPair)
+                continue;
+
+            // check for a clash against existing pairs
+            if(isOppositeMatchVsExisting(newPair))
+                continue;
+
+            ++linksAdded;
+            possiblePairs.add(newPair);
+            otherPairs.add(newPair);
+
+            if(!matchedPloidy)
+            {
+                matchedPloidy = getSvReplicationCount(lowerSV) == getSvReplicationCount(upperSV);
+            }
+
+            if(hasValidAP && hasValidAllelePloidyData(otherBreakend, allelePloidies))
+            {
+                double clusterAP = allelePloidies[getBreakendClusterChromosomeIndex(otherBreakend)][CLUSTER_AP];
+
+                if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
+                {
+                    // this lower breakend cannot match with anything further upstream
+                    log(LOG_LEVEL_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
+                            getBreakendClusterChromosomeIndex(breakend), breakend.toString(), index, otherBreakend.toString(), clusterAP));
+
+                    lastIndexValid = false;
+                    break;
+                }
+            }
+
+            if(applyMax && matchedPloidy && exceedsMaxPossibleLinks(possiblePairs.size()))
+            {
+                break;
+            }
+        }
+
+        if(lastIndexValid)
+        {
+            // make note of the last location tested for adding a new possible link
+            mBreakendLastLinkIndexMap.put(breakend, index);
+        }
+        else
+        {
+            mBreakendLastLinkIndexMap.remove(breakend);
+        }
+
+        return linksAdded > 0;
+        */
     }
 
     private void cullPossibleLinks()
