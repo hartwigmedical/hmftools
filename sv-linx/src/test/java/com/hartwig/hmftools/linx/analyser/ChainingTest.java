@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
@@ -373,6 +374,44 @@ public class ChainingTest
 
         int linkCount = 2 * 4 + 1 * 2 + 2 - 1;
         assertEquals(linkCount, chain.getLinkCount());
+    }
+
+    @Test
+    public void testDupAssemblyChain()
+    {
+        // simple chain with replicated section: centromere - DEL - remote TI - DUP - DEL - remote TI - telomere,
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 2000,3000, 1, -1, DEL, 2);
+        final SvVarData var2 = createTestSv("2", "1", "2", 4000,100, 1, -1, BND, 2);
+        final SvVarData var3 = createTestSv("3", "1", "2", 5000,200, -1, 1, BND, 2);
+        final SvVarData dup = createTestSv("4", "1", "1", 1000,6000, -1, 1, DUP, 1);
+
+        var1.setAssemblyData(false, "asmb12");
+        var2.setAssemblyData(true, "asmb12");
+
+        var2.setAssemblyData(false, "asmb23");
+        var3.setAssemblyData(false, "asmb23");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(dup);
+
+        tester.addCopyNumberData();
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(cluster.getFoldbacks().isEmpty());
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(6, chain.getLinkCount());
     }
 
 

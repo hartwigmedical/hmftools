@@ -384,13 +384,13 @@ public class ChainFinder
     {
         setUnlinkedBreakends();
 
+        setSvReplicationCounts();
+
         // first make chains out of any assembly links
         addAssemblyLinksToChains();
 
         if(assembledLinksOnly)
             return;
-
-        setSvReplicationCounts();
 
         if(mUseAllelePloidies)
             determineBreakendPloidies();
@@ -1311,7 +1311,14 @@ public class ChainFinder
 
         for(SvLinkedPair pair : mAssembledLinks)
         {
-            addPairToChain(pair);
+            // add as many times as permitted by the ploidy of the variants
+            int pairRepeatCount = !mHasReplication ?
+                    1 : min(getSvReplicationCount(pair.first()), getSvReplicationCount(pair.second())) ;
+
+            for(int i = 0; i < pairRepeatCount; ++i)
+            {
+                addPairToChain(pair);
+            }
         }
 
         if(!mChains.isEmpty())

@@ -177,6 +177,92 @@ public class LinkFinder
         return true;
     }
 
+    public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
+    {
+        // return the maximal length from each breakend's anchor distances if present
+        return max(breakend1.getMinTemplatedLength(), breakend2.getMinTemplatedLength());
+    }
+
+    public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            for (int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                SvBreakend breakend = breakendList.get(i);
+                SvBreakend nextBreakend = breakendList.get(i+1);
+                SvVarData var1 = breakend.getSV();
+                SvVarData var2 = nextBreakend.getSV();
+
+                if(var1 == var2)
+                    continue;
+
+                if(breakend.orientation() == nextBreakend.orientation())
+                    continue;
+
+                if(breakend.arm() != nextBreakend.arm())
+                    continue;
+
+                long distance = nextBreakend.position() - breakend.position();
+                int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
+
+                if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
+                {
+                    // breakends face away as per a normal DB
+                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
+                    markDeletionBridge(dbPair);
+                }
+                else if(distance < minTiLength)
+                {
+                    // facing breakends with a distance less than the anchor distances are in fact a DB with overlap
+                    if(haveLinkedAssemblies(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
+                    {
+                        // however check that they don't have assemblies on these breakends with each other
+                        continue;
+                    }
+
+                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());
+                    markDeletionBridge(dbPair);
+                }
+            }
+        }
+    }
+
+    private static void markDeletionBridge(SvLinkedPair dbPair)
+    {
+        // if either SV has a shorter DB already in existence, then keep it
+        final SvLinkedPair existingDBLink1 = dbPair.first().getDBLink(dbPair.firstLinkOnStart());
+        final SvLinkedPair existingDBLink2 = dbPair.second().getDBLink(dbPair.secondLinkOnStart());
+
+        if((existingDBLink1 != null && existingDBLink1.length() < dbPair.length())
+        || (existingDBLink2 != null && existingDBLink2.length() < dbPair.length()))
+        {
+            return;
+        }
+
+        // remove any conflicting DB link info
+        if(existingDBLink1 != null)
+        {
+            if(existingDBLink1.first() == dbPair.first())
+                existingDBLink1.second().setDBLink(null, existingDBLink1.secondLinkOnStart());
+            else
+                existingDBLink1.first().setDBLink(null, existingDBLink1.firstLinkOnStart());
+        }
+
+        if(existingDBLink2 != null)
+        {
+            if(existingDBLink2.first() == dbPair.first())
+                existingDBLink2.second().setDBLink(null, existingDBLink2.secondLinkOnStart());
+            else
+                existingDBLink2.first().setDBLink(null, existingDBLink2.firstLinkOnStart());
+        }
+
+        dbPair.first().setDBLink(dbPair, dbPair.firstLinkOnStart());
+        dbPair.second().setDBLink(dbPair, dbPair.secondLinkOnStart());
+    }
+
     public List<SvLinkedPair> createInferredLinkedPairs(SvCluster cluster, List<SvVarData> svList, boolean allowSingleBEs)
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
@@ -285,91 +371,5 @@ public class LinkFinder
         LOGGER.debug("cluster({}) has {} inferred linked pairs", cluster.id(), linkedPairs.size());
 
         return linkedPairs;
-    }
-
-    public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
-    {
-        // return the maximal length from each breakend's anchor distances if present
-        return max(breakend1.getMinTemplatedLength(), breakend2.getMinTemplatedLength());
-    }
-
-    public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
-    {
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            final List<SvBreakend> breakendList = entry.getValue();
-
-            for (int i = 0; i < breakendList.size() - 1; ++i)
-            {
-                SvBreakend breakend = breakendList.get(i);
-                SvBreakend nextBreakend = breakendList.get(i+1);
-                SvVarData var1 = breakend.getSV();
-                SvVarData var2 = nextBreakend.getSV();
-
-                if(var1 == var2)
-                    continue;
-
-                if(breakend.orientation() == nextBreakend.orientation())
-                    continue;
-
-                if(breakend.arm() != nextBreakend.arm())
-                    continue;
-
-                long distance = nextBreakend.position() - breakend.position();
-                int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
-
-                if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
-                {
-                    // breakends face away as per a normal DB
-                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_DB, breakend.usesStart(), nextBreakend.usesStart());
-                    markDeletionBridge(dbPair);
-                }
-                else if(distance < minTiLength)
-                {
-                    // facing breakends with a distance less than the anchor distances are in fact a DB with overlap
-                    if(haveLinkedAssemblies(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))
-                    {
-                        // however check that they don't have assemblies on these breakends with each other
-                        continue;
-                    }
-
-                    SvLinkedPair dbPair = new SvLinkedPair(var1, var2, LINK_TYPE_TI, breakend.usesStart(), nextBreakend.usesStart());
-                    markDeletionBridge(dbPair);
-                }
-            }
-        }
-    }
-
-    private static void markDeletionBridge(SvLinkedPair dbPair)
-    {
-        // if either SV has a shorter DB already in existence, then keep it
-        final SvLinkedPair existingDBLink1 = dbPair.first().getDBLink(dbPair.firstLinkOnStart());
-        final SvLinkedPair existingDBLink2 = dbPair.second().getDBLink(dbPair.secondLinkOnStart());
-
-        if((existingDBLink1 != null && existingDBLink1.length() < dbPair.length())
-        || (existingDBLink2 != null && existingDBLink2.length() < dbPair.length()))
-        {
-            return;
-        }
-
-        // remove any conflicting DB link info
-        if(existingDBLink1 != null)
-        {
-            if(existingDBLink1.first() == dbPair.first())
-                existingDBLink1.second().setDBLink(null, existingDBLink1.secondLinkOnStart());
-            else
-                existingDBLink1.first().setDBLink(null, existingDBLink1.firstLinkOnStart());
-        }
-
-        if(existingDBLink2 != null)
-        {
-            if(existingDBLink2.first() == dbPair.first())
-                existingDBLink2.second().setDBLink(null, existingDBLink2.secondLinkOnStart());
-            else
-                existingDBLink2.first().setDBLink(null, existingDBLink2.firstLinkOnStart());
-        }
-
-        dbPair.first().setDBLink(dbPair, dbPair.firstLinkOnStart());
-        dbPair.second().setDBLink(dbPair, dbPair.secondLinkOnStart());
     }
 }
