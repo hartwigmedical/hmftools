@@ -206,6 +206,8 @@ public class SvVarData
         return mSVData.id();
     }
 
+    public String toString() { return posId() + " " + typeStr(); }
+
     public final StructuralVariantData getSvData() { return mSVData; }
     public boolean isNoneSegment() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
 

@@ -203,6 +203,8 @@ public class ChainFinder
 
     public void initialise(SvCluster cluster, final List<SvVarData> svList)
     {
+        clear();
+
         mIsClusterSubset = true;
         mClusterId = cluster.id();
 
@@ -244,9 +246,19 @@ public class ChainFinder
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
+                // only add an assembled link if it has a partner in the provided SV set, and can be replicated equally
                 for (SvLinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
                 {
-                    if(svList.contains(link.getOtherSV(var)))
+                    final SvVarData otherVar = link.getOtherSV(var);
+
+                    if(!svList.contains(otherVar))
+                        continue;
+
+                    int maxRepCount = mHasReplication ? min(max(var.getReplicatedCount(),1), max(otherVar.getReplicatedCount(),1)) : 1;
+
+                    long currentLinkCount = mAssembledLinks.stream().filter(x -> x.matches(link)).count();
+
+                    if(currentLinkCount < maxRepCount)
                     {
                         mAssembledLinks.add(link);
                     }
@@ -1930,6 +1942,7 @@ public class ChainFinder
 
         // begin from immediately after the last added index and try to add another X possible links
         final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
+
         final double[][] allelePloidies = mChrAllelePloidies.get(breakend.chromosome());
 
         boolean hasValidAP = mUseAllelePloidies && hasValidAllelePloidyData(breakend, allelePloidies);
