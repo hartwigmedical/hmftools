@@ -86,6 +86,9 @@ public class DoubleMinuteFinder
 
     public void analyseCluster(final String sampleId, SvCluster cluster)
     {
+        if(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM))
+            return;
+
         if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DUP)
             return;
 
@@ -185,6 +188,9 @@ public class DoubleMinuteFinder
             cluster.setDoubleMinuteSVs(highPloidySVs);
 
         cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+
+        LOGGER.debug(String.format("cluster(%s) maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
+                cluster.id(), clusterMaxPloidy, highPloidySVs.size(), fullyChained));
 
         reportPotentialGroup(sampleId, cluster, highPloidySVs, fullyChained, dmChain);
     }

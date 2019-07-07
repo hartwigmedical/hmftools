@@ -8,12 +8,15 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -28,7 +31,7 @@ public class DoubleMinuteTest
         SvTestHelper tester = new SvTestHelper();
 
         // tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
+        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
         // first a simple DUP
         final SvVarData dup1 = createTestSv("0","1","1",500,600,-1,1, DUP,10);
@@ -53,19 +56,52 @@ public class DoubleMinuteTest
     @Test
     public void testChainedDM()
     {
+        // form a DM from 2 INVs
+        SvTestHelper tester = new SvTestHelper();
+
+        tester.logVerbose(true);
+        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
+
+        final SvVarData var1 = createTestSv("1","1","1",1000,6000,-1,-1, INV,8);
+        final SvVarData var2 = createTestSv("2","1","1",3000,8000,1,1, INV,8);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.preClusteringInit();
+
+        tester.addCopyNumberData();
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
+        assertTrue(cluster != null);
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
+
+        assertTrue(cluster.getChains().size() == 1);
+        assertEquals(2, cluster.getChains().get(0).getLinkCount());
+        assertTrue(cluster.getChains().get(0).isClosedLoop());
+    }
+
+    @Test
+    public void testChainedDMWithMinors()
+    {
         // form a DM from 3 chained SVs, with some other SVs in the cluster having a lower ploidy
         SvTestHelper tester = new SvTestHelper();
 
         tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
+        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
-        // 1 s100 -> 6 e600-500s -> 4 s1500-100e -> 3 s200-2000e -> 5 s2100-2200e -> 2 e2500-1200s -> 1 e1000
+        // 1 s10100 -> 6 e10600-10500s -> 4 s11500-10100e -> 3 s10200-12000e -> 5 s12100-12200e -> 2 e12500-11200s -> 1 e11000
 
-        final SvVarData var1 = createTestSv("1","1","1",10100,11000,-1,-1, INV,10);
-        final SvVarData var2 = createTestSv("2","1","1",11200,12500,1,1, INV,10);
-        final SvVarData var3 = createTestSv("3","1","2",12000,10200,-1,1, BND,10);
-        final SvVarData var4 = createTestSv("4","1","2",11500,10100,1,-1, BND,10);
-        final SvVarData var5 = createTestSv("5","1","1",12100,12200,1,1, DEL,1);
+        final SvVarData var1 = createTestSv("1","1","1",10100,11000,-1,-1, INV,8);
+        final SvVarData var2 = createTestSv("2","1","1",11200,12500,1,1, INV,8);
+        final SvVarData var3 = createTestSv("3","1","2",12000,10200,-1,1, BND,8);
+        final SvVarData var4 = createTestSv("4","1","2",11500,10100,1,-1, BND,8);
+        final SvVarData var5 = createTestSv("5","1","1",12100,12200,1,-1, DEL,2);
         final SvVarData var6 = createTestSv("6","1","1",10500,10600,-1,1, DUP,2);
 
         // unrelated SVs at either end of the cluster
@@ -92,18 +128,16 @@ public class DoubleMinuteTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        boolean matched = false;
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
+        assertTrue(cluster != null);
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
+        assertTrue(cluster.getDoubleMinuteSVs().contains(var4));
 
-        for(final SvCluster cluster : tester.Analyser.getClusters())
-        {
-            if (cluster.getSvCount() == 6 && cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM))
-            {
-                matched = true;
-                break;
-            }
-        }
-
-        assertTrue(matched);
+        assertTrue(cluster.getChains().size() == 1);
+        assertTrue(cluster.getChains().get(0).isClosedLoop());
     }
 
     @Test
@@ -113,14 +147,14 @@ public class DoubleMinuteTest
         SvTestHelper tester = new SvTestHelper();
 
         tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
+        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
-        // a cluster with a set of 2 foldbacks which control the ploidies
+        // a cluster with a set of 3 foldbacks which control the ploidies
         SvVarData var1 = createTestSv("1","1","1",400,500,-1,-1, INV,1);
         SvVarData var2 = createTestSv("2","1","1",5000,5200,1,1, INV,2);
         SvVarData var3 = createTestSv("3","1","1",1000,1200,-1,-1, INV,2);
         SvVarData var4 = createTestSv("4","1","1",2000,2200,1,1, INV,3);
-        SvVarData var5 = createTestSv("5","1","1",2100,2200,1,1, DEL,8);
+        SvVarData var5 = createTestSv("5","1","1",2100,2200,1,-1, DEL,8);
         SvVarData var6 = createTestSv("6","1","1",100,6000,-1,1, DUP,8);
 
         tester.AllVariants.add(var1);

@@ -172,6 +172,9 @@ public class SvCluster
         {
             mSVs.add(var);
             mRequiresRecalc = true;
+
+            mAnnotationList.clear();
+            mDoubleMinuteSVs.clear();
         }
 
         var.setCluster(this);
@@ -1016,6 +1019,7 @@ public class SvCluster
     public static String CLUSTER_ANNONTATION_CT = "CT";
 
     public final List<String> getAnnotationList() { return mAnnotationList; }
+
     public final void addAnnotation(final String annotation)
     {
         if(mAnnotationList.contains(annotation))
@@ -1023,6 +1027,8 @@ public class SvCluster
 
         mAnnotationList.add(annotation);
     }
+
+    public boolean hasAnnotation(final String annotation) { return mAnnotationList.contains(annotation); }
 
     public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
 

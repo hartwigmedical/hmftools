@@ -84,7 +84,7 @@ public class SvClassification
 
     public static boolean isSimpleSingleSV(final SvCluster cluster)
     {
-        return cluster.getSvCount() == 1 && cluster.getResolvedType().isSimple();
+        return cluster.getSvCount() == 1 && cluster.getSV(0).isSimpleType();
     }
 
     public static boolean isIncompleteType(final ResolvedType resolvedType)

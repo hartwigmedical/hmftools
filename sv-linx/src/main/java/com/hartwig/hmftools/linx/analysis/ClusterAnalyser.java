@@ -241,6 +241,9 @@ public class ClusterAnalyser {
         {
             if(isSimpleSingleSV(cluster))
             {
+                if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+                    mDmFinder.analyseCluster(mSampleId, cluster);
+
                 setClusterResolvedState(cluster, false);
                 continue;
             }
@@ -250,6 +253,9 @@ public class ClusterAnalyser {
 
             mLinkFinder.findAssembledLinks(cluster);
             applyCopyNumberReplication(cluster);
+
+            if(isSimple && runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+                mDmFinder.analyseCluster(mSampleId, cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster, !isSimple);
@@ -288,9 +294,7 @@ public class ClusterAnalyser {
 
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
             if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-            {
                 mDmFinder.analyseCluster(mSampleId, cluster);
-            }
 
             applyCopyNumberReplication(cluster);
 
