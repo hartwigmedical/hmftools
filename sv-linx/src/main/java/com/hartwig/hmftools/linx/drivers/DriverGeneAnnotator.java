@@ -517,12 +517,9 @@ public class DriverGeneAnnotator
                 if(varStart.position(true) > transStart || varStart.position(false) < transEnd)
                     continue;
 
-                // require the DUP to no be interupted by any other SV within this cluster within this gene region
+                // require the DUP to not be interupted by any other SV within this cluster within this gene region
                 SvBreakend lowerBreakend = breakend;
                 SvBreakend upperBreakend = varStart.getBreakend(false);
-
-                if(lowerBreakend.getClusterChrPosIndex() != upperBreakend.getClusterChrPosIndex() - 1)
-                    continue;
 
                 LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
                         mSampleId, varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type(),

@@ -78,6 +78,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.types.SvaConfig;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -856,6 +857,8 @@ public class SvSampleAnalyser {
                         {
                             final String linkArm = beStart.arm() == beEnd.arm() ? beStart.arm() : beStart.arm() + "_" + beEnd.arm();
 
+                            double ploidy = DatabaseUtil.decimal((beStart.getSV().ploidy() + beEnd.getSV().ploidy()) * 0.5);
+
                             linksData.add(ImmutableLinxLink.builder()
                                     .clusterId(cluster.id())
                                     .chainId(chain.id())
@@ -870,7 +873,7 @@ public class SvSampleAnalyser {
                                     .assembled(pair.isAssembled())
                                     .traversedSVCount(pair.getTraversedSVCount())
                                     .length(pair.length())
-                                    .ploidy((beStart.getSV().ploidy() + beEnd.getSV().ploidy()) * 0.5)
+                                    .ploidy(ploidy)
                                     .pseudogeneInfo(pair.getExonMatchData())
                                     .build());
                         }

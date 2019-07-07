@@ -3,15 +3,20 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.multiplyExact;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_AP;
+import static com.hartwig.hmftools.linx.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.List;
@@ -77,33 +82,34 @@ public class ChainFinder
     private boolean mHasReplication;
 
     // input state
-    private List<SvVarData> mUniqueSVs;
-    private List<SvVarData> mReplicatedSVs;
-    private List<SvVarData> mFoldbacks;
-    private boolean mIsClusterSubset;
-    private List<SvLinkedPair> mAssembledLinks;
+    private final List<SvVarData> mUniqueSVs;
+    private final List<SvVarData> mReplicatedSVs;
+    private final List<SvVarData> mFoldbacks;
+    private final List<SvVarData> mDoubleMinuteSVs;
+    private final List<SvLinkedPair> mAssembledLinks;
     private Map<String,List<SvBreakend>> mChrBreakendMap;
 
     // links a breakend to its position in a chromosome's breakend list - only applicable if a subset of SVs are being chained
-    private Map<SvBreakend,Integer> mSubsetBreakendClusterIndexMap;
+    private boolean mIsClusterSubset;
+    private final Map<SvBreakend,Integer> mSubsetBreakendClusterIndexMap;
 
     // chaining state
-    private List<SvLinkedPair> mSkippedPairs;
-    private List<SvVarData> mComplexDupCandidates;
-    private List<SvLinkedPair> mUniquePairs;
-    private List<SvLinkedPair> mAdjacentMatchingPairs;
+    private final List<SvLinkedPair> mSkippedPairs;
+    private final List<SvVarData> mComplexDupCandidates;
+    private final List<SvLinkedPair> mUniquePairs;
+    private final List<SvLinkedPair> mAdjacentMatchingPairs;
     private boolean mSkippedPair; // keep track of any excluded pair or SV without exiting the chaining routine
 
-    private List<SvChain> mChains;
+    private final List<SvChain> mChains;
     private int mNextChainId;
-    private List<SvVarData> mUnlinkedSVs;
-    private Map<SvBreakend,List<SvBreakend>> mUnlinkedBreakendMap;
-    private Map<SvVarData,Integer> mSvReplicationMap; // diminishes as SVs are added to chains
-    private Map<SvVarData,Integer> mSvOriginalReplicationMap;
-    private Map<SvBreakend,Integer> mBreakendLastLinkIndexMap;
-    private ChainPloidyLimits mClusterPloidyLimits;
+    private final List<SvVarData> mUnlinkedSVs;
+    private final Map<SvBreakend,List<SvBreakend>> mUnlinkedBreakendMap;
+    private final Map<SvVarData,Integer> mSvReplicationMap; // diminishes as SVs are added to chains
+    private final Map<SvVarData,Integer> mSvOriginalReplicationMap;
+    private final Map<SvBreakend,Integer> mBreakendLastLinkIndexMap;
+    private final ChainPloidyLimits mClusterPloidyLimits;
 
-    private Map<SvBreakend,List<SvLinkedPair>> mSvBreakendPossibleLinks;
+    private final Map<SvBreakend,List<SvLinkedPair>> mSvBreakendPossibleLinks;
 
     private int mLinkIndex;
     private String mLinkReason;
@@ -111,6 +117,10 @@ public class ChainFinder
     private boolean mLogVerbose;
     private boolean mRunValidation;
     private boolean mUseAllelePloidies;
+
+    // self-analysis only
+    private final List<SvVarData> mInitialComplexDup;
+    private final List<SvVarData> mInitialFolbacks;
 
     private static final Logger LOGGER = LogManager.getLogger(ChainFinder.class);
 
@@ -123,6 +133,7 @@ public class ChainFinder
         mUniqueSVs = Lists.newArrayList();
         mReplicatedSVs = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
+        mDoubleMinuteSVs = Lists.newArrayList();
         mIsClusterSubset = false;
         mAssembledLinks = Lists.newArrayList();
         mChrBreakendMap = null;
@@ -133,7 +144,6 @@ public class ChainFinder
         mSubsetBreakendClusterIndexMap = Maps.newHashMap();
         mBreakendLastLinkIndexMap = Maps.newHashMap();
         mComplexDupCandidates = Lists.newArrayList();
-        mFoldbacks = Lists.newArrayList();
         mChains = Lists.newArrayList();
         mSkippedPairs = Lists.newArrayList();
         mSvBreakendPossibleLinks = Maps.newHashMap();
@@ -141,6 +151,8 @@ public class ChainFinder
         mSvReplicationMap = Maps.newHashMap();
         mUnlinkedSVs = Lists.newArrayList();
         mUniquePairs = Lists.newArrayList();
+        mInitialComplexDup = Lists.newArrayList();
+        mInitialFolbacks = Lists.newArrayList();
         mUnlinkedBreakendMap = Maps.newHashMap();
 
         mHasReplication = false;
@@ -161,6 +173,7 @@ public class ChainFinder
         mUniqueSVs.clear();
         mReplicatedSVs.clear();
         mFoldbacks.clear();
+        mDoubleMinuteSVs.clear();
         mIsClusterSubset = false;
         mAssembledLinks.clear();
         mChrBreakendMap = null;
@@ -169,7 +182,6 @@ public class ChainFinder
         mSubsetBreakendClusterIndexMap.clear();
         mBreakendLastLinkIndexMap.clear();
         mComplexDupCandidates.clear();
-        mFoldbacks.clear();
         mChains.clear();
         mSkippedPairs.clear();
         mSvBreakendPossibleLinks.clear();
@@ -178,6 +190,9 @@ public class ChainFinder
         mUnlinkedBreakendMap.clear();
         mUniquePairs.clear();
         mUnlinkedSVs.clear();
+
+        mInitialComplexDup.clear();
+        mInitialFolbacks.clear();
 
         mNextChainId = 0;
         mLinkIndex = 0;
@@ -190,10 +205,13 @@ public class ChainFinder
         // critical that all state is cleared before the next run
         clear();
 
+        isSpecificCluster(cluster);
+
         mClusterId = cluster.id();
         mUniqueSVs.addAll(cluster.getSVs());
         mReplicatedSVs.addAll(cluster.getSVs(true));
         mFoldbacks.addAll(cluster.getFoldbacks());
+        mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
         mAssembledLinks.addAll(cluster.getAssemblyLinkedPairs());
         mChrBreakendMap = cluster.getChrBreakendMap();
         mHasReplication = cluster.hasReplicatedSVs();
@@ -264,6 +282,8 @@ public class ChainFinder
                 }
             }
         }
+
+        mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
     }
 
     public void setLogVerbose(boolean toggle)
@@ -392,6 +412,9 @@ public class ChainFinder
 
         determinePossibleLinks();
 
+        mInitialFolbacks.addAll(mFoldbacks);
+        mInitialComplexDup.addAll(mComplexDupCandidates);
+
         int iterationsWithoutNewLinks = 0; // protection against loops
 
         while (true)
@@ -429,6 +452,8 @@ public class ChainFinder
 
             checkProgress();
         }
+
+        checkDoubleMinuteChains();
     }
 
     private static String PP_METHOD_ONLY = "ONLY";
@@ -1520,29 +1545,6 @@ public class ChainFinder
         // identify potential complex DUP candidates along the way
         // for the special case of foldbacks, add every possible link they can make
 
-        /*
-        List<SvBreakend> reverseFoldbackBreakends = Lists.newArrayList();
-
-        for(SvVarData foldback : mFoldbacks)
-        {
-            if(foldback.isChainedFoldback())
-            {
-                SvBreakend breakend = foldback.getChainedFoldbackBreakend();
-
-                if(breakend.orientation() == 1)
-                    reverseFoldbackBreakends.add(breakend);
-            }
-            else
-            {
-                if(foldback.orientation(true) == 1)
-                {
-                    reverseFoldbackBreakends.add(foldback.getBreakend(true));
-                    reverseFoldbackBreakends.add(foldback.getBreakend(false));
-                }
-            }
-        }
-        */
-
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
@@ -1553,7 +1555,7 @@ public class ChainFinder
             {
                 final SvBreakend lowerBreakend = breakendList.get(i);
 
-                boolean matchedPloidy = false;
+                // boolean matchedPloidy = false;
 
                 if(lowerBreakend.orientation() != -1)
                     continue;
@@ -1574,7 +1576,7 @@ public class ChainFinder
                 boolean lowerValidAP = mUseAllelePloidies && mClusterPloidyLimits.hasValidAllelePloidyData(
                         getClusterChrBreakendIndex(lowerBreakend), allelePloidies);
 
-                boolean lowerIsFoldback = lowerSV.isFoldback() && (!lowerSV.isChainedFoldback() || lowerSV.getChainedFoldbackBreakend() == lowerBreakend);
+                // boolean lowerIsFoldback = lowerSV.isFoldback() && (!lowerSV.isChainedFoldback() || lowerSV.getChainedFoldbackBreakend() == lowerBreakend);
 
                 int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
@@ -1595,7 +1597,11 @@ public class ChainFinder
                         continue;
 
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
-                        continue;
+                    {
+                        // make an exception for DM DUPs which can link to themselves
+                        if(!(mDoubleMinuteSVs.size() == 1 && mDoubleMinuteSVs.get(0).type() == DUP))
+                            continue;
+                    }
 
                     if(alreadyLinkedBreakend(upperBreakend))
                         continue;
@@ -1676,14 +1682,6 @@ public class ChainFinder
                 }
             }
         }
-
-        /*
-        for(SvBreakend breakend : reverseFoldbackBreakends)
-        {
-            mBreakendLastLinkIndexMap.put(breakend, getClusterChrBreakendIndex(breakend));
-            addMorePossibleLinks(breakend, false);
-        }
-        */
     }
 
     private void checkIsComplexDupSV(SvBreakend lowerPloidyBreakend, SvBreakend higherPloidyBreakend)
@@ -1903,6 +1901,41 @@ public class ChainFinder
         }
     }
 
+    private void checkDoubleMinuteChains()
+    {
+        // if there is a single chain which contains all DM SVs, attempt to close the chain
+        if(mDoubleMinuteSVs.isEmpty())
+            return;
+
+        if(mChains.size() != 1)
+            return;
+
+        SvChain chain = mChains.get(0);
+
+        int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x, true)).count();
+
+        if(chainedDmSVs != mDoubleMinuteSVs.size())
+            return;
+
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend())
+        {
+            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart(), false))
+            {
+                SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd, LINK_TYPE_TI);
+
+                if (chain.linkWouldCloseChain(pair))
+                {
+                    chain.addLink(pair, true);
+                }
+            }
+        }
+
+        LOGGER.debug("cluster({}) closed DM chain", mClusterId);
+    }
+
     private static int LOG_LEVEL_ERROR = 0;
     private static int LOG_LEVEL_INFO = 1;
     private static int LOG_LEVEL_DEBUG = 2;
@@ -1956,6 +1989,84 @@ public class ChainFinder
         return mIsValid;
     }
 
+    public void diagnoseChains(final String sampleId)
+    {
+        if(mChains.size() != 1)
+            return;
+
+        if(mUniqueSVs.size() < 4 || mUniqueSVs.size() > 20)
+            return;
+
+        findMultiConnectionBreakends(sampleId);
+    }
+
+    private void findMultiConnectionBreakends(final String sampleId)
+    {
+        List<SvBreakend> reportedBreakends = Lists.newArrayList();
+
+        for(int i = 0; i < mUniquePairs.size(); ++i)
+        {
+            SvLinkedPair pair = mUniquePairs.get(i);
+
+            for (int be = SE_START; be <= SE_END; ++be)
+            {
+                final SvBreakend breakend = pair.getBreakend(isStart(be));
+                final SvBreakend origBreakend = breakend.getOrigBreakend();
+
+                if (reportedBreakends.contains(origBreakend))
+                    continue;
+
+                // ignore foldbacks formed by a single breakend and ignore DM SVs
+                if(origBreakend.getSV().isSingleBreakendFoldback() || mDoubleMinuteSVs.contains(origBreakend.getSV()))
+                    continue;
+
+                SvVarData otherVar = pair.getOtherBreakend(breakend).getOrigSV();
+
+                int connectionCount = 1;
+                int foldbackCons = 0;
+                int compDupCons = 0;
+
+                if(mInitialFolbacks.contains(otherVar))
+                    ++foldbackCons;
+                else if(mInitialComplexDup.contains(otherVar))
+                    ++compDupCons;
+
+                for (int j = i + 1; j < mUniquePairs.size(); ++j)
+                {
+                    SvLinkedPair pair2 = mUniquePairs.get(j);
+
+                    SvVarData otherVar2 = null;
+
+                    if(pair2.getBreakend(true).getOrigBreakend() == origBreakend)
+                        otherVar2 = pair2.getBreakend(false).getOrigSV();
+                    else if(pair2.getBreakend(false).getOrigBreakend() == origBreakend)
+                        otherVar2 = pair2.getBreakend(true).getOrigSV();
+                    else
+                        continue;
+
+                    ++connectionCount;
+
+                    if(mInitialFolbacks.contains(otherVar2))
+                        ++foldbackCons;
+                    else if(mInitialComplexDup.contains(otherVar2))
+                        ++compDupCons;
+                }
+
+                if(connectionCount > 1)
+                {
+                    LOGGER.info("sampleId({}) cluster({}) breakend({}) repCount({}) connections({}) with foldbacks({}) complexDups({})",
+                            sampleId, mClusterId, origBreakend.toString(), getSvReplicationCount(origBreakend.getSV()),
+                            connectionCount, foldbackCons, compDupCons);
+                }
+
+                reportedBreakends.add(origBreakend);
+            }
+        }
+    }
+
+
+    // unused optimisation code
+
     public void setMaxPossibleLinks(int maxLinks)
     {
         LOGGER.warn("incremental link finding disabled");
@@ -1983,6 +2094,39 @@ public class ChainFinder
     {
         return mMaxPossibleLinks > 0 && linkCount >= mMaxPossibleLinks;
     }
+
+    // start and end of determinePossible links:
+
+        /*
+        List<SvBreakend> reverseFoldbackBreakends = Lists.newArrayList();
+
+        for(SvVarData foldback : mFoldbacks)
+        {
+            if(foldback.isChainedFoldback())
+            {
+                SvBreakend breakend = foldback.getChainedFoldbackBreakend();
+
+                if(breakend.orientation() == 1)
+                    reverseFoldbackBreakends.add(breakend);
+            }
+            else
+            {
+                if(foldback.orientation(true) == 1)
+                {
+                    reverseFoldbackBreakends.add(foldback.getBreakend(true));
+                    reverseFoldbackBreakends.add(foldback.getBreakend(false));
+                }
+            }
+        }
+        */
+
+        /*
+        for(SvBreakend breakend : reverseFoldbackBreakends)
+        {
+            mBreakendLastLinkIndexMap.put(breakend, getClusterChrBreakendIndex(breakend));
+            addMorePossibleLinks(breakend, false);
+        }
+        */
 
     private boolean addMorePossibleLinks(SvBreakend breakend, boolean applyMax)
     {

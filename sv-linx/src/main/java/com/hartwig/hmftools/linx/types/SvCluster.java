@@ -76,6 +76,7 @@ public class SvCluster
     // cached lists of identified special cases
     private List<SvVarData> mLongDelDups;
     private List<SvVarData> mFoldbacks;
+    private List<SvVarData> mDoubleMinuteSVs;
     private boolean mHasLinkingLineElements;
     private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
@@ -128,6 +129,7 @@ public class SvCluster
 
         mLongDelDups = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
+        mDoubleMinuteSVs = Lists.newArrayList();
         mHasLinkingLineElements = false;
         mInversions = Lists.newArrayList();
         mShortTIRemoteSVs = Lists.newArrayList();
@@ -505,6 +507,11 @@ public class SvCluster
                 otherInfo = appendStr(otherInfo, String.format("inv=%d", mInversions.size()), ' ');
             }
 
+            if(!mDoubleMinuteSVs.isEmpty())
+            {
+                otherInfo = appendStr(otherInfo, "DM", ' ');
+            }
+
             if(!mShortTIRemoteSVs.isEmpty())
             {
                 otherInfo = appendStr(otherInfo, String.format("sti-bnd=%d", mShortTIRemoteSVs.size()), ' ');
@@ -552,6 +559,7 @@ public class SvCluster
     public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
     public final List<SvVarData> getFoldbacks() { return mFoldbacks; }
     public final List<SvVarData> getInversions() { return mInversions; }
+    public final List<SvVarData> getDoubleMinuteSVs() { return mDoubleMinuteSVs; }
 
     public void registerFoldback(final SvVarData var)
     {
@@ -576,6 +584,8 @@ public class SvCluster
         if(!mLongDelDups.contains(var) && !var.isReplicatedSv())
             mLongDelDups.add(var);
     }
+
+    public void setDoubleMinuteSVs(final List<SvVarData> svList) { mDoubleMinuteSVs.addAll(svList); }
 
     public void markAsLine()
     {

@@ -205,14 +205,18 @@ public class VisualiserWriter
             for (final SvChain chain : cluster.getChains())
             {
                 // log the start of the chain
-                SvBreakend breakend = chain.getOpenBreakend(true);
                 boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
 
-                if (breakend != null)
+                if(!chain.isClosedLoop())
                 {
-                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
-                            getPositionValue(breakend, true), getPositionValue(breakend, false),
-                            startsOnEnd ? 2 : 1));
+                    SvBreakend breakend = chain.getOpenBreakend(true);
+
+                    if (breakend != null)
+                    {
+                        segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
+                                getPositionValue(breakend, true), getPositionValue(breakend, false),
+                                startsOnEnd ? 2 : 1));
+                    }
                 }
 
                 for (final SvLinkedPair pair : chain.getLinkedPairs())
@@ -248,13 +252,16 @@ public class VisualiserWriter
                             beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), pairRepeatCount));
                 }
 
-                // log the end of the chain out to centromere or telomere
-                breakend = chain.getOpenBreakend(false);
-
-                if (breakend != null && !startsOnEnd)
+                if(!chain.isClosedLoop())
                 {
-                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
-                            getPositionValue(breakend, true), getPositionValue(breakend, false), 1));
+                    // log the end of the chain out to centromere or telomere
+                    SvBreakend breakend = chain.getOpenBreakend(false);
+
+                    if (breakend != null && !startsOnEnd)
+                    {
+                        segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
+                                getPositionValue(breakend, true), getPositionValue(breakend, false), 1));
+                    }
                 }
             }
 

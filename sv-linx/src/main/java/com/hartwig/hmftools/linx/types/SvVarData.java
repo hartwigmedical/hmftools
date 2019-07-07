@@ -515,7 +515,21 @@ public class SvVarData
     public final SvBreakend getFoldbackBreakend(boolean isStart) { return mFoldbackBreakends[seIndex(isStart)]; }
     public int getFoldbackLength(boolean isStart) { return mFoldbackLength[seIndex(isStart)]; }
     public final String getFoldbackInfo(boolean isStart) { return mFoldbackInfo[seIndex(isStart)]; }
+
     public boolean isFoldback() { return mFoldbackBreakends[SE_START] != null || mFoldbackBreakends[SE_END] != null; }
+
+    public boolean isSameSvFoldback() { return mFoldbackBreakends[SE_END] != null && mFoldbackBreakends[SE_END] == mBreakend[SE_START]; }
+
+    public boolean isSingleBreakendFoldback()
+    {
+        if(mFoldbackBreakends[SE_START] != null && mFoldbackBreakends[SE_START] == mBreakend[SE_START])
+            return true;
+        else if(mFoldbackBreakends[SE_END] != null && mFoldbackBreakends[SE_END] == mBreakend[SE_END])
+            return true;
+
+        return false;
+    }
+
     public boolean isChainedFoldback()
     {
         if(mFoldbackBreakends[SE_END] != null && mFoldbackBreakends[SE_END] != mBreakend[SE_START])

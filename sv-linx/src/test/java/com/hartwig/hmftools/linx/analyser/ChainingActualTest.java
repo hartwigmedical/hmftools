@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -11,9 +14,11 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -32,7 +37,6 @@ import org.junit.Test;
 
 public class ChainingActualTest
 {
-
     @Test
     public void testActualComplexChaining2()
     {
@@ -146,6 +150,80 @@ public class ChainingActualTest
         final SvChain chain = cluster.getChains().get(0);
         assertEquals(10, chain.getLinkCount());
     }
+
+    @Test
+    public void testActualDoubleMinuteChaining()
+    {
+        // based on CPCT2100151T chromosome 7 and EGFR AMP
+
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
+        tester.Analyser.setUseAllelePloidies(true);
+
+        /* SVs
+
+            Id,ChrStart,ChrEnd,PosStart,PosEnd,OrientStart,OrientEnd,Type,CNStart,CNEnd,CNChgStart,CNChgEnd,Ploidy
+            78,7,7,54877946,55110179,-1,-1,INV,27.65,27.9,8.02,8.57,7.14
+            79,7,7,55145598,55207090,1,1,INV,27.9,20.51,8.2,8.88,7.14
+            80,7,7,55200035,55223094,1,-1,DEL,19.71,19.79,8.1,8.17,7.34
+            81,7,7,55204831,55293096,-1,1,DUP,20.51,19.79,8.89,8.16,6.86
+            82,7,7,55092635,55588244,1,-1,DEL,27.65,19.53,8.31,7.9,7.19
+            83,7,7,54832875,55636355,1,-1,DEL,27.85,27.79,8.23,8.26,1.59
+            84,7,7,54832269,55636582,-1,1,DUP,27.85,27.79,24.86,24.85,23.21
+
+            SOLUTION: a closed loop:
+
+            chain(0) 0: pair(83 7:55636000:end & 84r 7:55700000:end) Inferred  length(64000)
+            chain(0) 1: pair(84r 7:54800000:start & 84r 7:55700000:end) Inferred ADJAC length(900000)
+            chain(0) 2: pair(84r 7:54800000:start & 80 7:55200000:start) Inferred ADJAC length(400000)
+            chain(0) 3: pair(80 7:55223000:end & 81 7:55293000:end) Inferred ONLY length(70000)
+            chain(0) 4: pair(81 7:55204000:start & 79 7:55207000:end) Inferred ADJAC length(3000)
+            chain(0) 5: pair(79 7:55145000:start & 78 7:55100000:end) Inferred ADJAC length(45000)
+            chain(0) 6: pair(78 7:54877000:start & 82 7:55092000:start) Inferred ONLY length(215000)
+            chain(0) 7: pair(82 7:55588000:end & 84 7:55700000:end) Inferred ONLY length(112000)
+            chain(0) 8: pair(84 7:54800000:start & 83 7:54832000:start) Inferred ONLY length(32000)
+         */
+
+        // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
+        String chromosome = "7";
+
+        final SvVarData var1 = createTestSv("78", chromosome, chromosome, 54877000, 55100000, -1, -1, INV, 8);
+        final SvVarData var2 = createTestSv("79", chromosome, chromosome, 55145000, 55207000, 1, 1, INV, 8);
+        final SvVarData var3 = createTestSv("80", chromosome, chromosome, 55200000, 55223000, 1, -1, DEL, 8);
+        final SvVarData var5 = createTestSv("81", chromosome, chromosome, 55204000, 55293000, -1, 1, DUP, 8);
+        final SvVarData var4 = createTestSv("82", chromosome, chromosome, 55092000, 55588000, 1, -1, DEL, 8);
+        final SvVarData var6 = createTestSv("83", chromosome, chromosome, 54832000, 55636000, 1, -1, DEL, 8);
+        SvVarData dmDup = createTestSv("84", chromosome, chromosome, 54800000, 55700000, -1, 1, DUP, 24);
+
+        tester.AllVariants.add(dmDup);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        tester.addCopyNumberData();
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // check clustering
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
+        assertEquals(1, cluster.getDoubleMinuteSVs().size());
+
+        // check chains
+        assertEquals(1, cluster.getChains().size());
+        final SvChain chain = cluster.getChains().get(0);
+        assertEquals(9, chain.getLinkCount());
+        assertTrue(chain.isClosedLoop());
+    }
+
 
     @Ignore
     @Test

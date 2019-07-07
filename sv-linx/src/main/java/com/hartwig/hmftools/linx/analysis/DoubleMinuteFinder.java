@@ -181,6 +181,11 @@ public class DoubleMinuteFinder
                 fullyChained = dmChain.getSvCount() == highPloidySVs.size() && dmChain.isClosedLoop();
         }
 
+        if(fullyChained)
+            cluster.setDoubleMinuteSVs(highPloidySVs);
+
+        cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+
         reportPotentialGroup(sampleId, cluster, highPloidySVs, fullyChained, dmChain);
     }
 
@@ -231,7 +236,8 @@ public class DoubleMinuteFinder
     private void reportPotentialGroup(final String sampleId, final SvCluster cluster, List<SvVarData> highPloidySVs,
             boolean fullyChained, SvChain chain)
     {
-        cluster.addAnnotation(CLUSTER_ANNONTATION_DM);
+        if(mOutputDir.isEmpty())
+            return;
 
         String svIds = "";
         int[] typeCounts = new int[StructuralVariantType.values().length];
@@ -286,38 +292,36 @@ public class DoubleMinuteFinder
             chromosomeStr = appendStr(chromosomeStr, chr, ';');
         }
 
-        if(!mOutputDir.isEmpty())
+        try
         {
-            try
+            if (mFileWriter == null)
             {
-                if (mFileWriter == null)
-                {
-                    String outputFileName = mOutputDir;
+                String outputFileName = mOutputDir;
 
-                    outputFileName += "SVA_DM.csv";
+                outputFileName += "SVA_DM.csv";
 
-                    mFileWriter = createBufferedWriter(outputFileName, false);
+                mFileWriter = createBufferedWriter(outputFileName, false);
 
-                    mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount,SamplePurity,SamplePloidy,DMSvCount,DMSvTypes");
-                    mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes,DupPosStart,DupPosEnd");
-                    mFileWriter.write(",MaxCopyNumber,MinPloidy,AmpGenes");
-                    mFileWriter.newLine();
-                }
-
-                mFileWriter.write(String.format("%s,%d,%s,%s,%d",
-                        sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
-
-                mFileWriter.write(String.format(",%.2f,%.2f,%d,%s,%s,%d,%d",
-                        samplePurity, samplePloidy, highPloidySVs.size(), dmTypesStr, fullyChained, dmChainLength, chainSvCount));
-
-                mFileWriter.write(String.format(",%s,%s,%d,%d,%.2f,%.2f,%s",
-                        svIds, chromosomeStr, posStart, posEnd, maxDMCopyNumber, minDMPloidy, amplifiedGenesStr));
-
+                mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount,SamplePurity,SamplePloidy,DMSvCount,DMSvTypes");
+                mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes,DupPosStart,DupPosEnd");
+                mFileWriter.write(",MaxCopyNumber,MinPloidy,AmpGenes");
                 mFileWriter.newLine();
-            } catch (final IOException e)
-            {
-                LOGGER.error("error writing DM data: {}", e.toString());
             }
+
+            mFileWriter.write(String.format("%s,%d,%s,%s,%d",
+                    sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
+
+            mFileWriter.write(String.format(",%.2f,%.2f,%d,%s,%s,%d,%d",
+                    samplePurity, samplePloidy, highPloidySVs.size(), dmTypesStr, fullyChained, dmChainLength, chainSvCount));
+
+            mFileWriter.write(String.format(",%s,%s,%d,%d,%.2f,%.2f,%s",
+                    svIds, chromosomeStr, posStart, posEnd, maxDMCopyNumber, minDMPloidy, amplifiedGenesStr));
+
+            mFileWriter.newLine();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing DM data: {}", e.toString());
         }
     }
 
@@ -751,8 +755,7 @@ public class DoubleMinuteFinder
         return true;
     }
 
-    private void reportPotentialGroup(final String sampleId, List<SvVarData> dmSVList, boolean isComplete,
-            int overlappedCount)
+    private void reportPotentialGroup(final String sampleId, List<SvVarData> dmSVList, boolean isComplete, int overlappedCount)
     {
         String clusterInfo = "";
         String svInfo = "";

@@ -359,6 +359,8 @@ public class ChainingTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
+        assertTrue(varB.isFoldback());
+        assertTrue(varC.isFoldback());
         assertTrue(varA1.isChainedFoldback());
         assertTrue(varA2.isChainedFoldback());
         assertEquals(varA2.id(), varA1.getFoldbackLink(true));

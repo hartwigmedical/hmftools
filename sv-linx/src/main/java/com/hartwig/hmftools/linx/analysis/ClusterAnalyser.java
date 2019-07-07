@@ -285,6 +285,13 @@ public class ClusterAnalyser {
             cluster.dissolveLinksAndChains();
 
             cluster.removeReplicatedSvs();
+
+            // look for and mark clusters has DM candidates, which can subsequently affect chaining
+            if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+            {
+                mDmFinder.analyseCluster(mSampleId, cluster);
+            }
+
             applyCopyNumberReplication(cluster);
 
             // no need to re-find assembled TIs
@@ -496,6 +503,10 @@ public class ClusterAnalyser {
         mChainFinder.initialise(cluster);
         mChainFinder.formClusterChains(assembledLinksOnly);
         mChainFinder.addChains(cluster);
+
+        if(!assembledLinksOnly)
+            mChainFinder.diagnoseChains(mSampleId);
+
         cluster.setValidAllelePloidySegmentPerc(mChainFinder.getValidAllelePloidySegmentPerc());
         mChainFinder.clear(); // release any refs to clusters and SVs
     }
@@ -1486,7 +1497,7 @@ public class ClusterAnalyser {
 
                 var.setFoldbackLink(be.usesStart(), be, 0, chainInfo);
 
-                LOGGER.debug("cluster({}) foldback translocation SV({} : {}) with own breakend({})",
+                LOGGER.debug("cluster({}) foldback SV({} : {}) with own breakend({})",
                         var.getCluster().id(), var.posId(), var.type(), be.toString());
             }
         }
@@ -1525,8 +1536,6 @@ public class ClusterAnalyser {
 
     private void reportClusterFeatures(final SvCluster cluster)
     {
-        // reportDoubleMinutes(cluster, mClusteringMethods.getChrBreakendMap());
-
         annotateChainedClusters(cluster, mClusteringMethods.getProximityDistance());
 
         if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
@@ -1537,11 +1546,6 @@ public class ClusterAnalyser {
         if(runAnnotation(mConfig.RequiredAnnotations, REPLICATION_REPAIR))
         {
             reportClusterRepRepairSegments(mSampleId, cluster);
-        }
-
-        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-        {
-            mDmFinder.analyseCluster(mSampleId, cluster);
         }
     }
 
