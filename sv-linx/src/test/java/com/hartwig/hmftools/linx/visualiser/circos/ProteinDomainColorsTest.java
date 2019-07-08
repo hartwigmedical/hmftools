@@ -1,40 +1,27 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
-import java.awt.Color;
-import java.util.Set;
-
-import com.google.common.collect.Sets;
 
 import org.junit.Test;
 
 public class ProteinDomainColorsTest
 {
-
-    private static final Color COLOR0 = new Color(204,61,61);
-    private static final Color COLOR1 = new Color(204,77,61);
-    private static final Color COLOR2 = new Color(204,93,61);
-    private static final Color COLOR3 = new Color(204,109,61);
-    private static final Color COLOR4 = new Color(204,124,61);
-    private static final Color COLOR5 = new Color(204,140,61);
-    private static final Color COLOR6 = new Color(204,156,61);
-    private static final Color COLOR7 = new Color(204,172,61);
-    private static final Color COLOR8 = new Color(204,188,61);
-    private static final Color COLOR9 = new Color(204,203,61);
-
     @Test
-    public void testFloating()
-    {
+    public void testHue() {
 
-        final Set<String> domains = Sets.newHashSet("Cadherin", "PD1", "PD2", "PD3");
-        final ProteinDomainColors domainColors = new ProteinDomainColors(domains);
+        assertEquals(21 + 90, 360 * ProteinDomainColors.hue(0, 1), 0.1);
 
-        assertNotEquals(domainColors.color("Cadherin"), domainColors.color("PD3"));
-        assertEquals(domainColors.color("PD3"), domainColors.color("PD3"));
+        assertEquals(21 + 90, 360 * ProteinDomainColors.hue(0, 2), 0.1);
+        assertEquals(21 + 270, 360 * ProteinDomainColors.hue(1, 2), 0.1);
 
-        System.out.println(domainColors);
+        assertEquals(21 + 60, 360 * ProteinDomainColors.hue(0, 3), 0.1);
+        assertEquals(21 + 180 + 60, 360 * ProteinDomainColors.hue(1, 3), 0.1);
+        assertEquals(21 + 120, 360 * ProteinDomainColors.hue(2, 3), 0.1);
+
+        assertEquals(21 + 60, 360 * ProteinDomainColors.hue(0, 4), 0.1);
+        assertEquals(21 + 180 + 60, 360 * ProteinDomainColors.hue(1, 4), 0.1);
+        assertEquals(21 + 120, 360 * ProteinDomainColors.hue(2, 4), 0.1);
+        assertEquals(21 + 180 + 120, 360 * ProteinDomainColors.hue(3, 4), 0.1);
 
     }
 

@@ -15,32 +15,14 @@ import org.jetbrains.annotations.NotNull;
 public class ProteinDomainColors
 {
 
-    // Top 10 were selected with the following query:
-    //
-    // proteinDomain = read.table(file = "~/hmf/analysis/fusions/SVA_VIS_PROTEIN_DOMAINS.tsv", sep = "\t", header = T) %>%
-    //     select(Transcript, Info) %>% distinct() %>%
-    //     group_by(Info) %>% count() %>% ungroup() %>%
-    //     top_n(10, n) %>% arrange(-n)
-
-    private static final float FIXED_HUE = 0.166f;
-    private static final float SAT = 0.7f;
-    private static final float BRIGHT = 0.8f;
-    private static final Color UTR = new Color(128,128,128);
+    private static final float SAT = 0.5f;
+    private static final float BRIGHT = 0.8392f;
+    private static final Color UTR = new Color(128, 128, 128);
 
     private final Map<String, Color> proteinColorMap = Maps.newLinkedHashMap();
 
     ProteinDomainColors(@NotNull final Set<String> proteinDomains)
     {
-        proteinColorMap.put("Protein kinase domain", getFixedColor(0));
-        proteinColorMap.put("Immunoglobulin-like domain", getFixedColor(1));
-        proteinColorMap.put("Zinc finger; C2H2", getFixedColor(2));
-        proteinColorMap.put("Zinc finger; RING-type", getFixedColor(3));
-        proteinColorMap.put("Pleckstrin homology domain", getFixedColor(4));
-        proteinColorMap.put("RNA recognition motif domain", getFixedColor(5));
-        proteinColorMap.put("SH2 domain", getFixedColor(6));
-        proteinColorMap.put("Ankyrin repeat", getFixedColor(7));
-        proteinColorMap.put("Ankyrin repeat-containing domain", getFixedColor(8));
-        proteinColorMap.put("Fibronectin type III", getFixedColor(9));
         proteinColorMap.put(ProteinDomains.UTR, UTR);
 
         final List<String> newProteinDomains =
@@ -68,12 +50,15 @@ public class ProteinDomainColors
 
     private static Color getFloatingColor(int i, int maxDomains)
     {
-        return Color.getHSBColor(FIXED_HUE + ((i + 1) * (1f - FIXED_HUE)) / (maxDomains + 1), SAT, BRIGHT);
+        return Color.getHSBColor(hue(i, maxDomains), SAT, BRIGHT);
     }
 
-    private static Color getFixedColor(int i)
+    static float hue(int i, int maxDomains)
     {
-        return Color.getHSBColor(i * FIXED_HUE / 9f, SAT, BRIGHT);
+        float colorDistance = 1f / (float) Math.ceil((maxDomains + 2) / 2f) / 2f;
+        return i % 2 == 0
+                ? 21f / 360f + (i / 2 + 1) * colorDistance
+                : 201f / 360f + (float) Math.ceil(i / 2f) * colorDistance;
     }
 
     @Override
