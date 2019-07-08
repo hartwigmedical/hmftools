@@ -14,9 +14,8 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
   
   fusion = fusedExons %>% group_by(fusion) %>% summarise(start = min(geneStart), end = max(geneEnd))
   
-  fusedGenes = fusedExons %>% group_by(gene) %>% mutate(start = min(start)) %>%
-    select(fusion, gene, start, end = geneEnd, upGene, color) %>% 
-    distinct()
+  fusedGenes = fusedExons %>% group_by(gene, upGene, color) %>% mutate(start = ifelse(rank == 1, start, geneStart)) %>%
+    summarise(start = max(start, geneStart), end = max(geneEnd))
   
   fadedAlpha = 0.4
   fadedArea = fusedExons %>% 
@@ -45,7 +44,8 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
     theme(axis.ticks = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank()) +
     theme(panel.background = element_blank(), panel.border =  element_blank(), panel.grid = element_blank(), panel.spacing = unit(3, "pt")) +
     theme(plot.margin = margin(t = 0, b = 0, l = 3, r = 3, unit = "pt"), legend.box.margin = margin(t = 0, b = 0, l = 0, r = 0, unit = "pt")) +
-    theme(legend.position = c(0.5, 0.7), legend.key.size = unit(6, "pt"), legend.background=element_blank(), legend.key=element_blank(), legend.direction = "horizontal")
+    theme(legend.position = c(0.5, 0.7), legend.key.size = unit(6, "pt"), legend.background=element_blank(), legend.key=element_blank(), legend.direction = "horizontal") +
+    guides(fill = guide_legend(nrow = 1))
   
   if (nrow(fusedProteinDomains) > 0) {
     p1 = p1 + geom_rect(data = fusedProteinDomains, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5, fill = name), position = "identity", stat = "identity", alpha = 0.8)
