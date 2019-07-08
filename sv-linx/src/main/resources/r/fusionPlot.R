@@ -44,7 +44,7 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
     theme(axis.ticks = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank()) +
     theme(panel.background = element_blank(), panel.border =  element_blank(), panel.grid = element_blank(), panel.spacing = unit(3, "pt")) +
     theme(plot.margin = margin(t = 0, b = 0, l = 3, r = 3, unit = "pt"), legend.box.margin = margin(t = 0, b = 0, l = 0, r = 0, unit = "pt")) +
-    theme(legend.position = c(0.5, 0.7), legend.key.size = unit(6, "pt"), legend.background=element_blank(), legend.key=element_blank(), legend.direction = "horizontal") +
+    theme(legend.position = c(0.5, 0.9), legend.key.size = unit(6, "pt"), legend.background=element_blank(), legend.key=element_blank(), legend.direction = "horizontal", legend.spacing.x = unit(1, "mm")) +
     guides(fill = guide_legend(nrow = 1))
   
   if (nrow(fusedProteinDomains) > 0) {
