@@ -31,7 +31,7 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
   proteinDomainColors = setNames(proteinDomainColors$color, proteinDomainColors$name)
   
   p1 = ggplot() +
-    geom_rect(data = fusion, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = "dark grey", color = NA) +
+    geom_rect(data = fusion, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = "#f5f5f5", color = NA) +
     geom_rect(data = fusedGenes, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = fusedGenes$color, color = NA) +
     geom_rect(data = fusedExons, mapping = aes(xmin = start, xmax = end, ymin = 0, ymax = 1), position = "identity", stat = "identity", fill = fusedExons$color, show.legend = F, color = NA) +
 
