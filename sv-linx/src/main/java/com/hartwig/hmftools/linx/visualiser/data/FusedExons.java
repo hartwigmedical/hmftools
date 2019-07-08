@@ -160,6 +160,7 @@ public class FusedExons
                         .end(firstUpExon.end())
                         .namePosition(0)
                         .name(fusion.geneDown())
+                        .transcript(fusion.transcriptUp())
                         .build() :
                 ImmutableGene.builder()
                         .chromosome(firstUpExon.chromosome())
@@ -167,6 +168,7 @@ public class FusedExons
                         .end(fusion.positionUp())
                         .namePosition(0)
                         .name(fusion.geneDown())
+                        .transcript(fusion.transcriptDown())
                         .build();
     }
 
@@ -180,6 +182,7 @@ public class FusedExons
                         .end(fusion.positionDown())
                         .namePosition(0)
                         .name(fusion.geneDown())
+                        .transcript(fusion.transcriptUp())
                         .build() :
                 ImmutableGene.builder()
                         .chromosome(finalDownGene.chromosome())
@@ -187,6 +190,7 @@ public class FusedExons
                         .end(finalDownGene.end())
                         .namePosition(0)
                         .name(fusion.geneDown())
+                        .transcript(fusion.transcriptDown())
                         .build();
     }
 

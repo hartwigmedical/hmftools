@@ -16,6 +16,13 @@ public class ProteinDomains
     public static final String UTR = "UTR/Non-coding";
 
     @NotNull
+    public static List<ProteinDomain> geneProteinDomains(@NotNull final List<Gene> gene, @NotNull final List<ProteinDomain> exons)
+    {
+        final Set<String> transcripts = gene.stream().map(Gene::transcript).collect(Collectors.toSet());
+        return exons.stream().filter(x -> transcripts.contains(x.transcript())).collect(Collectors.toList());
+    }
+
+    @NotNull
     public static List<ProteinDomain> readProteinDomainsInFusionGenes(@NotNull final String fileName, @NotNull final List<Fusion> fusions)
             throws IOException
     {

@@ -21,6 +21,7 @@ import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,10 @@ public class CircosData
         final List<GenomeRegion> unadjustedLineElements =
                 Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
 
-        final List<Gene> unadjustedGenes = Genes.genes(unadjustedExons);
+        final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
+        final List<Exon> unadjustedGeneExons = Exons.geneExons(unadjustedGenes, unadjustedExons);
+        final List<ProteinDomain> unadjustedGeneProteinDomains =
+                ProteinDomains.geneProteinDomains(unadjustedGenes, unadjustedProteinDomains);
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
@@ -77,12 +81,12 @@ public class CircosData
         unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         if (scaleExons)
         {
-            unadjustedPositions.addAll(Span.allPositions(unadjustedProteinDomains));
-            unadjustedPositions.addAll(Span.allPositions(unadjustedExons));
+            unadjustedPositions.addAll(Span.allPositions(unadjustedGeneProteinDomains));
+            unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
         }
         else
         {
-            unadjustedPositions.addAll(Span.allPositions(Exons.geneSpanPerChromosome(unadjustedExons)));
+            unadjustedPositions.addAll(Span.allPositions(Exons.geneSpanPerChromosome(unadjustedGeneExons)));
         }
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
@@ -97,8 +101,8 @@ public class CircosData
         genes = scalePosition.scaleGene(unadjustedGenes);
 
         // Note the following *might* be interpolated
-        exons = scalePosition.interpolateExons(unadjustedExons);
-        proteinDomains = scalePosition.interpolateProteinDomains(unadjustedProteinDomains);
+        exons = scalePosition.interpolateExons(unadjustedGeneExons);
+        proteinDomains = scalePosition.interpolateProteinDomains(unadjustedGeneProteinDomains);
 
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
