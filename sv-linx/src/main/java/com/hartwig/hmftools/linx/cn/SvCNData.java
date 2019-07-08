@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.cn;
 
+import static java.lang.Math.max;
+
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -68,7 +70,7 @@ public class SvCNData {
     public void setIndex(int index) { mIndex = index; }
 
     public double majorAllelePloidy() { return ActualBaf * CopyNumber; }
-    public double minorAllelePloidy() { return (1 - ActualBaf) * CopyNumber; }
+    public double minorAllelePloidy() { return max((1 - ActualBaf) * CopyNumber,0); }
 
     public void setStructuralVariantData(final StructuralVariantData svData, boolean linkOnStart)
     {

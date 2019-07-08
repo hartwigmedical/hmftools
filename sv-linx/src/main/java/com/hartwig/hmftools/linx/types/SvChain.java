@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.types;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -74,7 +75,7 @@ public class SvChain {
 
         // check ordering and switch if required so that the 'first' SV always links to the preceding link and vice versa
         if((addToStart && pair.second() != mLinkedPairs.get(0).first())
-        || (!addToStart && pair.first() != mLinkedPairs.get(mLinkedPairs.size()-1).second()))
+        || (!addToStart && pair.first() != mLinkedPairs.get(mLinkedPairs.size() - 1).second()))
         {
             pair.switchSVs();
         }
@@ -90,7 +91,16 @@ public class SvChain {
         boolean containsFirst = mSvList.contains(first);
         boolean containsSecond = mSvList.contains(second);
 
+        if(mSvList.isEmpty())
+        {
+            LOGGER.error("invalid empty list");
+            return;
+        }
+
+        // it's possible for the list to only contain a single SV (if it's a DM DUP)
         int lastIndex = mSvList.size() - 1;
+        int secondLastIndex = mSvList.size() >= 2 ? mSvList.size() - 2 : 0;
+        int secondIndex = mSvList.size() >= 2 ? 1 : 0;
 
         if(containsFirst && containsSecond)
         {
@@ -108,7 +118,7 @@ public class SvChain {
         {
             if (addToStart)
             {
-                if (mSvList.get(0) == first || mSvList.get(1) == first)
+                if (mSvList.get(0) == first || mSvList.get(secondIndex) == first)
                 {
                     // second SV is the new one here
                     mSvList.add(0, second);
@@ -120,7 +130,7 @@ public class SvChain {
             }
             else
             {
-                if (mSvList.get(lastIndex-1) == first || mSvList.get(lastIndex) == first)
+                if (mSvList.get(secondLastIndex) == first || mSvList.get(lastIndex) == first)
                 {
                     mSvList.add(second);
                 }

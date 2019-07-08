@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
@@ -36,6 +37,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -66,8 +68,6 @@ import org.apache.logging.log4j.Logger;
 
 public class DriverGeneAnnotator
 {
-    private static final Logger LOGGER = LogManager.getLogger(DriverGeneAnnotator.class);
-
     final DatabaseAccess mDbAccess;
     SvGeneTranscriptCollection mGeneTransCache;
 
@@ -88,9 +88,9 @@ public class DriverGeneAnnotator
     private Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap; // loaded from file to avoid DB hits on the massive table
     private VisualiserWriter mVisWriter;
 
-    // temp
-    private boolean mWriteMatchedGeneCopyNumber;
-    private BufferedWriter mGCNFileWriter;
+    private static final String GCN_DATA_FILE = "gcn_data_file";
+
+    private static final Logger LOGGER = LogManager.getLogger(DriverGeneAnnotator.class);
 
     public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection, final String outputDir)
     {
@@ -107,27 +107,18 @@ public class DriverGeneAnnotator
         mSamplePloidy = 0;
 
         mGeneTransCache.createGeneNameIdMap();
-
-        mWriteMatchedGeneCopyNumber = false;
-        mGCNFileWriter = null;
         mVisWriter = null;
 
         mPerfCounter = new PerformanceCounter("Drivers");
     }
 
-    private static final String WRITE_GCN_DATA = "write_gcn_data";
-    private static final String GCN_DATA_FILE = "gcn_data_file";
-
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(WRITE_GCN_DATA, false, "Write a cache of driver-matched gene copy number data");
         options.addOption(GCN_DATA_FILE, true, "Cache of driver-matched gene copy number data");
     }
 
     public boolean loadConfig(final CommandLine cmd)
     {
-        mWriteMatchedGeneCopyNumber = cmd.hasOption(WRITE_GCN_DATA);
-
         initialiseGeneData(cmd.getOptionValue(GCN_DATA_FILE,""));
 
         return true;
@@ -178,31 +169,9 @@ public class DriverGeneAnnotator
             return;
         }
 
-        if(!mWriteMatchedGeneCopyNumber)
-        {
-            mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(sampleId);
-            return;
-        }
+        final List<String> driverGenes = mDriverCatalog.stream().map(x -> x.gene()).collect(Collectors.toList());
 
-        LOGGER.info("sample({}) writing gene copy number data", mSampleId);
-
-        List<GeneCopyNumber> gcnDataList = mDbAccess.readGeneCopynumbers(sampleId);
-
-        for(final DriverCatalog driverData : mDriverCatalog)
-        {
-            for(final GeneCopyNumber gcnData : gcnDataList)
-            {
-                if(gcnData.gene().equals(driverData.gene()))
-                {
-                    writeGeneCopyNumberData(gcnData);
-                    mGeneCopyNumberData.add(gcnData);
-                    break;
-                }
-            }
-        }
-
-        LOGGER.info("sample({}) drivers matched({}/{}) from {} gene copy number data",
-                mSampleId, mGeneCopyNumberData.size(), mDriverCatalog.size(), gcnDataList.size());
+        mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(sampleId, driverGenes);
     }
 
     public void annotateSVs(final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -250,13 +219,7 @@ public class DriverGeneAnnotator
 
             final TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
 
-            final GeneCopyNumber geneCN = findGeneCopyNumber(driverGene);
-
-            if (geneCN == null)
-            {
-                LOGGER.warn("sample({}) gene({}) copy number data not found", mSampleId, driverGene.gene());
-                continue;
-            }
+            GeneCopyNumber geneCN = findGeneCopyNumber(driverGene);
 
             DriverGeneData dgData = new DriverGeneData(driverGene, geneData, canonicalTrans, geneCN);
             mDriverGeneDataList.add(dgData);
@@ -300,7 +263,10 @@ public class DriverGeneAnnotator
             return true;
 
         if(driverGene.category() == TSG && driverGene.likelihoodMethod() == LikelihoodMethod.BIALLELIC)
-            return true;
+        {
+            // need to look for an LOH
+            return driverGene.biallelic();
+        }
 
         if(driverGene.category() == ONCO && driverGene.driver() == DriverType.AMP)
             return true;
@@ -310,6 +276,12 @@ public class DriverGeneAnnotator
 
     private void annotateDeleteEvent(final DriverGeneData dgData)
     {
+        if (dgData.GeneCN == null)
+        {
+            LOGGER.warn("sample({}) gene({}) min copy number data not found for DEL driver", mSampleId, dgData.GeneData.GeneName);
+            return;
+        }
+
         // find the LOH and hom-loss events which caused this DEL
         long minRegionStart = dgData.GeneCN.minRegionStart();
         long minRegionEnd = dgData.GeneCN.minRegionEnd();
@@ -391,49 +363,47 @@ public class DriverGeneAnnotator
 
     private void annotateBiallelicEvent(DriverGeneData dgData)
     {
-        // look for an LOH covering the min-gene region
-        long minRegionStart = dgData.GeneCN.minRegionStart();
-        long minRegionEnd = dgData.GeneCN.minRegionEnd();
+        // look for an LOH covering any part of the coding region
+        if(dgData.TransData.CodingStart == null || dgData.TransData.CodingEnd == null)
+            return;
+
+        long codingStart = dgData.TransData.CodingStart;
+        long codingEnd = dgData.TransData.CodingEnd;
 
         for(final LohEvent lohEvent : mLohEventList)
         {
             if(!lohEvent.Chromosome.equals(dgData.GeneData.Chromosome))
                 continue;
 
-            // the LOH needs to straddle one or the other of the min-gene breakends
-            if(lohEvent.PosStart > minRegionEnd || lohEvent.PosEnd < minRegionStart)
+            if(lohEvent.PosStart > codingEnd || lohEvent.PosEnd < codingStart)
                 continue;
 
-            LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by LOH({})",
-                    dgData.GeneData.GeneName, minRegionStart, minRegionEnd, lohEvent);
+            LOGGER.debug("gene({}) coding region({} -> {}) covered by LOH({})",
+                    dgData.GeneData.GeneName, codingStart, codingEnd, lohEvent);
 
-            if((lohEvent.PosStart < minRegionEnd && lohEvent.PosEnd > minRegionStart) || !lohEvent.doubleSvEvent())
+            if(lohEvent.doubleSvEvent())
             {
-                // LOH covers the whole gene or extends to end of arm (ie not just 2 SVs
-                if(lohEvent.doubleSvEvent())
-                {
-                    DriverGeneEvent event = new DriverGeneEvent(LOH);
-                    event.setLohEvent(lohEvent);
+                DriverGeneEvent event = new DriverGeneEvent(LOH);
+                event.setLohEvent(lohEvent);
 
-                    // one or both breakendscan be null if not matched
-                    event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_DEL);
-                    dgData.addEvent(event);
-                }
-                else if(lohEvent.armLoss())
-                {
-                    dgData.addEvent(new DriverGeneEvent(LOH_ARM));
-                }
-                else if(lohEvent.chromosomeLoss())
-                {
-                    dgData.addEvent(new DriverGeneEvent(LOH_CHR));
-                }
-                else if(lohEvent.isSvEvent())
-                {
-                    DriverGeneEvent event = new DriverGeneEvent(LOH_ARM);
-                    event.setLohEvent(lohEvent);
-                    event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_ARM_SV);
-                    dgData.addEvent(event);
-                }
+                // one or both breakendscan be null if not matched
+                event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_DEL);
+                dgData.addEvent(event);
+            }
+            else if(lohEvent.armLoss())
+            {
+                dgData.addEvent(new DriverGeneEvent(LOH_ARM));
+            }
+            else if(lohEvent.chromosomeLoss())
+            {
+                dgData.addEvent(new DriverGeneEvent(LOH_CHR));
+            }
+            else if(lohEvent.isSvEvent())
+            {
+                DriverGeneEvent event = new DriverGeneEvent(LOH_ARM);
+                event.setLohEvent(lohEvent);
+                event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_ARM_SV);
+                dgData.addEvent(event);
             }
 
             break;
@@ -685,11 +655,9 @@ public class DriverGeneAnnotator
         mPerfCounter.logStats();
 
         closeBufferedWriter(mFileWriter);
-        closeBufferedWriter(mGCNFileWriter);
     }
 
-    private static String GENE_CN_DATA_FILE = "SVA_GENE_COPY_NUMBER.csv";
-    private static int GENE_CN_DATA_FILE_ITEM_COUNT = 30;
+    private static int GENE_CN_DATA_FILE_ITEM_COUNT = 6;
 
     private void loadGeneCopyNumberDataFile(final String gcnFileName)
     {
@@ -718,47 +686,44 @@ public class DriverGeneAnnotator
                 String[] items = line.split(",");
 
                 if (items.length != GENE_CN_DATA_FILE_ITEM_COUNT)
-                    continue;
+                {
+                    LOGGER.error("GCN file invalid item count({}) vs expected({})", items.length, GENE_CN_DATA_FILE_ITEM_COUNT);
+                    break;
+                }
 
-                String sampleId = items[1];
+                String sampleId = items[0];
 
                 if(currentSample.isEmpty() || !currentSample.equals(sampleId))
                 {
                     gcnDataList = Lists.newArrayList();
                     currentSample = sampleId;
                     mSampleGeneCopyNumberMap.put(currentSample, gcnDataList);
-
                 }
 
-                //                          0       1       2           3   4   5      6              7           8
-//                mGCNFileWriter.write("modified,sampleId,chromosome,start,end,gene,chromosomeBand,transcriptId,transcriptVersion");
-                //                       10             11           12             13                  14                 15        16              17
-//                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd");
-                //                          18                  19                      20          21
-//                mGCNFileWriter.write(",minRegionStartSupport,minRegionEndSupport,minRegionMethod,minMinorAllelePloidy");
+                // sampleId,minCopyNumber,minRegionStart,minRegionEnd,minMinorAllelePloidy
 
-                int index = 2;
+                int index = 1;
 
                 GeneCopyNumber gcnData = ImmutableGeneCopyNumber.builder()
-                        .chromosome(items[index++])
-                        .start(Integer.parseInt(items[index++]))
-                        .end(Integer.parseInt(items[index++]))
                         .gene(items[index++])
-                        .chromosomeBand(items[index++])
-                        .transcriptID(items[index++])
-                        .transcriptVersion(Integer.parseInt(items[index++]))
                         .minCopyNumber(Double.parseDouble(items[index++]))
-                        .maxCopyNumber(Double.parseDouble(items[index++]))
-                        .somaticRegions(Integer.parseInt(items[index++]))
-                        .germlineHomRegions(Integer.parseInt(items[index++]))
-                        .germlineHet2HomRegions(Integer.parseInt(items[index++]))
-                        .minRegions(Integer.parseInt(items[index++]))
                         .minRegionStart(Integer.parseInt(items[index++]))
                         .minRegionEnd(Integer.parseInt(items[index++]))
-                        .minRegionStartSupport(SegmentSupport.valueOf(items[index++]))
-                        .minRegionEndSupport(SegmentSupport.valueOf(items[index++]))
-                        .minRegionMethod(CopyNumberMethod.valueOf(items[index++]))
                         .minMinorAllelePloidy(Double.parseDouble(items[index++]))
+                        .maxCopyNumber(0)
+                        .somaticRegions(0)
+                        .germlineHet2HomRegions(0)
+                        .germlineHomRegions(0)
+                        .minRegions(0)
+                        .minRegionStartSupport(UNKNOWN)
+                        .minRegionEndSupport(UNKNOWN)
+                        .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                        .transcriptID("")
+                        .transcriptVersion(0)
+                        .chromosomeBand("")
+                        .chromosome("")
+                        .start(0)
+                        .end(0)
                         .build();
 
                 ++rowCount;
@@ -771,50 +736,6 @@ public class DriverGeneAnnotator
         catch (IOException e)
         {
             LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
-        }
-    }
-
-    private void writeGeneCopyNumberData(final GeneCopyNumber gcnData)
-    {
-        try
-        {
-            if(mGCNFileWriter == null)
-            {
-                String outputFileName = mOutputDir;
-
-                outputFileName += GENE_CN_DATA_FILE;
-
-                mGCNFileWriter = createBufferedWriter(outputFileName, false);
-
-                mGCNFileWriter.write("modified,sampleId,chromosome,start,end,gene,chromosomeBand,transcriptId,transcriptVersion");
-                mGCNFileWriter.write(",minCopyNumber,maxCopyNumber,somaticRegions,germlineHomRegions,germlineHetRegions,minRegions,minRegionStart,minRegionEnd");
-                mGCNFileWriter.write(",minRegionStartSupport,minRegionEndSupport,minRegionMethod,minMinorAllelePloidy");
-                mGCNFileWriter.newLine();
-            }
-
-            BufferedWriter writer = mGCNFileWriter;
-
-            final Timestamp timestamp = new Timestamp(new Date().getTime());
-
-            writer.write(String.format("%s,%s,%s,%d,%d,%s,%s,%s,%d",
-                    timestamp, mSampleId, gcnData.chromosome(), gcnData.start(), gcnData.end(),
-                    gcnData.gene(), gcnData.chromosomeBand(), gcnData.transcriptID(), gcnData.transcriptVersion()));
-
-            writer.write(String.format(",%.4f,%.4f,%d,%d,%d,%d,%d,%d,%s,%s,%s",
-                    gcnData.minCopyNumber(), gcnData.maxCopyNumber(), gcnData.somaticRegions(),
-                    gcnData.germlineHomRegions(), gcnData.germlineHet2HomRegions(),
-                    gcnData.minRegions(), gcnData.minRegionStart(), gcnData.minRegionEnd(),
-                    gcnData.minRegionStartSupport(), gcnData.minRegionEndSupport(), gcnData.minRegionMethod().toString()));
-
-
-            writer.write(String.format(",%.4f,", gcnData.minMinorAllelePloidy()));
-
-            writer.newLine();
-
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing gene copy number to outputFile: {}", e.toString());
         }
     }
 

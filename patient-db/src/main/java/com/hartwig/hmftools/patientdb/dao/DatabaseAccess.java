@@ -218,6 +218,11 @@ public class DatabaseAccess implements AutoCloseable {
         return geneCopyNumberDAO.read(sample);
     }
 
+    @NotNull
+    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample, @NotNull final List<String> genes) {
+        return geneCopyNumberDAO.read(sample, genes);
+    }
+
     public void writeGeneCopynumberRegions(@NotNull final String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }

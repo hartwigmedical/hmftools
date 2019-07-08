@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInser
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -1331,9 +1332,58 @@ public class ChainFinder
 
         for(SvLinkedPair pair : mAssembledLinks)
         {
-            // add as many times as permitted by the ploidy of the variants
-            int pairRepeatCount = !mHasReplication ?
-                    1 : min(getSvReplicationCount(pair.first()), getSvReplicationCount(pair.second())) ;
+            int pairRepeatCount = 1;
+
+            if(mHasReplication)
+            {
+                // replicate any assembly links where the ploidy supports it, taking note of multiple connections between the same
+                // breakend and other breakends eg if a SV has ploidy 2 and 2 different assembly links, it can only link once, whereas
+                // if it has ploidy 2 and 1 link it should be made twice, and any higher combinations are unclear
+                int[] repCounts = new int[SE_PAIR];
+                boolean[] hasOtherMultiPloidyLinks = {false, false};
+                int[] assemblyLinkCount = new int[SE_PAIR];
+
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    boolean isStart = isStart(be);
+
+                    final SvBreakend breakend = pair.getBreakend(isStart);
+                    repCounts[be] = max(breakend.getSV().getReplicatedCount(), 1);
+
+                    final List<SvLinkedPair> assemblyLinks = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
+                    assemblyLinkCount[be] = assemblyLinks.size();
+
+                    if(assemblyLinkCount[be] > 1)
+                    {
+                        hasOtherMultiPloidyLinks[be] = assemblyLinks.stream()
+                                .filter(x -> x != pair)
+                                .anyMatch(x -> x.getOtherBreakend(breakend).getSV().getReplicatedCount() > 1);
+                    }
+                }
+
+                // most likely scenario first
+                if(assemblyLinkCount[SE_START] == 1 && assemblyLinkCount[SE_END] == 1)
+                {
+                    pairRepeatCount = min(repCounts[SE_START], repCounts[SE_END]);
+                }
+                else if(repCounts[SE_START] >= 2 && repCounts[SE_END] >= 2
+                    && !hasOtherMultiPloidyLinks[SE_START] && !hasOtherMultiPloidyLinks[SE_END])
+                {
+                    // both SVs allow for 3 or more repeats, so if the max other assembled link SV ploidies are all <= 1,
+                    // then these links can safely be repeated
+                    int firstOtherLinks = assemblyLinkCount[SE_START] - 1;
+                    int secondOtherLinks = assemblyLinkCount[SE_END] - 1;
+
+                    pairRepeatCount = min(repCounts[SE_START] - firstOtherLinks, repCounts[SE_END] - secondOtherLinks);
+                }
+
+                if(pairRepeatCount > 1)
+                {
+                    LOGGER.debug("assembly pair({}) repeated {} times: first(rep={} links={}) second(rep={} links={})",
+                            pair.toString(), pairRepeatCount, repCounts[SE_START], assemblyLinkCount[SE_START],
+                            repCounts[SE_END], assemblyLinkCount[SE_END]);
+                }
+            }
 
             for(int i = 0; i < pairRepeatCount; ++i)
             {
@@ -1346,6 +1396,8 @@ public class ChainFinder
             LOGGER.debug("created {} partial chains from {} assembly links", mChains.size(), mAssembledLinks.size());
         }
     }
+
+    // private int getAssembledLinkReplication
 
     private void registerNewLink(final SvLinkedPair newPair, boolean[] pairToChain)
     {
@@ -1997,6 +2049,12 @@ public class ChainFinder
         if(mUniqueSVs.size() < 4 || mUniqueSVs.size() > 20)
             return;
 
+        if(mUniqueSVs.stream().anyMatch(x -> x.isNullBreakend())) // ignore for now
+            return;
+
+        if(!mDoubleMinuteSVs.isEmpty()) // for now skip these
+            return;
+
         findMultiConnectionBreakends(sampleId);
     }
 
@@ -2052,11 +2110,11 @@ public class ChainFinder
                         ++compDupCons;
                 }
 
-                if(connectionCount > 1)
+                if(connectionCount - foldbackCons - compDupCons > 1)
                 {
-                    LOGGER.info("sampleId({}) cluster({}) breakend({}) repCount({}) connections({}) with foldbacks({}) complexDups({})",
-                            sampleId, mClusterId, origBreakend.toString(), getSvReplicationCount(origBreakend.getSV()),
-                            connectionCount, foldbackCons, compDupCons);
+                    LOGGER.debug("sampleId({}) cluster({} count={}) breakend({}) repCount({}) connections({}) with foldbacks({}) complexDups({})",
+                            sampleId, mClusterId, mUniqueSVs.size(), origBreakend.toString(),
+                            getSvReplicationCount(origBreakend.getSV()), connectionCount, foldbackCons, compDupCons);
                 }
 
                 reportedBreakends.add(origBreakend);
