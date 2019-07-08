@@ -32,6 +32,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -1649,11 +1650,7 @@ public class ChainFinder
                         continue;
 
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
-                    {
-                        // make an exception for DM DUPs which can link to themselves
-                        if(!(mDoubleMinuteSVs.size() == 1 && mDoubleMinuteSVs.get(0).type() == DUP))
-                            continue;
-                    }
+                        continue;
 
                     if(alreadyLinkedBreakend(upperBreakend))
                         continue;
@@ -1964,6 +1961,55 @@ public class ChainFinder
 
         SvChain chain = mChains.get(0);
 
+        // allow any excess breakends from a single DM DUP to be added to the chain
+
+        if(mDoubleMinuteSVs.size() == 1 && mDoubleMinuteSVs.get(0).type() == DUP)
+        {
+            final SvVarData dupDM = mDoubleMinuteSVs.get(0);
+            final SvBreakend dupStart = dupDM.getBreakend(true);
+            final SvBreakend dupEnd = dupDM.getBreakend(false);
+
+            int remainingBreakends = min(getUnlinkedBreakendCount(dupStart), getUnlinkedBreakendCount(dupEnd));
+
+            if(remainingBreakends > 0
+            && (chain.getFirstSV().equals(dupDM, true) || chain.getLastSV().equals(dupDM, true)))
+            {
+                final List<SvBreakend> startBreakendList = mUnlinkedBreakendMap.get(dupStart);
+                final List<SvBreakend> endBreakendList = mUnlinkedBreakendMap.get(dupEnd);
+
+                // work out which end of the chain has this DUP if any
+                boolean linkOnStart = chain.getFirstSV().equals(dupDM, true);
+
+                for(int i = 0; i < remainingBreakends; ++i)
+                {
+                    SvBreakend chainBreakend = chain.getOpenBreakend(linkOnStart);
+
+                    SvBreakend otherBreakendOrig = dupStart == chainBreakend.getOrigBreakend() ? dupEnd : dupStart;
+                    SvBreakend otherBreakend = findUnlinkedMatchingBreakend(otherBreakendOrig);
+
+                    if(otherBreakend == null || chainBreakend.getSV() == otherBreakend.getSV())
+                        break;
+
+                    SvLinkedPair newLink = SvLinkedPair.from(chainBreakend, otherBreakend, LINK_TYPE_TI);
+
+                    LOGGER.debug("adding new DUP pair({}) to DM chain", newLink.toString());
+
+                    chain.addLink(newLink, linkOnStart);
+
+                    if(chainBreakend.usesStart())
+                    {
+                        startBreakendList.remove(chainBreakend);
+                        endBreakendList.remove(otherBreakend);
+                    }
+                    else
+                    {
+                        startBreakendList.remove(otherBreakend);
+                        endBreakendList.remove(chainBreakend);
+                    }
+                }
+            }
+        }
+
         int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x, true)).count();
 
         if(chainedDmSVs != mDoubleMinuteSVs.size())
@@ -1981,11 +2027,11 @@ public class ChainFinder
                 if (chain.linkWouldCloseChain(pair))
                 {
                     chain.addLink(pair, true);
+
+                    LOGGER.debug("cluster({}) closed DM chain", mClusterId);
                 }
             }
         }
-
-        LOGGER.debug("cluster({}) closed DM chain", mClusterId);
     }
 
     private static int LOG_LEVEL_ERROR = 0;

@@ -50,7 +50,11 @@ public class DoubleMinuteTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertEquals(1, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(dup1));
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM));
+
+        assertTrue(cluster.getChains().size() == 1);
+        assertEquals(1, cluster.getChains().get(0).getLinkCount());
+        assertTrue(cluster.getChains().get(0).isClosedLoop());
     }
 
     @Test

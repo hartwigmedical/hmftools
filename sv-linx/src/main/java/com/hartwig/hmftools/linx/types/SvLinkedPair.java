@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 
@@ -317,5 +318,7 @@ public class SvLinkedPair {
     {
         return mFirst.equals(var, true) || mSecond.equals(var, true);
     }
+
+    public boolean isDupLink() { return mFirst == mSecond && mFirst.type() == DUP; }
 
 }

@@ -189,13 +189,13 @@ public class ChainingActualTest
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
         String chromosome = "7";
 
-        final SvVarData var1 = createTestSv("78", chromosome, chromosome, 54877000, 55100000, -1, -1, INV, 8);
-        final SvVarData var2 = createTestSv("79", chromosome, chromosome, 55145000, 55207000, 1, 1, INV, 8);
-        final SvVarData var3 = createTestSv("80", chromosome, chromosome, 55200000, 55223000, 1, -1, DEL, 8);
-        final SvVarData var5 = createTestSv("81", chromosome, chromosome, 55204000, 55293000, -1, 1, DUP, 8);
-        final SvVarData var4 = createTestSv("82", chromosome, chromosome, 55092000, 55588000, 1, -1, DEL, 8);
-        final SvVarData var6 = createTestSv("83", chromosome, chromosome, 54832000, 55636000, 1, -1, DEL, 8);
-        SvVarData dmDup = createTestSv("84", chromosome, chromosome, 54800000, 55700000, -1, 1, DUP, 24);
+        final SvVarData var1 = createTestSv("78", chromosome, chromosome, 54877000, 55100000, -1, -1, INV, 2);
+        final SvVarData var2 = createTestSv("79", chromosome, chromosome, 55145000, 55207000, 1, 1, INV, 2);
+        final SvVarData var3 = createTestSv("80", chromosome, chromosome, 55200000, 55223000, 1, -1, DEL, 2);
+        final SvVarData var5 = createTestSv("81", chromosome, chromosome, 55204000, 55293000, -1, 1, DUP, 2);
+        final SvVarData var4 = createTestSv("82", chromosome, chromosome, 55092000, 55588000, 1, -1, DEL, 2);
+        final SvVarData var6 = createTestSv("83", chromosome, chromosome, 54832000, 55636000, 1, -1, DEL, 2);
+        SvVarData dmDup = createTestSv("84", chromosome, chromosome, 54800000, 55700000, -1, 1, DUP, 10);
 
         tester.AllVariants.add(dmDup);
         tester.AllVariants.add(var1);
@@ -220,7 +220,7 @@ public class ChainingActualTest
         // check chains
         assertEquals(1, cluster.getChains().size());
         final SvChain chain = cluster.getChains().get(0);
-        assertEquals(9, chain.getLinkCount());
+        assertEquals(11, chain.getLinkCount());
         assertTrue(chain.isClosedLoop());
     }
 

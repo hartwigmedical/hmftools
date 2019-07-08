@@ -56,7 +56,7 @@ public class DriverGeneData
             }
         }
 
-        return false;
+        return mEvents.size() > 1;
     }
 
     public String toString()

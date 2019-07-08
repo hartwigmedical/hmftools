@@ -632,7 +632,6 @@ public class DriverGeneAnnotator
                 writer.write(String.format(",%d,%d,%s,%s,%s",
                         posStart, posEnd, svIdStart, svIdEnd, driverEvent.getSvInfo()));
 
-
                 writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
                         mSamplePloidy, geneData.Chromosome, dgData.Arm, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
                         cnData[CENTROMERE_CN], dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));

@@ -42,6 +42,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -241,8 +242,7 @@ public class ClusterAnalyser {
         {
             if(isSimpleSingleSV(cluster))
             {
-                if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-                    mDmFinder.analyseCluster(mSampleId, cluster);
+                mDmFinder.analyseCluster(mSampleId, cluster);
 
                 setClusterResolvedState(cluster, false);
                 continue;
@@ -254,7 +254,7 @@ public class ClusterAnalyser {
             mLinkFinder.findAssembledLinks(cluster);
             applyCopyNumberReplication(cluster);
 
-            if(isSimple && runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+            if(isSimple)
                 mDmFinder.analyseCluster(mSampleId, cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
@@ -293,8 +293,7 @@ public class ClusterAnalyser {
             cluster.removeReplicatedSvs();
 
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
-            if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
-                mDmFinder.analyseCluster(mSampleId, cluster);
+            mDmFinder.analyseCluster(mSampleId, cluster);
 
             applyCopyNumberReplication(cluster);
 
@@ -1551,6 +1550,10 @@ public class ClusterAnalyser {
         {
             reportClusterRepRepairSegments(mSampleId, cluster);
         }
+
+        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES) && cluster.hasAnnotation(CLUSTER_ANNONTATION_DM))
+            mDmFinder.reportCluster(mSampleId, cluster);
+
     }
 
     public void close()

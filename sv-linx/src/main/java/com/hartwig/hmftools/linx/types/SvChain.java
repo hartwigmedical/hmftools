@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
@@ -90,6 +91,7 @@ public class SvChain {
 
         boolean containsFirst = mSvList.contains(first);
         boolean containsSecond = mSvList.contains(second);
+        boolean sameSV = (first == second);
 
         if(mSvList.isEmpty())
         {
@@ -102,7 +104,7 @@ public class SvChain {
         int secondLastIndex = mSvList.size() >= 2 ? mSvList.size() - 2 : 0;
         int secondIndex = mSvList.size() >= 2 ? 1 : 0;
 
-        if(containsFirst && containsSecond)
+        if(containsFirst && containsSecond && !sameSV)
         {
             // check that these SVs are at the start and end, otherwise the new link is invalid
             if((mSvList.get(0) == first && mSvList.get(lastIndex) != second) || (mSvList.get(0) == second && mSvList.get(lastIndex) != first))
@@ -164,7 +166,10 @@ public class SvChain {
         return isStart ? getFirstSV().getBreakend(firstLinkOpenOnStart()) : getLastSV().getBreakend(lastLinkOpenOnStart());
     }
 
-    public boolean isClosedLoop() { return mIsClosedLoop; }
+    public boolean isClosedLoop()
+    {
+        return mIsClosedLoop || (mSvList.size() == 1 && mSvList.get(0).type() == DUP);
+    }
 
     public boolean hasReplicatedSVs()
     {
@@ -247,6 +252,9 @@ public class SvChain {
             for(int j = i + 1; j< mLinkedPairs.size(); ++j)
             {
                 final SvLinkedPair lp2 = mLinkedPairs.get(j);
+
+                if(lp2.isDupLink())
+                    continue;
 
                 if(lp1.hasLinkClash(lp2))
                 {
