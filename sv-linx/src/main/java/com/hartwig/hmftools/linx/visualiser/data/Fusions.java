@@ -68,12 +68,14 @@ public class Fusions
                 .strandUp(Integer.valueOf(values[map.get("StrandUp")]))
                 .regionTypeUp(values[map.get("RegionTypeUp")])
                 .exonUp(Integer.valueOf(values[map.get("ExonUp")]))
+                .exonsSkippedUp(Integer.valueOf(values[map.get("ExonsSkippedUp")]))
                 .chromosomeDown(values[map.get("ChrDown")])
                 .positionDown(Long.valueOf(values[map.get("PosDown")]))
                 .geneDown(values[map.get("GeneNameDown")])
                 .strandDown(Integer.valueOf(values[map.get("StrandDown")]))
                 .regionTypeDown(values[map.get("RegionTypeDown")])
                 .exonDown(Integer.valueOf(values[map.get("ExonDown")]))
+                .exonsSkippedDown(Integer.valueOf(values[map.get("ExonsSkippedDown")]))
                 .build();
     }
 }

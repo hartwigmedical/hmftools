@@ -30,6 +30,8 @@ public abstract class Fusion
 
     public abstract int exonUp();
 
+    public abstract int exonsSkippedUp();
+
     @NotNull
     public abstract String geneDown();
 
@@ -45,8 +47,11 @@ public abstract class Fusion
 
     public abstract int exonDown();
 
+    public abstract int exonsSkippedDown();
+
     @NotNull
-    public String name() {
+    public String name()
+    {
         return geneUp() + "_" + geneDown();
     }
 
