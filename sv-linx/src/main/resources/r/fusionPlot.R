@@ -86,7 +86,7 @@ for (i in c(1:length(fusions))) {
       color = ifelse(upGene, singleBlue, singleRed))
   
   fusedProteinDomains = clusterProteinDomains %>% 
-    filter(chromosome == selectedFusion)
+    filter(fusion == selectedFusion)
   
   fusionPlotList[[selectedFusion]] <- plot_fusion(fusedExons, fusedProteinDomains, i == 1)
 }

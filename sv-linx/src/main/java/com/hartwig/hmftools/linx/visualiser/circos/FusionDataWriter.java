@@ -13,10 +13,10 @@ import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExons;
+import com.hartwig.hmftools.linx.visualiser.data.FusedProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,7 @@ public class FusionDataWriter
         for (Fusion fusion : fusions)
         {
             final List<FusedExon> fusedExons = FusedExons.fusedExons(fusion, exons);
-            final List<ProteinDomain> fusedProteinDomain = ProteinDomains.proteinDomainsInFusion(fusion, fusedExons, proteinDomains);
+            final List<ProteinDomain> fusedProteinDomain = FusedProteinDomains.fusedProteinDomains(fusion, fusedExons, proteinDomains);
 
             final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
             for (FusedExon fusedExon : fusedExons)
@@ -67,10 +67,8 @@ public class FusionDataWriter
             throws IOException
     {
         String filePrefix = outputDir + File.separator + sample;
-
         FusedExons.write(filePrefix + ".fusions.tsv", finalExons);
-
-        ProteinDomains.write(filePrefix + ".protein_domains.tsv", domainColors, finalProteinDomains);
+        FusedProteinDomains.write(filePrefix + ".protein_domains.tsv", domainColors, finalProteinDomains);
     }
 
     public List<FusedExon> finalExons()
