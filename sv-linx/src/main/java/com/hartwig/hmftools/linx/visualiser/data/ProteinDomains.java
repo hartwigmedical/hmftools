@@ -23,6 +23,7 @@ public class ProteinDomains
 {
 
     private static final String DELIMITER = "\t";
+    public static final String UTR = "UTR/Non-coding";
 
     public static List<ProteinDomain> proteinDomainsInGenes(@NotNull final List<Gene> genes,
             @NotNull final List<ProteinDomain> proteinDomains)
@@ -110,9 +111,20 @@ public class ProteinDomains
                 .chromosome(file.Chromosome)
                 .start(file.Start)
                 .end(file.End)
-                .name(file.Info)
+                .name(utr(file.Info))
                 .build();
+    }
 
+    @NotNull
+    private static String utr(@NotNull final String utr) {
+        switch (utr) {
+            case "Non Coding":
+            case "5-Prime UTR":
+            case "3-Prime UTR":
+                return UTR;
+        }
+
+        return utr;
     }
 
     public static void write(@NotNull final String fileName, @NotNull final ProteinDomainColors colors,

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +25,7 @@ public class ProteinDomainColors
     private static final float FIXED_HUE = 0.166f;
     private static final float SAT = 0.7f;
     private static final float BRIGHT = 0.8f;
+    private static final Color UTR = new Color(128,128,128);
 
     private final Map<String, Color> proteinColorMap = Maps.newLinkedHashMap();
 
@@ -39,6 +41,7 @@ public class ProteinDomainColors
         proteinColorMap.put("Ankyrin repeat", getFixedColor(7));
         proteinColorMap.put("Ankyrin repeat-containing domain", getFixedColor(8));
         proteinColorMap.put("Fibronectin type III", getFixedColor(9));
+        proteinColorMap.put(ProteinDomains.UTR, UTR);
 
         final List<String> newProteinDomains =
                 proteinDomains.stream().filter(x -> !proteinColorMap.keySet().contains(x)).collect(Collectors.toList());
