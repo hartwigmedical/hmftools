@@ -10,7 +10,7 @@ clusterProteinDomainPath <- args[1]
 clusterFusedExonPath <- args[2]
 circosPicturePath   <- args[3]
 
-plot_fusion <- function(fusedExons, fusedProteinDomains) {
+plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
   
   fusion = fusedExons %>% group_by(fusion) %>% summarise(start = min(geneStart), end = max(geneEnd))
   
@@ -43,9 +43,7 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
     theme(axis.text.x = element_text(size = 5), axis.title = element_text(size = 5), legend.text = element_text(size = 5)) +
     theme(axis.ticks = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank()) +
     theme(panel.background = element_blank(), panel.border =  element_blank(), panel.grid = element_blank(), panel.spacing = unit(3, "pt")) +
-    theme(plot.margin = margin(t = 0, b = 0, l = 3, r = 3, unit = "pt"), legend.box.margin = margin(t = 0, b = 0, l = 0, r = 0, unit = "pt")) +
-    theme(legend.position = c(0.5, 0.9), legend.key.size = unit(6, "pt"), legend.background=element_blank(), legend.key=element_blank(), legend.direction = "horizontal", legend.spacing.x = unit(1, "mm")) +
-    guides(fill = guide_legend(nrow = 1))
+    theme(plot.margin = margin(t = 0, b = 0, l = 3, r = 3, unit = "pt"), legend.box.margin = margin(t = 0, b = 0, l = 0, r = 0, unit = "pt"))
   
   if (nrow(fusedProteinDomains) > 0) {
     p1 = p1 + geom_rect(data = fusedProteinDomains, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5, fill = name), position = "identity", stat = "identity", alpha = 0.8)
@@ -56,6 +54,14 @@ plot_fusion <- function(fusedExons, fusedProteinDomains) {
     geom_rect(data = fadedArea, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 1), position = "identity", stat = "identity", fill = "white", alpha = 1 - fadedAlpha, color = NA) + 
     geom_segment(data = fusedGenes %>% filter(upGene), mapping = aes(x = end, y = -0.1, xend = end, yend = 1.1))
 
+  if (showLegend) {
+    p1 = p1 +
+      theme(legend.position = c(0.5, 0.8), legend.key.size = unit(6, "pt"), legend.background=element_blank(), legend.key=element_blank(), legend.direction = "horizontal", legend.spacing.x = unit(1, "mm")) +
+      guides(fill = guide_legend(nrow = 1))
+  } else {
+    p1 = p1 + theme(legend.position = "none")
+  }
+  
   return (p1)
 }
 
@@ -67,7 +73,10 @@ clusterProteinDomains = read.table(clusterProteinDomainPath, sep = '\t', header 
 clusterFusedExons = read.table(clusterFusedExonPath, sep = '\t', header = T, stringsAsFactors = F)
 
 fusionPlotList = list()
-for (selectedFusion in unique(clusterFusedExons$fusion)) {
+fusions = unique(clusterFusedExons$fusion)
+
+for (i in c(1:length(fusions))) {
+  selectedFusion = fusions[i]
   cat ("Processing", selectedFusion, "\n")
 
   fusedExons = clusterFusedExons %>%
@@ -79,7 +88,7 @@ for (selectedFusion in unique(clusterFusedExons$fusion)) {
   fusedProteinDomains = clusterProteinDomains %>% 
     filter(chromosome == selectedFusion)
   
-  fusionPlotList[[selectedFusion]] <- plot_fusion(fusedExons, fusedProteinDomains)
+  fusionPlotList[[selectedFusion]] <- plot_fusion(fusedExons, fusedProteinDomains, i == 1)
 }
 
 fusionPlotListCount = length(fusionPlotList)
