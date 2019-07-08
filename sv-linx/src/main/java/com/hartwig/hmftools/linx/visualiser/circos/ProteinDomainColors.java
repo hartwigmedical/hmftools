@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,11 @@ public class ProteinDomainColors
     private static final Color UTR = new Color(128, 128, 128);
 
     private final Map<String, Color> proteinColorMap = Maps.newLinkedHashMap();
+
+    public ProteinDomainColors(@NotNull final List<ProteinDomain> proteinDomains)
+    {
+        this(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
+    }
 
     ProteinDomainColors(@NotNull final Set<String> proteinDomains)
     {
