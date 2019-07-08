@@ -51,7 +51,8 @@ public class FusedExons
                 .unadjustedGeneStart(upGeneRegion.start())
                 .gene(fusion.geneUp())
                 .geneStart(convertedUpGeneRegion.start())
-                .geneEnd(convertedUpGeneRegion.end());
+                .geneEnd(convertedUpGeneRegion.end())
+                .transcript(fusion.transcriptUp());
 
         for (final Exon exon : upStreamExons)
         {
@@ -78,7 +79,8 @@ public class FusedExons
                 .unadjustedGeneStart(fusion.positionDown())
                 .gene(fusion.geneDown())
                 .geneStart(convertedDownGeneRegion.start() + convertedUpGeneRegion.end())
-                .geneEnd(convertedDownGeneRegion.end() + convertedUpGeneRegion.end());
+                .geneEnd(convertedDownGeneRegion.end() + convertedUpGeneRegion.end())
+                .transcript(fusion.transcriptDown());
 
         boolean intronicToExonicFusion = fusion.regionTypeUp().equals("Intronic") && fusion.regionTypeDown().equals("Exonic");
 
@@ -126,6 +128,7 @@ public class FusedExons
                 .add("end")
                 .add("rank")
                 .add("skipped")
+                .add("transcript")
                 .toString();
     }
 
@@ -144,6 +147,7 @@ public class FusedExons
                 .add(String.valueOf(exon.end()))
                 .add(String.valueOf(exon.rank()))
                 .add(String.valueOf(exon.skipped()))
+                .add(exon.transcript())
                 .toString();
     }
 

@@ -153,6 +153,7 @@ public class ProteinDomains
                 .add("end")
                 .add("name")
                 .add("color")
+                .add("transcript")
                 .toString();
     }
 
@@ -167,6 +168,7 @@ public class ProteinDomains
                 .add(String.valueOf(domain.end()))
                 .add(String.valueOf(domain.name()))
                 .add(hexColor(colors.color(domain.name())))
+                .add(domain.transcript())
                 .toString();
     }
 
