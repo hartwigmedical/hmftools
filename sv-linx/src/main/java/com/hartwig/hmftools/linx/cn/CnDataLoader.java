@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
+import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -219,7 +220,14 @@ public class CnDataLoader
                     }
 
                     // a match has been found
-                    cnData.setStructuralVariantData(svData, isStart);
+
+                    // don't override with a duplicate breakend
+                    boolean isDuplicateSgl = svData.type() == SGL && svData.startLinkedBy().contains(ASSEMBLY_TYPE_EQV);
+
+                    if(cnData.getStructuralVariantData() == null || !isDuplicateSgl)
+                    {
+                        cnData.setStructuralVariantData(svData, isStart);
+                    }
 
                     SvCNData[] cnDataItems = mSvIdCnDataMap.get(svData.id());
 
@@ -435,7 +443,13 @@ public class CnDataLoader
                     boolean lohLost = minCN < MIN_LOH_CN;
 
                     // check that an SV with correct orientation exists here
-                    if (lohLost && cnData.matchesSV(true) && findSvData(cnData, 1) == null)
+                    StructuralVariantData svData = findSvData(cnData, 1);
+
+                    if (lohLost && cnData.matchesSV(true) && svData == null)
+                    {
+                        lohLost = false;
+                    }
+                    else if(svData != null && svData.type() == SGL && svData.startLinkedBy().contains(ASSEMBLY_TYPE_EQV))
                     {
                         lohLost = false;
                     }

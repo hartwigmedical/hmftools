@@ -371,7 +371,7 @@ public class SvClusteringMethods {
         if(var.type() != SGL|| var.isNoneSegment())
             return NONE;
 
-        if(var.isEquivBreakend(true))
+        if(var.isEquivBreakend())
             return DUP_BE;
 
         return NONE;
@@ -1289,7 +1289,7 @@ public class SvClusteringMethods {
                         }
                     }
                 }
-                else if(var.type() == nextVar.type() && var.hasEquivBreakend() && nextVar.hasEquivBreakend())
+                else if(var.type() == nextVar.type() && var.isEquivBreakend())
                 {
                     // 2 non-SGL SVs may be duplicates, so check their other ends
                     SvBreakend otherBe = breakend.getOtherBreakend();

@@ -283,7 +283,6 @@ public class SvVarData
         }
     }
 
-    public void clearClusterReason() { mClusterReason = ""; }
     public final String getClusterReason() { return mClusterReason; }
 
     public boolean isReplicatedSv() { return mIsReplicatedSv; }
@@ -618,14 +617,9 @@ public class SvVarData
         return mTIAssemblies.get(seIndex(isStart));
     }
 
-    public boolean isEquivBreakend(boolean isStart)
+    public boolean isEquivBreakend()
     {
         return getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV);
-    }
-
-    public boolean hasEquivBreakend()
-    {
-        return isEquivBreakend(true) || isEquivBreakend(false);
     }
 
     public final List<GeneAnnotation> getGenesList(boolean isStart) { return mGenes.get(seIndex(isStart)); }
