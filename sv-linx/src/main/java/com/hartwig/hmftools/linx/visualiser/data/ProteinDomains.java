@@ -112,6 +112,7 @@ public class ProteinDomains
                 .start(file.Start)
                 .end(file.End)
                 .name(utr(file.Info))
+                .transcript(file.Transcript)
                 .build();
     }
 

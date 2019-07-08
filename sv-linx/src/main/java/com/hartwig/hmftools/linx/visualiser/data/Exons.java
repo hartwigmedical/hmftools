@@ -23,7 +23,7 @@ public class Exons
     public static List<Exon> sortedUpstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
         return exons.stream()
-                .filter(x -> x.gene().equals(fusion.geneUp()))
+                .filter(x -> x.gene().equals(fusion.geneUp()) & x.transcript().equals(fusion.transcriptUp()))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
     }
@@ -32,7 +32,7 @@ public class Exons
     public static List<Exon> sortedDownstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
         return exons.stream()
-                .filter(x -> x.gene().equals(fusion.geneDown()))
+                .filter(x -> x.gene().equals(fusion.geneDown()) & x.transcript().equals(fusion.transcriptDown()))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
     }
@@ -72,6 +72,7 @@ public class Exons
                 .rank(file.ExonRank)
                 .start(file.ExonStart)
                 .end(file.ExonEnd)
+                .transcript(file.Transcript)
                 .build();
 
     }
