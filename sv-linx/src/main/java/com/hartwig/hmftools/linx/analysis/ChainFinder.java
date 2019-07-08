@@ -207,7 +207,7 @@ public class ChainFinder
         // critical that all state is cleared before the next run
         clear();
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         mClusterId = cluster.id();
         mUniqueSVs.addAll(cluster.getSVs());
@@ -1283,7 +1283,7 @@ public class ChainFinder
                     mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), chain.id());
         }
 
-        newPair.setLinkReason(mLinkReason);
+        newPair.setLinkReason(mLinkReason, mLinkIndex);
 
         registerNewLink(newPair, pairToChain);
         ++mLinkIndex;

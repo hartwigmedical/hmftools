@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvChain.getRepeatedSvSequence;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_CT;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
@@ -92,7 +93,7 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
+            isSpecificCluster(cluster);
 
             // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
@@ -203,18 +204,18 @@ public class ClusterAnnotations
 
                         uniqueOverlaps.add(otherPair);
 
-                        long pos1Start = pair.getBreakend(true).position();
-                        long pos1End = pair.getBreakend(false).position();
-                        long pos2Start = otherPair.getBreakend(true).position();
-                        long pos2End = otherPair.getBreakend(false).position();
+                        // make note of this overlap if the overlap distance exceeds the short TI length
 
-                        long overlapDistance = 0;
-                        if(pos1Start <= pos2Start && pos1End >= pos2Start)
-                            overlapDistance = pos1End - pos2Start;
-                        else if(pos1Start <= pos2End && pos1End >= pos2End)
-                            overlapDistance = pos2End - pos1Start;
+                        if((pair.getBreakend(true).position() > otherPair.getBreakend(false).position())
+                        || (pair.getBreakend(false).position() < otherPair.getBreakend(true).position()))
+                        {
+                            continue;
+                        }
 
-                        if(overlapDistance >= abs(NO_DB_MARKER)) // longer than a max DB length
+                        long overlapStart = max(pair.getBreakend(true).position(), otherPair.getBreakend(true).position());
+                        long overlapEnd = min(pair.getBreakend(false).position(), otherPair.getBreakend(false).position());
+
+                        if(overlapEnd - overlapStart >= SHORT_TI_LENGTH) // longer than a max DB length
                         {
                             ++overlapCount;
                         }

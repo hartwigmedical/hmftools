@@ -777,11 +777,11 @@ public class SvSampleAnalyser {
 
             mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
-            mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType,IsLINE");
-            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,Id1,Id2,ChrArm,IsAssembled,TILength");
+            mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType");
+            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,IsAssembled,TILength");
             mLinksFileWriter.write(",NextSvDist,NextClusteredSvDist,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
             mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
-            mLinksFileWriter.write(",PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
+            mLinksFileWriter.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
             mLinksFileWriter.newLine();
         }
         catch (final IOException e)
@@ -825,13 +825,17 @@ public class SvSampleAnalyser {
                         if(mLinksFileWriter != null)
                         {
 
-                            mLinksFileWriter.write(String.format("%s,%d,%s,%d,%s,%s",
-                                    mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType(),
-                                    cluster.hasLinkingLineElements()));
+//                            mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType");
+//                            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChrArm,IsAssembled,TILength");
+//                            mLinksFileWriter.write(",NextSvDist,NextClusteredSvDist,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
+//                            mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
+//                            mLinksFileWriter.write(",Id1,Id2,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
 
-                            mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s",
-                                    chain.id(), chainSvCount, chainConsistent,
-                                    beStart.getSV().dbId(), beEnd.getSV().dbId(), beStart.getChrArm()));
+                            mLinksFileWriter.write(String.format("%s,%d,%s,%d,%s",
+                                    mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType()));
+
+                            mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%d",
+                                    chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex()));
 
                             mLinksFileWriter.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
                                     pair.isAssembled(), pair.length(),
@@ -842,8 +846,9 @@ public class SvSampleAnalyser {
                             SvArmCluster acStart = cluster.findArmCluster(beStart);
                             SvArmCluster acEnd = cluster.findArmCluster(beEnd);
 
-                            mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%s,%s,%s",
-                                    beStart.position(), beEnd.position(),
+                            mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s",
+                                    beStart.getSV().dbId(), beEnd.getSV().dbId(),
+                                    beStart.getChrArm(), beStart.position(), beEnd.position(),
                                     acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
                                     beStart.getSV().getGeneInBreakend(beStart.usesStart(), false),
                                     beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false), pair.getExonMatchData()));
