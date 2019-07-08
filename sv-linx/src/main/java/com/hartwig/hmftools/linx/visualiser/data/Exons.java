@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
@@ -21,33 +20,20 @@ public class Exons
     private static final Comparator<Exon> RANKED = Comparator.comparingInt(Exon::rank);
 
     @NotNull
-    public static List<Exon> upstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    public static List<Exon> sortedUpstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
         return exons.stream()
                 .filter(x -> x.gene().equals(fusion.geneUp()))
                 .sorted(RANKED)
-                .filter(x -> x.rank() <= fusion.exonUp())
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public static List<Exon> downstreamExons(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons)
-    {
-        final List<Exon> result = Lists.newArrayList();
-        for (Fusion fusion : fusions)
-        {
-            result.addAll(downstreamExons(fusion, exons));
-        }
-        return result;
-    }
-
-    @NotNull
-    public static List<Exon> downstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    public static List<Exon> sortedDownstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
         return exons.stream()
                 .filter(x -> x.gene().equals(fusion.geneDown()))
                 .sorted(RANKED)
-                .filter(x -> x.rank() >= fusion.exonDown())
                 .collect(Collectors.toList());
     }
 

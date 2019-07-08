@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import static com.hartwig.hmftools.linx.visualiser.data.Exons.downstreamExons;
-import static com.hartwig.hmftools.linx.visualiser.data.Exons.upstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.data.Exons.sortedDownstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.data.Exons.sortedUpstreamExons;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +29,8 @@ public class FusedExons
     {
         final List<FusedExon> result = Lists.newArrayList();
 
-        final List<Exon> upStreamExons = upstreamExons(fusion, exons);
-        final List<Exon> downStreamExons = downstreamExons(fusion, exons);
+        final List<Exon> upStreamExons = sortedUpstreamExons(fusion, exons);
+        final List<Exon> downStreamExons = sortedDownstreamExons(fusion, exons);
         if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
         {
             return result;
@@ -39,6 +39,9 @@ public class FusedExons
         final Exon firstUpExon = upStreamExons.get(0);
         final GenomeRegion upGeneRegion = upGeneRegion(fusion, firstUpExon);
         final GenomeRegion convertedUpGeneRegion = convertRegion(fusion.strandUp(), upGeneRegion, upGeneRegion);
+
+        int lastUpExon = fusion.exonUp() - fusion.exonsSkippedUp();
+        int firstDownExon = Math.max(2, fusion.exonDown() + fusion.exonsSkippedDown());
 
         final ImmutableFusedExon.Builder upFusedExonBuilder = ImmutableFusedExon.builder()
                 .sampleId(fusion.sampleId())
@@ -60,7 +63,7 @@ public class FusedExons
                         .start(convertedExon.start())
                         .end(convertedExon.end())
                         .rank(exon.rank())
-                        .skipped(false) // TODO: Check exon skipped field
+                        .skipped(exon.rank() > lastUpExon)
                         .build();
                 result.add(fusedExon);
             }
@@ -90,7 +93,7 @@ public class FusedExons
                         .start(convertedExon.start() + convertedUpGeneRegion.end())
                         .end(convertedExon.end() + convertedUpGeneRegion.end())
                         .rank(exon.rank())
-                        .skipped(exon.rank() == 1 || (i == 0 && intronicToExonicFusion)) // TODO: Check exon skipped field
+                        .skipped(exon.rank() < firstDownExon || (i == 0 && intronicToExonicFusion))
                         .build();
                 result.add(fusedExon);
             }

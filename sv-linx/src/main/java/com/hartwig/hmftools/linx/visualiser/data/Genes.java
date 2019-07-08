@@ -20,7 +20,7 @@ public class Genes
 
         for (Fusion fusion : fusions)
         {
-            final List<Exon> fusionExons = Exons.downstreamExons(fusion, exons);
+            final List<Exon> fusionExons = Exons.sortedDownstreamExons(fusion, exons);
             if (!fusionExons.isEmpty())
             {
                 result.add(FusedExons.downGene(fusion, fusionExons.get(fusionExons.size() - 1)));

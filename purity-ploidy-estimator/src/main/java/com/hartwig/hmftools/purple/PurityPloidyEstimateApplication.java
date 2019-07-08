@@ -239,6 +239,7 @@ public class PurityPloidyEstimateApplication {
         }
 
         final String vcfRecoveryFile = svConfig.recoveryFile().get().toString();
+        LOGGER.info("Loading recovery candidates from {}", vcfRecoveryFile);
         try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, vcfRecoveryFile, copyNumbers)) {
             final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
             if (!recoveredVariants.isEmpty()) {
