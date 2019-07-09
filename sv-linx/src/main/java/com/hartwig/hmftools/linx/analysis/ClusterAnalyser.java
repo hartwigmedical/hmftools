@@ -252,7 +252,7 @@ public class ClusterAnalyser {
             boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedPloidy();
 
             mLinkFinder.findAssembledLinks(cluster);
-            applyCopyNumberReplication(cluster);
+            applySvPloidyReplication(cluster);
 
             if(isSimple)
                 mDmFinder.analyseCluster(mSampleId, cluster);
@@ -295,7 +295,7 @@ public class ClusterAnalyser {
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
             mDmFinder.analyseCluster(mSampleId, cluster);
 
-            applyCopyNumberReplication(cluster);
+            applySvPloidyReplication(cluster);
 
             // no need to re-find assembled TIs
 
@@ -333,7 +333,7 @@ public class ClusterAnalyser {
                 mClusteringMethods.getDelCutoffLength(), mClusteringMethods.getDupCutoffLength(), mConfig.ProximityDistance);
     }
 
-    public void applyCopyNumberReplication(SvCluster cluster)
+    private void applySvPloidyReplication(SvCluster cluster)
     {
         if(!cluster.hasVariedPloidy() && !cluster.requiresReplication())
             return;
@@ -504,7 +504,7 @@ public class ClusterAnalyser {
 
         cluster.getChains().clear();
         mChainFinder.initialise(cluster);
-        mChainFinder.formClusterChains(assembledLinksOnly);
+        mChainFinder.formChains(assembledLinksOnly);
         mChainFinder.addChains(cluster);
 
         if(!assembledLinksOnly)

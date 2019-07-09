@@ -15,17 +15,14 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -228,7 +225,7 @@ public class DoubleMinuteFinder
         }
 
         mChainFinder.initialise(cluster, dmSVList);
-        mChainFinder.formClusterChains(false);
+        mChainFinder.formChains(false);
 
         if(mChainFinder.getChains().size() != 1)
             return null;

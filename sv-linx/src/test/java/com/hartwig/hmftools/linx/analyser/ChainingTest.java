@@ -249,34 +249,36 @@ public class ChainingTest
     }
 
     @Test
-    public void testBFBChain2()
+    public void testBFBChainWithComplexDup()
     {
-        // BFB of the form centromere - A - B - A - C - A - D - B - A - C - A - B - R - telomere,
+        // BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 4-DUP - 2 - 1 - 3 - 1 - 2 - 5R - telomere,
         // where D is a complex DUP around the section B - A - C - A and R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData varA = createTestSv("0", "1", "1", 2000,3000, -1, -1, INV, 5);
-        final SvVarData varB = createTestSv("1", "1", "1", 9000,10000, 1, 1, INV, 3);
-        final SvVarData varC = createTestSv("2", "1", "1", 5000,6000, 1, 1, INV, 2);
-        final SvVarData varD = createTestSv("3", "1", "1", 7000,8000, -1, 1, DUP, 1);
-        final SvVarData varR = createTestSv("4", "1", "1", 1000,4000, 1, -1, DEL, 1);
+        // tester.Analyser.getChainFinder().setUseNewMethod(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 2000,3000, -1, -1, INV, 5);
+        final SvVarData var2 = createTestSv("2", "1", "1", 9000,10000, 1, 1, INV, 3);
+        final SvVarData var3 = createTestSv("3", "1", "1", 5000,6000, 1, 1, INV, 2);
+        final SvVarData var4 = createTestSv("4", "1", "1", 7000,8000, -1, 1, DUP, 1);
+        final SvVarData var5 = createTestSv("5", "1", "1", 1000,4000, 1, -1, DEL, 1);
 
         // CN profile:
         // T - 2 - 1 - 6 - 11 - 12 - 10 - 8 - 9 - 8 - 5 - 2 - C
 
-        tester.AllVariants.add(varA);
-        tester.AllVariants.add(varB);
-        tester.AllVariants.add(varC);
-        tester.AllVariants.add(varD);
-        tester.AllVariants.add(varR);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(varA.getFoldbackLink(true), varA.id());
-        assertEquals(varB.getFoldbackLink(true), varB.id());
-        assertEquals(varC.getFoldbackLink(true), varC.id());
+        assertEquals(var1.getFoldbackLink(true), var1.id());
+        assertEquals(var2.getFoldbackLink(true), var2.id());
+        assertEquals(var3.getFoldbackLink(true), var3.id());
 
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
@@ -286,6 +288,41 @@ public class ChainingTest
         final SvChain chain = cluster.getChains().get(0);
 
         assertEquals(11, chain.getLinkCount());
+    }
+
+    @Test
+    public void testComplexDupSimple()
+    {
+        // simple chain with replicated SV: centromere - 1 - 2-DUP - 1 - 3 - telomere,
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 4000,5000, 1, -1, DEL, 2);
+        final SvVarData var2 = createTestSv("2", "1", "1", 2000,6000, -1, 1, DUP, 1);
+        final SvVarData var3 = createTestSv("3", "1", "1", 7000,8000, 1, -1, DEL, 1);
+
+        // add some BND so the group isn't considered simple and split up
+        final SvVarData var4 = createTestSv("4", "1", "2", 500,100, 1, -1, BND, 1);
+        final SvVarData var5 = createTestSv("5", "1", "2", 1000,200, -1, 1, BND, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(cluster.getFoldbacks().isEmpty());
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(5, chain.getLinkCount());
     }
 
     @Test

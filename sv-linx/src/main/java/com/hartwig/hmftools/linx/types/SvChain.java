@@ -146,6 +146,14 @@ public class SvChain {
         setIsValid();
     }
 
+    public void addLink(final SvLinkedPair pair, int index)
+    {
+        if(index >= mLinkedPairs.size())
+            return;
+
+        mLinkedPairs.add(index, pair);
+    }
+
     public SvVarData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
     public SvVarData getLastSV() { return mSvList.isEmpty() ? null : mSvList.get(mSvList.size()-1); }
     public SvVarData getChainEndSV(boolean isFirst) { return isFirst ? getFirstSV() : getLastSV(); }
@@ -281,8 +289,8 @@ public class SvChain {
         {
             final SvLinkedPair pair = mLinkedPairs.get(i);
 
-            LOGGER.debug("chain({}) {}: pair({}) {} {} length({})",
-                    mId, i, pair.toString(), pair.assemblyInferredStr(), pair.getLinkReason(), pair.length());
+            LOGGER.debug("chain({}) {}: pair({}) {} {} length({}) index({})",
+                    mId, i, pair.toString(), pair.assemblyInferredStr(), pair.getLinkReason(), pair.length(), pair.getLinkIndex());
         }
     }
 

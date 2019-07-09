@@ -162,6 +162,8 @@ public class ChainingActualTest
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
         tester.Analyser.setUseAllelePloidies(true);
 
+        // tester.Analyser.getChainFinder().setUseNewMethod(false);
+
         /* SVs
 
             Id,ChrStart,ChrEnd,PosStart,PosEnd,OrientStart,OrientEnd,Type,CNStart,CNEnd,CNChgStart,CNChgEnd,Ploidy

@@ -336,7 +336,7 @@ public class SvVarData
     {
         double ploidyEstimate = mHasCalcPloidy ? (mPloidyMin + mPloidyMax) * 0.5 : mPloidy;
         double roundedPloidy = round(ploidyEstimate);
-        return enforceClonal ? max(roundedPloidy,1) : roundedPloidy;
+        return enforceClonal ? max(roundedPloidy, 1) : roundedPloidy;
     }
 
     public int getMaxAssembledBreakend()
