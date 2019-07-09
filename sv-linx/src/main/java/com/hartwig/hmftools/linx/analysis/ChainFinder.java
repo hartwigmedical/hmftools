@@ -6,9 +6,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_LEVEL_DIAGNOSTIC;
-import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_LEVEL_ERROR;
-import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_LEVEL_VERBOSE;
+import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_INFO;
+import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_VERBOSE;
+import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_WARN;
 import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.areLinkedSection;
@@ -340,24 +340,7 @@ public class ChainFinder
 
         buildChains(assembledLinksOnly);
 
-        // report on how effective chaining was
-        if(LOGGER.isDebugEnabled())
-        {
-            int breakendCount = (int)mUnlinkedBreakendMap.values().stream().count();
-
-            List<SvVarData> uniqueUnlinkedSVs = Lists.newArrayList();
-
-            for(final SvVarData var : mUnlinkedReplicatedSVs)
-            {
-                if(!uniqueUnlinkedSVs.contains(var.getOrigSV()))
-                    uniqueUnlinkedSVs.add(var.getOrigSV());
-            }
-
-            LOGGER.debug("cluster({}) chaining finished: chains({} links={}) unlinked SVs({} unique={}) breakends({} reps={}) validAllelePerc({})",
-                    mClusterId, mChains.size(), mLinkIndex, mUnlinkedReplicatedSVs.size(), uniqueUnlinkedSVs.size(),
-                    mUnlinkedBreakendMap.size(), breakendCount,
-                    String.format("%.2f", mClusterPloidyLimits.getValidAllelePloidySegmentPerc()));
-        }
+        mDiagnostics.chainingComplete(mLinkIndex);
 
         if(!mIsValid)
         {
@@ -428,6 +411,8 @@ public class ChainFinder
 
         populateSvReplicationCounts();
 
+        mDiagnostics.initialise(mClusterId, mHasReplication);
+
         // first make chains out of any assembly links
         addAssemblyLinksToChains();
 
@@ -439,7 +424,7 @@ public class ChainFinder
 
         determinePossibleLinks();
 
-        mDiagnostics.initialise(mClusterId, mHasReplication, mComplexDupCandidates, mFoldbacks);
+        mDiagnostics.setPriorityData(mComplexDupCandidates, mFoldbacks);
 
         int iterationsWithoutNewLinks = 0; // protection against loops
 
@@ -598,8 +583,14 @@ public class ChainFinder
                         Integer otherRepCount = mSvReplicationMap.get(otherVar);
                         if(otherRepCount != null && otherRepCount == repCount)
                         {
-                            log(LOG_LEVEL_VERBOSE, String.format("pair(%s) with matching high-rep count(%s)", pair.toString(), repCount));
+                            log(LOG_TYPE_VERBOSE, String.format("pair(%s) with matching high-rep count(%s)", pair.toString(), repCount));
                             newPairs.add(pair);
+
+                            if(var.getImpliedPloidy() != otherVar.getImpliedPloidy())
+                            {
+                                log(LOG_TYPE_WARN, String.format("ploidy-match SVs(%s & %s) have diff ploidies(%d & %d)",
+                                        var.id(), otherVar.id(), var.getImpliedPloidy(), otherVar.getImpliedPloidy()));
+                            }
                         }
                     }
                 }
@@ -694,7 +685,7 @@ public class ChainFinder
 
                 candidatePairs.add(matchingPair);
 
-                log(LOG_LEVEL_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f -> %.1f)",
+                log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f -> %.1f)",
                         compDup.id(), compDupPloidy, chainBeStart.toString(), chainBeEnd.toString(),
                         chainBeStart.getSV().ploidyMin(), chainBeStart.getSV().ploidyMax()));
             }
@@ -721,7 +712,7 @@ public class ChainFinder
                         SvLinkedPair[] linkPair = {pairStart, pairEnd};
                         candidatePairs.add(linkPair);
 
-                        log(LOG_LEVEL_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with breakends(%s & %s) ploidy(%.1f -> %.1f)",
+                        log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with breakends(%s & %s) ploidy(%.1f -> %.1f)",
                                 compDup.id(), compDupPloidy, otherBreakend, otherBreakend2, nonFbVar.ploidyMin(), nonFbVar.ploidyMax()));
                         break;
                     }
@@ -862,7 +853,7 @@ public class ChainFinder
                         SvLinkedPair[] linkPair = {pairStart, pairEnd};
                         candidatePairs.add(linkPair);
 
-                        log(LOG_LEVEL_VERBOSE, String.format("foldback(%s) ploidy(%d) matched with breakend(%s) ploidy(%.1f -> %.1f)",
+                        log(LOG_TYPE_VERBOSE, String.format("foldback(%s) ploidy(%d) matched with breakend(%s) ploidy(%.1f -> %.1f)",
                                 foldback.id(), foldbackPloidy, otherBreakend, nonFbVar.ploidyMin(), nonFbVar.ploidyMax()));
                         break;
                     }
@@ -927,174 +918,6 @@ public class ChainFinder
         return possiblePairs;
     }
 
-    private List<SvLinkedPair> findFoldbackPairs_old()
-    {
-        // both ends of a foldback or complex DUP connect to one end of another SV with ploidy >= 2x
-        List<SvLinkedPair> possiblePairs = Lists.newArrayList();
-
-        if(mFoldbacks.isEmpty())
-            return possiblePairs;
-
-        for(SvVarData var : mFoldbacks)
-        {
-            int varPloidy = var.getImpliedPloidy();
-
-            // collect up possible pairs for this foldback or complex DUP
-            List<SvLinkedPair> varPairs = Lists.newArrayList();
-
-            for(int be = SE_START; be <= SE_END; ++be)
-            {
-                boolean isStart = isStart(be);
-                SvBreakend breakend = var.getBreakend(isStart);
-
-                if(var.getFoldbackBreakend(isStart) != null)
-                {
-                    List<SvLinkedPair> bePairs = mSvBreakendPossibleLinks.get(breakend);
-                    if(bePairs != null)
-                    {
-                        varPairs.addAll(bePairs);
-                    }
-                }
-            }
-
-            // then check if any of these run into a breakend of higher ploidy, and if so, take the nearest pair set
-            // eg for a foldback of the form A - B - A, where A has double ploidy of B, and both ends of B connect to same end of A
-            // in the logic below, the SV in question - 'otherVar' - is the B variant
-            List<SvVarData> otherSVs = Lists.newArrayList();
-
-            for(SvLinkedPair pair : varPairs)
-            {
-                SvVarData otherSV = pair.getOtherSV(var); // the SV with equal or higher ploidy
-                int otherVarPloidy = otherSV.getImpliedPloidy();
-
-                if(varPloidy > otherVarPloidy)
-                    continue;
-
-                if(otherSVs.contains(otherSV))
-                    continue;
-
-                otherSVs.add(otherSV);
-
-                // at this point select the nearer of the breakend pair and link them both to one end of the higher-ploidy SV
-                int endsMatchedOnOtherVarStart = 0;
-                int endsMatchedOnOtherVarEnd = 0;
-                long linkOnOtherVarStartLength = 0;
-                long linkOnOtherVarEndLength = 0;
-                int maxLinkOnOtherVarStart = 0;
-                int maxLinkOnOtherVarEnd = 0;
-                List<SvLinkedPair> startLinks = Lists.newArrayList();
-                List<SvLinkedPair> endLinks = Lists.newArrayList();
-
-                for(SvLinkedPair otherPair : varPairs)
-                {
-                    int maxPairCount = getMaxUnlinkedPairCount(otherPair);
-
-                    if(maxPairCount == 0)
-                        continue;
-
-                    if(otherPair.hasBreakend(otherSV, true) && getUnlinkedBreakendCount(otherSV.getBreakend(true)) > 1
-                            && (otherPair.hasBreakend(var, true) || otherPair.hasBreakend(var, false)))
-                    {
-                        // link can be made from start of this var to both ends of the other SV, and record the shortest pair length
-                        ++endsMatchedOnOtherVarStart;
-                        maxLinkOnOtherVarStart = max(maxLinkOnOtherVarStart, maxPairCount);
-                        startLinks.add(otherPair);
-
-                        if (linkOnOtherVarStartLength == 0 || otherPair.length() < linkOnOtherVarStartLength)
-                            linkOnOtherVarStartLength = otherPair.length();
-                    }
-                    else if(otherPair.hasBreakend(otherSV, false) && getUnlinkedBreakendCount(otherSV.getBreakend(false)) > 1
-                            && (otherPair.hasBreakend(var, true) || otherPair.hasBreakend(var, false)))
-                    {
-                        ++endsMatchedOnOtherVarEnd;
-                        maxLinkOnOtherVarEnd = max(maxLinkOnOtherVarEnd, maxPairCount);
-                        endLinks.add(otherPair);
-
-                        if (linkOnOtherVarEndLength == 0 || otherPair.length() < linkOnOtherVarEndLength)
-                            linkOnOtherVarEndLength = otherPair.length();
-                    }
-                }
-
-                if(endsMatchedOnOtherVarStart < 2 && endsMatchedOnOtherVarEnd < 2)
-                    continue;
-
-                log(LOG_LEVEL_VERBOSE, String.format("SV(%s) ploidy(%d) foldback dual links: start(links=%d maxLinks=%d matched=%d) start(links=%d maxLinks=%d matched=%d)",
-                        var.id(), varPloidy, startLinks.size(), maxLinkOnOtherVarStart, endsMatchedOnOtherVarStart,
-                        endLinks.size(), maxLinkOnOtherVarEnd, endsMatchedOnOtherVarEnd));
-
-                // check for conflicts between this pairing and any others involving the SVs, and if found
-                // go with the shortest (could change this to the highest)
-                if(!possiblePairs.isEmpty())
-                {
-                    boolean replacePossibles = false;
-                    boolean hasClashes = false;
-
-                    for(SvLinkedPair otherPair : possiblePairs)
-                    {
-                        if (otherPair.hasVariant(var) || otherPair.hasVariant(otherSV))
-                        {
-                            hasClashes = true;
-                            int shorterNewPairs = 0;
-
-                            if (endsMatchedOnOtherVarStart == 2)
-                            {
-                                shorterNewPairs = (int) startLinks.stream().filter(x -> x.length() < otherPair.length()).count();
-                            }
-
-                            if (endsMatchedOnOtherVarEnd == 2)
-                            {
-                                shorterNewPairs += (int) endLinks.stream().filter(x -> x.length() < otherPair.length()).count();
-                            }
-
-                            if (shorterNewPairs > 0)
-                            {
-                                replacePossibles = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if(replacePossibles)
-                    {
-                        possiblePairs.clear();
-                    }
-                    else if(hasClashes)
-                    {
-                        continue;
-                    }
-                }
-
-                if(endsMatchedOnOtherVarStart == 2 && endsMatchedOnOtherVarEnd == 2)
-                {
-                    // prioritise potential link count followed by length
-                    if(maxLinkOnOtherVarStart > maxLinkOnOtherVarEnd || linkOnOtherVarStartLength < linkOnOtherVarEndLength)
-                    {
-                        possiblePairs.addAll(startLinks);
-                    }
-                    else
-                    {
-                        possiblePairs.addAll(endLinks);
-                    }
-                }
-                else if(endsMatchedOnOtherVarStart == 2)
-                {
-                    possiblePairs.addAll(startLinks);
-                }
-                else if(endsMatchedOnOtherVarEnd == 2)
-                {
-                    possiblePairs.addAll(endLinks);
-                }
-            }
-        }
-
-        if(!possiblePairs.isEmpty())
-        {
-            removeSkippedPairs(possiblePairs);
-        }
-
-        return possiblePairs;
-    }
-
     private List<SvLinkedPair> findSingleOptionPairs()
     {
         List<SvLinkedPair> restrictedPairs = Lists.newArrayList();
@@ -1144,7 +967,7 @@ public class ChainFinder
 
                 if(getUnlinkedBreakendCount(otherBreakend) == 1)
                 {
-                    log(LOG_LEVEL_DIAGNOSTIC, String.format("single-option pair(%s len=%d rep=%d) clashes with pair(%s len=%d rep=%d)",
+                    log(LOG_TYPE_WARN, String.format("single-option pair(%s len=%d rep=%d) clashes with pair(%s len=%d rep=%d)",
                             newPair.toString(), newPair.length(), minLinkCount,
                             otherPair.toString(), otherPair.length(), otherMinLinkCount));
                 }
@@ -1162,7 +985,7 @@ public class ChainFinder
 
             if(canAdd)
             {
-                log(LOG_LEVEL_VERBOSE, String.format("single-option pair(%s) limited by breakend(%s)",
+                log(LOG_TYPE_VERBOSE, String.format("single-option pair(%s) limited by breakend(%s)",
                         newPair.toString(), limitingBreakend.toString()));
                 restrictedPairs.add(newPair);
             }
@@ -1217,11 +1040,19 @@ public class ChainFinder
 
         List<SvBreakend> breakendList = Lists.newArrayList();
 
-        for (final SvBreakend breakend : mUnlinkedBreakendMap.keySet())
+        for(final SvVarData var : maxRepSVs)
         {
-            if (maxRepSVs.contains(breakend.getSV()))
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                breakendList.add(breakend);
+                if(se == SE_END && var.isNullBreakend())
+                    continue;
+
+                SvBreakend breakend = var.getBreakend(isStart(se));
+
+                if(getUnlinkedBreakendCount(breakend) > 0)
+                {
+                    breakendList.add(breakend);
+                }
             }
         }
 
@@ -1244,7 +1075,7 @@ public class ChainFinder
             // these high-replication SVs yielded no possible links so remove them from consideration
             for (final SvVarData var : maxRepSVs)
             {
-                log(LOG_LEVEL_VERBOSE, String.format("cluster(%s) removing high-replicated SV(%s %s)",
+                log(LOG_TYPE_VERBOSE, String.format("cluster(%s) removing high-replicated SV(%s %s)",
                         mClusterId, var.posId(), var.type()));
 
                 mSvReplicationMap.remove(var);
@@ -1355,7 +1186,7 @@ public class ChainFinder
             SvLinkedPair shortestPair = null;
             for (SvLinkedPair pair : possiblePairs)
             {
-                log(LOG_LEVEL_VERBOSE, String.format("method(%s) possible pair: %s length(%s)",
+                log(LOG_TYPE_VERBOSE, String.format("method(%s) possible pair: %s length(%s)",
                         mLinkReason, pair.toString(), pair.length()));
 
                 if (shortestPair == null || pair.length() < shortestPair.length())
@@ -1366,7 +1197,7 @@ public class ChainFinder
 
             possiblePairs.remove(shortestPair);
 
-            // log(LOG_LEVEL_VERBOSE, String.format("shortest possible pair: %s length(%s)", shortestPair.toString(), shortestPair.length()));
+            // log(LOG_TYPE_VERBOSE, String.format("shortest possible pair: %s length(%s)", shortestPair.toString(), shortestPair.length()));
 
             int pairRepeatCount = 1;
 
@@ -1613,7 +1444,7 @@ public class ChainFinder
 
                 if(!replacementFound)
                 {
-                    log(LOG_LEVEL_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
+                    log(LOG_TYPE_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
                             newPair.toString(), chain.id()));
 
                     if(!mSkippedPairs.contains(newPair))
@@ -2036,6 +1867,8 @@ public class ChainFinder
                 boolean lowerValidAP = mUseAllelePloidies && mClusterPloidyLimits.hasValidAllelePloidyData(
                         getClusterChrBreakendIndex(lowerBreakend), allelePloidies);
 
+                int lowerRepCount = getSvReplicationCount(lowerSV);
+
                 int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
                 for (int j = i+1; j < breakendList.size(); ++j)
@@ -2073,7 +1906,7 @@ public class ChainFinder
                             lowerBreakend.usesStart(), upperBreakend.usesStart());
 
                     // make note of any pairs formed from adjacent facing breakends
-                    if(j == i + 1 && getSvReplicationCount(lowerSV) == getSvReplicationCount(upperSV))
+                    if(j == i + 1 && lowerRepCount == getSvReplicationCount(upperSV))
                     {
                         mAdjacentMatchingPairs.add(newPair);
                     }
@@ -2112,7 +1945,7 @@ public class ChainFinder
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {
                             // this lower breakend cannot match with anything further upstream
-                            log(LOG_LEVEL_VERBOSE, String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
+                            log(LOG_TYPE_VERBOSE, String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
                                     i, lowerBreakend.toString(), j, upperBreakend.toString(), clusterAP));
 
                             break;
@@ -2175,13 +2008,13 @@ public class ChainFinder
                 {
                     if(otherSV == higherPloidyBreakend.getSV())
                     {
-                        log(LOG_LEVEL_DIAGNOSTIC, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
+                        log(LOG_TYPE_INFO, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
                                 var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(), higherPloidyBreakend.getSV().id(),
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
                     }
                     else
                     {
-                        log(LOG_LEVEL_DIAGNOSTIC, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
+                        log(LOG_TYPE_INFO, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
                                 var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(),
                                 otherSV.id(), otherSV.ploidyMin(), otherSV.ploidyMax(), higherPloidyBreakend.getSV().id(),
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
@@ -2459,19 +2292,189 @@ public class ChainFinder
 
     private void log(int level, final String message)
     {
-        if(level >= LOG_LEVEL_VERBOSE && !mLogVerbose)
+        if(level >= LOG_TYPE_VERBOSE && !mLogVerbose)
             return;
 
-        if(level >= LOG_LEVEL_DIAGNOSTIC && !LOGGER.isDebugEnabled())
+        if(level >= LOG_TYPE_INFO && !LOGGER.isDebugEnabled())
             return;
 
-        if(level <= LOG_LEVEL_DIAGNOSTIC)
+        if(level <= LOG_TYPE_INFO)
         {
             mDiagnostics.addMessage(level, message);
         }
 
         LOGGER.debug(message);
     }
+
+    // old chaining methods
+    private List<SvLinkedPair> findFoldbackPairs_old()
+    {
+        // both ends of a foldback or complex DUP connect to one end of another SV with ploidy >= 2x
+        List<SvLinkedPair> possiblePairs = Lists.newArrayList();
+
+        if(mFoldbacks.isEmpty())
+            return possiblePairs;
+
+        for(SvVarData var : mFoldbacks)
+        {
+            int varPloidy = var.getImpliedPloidy();
+
+            // collect up possible pairs for this foldback or complex DUP
+            List<SvLinkedPair> varPairs = Lists.newArrayList();
+
+            for(int be = SE_START; be <= SE_END; ++be)
+            {
+                boolean isStart = isStart(be);
+                SvBreakend breakend = var.getBreakend(isStart);
+
+                if(var.getFoldbackBreakend(isStart) != null)
+                {
+                    List<SvLinkedPair> bePairs = mSvBreakendPossibleLinks.get(breakend);
+                    if(bePairs != null)
+                    {
+                        varPairs.addAll(bePairs);
+                    }
+                }
+            }
+
+            // then check if any of these run into a breakend of higher ploidy, and if so, take the nearest pair set
+            // eg for a foldback of the form A - B - A, where A has double ploidy of B, and both ends of B connect to same end of A
+            // in the logic below, the SV in question - 'otherVar' - is the B variant
+            List<SvVarData> otherSVs = Lists.newArrayList();
+
+            for(SvLinkedPair pair : varPairs)
+            {
+                SvVarData otherSV = pair.getOtherSV(var); // the SV with equal or higher ploidy
+                int otherVarPloidy = otherSV.getImpliedPloidy();
+
+                if(varPloidy > otherVarPloidy)
+                    continue;
+
+                if(otherSVs.contains(otherSV))
+                    continue;
+
+                otherSVs.add(otherSV);
+
+                // at this point select the nearer of the breakend pair and link them both to one end of the higher-ploidy SV
+                int endsMatchedOnOtherVarStart = 0;
+                int endsMatchedOnOtherVarEnd = 0;
+                long linkOnOtherVarStartLength = 0;
+                long linkOnOtherVarEndLength = 0;
+                int maxLinkOnOtherVarStart = 0;
+                int maxLinkOnOtherVarEnd = 0;
+                List<SvLinkedPair> startLinks = Lists.newArrayList();
+                List<SvLinkedPair> endLinks = Lists.newArrayList();
+
+                for(SvLinkedPair otherPair : varPairs)
+                {
+                    int maxPairCount = getMaxUnlinkedPairCount(otherPair);
+
+                    if(maxPairCount == 0)
+                        continue;
+
+                    if(otherPair.hasBreakend(otherSV, true) && getUnlinkedBreakendCount(otherSV.getBreakend(true)) > 1
+                            && (otherPair.hasBreakend(var, true) || otherPair.hasBreakend(var, false)))
+                    {
+                        // link can be made from start of this var to both ends of the other SV, and record the shortest pair length
+                        ++endsMatchedOnOtherVarStart;
+                        maxLinkOnOtherVarStart = max(maxLinkOnOtherVarStart, maxPairCount);
+                        startLinks.add(otherPair);
+
+                        if (linkOnOtherVarStartLength == 0 || otherPair.length() < linkOnOtherVarStartLength)
+                            linkOnOtherVarStartLength = otherPair.length();
+                    }
+                    else if(otherPair.hasBreakend(otherSV, false) && getUnlinkedBreakendCount(otherSV.getBreakend(false)) > 1
+                            && (otherPair.hasBreakend(var, true) || otherPair.hasBreakend(var, false)))
+                    {
+                        ++endsMatchedOnOtherVarEnd;
+                        maxLinkOnOtherVarEnd = max(maxLinkOnOtherVarEnd, maxPairCount);
+                        endLinks.add(otherPair);
+
+                        if (linkOnOtherVarEndLength == 0 || otherPair.length() < linkOnOtherVarEndLength)
+                            linkOnOtherVarEndLength = otherPair.length();
+                    }
+                }
+
+                if(endsMatchedOnOtherVarStart < 2 && endsMatchedOnOtherVarEnd < 2)
+                    continue;
+
+                log(LOG_TYPE_VERBOSE, String.format("SV(%s) ploidy(%d) foldback dual links: start(links=%d maxLinks=%d matched=%d) start(links=%d maxLinks=%d matched=%d)",
+                        var.id(), varPloidy, startLinks.size(), maxLinkOnOtherVarStart, endsMatchedOnOtherVarStart,
+                        endLinks.size(), maxLinkOnOtherVarEnd, endsMatchedOnOtherVarEnd));
+
+                // check for conflicts between this pairing and any others involving the SVs, and if found
+                // go with the shortest (could change this to the highest)
+                if(!possiblePairs.isEmpty())
+                {
+                    boolean replacePossibles = false;
+                    boolean hasClashes = false;
+
+                    for(SvLinkedPair otherPair : possiblePairs)
+                    {
+                        if (otherPair.hasVariant(var) || otherPair.hasVariant(otherSV))
+                        {
+                            hasClashes = true;
+                            int shorterNewPairs = 0;
+
+                            if (endsMatchedOnOtherVarStart == 2)
+                            {
+                                shorterNewPairs = (int) startLinks.stream().filter(x -> x.length() < otherPair.length()).count();
+                            }
+
+                            if (endsMatchedOnOtherVarEnd == 2)
+                            {
+                                shorterNewPairs += (int) endLinks.stream().filter(x -> x.length() < otherPair.length()).count();
+                            }
+
+                            if (shorterNewPairs > 0)
+                            {
+                                replacePossibles = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(replacePossibles)
+                    {
+                        possiblePairs.clear();
+                    }
+                    else if(hasClashes)
+                    {
+                        continue;
+                    }
+                }
+
+                if(endsMatchedOnOtherVarStart == 2 && endsMatchedOnOtherVarEnd == 2)
+                {
+                    // prioritise potential link count followed by length
+                    if(maxLinkOnOtherVarStart > maxLinkOnOtherVarEnd || linkOnOtherVarStartLength < linkOnOtherVarEndLength)
+                    {
+                        possiblePairs.addAll(startLinks);
+                    }
+                    else
+                    {
+                        possiblePairs.addAll(endLinks);
+                    }
+                }
+                else if(endsMatchedOnOtherVarStart == 2)
+                {
+                    possiblePairs.addAll(startLinks);
+                }
+                else if(endsMatchedOnOtherVarEnd == 2)
+                {
+                    possiblePairs.addAll(endLinks);
+                }
+            }
+        }
+
+        if(!possiblePairs.isEmpty())
+        {
+            removeSkippedPairs(possiblePairs);
+        }
+
+        return possiblePairs;
+    }
+
 
     // unused optimisation code
 
@@ -2658,7 +2661,7 @@ public class ChainFinder
                 if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                 {
                     // this lower breakend cannot match with anything further upstream
-                    log(LOG_LEVEL_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
+                    log(LOG_TYPE_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
                             getClusterChrBreakendIndex(breakend), breakend.toString(), index, otherBreakend.toString(), clusterAP));
 
                     lastIndexValid = false;

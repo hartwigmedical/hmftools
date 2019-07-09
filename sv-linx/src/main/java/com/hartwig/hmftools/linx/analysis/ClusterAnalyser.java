@@ -44,6 +44,7 @@ import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -108,12 +109,16 @@ public class ClusterAnalyser {
         mSampleId = "";
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
-        mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath);
         mDmFinder = new DoubleMinuteFinder();
-        mDmFinder.setOutputDir(mConfig.OutputDataPath);
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mUseAllelePloidies = false;
+
+        if(mConfig.hasMultipleSamples())
+        {
+            mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath, mConfig.LogChainingMaxSize);
+            mDmFinder.setOutputDir(mConfig.OutputDataPath);
+        }
 
         mRunValidationChecks = false; // emabled in unit tests and after changes to merging-rule flow
 
@@ -141,7 +146,6 @@ public class ClusterAnalyser {
     }
 
     // access for unit testing
-    public final SvClusteringMethods getClusterer() { return mClusteringMethods; }
     public final ChainFinder getChainFinder() { return mChainFinder; }
     public final LinkFinder getLinkFinder() { return mLinkFinder; }
 
@@ -158,6 +162,7 @@ public class ClusterAnalyser {
     public boolean clusterAndAnalyse()
     {
         mClusters.clear();
+        mDmFinder.clear();
 
         mPcClustering.start();
         mClusteringMethods.clusterExcludedVariants(mClusters);
@@ -223,7 +228,6 @@ public class ClusterAnalyser {
                     cluster.setResolved(true, cluster.getResolvedType());
             }
 
-            // isSpecificCluster(cluster);
             cluster.cacheLinkedPairs();
             cluster.buildArmClusters();
 
@@ -243,7 +247,7 @@ public class ClusterAnalyser {
         {
             if(isSimpleSingleSV(cluster))
             {
-                mDmFinder.analyseCluster(mSampleId, cluster);
+                mDmFinder.analyseCluster(cluster);
 
                 setClusterResolvedState(cluster, false);
                 continue;
@@ -256,7 +260,7 @@ public class ClusterAnalyser {
             applySvPloidyReplication(cluster);
 
             if(isSimple)
-                mDmFinder.analyseCluster(mSampleId, cluster);
+                mDmFinder.analyseCluster(cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs
             findChains(cluster, !isSimple);
@@ -294,7 +298,7 @@ public class ClusterAnalyser {
             cluster.removeReplicatedSvs();
 
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
-            mDmFinder.analyseCluster(mSampleId, cluster);
+            mDmFinder.analyseCluster(cluster);
 
             applySvPloidyReplication(cluster);
 
@@ -495,7 +499,7 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
-        // isSpecificCluster(cluster);
+        isSpecificCluster(cluster);
         if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount(true) > mConfig.ChainingSvLimit)
         {
             LOGGER.info("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",

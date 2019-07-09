@@ -35,6 +35,7 @@ public class SvaConfig
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
+    public int LogChainingMaxSize;
 
     private List<String> mSampleIds;
 
@@ -62,6 +63,7 @@ public class SvaConfig
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
     public static final String LOG_DEBUG = "log_debug";
     private static final String LOG_VERBOSE = "log_verbose";
+    private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
     private static final String LOG_CLUSTER_ID = "log_cluster_id"; // for logging and breakends
     private static final String LOG_SV_ID = "log_sv_id";
 
@@ -127,6 +129,7 @@ public class SvaConfig
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
+        LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
 
@@ -160,6 +163,7 @@ public class SvaConfig
         RequiredAnnotations = "";
         mSampleIds = Lists.newArrayList();
         MaxSamples = 0;
+        LogChainingMaxSize = 0;
         LogVerbose = false;
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
@@ -179,11 +183,12 @@ public class SvaConfig
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
-        options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        options.addOption(LOG_VERBOSE, false, "Log extra detail");
+        options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
         options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
     }

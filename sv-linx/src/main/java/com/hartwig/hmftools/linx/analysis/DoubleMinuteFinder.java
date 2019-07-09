@@ -23,8 +23,10 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -42,9 +44,13 @@ import org.apache.logging.log4j.Logger;
 
 public class DoubleMinuteFinder
 {
+
     private CnDataLoader mCnAnalyser;
     private SvGeneTranscriptCollection mGeneTransCache;
     private ChainFinder mChainFinder;
+
+    private Map<Integer, SvChain> mClusterChains;
+    private Map<Integer, List<SvVarData>> mClusterSVs;
 
     private String mOutputDir;
     private BufferedWriter mFileWriter;
@@ -55,12 +61,6 @@ public class DoubleMinuteFinder
     private static double HIGH_PLOIDY_FACTOR = 1.1;
     private static double ADJACENT_PLOIDY_RATIO = 2.3;
 
-    // old constants
-    private static double DM_PLOIDY_MIN_RATIO = 2.3;
-    private static double DM_MIN_PLOIDY = 3;
-    private static double DM_PLOIDY_INCOMPLETE_MIN_RATIO = 4;
-    private static double DM_INCOMPLETE_MIN_PLOIDY = 10;
-    private static int DM_MAX_SV_COUNT = 16;
 
     private static final Logger LOGGER = LogManager.getLogger(DoubleMinuteFinder.class);
 
@@ -69,6 +69,10 @@ public class DoubleMinuteFinder
         mChainFinder = new ChainFinder();
         mCnAnalyser = null;
         mGeneTransCache = null;
+
+        mClusterChains = Maps.newHashMap();
+        mClusterSVs = Maps.newHashMap();
+
         mOutputDir = null;
         mFileWriter = null;
     }
@@ -81,7 +85,13 @@ public class DoubleMinuteFinder
         mOutputDir = outputDir;
     }
 
-    public void analyseCluster(final String sampleId, SvCluster cluster)
+    public void clear()
+    {
+        mClusterSVs.clear();;
+        mClusterChains.clear();
+    }
+
+    public void analyseCluster(SvCluster cluster)
     {
         if(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM))
             return;
@@ -181,6 +191,9 @@ public class DoubleMinuteFinder
                 fullyChained = dmChain.getSvCount() == highPloidySVs.size() && dmChain.isClosedLoop();
         }
 
+        mClusterChains.put(cluster.id(), dmChain);
+        mClusterSVs.put(cluster.id(), highPloidySVs);
+
         if(fullyChained)
             cluster.setDoubleMinuteSVs(highPloidySVs);
 
@@ -255,15 +268,15 @@ public class DoubleMinuteFinder
 
     public void reportCluster(final String sampleId, final SvCluster cluster)
     {
-        if(mOutputDir.isEmpty())
+        if(mOutputDir == null || mOutputDir.isEmpty())
             return;
 
-        List<SvVarData> highPloidySVs = cluster.getDoubleMinuteSVs();
+        final List<SvVarData> highPloidySVs = mClusterSVs.get(cluster.id());
 
         if(highPloidySVs.isEmpty())
             return;
 
-        final SvChain chain = createDMChain(cluster, highPloidySVs);
+        final SvChain chain = mClusterChains.get(cluster.id());
 
         // a single DUP or a chain involving all high-ploidy SVs which can be made into a loop
         boolean fullyChained = false;

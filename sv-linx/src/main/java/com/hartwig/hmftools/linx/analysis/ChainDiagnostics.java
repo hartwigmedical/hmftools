@@ -26,12 +26,16 @@ public class ChainDiagnostics
 {
     private List<String> mLogMessages;
     private String mOutputDir;
+    private int mMaxClusterSize;
     private BufferedWriter mFileWriter;
 
     private final List<SvVarData> mInitialComplexDup;
     private final List<SvVarData> mInitialFoldbacks;
     private int mIntialReplicatedSvCount;
     private int mMaxRepCount;
+    private int mUnlinkedBreakendCount;
+    private int mUnlinkedSvCount;
+    private int mWarnings;
 
     // references from chain finder
     private int mClusterId;
@@ -45,9 +49,10 @@ public class ChainDiagnostics
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvLinkedPair> mUniquePairs;
 
-    public static final int LOG_LEVEL_ERROR = 0;
-    public static final int LOG_LEVEL_DIAGNOSTIC = 1;
-    public static final int LOG_LEVEL_VERBOSE = 2;
+    public static final int LOG_TYPE_ERROR = 0;
+    public static final int LOG_TYPE_WARN = 1;
+    public static final int LOG_TYPE_INFO = 2;
+    public static final int LOG_TYPE_VERBOSE = 3;
 
     private static final Logger LOGGER = LogManager.getLogger(ChainDiagnostics.class);
 
@@ -61,6 +66,10 @@ public class ChainDiagnostics
         mInitialFoldbacks = Lists.newArrayList();
         mOutputDir = null;
         mFileWriter = null;
+        mMaxClusterSize = 0;
+        mWarnings = 0;
+        mUnlinkedBreakendCount = 0;
+        mUnlinkedSvCount = 0;
 
         mUniqueSVs = uniqueSVs;
         mChains = chains;
@@ -72,18 +81,21 @@ public class ChainDiagnostics
         mUniquePairs = uniquePairs;
     }
 
-    public void setOutputDir(final String dir) { mOutputDir = dir; }
+    public void setOutputDir(final String dir, int maxLogSize)
+    {
+        mOutputDir = dir;
+        mMaxClusterSize = maxLogSize;
+    }
 
-    public void initialise(int clusterId, boolean hasReplication, final List<SvVarData> complexDups, final List<SvVarData> foldbacks)
+    public void initialise(int clusterId, boolean hasReplication)
     {
         mLogMessages.clear();
+        mWarnings = 0;
+        mUnlinkedBreakendCount = 0;
+        mUnlinkedSvCount = 0;
 
         mClusterId = clusterId;
         mHasReplication = hasReplication;
-        mInitialFoldbacks.clear();
-        mInitialFoldbacks.addAll(foldbacks);
-        mInitialComplexDup.clear();
-        mInitialComplexDup.addAll(complexDups);
         mIntialReplicatedSvCount = mUnlinkedReplicatedSVs.size();
 
         if(mHasReplication)
@@ -96,15 +108,39 @@ public class ChainDiagnostics
         }
     }
 
+    public void setPriorityData(List<SvVarData> complexDups, final List<SvVarData> foldbacks)
+    {
+        mInitialFoldbacks.clear();
+        mInitialFoldbacks.addAll(foldbacks);
+        mInitialComplexDup.clear();
+        mInitialComplexDup.addAll(complexDups);
+    }
+
+    public int unlinkedBreakendCount() { return mUnlinkedBreakendCount; }
+    public int unlinkedSvCount() { return mUnlinkedSvCount; }
+
+    private static String logTypeStr(int type)
+    {
+        switch(type)
+        {
+            case LOG_TYPE_ERROR: return "Error";
+            case LOG_TYPE_WARN: return "Warn";
+            case LOG_TYPE_INFO: return "Info";
+            default: return "Verbose";
+        }
+    }
+
     public void addMessage(int level, final String msg)
     {
-        mLogMessages.add(String.format("%s: %s", level == LOG_LEVEL_ERROR ? "ERROR" : "INFO", msg));
+        if(level <= LOG_TYPE_WARN)
+            ++mWarnings;
+
+        mLogMessages.add(String.format("%s: %s", logTypeStr(level), msg));
     }
 
     public void diagnoseChains(final String sampleId)
     {
-        // for now tap out at 20 SVs
-        if(mUniqueSVs.size() < 4 || mUniqueSVs.size() > 20)
+        if(mUniqueSVs.size() < 4 || mUniqueSVs.size() > mMaxClusterSize)
             return;
 
         if(!mDoubleMinuteSVs.isEmpty()) // for now skip these
@@ -206,6 +242,25 @@ public class ChainDiagnostics
         return invalidCount;
     }
 
+    public void chainingComplete(int linkIndex)
+    {
+        mUnlinkedSvCount = (int)mUnlinkedBreakendMap.values().stream().count();
+
+        List<SvVarData> uniqueUnlinkedSVs = Lists.newArrayList();
+
+        for(final SvVarData var : mUnlinkedReplicatedSVs)
+        {
+            if(!uniqueUnlinkedSVs.contains(var.getOrigSV()))
+                uniqueUnlinkedSVs.add(var.getOrigSV());
+        }
+
+        mUnlinkedSvCount = uniqueUnlinkedSVs.size();
+
+        LOGGER.debug("cluster({}) chaining finished: chains({} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
+                mClusterId, mChains.size(), linkIndex, mUnlinkedReplicatedSVs.size(), uniqueUnlinkedSVs.size(),
+                mUnlinkedBreakendMap.size(), mUnlinkedSvCount);
+    }
+
     private void writeResults(final String sampleId, int invalidBreakends)
     {
         if(mOutputDir == null)
@@ -221,29 +276,19 @@ public class ChainDiagnostics
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,ClusterId,SvCount,RepSvCount,Chains,SGLs");
+                mFileWriter.write("SampleId,ClusterId,SvCount,RepSvCount,Chains,SGLs,Warnings");
                 mFileWriter.write(",MaxRep,UnlinksSVs,UnlinkedBEs,InvalidBEs,Foldbacks,CompDups");
                 mFileWriter.newLine();
             }
 
             int sglCount = (int)mUniqueSVs.stream().filter(SvVarData::isNullBreakend).count();
 
-            int breakendCount = (int)mUnlinkedBreakendMap.values().stream().count();
-
-            List<SvVarData> uniqueUnlinkedSVs = Lists.newArrayList();
-
-            for(final SvVarData var : mUnlinkedReplicatedSVs)
-            {
-                if(!uniqueUnlinkedSVs.contains(var.getOrigSV()))
-                    uniqueUnlinkedSVs.add(var.getOrigSV());
-            }
-
-            mFileWriter.write(String.format("%s,%d,%d,%d,%d,%d",
+            mFileWriter.write(String.format("%s,%d,%d,%d,%d,%d,%d",
                     sampleId, mClusterId, mUniqueSVs.size(), mIntialReplicatedSvCount,
-                    mChains.size(), sglCount));
+                    mChains.size(), sglCount, mWarnings));
 
             mFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
-                    mMaxRepCount, uniqueUnlinkedSVs.size(), breakendCount, invalidBreakends,
+                    mMaxRepCount, mUnlinkedSvCount, mUnlinkedBreakendCount, invalidBreakends,
                     mInitialFoldbacks.size(), mInitialComplexDup.size()));
 
             mFileWriter.newLine();
