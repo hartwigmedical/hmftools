@@ -102,7 +102,7 @@ public class TherapyDetailsChapter implements ReportChapter {
 
     @NotNull
     private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
-        final String title = "Clinical trials (NL)";
+        final String title = "Tumor type specific Clinical trials (NL)";
 
         if (trials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);

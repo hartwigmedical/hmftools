@@ -39,7 +39,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
     @Override
     @NotNull
     public String name() {
-        return "Actionable or drivers";
+        return "Genomic alteration details";
     }
 
     @Override
