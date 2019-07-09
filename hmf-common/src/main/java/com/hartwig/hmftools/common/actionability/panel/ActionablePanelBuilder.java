@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -82,7 +81,7 @@ public class ActionablePanelBuilder {
 
     @NotNull
     public ActionablePanelBuilder addDrup(@NotNull final DrupActionabilityModel drup) {
-        drup.geneDriverCategoryMap().forEach(this::addDrup);
+        drup.actionableGenes().forEach(this::addDrup);
         return this;
     }
 
@@ -114,8 +113,8 @@ public class ActionablePanelBuilder {
     }
 
     @NotNull
-    private ActionablePanelBuilder addDrup(@NotNull final String gene, @NotNull final DriverCategory category) {
-        select(gene).drup(true).drupCategory(category.toString());
+    private ActionablePanelBuilder addDrup(@NotNull final String gene) {
+        select(gene).drup(true);
         return this;
     }
 
@@ -133,7 +132,6 @@ public class ActionablePanelBuilder {
                 .fusion(false)
                 .variant(false)
                 .drup(false)
-                .drupCategory(Strings.EMPTY)
                 .responsive(Strings.EMPTY)
                 .responsiveSource(Strings.EMPTY)
                 .resistant(Strings.EMPTY)
