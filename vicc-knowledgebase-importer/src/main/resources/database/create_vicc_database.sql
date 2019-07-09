@@ -1,8 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO: Remove per 1st of july.
-DROP TABLE IF EXISTS features;
-
 DROP TABLE IF EXISTS viccEntry;
 DROP TABLE IF EXISTS gene;
 DROP TABLE IF EXISTS geneIdentifier;
