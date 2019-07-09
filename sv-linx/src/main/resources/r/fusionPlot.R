@@ -14,8 +14,11 @@ plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
   
   fusion = fusedExons %>% group_by(fusion) %>% summarise(start = min(geneStart), end = max(geneEnd))
   
-  fusedGenes = fusedExons %>% group_by(gene, upGene, color) %>% mutate(start = ifelse(rank == 1, start, geneStart)) %>%
-    summarise(start = max(start, geneStart), end = max(geneEnd))
+  fusedGenes = fusedExons %>% 
+    group_by(gene, transcript, upGene, color) %>% 
+    mutate(start = ifelse(rank == 1, start, geneStart)) %>%
+    summarise(start = max(start, geneStart), end = max(geneEnd)) %>%
+    mutate(label = paste0(gene, " (",transcript,")"))
   
   fadedAlpha = 0.4
   fadedArea = fusedExons %>% 
@@ -34,8 +37,8 @@ plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
     geom_rect(data = fusedGenes, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = fusedGenes$color, color = NA) +
     geom_rect(data = fusedExons, mapping = aes(xmin = start, xmax = end, ymin = 0, ymax = 1), position = "identity", stat = "identity", fill = fusedExons$color, show.legend = F, color = NA) +
 
-    geom_text(data = fusedGenes %>% filter(upGene), mapping = aes(label = gene, x = start, y = 1.1), hjust = 0, vjust = 0, size = 6 * 25.4 / 72) +
-    geom_text(data = fusedGenes %>% filter(!upGene), mapping = aes(label = gene, x = end, y = 1.1), hjust = 1,  vjust = 0, size = 6 * 25.4 / 72) +
+    geom_text(data = fusedGenes %>% filter(upGene), mapping = aes(label = label, x = start, y = 1.1), hjust = 0, vjust = 0, size = 6 * 25.4 / 72) +
+    geom_text(data = fusedGenes %>% filter(!upGene), mapping = aes(label = label, x = end, y = 1.1), hjust = 1,  vjust = 0, size = 6 * 25.4 / 72) +
     scale_x_continuous(name = "", breaks = fusedExons$start, labels = fusedExons$rank) +
     scale_fill_manual(name =  "", values = proteinDomainColors) +
     scale_alpha_manual(values = fusedExonsAlpha) +
