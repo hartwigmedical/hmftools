@@ -31,7 +31,7 @@ import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
-import com.hartwig.hmftools.linx.types.SvaConfig;
+import com.hartwig.hmftools.linx.types.LinxConfig;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -43,7 +43,7 @@ public class SvTestHelper
 {
     public String SampleId;
     public List<SvVarData> AllVariants;
-    public SvaConfig Config;
+    public LinxConfig Config;
     public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
     public CnDataLoader CnDataLoader;
@@ -53,7 +53,7 @@ public class SvTestHelper
 
     public SvTestHelper()
     {
-        Config = new SvaConfig(DEFAULT_PROXIMITY_DISTANCE);
+        Config = new LinxConfig(DEFAULT_PROXIMITY_DISTANCE);
 
         ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
         Analyser = new ClusterAnalyser(Config, ClusteringMethods);

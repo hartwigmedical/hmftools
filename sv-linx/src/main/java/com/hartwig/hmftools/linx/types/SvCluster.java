@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.INF_SV_TYPE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConfig.SPECIFIC_CLUSTER_ID;
+import static com.hartwig.hmftools.linx.types.LinxConfig.SPECIFIC_CLUSTER_ID;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PERCENT;
 

@@ -52,7 +52,7 @@ import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.types.SvaConfig;
+import com.hartwig.hmftools.linx.types.LinxConfig;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
@@ -72,7 +72,7 @@ public class FusionDisruptionAnalyser
     private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<String> mKnownFusionGenes;
-    private SvaConfig mConfig;
+    private LinxConfig mConfig;
 
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
@@ -129,7 +129,7 @@ public class FusionDisruptionAnalyser
         options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
     }
 
-    public void initialise(final CommandLine cmdLineArgs, final String outputDir, final SvaConfig config, SvGeneTranscriptCollection ensemblDataCache)
+    public void initialise(final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache)
     {
         mOutputDir = outputDir;
 

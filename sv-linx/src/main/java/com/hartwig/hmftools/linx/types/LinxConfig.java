@@ -18,7 +18,7 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SvaConfig
+public class LinxConfig
 {
     final public int ProximityDistance;
     final public String OutputDataPath;
@@ -73,9 +73,9 @@ public class SvaConfig
     public static int SPECIFIC_CLUSTER_ID = -1;
     public static String SPECIFIC_SV_ID = "";
 
-    private static final Logger LOGGER = LogManager.getLogger(SvaConfig.class);
+    private static final Logger LOGGER = LogManager.getLogger(LinxConfig.class);
 
-    public SvaConfig(final CommandLine cmd)
+    public LinxConfig(final CommandLine cmd)
     {
         String configSampleStr = cmd.getOptionValue(SAMPLE);
 
@@ -149,7 +149,7 @@ public class SvaConfig
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
 
-    public SvaConfig(int proximityDistance)
+    public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
         PurpleDataPath = "";

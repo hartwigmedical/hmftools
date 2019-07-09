@@ -70,14 +70,14 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.types.SvaConfig;
+import com.hartwig.hmftools.linx.types.LinxConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ClusterAnalyser {
 
-    private final SvaConfig mConfig;
+    private final LinxConfig mConfig;
     private SvClusteringMethods mClusteringMethods;
     private CnDataLoader mCnDataLoader;
     private SvGeneTranscriptCollection mGeneTransCache;
@@ -99,7 +99,7 @@ public class ClusterAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
-    public ClusterAnalyser(final SvaConfig config, SvClusteringMethods clusteringMethods)
+    public ClusterAnalyser(final LinxConfig config, SvClusteringMethods clusteringMethods)
     {
         mConfig = config;
         mClusteringMethods = clusteringMethods;

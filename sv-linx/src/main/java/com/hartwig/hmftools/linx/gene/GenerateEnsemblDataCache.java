@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.gene;
 
-import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.types.LinxConfig.DATA_OUTPUT_DIR;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

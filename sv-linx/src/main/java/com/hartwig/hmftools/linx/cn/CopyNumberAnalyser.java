@@ -7,9 +7,9 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.types.SvaConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.types.SvaConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.types.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.types.LinxConfig.formOutputPath;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

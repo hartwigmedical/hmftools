@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.setSvGeneData;
-import static com.hartwig.hmftools.linx.types.SvaConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.linx.types.SvaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.types.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.types.SvaConfig;
+import com.hartwig.hmftools.linx.types.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -59,7 +59,7 @@ public class SvLinxApplication
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        SvaConfig svaConfig = new SvaConfig(cmd);
+        LinxConfig svaConfig = new LinxConfig(cmd);
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
@@ -282,7 +282,7 @@ public class SvLinxApplication
         options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
 
         // allow sub-components to add their specific config
-        SvaConfig.addCmdLineArgs(options);
+        LinxConfig.addCmdLineArgs(options);
         FusionFinder.addCmdLineArgs(options);
         DriverGeneAnnotator.addCmdLineArgs(options);
         FusionDisruptionAnalyser.addCmdLineArgs(options);

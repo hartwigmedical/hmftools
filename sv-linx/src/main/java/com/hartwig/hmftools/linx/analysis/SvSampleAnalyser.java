@@ -75,7 +75,7 @@ import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.types.SvaConfig;
+import com.hartwig.hmftools.linx.types.LinxConfig;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
@@ -86,7 +86,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class SvSampleAnalyser {
 
-    private final SvaConfig mConfig;
+    private final LinxConfig mConfig;
     private final ClusterAnalyser mAnalyser;
 
     // data per run (ie sample)
@@ -113,7 +113,7 @@ public class SvSampleAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 
-    public SvSampleAnalyser(final SvaConfig config)
+    public SvSampleAnalyser(final LinxConfig config)
     {
         mConfig = config;
         mSampleId = "";

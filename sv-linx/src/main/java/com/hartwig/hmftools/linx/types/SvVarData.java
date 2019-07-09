@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
-import static com.hartwig.hmftools.linx.types.SvaConfig.SPECIFIC_SV_ID;
+import static com.hartwig.hmftools.linx.types.LinxConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;

@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_PRIVATE;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_SHARED;
-import static com.hartwig.hmftools.linx.types.SvaConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.types.SvaConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.types.SvaConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.types.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.types.LinxConfig.formOutputPath;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
