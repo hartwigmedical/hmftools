@@ -108,6 +108,7 @@ public class ClusterAnalyser {
         mSampleId = "";
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
+        mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath);
         mDmFinder = new DoubleMinuteFinder();
         mDmFinder.setOutputDir(mConfig.OutputDataPath);
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
@@ -508,7 +509,7 @@ public class ClusterAnalyser {
         mChainFinder.addChains(cluster);
 
         if(!assembledLinksOnly)
-            mChainFinder.diagnoseChains(mSampleId);
+            mChainFinder.getDiagnostics().diagnoseChains(mSampleId);
 
         cluster.setValidAllelePloidySegmentPerc(mChainFinder.getValidAllelePloidySegmentPerc());
         mChainFinder.clear(); // release any refs to clusters and SVs
@@ -1559,6 +1560,7 @@ public class ClusterAnalyser {
     public void close()
     {
         mDmFinder.close();
+        mChainFinder.getDiagnostics().close();
     }
 
     public void logStats()
