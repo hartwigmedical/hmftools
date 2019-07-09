@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.kataegis;
 
+import static com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment.KATAEGIS_FLAG;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.function.Consumer;
@@ -12,7 +14,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 class KataegisQueue implements Consumer<VariantContext> {
 
-    static final String KATAEGIS_FLAG = "KATAEGIS";
     private static final long MAX_ABS_DISTANCE = 5000;
     private static final long MAX_AVG_DISTANCE = 1000;
     private static final int MIN_COUNT = 6;

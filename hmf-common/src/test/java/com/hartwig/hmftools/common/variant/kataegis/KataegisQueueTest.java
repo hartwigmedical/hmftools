@@ -27,7 +27,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisQueue.KATAEGIS_FLAG));
+        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -41,7 +41,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.NONE.toString(), result.get(0).getAttribute(KataegisQueue.KATAEGIS_FLAG));
+        assertEquals(KataegisStatus.NONE.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -55,7 +55,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisQueue.KATAEGIS_FLAG));
+        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisQueue.KATAEGIS_FLAG));
+        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -83,17 +83,17 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.NONE.toString(), result.get(0).getAttribute(KataegisQueue.KATAEGIS_FLAG));
+        assertEquals(KataegisStatus.NONE.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @NotNull
     static VariantContext create(String contig, long start, boolean kataegis) {
-        return create(contig, start, "C", kataegis ? "T" : "A");
+        return create(contig, start, kataegis ? "T" : "A");
     }
 
     @NotNull
-    private static VariantContext create(String contig, long start, @NotNull final String ref, @NotNull final String alt) {
-        Allele refAllele = Allele.create(ref, true);
+    private static VariantContext create(String contig, long start, @NotNull final String alt) {
+        Allele refAllele = Allele.create("C", true);
         Allele altAllele = Allele.create(alt, false);
 
         return new VariantContextBuilder("Source", contig, start, start, Lists.newArrayList(refAllele, altAllele)).make();
