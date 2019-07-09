@@ -3,13 +3,13 @@ package com.hartwig.hmftools.knowledgebaseimporter.oncoKb.input
 import com.hartwig.hmftools.extensions.csv.CsvData
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CorrectedInput
 
-data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_") private val Gene: String, val Alteration: String,
+data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_") private val `Hugo Symbol`: String, val Alteration: String,
                           val `Mutation Effect`: String, val Oncogenicity: String) : CsvData, CorrectedInput<OncoKnownInput>,
         OncoKbInput {
 
-    val reference = "$Gene $Alteration"
+    val reference = "$`Hugo Symbol` $Alteration"
     override val transcript = Isoform
-    override val gene = Gene
+    override val gene = `Hugo Symbol`
     override val variant = Alteration
 
     override fun correct(): OncoKnownInput? {

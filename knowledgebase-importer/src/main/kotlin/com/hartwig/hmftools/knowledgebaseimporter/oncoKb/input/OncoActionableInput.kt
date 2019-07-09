@@ -5,7 +5,7 @@ import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.CorrectedInput
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfLevel
 import com.hartwig.hmftools.knowledgebaseimporter.output.HmfResponse
 
-data class OncoActionableInput(private val Isoform: String?, @get:JvmName("getGene_") private val Gene: String, val Alteration: String,
+data class OncoActionableInput(private val Isoform: String?, @get:JvmName("getGene_") private val `Hugo Symbol`: String, val Alteration: String,
                                val `Cancer Type`: String, val `Drugs(s)`: String, private val Level: String) : CsvData,
         CorrectedInput<OncoActionableInput>, OncoKbInput {
 
@@ -14,7 +14,7 @@ data class OncoActionableInput(private val Isoform: String?, @get:JvmName("getGe
     val hmfResponse = if (Level.startsWith("R")) HmfResponse.Resistant else HmfResponse.Responsive
     val reference = Alteration
     override val transcript = Isoform.orEmpty()
-    override val gene: String = Gene
+    override val gene: String = `Hugo Symbol`
     override val variant: String = Alteration
 
     override fun correct(): OncoActionableInput {
