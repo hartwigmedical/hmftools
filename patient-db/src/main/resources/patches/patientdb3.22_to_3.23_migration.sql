@@ -8,3 +8,9 @@ ALTER TABLE driverCatalog
 UPDATE driverCatalog set driver = "MUTATION";
 UPDATE driverCatalog set driver = "AMP" WHERE likelihoodMethod = "AMP";
 UPDATE driverCatalog set driver = "DEL" WHERE likelihoodMethod = "DEL";
+
+ALTER TABLE driverCatalog DROP INDEX sampleId;
+ALTER TABLE driverCatalog ADD INDEX (sampleId, gene);
+
+ALTER TABLE geneCopyNumber DROP INDEX sampleId;
+ALTER TABLE geneCopyNumber ADD INDEX (sampleId, gene);

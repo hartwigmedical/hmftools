@@ -428,7 +428,7 @@ CREATE TABLE geneCopyNumber
     minRegionMethod varchar(255) NOT NULL,
     minMinorAllelePloidy DOUBLE PRECISION not null,
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, gene),
     INDEX(gene)
 );
 
@@ -716,7 +716,7 @@ CREATE TABLE driverCatalog
     inframe int NOT NULL,
     biallelic BOOLEAN NOT NULL,
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, gene),
     INDEX(gene)
 );
 
