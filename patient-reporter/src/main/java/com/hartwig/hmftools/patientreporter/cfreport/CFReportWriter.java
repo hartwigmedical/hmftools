@@ -16,7 +16,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.ExplanationChapter
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.QCFailChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOffLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -51,7 +52,7 @@ public class CFReportWriter implements ReportWriter {
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath)
             throws IOException {
         writeReport(report,
-                new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapter(report), new ActionableOrDriversChapter(report),
+                new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report), new TherapyDetailsChapterOffLabel(report), new ActionableOrDriversChapter(report),
                         new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                         new DetailsAndDisclaimerChapter(report) },
                 outputFilePath);
