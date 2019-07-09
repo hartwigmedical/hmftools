@@ -39,8 +39,6 @@ public class DoubleMinuteTest
 
         tester.AllVariants.add(dup1);
 
-        tester.addCopyNumberData();
-
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();
@@ -72,8 +70,6 @@ public class DoubleMinuteTest
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.preClusteringInit();
-
-        tester.addCopyNumberData();
 
         tester.preClusteringInit();
 
@@ -124,9 +120,6 @@ public class DoubleMinuteTest
 
         tester.AllVariants.add(other2);
         tester.AllVariants.add(other3);
-        tester.preClusteringInit();
-
-        tester.addCopyNumberData();
 
         tester.preClusteringInit();
 
@@ -167,9 +160,6 @@ public class DoubleMinuteTest
         tester.AllVariants.add(var4);
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
-        tester.preClusteringInit();
-
-        tester.addCopyNumberData();
 
         tester.preClusteringInit();
 

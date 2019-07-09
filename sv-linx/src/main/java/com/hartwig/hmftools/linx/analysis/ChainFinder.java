@@ -643,8 +643,14 @@ public class ChainFinder
             // search existing chains for open chain ends match the set of possibles for the complex DUP and with twice the ploidy
             for(SvChain chain : mChains)
             {
-                SvBreakend chainBeStart = chain.getOpenBreakend(true).getOrigBreakend();
-                SvBreakend chainBeEnd = chain.getOpenBreakend(false).getOrigBreakend();
+                SvBreakend chainBeStart = chain.getOpenBreakend(true);
+                SvBreakend chainBeEnd = chain.getOpenBreakend(false);
+
+                if(chainBeStart == null || chainBeEnd == null)
+                    continue;
+
+                chainBeStart = chainBeStart.getOrigBreakend();
+                chainBeEnd = chainBeEnd.getOrigBreakend();
 
                 SvLinkedPair[] matchingPair = {null, null};
 
@@ -2212,6 +2218,8 @@ public class ChainFinder
 
             if(remainingBreakends > 0)
             {
+                LOGGER.debug("cluster({}) adding DUP pair to DM chain {} times", mClusterId, remainingBreakends);
+
                 if(chain.getFirstSV().equals(dupDM, true) || chain.getLastSV().equals(dupDM, true))
                 {
                     final List<SvBreakend> startBreakendList = mUnlinkedBreakendMap.get(dupStart);
@@ -2231,8 +2239,6 @@ public class ChainFinder
                             break;
 
                         SvLinkedPair newLink = SvLinkedPair.from(chainBreakend, otherBreakend, LINK_TYPE_TI);
-
-                        LOGGER.debug("adding new DUP pair({}) to DM chain", newLink.toString());
 
                         chain.addLink(newLink, linkOnStart);
                         newLink.setLinkReason(LR_METHOD_DM_DUP, mLinkIndex++);
@@ -2255,8 +2261,6 @@ public class ChainFinder
                     for(int i = 0; i < remainingBreakends; ++i)
                     {
                         SvLinkedPair newLink = SvLinkedPair.from(dupStart, dupEnd, LINK_TYPE_TI);
-
-                        LOGGER.debug("adding new DUP pair({}) to DM chain", newLink.toString());
 
                         chain.addLink(newLink, 0);
                         newLink.setLinkReason(LR_METHOD_DM_DUP, mLinkIndex++);

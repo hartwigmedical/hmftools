@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -49,6 +50,7 @@ public class DoubleMinuteFinder
     private SvGeneTranscriptCollection mGeneTransCache;
     private ChainFinder mChainFinder;
 
+    private List<Integer> mProcessedClusters;
     private Map<Integer, SvChain> mClusterChains;
     private Map<Integer, List<SvVarData>> mClusterSVs;
 
@@ -70,6 +72,7 @@ public class DoubleMinuteFinder
         mCnAnalyser = null;
         mGeneTransCache = null;
 
+        mProcessedClusters = Lists.newArrayList();
         mClusterChains = Maps.newHashMap();
         mClusterSVs = Maps.newHashMap();
 
@@ -87,19 +90,35 @@ public class DoubleMinuteFinder
 
     public void clear()
     {
-        mClusterSVs.clear();;
+        mProcessedClusters.clear();
+        mClusterSVs.clear();
         mClusterChains.clear();
     }
 
     public void analyseCluster(SvCluster cluster)
     {
+        analyseCluster(cluster, false);
+    }
+
+    public void analyseCluster(SvCluster cluster, boolean reassess)
+    {
+        if(mProcessedClusters.contains(cluster.id()))
+        {
+            if(!reassess)
+                return;
+        }
+        else
+        {
+            mProcessedClusters.add(cluster.id());
+        }
+
         if(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM))
             return;
 
         if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DUP)
             return;
 
-        // isSpecificCluster(cluster);
+        isSpecificCluster(cluster);
 
         double clusterMaxPloidy = cluster.getSVs().stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
 
@@ -268,7 +287,13 @@ public class DoubleMinuteFinder
 
     public void reportCluster(final String sampleId, final SvCluster cluster)
     {
+        // check whether this cluster has been processed
+        analyseCluster(cluster, false);
+
         if(mOutputDir == null || mOutputDir.isEmpty())
+            return;
+
+        if(!cluster.hasAnnotation(CLUSTER_ANNONTATION_DM))
             return;
 
         final List<SvVarData> highPloidySVs = mClusterSVs.get(cluster.id());

@@ -160,7 +160,6 @@ public class ChainingActualTest
         tester.logVerbose(true);
 
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
-        tester.Analyser.setUseAllelePloidies(true);
 
         // tester.Analyser.getChainFinder().setUseNewMethod(false);
 
@@ -207,7 +206,6 @@ public class ChainingActualTest
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
-        tester.addCopyNumberData();
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();

@@ -231,6 +231,8 @@ public class ClusterAnalyser {
             cluster.cacheLinkedPairs();
             cluster.buildArmClusters();
 
+            // isSpecificCluster(cluster);
+
             reportClusterFeatures(cluster);
         }
 
@@ -247,8 +249,6 @@ public class ClusterAnalyser {
         {
             if(isSimpleSingleSV(cluster))
             {
-                mDmFinder.analyseCluster(cluster);
-
                 setClusterResolvedState(cluster, false);
                 continue;
             }
@@ -298,7 +298,7 @@ public class ClusterAnalyser {
             cluster.removeReplicatedSvs();
 
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
-            mDmFinder.analyseCluster(cluster);
+            mDmFinder.analyseCluster(cluster, true);
 
             applySvPloidyReplication(cluster);
 
@@ -326,6 +326,9 @@ public class ClusterAnalyser {
             {
                 SvCluster newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
                 newCluster.addVariant(var);
+
+                mDmFinder.analyseCluster(newCluster);
+
                 setClusterResolvedState(newCluster, true);
                 mClusters.add(newCluster);
             }
@@ -1556,9 +1559,8 @@ public class ClusterAnalyser {
             reportClusterRepRepairSegments(mSampleId, cluster);
         }
 
-        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES) && cluster.hasAnnotation(CLUSTER_ANNONTATION_DM))
+        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
             mDmFinder.reportCluster(mSampleId, cluster);
-
     }
 
     public void close()

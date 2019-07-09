@@ -294,12 +294,17 @@ public class SvTestHelper
 
     private double calcActualBaf(double copyNumber, double nonDisruptedAP)
     {
+        if(copyNumber == 0)
+            return 0;
+
         double disruptedPloidy  = copyNumber - nonDisruptedAP;
         return disruptedPloidy >= nonDisruptedAP ? disruptedPloidy / copyNumber : nonDisruptedAP / copyNumber;
     }
 
     public void addCopyNumberData()
     {
+        Analyser.setUseAllelePloidies(true);
+
         // use SV breakend data to re-create the copy number segments
         // assume CN is 2 at the telomere and by default Actual BAF = 0.5
 
@@ -362,13 +367,13 @@ public class SvTestHelper
                     }
                     else
                     {
-                        if(breakend.orientation() == 1)
+                        if(breakend.orientation() == 1 || breakend.getSV().type() == DUP)
                         {
                             // copy number and actual BAF as expected
                         }
                         else
                         {
-                            // no chromatid running to telomere on this end
+                            // no chromatid running to telomere on this end unless it's a DUP on the end
                             currentCopyNumber = nonDisruptedAP;
                             currentActualBaf = 1;
                         }

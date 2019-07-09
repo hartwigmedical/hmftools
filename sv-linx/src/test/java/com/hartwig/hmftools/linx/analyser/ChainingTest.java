@@ -438,7 +438,6 @@ public class ChainingTest
         tester.AllVariants.add(var3);
         tester.AllVariants.add(dup);
 
-        tester.addCopyNumberData();
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
