@@ -308,11 +308,7 @@ public class SvVarData
         return false;
     }
 
-    public double ploidy()
-    {
-        // use the estimated ploidy when present
-        return mHasCalcPloidy ? (mPloidyMax + mPloidyMin) * 0.5 : mPloidy;
-    }
+    public double ploidy() { return mPloidy; }
 
     public double copyNumberChange(boolean isStart)
     {
@@ -334,8 +330,7 @@ public class SvVarData
 
     public double getRoundedPloidy(boolean enforceClonal)
     {
-        double ploidyEstimate = mHasCalcPloidy ? (mPloidyMin + mPloidyMax) * 0.5 : mPloidy;
-        double roundedPloidy = round(ploidyEstimate);
+        double roundedPloidy = round(ploidy());
         return enforceClonal ? max(roundedPloidy, 1) : roundedPloidy;
     }
 
@@ -343,30 +338,6 @@ public class SvVarData
     {
         return max(getAssembledLinkedPairs(true).size(), getAssembledLinkedPairs(false).size());
     }
-
-    /*
-    public int getImpliedAssemblyPloidy()
-    {
-        if(mTiLinks.isEmpty())
-            return 1;
-
-        // imply a ploidy from the assembled links
-        int maxPloidy = 1;
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            List<SvLinkedPair> tiLinks = getAssembledLinkedPairs(isStart(se));
-            int breakendPloidy = 0;
-
-            for(SvLinkedPair link : tiLinks)
-            {
-                SvVarData otherVar = link.getOtherSV(this);
-                int otherPloidy = (int)otherVar.getRoundedPloidy(true);
-
-                breakendPloidy += otherPloidy;
-            }
-        }
-    }
-    */
 
     public int getImpliedPloidy()
     {
