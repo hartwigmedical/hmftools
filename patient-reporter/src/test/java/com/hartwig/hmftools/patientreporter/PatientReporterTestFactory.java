@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
@@ -63,7 +62,7 @@ public final class PatientReporterTestFactory {
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
                 .clonality(Clonality.UNKNOWN)
-                .kataegis(KataegisStatus.NONE)
+                .kataegis(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)

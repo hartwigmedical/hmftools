@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -199,7 +198,7 @@ public class SomaticVariantFactory {
                 .recovered(context.hasAttribute(RECOVERED_FLAG))
                 .biallelic(context.hasAttribute(PURPLE_BIALLELIC_FLAG))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
-                .kataegis(KataegisStatus.valueOf(context.getAttributeAsString(KataegisEnrichment.KATAEGIS_FLAG, KataegisStatus.NONE.toString())))
+                .kataegis(context.getAttributeAsString(KataegisEnrichment.KATAEGIS_FLAG,Strings.EMPTY))
                 .trinucleotideContext(context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY))
                 .microhomology(context.getAttributeAsString(RefContextEnrichment.MICROHOMOLOGY_FLAG, Strings.EMPTY))
                 .repeatCount(context.getAttributeAsInt(RefContextEnrichment.REPEAT_COUNT_FLAG, 0))

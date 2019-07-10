@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -81,7 +80,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
                 .biallelic(false)
-                .kataegis(KataegisStatus.NONE)
+                .kataegis(Strings.EMPTY)
                 .trinucleotideContext(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)

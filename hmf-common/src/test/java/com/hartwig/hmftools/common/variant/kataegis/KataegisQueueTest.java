@@ -28,7 +28,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.FWD.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -104,7 +104,7 @@ public class KataegisQueueTest {
     private static List<VariantContext> kataegis(@NotNull final List<VariantContext> contexts) {
         final Predicate<VariantContext> kataegisPredicate = context -> context.getAlternateAllele(0).getBaseString().equals("T");
         final List<VariantContext> result = Lists.newArrayList();
-        KataegisQueue inner = new KataegisQueue(KataegisStatus.FWD, kataegisPredicate, result::add);
+        KataegisQueue inner = new KataegisQueue("TST", kataegisPredicate, result::add);
         contexts.forEach(inner::accept);
         inner.flush();
         return result;

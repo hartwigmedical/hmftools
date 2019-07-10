@@ -20,12 +20,14 @@ class KataegisQueue implements Consumer<VariantContext> {
     private final Predicate<VariantContext> candidate;
     private final Consumer<VariantContext> consumer;
     private final Deque<VariantContext> buffer;
-    private final KataegisStatus status;
+    private final String idPrefix;
 
-    KataegisQueue(final KataegisStatus status, final Predicate<VariantContext> candidate, final Consumer<VariantContext> consumer) {
+    private int identifier = 0;
+
+    KataegisQueue(final String idPrefix, final Predicate<VariantContext> candidate, final Consumer<VariantContext> consumer) {
         this.candidate = candidate;
         this.consumer = consumer;
-        this.status = status;
+        this.idPrefix = idPrefix;
         this.buffer = new ArrayDeque<>();
     }
 
@@ -52,18 +54,25 @@ class KataegisQueue implements Consumer<VariantContext> {
 
             final VariantContext first = buffer.peekFirst();
             if (!candidate.test(first)) {
-                consumer.accept(addStatus(buffer.pollFirst(), KataegisStatus.NONE));
+                consumer.accept(buffer.pollFirst());
             } else {
                 final KataegisWindow window = longestViableWindow(first);
                 final boolean isWindowViable = window.isViable(MIN_COUNT, MAX_AVG_DISTANCE);
+                if (isWindowViable) {
+                    identifier++;
+                }
+
                 while (!buffer.isEmpty()) {
-                    final VariantContext context = buffer.peekFirst();
-                    if (context.getStart() > window.end()) {
+                    final VariantContext peek = buffer.peekFirst();
+                    if (peek.getStart() > window.end()) {
                         return;
                     }
 
-                    final KataegisStatus contextStatus = isWindowViable && candidate.test(context) ? status : KataegisStatus.NONE;
-                    consumer.accept(addStatus(buffer.pollFirst(), contextStatus));
+                    if (isWindowViable && candidate.test(peek)) {
+                        peek.getCommonInfo().putAttribute(KATAEGIS_FLAG, idPrefix + "_" + identifier);
+                    }
+
+                    consumer.accept(buffer.pollFirst());
                 }
             }
         }
@@ -92,12 +101,4 @@ class KataegisQueue implements Consumer<VariantContext> {
         return result;
     }
 
-    @NotNull
-    private static VariantContext addStatus(@NotNull final VariantContext context, @NotNull final KataegisStatus status) {
-        if (status != KataegisStatus.NONE) {
-            context.getCommonInfo().putAttribute(KATAEGIS_FLAG, status.toString(), false);
-        }
-
-        return context;
-    }
 }

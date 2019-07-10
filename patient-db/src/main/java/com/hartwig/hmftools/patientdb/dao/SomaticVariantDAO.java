@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -82,19 +81,10 @@ class SomaticVariantDAO {
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
-                    .kataegis(kataegisStatus(record))
+                    .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                     .build());
         }
         return variants;
-    }
-
-    private static KataegisStatus kataegisStatus(@NotNull Record record) {
-        //TODO: Remove backwards compability after next full rerun (10-Jul-2019)
-        final String value = record.get(SOMATICVARIANT.KATAEGIS);
-        if (!value.isEmpty()) {
-            return KataegisStatus.valueOf(value);
-        }
-        return KataegisStatus.NONE;
     }
 
     private static boolean byteToBoolean(@Nullable Byte b) {

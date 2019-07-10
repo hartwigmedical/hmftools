@@ -17,14 +17,14 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class KataegisEnrichment implements VariantContextEnrichment {
 
     public static final String KATAEGIS_FLAG = "KATAEGIS";
-    private static final String KATAEGIS_FLAG_DESCRITION = "Strand kataegis detected on: FWD,REV or NONE";
+    private static final String KATAEGIS_FLAG_DESCRITION = "Forward/reverse kataegis id";
 
     private final KataegisQueue forwardDetector;
     private final KataegisQueue reverseDetector;
 
     public KataegisEnrichment(final Consumer<VariantContext> consumer) {
-        reverseDetector = new KataegisQueue(KataegisStatus.REV, KataegisEnrichment::isReverseCandidate, consumer);
-        forwardDetector = new KataegisQueue(KataegisStatus.FWD, KataegisEnrichment::isForwardCandidate, reverseDetector);
+        reverseDetector = new KataegisQueue("REV", KataegisEnrichment::isReverseCandidate, consumer);
+        forwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, reverseDetector);
     }
 
     @Override
