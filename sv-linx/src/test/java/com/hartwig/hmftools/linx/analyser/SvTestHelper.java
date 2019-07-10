@@ -187,6 +187,14 @@ public class SvTestHelper
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq)
     {
+        return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type, cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, "PASS");
+    }
+
+    public static SvVarData createTestSv(final String varId, final String chrStart, final String chrEnd,
+            long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
+            double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq,
+            final String filter)
+    {
         StructuralVariantData svData =
                 ImmutableStructuralVariantData.builder()
                         .id(Integer.parseInt(varId))
@@ -209,7 +217,7 @@ public class SvTestHelper
                         .adjustedEndCopyNumberChange(cnChgEnd)
                         .insertSequence(insertSeq)
                         .type(type)
-                        .filter("PASS")
+                        .filter(filter)
                         .imprecise(false)
                         .qualityScore(0.0)
                         .event("")

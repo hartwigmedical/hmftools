@@ -828,6 +828,8 @@ public class ChainFinder
                     continue;
 
                 processedChainedFoldbacks.add(foldback);
+                processedChainedFoldbacks.add(foldback.getChainedFoldbackSv());
+
             }
 
             SvBreakend foldbackStart = null;

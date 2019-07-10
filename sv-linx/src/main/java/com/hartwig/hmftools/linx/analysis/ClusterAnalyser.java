@@ -42,7 +42,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvChain.CHAIN_LINK_COUNT;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;

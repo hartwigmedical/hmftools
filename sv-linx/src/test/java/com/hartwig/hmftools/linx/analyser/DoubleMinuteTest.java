@@ -4,19 +4,18 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_BFB_AMP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_DM;
+import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -48,7 +47,7 @@ public class DoubleMinuteTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertEquals(1, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(dup1));
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONT_DM));
 
         assertTrue(cluster.getChains().size() == 1);
         assertEquals(1, cluster.getChains().get(0).getLinkCount());
@@ -77,7 +76,7 @@ public class DoubleMinuteTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
         assertTrue(cluster != null);
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONT_DM));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
 
@@ -127,7 +126,7 @@ public class DoubleMinuteTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
         assertTrue(cluster != null);
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONT_DM));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
@@ -167,7 +166,47 @@ public class DoubleMinuteTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
+        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONT_BFB_AMP));
+
+        tester.clearClustersAndSVs();
+
+        // cannot be 2 close INFs
+        var1 = createTestSv("1","1","0",1000,-1,1,-1, SGL,
+                10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
+
+        var2 = createTestSv("2","1","0",2000,-1,-1,-1, SGL,
+                10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
+
+        tester.clearClustersAndSVs();
+
+        // cannot be a single DEL
+        var1 = createTestSv("1","1","1",1000,2000,-1,-1, INV,2);
+        var2 = createTestSv("2","1","1",4000,5000,1,-1, DEL,20);
+        var3 = createTestSv("3","1","1",5000,6000,1,1, INV,2);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
 
     }
 

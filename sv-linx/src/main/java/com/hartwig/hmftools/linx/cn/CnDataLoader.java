@@ -60,8 +60,12 @@ public class CnDataLoader
     private Map<Integer,double[]> mSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
     private Map<String, double[]> mChrEndsCNMap; // telemore and centromere CN values
 
-    public static double MIN_LOH_CN = 0.5;
-    public static double TOTAL_CN_LOSS = 0.5;
+    public static final double MIN_LOH_CN = 0.5;
+    public static final double TOTAL_CN_LOSS = 0.5;
+
+    public static final int P_ARM_TELOMERE_CN = 0;
+    public static final int CENTROMERE_CN = 1;
+    public static final int Q_ARM_TELOMERE_CN = 2;
 
     private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
@@ -112,15 +116,6 @@ public class CnDataLoader
         findLohEvents(sampleId);
 
         reaclcAdjustedPloidy(sampleId);
-    }
-
-    public void clearState()
-    {
-        // shrink the data source to make future look-ups faster
-        // and to release references to other SV objects (eg SvBreakend)
-        mSvPloidyCalcMap.clear();
-        mLohEventData.clear();
-        mHomLossData.clear();
     }
 
     private void loadCopyNumberData(final String sampleId)
@@ -621,11 +616,6 @@ public class CnDataLoader
 
         return (startSvData != null && endSvData != null) ? 1 : 0;
     }
-
-
-    public static int P_ARM_TELOMERE_CN = 0;
-    public static int CENTROMERE_CN = 1;
-    public static int Q_ARM_TELOMERE_CN = 2;
 
     public void createChrCopyNumberMap()
     {

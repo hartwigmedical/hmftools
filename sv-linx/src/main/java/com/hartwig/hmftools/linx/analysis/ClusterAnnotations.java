@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvChain.getRepeatedSvSequence;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_CT;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_SHATTERING;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
@@ -65,7 +65,6 @@ public class ClusterAnnotations
     public static final String ALL_ANNOTATIONS = "ALL";
     public static final String DOUBLE_MINUTES = "DM";
     public static final String FOLDBACK_MATCHES = "FBM";
-    public static final String CHROMOTHRIPSIS = "CT";
     public static final String REPLICATION_REPAIR = "REPR";
 
     public static boolean runAnnotation(final String annotationsList, final String annotation)
@@ -578,7 +577,7 @@ public class ClusterAnnotations
             // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
             if(!isComplex)
             {
-                cluster.addAnnotation(CLUSTER_ANNONTATION_CT);
+                cluster.addAnnotation(CLUSTER_ANNONT_SHATTERING);
             }
         }
     }

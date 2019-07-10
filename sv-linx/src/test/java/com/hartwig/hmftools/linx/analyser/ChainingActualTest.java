@@ -14,19 +14,15 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -214,7 +210,7 @@ public class ChainingActualTest
         assertEquals(tester.Analyser.getClusters().size(), 1);
 
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONTATION_DM));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
         assertEquals(1, cluster.getDoubleMinuteSVs().size());
 
         // check chains

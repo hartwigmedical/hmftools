@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
@@ -17,7 +14,6 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONTATION_DM;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnnotationTest
