@@ -82,10 +82,19 @@ class SomaticVariantDAO {
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
-                    .kataegis(KataegisStatus.valueOf(record.get(SOMATICVARIANT.KATAEGIS)))
+                    .kataegis(kataegisStatus(record))
                     .build());
         }
         return variants;
+    }
+
+    private static KataegisStatus kataegisStatus(@NotNull Record record) {
+        //TODO: Remove backwards compability after next full rerun (10-Jul-2019)
+        final String value = record.get(SOMATICVARIANT.KATAEGIS);
+        if (!value.isEmpty()) {
+            return KataegisStatus.valueOf(value);
+        }
+        return KataegisStatus.NONE;
     }
 
     private static boolean byteToBoolean(@Nullable Byte b) {
@@ -190,10 +199,8 @@ class SomaticVariantDAO {
 
     @NotNull
     public final List<String> getSamplesList() {
-        final Result<Record1<String>> result = context.select(SOMATICVARIANT.SAMPLEID)
-                .from(SOMATICVARIANT)
-                .groupBy(SOMATICVARIANT.SAMPLEID)
-                .fetch();
+        final Result<Record1<String>> result =
+                context.select(SOMATICVARIANT.SAMPLEID).from(SOMATICVARIANT).groupBy(SOMATICVARIANT.SAMPLEID).fetch();
 
         List<String> samplesList = Lists.newArrayList();
 
