@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.purple.config;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -26,6 +30,8 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface RefGenomeData {
@@ -35,13 +41,13 @@ public interface RefGenomeData {
     String REF_GENOME = "ref_genome";
 
     static void addOptions(@NotNull Options options) {
-        options.addOption(REF_GENOME,
-                true,
-                "Reference genome to use. Will attempt to detect using cobalt chromosome lengths, otherwise must be either \"hg19\" or \"hg38\".");
+        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
     }
 
+    boolean isHg38();
+
     @NotNull
-    RefGenome refRegome();
+    String refGenome();
 
     @NotNull
     Map<Chromosome, GenomePosition> length();
@@ -53,44 +59,29 @@ public interface RefGenomeData {
     List<HmfTranscriptRegion> genePanel();
 
     @NotNull
-    static RefGenomeData createRefGenomeConfig(@NotNull CommandLine cmd, @NotNull CobaltData cobaltData) throws ParseException {
+    static RefGenomeData createRefGenomeConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
 
-        if (cobaltData.chromosomeLengthsEstimated() && !cmd.hasOption(REF_GENOME)) {
-            throw new ParseException(
-                    "Cobalt chromosome information unavailable. You must specify -" + REF_GENOME + " as either \"hg19\" or \"hg38\".");
+        if (!cmd.hasOption(REF_GENOME)) {
+            throw new ParseException(REF_GENOME + " is a mandatory argument");
         }
 
-        final Map<Chromosome, GenomePosition> lengthPositions = cobaltData.chromosomeLengths();
-        final Map<Chromosome, Long> lengths = asLongs(lengthPositions);
-        final Optional<RefGenome> automaticallyDetectedRefGenome = RefGenome.fromLengths(lengths);
+        final String refGenomePath = cmd.getOptionValue(REF_GENOME);
+        final Map<Chromosome, GenomePosition> lengthPositions;
+        try (final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomePath))) {
+            lengthPositions = fromLengths(ChromosomeLengthFactory.create(indexedFastaSequenceFile.getSequenceDictionary()));
+        }
+
+        final GenomePosition chr1Length = lengthPositions.get(HumanChromosome._1);
+        final RefGenome refGenome;
+        if (chr1Length != null && chr1Length.position() == RefGenome.HG38.lengths().get(HumanChromosome._1)) {
+            refGenome = RefGenome.HG38;
+        } else {
+            refGenome = RefGenome.HG19;
+        }
+        LOGGER.info("Using ref genome: {}", refGenome);
+
         final Map<Chromosome, String> contigMap =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
-
-        final Optional<RefGenome> suppliedGenome;
-        if (cmd.hasOption(REF_GENOME)) {
-            try {
-                suppliedGenome = Optional.of(RefGenome.valueOf(cmd.getOptionValue(REF_GENOME).toUpperCase()));
-            } catch (Exception e) {
-                throw new ParseException("Unknown ref genome " + cmd.getOptionValue(REF_GENOME) + ". Must be either \"hg19\" or \"hg38\".");
-            }
-        } else {
-            suppliedGenome = Optional.empty();
-        }
-
-        final RefGenome refGenome;
-        if (automaticallyDetectedRefGenome.isPresent()) {
-            refGenome = automaticallyDetectedRefGenome.get();
-            LOGGER.info("Detected ref genome: {}", refGenome);
-            if (suppliedGenome.isPresent() && !suppliedGenome.get().equals(automaticallyDetectedRefGenome.get())) {
-                throw new ParseException("Parameter " + REF_GENOME + " " + suppliedGenome.get() + " does not match detected ref genome.");
-            }
-        } else if (suppliedGenome.isPresent()) {
-            refGenome = suppliedGenome.get();
-            LOGGER.info("Using {} parameter: {}", REF_GENOME, refGenome);
-        } else {
-            throw new ParseException("Unable to detect ref genome. Please specify " + cmd.getOptionValue(REF_GENOME)
-                    + " parameter as one of \"hg19\" or \"hg38\". ");
-        }
 
         final List<HmfTranscriptRegion> rawGenePanel =
                 refGenome == RefGenome.HG38 ? HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
@@ -105,7 +96,8 @@ public interface RefGenomeData {
         return ImmutableRefGenomeData.builder()
                 .length(toPosition(refGenome.lengths(), contigMap))
                 .centromere(toPosition(refGenome.centromeres(), contigMap))
-                .refRegome(refGenome)
+                .refGenome(refGenomePath)
+                .isHg38(refGenome.equals(RefGenome.HG38))
                 .genePanel(genePanel)
                 .build();
     }
@@ -141,10 +133,12 @@ public interface RefGenomeData {
         return result;
     }
 
-    static Map<Chromosome, Long> asLongs(@NotNull final Map<Chromosome, GenomePosition> positions) {
-        return positions.values()
-                .stream()
-                .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()), GenomePosition::position));
+    @NotNull
+    static Map<Chromosome, GenomePosition> fromLengths(@NotNull final Collection<ChromosomeLength> lengths) {
+        return lengths.stream()
+                .filter(x -> HumanChromosome.contains(x.chromosome()))
+                .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()),
+                        item -> GenomePositions.create(item.chromosome(), item.length())));
     }
 
 }

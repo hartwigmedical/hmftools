@@ -27,7 +27,7 @@ public interface VariantContextEnrichmentFactory {
             }
 
             @Override
-            public void accept(final VariantContext context) {
+            public void accept(@NotNull final VariantContext context) {
                 consumer.accept(context);
             }
         };

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

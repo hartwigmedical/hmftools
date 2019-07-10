@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant.kataegis;
 
-import static com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-class KataegisQueue implements Consumer<VariantContext> {
+public class KataegisQueue {
 
     private static final long MAX_ABS_DISTANCE = 5000;
     private static final long MAX_AVG_DISTANCE = 1000;
@@ -24,7 +24,7 @@ class KataegisQueue implements Consumer<VariantContext> {
 
     private int identifier = 0;
 
-    KataegisQueue(final String idPrefix, final Predicate<VariantContext> candidate, final Consumer<VariantContext> consumer) {
+    public KataegisQueue(final String idPrefix, final Predicate<VariantContext> candidate, final Consumer<VariantContext> consumer) {
         this.candidate = candidate;
         this.consumer = consumer;
         this.idPrefix = idPrefix;

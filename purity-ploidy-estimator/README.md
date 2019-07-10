@@ -61,6 +61,7 @@ output_dir | Path to the output directory. This directory will be created if it 
 amber | Path to AMBER output. This should correspond to the output_dir used in AMBER.
 cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
 gc_profile | Path to GC profile.
+ref_genome | Path to reference genome fasta file. 
 
 The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 A HG38 equivalent is also available.
@@ -79,7 +80,6 @@ db_enabled | None | This parameter has no arguments. Optionally include if you w
 db_user | None | Database username. Mandatory if db_enabled.
 db_pass | None | Database password. Mandatory if db_enabled.
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
-ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
 no_charts | NA | Disables creation of (non-circos) charts
 
 #### Optional Somatic Fit Arguments
@@ -597,6 +597,11 @@ PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
 PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
 PURPLE_MAP | 1 | Purity adjusted minor allele ploidy surrounding variant location
 PURPLE_GERMLINE | 1 | Germline classification surrounding variant location, one of `HOM_DELETION`, `HET_DELETION`, `AMPLIFICATION`, `NOISE`, `DIPLOID`, `UNKNOWN`
+REP_S | 1 | Repeat sequence
+REP_C | 1 | Repeat sequence count
+MH | 1 | Microhomology
+KT | 1 | Forward/reverse kataegis id
+TNC | 1 | Tri-nucleotide context
 
 ### Database
 
@@ -857,6 +862,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Consistent file headers
   - Fix whole genome duplication calculation
+  - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
+  - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-30)
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)

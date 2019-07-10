@@ -196,11 +196,14 @@ public class PurityPloidyEstimateApplication {
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), copyNumbers);
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDirectory, tumorSample), germlineDeletions);
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDirectory, tumorSample),
+                    germlineDeletions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
-            new SomaticVCF(config, configSupplier.somaticConfig()).write(purityAdjuster, copyNumbers, enrichedFittedRegions);
+            new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig()).write(purityAdjuster,
+                    copyNumbers,
+                    enrichedFittedRegions);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -217,7 +220,8 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Generating charts");
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(allSomatics);
+                    new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(
+                            allSomatics);
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,

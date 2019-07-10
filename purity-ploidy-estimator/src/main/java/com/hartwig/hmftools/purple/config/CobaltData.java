@@ -2,24 +2,15 @@ package com.hartwig.hmftools.purple.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.apache.commons.cli.ParseException;
@@ -42,18 +33,13 @@ public interface CobaltData {
     ListMultimap<Chromosome, CobaltRatio> ratios();
 
     @NotNull
-    Map<Chromosome, GenomePosition> chromosomeLengths();
-
-    boolean chromosomeLengthsEstimated();
-
     Multimap<Chromosome, PCFPosition> tumorSegments();
 
+    @NotNull
     Multimap<Chromosome, PCFPosition> referenceSegments();
 
-
     @NotNull
-    static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig)
-            throws ParseException, IOException {
+    static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig) throws ParseException, IOException {
         final String cobaltDirectory = commonConfig.cobaltDirectory();
         final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, commonConfig.tumorSample());
         if (!new File(cobaltFilename).exists()) {
@@ -74,17 +60,6 @@ public interface CobaltData {
         final ListMultimap<Chromosome, CobaltRatio> ratios = CobaltRatioFile.read(cobaltFilename);
         final Gender gender = Gender.fromCobalt(ratios);
 
-        final Map<Chromosome, GenomePosition> lengths;
-        final boolean lengthsEstimated;
-        final String chrLengthFile = ChromosomeLengthFile.generateFilename(cobaltDirectory, commonConfig.tumorSample());
-        if (!new File(chrLengthFile).exists()) {
-            lengthsEstimated = true;
-            lengths = fromLengths(ChromosomeLengthFactory.create(commonConfig.windowSize(), ratios).values());
-        } else {
-            lengthsEstimated = false;
-            lengths = fromLengths(ChromosomeLengthFile.read(chrLengthFile));
-        }
-
         LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
         final Multimap<Chromosome, PCFPosition> referenceSegments =
                 PCFFile.readPositions(commonConfig.windowSize(), PCFSource.REFERENCE_RATIO, referenceSegmentFile);
@@ -94,21 +69,11 @@ public interface CobaltData {
                 PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_RATIO, tumorSegmentFile);
 
         return ImmutableCobaltData.builder()
-                .chromosomeLengths(lengths)
-                .chromosomeLengthsEstimated(lengthsEstimated)
                 .ratios(ratios)
                 .gender(gender)
                 .tumorSegments(tumorSegments)
                 .referenceSegments(referenceSegments)
                 .build();
-    }
-
-    @NotNull
-    static Map<Chromosome, GenomePosition> fromLengths(@NotNull final Collection<ChromosomeLength> lengths) {
-        return lengths.stream()
-                .filter(x -> HumanChromosome.contains(x.chromosome()))
-                .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()),
-                        item -> GenomePositions.create(item.chromosome(), item.length())));
     }
 
 }

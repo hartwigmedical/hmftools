@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.enrich;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
+import com.hartwig.hmftools.common.variant.Microhomology;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
@@ -23,14 +23,14 @@ public class RefContextEnrichment implements VariantContextEnrichment {
 
     private static final Logger LOGGER = LogManager.getLogger(RefContextEnrichment.class);
 
-    public static final String TRINUCLEOTIDE_FLAG = "TRI";
-    public static final String REPEAT_SEQUENCE_FLAG = "REPS";
-    public static final String REPEAT_COUNT_FLAG = "REPC";
+    public static final String TRINUCLEOTIDE_FLAG = "TNC";
+    public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
+    public static final String REPEAT_COUNT_FLAG = "REP_C";
     public static final String MICROHOMOLOGY_FLAG = "MH";
 
     private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
-    private static final String TRI_FLAG_DESCRIPTION = "Trinucleotide context";
-    private static final String MICROHOMOLOGY_FLAG_DESCRIPTION = "INDEL microhomology";
+    private static final String TRI_FLAG_DESCRIPTION = "Tri-nucleotide context";
+    private static final String MICROHOMOLOGY_FLAG_DESCRIPTION = "Microhomology";
     private static final String REPEAT_COUNT_DESCRIPTION = "Repeat sequence count";
 
     private final IndexedFastaSequenceFile reference;
@@ -47,16 +47,13 @@ public class RefContextEnrichment implements VariantContextEnrichment {
         template.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRI_FLAG_DESCRIPTION));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESCRIPTION));
-        template.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG,
-                1,
-                VCFHeaderLineType.String,
-                MICROHOMOLOGY_FLAG_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG, 1, VCFHeaderLineType.String, MICROHOMOLOGY_FLAG_DESCRIPTION));
 
         return template;
     }
 
     @Override
-    public void accept(final VariantContext context) {
+    public void accept(@NotNull final VariantContext context) {
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(context);
 
         addTrinucleotideContext(context, relativePositionAndRef);
@@ -71,7 +68,8 @@ public class RefContextEnrichment implements VariantContextEnrichment {
         // None
     }
 
-    private void addTrinucleotideContext(@NotNull final VariantContext variant, @NotNull final Pair<Integer, String> relativePositionAndRef) {
+    private void addTrinucleotideContext(@NotNull final VariantContext variant,
+            @NotNull final Pair<Integer, String> relativePositionAndRef) {
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
         if (!sequence.isEmpty()) {
@@ -101,9 +99,11 @@ public class RefContextEnrichment implements VariantContextEnrichment {
             final String alt = variant.getAlternateAllele(0).getBaseString();
 
             if (ref.length() > alt.length()) {
-                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref));
+                variant.getCommonInfo()
+                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref));
             } else if (ref.length() == 1) {
-                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt));
+                variant.getCommonInfo()
+                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt));
             }
 
         }

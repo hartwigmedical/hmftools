@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.common.variant.kataegis;
+package com.hartwig.hmftools.common.variant.enrich;
 
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.variant.RefContextEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
+import com.hartwig.hmftools.common.variant.kataegis.KataegisQueue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -16,15 +15,15 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class KataegisEnrichment implements VariantContextEnrichment {
 
-    public static final String KATAEGIS_FLAG = "KATAEGIS";
+    public static final String KATAEGIS_FLAG = "KT";
     private static final String KATAEGIS_FLAG_DESCRITION = "Forward/reverse kataegis id";
 
     private final KataegisQueue forwardDetector;
     private final KataegisQueue reverseDetector;
 
-    public KataegisEnrichment(final Consumer<VariantContext> consumer) {
+    public KataegisEnrichment(@NotNull final Consumer<VariantContext> consumer) {
         reverseDetector = new KataegisQueue("REV", KataegisEnrichment::isReverseCandidate, consumer);
-        forwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, reverseDetector);
+        forwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, reverseDetector::accept);
     }
 
     @Override

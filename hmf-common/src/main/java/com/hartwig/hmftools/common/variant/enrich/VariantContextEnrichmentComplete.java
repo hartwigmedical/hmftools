@@ -4,9 +4,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.HighConfidenceEnrichment;
-import com.hartwig.hmftools.common.variant.RefContextEnrichment;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +42,7 @@ public class VariantContextEnrichmentComplete implements VariantContextEnrichmen
     }
 
     @Override
-    public void accept(final VariantContext context) {
+    public void accept(@NotNull final VariantContext context) {
         refContextEnrichment.accept(context);
     }
 }
