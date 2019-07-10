@@ -25,11 +25,11 @@ public class KataegisEnrichment implements VariantContextEnrichment {
 
     public KataegisEnrichment(final Consumer<VariantContext> consumer) {
 
-        forwardPredicate = x -> true;
-        reversePredicate = x -> true;
+        forwardPredicate = x -> false;
+        reversePredicate = x -> false;
 
-        reverseDetector = new KataegisQueue(KataegisStatus.FWD, x -> true, consumer);
-        forwardDetector = new KataegisQueue(KataegisStatus.FWD, x -> true, reverseDetector);
+        reverseDetector = new KataegisQueue(KataegisStatus.FWD, reversePredicate, consumer);
+        forwardDetector = new KataegisQueue(KataegisStatus.FWD, forwardPredicate, reverseDetector);
     }
 
     @Override

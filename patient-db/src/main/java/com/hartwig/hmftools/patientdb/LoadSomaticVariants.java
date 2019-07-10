@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentComplete;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -80,15 +81,17 @@ public class LoadSomaticVariants {
             compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
 
-        LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
-        final List<SomaticVariant> variants =
-                SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
-
         LOGGER.info("Reading high confidence bed file: {}", highConfidenceBed);
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
         LOGGER.info("Loading indexed fasta reference file: {}", fastaFileLocation);
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+
+        LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
+        final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(filter,
+                compoundEnrichment,
+                VariantContextEnrichmentComplete.factory(indexedFastaSequenceFile, highConfidenceRegions))
+                .fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Querying purple database");
         final List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
@@ -101,7 +104,6 @@ public class LoadSomaticVariants {
         final PurityAdjuster purityAdjuster = purityContext == null
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
-
 
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
 

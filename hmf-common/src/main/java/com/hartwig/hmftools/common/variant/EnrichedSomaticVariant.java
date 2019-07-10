@@ -9,18 +9,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class EnrichedSomaticVariant implements PurityAdjustedSomaticVariant {
 
     @NotNull
-    public abstract String trinucleotideContext();
-
-    public abstract boolean highConfidenceRegion();
-
-    @NotNull
-    public abstract String microhomology();
-
-    @NotNull
-    public abstract String repeatSequence();
-
-    public abstract int repeatCount();
-
-    @NotNull
     public abstract Clonality clonality();
 }

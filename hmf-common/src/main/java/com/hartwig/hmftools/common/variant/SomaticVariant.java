@@ -109,4 +109,16 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     GermlineStatus germlineStatus();
 
+    @NotNull
+    String trinucleotideContext();
+
+    @NotNull
+    String microhomology();
+
+    @NotNull
+    String repeatSequence();
+
+    int repeatCount();
+
+    boolean highConfidenceRegion();
 }

@@ -14,7 +14,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
@@ -25,7 +24,7 @@ public class RefContextEnrichment implements VariantContextEnrichment {
 
     private static final Logger LOGGER = LogManager.getLogger(RefContextEnrichment.class);
 
-    public static final String TRI_FLAG = "TRI";
+    public static final String TRINUCLEOTIDE_FLAG = "TRI";
     public static final String REPEAT_SEQUENCE_FLAG = "REPS";
     public static final String REPEAT_COUNT_FLAG = "REPC";
     public static final String MICROHOMOLOGY_FLAG = "MH";
@@ -47,7 +46,7 @@ public class RefContextEnrichment implements VariantContextEnrichment {
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
         final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(TRI_FLAG, 1, VCFHeaderLineType.String, TRI_FLAG_DESCRIPTION));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRI_FLAG_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG,
@@ -80,19 +79,8 @@ public class RefContextEnrichment implements VariantContextEnrichment {
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
         if (!sequence.isEmpty()) {
-            final String tri = sequence.substring(Math.max(0, relativePosition - 1), Math.min(sequence.length(), relativePosition + 1));
-            builder.attribute(TRI_FLAG, tri);
-        }
-    }
-
-    private void addTrinucleotideContext(@NotNull final VariantContextBuilder builder, @NotNull final VariantContext variant) {
-        final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.getContig()).getSequenceLength();
-        if (variant.getStart() < chromosomeLength) {
-            final ReferenceSequence sequence =
-                    reference.getSubsequenceAt(variant.getContig(), Math.max(1, variant.getStart() - 1), variant.getStart() + 1);
-            builder.attribute(TRI_FLAG, sequence.getBaseString());
-        } else {
-            LOGGER.warn("Requested ref sequence beyond contig length! variant = " + variant);
+            final String tri = sequence.substring(Math.max(0, relativePosition - 1), Math.min(sequence.length(), relativePosition + 2));
+            builder.attribute(TRINUCLEOTIDE_FLAG, tri);
         }
     }
 
