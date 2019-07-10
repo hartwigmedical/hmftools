@@ -102,6 +102,7 @@ public class ChainFinder
     private boolean mPairSkipped; // keep track of any excluded pair or SV without exiting the chaining routine
 
     private final List<SvChain> mChains;
+    private final List<SvChain> mUniqueChains;
     private int mNextChainId;
 
     // the key is a 'original' unreplicated breakend, the values are the set of remaining replicated breakends
@@ -166,6 +167,7 @@ public class ChainFinder
         mBreakendLastLinkIndexMap = Maps.newHashMap();
         mComplexDupCandidates = Lists.newArrayList();
         mChains = Lists.newArrayList();
+        mUniqueChains = Lists.newArrayList();
         mSkippedPairs = Lists.newArrayList();
         mSvBreakendPossibleLinks = Maps.newHashMap();
         mSvOriginalReplicationMap = Maps.newHashMap();
@@ -185,8 +187,8 @@ public class ChainFinder
         mLinkReason = "";
         mUseAllelePloidies = false;
 
-        mDiagnostics = new ChainDiagnostics(mUniqueSVs, mChains, mUnlinkedReplicatedSVs, mSvReplicationMap, mSvBreakendPossibleLinks,
-                mUnlinkedBreakendMap, mDoubleMinuteSVs, mUniquePairs);
+        mDiagnostics = new ChainDiagnostics(mUniqueSVs, mChains, mUniqueChains, mUnlinkedReplicatedSVs,
+                mSvReplicationMap, mSvBreakendPossibleLinks, mUnlinkedBreakendMap, mDoubleMinuteSVs, mUniquePairs);
 
         mNewMethod =  true;
     }
@@ -209,6 +211,7 @@ public class ChainFinder
         mBreakendLastLinkIndexMap.clear();
         mComplexDupCandidates.clear();
         mChains.clear();
+        mUniqueChains.clear();
         mSkippedPairs.clear();
         mSvBreakendPossibleLinks.clear();
         mSvOriginalReplicationMap.clear();
@@ -321,7 +324,7 @@ public class ChainFinder
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
     public void setUseAllelePloidies(boolean toggle) { mUseAllelePloidies = toggle; }
 
-    public final List<SvChain> getChains() { return mChains; }
+    public final List<SvChain> getUniqueChains() { return mUniqueChains; }
     public double getValidAllelePloidySegmentPerc() { return mClusterPloidyLimits.getValidAllelePloidySegmentPerc(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 
@@ -340,12 +343,46 @@ public class ChainFinder
 
         buildChains(assembledLinksOnly);
 
-        mDiagnostics.chainingComplete(mLinkIndex);
+        removeIdenticalChains();
+
+        mDiagnostics.chainingComplete();
 
         if(!mIsValid)
         {
             LOGGER.warn("cluster({}) chain finding failed", mClusterId);
             return;
+        }
+    }
+
+    private void removeIdenticalChains()
+    {
+        if(!mHasReplication)
+        {
+            mUniqueChains.addAll(mChains);
+            return;
+        }
+
+        for(final SvChain newChain : mChains)
+        {
+            boolean matched = false;
+
+            for(final SvChain chain : mUniqueChains)
+            {
+                if (chain.identicalChain(newChain, true))
+                {
+                    LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({})",
+                            mClusterId, newChain.id(), chain.id());
+
+                    chain.addToReplicationCount();
+                    matched = true;
+                    break;
+                }
+            }
+
+            if(!matched)
+            {
+                mUniqueChains.add(newChain);
+            }
         }
     }
 
@@ -377,29 +414,18 @@ public class ChainFinder
             return;
         }
 
-        // any identical chains will have their replicated SVs entirely removed
-        for(final SvChain chain : cluster.getChains())
+        // any identical chains (including precise subsets of longer chains) will have their replicated SVs entirely removed
+        if(!mUniqueChains.contains(newChain))
         {
-            if(chain.identicalChain(newChain))
+            boolean allReplicatedSVs = newChain.getSvCount(false) == 0;
+
+            // remove these replicated SVs as well as the replicated chain
+            if(allReplicatedSVs)
             {
-                boolean allReplicatedSVs = newChain.getSvCount(false) == 0;
-
-                LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({}) all replicated({})",
-                        mClusterId, newChain.id(), chain.id(), allReplicatedSVs);
-
-                chain.addToReplicationCount();
-
-                // remove these replicated SVs as well as the replicated chain
-                if(allReplicatedSVs)
-                {
-                    for (final SvVarData var : newChain.getSvList())
-                    {
-                        cluster.removeReplicatedSv(var);
-                    }
-                }
-
-                return;
+                newChain.getSvList().stream().forEach(x -> cluster.removeReplicatedSv(x));
             }
+
+            return;
         }
 
         cluster.addChain(newChain, false);

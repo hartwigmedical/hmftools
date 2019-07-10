@@ -118,7 +118,7 @@ public class DoubleMinuteFinder
         if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DUP)
             return;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         double clusterMaxPloidy = cluster.getSVs().stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
 
@@ -259,10 +259,10 @@ public class DoubleMinuteFinder
         mChainFinder.initialise(cluster, dmSVList);
         mChainFinder.formChains(false);
 
-        if(mChainFinder.getChains().size() != 1)
+        if(mChainFinder.getUniqueChains().size() != 1)
             return null;
 
-        SvChain chain = mChainFinder.getChains().get(0);
+        SvChain chain = mChainFinder.getUniqueChains().get(0);
 
         // check whether the chain could form a loop
         SvBreakend chainStart = chain.getOpenBreakend(true);

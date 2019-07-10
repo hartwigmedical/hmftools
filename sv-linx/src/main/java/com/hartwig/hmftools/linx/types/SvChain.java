@@ -467,25 +467,63 @@ public class SvChain {
         return linkData;
     }
 
-    public boolean identicalChain(final SvChain other)
+    public boolean identicalChain(final SvChain other, boolean allowSubsets)
     {
         // same SVs forming same links in the same order
-        if(mLinkedPairs.size() != other.getLinkCount())
-            return false;
+        final List<SvLinkedPair> otherLinks = other.getLinkedPairs();
 
-        for(int i = 0; i < mLinkedPairs.size(); ++i)
+        if(mLinkedPairs.size() == otherLinks.size())
         {
-            final SvLinkedPair pair = mLinkedPairs.get(i);
-            final SvLinkedPair otherPair = other.getLinkedPairs().get(i);
+            for(int i = 0; i < mLinkedPairs.size(); ++i)
+            {
+                final SvLinkedPair pair = mLinkedPairs.get(i);
+                final SvLinkedPair otherPair = otherLinks.get(i);
 
-            if(!pair.first().equals(otherPair.first(), true))
-                return false;
+                if(!pair.first().equals(otherPair.first(), true))
+                    return false;
 
-            if(!pair.second().equals(otherPair.second(), true))
-                return false;
+                if(!pair.second().equals(otherPair.second(), true))
+                    return false;
+            }
+
+            return true;
         }
+        else
+        {
+            if(!allowSubsets)
+                return false;
 
-        return true;
+            final List<SvLinkedPair> longerLinks = mLinkedPairs.size() > otherLinks.size() ? mLinkedPairs : otherLinks;
+            final List<SvLinkedPair> shorterLinks = mLinkedPairs.size() < otherLinks.size() ? mLinkedPairs : otherLinks;
+
+            int j = 0;
+            boolean matchingLinkFound = false;
+            for(int i = 0; i < longerLinks.size(); ++i)
+            {
+                final SvLinkedPair pair = longerLinks.get(i);
+
+                if(j >= shorterLinks.size())
+                    break;
+
+                final SvLinkedPair otherPair = other.getLinkedPairs().get(j);
+
+                boolean linksMatch = pair.first().equals(otherPair.first(), true)
+                    && pair.second().equals(otherPair.second(), true);
+
+                if(linksMatch)
+                {
+                    matchingLinkFound = true;
+                    ++j;
+                }
+                else if(matchingLinkFound)
+                {
+                    // links matched up to this point but not differ
+                    return false;
+                }
+            }
+
+            return matchingLinkFound;
+        }
     }
 
     private static String CHAIN_SEQ_DELIM = " - ";
