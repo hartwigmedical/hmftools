@@ -240,7 +240,7 @@ class PurpleStructuralVariantSupplier {
     @NotNull
     @VisibleForTesting
     static VCFHeader generateOutputHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template) {
-        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
+        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getGenotypeSamples());
         outputVCFHeader.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
 
         outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("GT"));
