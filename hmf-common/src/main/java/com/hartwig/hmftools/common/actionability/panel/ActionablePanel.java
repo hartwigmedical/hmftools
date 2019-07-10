@@ -23,9 +23,6 @@ public abstract class ActionablePanel implements Comparable<ActionablePanel> {
     public abstract boolean drup();
 
     @NotNull
-    public abstract String drupCategory();
-
-    @NotNull
     public abstract String responsive();
 
     @NotNull

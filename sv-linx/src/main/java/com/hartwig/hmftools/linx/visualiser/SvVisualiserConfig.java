@@ -148,10 +148,12 @@ public interface SvVisualiserConfig
         final List<Link> links = Links.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Exon> exons = Exons.readExons(exonPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<Segment> segments = Segments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
-        final List<CopyNumberAlteration> cna =
-                CopyNumberAlterations.read(cnaPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
-        final List<ProteinDomain> proteinDomains =
-                ProteinDomains.readProteinDomains(proteinDomainPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<CopyNumberAlteration> cna = CopyNumberAlterations.read(cnaPath)
+                .stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
+        final List<ProteinDomain> proteinDomains = ProteinDomains.readProteinDomainsInFusionGenes(proteinDomainPath, fusions)
+                .stream()
+                .filter(x -> x.sampleId().equals(sample))
+                .collect(toList());
 
         if (segments.isEmpty() && links.isEmpty())
         {

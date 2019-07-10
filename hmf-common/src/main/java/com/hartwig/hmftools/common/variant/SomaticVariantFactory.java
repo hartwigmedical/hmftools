@@ -18,9 +18,12 @@ import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
+import com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -45,7 +48,7 @@ public class SomaticVariantFactory {
         final VariantContextFilter filter = new AlwaysPassFilter();
         final SomaticEnrichment enrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, enrichment);
+        return new SomaticVariantFactory(filter, enrichment, VariantContextEnrichmentFactory.none());
     }
 
     @NotNull
@@ -59,13 +62,13 @@ public class SomaticVariantFactory {
         filter.addAll(Arrays.asList(filters));
         final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, noEnrichment);
+        return new SomaticVariantFactory(filter, noEnrichment, VariantContextEnrichmentFactory.none());
     }
 
     @NotNull
     public static SomaticVariantFactory filteredInstanceWithEnrichment(@NotNull VariantContextFilter filter,
-            @NotNull SomaticEnrichment somaticEnrichment) {
-        return new SomaticVariantFactory(filter, somaticEnrichment);
+            @NotNull SomaticEnrichment somaticEnrichment, @NotNull VariantContextEnrichmentFactory factory) {
+        return new SomaticVariantFactory(filter, somaticEnrichment, factory);
     }
 
     private static final String DBSNP_IDENTIFIER = "rs";
@@ -90,8 +93,11 @@ public class SomaticVariantFactory {
     private final SomaticEnrichment enrichment;
     @NotNull
     private final CanonicalAnnotation canonicalAnnotationFactory;
+    @NotNull
+    private final VariantContextEnrichmentFactory variantContextEnrichmentFactory;
 
-    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment) {
+    private SomaticVariantFactory(@NotNull final VariantContextFilter filter, @NotNull final SomaticEnrichment enrichment,
+            @NotNull final VariantContextEnrichmentFactory variantContextEnrichmentFactory) {
         this.filter = new CompoundFilter(true);
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new NTFilter());
@@ -99,11 +105,14 @@ public class SomaticVariantFactory {
 
         this.enrichment = enrichment;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
+        this.variantContextEnrichmentFactory = variantContextEnrichmentFactory;
+
     }
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
         final List<VariantContext> variants = Lists.newArrayList();
+        final VariantContextEnrichment enrichment = variantContextEnrichmentFactory.create(variants::add);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
@@ -118,9 +127,11 @@ public class SomaticVariantFactory {
             for (VariantContext variant : reader.iterator()) {
                 // Note we need pon filtered indels for near indel pon logic to work correctly
                 if (filter.test(variant) || NearPonFilteredIndel.isPonFilteredIndel(variant)) {
-                    variants.add(variant);
+                    enrichment.accept(variant);
                 }
             }
+
+            enrichment.flush();
         }
 
         return process(sample, variants);
@@ -186,7 +197,13 @@ public class SomaticVariantFactory {
                 .ploidy(context.getAttributeAsDouble(PURPLE_PLOIDY_INFO, 0))
                 .recovered(context.hasAttribute(RECOVERED_FLAG))
                 .biallelic(context.hasAttribute(PURPLE_BIALLELIC_FLAG))
-                .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0));
+                .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
+                .kataegis(context.getAttributeAsString(KataegisEnrichment.KATAEGIS_FLAG,Strings.EMPTY))
+                .trinucleotideContext(context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY))
+                .microhomology(context.getAttributeAsString(RefContextEnrichment.MICROHOMOLOGY_FLAG, Strings.EMPTY))
+                .repeatCount(context.getAttributeAsInt(RefContextEnrichment.REPEAT_COUNT_FLAG, 0))
+                .repeatSequence(context.getAttributeAsString(RefContextEnrichment.REPEAT_SEQUENCE_FLAG, Strings.EMPTY))
+                .highConfidenceRegion(context.hasAttribute(HighConfidenceEnrichment.HIGH_CONFIDENCE_FLAG));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, canonicalAnnotationFactory);

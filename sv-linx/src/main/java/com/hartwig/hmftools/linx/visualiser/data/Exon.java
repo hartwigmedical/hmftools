@@ -15,11 +15,16 @@ public abstract class Exon implements GenomeRegion
     {
     }
 
+    @NotNull
     public abstract String sampleId();
 
     public abstract int clusterId();
 
+    @NotNull
     public abstract String gene();
+
+    @NotNull
+    public abstract String transcript();
 
     public abstract int rank();
 

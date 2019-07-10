@@ -165,8 +165,8 @@ public class SageHotspotAnnotation {
     }
 
     @NotNull
-    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader inputVCF, @NotNull final VCFHeader hotspotVCF) {
-        final VCFHeader outputVCFHeader = new VCFHeader(inputVCF.getMetaDataInInputOrder(), inputVCF.getSampleNamesInOrder());
+    private static VCFHeader generateOutputHeader(@NotNull final VCFHeader template, @NotNull final VCFHeader hotspotVCF) {
+        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getGenotypeSamples());
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT_FLAG, 0, VCFHeaderLineType.Flag, HOTSPOT_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(NEAR_HOTSPOT_FLAG, 0, VCFHeaderLineType.Flag, NEAR_HOTSPOT_DESCRIPTION));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, RECOVERED_FLAG_DESCRIPTION));

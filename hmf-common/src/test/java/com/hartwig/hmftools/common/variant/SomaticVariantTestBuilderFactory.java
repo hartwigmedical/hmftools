@@ -38,17 +38,17 @@ public final class SomaticVariantTestBuilderFactory {
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
                 .biallelic(false)
-                .mappability(0D);
-    }
-
-    @NotNull
-    public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
-        return ImmutableEnrichedSomaticVariant.builder().from(create().build())
+                .kataegis(Strings.EMPTY)
                 .trinucleotideContext(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
-                .clonality(Clonality.UNKNOWN);
+                .mappability(0D);
+    }
+
+    @NotNull
+    public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
+        return ImmutableEnrichedSomaticVariant.builder().from(create().build()).clonality(Clonality.UNKNOWN);
     }
 }

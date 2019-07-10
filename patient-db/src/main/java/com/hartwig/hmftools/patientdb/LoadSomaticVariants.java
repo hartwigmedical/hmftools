@@ -20,11 +20,11 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentComplete;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -80,15 +80,17 @@ public class LoadSomaticVariants {
             compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
 
-        LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
-        final List<SomaticVariant> variants =
-                SomaticVariantFactory.filteredInstanceWithEnrichment(filter, compoundEnrichment).fromVCFFile(sample, vcfFileLocation);
-
         LOGGER.info("Reading high confidence bed file: {}", highConfidenceBed);
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
         LOGGER.info("Loading indexed fasta reference file: {}", fastaFileLocation);
         IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
+
+        LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
+        final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(filter,
+                compoundEnrichment,
+                VariantContextEnrichmentComplete.factory(indexedFastaSequenceFile, highConfidenceRegions))
+                .fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Querying purple database");
         final List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
@@ -102,14 +104,11 @@ public class LoadSomaticVariants {
                 ? new PurityAdjuster(Gender.FEMALE, 1, 1)
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
-
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
 
-        LOGGER.info("Enriching variants");
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
-                indexedFastaSequenceFile,
-                ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy));
-        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
+        LOGGER.info("Determine clonality");
+        final ClonalityFactory clonality = ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy);
+        final List<EnrichedSomaticVariant> enrichedVariants = variants.stream().map(clonality::enrich).collect(Collectors.toList());
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeSomaticVariants(sample, enrichedVariants);

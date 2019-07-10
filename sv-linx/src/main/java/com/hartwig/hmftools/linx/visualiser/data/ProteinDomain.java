@@ -15,9 +15,14 @@ public abstract class ProteinDomain implements GenomeRegion
     {
     }
 
+    @NotNull
     public abstract String sampleId();
 
     public abstract int clusterId();
 
+    @NotNull
     public abstract String name();
+
+    @NotNull
+    public abstract String transcript();
 }

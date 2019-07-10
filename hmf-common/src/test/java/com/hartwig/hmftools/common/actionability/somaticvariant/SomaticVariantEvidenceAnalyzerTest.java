@@ -80,6 +80,12 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
                 .biallelic(false)
+                .kataegis(Strings.EMPTY)
+                .trinucleotideContext(Strings.EMPTY)
+                .highConfidenceRegion(false)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0)
                 .build();
 
         assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());

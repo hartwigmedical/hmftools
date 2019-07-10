@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -47,15 +46,17 @@ public class CircosDataWriter
     private final String filePrefix;
     private boolean debug;
     private final CircosConfigWriter configWriter;
+    private final ProteinDomainColors proteinDomainColors;
 
     public CircosDataWriter(final boolean debug, final ColorPicker colorPicker, @NotNull final String sample,
             @NotNull final String outputDir,
-            final CircosConfigWriter configWriter)
+            @NotNull final CircosConfigWriter configWriter, @NotNull final ProteinDomainColors proteinDomainColors)
     {
         this.debug = debug;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
         this.filePrefix = outputDir + File.separator + sample;
+        this.proteinDomainColors = proteinDomainColors;
     }
 
     public void write(@NotNull final CircosData data) throws IOException
@@ -154,13 +155,10 @@ public class CircosDataWriter
     @NotNull
     private List<String> proteinDomain(@NotNull final List<ProteinDomain> proteinDomains)
     {
-        final ProteinDomainColors domainColors =
-                new ProteinDomainColors(proteinDomains.stream().map(ProteinDomain::name).collect(Collectors.toSet()));
-
         final List<String> result = Lists.newArrayList();
         for (final ProteinDomain proteinDomain : proteinDomains)
         {
-            final String color = domainColors.rgb(proteinDomain.name());
+            final String color = proteinDomainColors.rgb(proteinDomain.name());
 
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(proteinDomain.chromosome()))
                     .add(String.valueOf(proteinDomain.start()))

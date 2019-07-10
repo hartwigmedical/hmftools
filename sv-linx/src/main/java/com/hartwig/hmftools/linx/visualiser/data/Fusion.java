@@ -19,7 +19,11 @@ public abstract class Fusion
     public abstract String geneUp();
 
     @NotNull
+
     public abstract String chromosomeUp();
+
+    @NotNull
+    public abstract String transcriptUp();
 
     public abstract long positionUp();
 
@@ -37,6 +41,9 @@ public abstract class Fusion
 
     @NotNull
     public abstract String chromosomeDown();
+
+    @NotNull
+    public abstract String transcriptDown();
 
     public abstract long positionDown();
 

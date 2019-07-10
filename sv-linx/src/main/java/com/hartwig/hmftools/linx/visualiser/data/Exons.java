@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -20,19 +21,26 @@ public class Exons
     private static final Comparator<Exon> RANKED = Comparator.comparingInt(Exon::rank);
 
     @NotNull
-    public static List<Exon> sortedUpstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    public static List<Exon> geneExons(@NotNull final List<Gene> gene, @NotNull final List<Exon> exons)
+    {
+        final Set<String> transcripts = gene.stream().map(Gene::transcript).collect(Collectors.toSet());
+        return exons.stream().filter(x -> transcripts.contains(x.transcript())).collect(Collectors.toList());
+    }
+
+    @NotNull
+    static List<Exon> sortedUpstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
         return exons.stream()
-                .filter(x -> x.gene().equals(fusion.geneUp()))
+                .filter(x -> x.gene().equals(fusion.geneUp()) & x.transcript().equals(fusion.transcriptUp()))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public static List<Exon> sortedDownstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    static List<Exon> sortedDownstreamExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
         return exons.stream()
-                .filter(x -> x.gene().equals(fusion.geneDown()))
+                .filter(x -> x.gene().equals(fusion.geneDown()) & x.transcript().equals(fusion.transcriptDown()))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
     }
@@ -72,6 +80,7 @@ public class Exons
                 .rank(file.ExonRank)
                 .start(file.ExonStart)
                 .end(file.ExonEnd)
+                .transcript(file.Transcript)
                 .build();
 
     }

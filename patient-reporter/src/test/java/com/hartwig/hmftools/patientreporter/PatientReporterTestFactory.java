@@ -62,6 +62,7 @@ public final class PatientReporterTestFactory {
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
                 .clonality(Clonality.UNKNOWN)
+                .kataegis(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)

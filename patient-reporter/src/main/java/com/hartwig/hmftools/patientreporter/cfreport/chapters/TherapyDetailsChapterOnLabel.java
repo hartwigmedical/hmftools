@@ -23,7 +23,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TherapyDetailsChapter implements ReportChapter {
+public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
     private final static float COL_WIDTH_DRIVERS = 110;
     private final static float COL_WIDTH_MATCH = 60;
@@ -39,14 +39,14 @@ public class TherapyDetailsChapter implements ReportChapter {
     @NotNull
     private final AnalysedPatientReport patientReport;
 
-    public TherapyDetailsChapter(@NotNull final AnalysedPatientReport patientReport) {
+    public TherapyDetailsChapterOnLabel(@NotNull final AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
     }
 
     @NotNull
     @Override
     public String name() {
-        return "Therapy details";
+        return "Therapy details (Tumor type specific)";
     }
 
     @Override
@@ -58,10 +58,6 @@ public class TherapyDetailsChapter implements ReportChapter {
                 .setBorder(Border.NO_BORDER));
 
         chapterTable.addCell(new Cell().add(createClinicalTrialsTable(patientReport.clinicalTrials()))
-                .setPadding(0)
-                .setBorder(Border.NO_BORDER));
-
-        chapterTable.addCell(new Cell().add(createEvidenceTable("Evidence on other tumor types", patientReport.offLabelEvidence()))
                 .setPadding(0)
                 .setBorder(Border.NO_BORDER));
 
@@ -102,7 +98,7 @@ public class TherapyDetailsChapter implements ReportChapter {
 
     @NotNull
     private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
-        final String title = "Clinical trials (NL)";
+        final String title = "Tumor type specific clinical trials (NL)";
 
         if (trials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);

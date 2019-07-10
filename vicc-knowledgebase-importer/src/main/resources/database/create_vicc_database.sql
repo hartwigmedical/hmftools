@@ -1,8 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO: Remove per 1st of july.
-DROP TABLE IF EXISTS features;
-
 DROP TABLE IF EXISTS viccEntry;
 DROP TABLE IF EXISTS gene;
 DROP TABLE IF EXISTS geneIdentifier;
@@ -223,22 +220,22 @@ CREATE TABLE environmentalContext
 
 CREATE TABLE approvedCountry
 (   id int NOT NULL AUTO_INCREMENT,
-    environmentalContextsId int NOT NULL,
+    environmentContextId int NOT NULL,
     approvedCountryName varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentalContextsId) REFERENCES environmentalContext(id)
+    FOREIGN KEY (environmentContextId) REFERENCES environmentalContext(id)
 );
 
 CREATE TABLE taxonomy
 (   id int NOT NULL AUTO_INCREMENT,
-    environmentalContextsId int NOT NULL,
+    environmentContextId int NOT NULL,
     kingdom varchar(225) NOT NULL,
     directParent varchar(225) NOT NULL,
     class varchar(225) NOT nULL,
     subClass varchar(225),
     superClass varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentalContextsId) REFERENCES environmentalContext(id)
+    FOREIGN KEY (environmentContextId) REFERENCES environmentalContext(id)
 );
 
 CREATE TABLE sage
@@ -271,10 +268,10 @@ CREATE TABLE brca
     BX_ID_ENIGMA varchar(255) NOT NULL,
     Co_occurrence_LR_exLOVD varchar(255) NOT NULL,
     Homozygous_count_EAS_ExAC varchar(255) NOT NULL,
-    Submitter_ClinVar varchar(255) NOT NULL,
+    Submitter_ClinVar varchar(1500) NOT NULL,
     Allele_frequency_EAS_ExAC varchar(255) NOT NULL,
     Hg37_End varchar(255) NOT NULL,
-    Submitters_LOVD varchar(255) NOT NULL,
+    Submitters_LOVD varchar(1000) NOT NULL,
     Clinical_classification_BIC varchar(255) NOT NULL,
     Homozygous_count_NFE_ExAC varchar(255) NOT NULL,
     Allele_count_SAS_ExAC varchar(255) NOT NULL,
@@ -292,7 +289,7 @@ CREATE TABLE brca
     HGVS_cDNA_LOVD varchar(255) NOT NULL,
     Homozygous_count_FIN_ExAC varchar(255) NOT NULL,
     EAS_Allele_frequency_1000_Genomes varchar(255) NOT NULL,
-    Ethnicity_BIC varchar(255) NOT NULL,
+    Ethnicity_BIC varchar(2000) NOT NULL,
     Individuals_LOVD varchar(255) NOT NULL,
     Variant_in_ExAC varchar(255) NOT NULL,
     URL_ENIGMA varchar(255) NOT NULL,
@@ -308,9 +305,9 @@ CREATE TABLE brca
     Allele_number_AFR_ExAC varchar(255) NOT NULL,
     Allele_count_AFR_ExAC varchar(255) NOT NULL,
     BX_ID_LOVD varchar(255) NOT NULL,
-    Synonyms varchar(255) NOT NULL,
+    Synonyms varchar(1000) NOT NULL,
     Gene_Symbol varchar(255) NOT NULL,
-    Comment_on_clinical_significance_ENIGMA varchar(255) NOT NULL,
+    Comment_on_clinical_significance_ENIGMA varchar(500) NOT NULL,
     Missense_analysis_prior_probability_exLOVD varchar(255) NOT NULL,
     Allele_number_FIN_ExAC varchar(255) NOT NULL,
     Posterior_probability_exLOVD varchar(255) NOT NULL,
@@ -325,18 +322,18 @@ CREATE TABLE brca
     Combined_prior_probablility_exLOVD varchar(255) NOT NULL,
     BX_ID_ClinVar varchar(255) NOT NULL,
     IARC_class_exLOVD varchar(255) NOT NULL,
-    BX_ID_BIC varchar(255) NOT NULL,
+    BX_ID_BIC varchar(12500) NOT NULL,
     Sift_Prediction varchar(255) NOT NULL,
     Allele_number_NFE_ExAC varchar(255) NOT NULL,
     Allele_origin_ENIGMA varchar(255) NOT NULL,
     Allele_number_OTH_ExAC varchar(255) NOT NULL,
     Hg36_End varchar(255) NOT NULL,
     Allele_frequency_SAS_ExAC varchar(255) NOT NULL,
-    Date_Last_Updated_ClinVar varchar(255) NOT NULL,
+    Date_Last_Updated_ClinVar varchar(500) NOT NULL,
     Allele_number_EAS_ExAC varchar(255) NOT NULL,
     Allele_frequency_OTH_ExAC varchar(255) NOT NULL,
-    Source_URL varchar(255) NOT NULL,
-    SCV_ClinVar varchar(255) NOT NULL,
+    Source_URL varchar(2000) NOT NULL,
+    SCV_ClinVar varchar(500) NOT NULL,
     Pathogenicity_expert varchar(255) NOT NULL,
     Allele_frequency_1000_Genomes varchar(255) NOT NULL,
     Functional_analysis_result_LOVD varchar(255) NOT NULL,
@@ -348,7 +345,7 @@ CREATE TABLE brca
     Allele_count_AMR_ExAC varchar(255) NOT NULL,
     Variant_in_ENIGMA varchar(255) NOT NULL,
     BX_ID_ESP varchar(255) NOT NULL,
-    Patient_nationality_BIC varchar(255) NOT NULL,
+    Patient_nationality_BIC varchar(500) NOT NULL,
     BX_ID_1000_Genomes varchar(255) NOT NULL,
     Genomic_Coordinate_hg37 varchar(255) NOT NULL,
     Genomic_Coordinate_hg36 varchar(255) NOT NULL,
@@ -387,7 +384,7 @@ CREATE TABLE brca
     Sift_Score varchar(255) NOT NULL,
     Genomic_Coordinate_hg38 varchar(255) NOT NULL,
     Alt varchar(255) NOT NULL,
-    Literature_citation_BIC varchar(255) NOT NULL,
+    Literature_citation_BIC varchar(1000) NOT NULL,
     Variant_haplotype_LOVD varchar(255) NOT NULL,
     Allele_frequency_NFE_ExAC varchar(255) NOT NULL,
     Hg38_Start varchar(255) NOT NULL,

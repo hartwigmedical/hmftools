@@ -460,7 +460,7 @@ public class ViccDAO {
                     TAXONOMY.CLASS,
                     TAXONOMY.SUBCLASS,
                     TAXONOMY.SUPERCLASS,
-                    TAXONOMY.ENVIRONMENTALCONTEXTSID)
+                    TAXONOMY.ENVIRONMENTCONTEXTID)
                     .values(taxonomy.kingdom(),
                             taxonomy.directParent(),
                             taxonomy.classs(),
@@ -473,7 +473,7 @@ public class ViccDAO {
 
     private void writeApprovedCountries(int environmentalContextsId, @NotNull List<String> approvedCountries) {
         for (String approvesCountry : approvedCountries) {
-            context.insertInto(APPROVEDCOUNTRY, APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME, APPROVEDCOUNTRY.ENVIRONMENTALCONTEXTSID)
+            context.insertInto(APPROVEDCOUNTRY, APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME, APPROVEDCOUNTRY.ENVIRONMENTCONTEXTID)
                     .values(approvesCountry, environmentalContextsId)
                     .execute();
         }

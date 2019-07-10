@@ -76,6 +76,8 @@ public class Fusions
                 .regionTypeDown(values[map.get("RegionTypeDown")])
                 .exonDown(Integer.valueOf(values[map.get("ExonDown")]))
                 .exonsSkippedDown(Integer.valueOf(values[map.get("ExonsSkippedDown")]))
+                .transcriptUp(values[map.get("TranscriptUp")])
+                .transcriptDown(values[map.get("TranscriptDown")])
                 .build();
     }
 }

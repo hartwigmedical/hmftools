@@ -49,6 +49,11 @@ public class ClonalityFactory {
         }
 
         return Clonality.CLONAL;
-
     }
+
+    @NotNull
+    public EnrichedSomaticVariant enrich(@NotNull final SomaticVariant variant) {
+        return ImmutableEnrichedSomaticVariant.builder().from(variant).clonality(determineClonalityForVariant(variant)).build();
+    }
+
 }

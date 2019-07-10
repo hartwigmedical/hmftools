@@ -285,13 +285,14 @@ CREATE TABLE somaticVariant
     copyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
-    clonality varchar(455) NOT NULL,
+    clonality varchar(20) NOT NULL,
     biallelic BOOLEAN NOT NULL,
-    hotspot varchar(455) NOT NULL,
+    hotspot varchar(20) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
     germlineStatus varchar(255) NOT NULL,
     minorAllelePloidy DOUBLE PRECISION NOT NULL,
     recovered BOOLEAN NOT NULL,
+    kataegis varchar(20) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),
@@ -428,7 +429,7 @@ CREATE TABLE geneCopyNumber
     minRegionMethod varchar(255) NOT NULL,
     minMinorAllelePloidy DOUBLE PRECISION not null,
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, gene),
     INDEX(gene)
 );
 
@@ -716,7 +717,7 @@ CREATE TABLE driverCatalog
     inframe int NOT NULL,
     biallelic BOOLEAN NOT NULL,
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, gene),
     INDEX(gene)
 );
 

@@ -81,6 +81,7 @@ class SomaticVariantDAO {
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
+                    .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                     .build());
         }
         return variants;
@@ -134,6 +135,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.GERMLINESTATUS,
                     SOMATICVARIANT.MINORALLELEPLOIDY,
                     SOMATICVARIANT.RECOVERED,
+                    SOMATICVARIANT.KATAEGIS,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
@@ -177,6 +179,7 @@ class SomaticVariantDAO {
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 variant.recovered(),
+                variant.kataegis().toString(),
                 timestamp);
     }
 
@@ -186,10 +189,8 @@ class SomaticVariantDAO {
 
     @NotNull
     public final List<String> getSamplesList() {
-        final Result<Record1<String>> result = context.select(SOMATICVARIANT.SAMPLEID)
-                .from(SOMATICVARIANT)
-                .groupBy(SOMATICVARIANT.SAMPLEID)
-                .fetch();
+        final Result<Record1<String>> result =
+                context.select(SOMATICVARIANT.SAMPLEID).from(SOMATICVARIANT).groupBy(SOMATICVARIANT.SAMPLEID).fetch();
 
         List<String> samplesList = Lists.newArrayList();
 
