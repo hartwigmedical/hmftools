@@ -81,7 +81,7 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable {
 
     @NotNull
     private VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
-        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
+        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getGenotypeSamples());
         outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("AD"));
         return outputVCFHeader;
     }

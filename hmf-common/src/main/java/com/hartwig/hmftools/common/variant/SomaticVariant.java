@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
+import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
@@ -121,4 +122,7 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     int repeatCount();
 
     boolean highConfidenceRegion();
+
+    @NotNull
+    KataegisStatus kataegis();
 }

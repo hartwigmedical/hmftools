@@ -40,13 +40,12 @@ public class HighConfidenceEnrichment implements VariantContextEnrichment {
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(HIGH_CONFIDENCE_FLAG,
+        template.addMetaDataLine(new VCFInfoHeaderLine(HIGH_CONFIDENCE_FLAG,
                 0,
                 VCFHeaderLineType.Flag,
                 HIGH_CONFIDENCE_FLAG_DESCRIPTION));
 
-        return outputVCFHeader;
+        return template;
     }
 
     @Override

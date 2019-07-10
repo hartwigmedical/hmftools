@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -81,6 +82,7 @@ class SomaticVariantDAO {
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
+                    .kataegis(KataegisStatus.valueOf(record.get(SOMATICVARIANT.KATAEGIS)))
                     .build());
         }
         return variants;
@@ -134,6 +136,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.GERMLINESTATUS,
                     SOMATICVARIANT.MINORALLELEPLOIDY,
                     SOMATICVARIANT.RECOVERED,
+                    SOMATICVARIANT.KATAEGIS,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
@@ -177,6 +180,7 @@ class SomaticVariantDAO {
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 variant.recovered(),
+                variant.kataegis().toString(),
                 timestamp);
     }
 

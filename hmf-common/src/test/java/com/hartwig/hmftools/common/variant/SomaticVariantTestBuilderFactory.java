@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.variant.kataegis.KataegisStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,17 +39,18 @@ public final class SomaticVariantTestBuilderFactory {
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
                 .biallelic(false)
+                .kataegis(KataegisStatus.NONE)
+                .trinucleotideContext(Strings.EMPTY)
+                .highConfidenceRegion(false)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0)
                 .mappability(0D);
     }
 
     @NotNull
     public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
         return ImmutableEnrichedSomaticVariant.builder().from(create().build())
-                .trinucleotideContext(Strings.EMPTY)
-                .highConfidenceRegion(false)
-                .microhomology(Strings.EMPTY)
-                .repeatSequence(Strings.EMPTY)
-                .repeatCount(0)
                 .clonality(Clonality.UNKNOWN);
     }
 }

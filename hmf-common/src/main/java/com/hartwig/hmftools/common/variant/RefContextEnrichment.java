@@ -45,16 +45,15 @@ public class RefContextEnrichment implements VariantContextEnrichment {
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getSampleNamesInOrder());
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRI_FLAG_DESCRIPTION));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESCRIPTION));
-        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG,
+        template.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRI_FLAG_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG,
                 1,
                 VCFHeaderLineType.String,
                 MICROHOMOLOGY_FLAG_DESCRIPTION));
 
-        return outputVCFHeader;
+        return template;
     }
 
     @Override
