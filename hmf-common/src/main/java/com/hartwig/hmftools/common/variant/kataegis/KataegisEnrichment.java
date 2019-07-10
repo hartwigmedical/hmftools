@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.kataegis;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.RefContextEnrichment;
@@ -53,7 +54,7 @@ public class KataegisEnrichment implements VariantContextEnrichment {
         final String triContext = context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
         final boolean triMatch = triContext.startsWith("TC");
 
-        return triMatch && altMatch;
+        return isNotFiltered(context) && triMatch && altMatch;
     }
 
     private static boolean isReverseCandidate(@NotNull final VariantContext context) {
@@ -64,8 +65,13 @@ public class KataegisEnrichment implements VariantContextEnrichment {
         final String triContext = context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
         final boolean triMatch = triContext.endsWith("GA");
 
-        return triMatch && altMatch;
+        return isNotFiltered(context) && triMatch && altMatch;
 
+    }
+
+    private static boolean isNotFiltered(@NotNull final VariantContext context) {
+        final Set<String> filters = context.getFilters();
+        return filters.isEmpty() || (filters.size() == 1 && filters.contains("PASS"));
     }
 
 }
