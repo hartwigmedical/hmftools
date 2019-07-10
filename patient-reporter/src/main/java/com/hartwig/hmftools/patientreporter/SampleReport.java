@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -70,6 +71,29 @@ public abstract class SampleReport {
 
     @NotNull
     public abstract String hospitalPathologySampleId();
+
+    @NotNull
+    @Value.Derived
+    public  String compareDates() {
+        String refDateString = DataUtil.formatDate(refArrivalDate());
+        LocalDate refDate = refArrivalDate();
+        LocalDate sampleDate = tumorArrivalDate();
+
+        String startDate = Strings.EMPTY;
+
+        if (refDate == null) {
+            refDateString = "NA";
+        }
+
+        if (refDateString.equals("NA")) {
+            startDate = DataUtil.formatDate(sampleDate);
+        } else if (sampleDate.isAfter(refDate)){
+            startDate = DataUtil.formatDate(refDate);
+        } else if (sampleDate.isBefore(refDate)){
+            startDate = DataUtil.formatDate(sampleDate);
+        }
+        return startDate;
+    }
 
     @NotNull
     @Value.Derived
