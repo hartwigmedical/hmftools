@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
 import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -107,11 +106,9 @@ public class LoadSomaticVariants {
 
         final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
 
-        LOGGER.info("Enriching variants");
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(highConfidenceRegions,
-                indexedFastaSequenceFile,
-                ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy));
-        final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(variants);
+        LOGGER.info("Determine clonality");
+        final ClonalityFactory clonality = ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy);
+        final List<EnrichedSomaticVariant> enrichedVariants = variants.stream().map(clonality::enrich).collect(Collectors.toList());
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeSomaticVariants(sample, enrichedVariants);

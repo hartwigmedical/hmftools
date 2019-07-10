@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.kataegis;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -41,7 +42,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.NONE.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertFalse(result.get(0).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
@@ -83,7 +84,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals(KataegisStatus.NONE.toString(), result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertFalse(result.get(0).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @NotNull

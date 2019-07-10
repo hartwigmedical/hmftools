@@ -97,6 +97,10 @@ class KataegisQueue implements Consumer<VariantContext> {
 
     @NotNull
     private static VariantContext addStatus(@NotNull final VariantContext context, @NotNull final KataegisStatus status) {
+        if (status == KataegisStatus.NONE) {
+            return context;
+        }
+
         return new VariantContextBuilder(context).attribute(KATAEGIS_FLAG, status.toString()).make();
     }
 }
