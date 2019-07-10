@@ -60,7 +60,7 @@ public class SomaticVCF {
         if (enabled) {
 
             final PurityAdjustedSomaticVariantFactory enricher =
-                    new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers, fittedRegions);
+                    new PurityAdjustedSomaticVariantFactory(commonConfig.tumorSample(), purityAdjuster, copyNumbers, fittedRegions);
 
             final VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false);
             final VCFHeader header = generateOutputHeader(commonConfig.version(), vcfReader.getFileHeader());
@@ -73,7 +73,7 @@ public class SomaticVCF {
             writer.writeHeader(header);
 
             for (VariantContext context : vcfReader) {
-                writer.add(enricher.enrich(commonConfig.tumorSample(), context));
+                writer.add(enricher.enrich(context));
             }
 
             vcfReader.close();
@@ -99,6 +99,8 @@ public class SomaticVCF {
                 0,
                 VCFHeaderLineType.Flag,
                 PURPLE_BIALLELIC_DESC));
+
+
         return outputVCFHeader;
     }
 

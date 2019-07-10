@@ -22,9 +22,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class PurityAdjustedSomaticVariantFactory {
+public class PurityAdjustedSomaticVariantFactory  {
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -32,19 +31,22 @@ public class PurityAdjustedSomaticVariantFactory {
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
     @NotNull
     private final GenomeRegionSelector<FittedRegion> fittedRegionSelector;
+    private final String tumorSample;
 
-    public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        this(purityAdjuster, copyNumbers, Collections.emptyList());
+
+    public PurityAdjustedSomaticVariantFactory(final String tumorSample, @NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+        this(tumorSample, purityAdjuster, copyNumbers, Collections.emptyList());
     }
 
-    public PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+    public PurityAdjustedSomaticVariantFactory(final String tumorSample, @NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions) {
-        this(purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
+        this(tumorSample, purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
     }
 
-    private PurityAdjustedSomaticVariantFactory(@NotNull PurityAdjuster purityAdjuster,
+    private PurityAdjustedSomaticVariantFactory(final String tumorSample, @NotNull PurityAdjuster purityAdjuster,
             @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
             @NotNull final Multimap<Chromosome, FittedRegion> fittedRegions) {
+        this.tumorSample = tumorSample;
         this.purityAdjuster = purityAdjuster;
         this.copyNumberSelector = GenomeRegionSelectorFactory.createImproved(copyNumbers);
         this.fittedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
@@ -70,14 +72,12 @@ public class PurityAdjustedSomaticVariantFactory {
     }
 
     @NotNull
-    public VariantContext enrich(@NotNull final String tumorSample, @NotNull final VariantContext variant) {
+    public VariantContext enrich(@NotNull final VariantContext variant) {
         final Genotype genotype = variant.getGenotype(tumorSample);
         if (genotype != null && genotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
-            final VariantContextBuilder builder = new VariantContextBuilder(variant);
             final GenomePosition position = GenomePositions.create(variant.getContig(), variant.getStart());
             final AllelicDepth depth = SomaticVariantFactory.allelicDepth(genotype);
-            enrich(position, depth, PurityAdjustedSomaticVariantBuilder.fromVariantContextBuilder(builder));
-            return builder.make();
+            enrich(position, depth, PurityAdjustedSomaticVariantBuilder.fromVariantContex(variant));
         }
         return variant;
     }
