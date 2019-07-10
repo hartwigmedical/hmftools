@@ -71,6 +71,8 @@ public final class BachelorFile {
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("pass"))
                 .gene(values[7].trim())
+                .chromosome(values[2].trim())
+                .position(values[3].trim())
                 .hgvsCodingImpact(values[26].trim())
                 .hgvsProteinImpact(values[25].trim())
                 .totalReadCount(totalReadCount)

@@ -59,8 +59,8 @@ public class ActionableOrDriversChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 75, 60, 60, 40, 65, 35, 50, 45, 35 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Variant"),
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 50, 75, 60, 60, 45, 65, 35, 50, 45, 35 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("gDNA"), TableUtil.createHeaderCell("Variant"),
                         TableUtil.createHeaderCell("Impact"),
                         TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
@@ -75,6 +75,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             chart.setHeight(4);
 
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
+            contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(variant.hgvsCodingImpact()));
             contentTable.addCell(TableUtil.createContentCell(variant.hgvsProteinImpact()));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
@@ -98,7 +99,8 @@ public class ActionableOrDriversChapter implements ReportChapter {
                 .setPaddingTop(10)
                 .add(new Paragraph("* Marked gene(s) are included in the DRUP study and indicate potential eligibility in "
                         + "DRUP. Please note that the marking is NOT based on the specific mutation").addStyle(ReportResources.subTextStyle()))
-                .add(new Paragraph("reported for this sample, but only on a gene-level.").setPaddingLeft(5).addStyle(ReportResources.subTextStyle())));
+                .add(new Paragraph("reported for this sample, but only on a gene-level.").setPaddingLeft(5)
+                        .addStyle(ReportResources.subTextStyle())));
 
         if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())

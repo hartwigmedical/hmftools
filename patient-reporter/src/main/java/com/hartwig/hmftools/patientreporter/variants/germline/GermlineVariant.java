@@ -17,6 +17,12 @@ public abstract class GermlineVariant implements AllelicDepth {
     public abstract String gene();
 
     @NotNull
+    public abstract String chromosome();
+
+    @NotNull
+    public abstract String position();
+
+    @NotNull
     public abstract String hgvsCodingImpact();
 
     @NotNull
