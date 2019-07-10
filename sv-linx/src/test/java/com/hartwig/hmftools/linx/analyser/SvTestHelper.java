@@ -92,9 +92,14 @@ public class SvTestHelper
 
     public void preClusteringInit()
     {
+        preClusteringInit(false);
+    }
+
+    public void preClusteringInit(boolean includePloidyCalcs)
+    {
         ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
 
-        addCopyNumberData();
+        addCopyNumberData(includePloidyCalcs);
 
         ClusteringMethods.annotateNearestSvData();
         LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
@@ -208,14 +213,14 @@ public class SvTestHelper
                         .imprecise(false)
                         .qualityScore(0.0)
                         .event("")
-                        .startTumorVariantFragmentCount(0)
-                        .startTumorReferenceFragmentCount(0)
-                        .startNormalVariantFragmentCount(0)
-                        .startNormalReferenceFragmentCount(0)
-                        .endTumorVariantFragmentCount(0)
-                        .endTumorReferenceFragmentCount(0)
-                        .endNormalVariantFragmentCount(0)
-                        .endNormalReferenceFragmentCount(0)
+                        .startTumorVariantFragmentCount(10)
+                        .startTumorReferenceFragmentCount(10)
+                        .startNormalVariantFragmentCount(10)
+                        .startNormalReferenceFragmentCount(10)
+                        .endTumorVariantFragmentCount(10)
+                        .endTumorReferenceFragmentCount(10)
+                        .endNormalVariantFragmentCount(10)
+                        .endNormalReferenceFragmentCount(10)
                         .startIntervalOffsetStart(0)
                         .startIntervalOffsetEnd(0)
                         .endIntervalOffsetStart(0)
@@ -301,7 +306,7 @@ public class SvTestHelper
         return disruptedPloidy >= nonDisruptedAP ? disruptedPloidy / copyNumber : nonDisruptedAP / copyNumber;
     }
 
-    public void addCopyNumberData()
+    public void addCopyNumberData(boolean includePloidyCalcs)
     {
         Analyser.setUseAllelePloidies(true);
 
@@ -334,6 +339,7 @@ public class SvTestHelper
             for (int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
+                final StructuralVariantData svData = breakend.getSV().getSvData();
                 final SvVarData var = breakend.getSV();
                 double ploidy = var.ploidy();
 
@@ -403,6 +409,7 @@ public class SvTestHelper
                 if (i < breakendList.size() - 1)
                 {
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
+                    final StructuralVariantData nextSvData = nextBreakend.getSV().getSvData();
 
                     if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
                     {
@@ -411,6 +418,7 @@ public class SvTestHelper
                                 1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
                         cnDataList.add(cnData);
 
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, nextBreakend.position() - 1,
@@ -427,6 +435,7 @@ public class SvTestHelper
                                 1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
                         cnDataList.add(cnData);
                     }
                 }
@@ -441,6 +450,7 @@ public class SvTestHelper
                                 1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
                         cnDataList.add(cnData);
 
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, chromosomeLength,
@@ -458,6 +468,7 @@ public class SvTestHelper
                                 1, currentActualBaf, 100);
 
                         cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
                         cnDataList.add(cnData);
                     }
                 }
@@ -477,6 +488,9 @@ public class SvTestHelper
                 breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, ploidy);
             }
         }
+
+        if(includePloidyCalcs)
+            CnDataLoader.reaclcAdjustedPloidy(SampleId);
 
         setSvCopyNumberData(
                 AllVariants,

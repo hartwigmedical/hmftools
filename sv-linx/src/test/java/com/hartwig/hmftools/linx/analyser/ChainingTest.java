@@ -438,7 +438,7 @@ public class ChainingTest
         tester.AllVariants.add(var3);
         tester.AllVariants.add(dup);
 
-        tester.preClusteringInit();
+        tester.preClusteringInit(true);
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(1, tester.Analyser.getClusters().size());

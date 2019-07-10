@@ -698,7 +698,7 @@ public class CnDataLoader
     }
 
 
-    private void reaclcAdjustedPloidy(final String sampleId)
+    public void reaclcAdjustedPloidy(final String sampleId)
     {
         mSvPloidyCalcMap.clear();
 
@@ -709,9 +709,9 @@ public class CnDataLoader
 
             final SvCNData cnStartData = cnDataPair[SE_START];
 
-            if (cnStartData == null)
+            if (cnStartData == null || cnStartData.getStructuralVariantData() == null)
             {
-                LOGGER.error("SV({}) missing start copy number data", svId);
+                LOGGER.error("SV({}) missing start copy number data or unlined SV data", svId);
                 continue;
             }
 
@@ -901,7 +901,7 @@ public class CnDataLoader
 
     private static double calcPloidyUncertainty(int tumorReadCount, double adjVaf, double maxCopyNumber, double cnChangeUncertainty)
     {
-        if(cnChangeUncertainty <= 0)
+        if(cnChangeUncertainty <= 0 || tumorReadCount == 0)
             return 0;
 
         double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
