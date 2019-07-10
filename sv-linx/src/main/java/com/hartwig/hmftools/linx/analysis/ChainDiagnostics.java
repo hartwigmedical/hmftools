@@ -243,7 +243,7 @@ public class ChainDiagnostics
 
     public void chainingComplete()
     {
-        mUnlinkedSvCount = (int)mUnlinkedBreakendMap.values().stream().count();
+        mUnlinkedBreakendCount = (int)mUnlinkedBreakendMap.values().stream().count();
 
         List<SvVarData> unlinkedSVs = Lists.newArrayList();
 
@@ -257,7 +257,7 @@ public class ChainDiagnostics
 
         LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
                 mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mUnlinkedReplicatedSVs.size(), unlinkedSVs.size(),
-                mUnlinkedBreakendMap.size(), mUnlinkedSvCount);
+                mUnlinkedBreakendMap.size(), mUnlinkedBreakendCount);
     }
 
     private void writeResults(final String sampleId, int invalidBreakends)
