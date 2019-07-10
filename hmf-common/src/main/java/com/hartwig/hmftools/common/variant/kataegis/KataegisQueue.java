@@ -10,7 +10,6 @@ import java.util.function.Predicate;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 class KataegisQueue implements Consumer<VariantContext> {
 
@@ -30,9 +29,7 @@ class KataegisQueue implements Consumer<VariantContext> {
         this.buffer = new ArrayDeque<>();
     }
 
-    @Override
     public void accept(@NotNull final VariantContext context) {
-
         if (!buffer.isEmpty()) {
             final VariantContext previous = buffer.peekLast();
             if (context.getStart() - previous.getStart() > MAX_ABS_DISTANCE || !previous.getContig().equals(context.getContig())) {
@@ -97,10 +94,10 @@ class KataegisQueue implements Consumer<VariantContext> {
 
     @NotNull
     private static VariantContext addStatus(@NotNull final VariantContext context, @NotNull final KataegisStatus status) {
-        if (status == KataegisStatus.NONE) {
-            return context;
+        if (status != KataegisStatus.NONE) {
+            context.getCommonInfo().putAttribute(KATAEGIS_FLAG, status.toString(), false);
         }
 
-        return new VariantContextBuilder(context).attribute(KATAEGIS_FLAG, status.toString()).make();
+        return context;
     }
 }

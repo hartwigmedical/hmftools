@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -58,14 +57,13 @@ public class RefContextEnrichment implements VariantContextEnrichment {
 
     @Override
     public void accept(final VariantContext context) {
-        final VariantContextBuilder builder = new VariantContextBuilder(context);
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(context);
 
-        addTrinucleotideContext(builder, relativePositionAndRef);
-        addMicrohomology(context, builder, relativePositionAndRef);
-        addRepeatContext(context, builder, relativePositionAndRef);
+        addTrinucleotideContext(context, relativePositionAndRef);
+        addMicrohomology(context, relativePositionAndRef);
+        addRepeatContext(context, relativePositionAndRef);
 
-        consumer.accept(builder.make());
+        consumer.accept(context);
     }
 
     @Override
@@ -73,18 +71,16 @@ public class RefContextEnrichment implements VariantContextEnrichment {
         // None
     }
 
-    private void addTrinucleotideContext(@NotNull final VariantContextBuilder builder,
-            @NotNull final Pair<Integer, String> relativePositionAndRef) {
+    private void addTrinucleotideContext(@NotNull final VariantContext variant, @NotNull final Pair<Integer, String> relativePositionAndRef) {
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
         if (!sequence.isEmpty()) {
             final String tri = sequence.substring(Math.max(0, relativePosition - 1), Math.min(sequence.length(), relativePosition + 2));
-            builder.attribute(TRINUCLEOTIDE_FLAG, tri);
+            variant.getCommonInfo().putAttribute(TRINUCLEOTIDE_FLAG, tri);
         }
     }
 
-    private void addRepeatContext(@NotNull final VariantContext variant, @NotNull final VariantContextBuilder builder,
-            final Pair<Integer, String> relativePositionAndRef) {
+    private void addRepeatContext(@NotNull final VariantContext variant, final Pair<Integer, String> relativePositionAndRef) {
 
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
@@ -92,13 +88,12 @@ public class RefContextEnrichment implements VariantContextEnrichment {
         Optional<RepeatContext> repeatContext = getRepeatContext(variant, relativePosition, sequence);
         if (repeatContext.isPresent()) {
 
-            builder.attribute(REPEAT_SEQUENCE_FLAG, repeatContext.get().sequence());
-            builder.attribute(REPEAT_COUNT_FLAG, repeatContext.get().count());
+            variant.getCommonInfo().putAttribute(REPEAT_SEQUENCE_FLAG, repeatContext.get().sequence());
+            variant.getCommonInfo().putAttribute(REPEAT_COUNT_FLAG, repeatContext.get().count());
         }
     }
 
-    private void addMicrohomology(@NotNull final VariantContext variant, @NotNull final VariantContextBuilder builder,
-            final Pair<Integer, String> relativePositionAndRef) {
+    private void addMicrohomology(@NotNull final VariantContext variant, final Pair<Integer, String> relativePositionAndRef) {
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
         if (variant.isIndel()) {
@@ -106,9 +101,9 @@ public class RefContextEnrichment implements VariantContextEnrichment {
             final String alt = variant.getAlternateAllele(0).getBaseString();
 
             if (ref.length() > alt.length()) {
-                builder.attribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref));
+                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref));
             } else if (ref.length() == 1) {
-                builder.attribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt));
+                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt));
             }
 
         }

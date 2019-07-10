@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -52,10 +51,9 @@ public class HighConfidenceEnrichment implements VariantContextEnrichment {
     public void accept(final VariantContext context) {
         Optional<GenomeRegion> region = highConfidenceSelector.select(GenomePositions.create(context.getContig(), context.getStart()));
         if (region.isPresent()) {
-            consumer.accept(new VariantContextBuilder(context).attribute(HIGH_CONFIDENCE_FLAG, true).make());
-        } else {
-            consumer.accept(context);
+            context.getCommonInfo().putAttribute(HIGH_CONFIDENCE_FLAG, true);
         }
 
+        consumer.accept(context);
     }
 }
