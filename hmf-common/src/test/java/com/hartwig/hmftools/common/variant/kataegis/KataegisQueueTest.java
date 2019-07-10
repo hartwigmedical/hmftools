@@ -20,29 +20,26 @@ public class KataegisQueueTest {
 
     @Test
     public void testExpectedBehaviour() {
-        final VariantContext context1 = create("1", 100, true);
-        final VariantContext context2 = create("1", 102, true);
-        final VariantContext context3 = create("1", 103, true);
-        final VariantContext context4 = create("1", 104, true);
-        final VariantContext context5 = create("1", 105, true);
-        final VariantContext context6 = create("1", 106, true);
 
-        List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
-        assertEquals(6, result.size());
+        final List<VariantContext> input = Lists.newArrayList();
+        for (int i = 0; i < KataegisQueue.MIN_COUNT; i++) {
+            input.add(create("1", 100 + i, true));
+        }
+
+        List<VariantContext> result = kataegis(input);
+        assertEquals(KataegisQueue.MIN_COUNT, result.size());
         assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @Test
     public void testChangeContig() {
-        final VariantContext context1 = create("1", 100, true);
-        final VariantContext context2 = create("1", 102, true);
-        final VariantContext context3 = create("1", 103, true);
-        final VariantContext context4 = create("2", 104, true);
-        final VariantContext context5 = create("2", 105, true);
-        final VariantContext context6 = create("2", 106, true);
+        final List<VariantContext> input = Lists.newArrayList();
+        for (int i = 0; i < KataegisQueue.MIN_COUNT; i++) {
+            input.add(create(i % 2 == 0 ? "1" : "2", 100 + i, true));
+        }
 
-        List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
-        assertEquals(6, result.size());
+        List<VariantContext> result = kataegis(input);
+        assertEquals(KataegisQueue.MIN_COUNT, result.size());
         assertFalse(result.get(0).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
@@ -53,7 +50,7 @@ public class KataegisQueueTest {
         final VariantContext context3 = create("1", 103, true);
         final VariantContext context4 = create("1", 104, true);
         final VariantContext context5 = create("1", 105, true);
-        final VariantContext context6 = create("1", 5100, true);
+        final VariantContext context6 = create("1", 2100, true);
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
@@ -76,16 +73,21 @@ public class KataegisQueueTest {
 
     @Test
     public void testMaxDepthAcceptable() {
-        final VariantContext context1 = create("1", 100, true);
-        final VariantContext context2 = create("1", 102, true);
-        final VariantContext context3 = create("1", 103, true);
-        final VariantContext context4 = create("1", 104, true);
-        final VariantContext context5 = create("1", 105, true);
-        final VariantContext context6 = create("1", 5106, true);
 
-        List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
-        assertEquals(6, result.size());
-        assertFalse(result.get(0).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        final List<VariantContext> input = Lists.newArrayList();
+        int i;
+        for (i = 0; i < KataegisQueue.MIN_COUNT; i++) {
+            input.add(create("1", 100 + i, true));
+        }
+        i--;
+
+        input.add(create("1", 100 + i + KataegisQueue.MAX_ABS_DISTANCE, true));
+        input.add(create("1", 100 + i + 2 * KataegisQueue.MAX_ABS_DISTANCE + 1, true));
+
+        final List<VariantContext> result = kataegis(input);
+        assertEquals(KataegisQueue.MIN_COUNT + 2, result.size());
+        assertEquals("TST_1", result.get(i + 1).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertFalse(result.get(i + 2).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
     }
 
     @NotNull

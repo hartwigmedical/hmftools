@@ -13,9 +13,9 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class KataegisQueue {
 
-    private static final long MAX_ABS_DISTANCE = 5000;
-    private static final long MAX_AVG_DISTANCE = 1000;
-    private static final int MIN_COUNT = 6;
+    static final long MAX_ABS_DISTANCE = 2000;
+    static final long MAX_AVG_DISTANCE = 1000;
+    static final int MIN_COUNT = 3;
 
     private final Predicate<VariantContext> candidate;
     private final Consumer<VariantContext> consumer;
