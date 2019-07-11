@@ -97,7 +97,7 @@ public final class PatientReporterTestFactory {
                 .passFilter(true)
                 .gene(Strings.EMPTY)
                 .chromosome("1")
-                .position("600")
+                .position(600)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .totalReadCount(0)
@@ -126,7 +126,7 @@ public final class PatientReporterTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
                 .notifyClinicalGeneticist(false)
-                .gDNA("6:100");
+                .gDNA("1:600");
     }
 
     @NotNull

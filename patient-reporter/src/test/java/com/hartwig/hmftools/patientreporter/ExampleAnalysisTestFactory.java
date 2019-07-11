@@ -475,7 +475,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
                 .notifyClinicalGeneticist(false)
-                .gDNA("6:100")
+                .gDNA("7:140453136")
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -494,7 +494,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.9)
                 .notifyClinicalGeneticist(false)
-                .gDNA("6:100")
+                .gDNA("9:21971092")
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
@@ -513,7 +513,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0.5)
                 .notifyClinicalGeneticist(false)
-                .gDNA("6:100")
+                .gDNA("2:198266779")
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
@@ -532,7 +532,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(false)
-                .gDNA("6:100")
+                .gDNA("3:189604330")
                 .build();
         return Lists.newArrayList(variant1, variant2, variant3, variant4);
     }
@@ -555,7 +555,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(false)
-                .gDNA("6:100")
+                .gDNA("3:189604330")
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -574,7 +574,7 @@ public final class ExampleAnalysisTestFactory {
                 .driverCategory(DriverCategory.TSG)
                 .driverLikelihood(0.1)
                 .notifyClinicalGeneticist(true)
-                .gDNA("6:100")
+                .gDNA("3:81627197")
                 .build();
 
         return Lists.newArrayList(variant1, variant2);

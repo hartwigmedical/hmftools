@@ -59,11 +59,11 @@ public class ActionableOrDriversChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 50, 75, 60, 60, 45, 65, 35, 50, 45, 35 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("gDNA"), TableUtil.createHeaderCell("Variant"),
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 60, 75, 60, 60, 50, 65, 50, 45, 40 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("position"), TableUtil.createHeaderCell("Variant"),
                         TableUtil.createHeaderCell("Impact"),
                         TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
+                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"),
                         TableUtil.createHeaderCell("Clonality"), TableUtil.createHeaderCell("Biallelic"),
                         TableUtil.createHeaderCell("Driver") });
 
@@ -87,7 +87,6 @@ public class ActionableOrDriversChapter implements ReportChapter {
                     variant.minorAllelePloidy(),
                     variant.adjustedVAF(),
                     hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.createContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalityString(variant.clonality(), hasReliablePurityFit)));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
