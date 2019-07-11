@@ -761,7 +761,7 @@ WHERE filter = 'PASS'
 GROUP BY 1;
 ```
 
-Regions of kataegis within a sample is queried with:
+Regions of kataegis within a sample are queried with:
 ```
 SELECT kataegis, min(chromosome) as chromosome, min(position) as start, max(position) as end,  
        count(*), round((max(position) - min(position)) / (count(*) - 1))  as avgDistance
