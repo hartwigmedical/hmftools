@@ -42,7 +42,7 @@ public class KataegisWindow {
     }
 
     public long averageDistance() {
-        return count == 0 || count == 1 ? 0 : (end - start) / (count - 1);
+        return count == 0 || count == 1 ? 0 : Math.round(1d * (end - start) / (count - 1));
     }
 
 }
