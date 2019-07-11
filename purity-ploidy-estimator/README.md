@@ -846,7 +846,7 @@ well as rainfall plot with kataegis clusters highlighted grey:
 </p>
 
 <p align="center">
-  <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="500" alt="Somatic Rainfall">
+  <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="700" alt="Somatic Rainfall">
 </p>
 
 
