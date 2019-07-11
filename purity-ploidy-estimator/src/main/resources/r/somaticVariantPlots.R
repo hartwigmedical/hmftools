@@ -3,9 +3,9 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
-#sample = "COLO829T"
-#purpleDir <- "~/hmf/analysis/COLO829T/purple"
-#plotDir   <- "~/hmf/analysis/COLO829T/purple/plot"
+sample = "COLO829T"
+purpleDir <- "~/hmf/analysis/COLO829T/purple"
+plotDir   <- "~/hmf/analysis/COLO829T/purple/plot"
 
 # Parse the arguments
 args <- commandArgs(trailing=T)
@@ -44,6 +44,10 @@ standard_mutation <- function(types) {
 }
 
 rainfall_plot <- function(somaticVariants) {
+  
+  strandColours = c("#6bd692", "#7e6bd6")
+  strandColours = setNames(strandColours, c("Forward", "Reverse"))
+  
   singleSubstitutionColours = c("#14B0EF","#060809","#E00714","#BFBEBF","#90CA4B","#E9BBB8")
   singleSubstitutionColours = setNames(singleSubstitutionColours, c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G"))
   
@@ -64,16 +68,18 @@ rainfall_plot <- function(somaticVariants) {
   kataegis = snps %>% mutate(ymin = min(distanceToNeighbour), ymax = max(distanceToNeighbour)) %>% 
     filter(!is.na(kataegis)) %>% 
     group_by(kataegis, ymin, ymax) %>%
-    summarise(xmin = min(rank), xmax = max(rank))
+    summarise(xmin = min(rank), xmax = max(rank)) %>%
+    mutate(strand = ifelse(substring(kataegis, 1, 3) == "FWD", "Forward", "Reverse"))
 
   p = ggplot() +
-    geom_rect(data = kataegis, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), fill = "dark grey", alpha = 0.8) + 
+    geom_rect(data = kataegis, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = strand), alpha = 0.6) + 
     geom_point(data = snps, mapping = aes(x = rank, y = distanceToNeighbour, color = mutation), size = 0.1) +
     scale_y_log10(labels = function(x) {format(x, scientific = FALSE)}) + 
     ylab("Intermutation distance (bp)") + xlab("Mutation number") +
-    scale_color_manual(values = singleSubstitutionColours, name = "") + 
+    scale_color_manual(values = singleSubstitutionColours, name = "Mutation") + 
+    scale_fill_manual(values = strandColours, name = "Kataegis Regions") + 
     guides(color = guide_legend(override.aes = list(size = 2)))
-
+  
   return (p)
 }
 
