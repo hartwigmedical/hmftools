@@ -86,9 +86,9 @@ public class SvLinkedPair {
             --mLinkLength;
     }
 
-    public static SvLinkedPair from(final SvBreakend first, final SvBreakend second, final String linkType)
+    public static SvLinkedPair from(final SvBreakend first, final SvBreakend second)
     {
-        return new SvLinkedPair(first.getSV(), second.getSV(), linkType, first.usesStart(), second.usesStart());
+        return new SvLinkedPair(first.getSV(), second.getSV(), LINK_TYPE_TI, first.usesStart(), second.usesStart());
     }
 
     public final SvVarData first() { return mFirst; }

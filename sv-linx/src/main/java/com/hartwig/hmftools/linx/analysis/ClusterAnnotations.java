@@ -1238,7 +1238,7 @@ public class ClusterAnnotations
                 if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
                     continue;
 
-                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
+                SvLinkedPair pair = SvLinkedPair.from(be1, be2);
                 pairs.add(pair);
 
                 pairFound = true;
@@ -1281,7 +1281,7 @@ public class ClusterAnnotations
                 if (!copyNumbersEqual(be1.copyNumberChange(), be2.copyNumberChange()))
                     continue;
 
-                SvLinkedPair pair = SvLinkedPair.from(be1, be2, LINK_TYPE_TI);
+                SvLinkedPair pair = SvLinkedPair.from(be1, be2);
                 pairs.add(pair);
 
                 linkFound = true;

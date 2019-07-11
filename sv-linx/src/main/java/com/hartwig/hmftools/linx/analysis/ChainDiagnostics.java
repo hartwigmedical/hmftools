@@ -16,6 +16,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvChain;
+import com.hartwig.hmftools.linx.types.SvChainState;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -31,22 +32,20 @@ public class ChainDiagnostics
 
     private final List<SvVarData> mInitialComplexDup;
     private final List<SvVarData> mInitialFoldbacks;
-    private int mIntialReplicatedSvCount;
-    private int mMaxRepCount;
     private int mUnlinkedBreakendCount;
     private int mUnlinkedSvCount;
+    private int mCompleteSvCount;
+    private int mMaxRepCount;
     private int mWarnings;
 
     // references from chain finder
     private int mClusterId;
     private boolean mHasReplication;
-    private final List<SvVarData> mUniqueSVs;
     private final List<SvChain> mChains;
     private final List<SvChain> mUniqueChains;
-    private final List<SvVarData> mUnlinkedReplicatedSVs;
-    private final Map<SvVarData,Integer> mSvReplicationMap;
+    private final Map<SvVarData,SvChainState> mSvConnectionsMap;
+    private final List<SvChainState> mSvCompletedConnections;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
-    private final Map<SvBreakend, List<SvBreakend>> mUnlinkedBreakendMap;
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvLinkedPair> mUniquePairs;
 
@@ -57,9 +56,9 @@ public class ChainDiagnostics
 
     private static final Logger LOGGER = LogManager.getLogger(ChainDiagnostics.class);
 
-    public ChainDiagnostics(final List<SvVarData> uniqueSVs, final List<SvChain> chains, final List<SvChain> uniqueChains,
-            final List<SvVarData> unlinkedReplicatedSVs, final Map<SvVarData,Integer> svReplicationMap,
-            final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks, final Map<SvBreakend, List<SvBreakend>> unlinkedBreakendMap,
+    public ChainDiagnostics(final Map<SvVarData,SvChainState> svConnMap, final List<SvChainState> svCompleteConns,
+            final List<SvChain> chains, final List<SvChain> uniqueChains,
+            final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
             final List<SvVarData> doubleMinuteSVs, final List<SvLinkedPair> uniquePairs)
     {
         mLogMessages = Lists.newArrayList();
@@ -68,17 +67,16 @@ public class ChainDiagnostics
         mOutputDir = null;
         mFileWriter = null;
         mMaxClusterSize = 0;
-        mWarnings = 0;
-        mUnlinkedBreakendCount = 0;
         mUnlinkedSvCount = 0;
+        mUnlinkedBreakendCount = 0;
+        mCompleteSvCount = 0;
+        mWarnings = 0;
 
-        mUniqueSVs = uniqueSVs;
+        mSvConnectionsMap = svConnMap;
+        mSvCompletedConnections = svCompleteConns;
         mChains = chains;
         mUniqueChains = uniqueChains;
-        mUnlinkedReplicatedSVs = unlinkedReplicatedSVs;
-        mSvReplicationMap = svReplicationMap;
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
-        mUnlinkedBreakendMap = unlinkedBreakendMap;
         mDoubleMinuteSVs = doubleMinuteSVs;
         mUniquePairs = uniquePairs;
     }
@@ -93,16 +91,16 @@ public class ChainDiagnostics
     {
         mLogMessages.clear();
         mWarnings = 0;
-        mUnlinkedBreakendCount = 0;
         mUnlinkedSvCount = 0;
+        mUnlinkedBreakendCount = 0;
+        mCompleteSvCount = 0;
 
         mClusterId = clusterId;
         mHasReplication = hasReplication;
-        mIntialReplicatedSvCount = mUnlinkedReplicatedSVs.size();
 
         if(mHasReplication)
         {
-            mMaxRepCount = mSvReplicationMap.values().stream().mapToInt(x -> x.intValue()).max().getAsInt();
+            mMaxRepCount = mSvConnectionsMap.values().stream().mapToInt(x -> x.MaxPloidy).max().getAsInt();
         }
         else
         {
@@ -139,7 +137,7 @@ public class ChainDiagnostics
 
     public void diagnoseChains(final String sampleId)
     {
-        if(mUniqueSVs.size() < 4 || mUniqueSVs.size() > mMaxClusterSize)
+        if(mSvConnectionsMap.keySet().size() < 4 || mSvConnectionsMap.keySet().size() > mMaxClusterSize)
             return;
 
         if(!mDoubleMinuteSVs.isEmpty()) // for now skip these
@@ -230,7 +228,7 @@ public class ChainDiagnostics
                     int repCount = max(breakend.getSV().getReplicatedCount(), 1);
 
                     LOGGER.debug("cluster({} count={}) breakend({}) rep({}) conns({}) foldbacks({}) compDups({}) asmb({})",
-                            mClusterId, mUniqueSVs.size(), breakend.toString(),
+                            mClusterId, mSvConnectionsMap.keySet().size(), breakend.toString(),
                             repCount, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
                     ++invalidCount;
@@ -243,21 +241,29 @@ public class ChainDiagnostics
 
     public void chainingComplete()
     {
-        mUnlinkedBreakendCount = (int)mUnlinkedBreakendMap.values().stream().count();
+        mUnlinkedBreakendCount = mSvConnectionsMap.values().stream()
+                .mapToInt(x -> (x.breakendCount(true) == 0 ? 1 : 0) + (x.breakendCount(false) == 0 ? 1 : 0)).sum();
 
-        List<SvVarData> unlinkedSVs = Lists.newArrayList();
+        mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream().filter(x -> x.curentCount() == 0).count();
 
-        for(final SvVarData var : mUnlinkedReplicatedSVs)
+        mCompleteSvCount = mSvCompletedConnections.size();
+
+        if(mHasReplication)
         {
-            if(!var.isReplicatedSv() && !unlinkedSVs.contains(var))
-                unlinkedSVs.add(var);
+            int unlinkedPloidyBreakends = mSvConnectionsMap.values().stream()
+                .mapToInt(x -> x.unlinked(true) + x.unlinked(false)).sum();
+
+            int unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToInt(x -> x.unlinked()).sum();
+
+            LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
+                    mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mUnlinkedSvCount, unlinkedPloidySVs,
+                    mUnlinkedBreakendCount, unlinkedPloidyBreakends);
         }
-
-        mUnlinkedSvCount = unlinkedSVs.size();
-
-        LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
-                mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mUnlinkedReplicatedSVs.size(), unlinkedSVs.size(),
-                mUnlinkedBreakendMap.size(), mUnlinkedBreakendCount);
+        else
+        {
+            LOGGER.debug("cluster({}) chaining finished: chains({} links={}) unlinked SVs({}) breakends({})",
+                    mClusterId, mUniqueChains.size(), mUniquePairs.size(), mUnlinkedSvCount, mUnlinkedBreakendCount);
+        }
     }
 
     private void writeResults(final String sampleId, int invalidBreakends)
@@ -275,15 +281,18 @@ public class ChainDiagnostics
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,ClusterId,SvCount,RepSvCount,Chains,ReplicatedChains,SGLs,Warnings");
+                mFileWriter.write("SampleId,ClusterId,Replication,SvCount,RepSvCount,Chains,ReplicatedChains,SGLs,Warnings");
                 mFileWriter.write(",MaxRep,UnlinksSVs,UnlinkedBEs,InvalidBEs,Foldbacks,CompDups");
                 mFileWriter.newLine();
             }
 
-            int sglCount = (int)mUniqueSVs.stream().filter(SvVarData::isNullBreakend).count();
+            int sglCount = (int) mSvConnectionsMap.keySet().stream().filter(SvVarData::isNullBreakend).count();
 
-            mFileWriter.write(String.format("%s,%d,%d,%d,%d,%d,%d,%d",
-                    sampleId, mClusterId, mUniqueSVs.size(), mIntialReplicatedSvCount,
+            // FIXME:
+            int mIntialReplicatedSvCount = 0;
+
+            mFileWriter.write(String.format("%s,%d,%s,%d,%d,%d,%d,%d,%d",
+                    sampleId, mClusterId, mHasReplication, mSvConnectionsMap.keySet().size(), mIntialReplicatedSvCount,
                     mUniqueChains.size(), mChains.size() - mUniqueChains.size(), sglCount, mWarnings));
 
             mFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
@@ -308,6 +317,7 @@ public class ChainDiagnostics
         if(!LOGGER.isDebugEnabled())
             return;
 
+        /*
         if(!mHasReplication || mUniqueSVs.size() < 100)
             return;
 
@@ -317,6 +327,7 @@ public class ChainDiagnostics
                     mClusterId, mUniqueSVs.size(), mChains.size(), mUnlinkedReplicatedSVs.size(),
                     mUnlinkedBreakendMap.size(), mSvReplicationMap.size());
         }
+        */
     }
 
     public boolean checkHasValidState(int linkIndex)
@@ -328,7 +339,7 @@ public class ChainDiagnostics
         {
             SvBreakend breakend = entry.getKey();
 
-            List<SvBreakend> breakendList = mUnlinkedBreakendMap.get(breakend);
+            List<SvBreakend> breakendList = Lists.newArrayList(); // mUnlinkedBreakendMap.get(breakend);
 
             if(breakendList == null)
             {

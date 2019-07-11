@@ -455,7 +455,7 @@ public class ChainFinderOld
 
         if (mHasReplication)
         {
-            possiblePairs = findFoldbackPairs_old();
+            possiblePairs = findFoldbackPairs(); // findFoldbackPairs_old();
 
             if (!possiblePairs.isEmpty())
             {
@@ -857,32 +857,30 @@ public class ChainFinderOld
 
                 int minLinkCount = getMaxUnlinkedPairsCount(pairStart, pairEnd);
 
-                if(pairStart.first() == pairEnd.first())
+                for(SvLinkedPair[] otherPairSet : possiblePairSets)
+                {
+                    SvLinkedPair otherPairStart = otherPairSet[SE_START];
+                    SvLinkedPair otherPairEnd = otherPairSet[SE_END];
 
-                    for(SvLinkedPair[] otherPairSet : possiblePairSets)
+                    if(!otherPairStart.hasLinkClash(pairStart)) // only need to test one of each of the sets since they contain the same SVs
+                        continue;
+
+                    // choose the one with the higher replication count and then the shortest
+                    int otherMinLinkCount = getMaxUnlinkedPairsCount(otherPairStart, otherPairEnd);
+
+                    if(otherMinLinkCount > minLinkCount)
+                        break;
+
+                    long minLength = min(pairStart.length(), pairEnd.length());
+                    long otherMinLength = min(otherPairStart.length(), otherPairEnd.length());
+
+                    if(minLinkCount > otherMinLinkCount || minLength < otherMinLength)
                     {
-                        SvLinkedPair otherPairStart = otherPairSet[SE_START];
-                        SvLinkedPair otherPairEnd = otherPairSet[SE_END];
-
-                        if(!otherPairStart.hasLinkClash(pairStart)) // only need to test one of each of the sets since they contain the same SVs
-                            continue;
-
-                        // choose the one with the higher replication count and then the shortest
-                        int otherMinLinkCount = getMaxUnlinkedPairsCount(otherPairStart, otherPairEnd);
-
-                        if(otherMinLinkCount > minLinkCount)
-                            break;
-
-                        long minLength = min(pairStart.length(), pairEnd.length());
-                        long otherMinLength = min(otherPairStart.length(), otherPairEnd.length());
-
-                        if(minLinkCount > otherMinLinkCount || minLength < otherMinLength)
-                        {
-                            possiblePairSets.remove(otherPairSet);
-                            possiblePairSets.add(newPairSet);
-                            break;
-                        }
+                        possiblePairSets.remove(otherPairSet);
+                        possiblePairSets.add(newPairSet);
+                        break;
                     }
+                }
             }
         }
 
@@ -1786,7 +1784,7 @@ public class ChainFinderOld
         }
     }
 
-    public int getClusterChrBreakendIndex(final SvBreakend breakend)
+    private int getClusterChrBreakendIndex(final SvBreakend breakend)
     {
         if(!mIsClusterSubset)
             return breakend.getClusterChrPosIndex();

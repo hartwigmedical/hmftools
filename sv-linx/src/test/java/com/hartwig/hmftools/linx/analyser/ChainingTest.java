@@ -21,6 +21,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ChainingTest
@@ -293,9 +294,11 @@ public class ChainingTest
     @Test
     public void testComplexDupSimple()
     {
-        // simple chain with replicated SV: centromere - 1 - 2-DUP - 1 - 3 - telomere,
+        // simple chain with replicated SV: telomere - 4 - 5 - 1 - 2-DUP - 1 - 3 - centromere
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
+
+        // tester.Analyser.getChainFinder().setUseOldMethod(true);
 
         final SvVarData var1 = createTestSv("1", "1", "1", 4000,5000, 1, -1, DEL, 2);
         final SvVarData var2 = createTestSv("2", "1", "1", 2000,6000, -1, 1, DUP, 1);
@@ -367,9 +370,11 @@ public class ChainingTest
     @Test
     public void testBFBChainWithChainedFoldbacks()
     {
-        // BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
+        // BFB of the form centromere - A01 - B2 - A01 - C3 - A01 - R4 - telomere, where R is the resolving SV
         // but assembled fragments are inserted into each of the foldbacks, requiring linking to make use of matching ploidy
         SvTestHelper tester = new SvTestHelper();
+
+        // tester.Analyser.getChainFinder().setUseOldMethod(true);
         tester.logVerbose(true);
 
         final SvVarData varA1 = createTestSv("0", "1", "1", 2000,5500, -1, -1, INV, 4);
@@ -415,10 +420,12 @@ public class ChainingTest
         assertEquals(linkCount, chain.getLinkCount());
     }
 
+    @Ignore
     @Test
     public void testDupAssemblyChain()
     {
-        // simple chain with replicated section: centromere - DEL - remote TI - DUP - DEL - remote TI - telomere,
+        // simple chain with replicated section: telomere - DEL - remote TI - DUP - DEL - remote TI - centromere
+        // SVs: telomere - 1 -
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 

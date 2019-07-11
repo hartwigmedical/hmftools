@@ -305,6 +305,11 @@ public class SvCluster
 
     public void addChain(SvChain chain, boolean resetId)
     {
+        addChain(chain, resetId, false);
+    }
+
+    public void addChain(SvChain chain, boolean resetId,boolean addReplicatedSVs)
+    {
         if(resetId)
             chain.setId(mChains.size());
 
@@ -312,7 +317,17 @@ public class SvCluster
 
         for(SvVarData var : chain.getSvList())
         {
-            mUnchainedSVs.remove(var);
+            if(addReplicatedSVs)
+            {
+                if(var.isReplicatedSv())
+                    addVariant(var);
+                else
+                    mUnchainedSVs.remove(var);
+            }
+            else
+            {
+                mUnchainedSVs.remove(var);
+            }
         }
     }
 
