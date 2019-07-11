@@ -23,9 +23,11 @@ public class SvChainState
     private int mCurrentCount;
     private int[] mBreakendCount;
 
+    // unique connections made to other SVs
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
 
+    // replicated breakends for this SV
     final List<SvBreakend> mRepBreakendsStart;
     final List<SvBreakend> mRepBreakendsEnd;
 
@@ -42,8 +44,8 @@ public class SvChainState
         else
         {
             Ploidy = var.getImpliedPloidy();
-            MinPloidy = (int) round(var.ploidyMin());
-            MaxPloidy = (int) round(var.ploidyMax());
+            MinPloidy = max((int) round(var.ploidyMin()), 1);
+            MaxPloidy = max((int) round(var.ploidyMax()), Ploidy);
         }
 
         mCurrentCount = 0;

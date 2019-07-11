@@ -167,7 +167,7 @@ public class SvLinxApplication
 
             if(svaConfig.hasMultipleSamples())
             {
-                LOGGER.info("sample({}) processing {} SVs, samplesComplete({})", sampleId, svVarData.size(), count - 1);
+                LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svVarData.size(), count - 1);
             }
 
             cnDataLoader.loadSampleData(sampleId, svRecords);

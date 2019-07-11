@@ -80,6 +80,7 @@ import org.apache.logging.log4j.Logger;
 public class ChainFinder
 {
     private int mClusterId;
+    public String mSampleId;
     private boolean mHasReplication;
 
     // input state
@@ -175,6 +176,7 @@ public class ChainFinder
         mNextChainId = 0;
         mLinkIndex = 0;
         mLinkReason = "";
+        mSampleId= "";
         mUseAllelePloidies = false;
 
         mDiagnostics = new ChainDiagnostics(
@@ -182,7 +184,7 @@ public class ChainFinder
                 mSvBreakendPossibleLinks, mDoubleMinuteSVs, mUniquePairs);
 
         mOldFinder = new ChainFinderOld();
-        mUseOld = true;
+        mUseOld = false;
     }
 
     public void setUseOldMethod(boolean toggle) { mUseOld = toggle; }
@@ -214,6 +216,14 @@ public class ChainFinder
         mLinkIndex = 0;
         mIsValid = true;
         mPairSkipped = false;
+
+        mDiagnostics.clear();
+    }
+
+    public void setSampleId(final String sampleId)
+    {
+        mSampleId = sampleId;
+        mDiagnostics.setSampleId(sampleId);
     }
 
     public void initialise(SvCluster cluster)
@@ -324,7 +334,6 @@ public class ChainFinder
     {
         return mUseOld ? mOldFinder.getUniqueChains() : mUniqueChains;
     }
-
     public double getValidAllelePloidySegmentPerc() { return mClusterPloidyLimits.getValidAllelePloidySegmentPerc(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 
@@ -482,6 +491,9 @@ public class ChainFinder
             else
             {
                 processPossiblePairs(possiblePairs);
+
+                if(!mIsValid)
+                    return;
             }
 
             if(lastAddedIndex == mLinkIndex)
@@ -748,6 +760,12 @@ public class ChainFinder
                 log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f -> %.1f)",
                         compDup.id(), compDupPloidy, chainBeStart.toString(), chainBeEnd.toString(),
                         chainBeStart.getSV().ploidyMin(), chainBeStart.getSV().ploidyMax()));
+
+                mDiagnostics.logCsv("COMP_DUP", compDup,
+                        String.format("ploidy(%.1f-%.1f-%.1f) beStart(%s ploidy=%.1f-%.1f) beEnd(%s ploidy=%.1f-%.1f)",
+                                compDup.ploidyMin(), compDup.ploidy(), compDup.ploidyMax(),
+                                chainBeStart.toString(), chainBeStart.getSV().ploidyMin(), chainBeStart.getSV().ploidyMax(),
+                                chainBeEnd.toString(), chainBeEnd.getSV().ploidyMin(), chainBeEnd.getSV().ploidyMax()));
             }
 
             // additionally if the same SV can be linked to the complex DUP's breakends and satisifies the ploidy constraints, add it as well
@@ -1637,12 +1655,12 @@ public class ChainFinder
             return null;
 
         // otherwise create a new replicated instance of the SV and cache its breakends
-        SvVarData replicatedSV = new SvVarData(breakend.getSV(), true);
-        replicatedSV.getOrigSV().setReplicatedCount(replicatedSV.getOrigSV().getReplicatedCount() + 1);
+        SvVarData replicatedSV = new SvVarData(svConn.SV, true);
+        svConn.SV.setReplicatedCount(svConn.SV.getReplicatedCount() + 1);
 
         svConn.addRepBreakend(replicatedSV.getBreakend(true));
 
-        if(!replicatedSV.isNullBreakend())
+        if(!svConn.SV.isNullBreakend())
             svConn.addRepBreakend(replicatedSV.getBreakend(false));
 
         return replicatedSV.getBreakend(breakend.usesStart());
@@ -1668,9 +1686,6 @@ public class ChainFinder
 
             SvChainState svConn = mSvConnectionsMap.get(origSV);
 
-            if(breakend.getSV().isReplicatedSv())
-                svConn.removeRepBreakend(breakend);
-
             // mUnlinkedReplicatedSVs.remove(breakend.getSV());
             // final List<SvBreakend> breakendList = mUnlinkedBreakendMap.get(origBreakend);
 
@@ -1681,6 +1696,9 @@ public class ChainFinder
                 mIsValid = false;
                 return;
             }
+
+            if(breakend.getSV().isReplicatedSv())
+                svConn.removeRepBreakend(breakend);
 
             svConn.add(breakend.usesStart());
             svConn.addConnection(otherPairBreakend, breakend.usesStart());

@@ -109,8 +109,6 @@ public class ClusterAnalyser {
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
         mDmFinder = new DoubleMinuteFinder();
-        mChainFinder.setLogVerbose(mConfig.LogVerbose);
-        mLinkFinder.setLogVerbose(mConfig.LogVerbose);
         mUseAllelePloidies = false;
 
         if(mConfig.hasMultipleSamples())
@@ -118,6 +116,12 @@ public class ClusterAnalyser {
             mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath, mConfig.LogChainingMaxSize);
             mDmFinder.setOutputDir(mConfig.OutputDataPath);
         }
+
+        if(mConfig.ChainingMethod == 1)
+            mChainFinder.setUseOldMethod(true);
+
+        mChainFinder.setLogVerbose(mConfig.LogVerbose);
+        mLinkFinder.setLogVerbose(mConfig.LogVerbose);
 
         mRunValidationChecks = false; // emabled in unit tests and after changes to merging-rule flow
 
@@ -154,6 +158,7 @@ public class ClusterAnalyser {
     {
         mSampleId = sampleId;
         mClusters.clear();
+        mChainFinder.setSampleId(sampleId);
     }
 
     public final List<SvCluster> getClusters() { return mClusters; }
@@ -515,7 +520,7 @@ public class ClusterAnalyser {
         mChainFinder.addChains(cluster);
 
         if(!assembledLinksOnly)
-            mChainFinder.getDiagnostics().diagnoseChains(mSampleId);
+            mChainFinder.getDiagnostics().diagnoseChains();
 
         cluster.setValidAllelePloidySegmentPerc(mChainFinder.getValidAllelePloidySegmentPerc());
         mChainFinder.clear(); // release any refs to clusters and SVs

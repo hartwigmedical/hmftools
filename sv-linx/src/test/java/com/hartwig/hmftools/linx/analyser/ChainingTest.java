@@ -422,7 +422,7 @@ public class ChainingTest
 
     @Ignore
     @Test
-    public void testDupAssemblyChain()
+    public void testComplexDupAssemblyChain()
     {
         // simple chain with replicated section: telomere - DEL - remote TI - DUP - DEL - remote TI - centromere
         // SVs: telomere - 1 -
