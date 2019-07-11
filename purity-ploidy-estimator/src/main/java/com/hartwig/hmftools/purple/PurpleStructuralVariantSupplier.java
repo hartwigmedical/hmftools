@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.enrich.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.structural.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
@@ -32,6 +34,7 @@ import com.hartwig.hmftools.purple.sv.VariantContextCollectionImpl;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.index.tabix.TabixFormat;
 import htsjdk.tribble.index.tabix.TabixIndexCreator;
 import htsjdk.variant.variantcontext.Allele;
@@ -75,6 +78,7 @@ class PurpleStructuralVariantSupplier {
     private final String outputVCF;
     private final Optional<VCFHeader> header;
     private final VariantContextCollection variants;
+    private final String refGenomePath;
 
     private int counter = 0;
 
@@ -82,11 +86,13 @@ class PurpleStructuralVariantSupplier {
         header = Optional.empty();
         outputVCF = Strings.EMPTY;
         variants = new VariantContextCollectionDummy();
+        refGenomePath = Strings.EMPTY;
     }
 
-    PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF) {
+    PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF, @NotNull final String refGenomePath) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
+        this.refGenomePath = refGenomePath;
         header = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
         variants = new VariantContextCollectionImpl(header.get());
 
@@ -145,19 +151,24 @@ class PurpleStructuralVariantSupplier {
                 .make();
     }
 
-    public void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
         if (header.isPresent()) {
 
-            final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
-                    .setReferenceDictionary(header.get().getSequenceDictionary())
-                    .setIndexCreator(new TabixIndexCreator(header.get().getSequenceDictionary(), new TabixFormat()))
-                    .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                    .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                    .build();
+            try(final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomePath));
+                    final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+                            .setReferenceDictionary(header.get().getSequenceDictionary())
+                            .setIndexCreator(new TabixIndexCreator(header.get().getSequenceDictionary(), new TabixFormat()))
+                            .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                            .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                            .build()) {
 
-            writer.writeHeader(header.get());
-            enriched(purityAdjuster, copyNumbers).forEach(writer::add);
-            writer.close();
+
+                final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(indexedFastaSequenceFile, writer::add);
+                writer.writeHeader(refEnricher.enrichHeader(header.get()));
+
+                enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
+                refEnricher.flush();
+            }
         }
     }
 

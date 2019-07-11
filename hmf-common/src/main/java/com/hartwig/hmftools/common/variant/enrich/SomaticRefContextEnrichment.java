@@ -19,24 +19,24 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class RefContextEnrichment implements VariantContextEnrichment {
+public class SomaticRefContextEnrichment implements VariantContextEnrichment {
 
-    private static final Logger LOGGER = LogManager.getLogger(RefContextEnrichment.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticRefContextEnrichment.class);
 
-    public static final String TRINUCLEOTIDE_FLAG = "TNC";
-    public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
-    public static final String REPEAT_COUNT_FLAG = "REP_C";
     public static final String MICROHOMOLOGY_FLAG = "MH";
+    public static final String TRINUCLEOTIDE_FLAG = "TNC";
+    public static final String REPEAT_COUNT_FLAG = "REP_C";
+    public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
 
     private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
-    private static final String TRI_FLAG_DESCRIPTION = "Tri-nucleotide context";
     private static final String MICROHOMOLOGY_FLAG_DESCRIPTION = "Microhomology";
     private static final String REPEAT_COUNT_DESCRIPTION = "Repeat sequence count";
+    private static final String TRINUCLEOTIDE_FLAG_DESCRIPTION = "Tri-nucleotide context";
 
     private final IndexedFastaSequenceFile reference;
     private final Consumer<VariantContext> consumer;
 
-    public RefContextEnrichment(@NotNull final IndexedFastaSequenceFile reference, final Consumer<VariantContext> consumer) {
+    public SomaticRefContextEnrichment(@NotNull final IndexedFastaSequenceFile reference, final Consumer<VariantContext> consumer) {
         this.reference = reference;
         this.consumer = consumer;
     }
@@ -44,7 +44,7 @@ public class RefContextEnrichment implements VariantContextEnrichment {
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        template.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRI_FLAG_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_FLAG_DESCRIPTION));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESCRIPTION));
         template.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG, 1, VCFHeaderLineType.String, MICROHOMOLOGY_FLAG_DESCRIPTION));
@@ -54,7 +54,7 @@ public class RefContextEnrichment implements VariantContextEnrichment {
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(context);
+        final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(reference, context);
 
         addTrinucleotideContext(context, relativePositionAndRef);
         addMicrohomology(context, relativePositionAndRef);
@@ -110,7 +110,7 @@ public class RefContextEnrichment implements VariantContextEnrichment {
     }
 
     @NotNull
-    private Pair<Integer, String> relativePositionAndRef(@NotNull final VariantContext variant) {
+    static Pair<Integer, String> relativePositionAndRef(@NotNull final IndexedFastaSequenceFile reference, @NotNull final VariantContext variant) {
         final int refLength = variant.getReference().getBaseString().length();
         final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.getContig()).getSequenceLength();
         long positionBeforeEvent = variant.getStart();

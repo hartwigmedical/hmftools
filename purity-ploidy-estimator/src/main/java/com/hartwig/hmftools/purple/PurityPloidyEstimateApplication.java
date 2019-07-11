@@ -307,7 +307,7 @@ public class PurityPloidyEstimateApplication {
             final String outputPath = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.sv.vcf.gz";
 
             LOGGER.info("Loading structural variants from {}", filePath);
-            return new PurpleStructuralVariantSupplier(commonConfig.version(), filePath, outputPath);
+            return new PurpleStructuralVariantSupplier(commonConfig.version(), filePath, outputPath, configSupplier.refGenomeConfig().refGenome());
         } else {
             return new PurpleStructuralVariantSupplier();
         }

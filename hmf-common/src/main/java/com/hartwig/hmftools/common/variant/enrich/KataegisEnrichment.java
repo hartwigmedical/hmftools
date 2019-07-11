@@ -50,7 +50,7 @@ public class KataegisEnrichment implements VariantContextEnrichment {
         final boolean altMatch =
                 context.getAlternateAlleles().stream().anyMatch(x -> x.getBaseString().equals("T") || x.getBaseString().equals("G"));
 
-        final String triContext = context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
+        final String triContext = context.getAttributeAsString(SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
         final boolean triMatch = triContext.startsWith("TC");
 
         return isNotFiltered(context) && triMatch && altMatch;
@@ -61,7 +61,7 @@ public class KataegisEnrichment implements VariantContextEnrichment {
         final boolean altMatch =
                 context.getAlternateAlleles().stream().anyMatch(x -> x.getBaseString().equals("C") || x.getBaseString().equals("A"));
 
-        final String triContext = context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
+        final String triContext = context.getAttributeAsString(SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY);
         final boolean triMatch = triContext.endsWith("GA");
 
         return isNotFiltered(context) && triMatch && altMatch;

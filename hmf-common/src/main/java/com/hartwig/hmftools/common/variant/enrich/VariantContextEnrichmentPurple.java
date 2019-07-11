@@ -17,7 +17,7 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
 
     private final PurityEnrichment purityEnrichment;
     private final KataegisEnrichment kataegisEnrichment;
-    private final RefContextEnrichment refContextEnrichment;
+    private final SomaticRefContextEnrichment somaticRefContextEnrichment;
 
     public VariantContextEnrichmentPurple(@NotNull final String purpleVersion, @NotNull final String tumorSample,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
@@ -25,12 +25,12 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
             @NotNull final Consumer<VariantContext> consumer) {
         purityEnrichment = new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, consumer);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
-        refContextEnrichment = new RefContextEnrichment(reference, kataegisEnrichment);
+        somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
     }
 
     @Override
     public void flush() {
-        refContextEnrichment.flush();
+        somaticRefContextEnrichment.flush();
         kataegisEnrichment.flush();
         purityEnrichment.flush();
     }
@@ -38,13 +38,13 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        VCFHeader header = refContextEnrichment.enrichHeader(template);
+        VCFHeader header = somaticRefContextEnrichment.enrichHeader(template);
         header = kataegisEnrichment.enrichHeader(header);
         return purityEnrichment.enrichHeader(header);
     }
 
     @Override
-    public void accept(final VariantContext context) {
-        refContextEnrichment.accept(context);
+    public void accept(@NotNull final VariantContext context) {
+        somaticRefContextEnrichment.accept(context);
     }
 }

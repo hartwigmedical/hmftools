@@ -585,6 +585,7 @@ PURPLE_CN_CHANGE | 1 or 2 | Purity adjusted change in copy number at each breake
 RECOVERED | 0 | Flag to indicate entry has been recovered
 RECOVERY_METHOD | 1 | Method used to recover, one of `UNBALANCED_SV_START`, `UNBALANCED_SV_END`, `UNSUPPORTED_BREAKEND_START`, `UNSUPPORTED_BREAKEND_END`
 RECOVERY_FILTER | n | Filter prior to recovery
+REFG | 1 | Ref genome surrounding break point
 
 #### Somatic Variant VCF
 
@@ -864,6 +865,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Fix whole genome duplication calculation
   - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
   - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 
+  - Added REF_G to structural vcf output
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-30)
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)
