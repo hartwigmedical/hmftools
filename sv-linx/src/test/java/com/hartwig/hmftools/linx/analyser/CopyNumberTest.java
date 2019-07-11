@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
+import static com.hartwig.hmftools.linx.cn.CnDataLoader.APC_EST_PLOIDY;
+import static com.hartwig.hmftools.linx.cn.CnDataLoader.APC_EST_UNCERTAINTY;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.calcAdjustedPloidyValues;
 
 import static org.junit.Assert.assertEquals;
@@ -17,18 +19,21 @@ public class CopyNumberTest
     public void testPloidyRecalcs()
     {
         // example
-        double cnChgStart = 1;
-        double cnChgEnd = 0;
-        int tumorReadCountStart = 30;
-        int tumorReadCountEnd = 30;
-        double maxCNStart = 4;
-        double maxCNEnd = 5;
-        double adjVaf = 0.2;
-        int[] startDepthData = {100, 100};
+        double cnChgStart = 3.1;
+        double cnChgEnd = 3.6;
+        int tumorReadCount = 58;
+        double maxCNStart = 6.01;
+        double maxCNEnd = 6.66;
+        double ploidy = 2.14;
+        int[] startDepthData = {3, 3};
         int[] endDepthData = {1, 1};
 
-        double[] calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCountStart, tumorReadCountEnd,
-                adjVaf, adjVaf, maxCNStart, maxCNEnd, startDepthData, endDepthData);
+        double[] calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCount, ploidy,
+                maxCNStart, maxCNEnd, startDepthData, endDepthData);
+
+        assertEquals(2.85, calcResults[APC_EST_PLOIDY], 0.01);
+        assertEquals(1.11, calcResults[APC_EST_UNCERTAINTY], 0.01);
+
     }
 
     @Test

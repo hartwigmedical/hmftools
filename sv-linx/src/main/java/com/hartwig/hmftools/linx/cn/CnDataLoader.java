@@ -757,7 +757,7 @@ public class CnDataLoader
             }
 
             final double calcResults[] = calcAdjustedPloidyValues(cnChgStart, cnChgEnd,
-                    tumorReadCountStart, tumorReadCountEnd, adjVafStart, adjVafEnd, maxCNStart, maxCNEnd,
+                    tumorReadCountStart, svData.ploidy(), maxCNStart, maxCNEnd,
                     startDepthData, cnEndData != null ? endDepthData : null);
 
             double ploidyEstimate = calcResults[APC_EST_PLOIDY];
@@ -789,8 +789,7 @@ public class CnDataLoader
     private static double POIS_PROB_HIGH = 0.995;
 
     public static double[] calcAdjustedPloidyValues(double cnChgStart, double cnChgEnd,
-            int tumorReadCountStart, int tumorReadCountEnd, double adjVafStart, double adjVafEnd,
-            double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)
+            int tumorReadCount, double ploidy, double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)
     {
         double cnUncertaintyStart = calcCopyNumberSideUncertainty(maxCNStart, startDepthData);
         double cnUncertaintyEnd = endDepthData != null ? calcCopyNumberSideUncertainty(maxCNEnd, endDepthData) : 0;
@@ -810,28 +809,24 @@ public class CnDataLoader
             uncertainties.add(cnUncertaintyEnd);
         }
 
-        // calculate a ploidy for each side independently
-        if(adjVafStart > 0)
+        if(tumorReadCount > 0)
         {
-            double ploidyStart = adjVafStart * maxCNStart;
-            double ploidyUncertaintyStart = calcPloidyUncertainty(tumorReadCountStart, adjVafStart, maxCNStart, cnUncertaintyStart);
+            double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
+            double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
 
-            if (ploidyUncertaintyStart > 0)
+            double rcAdjustedPloidy = ploidy / tumorReadCount * ((poissonRCLow + poissonRCHigh) * 0.5);
+
+            double ploidyUncertainty = (poissonRCHigh - tumorReadCount) / tumorReadCount * ploidy;
+
+            double cnUncertaintyFactor = !uncertainties.isEmpty() ?
+                    uncertainties.stream().mapToDouble(x -> x).sum() / uncertainties.size() : 0;
+
+            ploidyUncertainty += cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC;
+
+            if (ploidyUncertainty > 0)
             {
-                observations.add(ploidyStart);
-                uncertainties.add(ploidyUncertaintyStart);
-            }
-        }
-
-        if(adjVafEnd > 0)
-        {
-            double ploidyEnd = adjVafEnd * maxCNEnd;
-            double ploidyUncertaintyEnd = calcPloidyUncertainty(tumorReadCountEnd, adjVafEnd, maxCNEnd, cnUncertaintyEnd);
-
-            if (ploidyUncertaintyEnd > 0)
-            {
-                observations.add(ploidyEnd);
-                uncertainties.add(ploidyUncertaintyEnd);
+                observations.add(rcAdjustedPloidy);
+                uncertainties.add(ploidyUncertainty);
             }
         }
 
@@ -855,7 +850,7 @@ public class CnDataLoader
                 sumObservedUncertainty += observations.get(i) * uncertInvSqrd;
             }
 
-            // consloidatedPloidy =  SUM[Observation(i)*(1/Uncertainty(i)^2)] / Sum[1/Uncertainty(i)^2]
+            // consolidatedPloidy =  SUM[Observation(i)*(1/Uncertainty(i)^2)] / Sum[1/Uncertainty(i)^2]
             estPloidy = sumObservedUncertainty / sumUncertainty;
 
             double adjUncertainty = 0;
@@ -870,11 +865,11 @@ public class CnDataLoader
             // consolidatedUncertainty = SQRT(countObservations/(countObervations-1) * SUM[(1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedPloidy,Uncertainty(i)/2))^2]
             // / Sum[1/Uncertainty(i)^2] )
 
-            estUncertainty = sqrt(observations.size() / (observations.size() - 1) * adjUncertainty / sumUncertainty);
+            estUncertainty = sqrt(observations.size() / (double)(observations.size() - 1) * adjUncertainty / sumUncertainty);
         }
 
         // populate a results object
-        double[] results = new double[APC_RESULTS_MAX+1];
+        double[] results = new double[APC_RESULTS_MAX];
 
         results[APC_EST_UNCERTAINTY] = estUncertainty;
         results[APC_EST_PLOIDY] = estPloidy;
@@ -883,29 +878,11 @@ public class CnDataLoader
     }
 
     private static double ABS_UNCERTAINTY = 0.15;
-    private static double RELATIVE_UNCERTAINTY = 0.1;
+    private static double RELATIVE_UNCERTAINTY = 0.15;
     private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
-    private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
+    private static double ADDITIONAL_REL_UNCERTAINTY = 0.20;
     private static double PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC = 0.5;
     private static double NO_DEPTH_CNCHANGE_UNC = 0.5;
-
-    private static double calcPloidyUncertainty(int tumorReadCount, double adjVaf, double maxCopyNumber, double cnChangeUncertainty)
-    {
-        if(cnChangeUncertainty <= 0 || tumorReadCount == 0)
-            return 0;
-
-        double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
-        double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
-
-        double poissonVafLow = adjVaf * poissonRCLow / tumorReadCount;
-        double poissonVafHigh = adjVaf * poissonRCHigh / tumorReadCount;
-
-        double ploidyUncertainty = (poissonVafHigh * (maxCopyNumber + PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC * cnChangeUncertainty));
-        ploidyUncertainty -= (poissonVafLow * (maxCopyNumber - PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC * cnChangeUncertainty));
-        ploidyUncertainty *= 0.5;
-
-        return ploidyUncertainty;
-    }
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
     {
