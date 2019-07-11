@@ -16,8 +16,6 @@ public abstract class ActionablePanel implements Comparable<ActionablePanel> {
 
     public abstract boolean deletion();
 
-    public abstract boolean fusion();
-
     public abstract boolean variant();
 
     public abstract boolean drup();
