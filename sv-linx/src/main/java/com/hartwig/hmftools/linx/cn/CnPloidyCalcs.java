@@ -24,15 +24,22 @@ import org.apache.logging.log4j.Logger;
 
 public class CnPloidyCalcs
 {
-    private final Map<Integer,double[]> mSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
+    private final Map<Integer,PloidyCalcData> mSvPloidyCalcMap; // map of sample to SV Id & ploidy calc data
 
     // references
     private final Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
     private final Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private final List<StructuralVariantData> mSvDataList;
 
-    private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
+    private static double ABS_UNCERTAINTY = 0.15;
+    private static double RELATIVE_UNCERTAINTY = 0.15;
+    private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
+    private static double ADDITIONAL_REL_UNCERTAINTY = 0.20;
+    private static double PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC = 0.5;
+    private static double NO_DEPTH_CNCHANGE_UNC = 0.5;
+
+    private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 
     public CnPloidyCalcs(
             final Map<String,List<SvCNData>> chrCnDataMap,
@@ -46,7 +53,7 @@ public class CnPloidyCalcs
         mSvPloidyCalcMap = Maps.newHashMap();
     }
 
-    public final Map<Integer,double[]> getSvPloidyCalcMap() { return mSvPloidyCalcMap; }
+    public final Map<Integer,PloidyCalcData> getSvPloidyCalcMap() { return mSvPloidyCalcMap; }
 
     public void calculateAdjustedPloidy(final String sampleId)
     {
@@ -85,10 +92,6 @@ public class CnPloidyCalcs
             final SvCNData cnEndData = cnEndNextData != null ? getCNSegment(cnEndNextData.Chromosome, cnEndNextData.getIndex() - 1) : null;
 
             int tumorReadCountStart = svData.startTumorVariantFragmentCount();
-            int tumorReadCountEnd = svData.endTumorVariantFragmentCount();
-
-            double adjVafStart = svData.adjustedStartAF();
-            double adjVafEnd = svData.adjustedEndAF();
 
             double maxCNStart = max(cnStartPrevData.CopyNumber, cnStartData.CopyNumber);
             double maxCNEnd = cnEndData != null && cnEndNextData != null ? max(cnEndData.CopyNumber, cnEndNextData.CopyNumber): 0;
@@ -116,39 +119,24 @@ public class CnPloidyCalcs
                 }
             }
 
-            final double calcResults[] = calcAdjustedPloidyValues(cnChgStart, cnChgEnd,
+            final PloidyCalcData calcResults = calcAdjustedPloidyValues(cnChgStart, cnChgEnd,
                     tumorReadCountStart, svData.ploidy(), maxCNStart, maxCNEnd,
                     startDepthData, cnEndData != null ? endDepthData : null);
 
-            double ploidyEstimate = calcResults[APC_EST_PLOIDY];
-            double ploidyUncertainty = calcResults[APC_EST_UNCERTAINTY];
-
-            if(ploidyUncertainty == 0 || Double.isNaN(ploidyEstimate) || Double.isNaN(ploidyUncertainty))
+            if(!calcResults.Valid)
             {
                 LOGGER.debug("sample({}) svID({} type={}) unexpected ploidy(est={} unc={})",
-                        sampleId, svData.id(), svData.type(), ploidyEstimate, ploidyUncertainty);
+                        sampleId, svData.id(), svData.type(), calcResults.PloidyEstimate, calcResults.PloidyUncertainty);
             }
 
-            if(Double.isNaN(ploidyEstimate))
-                ploidyEstimate = 0;
-
-            if(Double.isNaN(ploidyUncertainty))
-                ploidyUncertainty = 0;
-
-            double[] ploidyCalcs = {ploidyEstimate, ploidyUncertainty};
-            mSvPloidyCalcMap.put(svData.id(), ploidyCalcs);
-
+            mSvPloidyCalcMap.put(svData.id(), calcResults);
         }
     }
-
-    public static int APC_EST_PLOIDY = 0;
-    public static int APC_EST_UNCERTAINTY = 1;
-    public static int APC_RESULTS_MAX = 2;
 
     private static double POIS_PROB_LOW = 0.005;
     private static double POIS_PROB_HIGH = 0.995;
 
-    public static double[] calcAdjustedPloidyValues(double cnChgStart, double cnChgEnd,
+    public static PloidyCalcData calcAdjustedPloidyValues(double cnChgStart, double cnChgEnd,
             int tumorReadCount, double ploidy, double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)
     {
         double cnUncertaintyStart = calcCopyNumberSideUncertainty(maxCNStart, startDepthData);
@@ -228,21 +216,11 @@ public class CnPloidyCalcs
             estUncertainty = sqrt(observations.size() / (double)(observations.size() - 1) * adjUncertainty / sumUncertainty);
         }
 
-        // populate a results object
-        double[] results = new double[APC_RESULTS_MAX];
+        if(Double.isNaN(estPloidy) || estPloidy <= 0 || Double.isNaN(estUncertainty) || estUncertainty <= 0)
+            return new PloidyCalcData(0,0, false);
 
-        results[APC_EST_UNCERTAINTY] = estUncertainty;
-        results[APC_EST_PLOIDY] = estPloidy;
-
-        return results;
+        return new PloidyCalcData(estPloidy, estUncertainty, true);
     }
-
-    private static double ABS_UNCERTAINTY = 0.15;
-    private static double RELATIVE_UNCERTAINTY = 0.15;
-    private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
-    private static double ADDITIONAL_REL_UNCERTAINTY = 0.20;
-    private static double PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC = 0.5;
-    private static double NO_DEPTH_CNCHANGE_UNC = 0.5;
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
     {

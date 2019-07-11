@@ -66,6 +66,7 @@ import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -201,7 +202,7 @@ public class SvSampleAnalyser {
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
 
-    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer,double[]> svPloidyCalcDataMap,
+    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer,PloidyCalcData> svPloidyCalcDataMap,
             final Map<Integer,SvCNData[]> svIdCnDataMap, final Map<String,List<SvCNData>> chrCnDataMap)
     {
         if((svPloidyCalcDataMap == null || svPloidyCalcDataMap.isEmpty()) && svIdCnDataMap.isEmpty())
@@ -213,11 +214,11 @@ public class SvSampleAnalyser {
         {
             if(svPloidyCalcDataMap != null)
             {
-                final double[] ploidyData = svPloidyCalcDataMap.get(var.dbId());
+                final PloidyCalcData ploidyData = svPloidyCalcDataMap.get(var.dbId());
                 if (ploidyData != null)
                 {
-                    double estPloidy = ploidyData[0];
-                    double estUncertainty = ploidyData[1];
+                    double estPloidy = ploidyData.PloidyEstimate;
+                    double estUncertainty = ploidyData.PloidyUncertainty;
                     var.setPloidyRecalcData(estPloidy - estUncertainty, estPloidy + estUncertainty);
                 }
             }

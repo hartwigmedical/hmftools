@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.APC_EST_PLOIDY;
-import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.APC_EST_UNCERTAINTY;
 import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.calcAdjustedPloidyValues;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -28,11 +27,11 @@ public class CopyNumberTest
         int[] startDepthData = {3, 3};
         int[] endDepthData = {1, 1};
 
-        double[] calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCount, ploidy,
+        PloidyCalcData calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCount, ploidy,
                 maxCNStart, maxCNEnd, startDepthData, endDepthData);
 
-        assertEquals(2.85, calcResults[APC_EST_PLOIDY], 0.01);
-        assertEquals(1.11, calcResults[APC_EST_UNCERTAINTY], 0.01);
+        assertEquals(2.85, calcResults.PloidyEstimate, 0.01);
+        assertEquals(1.11, calcResults.PloidyUncertainty, 0.01);
 
     }
 

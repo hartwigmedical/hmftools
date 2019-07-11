@@ -86,7 +86,7 @@ public class CnDataLoader
         mCnPloidyCalcs = new CnPloidyCalcs(mChrCnDataMap, mSvIdCnDataMap, mSvDataList);
     }
 
-    public final Map<Integer,double[]> getSvPloidyCalcMap() { return mCnPloidyCalcs.getSvPloidyCalcMap(); }
+    public final Map<Integer,PloidyCalcData> getSvPloidyCalcMap() { return mCnPloidyCalcs.getSvPloidyCalcMap(); }
     public final List<LohEvent> getLohData() { return mLohEventData; }
     public final List<HomLossEvent> getHomLossData() { return mHomLossData; }
     public final Map<String, double[]> getChrCopyNumberMap() { return mChrEndsCNMap; }
