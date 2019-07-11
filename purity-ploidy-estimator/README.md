@@ -604,6 +604,10 @@ MH | 1 | Microhomology
 KT | 1 | Forward/reverse kataegis id
 TNC | 1 | Tri-nucleotide context
 
+Somatic variants of type C>T and C>G in a TpCpN context are annotated as showing Kataegis ([Nik Zainal et al., 2012](https://www.ncbi.nlm.nih.gov/pubmed/22608084)) 
+if there are three or more mutations of that type, strand and context localised within a region with an average inter-mutation distance of 
+<= 1kb. The annotation describes the strand it was found on along with an id and is shared by grouped variants.
+ 
 ### Database
 
 PURPLE can optionally persist its output to a SQL database. This is particularly useful when querying data over a cohort. 
@@ -755,6 +759,16 @@ SELECT sampleId, count(*)/2859 AS TMB, IF (count(*)/2859 > 10, "High", "Low") AS
 FROM somaticVariant 
 WHERE filter = 'PASS'
 GROUP BY 1;
+```
+
+Regions of kataegis can be found within a sample as:
+```
+SELECT kataegis, min(chromosome) as chromosome, min(position) as start, max(position) as end, count(*), 
+       round((max(position) - min(position)) / (count(*) - 1))  as avgDistance
+FROM somaticVariant 
+WHERE sampleId = 'COLO829T' AND kataegis <> ''
+GROUP BY kataegis
+ORDER BY count(*) DESC;
 ```
 
 ### CIRCOS
