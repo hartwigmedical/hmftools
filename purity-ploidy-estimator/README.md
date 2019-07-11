@@ -838,11 +838,17 @@ Copy numbers are broken down by colour into their respective minor allele ploidy
   <img src="src/main/resources/readme/COLO829T.map.png" width="500" alt="Minor Allele Ploidy PDF">
 </p>
 
-If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant ploidy broken down by copy number:
+If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant ploidy broken down by copy number as 
+well as rainfall plot with kataegis clusters highlighted grey:
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.variant.png" width="500" alt="Somatic Variant Ploidy PDF">
 </p>
+
+<p align="center">
+  <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="500" alt="Somatic Rainfall">
+</p>
+
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
@@ -866,6 +872,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
   - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 
   - Added REF_G to structural vcf output
+  - Added variant rainfall plot
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-30)
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)

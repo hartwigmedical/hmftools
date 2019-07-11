@@ -189,7 +189,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
 
-            LOGGER.info("Writing purple data to: {}", outputDirectory);
+            LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
             FittedPurityFile.write(outputDirectory, tumorSample, purityContext);
@@ -200,6 +200,7 @@ public class PurityPloidyEstimateApplication {
                     germlineDeletions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
+
             structuralVariants.write(purityAdjuster, copyNumbers);
             new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig()).write(purityAdjuster,
                     copyNumbers,
@@ -207,6 +208,7 @@ public class PurityPloidyEstimateApplication {
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
+                LOGGER.info("Writing purple data to database: {}", dbConfig.url());
                 final DatabaseAccess dbAccess = databaseAccess(dbConfig);
                 persistToDatabase(dbAccess,
                         tumorSample,
