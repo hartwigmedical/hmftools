@@ -59,12 +59,12 @@ public class KataegisQueueTest {
 
     @Test
     public void testAverageDistanceSpread() {
-        final VariantContext context1 = create("1", 1100, true);
+        final VariantContext context1 = create("1", 1101, true);
         final VariantContext context2 = create("1", 2102, true);
         final VariantContext context3 = create("1", 3103, true);
         final VariantContext context4 = create("1", 4104, true);
         final VariantContext context5 = create("1", 5105, true);
-        final VariantContext context6 = create("1", 6104, true);
+        final VariantContext context6 = create("1", 6103, true);
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
