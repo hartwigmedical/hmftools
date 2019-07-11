@@ -761,10 +761,10 @@ WHERE filter = 'PASS'
 GROUP BY 1;
 ```
 
-Regions of kataegis can be found within a sample as:
+Regions of kataegis within a sample is queried with:
 ```
-SELECT kataegis, min(chromosome) as chromosome, min(position) as start, max(position) as end, count(*), 
-       round((max(position) - min(position)) / (count(*) - 1))  as avgDistance
+SELECT kataegis, min(chromosome) as chromosome, min(position) as start, max(position) as end,  
+       count(*), round((max(position) - min(position)) / (count(*) - 1))  as avgDistance
 FROM somaticVariant 
 WHERE sampleId = 'COLO829T' AND kataegis <> ''
 GROUP BY kataegis
