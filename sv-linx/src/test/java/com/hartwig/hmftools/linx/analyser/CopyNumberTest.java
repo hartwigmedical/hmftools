@@ -30,9 +30,23 @@ public class CopyNumberTest
         PloidyCalcData calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCount, ploidy,
                 maxCNStart, maxCNEnd, startDepthData, endDepthData);
 
-        assertEquals(2.85, calcResults.PloidyEstimate, 0.01);
-        assertEquals(1.11, calcResults.PloidyUncertainty, 0.01);
+        assertEquals(2.86, calcResults.PloidyEstimate, 0.01);
+        assertEquals(0.87, calcResults.PloidyUncertainty, 0.01);
 
+        cnChgStart = 2;
+        cnChgEnd = 1.3;
+        tumorReadCount = 69;
+        maxCNStart = 7;
+        maxCNEnd = 5;
+        ploidy = 1.43;
+        startDepthData[0] = 0;;
+        endDepthData[0] = 0;
+
+        calcResults =  calcAdjustedPloidyValues(cnChgStart, cnChgEnd, tumorReadCount, ploidy,
+                maxCNStart, maxCNEnd, startDepthData, endDepthData);
+
+        assertEquals(1.49, calcResults.PloidyEstimate, 0.01);
+        assertEquals(0.84, calcResults.PloidyUncertainty, 0.01);
     }
 
     @Test

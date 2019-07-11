@@ -33,9 +33,9 @@ public class CnPloidyCalcs
 
 
     private static double ABS_UNCERTAINTY = 0.15;
-    private static double RELATIVE_UNCERTAINTY = 0.15;
+    private static double RELATIVE_UNCERTAINTY = 0.12;
     private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
-    private static double ADDITIONAL_REL_UNCERTAINTY = 0.20;
+    private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
     private static double PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC = 0.5;
     private static double NO_DEPTH_CNCHANGE_UNC = 0.5;
 
@@ -164,10 +164,10 @@ public class CnPloidyCalcs
 
             double rcAdjustedPloidy = ploidy / tumorReadCount * ((poissonRCLow + poissonRCHigh) * 0.5);
 
+            // (B20-B18)/B18*B17+MIN(B14:C14)*proportionCNChangeUsedInPloidy
             double ploidyUncertainty = (poissonRCHigh - tumorReadCount) / tumorReadCount * ploidy;
 
-            double cnUncertaintyFactor = !uncertainties.isEmpty() ?
-                    uncertainties.stream().mapToDouble(x -> x).sum() / uncertainties.size() : 0;
+            double cnUncertaintyFactor = !uncertainties.isEmpty() ? uncertainties.stream().mapToDouble(x -> x).min().getAsDouble() : 0;
 
             ploidyUncertainty += cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC;
 
@@ -226,9 +226,9 @@ public class CnPloidyCalcs
     {
         int minDepthCount = min(depthData[0], depthData[1]);
 
-        if(minDepthCount <= 0)
-            return NO_DEPTH_CNCHANGE_UNC * copyNumber;
+        minDepthCount = max(minDepthCount, 1);
 
+        // MAX(copyNumber*relUncertainty,absUncertainty)+MAX(addAbsUncertainty,addRelUncertainty*copyNumber)/SQRT(MAX(minDepthCount,1))
         double uncertainty = max(copyNumber*RELATIVE_UNCERTAINTY, ABS_UNCERTAINTY);
         uncertainty += max(ADDITIONAL_ABS_UNCERTAINTY, ADDITIONAL_REL_UNCERTAINTY * copyNumber) / sqrt(minDepthCount);
 
