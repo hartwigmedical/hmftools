@@ -332,30 +332,22 @@ public class DoubleMinuteFinder
         if(cnData == null)
             return false;
 
+        //  we want to check telomere / centromere CN < max (8, 3x sample ploidy).
+
         final PurityContext samplePurity = mCnAnalyser.getPurityContext();
         if(samplePurity == null)
             return false;
 
         double telomereCN = (arm == CHROMOSOME_ARM_CENTROMERE) ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
 
-        return telomereCN > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C
-                || cnData[CENTROMERE_CN] > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C;
-    }
+        if(cnData[CENTROMERE_CN] > PLOIDY_THRESHOLD || telomereCN > PLOIDY_THRESHOLD)
+            return true;
 
-    private boolean amplifiedVsTelomereAndCentromere(final String chromosome, final String arm, double maxPloidy)
-    {
-        final double[] cnData = mCnAnalyser.getChrCopyNumberMap().get(chromosome);
+        if(telomereCN > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C
+        || cnData[CENTROMERE_CN] > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C)
+            return true;
 
-        if(cnData == null)
-            return false;
-
-        // final PurityContext samplePurity = mCnAnalyser.getPurityContext();
-        // if(samplePurity == null)
-        //    return false;
-
-        double telomereCN = (arm == CHROMOSOME_ARM_CENTROMERE) ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
-
-        return maxPloidy < telomereCN * PLOIDY_VS_T_AND_C || maxPloidy < cnData[CENTROMERE_CN] * PLOIDY_VS_T_AND_C;
+        return false;
     }
 
     private final SvChain createDMChain(SvCluster cluster, List<SvVarData> dmSVList)

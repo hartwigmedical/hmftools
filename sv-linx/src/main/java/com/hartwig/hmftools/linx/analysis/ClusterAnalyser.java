@@ -282,7 +282,7 @@ public class ClusterAnalyser {
         {
             // isSpecificCluster(cluster);
 
-            if (cluster.isResolved() && cluster.getResolvedType() != LINE)
+            if (cluster.isResolved() || cluster.getResolvedType() == LINE) // only simple assembly links for LINE clusters
                 continue;
 
             // these are either already chained or no need to chain

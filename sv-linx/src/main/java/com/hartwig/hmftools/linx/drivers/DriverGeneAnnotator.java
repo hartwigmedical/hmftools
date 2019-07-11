@@ -488,15 +488,17 @@ public class DriverGeneAnnotator
                     continue;
 
                 // require the DUP to not be interupted by any other SV within this cluster within this gene region
-                SvBreakend lowerBreakend = breakend;
                 SvBreakend upperBreakend = varStart.getBreakend(false);
+
+                if(upperBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 1)
+                    continue;
 
                 LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
                         mSampleId, varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type(),
                         varStart.copyNumber(true), varStart.copyNumberChange(true)));
 
                 DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.addSvBreakendPair(lowerBreakend, upperBreakend, SV_DRIVER_TYPE_DUP);
+                event.addSvBreakendPair(breakend, upperBreakend, SV_DRIVER_TYPE_DUP);
                 dgData.addEvent(event);
 
                 if(varStart.copyNumberChange(true) > maxCopyNumber)
