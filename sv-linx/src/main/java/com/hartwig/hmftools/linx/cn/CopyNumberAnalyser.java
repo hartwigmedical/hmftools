@@ -130,7 +130,7 @@ public class CopyNumberAnalyser
         findLohEvents(sampleId);
 
         if(mWriteAdjustedPloidyToFile)
-            reaclcAdjustedPloidy(sampleId);
+            calculateAdjustedPloidy(sampleId);
     }
     */
 

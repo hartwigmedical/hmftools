@@ -117,7 +117,7 @@ public class ClusterAnalyser {
             mDmFinder.setOutputDir(mConfig.OutputDataPath);
         }
 
-        if(mConfig.ChainingMethod == 1)
+        if(mConfig.ChainingMethod == 0)
             mChainFinder.setUseOldMethod(true);
 
         mChainFinder.setLogVerbose(mConfig.LogVerbose);

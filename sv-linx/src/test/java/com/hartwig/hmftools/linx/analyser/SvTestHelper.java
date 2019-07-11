@@ -498,7 +498,7 @@ public class SvTestHelper
         }
 
         if(includePloidyCalcs)
-            CnDataLoader.reaclcAdjustedPloidy(SampleId);
+            CnDataLoader.calculateAdjustedPloidy(SampleId);
 
         setSvCopyNumberData(
                 AllVariants,

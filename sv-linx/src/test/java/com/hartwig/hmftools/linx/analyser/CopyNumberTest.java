@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.APC_EST_PLOIDY;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.APC_EST_UNCERTAINTY;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.calcAdjustedPloidyValues;
+import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.APC_EST_PLOIDY;
+import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.APC_EST_UNCERTAINTY;
+import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.calcAdjustedPloidyValues;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
