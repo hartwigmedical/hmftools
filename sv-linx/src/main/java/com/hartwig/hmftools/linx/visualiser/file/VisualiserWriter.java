@@ -149,7 +149,7 @@ public class VisualiserWriter
             int chainCount = chains.isEmpty() ? 1 : chains.size();
             int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
 
-            int repeatCount = max((int)var.getRoundedCNChange(),1);
+            int repeatCount = (int)var.getRoundedPloidy(true);
 
             for(int i = 0; i < chainCount; ++i)
             {
@@ -238,8 +238,9 @@ public class VisualiserWriter
 
                     uniquePairs.add(pair);
 
-                    int pairRepeatCount = 0;
+                    int pairRepeatCount = pair.repeatCount();
 
+                    // check for duplicate links - would only exist in non-identical chains since these have already been removed
                     for (final SvChain otherChain : cluster.getChains())
                     {
                         pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();

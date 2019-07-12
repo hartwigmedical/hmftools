@@ -320,9 +320,15 @@ public class SvCluster
             if(addReplicatedSVs)
             {
                 if(var.isReplicatedSv())
+                {
                     addVariant(var);
+                    mUnchainedSVs.remove(var); // since was just added which is crap
+                    mUnchainedSVs.remove(var.getOrigSV());
+                }
                 else
+                {
                     mUnchainedSVs.remove(var);
+                }
             }
             else
             {

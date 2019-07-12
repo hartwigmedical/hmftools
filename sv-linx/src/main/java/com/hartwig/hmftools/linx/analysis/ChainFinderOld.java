@@ -343,7 +343,7 @@ public class ChainFinderOld
     {
         // add these chains to the cluster, but skip any which are identical to existing ones,
         // which can happen for clusters with replicated SVs
-        mChains.stream().forEach(chain -> checkAddNewChain(chain, cluster));
+        mUniqueChains.stream().forEach(chain -> checkAddNewChain(chain, cluster));
 
         for(int i = 0; i < cluster.getChains().size(); ++i)
         {

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.types;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -20,7 +21,6 @@ public class SvChainState
     public final int Ploidy;
     public final int MaxPloidy;
 
-    private int mCurrentCount;
     private int[] mBreakendCount;
 
     // unique connections made to other SVs
@@ -48,7 +48,6 @@ public class SvChainState
             MaxPloidy = max((int) round(var.ploidyMax()), Ploidy);
         }
 
-        mCurrentCount = 0;
         mBreakendCount = new int[SE_PAIR];
 
         mConnectionsStart = Lists.newArrayList();
@@ -57,16 +56,15 @@ public class SvChainState
         mRepBreakendsStart = Lists.newArrayList();
     }
 
-    public void add() { ++mCurrentCount; }
     public void add(boolean isStart) { ++mBreakendCount[seIndex(isStart)]; }
 
-    public int curentCount() { return mCurrentCount; }
+    public int curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
     public int breakendCount(int se) { return mBreakendCount[se]; }
     public int breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
 
-    public int minUnlinked() { return max(MinPloidy - mCurrentCount, 0); }
-    public int maxUnlinked() { return max(MaxPloidy - mCurrentCount, 0); }
-    public int unlinked() { return max(Ploidy - mCurrentCount, 0); }
+    public int minUnlinked() { return max(MinPloidy - curentCount(), 0); }
+    public int maxUnlinked() { return max(MaxPloidy - curentCount(), 0); }
+    public int unlinked() { return max(Ploidy - curentCount(), 0); }
 
     public int minUnlinked(boolean isStart) { return minUnlinked(seIndex(isStart)); }
     public int maxUnlinked(boolean isStart) { return maxUnlinked(seIndex(isStart)); }
@@ -107,8 +105,8 @@ public class SvChainState
 
     public String toString()
     {
-        return String.format("id(%d) ploidy(%d-%d-%d) counts(%d s=%d e=%d)",
-                SV.dbId(), MinPloidy, Ploidy, MaxPloidy, mCurrentCount, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+        return String.format("id(%d) ploidy(%d-%d-%d) counts(s=%d e=%d)",
+                SV.dbId(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
     }
 
 }

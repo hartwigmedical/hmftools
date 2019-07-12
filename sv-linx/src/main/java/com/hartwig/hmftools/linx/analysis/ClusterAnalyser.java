@@ -506,7 +506,11 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
-        isSpecificCluster(cluster);
+        if(!assembledLinksOnly)
+        {
+            isSpecificCluster(cluster);
+        }
+
         if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount(true) > mConfig.ChainingSvLimit)
         {
             LOGGER.info("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",

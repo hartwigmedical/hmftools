@@ -30,6 +30,7 @@ public class SvLinkedPair {
     private String mLocationType;
     private int mOverlapCount;
     private boolean mHasCopyNumberGain;
+    private int mRepeatCount;
 
     private String mExonMatchData;
 
@@ -66,6 +67,7 @@ public class SvLinkedPair {
         mOverlapCount = 0;
         mHasCopyNumberGain = false;
         mExonMatchData = "";
+        mRepeatCount = 0;
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
         mLinkLength = abs(length);
@@ -169,6 +171,9 @@ public class SvLinkedPair {
     public void setOverlapCount(int count) { mOverlapCount = count; }
     public int overlapCount() { return mOverlapCount; }
 
+    public void setRepeatCount(int count) { mRepeatCount = count; }
+    public int repeatCount() { return mRepeatCount; }
+
     public void setHasCopyNumberGain(boolean toggle) { mHasCopyNumberGain = toggle; }
     public boolean hasCopyNumberGain() { return mHasCopyNumberGain; }
 
@@ -241,17 +246,6 @@ public class SvLinkedPair {
         }
     }
 
-    public static final SvLinkedPair findLinkedPair(final List<SvLinkedPair> linkedPairs, final SvVarData var, boolean useStart)
-    {
-        for(final SvLinkedPair pair : linkedPairs)
-        {
-            if(pair.hasBreakend(var, useStart))
-                return pair;
-        }
-
-        return null;
-    }
-
     public boolean matches(final SvLinkedPair other)
     {
         if(this == other)
@@ -314,12 +308,6 @@ public class SvLinkedPair {
     {
         final SvBreakend lower = getBreakend(true);
         return breakend == lower ? getBreakend(false) : lower;
-    }
-
-    public boolean hasAnySameVariant(final SvLinkedPair other)
-    {
-        return (mFirst.equals(other.first(), true) || mSecond.equals(other.second(), true)
-            || mFirst.equals(other.second(), true) || mSecond.equals(other.first(), true));
     }
 
     public boolean hasVariant(final SvVarData var)
