@@ -26,7 +26,6 @@
         <module>bam-slicer</module>
         <module>bachelor</module>
         <module>hmf-id-generator</module>
-        <module>portal-data-converter</module>
         <module>sv-linx</module>
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
