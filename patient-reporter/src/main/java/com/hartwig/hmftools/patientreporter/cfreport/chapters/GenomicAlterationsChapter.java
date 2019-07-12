@@ -23,16 +23,15 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
-import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ActionableOrDriversChapter implements ReportChapter {
+public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private final AnalysedPatientReport patientReport;
 
-    public ActionableOrDriversChapter(@NotNull final AnalysedPatientReport patientReport) {
+    public GenomicAlterationsChapter(@NotNull final AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
     }
 
@@ -147,8 +146,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
         Table contentTable = TableUtil.createReportContentTable(new float[] { 90, 82.5f, 82.5f, 37.5f, 37.5f, 40, 30, 100 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell(""), TableUtil.createHeaderCell("Source") });
+                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies")});
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
