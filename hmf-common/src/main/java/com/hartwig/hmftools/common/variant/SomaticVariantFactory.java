@@ -23,7 +23,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -164,7 +163,7 @@ public class SomaticVariantFactory {
         final Genotype genotype = context.getGenotype(sample);
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
-            final AllelicDepth allelicDepth = allelicDepth(context.getGenotype(sample));
+            final AllelicDepth allelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
             if (allelicDepth.totalReadCount() > 0) {
                 return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                         .map(x -> enrichment.enrich(x, context))
@@ -176,7 +175,7 @@ public class SomaticVariantFactory {
 
     @NotNull
     public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context) {
-        final AllelicDepth allelicDepth = allelicDepth(context.getGenotype(sample));
+        final AllelicDepth allelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
 
         return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
                 .map(x -> enrichment.enrich(x, context))
@@ -326,17 +325,4 @@ public class SomaticVariantFactory {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
     }
 
-    @NotNull
-    public static AllelicDepth allelicDepth(@NotNull final Genotype genotype) {
-        Preconditions.checkArgument(genotype.hasAD());
-
-        int[] adFields = genotype.getAD();
-        final int alleleReadCount = adFields[1];
-        int totalReadCount = 0;
-        for (final int afField : adFields) {
-            totalReadCount += afField;
-        }
-
-        return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
-    }
 }

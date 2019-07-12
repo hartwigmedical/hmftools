@@ -74,7 +74,7 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
         final String sequence = relativePositionAndRef.getSecond();
         if (!sequence.isEmpty()) {
             final String tri = sequence.substring(Math.max(0, relativePosition - 1), Math.min(sequence.length(), relativePosition + 2));
-            variant.getCommonInfo().putAttribute(TRINUCLEOTIDE_FLAG, tri);
+            variant.getCommonInfo().putAttribute(TRINUCLEOTIDE_FLAG, tri, true);
         }
     }
 
@@ -86,8 +86,8 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
         Optional<RepeatContext> repeatContext = getRepeatContext(variant, relativePosition, sequence);
         if (repeatContext.isPresent()) {
 
-            variant.getCommonInfo().putAttribute(REPEAT_SEQUENCE_FLAG, repeatContext.get().sequence());
-            variant.getCommonInfo().putAttribute(REPEAT_COUNT_FLAG, repeatContext.get().count());
+            variant.getCommonInfo().putAttribute(REPEAT_SEQUENCE_FLAG, repeatContext.get().sequence(), true);
+            variant.getCommonInfo().putAttribute(REPEAT_COUNT_FLAG, repeatContext.get().count(), true);
         }
     }
 
@@ -100,10 +100,10 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
 
             if (ref.length() > alt.length()) {
                 variant.getCommonInfo()
-                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref));
+                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref), true);
             } else if (ref.length() == 1) {
                 variant.getCommonInfo()
-                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt));
+                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt), true);
             }
 
         }

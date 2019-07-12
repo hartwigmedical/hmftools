@@ -7,6 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.common.variant.clonality.PeakModelFile;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentPurple;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.RefGenomeData;
@@ -68,6 +69,11 @@ public class SomaticVCF {
                 }
 
                 enricher.flush();
+
+                final String peakModelFilename =
+                        PeakModelFile.generateFilenameForWriting(commonConfig.outputDirectory(), commonConfig.tumorSample());
+                PeakModelFile.write(peakModelFilename, enricher.clonalityModel());
+
             }
         }
     }
