@@ -59,12 +59,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 70, 80, 80, 60, 50, 70, 45, 40 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("position"), TableUtil.createHeaderCell("Variant"),
-                        TableUtil.createHeaderCell("Impact"),
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("position"),
+                        TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
                         TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"),
-                        TableUtil.createHeaderCell("Biallelic"),
-                        TableUtil.createHeaderCell("Driver") });
+                        TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Driver") });
 
         final List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
@@ -143,10 +142,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 90, 82.5f, 82.5f, 37.5f, 37.5f, 40, 30, 100 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 95, 85, 85, 40, 40, 40, 30 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies")});
+                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
+                        TableUtil.createHeaderCell("") });
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
@@ -160,6 +160,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(""));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
