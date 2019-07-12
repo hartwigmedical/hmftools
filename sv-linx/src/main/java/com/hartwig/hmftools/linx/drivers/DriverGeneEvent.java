@@ -25,6 +25,7 @@ public class DriverGeneEvent
     public static final String SV_DRIVER_TYPE_TI = "TI";
     public static final String SV_DRIVER_TYPE_FB = "FB";
     public static final String SV_DRIVER_TYPE_DUP = "DUP";
+    public static final String SV_DRIVER_TYPE_DM = "DM";
     public static final String SV_DRIVER_TYPE_DEL = "DEL";
     public static final String SV_DRIVER_TYPE_ARM_SV = "ARM_SV";
 

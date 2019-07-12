@@ -4,10 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.MULTIPLE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
@@ -23,9 +20,8 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvChain.getRepeatedSvSequence;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_SHATTERING;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -48,7 +44,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -577,7 +572,7 @@ public class ClusterAnnotations
             // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
             if(!isComplex)
             {
-                cluster.addAnnotation(CLUSTER_ANNONT_SHATTERING);
+                cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
             }
         }
     }

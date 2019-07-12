@@ -20,9 +20,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_BFB_AMP;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_DM;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -174,7 +173,7 @@ public class DoubleMinuteFinder
                 LOGGER.debug(String.format("cluster(%s) maxPloidy(%.1f) foldbacks(%d ploidy(max=%.1f sum=%.1f) explains AMP",
                         cluster.id(), maxSvPloidy, cluster.getFoldbacks().size(), maxFoldbackPloidy, sumFoldbackPloidy));
 
-                cluster.addAnnotation(CLUSTER_ANNONT_BFB_AMP);
+                cluster.addAnnotation(CLUSTER_ANNOT_BFB_AMP);
                 return;
             }
         }
@@ -298,7 +297,7 @@ public class DoubleMinuteFinder
         if(fullyChained)
             cluster.setDoubleMinuteSVs(highPloidySVs);
 
-        cluster.addAnnotation(CLUSTER_ANNONT_DM);
+        cluster.addAnnotation(CLUSTER_ANNOT_DM);
 
         if(highPloidySVs.size() == 1 && fullyChained)
         {
@@ -402,7 +401,7 @@ public class DoubleMinuteFinder
         if(mOutputDir == null || mOutputDir.isEmpty())
             return;
 
-        if(!cluster.hasAnnotation(CLUSTER_ANNONT_DM))
+        if(!cluster.hasAnnotation(CLUSTER_ANNOT_DM))
             return;
 
         final List<SvVarData> highPloidySVs = mClusterSVs.get(cluster.id());

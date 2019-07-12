@@ -33,11 +33,10 @@ public class CnPloidyCalcs
 
 
     private static double ABS_UNCERTAINTY = 0.15;
-    private static double RELATIVE_UNCERTAINTY = 0.12;
+    private static double RELATIVE_UNCERTAINTY = 0.10;
     private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
     private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
     private static double PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC = 0.5;
-    private static double NO_DEPTH_CNCHANGE_UNC = 0.5;
 
     private static final Logger LOGGER = LogManager.getLogger(CnDataLoader.class);
 

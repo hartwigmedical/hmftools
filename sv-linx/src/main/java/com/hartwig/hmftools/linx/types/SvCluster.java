@@ -95,10 +95,10 @@ public class SvCluster
     private int mOriginArms;
     private int mFragmentArms;
 
-    public static String CLUSTER_ANNONT_DM = "DM";
-    public static String CLUSTER_ANNONT_BFB_AMP = "BFB_AMP";
-    public static String CLUSTER_ANNONT_SHATTERING = "CHR_THRIP";
-    public static String CLUSTER_ANNONT_CHROM_PLEX = "CHR_PLEX";
+    public static String CLUSTER_ANNOT_DM = "DM";
+    public static String CLUSTER_ANNOT_BFB_AMP = "BFB_AMP";
+    public static String CLUSTER_ANNOT_SHATTERING = "CHR_THRIP";
+    public static String CLUSTER_ANNOT_CHROM_PLEX = "CHR_PLEX";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 

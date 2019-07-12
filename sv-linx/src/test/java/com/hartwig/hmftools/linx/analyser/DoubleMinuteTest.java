@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_BFB_AMP;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNONT_DM;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import static org.junit.Assert.assertEquals;
@@ -47,7 +47,7 @@ public class DoubleMinuteTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertEquals(1, cluster.getSvCount());
         assertTrue(cluster.getSVs().contains(dup1));
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONT_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNOT_DM));
 
         assertTrue(cluster.getChains().size() == 1);
         assertEquals(1, cluster.getChains().get(0).getLinkCount());
@@ -76,7 +76,7 @@ public class DoubleMinuteTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
         assertTrue(cluster != null);
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONT_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNOT_DM));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
 
@@ -126,7 +126,7 @@ public class DoubleMinuteTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var3, var4, var5, var6));
         assertTrue(cluster != null);
-        assertTrue(cluster.hasAnnotation(CLUSTER_ANNONT_DM));
+        assertTrue(cluster.hasAnnotation(CLUSTER_ANNOT_DM));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var3));
@@ -166,8 +166,8 @@ public class DoubleMinuteTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNONT_BFB_AMP));
+        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_BFB_AMP));
 
         tester.clearClustersAndSVs();
 
@@ -187,7 +187,7 @@ public class DoubleMinuteTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
+        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
 
         tester.clearClustersAndSVs();
 
@@ -206,7 +206,7 @@ public class DoubleMinuteTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
-        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNONT_DM));
+        assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
 
     }
 

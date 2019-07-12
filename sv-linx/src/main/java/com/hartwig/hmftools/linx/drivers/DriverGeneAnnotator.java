@@ -17,12 +17,14 @@ import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_CHR;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
+import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DM;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DUP;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_FB;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_TI;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -32,8 +34,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +47,6 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -479,8 +478,25 @@ public class DriverGeneAnnotator
 
             final SvVarData varStart = breakend.getSV();
 
+            // only report on each cluster once
+            if(reportedClusters.contains(varStart.getCluster().id()))
+                continue;
+
             if(breakend.orientation() == -1 && !varStart.getFoldbackLink(breakend.usesStart()).isEmpty())
                 foldbackBreakend = breakend;
+
+            if(varStart.getCluster().hasAnnotation(CLUSTER_ANNOT_DM))
+            {
+                LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) double minute SV(%s %s)",
+                        mSampleId, varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type()));
+
+                DriverGeneEvent event = new DriverGeneEvent(GAIN);
+                event.addSvBreakendPair(breakend, breakend.getOtherBreakend(), SV_DRIVER_TYPE_DM);
+                dgData.addEvent(event);
+
+                reportedClusters.add(varStart.getCluster().id());
+                continue;
+            }
 
             if(varStart.type() == DUP)
             {
@@ -501,6 +517,8 @@ public class DriverGeneAnnotator
                 event.addSvBreakendPair(breakend, upperBreakend, SV_DRIVER_TYPE_DUP);
                 dgData.addEvent(event);
 
+                reportedClusters.add(varStart.getCluster().id());
+
                 if(varStart.copyNumberChange(true) > maxCopyNumber)
                 {
                     maxCopyNumber = varStart.copyNumberChange(true);
@@ -510,10 +528,6 @@ public class DriverGeneAnnotator
 
                 continue;
             }
-
-            // only report on each cluster once
-            if(reportedClusters.contains(varStart.getCluster().id()))
-                continue;
 
             // look for the first TI which overlaps the gene region
             List<SvLinkedPair> tiPairs = varStart.getLinkedPairs(breakend.usesStart());
@@ -549,22 +563,27 @@ public class DriverGeneAnnotator
             }
         }
 
-        if(maxSvStart == null || maxSvEnd == null)
-        {
-            if(foldbackBreakend != null)
-            {
-                SvVarData foldbackSv = foldbackBreakend.getSV();
-                SvBreakend otherBreakend = foldbackSv.isChainedFoldback() ?
-                        foldbackSv.getChainedFoldbackSv().getChainedFoldbackBreakend() : foldbackBreakend.getOtherBreakend();
+        if(maxSvStart != null || maxSvEnd != null)
+            return;
 
-                if(otherBreakend != null)
-                {
-                    DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                    event.addSvBreakendPair(foldbackBreakend, otherBreakend, SV_DRIVER_TYPE_FB);
-                    dgData.addEvent(event);
-                }
+        if(foldbackBreakend != null)
+        {
+            SvVarData foldbackSv = foldbackBreakend.getSV();
+            SvBreakend otherBreakend = foldbackSv.isChainedFoldback() ?
+                    foldbackSv.getChainedFoldbackSv().getChainedFoldbackBreakend() : foldbackBreakend.getOtherBreakend();
+
+            if(otherBreakend != null)
+            {
+                DriverGeneEvent event = new DriverGeneEvent(GAIN);
+                event.addSvBreakendPair(foldbackBreakend, otherBreakend, SV_DRIVER_TYPE_FB);
+                dgData.addEvent(event);
+                return;
             }
         }
+
+        // otherwise no event
+        DriverGeneEvent event = new DriverGeneEvent(GAIN);
+        dgData.addEvent(event);
     }
 
     private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
