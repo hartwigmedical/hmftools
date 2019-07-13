@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analysis;
+package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;

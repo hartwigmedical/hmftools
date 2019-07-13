@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.types;
+package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

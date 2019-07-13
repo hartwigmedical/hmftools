@@ -16,9 +16,9 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.SvChain.CM_CHAIN_MAX;
-import static com.hartwig.hmftools.linx.types.SvChain.CM_DB;
-import static com.hartwig.hmftools.linx.types.SvChain.CM_SHORT_DB;
+import static com.hartwig.hmftools.linx.chaining.SvChain.CM_CHAIN_MAX;
+import static com.hartwig.hmftools.linx.chaining.SvChain.CM_DB;
+import static com.hartwig.hmftools.linx.chaining.SvChain.CM_SHORT_DB;
 import static com.hartwig.hmftools.linx.types.SvVarData.INF_SV_TYPE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PER
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.SvClassification;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 
 import org.apache.logging.log4j.LogManager;

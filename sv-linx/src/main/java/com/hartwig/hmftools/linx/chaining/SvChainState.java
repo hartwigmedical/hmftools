@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.types;
+package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class SvChainState
 {

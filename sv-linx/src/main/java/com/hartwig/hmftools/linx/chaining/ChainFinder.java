@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analysis;
+package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -6,13 +6,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_INFO;
-import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_VERBOSE;
-import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_WARN;
-import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
-import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_AP;
-import static com.hartwig.hmftools.linx.analysis.LinkFinder.areLinkedSection;
-import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_INFO;
+import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_VERBOSE;
+import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_WARN;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
@@ -25,8 +25,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvChain;
-import com.hartwig.hmftools.linx.types.SvChainState;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;

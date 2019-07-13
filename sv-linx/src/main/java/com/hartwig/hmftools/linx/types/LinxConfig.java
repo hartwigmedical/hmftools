@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
-import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_NEW;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 

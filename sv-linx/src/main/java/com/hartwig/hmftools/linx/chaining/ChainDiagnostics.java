@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analysis;
+package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.max;
 
@@ -13,8 +13,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvChain;
-import com.hartwig.hmftools.linx.types.SvChainState;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
