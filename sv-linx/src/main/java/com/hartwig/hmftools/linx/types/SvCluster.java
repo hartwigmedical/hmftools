@@ -289,9 +289,12 @@ public class SvCluster
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
-    public boolean hasReplicatedSVs() { return mHasReplicatedSVs; }
-    public boolean requiresReplication() { return mRequiresReplication; }
-    public void setRequiresReplication(boolean toggle) { mRequiresReplication = toggle; }
+    public boolean requiresReplication() { return mHasReplicatedSVs || mRequiresReplication; }
+
+    public void setRequiresReplication()
+    {
+        mRequiresReplication = true;
+    }
 
     public void addLohEvent(final LohEvent lohEvent)
     {
@@ -429,7 +432,9 @@ public class SvCluster
         mAssemblyLinkedPairs.addAll(other.getAssemblyLinkedPairs());
 
         if(other.requiresReplication())
+        {
             mRequiresReplication = true;
+        }
 
         mInversions.addAll(other.getInversions());
         mFoldbacks.addAll(other.getFoldbacks());

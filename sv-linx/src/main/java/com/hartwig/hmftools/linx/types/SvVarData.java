@@ -197,6 +197,11 @@ public class SvVarData
 
         mAssemblyMatchType[SE_START] = other.getAssemblyMatchType(true);
         mAssemblyMatchType[SE_END] = other.getAssemblyMatchType(false);
+
+        if(other.hasCalculatedPloidy())
+        {
+            setPloidyRecalcData(other.ploidyMin(), other.ploidyMax());
+        }
     }
 
     public final String id() { return mIdStr; }
@@ -682,6 +687,7 @@ public class SvVarData
     {
         mPloidyMin = minPloidy;
         mPloidyMax = maxPloidy;
+        mPloidy = (mPloidyMin + mPloidyMax) * 0.5;
         mHasCalcPloidy = true;
     }
 

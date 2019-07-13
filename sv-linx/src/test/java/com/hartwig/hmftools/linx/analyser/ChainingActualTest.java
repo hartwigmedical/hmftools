@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_NEW;
+import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
@@ -34,11 +36,12 @@ import org.junit.Test;
 public class ChainingActualTest
 {
     @Test
-    public void testActualComplexChaining2()
+    public void testActualComplexChaining()
     {
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
         SvTestHelper tester = new SvTestHelper();
+        tester.setChaininMethod(CHAIN_METHOD_NEW);
         tester.logVerbose(true);
 
         /*
@@ -105,7 +108,7 @@ public class ChainingActualTest
         assertEquals(tester.Analyser.getClusters().size(), 1);
 
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
-        assertTrue(cluster.hasReplicatedSVs());
+        assertTrue(cluster.requiresReplication());
         assertEquals(cluster.getSvCount(), 8);
 
         // check links

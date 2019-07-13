@@ -21,7 +21,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -31,7 +30,6 @@ import com.hartwig.hmftools.linx.types.SvChainState;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -121,6 +119,9 @@ public class ChainFinder
     // temporary support for old chain finder
     private ChainFinderOld mOldFinder;
     private boolean mUseOld;
+
+    public static final int CHAIN_METHOD_OLD = 0;
+    public static final int CHAIN_METHOD_NEW = 1;
 
     private int mLinkIndex; // incrementing value for each link added to any chain
     private String mLinkReason;
@@ -246,7 +247,7 @@ public class ChainFinder
         mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
         mAssembledLinks.addAll(cluster.getAssemblyLinkedPairs());
         mChrBreakendMap = cluster.getChrBreakendMap();
-        mHasReplication = cluster.hasReplicatedSVs();
+        mHasReplication = cluster.requiresReplication();
         mIsClusterSubset = false;
 
         if(mUseOld)
@@ -425,12 +426,6 @@ public class ChainFinder
             mOldFinder.addChains(cluster);
             return;
         }
-
-        // external replicated SVs no longer used
-        List<SvVarData> replicatedSVs = cluster.getSVs(true).stream()
-                .filter(x -> x.isReplicatedSv()).collect(Collectors.toList());
-
-        replicatedSVs.stream().forEach(x -> cluster.removeReplicatedSv(x));
 
         // add these chains to the cluster, but skip any which are identical to existing ones,
         // which can happen for clusters with replicated SVs
@@ -1476,6 +1471,13 @@ public class ChainFinder
                             SvChainState svConn = mSvConnectionsMap.get(origPair.second());
                             SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.getSecondBreakend());
 
+                            if(otherBreakend == null)
+                            {
+                                LOGGER.error("cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
+                                mIsValid = false;
+                                return false;
+                            }
+
                             newPair = SvLinkedPair.from(otherBreakend, chainBreakend);
 
                             if(origPair.isAssembled())
@@ -1495,6 +1497,13 @@ public class ChainFinder
                         {
                             SvChainState svConn = mSvConnectionsMap.get(origPair.first());
                             SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.getFirstBreakend());
+
+                            if(otherBreakend == null)
+                            {
+                                LOGGER.error("cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
+                                mIsValid = false;
+                                return false;
+                            }
 
                             newPair = SvLinkedPair.from(otherBreakend, chainBreakend);
 
@@ -1693,7 +1702,7 @@ public class ChainFinder
 
         // otherwise create a new replicated instance of the SV and cache its breakends
         SvVarData replicatedSV = new SvVarData(svConn.SV, true);
-        svConn.SV.setReplicatedCount(svConn.SV.getReplicatedCount() + 1);
+        // svConn.SV.setReplicatedCount(svConn.SV.getReplicatedCount() + 1);
 
         svConn.addRepBreakend(replicatedSV.getBreakend(true));
 
@@ -1928,6 +1937,7 @@ public class ChainFinder
                 // if it has ploidy 2 and 1 link it should be made twice, and any higher combinations are unclear
                 int[] repCounts = new int[SE_PAIR];
                 boolean[] hasOtherMultiPloidyLinks = {false, false};
+                boolean[] hasOtherMultiAssemblyLinks = {false, false};
                 int[] assemblyLinkCount = new int[SE_PAIR];
 
                 for (int be = SE_START; be <= SE_END; ++be)
@@ -1935,16 +1945,23 @@ public class ChainFinder
                     boolean isStart = isStart(be);
 
                     final SvBreakend breakend = pair.getBreakend(isStart);
-                    repCounts[be] = max(breakend.getSV().getReplicatedCount(), 1);
+                    repCounts[be] = getUnlinkedBreakendCount(breakend);  // max(breakend.getSV().getReplicatedCount(), 1);
 
                     final List<SvLinkedPair> assemblyLinks = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
                     assemblyLinkCount[be] = assemblyLinks.size();
 
                     if(assemblyLinkCount[be] > 1)
                     {
-                        hasOtherMultiPloidyLinks[be] = assemblyLinks.stream()
-                                .filter(x -> x != pair)
-                                .anyMatch(x -> x.getOtherBreakend(breakend).getSV().getReplicatedCount() > 1);
+                        for(final SvLinkedPair assemblyLink : assemblyLinks)
+                        {
+                            final SvBreakend otherBreakend = assemblyLink.getOtherBreakend(breakend);
+
+                            if(getUnlinkedBreakendCount(otherBreakend) > 1)
+                                hasOtherMultiPloidyLinks[be] = true;
+
+                            if(otherBreakend.getSV().getAssembledLinkedPairs(otherBreakend.usesStart()).size() > 1)
+                                hasOtherMultiAssemblyLinks[be] = true;
+                        }
                     }
                 }
 
@@ -1954,9 +1971,10 @@ public class ChainFinder
                     pairRepeatCount = min(repCounts[SE_START], repCounts[SE_END]);
                 }
                 else if(repCounts[SE_START] >= 2 && repCounts[SE_END] >= 2
-                    && !hasOtherMultiPloidyLinks[SE_START] && !hasOtherMultiPloidyLinks[SE_END])
+                    && (!hasOtherMultiPloidyLinks[SE_START] || !hasOtherMultiAssemblyLinks[SE_START])
+                    && (!hasOtherMultiPloidyLinks[SE_END] || !hasOtherMultiAssemblyLinks[SE_END]))
                 {
-                    // both SVs allow for 3 or more repeats, so if the max other assembled link SV ploidies are all <= 1,
+                    // both SVs allow for 2 or more repeats, so if the max other assembled link SV ploidies are all <= 1,
                     // then these links can safely be repeated
                     int firstOtherLinks = assemblyLinkCount[SE_START] - 1;
                     int secondOtherLinks = assemblyLinkCount[SE_END] - 1;

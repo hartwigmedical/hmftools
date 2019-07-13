@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
+import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 
@@ -131,8 +132,11 @@ public class LinxConfig
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
+
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
-        ChainingMethod = Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD, "0"));
+
+        ChainingMethod = cmd.hasOption(CHAINING_METHOD) ? Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD)) : CHAIN_METHOD_NEW;
+
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
 
@@ -170,7 +174,7 @@ public class LinxConfig
         LogVerbose = false;
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
-        ChainingMethod = 0;
+        ChainingMethod = CHAIN_METHOD_NEW;
     }
 
     public static void addCmdLineArgs(Options options)

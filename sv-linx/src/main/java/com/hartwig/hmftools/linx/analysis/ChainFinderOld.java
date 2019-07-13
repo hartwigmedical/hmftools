@@ -5,13 +5,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_INFO;
 import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_VERBOSE;
 import static com.hartwig.hmftools.linx.analysis.ChainDiagnostics.LOG_TYPE_WARN;
 import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.analysis.ChainPloidyLimits.CLUSTER_AP;
-import static com.hartwig.hmftools.linx.analysis.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.analysis.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -185,7 +183,7 @@ public class ChainFinderOld
         mFoldbacks.addAll(cluster.getFoldbacks());
         mAssembledLinks.addAll(cluster.getAssemblyLinkedPairs());
         mChrBreakendMap = cluster.getChrBreakendMap();
-        mHasReplication = cluster.hasReplicatedSVs();
+        mHasReplication = cluster.requiresReplication();
         mIsClusterSubset = false;
     }
 

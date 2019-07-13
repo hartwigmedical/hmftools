@@ -121,10 +121,6 @@ public class DoubleMinuteFinder
         if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DUP)
             return;
 
-        // isSpecificCluster(cluster);
-
-        // double clusterMaxPloidy = cluster.getSVs().stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
-
         double maxSvPloidy = 0;
         double maxInfPloidy = 0;
 

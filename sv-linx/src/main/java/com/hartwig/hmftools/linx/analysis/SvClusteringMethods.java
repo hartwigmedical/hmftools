@@ -1515,7 +1515,7 @@ public class SvClusteringMethods {
 
     private boolean resolveSyntheticDelDupCluster(SvCluster cluster)
     {
-        if(cluster.getLinkedPairs().isEmpty() || cluster.hasReplicatedSVs())
+        if(cluster.getLinkedPairs().isEmpty() || cluster.requiresReplication())
             return false;
 
         // first work out if there are 1 or 2 templated insertions

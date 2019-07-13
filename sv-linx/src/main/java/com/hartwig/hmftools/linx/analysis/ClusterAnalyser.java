@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_NEW;
+import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.REPLICATION_REPAIR;
@@ -117,7 +119,7 @@ public class ClusterAnalyser {
             mDmFinder.setOutputDir(mConfig.OutputDataPath);
         }
 
-        if(mConfig.ChainingMethod == 0)
+        if(mConfig.ChainingMethod == CHAIN_METHOD_OLD)
             mChainFinder.setUseOldMethod(true);
 
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
@@ -403,12 +405,20 @@ public class ClusterAnalyser {
             LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
                     cluster.id(), var.posId(), svMultiple, svPloidy, clusterMinPloidy);
 
-            var.setReplicatedCount(svMultiple);
-
-            for(int j = 1; j < svMultiple; ++j)
+            if(mConfig.ChainingMethod == CHAIN_METHOD_NEW)
             {
-                SvVarData newVar = new SvVarData(var, true);
-                cluster.addVariant(newVar);
+                if(!cluster.requiresReplication())
+                    cluster.setRequiresReplication();
+            }
+            else
+            {
+                var.setReplicatedCount(svMultiple);
+
+                for (int j = 1; j < svMultiple; ++j)
+                {
+                    SvVarData newVar = new SvVarData(var, true);
+                    cluster.addVariant(newVar);
+                }
             }
         }
     }

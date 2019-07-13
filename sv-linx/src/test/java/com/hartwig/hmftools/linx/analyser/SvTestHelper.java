@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.analysis.SvSampleAnalyser.setSvCopyNumberData;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -88,6 +89,14 @@ public class SvTestHelper
         Config.LogVerbose = toggle;
         Analyser.getChainFinder().setLogVerbose(toggle);
         Analyser.getLinkFinder().setLogVerbose(toggle);
+    }
+
+    public void setChaininMethod(int method)
+    {
+        Config.ChainingMethod = method;
+
+        if(method == CHAIN_METHOD_OLD)
+            Analyser.getChainFinder().setUseOldMethod(true);
     }
 
     public void preClusteringInit()

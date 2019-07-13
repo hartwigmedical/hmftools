@@ -120,7 +120,8 @@ public class LinkFinder
             }
         }
 
-        cluster.setRequiresReplication(hasMultiBreakendLinks);
+        if(hasMultiBreakendLinks)
+            cluster.setRequiresReplication();
 
         return linkedPairs;
     }
@@ -310,7 +311,7 @@ public class LinkFinder
                         long distance = abs(var1.position(v1Start) - var2.position(v2Start));
                         int minTiLength = max(var1.getMinTemplatedLength(v1Start), var2.getMinTemplatedLength(v2Start));
 
-                        if (!areLinkedSection(var1, var2, v1Start, v2Start, !cluster.hasReplicatedSVs()) || distance < minTiLength)
+                        if (!areLinkedSection(var1, var2, v1Start, v2Start, !cluster.requiresReplication()) || distance < minTiLength)
                             continue;
 
                         // form a new TI from these 2 BEs

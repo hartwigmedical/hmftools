@@ -360,7 +360,7 @@ public class ClusterAnnotations
         if(cluster.isResolved() || cluster.getChains().isEmpty())
             return;
 
-        boolean isComplex = cluster.hasReplicatedSVs() || !cluster.getFoldbacks().isEmpty();
+        boolean isComplex = cluster.requiresReplication() || !cluster.getFoldbacks().isEmpty();
         boolean isIncomplete = !cluster.isFullyChained(false) || cluster.getTypeCount(SGL) > 0;
 
         // skip simple chained clusters
