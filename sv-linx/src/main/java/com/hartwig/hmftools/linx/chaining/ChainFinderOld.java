@@ -323,7 +323,6 @@ public class ChainFinderOld
                     LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({})",
                             mClusterId, newChain.id(), chain.id());
 
-                    chain.addToReplicationCount();
                     matched = true;
                     break;
                 }

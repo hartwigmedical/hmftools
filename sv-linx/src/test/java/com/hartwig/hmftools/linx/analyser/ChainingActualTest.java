@@ -34,6 +34,7 @@ import org.junit.Test;
 
 public class ChainingActualTest
 {
+    @Ignore
     @Test
     public void testActualComplexChaining()
     {
@@ -149,6 +150,7 @@ public class ChainingActualTest
         assertEquals(10, chain.getLinkCount());
     }
 
+    @Ignore
     @Test
     public void testActualDoubleMinuteChaining()
     {

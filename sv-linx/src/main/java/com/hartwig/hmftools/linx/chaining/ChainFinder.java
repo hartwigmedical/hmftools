@@ -404,7 +404,6 @@ public class ChainFinder
                         }
                     }
 
-                    chain.addToReplicationCount();
                     matched = true;
                     break;
                 }
@@ -1425,6 +1424,16 @@ public class ChainFinder
 
     private static int SPEC_LINK_INDEX = -1;
     // private static int SPEC_LINK_INDEX = 26;
+
+    private boolean addLinks(final ProposedLinks proposedLinks)
+    {
+        // if a chain is specified, add the links to it
+        // otherwise look for a chain which can link in these new pairs
+        // and if none can be found, create a new chain with them
+
+        return true;
+    }
+
 
     private boolean addPairToChain(final SvLinkedPair origPair)
     {

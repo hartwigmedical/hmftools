@@ -14,12 +14,10 @@ import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.REPLICATION_REPAIR;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateChainedClusters;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.calcNetCopyNumberChangeAcrossCluster;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportClusterRepRepairSegments;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
@@ -1572,11 +1570,6 @@ public class ClusterAnalyser {
         if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
         {
             findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCnDataLoader);
-        }
-
-        if(runAnnotation(mConfig.RequiredAnnotations, REPLICATION_REPAIR))
-        {
-            reportClusterRepRepairSegments(mSampleId, cluster);
         }
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))

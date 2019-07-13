@@ -34,9 +34,6 @@ public class SvChain {
 
     private boolean mIsClosedLoop;
     private boolean mIsValid;
-    private int mReplicationCount; // if a chain is identically repeated, report the number of times this occurs
-
-    private String mDetails;
 
     private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
@@ -47,8 +44,6 @@ public class SvChain {
         mLinkedPairs = Lists.newArrayList();
         mIsClosedLoop = false;
         mIsValid = true;
-        mDetails = "";
-        mReplicationCount = 1;
     }
 
     public int id() { return mId; }
@@ -170,7 +165,6 @@ public class SvChain {
         return !mLinkedPairs.isEmpty() ? mLinkedPairs.get(0).firstUnlinkedOnStart() : false;
     }
     public boolean lastLinkOpenOnStart() { return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false; }
-    public boolean chainEndOpenOnStart(boolean isFirst) { return isFirst ? firstLinkOpenOnStart() : lastLinkOpenOnStart(); }
 
     public final SvBreakend getOpenBreakend(boolean isStart)
     {
@@ -180,22 +174,6 @@ public class SvChain {
     public boolean isClosedLoop()
     {
         return mIsClosedLoop || (mSvList.size() == 1 && mSvList.get(0).type() == DUP);
-    }
-
-    public boolean hasReplicatedSVs()
-    {
-        for(int i = 0; i < mSvList.size(); ++i)
-        {
-            final SvVarData var1 = mSvList.get(i);
-
-            for(int j = i+1; j < mSvList.size(); ++j)
-            {
-                if (mSvList.get(j).equals(var1, true))
-                    return true;
-            }
-        }
-
-        return false;
     }
 
     public boolean isConsistent()
@@ -208,9 +186,6 @@ public class SvChain {
         consistency += calcConsistency(getLastSV(), lastLinkOpenOnStart());
         return consistency == 0;
     }
-
-    public String getDetails() { return mDetails; }
-    public void setDetails(final String details) { mDetails = details; }
 
     public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
     {
@@ -277,9 +252,6 @@ public class SvChain {
 
         mIsValid = true;
     }
-
-    public int getReplicationCount() { return mReplicationCount; }
-    public void addToReplicationCount() { ++mReplicationCount; }
 
     public void logLinks()
     {
@@ -588,19 +560,6 @@ public class SvChain {
         return sequenceStr;
     }
 
-    public static int CM_DB = 0;
-    public static int CM_SHORT_DB = 1;
-    public static int CM_INT_TI = 2;
-    public static int CM_EXT_TI = 3;
-    public static int CM_INT_TI_CN_GAIN = 4;
-    public static int CM_INT_SHORT_TI = 5;
-    public static int CM_EXT_SHORT_TI = 6;
-    public static int CM_EXT_TI_CN_GAIN = 7;
-    public static int CM_OVERLAPPING_TI = 8;
-    public static int CM_CHAIN_ENDS_FACE = 9;
-    public static int CM_CHAIN_ENDS_AWAY = 10;
-    public static int CM_CHAIN_MAX = 11;
-
     public ChainMetrics extractChainMetrics()
     {
         final SvBreakend chainStart = getOpenBreakend(true);
@@ -661,37 +620,4 @@ public class SvChain {
         return metrics;
     }
 
-    public static List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)
-    {
-        // walk forward from these 2 start points comparing SVs
-        List<SvVarData> sequence = Lists.newArrayList();
-
-        int i = firstIndex;
-        int j = secondIndex + 1;
-
-        if(walkForwards)
-            ++i;
-        else
-            --i;
-
-        while(i < secondIndex && i >= 0 && j < svList.size())
-        {
-            final SvVarData var1 = svList.get(i);
-            final SvVarData var2 = svList.get(j);
-
-            if(!var1.equals(var2, true))
-                break;
-
-            sequence.add(var1);
-
-            ++j;
-
-            if(walkForwards)
-                ++i;
-            else
-                --i;
-        }
-
-        return sequence;
-    }
 }
