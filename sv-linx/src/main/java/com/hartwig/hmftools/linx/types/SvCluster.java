@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PER
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.SvClassification;
+import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 
@@ -997,10 +998,11 @@ public class SvCluster
     public int getOriginArms() { return mOriginArms; }
     public int getFragmentArms() { return mFragmentArms; }
 
-    public int[] getLinkMetrics()
+    public ChainMetrics getLinkMetrics()
     {
-        int[] chainData = new int[CM_CHAIN_MAX];
-        mChains.stream().forEach(x -> x.extractChainMetrics(chainData));
+        ChainMetrics chainMetrics = new ChainMetrics();
+
+        mChains.stream().forEach(x -> chainMetrics.add(x.extractChainMetrics()));
 
         for(SvVarData var : mSVs)
         {
@@ -1015,15 +1017,15 @@ public class SvCluster
                 // only take matches on the lower breakend to avoid double-counting DBs
                 if(dbLink != null && dbLink.getBreakend(true).getSV() == var && dbLink.getOtherSV(var).getCluster() == this)
                 {
-                    ++chainData[CM_DB];
+                    ++chainMetrics.DSBs;
 
                     if(dbLink.length() <= 100)
-                        ++chainData[CM_SHORT_DB];
+                        ++chainMetrics.ShortDSBs;
                 }
             }
         }
 
-        return chainData;
+        return chainMetrics;
     }
 
     public static boolean isSpecificCluster(final SvCluster cluster)

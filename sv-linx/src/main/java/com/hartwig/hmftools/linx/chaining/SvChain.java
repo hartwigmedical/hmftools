@@ -601,13 +601,15 @@ public class SvChain {
     public static int CM_CHAIN_ENDS_AWAY = 10;
     public static int CM_CHAIN_MAX = 11;
 
-    public void extractChainMetrics(int[] chainData)
+    public ChainMetrics extractChainMetrics()
     {
         final SvBreakend chainStart = getOpenBreakend(true);
         final SvBreakend chainEnd = getOpenBreakend(false);
 
+        ChainMetrics metrics = new ChainMetrics();
+
         if(chainStart == null || chainEnd == null)
-            return;
+            return metrics;
 
         final SvBreakend lowerBreakend = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
         final SvBreakend upperBreakend = chainStart == lowerBreakend ? chainEnd : chainStart;
@@ -618,11 +620,11 @@ public class SvChain {
         {
             if (lowerBreakend.orientation() == 1 && upperBreakend.orientation() == -1)
             {
-                ++chainData[CM_CHAIN_ENDS_AWAY];
+                ++metrics.ChainEndsAway;
             }
             else if (lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1)
             {
-                ++chainData[CM_CHAIN_ENDS_FACE];
+                ++metrics.ChainEndsFace;
             }
         }
 
@@ -633,28 +635,30 @@ public class SvChain {
 
             if(pair.locationType() == LOCATION_TYPE_INTERNAL)
             {
-                ++chainData[CM_INT_TI];
+                ++metrics.InternalTIs;
 
                 if(pair.length() <= SHORT_TI_LENGTH)
-                    ++chainData[CM_INT_SHORT_TI];
+                    ++metrics.InternalShortTIs;
 
                 if(pair.hasCopyNumberGain())
-                    ++chainData[CM_INT_TI_CN_GAIN];
+                    ++metrics.InternalTICnGain;
             }
             else if(pair.locationType() == LOCATION_TYPE_REMOTE)
             {
-                ++chainData[CM_EXT_TI];
+                ++metrics.ExternalTIs;
 
                 if(pair.length() <= SHORT_TI_LENGTH)
-                    ++chainData[CM_EXT_SHORT_TI];
+                    ++metrics.ExternalShortTIs;
 
                 if(pair.hasCopyNumberGain())
-                    ++chainData[CM_EXT_TI_CN_GAIN];
+                    ++metrics.ExternalTICnGain;
             }
 
             if(pair.overlapCount() > 0)
-                ++chainData[CM_OVERLAPPING_TI];
+                ++metrics.OverlappingTIs;
         }
+
+        return metrics;
     }
 
     public static List<SvVarData> getRepeatedSvSequence(final List<SvVarData> svList, int firstIndex, int secondIndex, boolean walkForwards)

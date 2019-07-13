@@ -65,6 +65,7 @@ import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
+import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
@@ -727,12 +728,12 @@ public class SvSampleAnalyser {
                     mClusterFileWriter.write(String.format(",%d,%d,%d",
                             cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs));
 
-                    int[] chainData = cluster.getLinkMetrics();
+                    final ChainMetrics chainMetrics = cluster.getLinkMetrics();
 
                     mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                            chainData[CM_INT_TI], chainData[CM_EXT_TI], chainData[CM_INT_SHORT_TI], chainData[CM_EXT_SHORT_TI],
-                            chainData[CM_INT_TI_CN_GAIN], chainData[CM_EXT_TI_CN_GAIN], chainData[CM_OVERLAPPING_TI],
-                            chainData[CM_DB], chainData[CM_SHORT_DB], chainData[CM_CHAIN_ENDS_FACE], chainData[CM_CHAIN_ENDS_AWAY]));
+                            chainMetrics.InternalTIs, chainMetrics.ExternalTIs, chainMetrics.InternalShortTIs, chainMetrics.ExternalShortTIs,
+                            chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
+                            chainMetrics.DSBs, chainMetrics.ShortDSBs, chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway));
 
                     mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
                             cluster.getSyntheticLength(), cluster.getSyntheticTILength(), cluster.getOriginArms(), cluster.getFragmentArms(),
