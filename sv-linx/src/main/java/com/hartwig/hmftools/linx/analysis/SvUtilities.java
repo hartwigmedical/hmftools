@@ -352,9 +352,14 @@ public class SvUtilities {
         return true;
     }
 
-    public static final String getVariantChrArm(final SvVarData var, boolean isStart)
+    public static String formatPloidy(double ploidy)
     {
-        return makeChrArmStr(var.chromosome(isStart), var.arm(isStart));
+        if(ploidy > 10)
+            return String.format("%.0f", ploidy);
+        else if(ploidy < 0.5)
+            return String.format("%.2f", ploidy);
+        else
+            return String.format("%.1f", ploidy);
     }
 
     public static final String makeChrArmStr(final SvVarData var, boolean useStart)

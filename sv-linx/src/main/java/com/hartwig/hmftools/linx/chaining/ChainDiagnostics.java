@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -234,14 +235,14 @@ public class ChainDiagnostics
 
         if(mHasReplication)
         {
-            int unlinkedPloidyBreakends = mSvConnectionsMap.values().stream()
-                .mapToInt(x -> x.unlinked(true) + x.unlinked(false)).sum();
+            double unlinkedPloidyBreakends = mSvConnectionsMap.values().stream()
+                .mapToDouble(x -> x.unlinked(true) + x.unlinked(false)).sum();
 
-            int unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToInt(x -> x.unlinked()).sum();
+            double unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
 
             LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} unique={}) breakends({} reps={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
-                    mUnlinkedSvCount, unlinkedPloidySVs, mUnlinkedBreakendCount, unlinkedPloidyBreakends);
+                    mUnlinkedSvCount, formatPloidy(unlinkedPloidySVs), mUnlinkedBreakendCount, formatPloidy(unlinkedPloidyBreakends));
         }
         else
         {
@@ -272,15 +273,15 @@ public class ChainDiagnostics
 
             int sglCount = (int) svConnections.stream().filter(x -> x.SV.isNullBreakend()).count();
 
-            int ploidyTotal = svConnections.stream().mapToInt(x -> x.Ploidy).sum();
+            double ploidyTotal = svConnections.stream().mapToDouble(x -> x.Ploidy).sum();
 
-            int maxPloidy = mHasReplication ? svConnections.stream().mapToInt(x -> x.Ploidy).max().getAsInt() : 1;
+            double maxPloidy = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Ploidy).max().getAsDouble() : 1;
 
-            mFileWriter.write(String.format("%s,%d,%s,%d,%d,%d,%d,%d,%d",
+            mFileWriter.write(String.format("%s,%d,%s,%d,%.1f,%d,%d,%d,%d",
                     mSampleId, mClusterId, mHasReplication, mClusterCount, ploidyTotal,
                     mUniqueChains.size(), mChains.size() - mUniqueChains.size(), sglCount, mWarnings));
 
-            mFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
+            mFileWriter.write(String.format(",%.1f,%d,%d,%d,%d,%d",
                     maxPloidy, mUnlinkedSvCount, mUnlinkedBreakendCount, invalidBreakends,
                     mInitialFoldbacks.size(), mInitialComplexDup.size()));
 

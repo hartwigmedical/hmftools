@@ -3,13 +3,16 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 import org.apache.logging.log4j.LogManager;
@@ -277,6 +280,27 @@ public class ChainPloidyLimits
         return beAllelePloidies[AP_DATA_VALID] == AP_IS_VALID;
     }
 
+    public static PloidyCalcData calcPloidyUncertainty(final PloidyCalcData data1, final PloidyCalcData data2)
+    {
+        if(!data1.Valid || !data2.Valid)
+            return new PloidyCalcData(0, 0, false);
+
+        double uncertInvSqrd1 = 1 / pow(data1.PloidyUncertainty, 2);
+        double uncertInvSqrd2 = 1 / pow(data2.PloidyUncertainty, 2);
+
+        double sumUncertainty = uncertInvSqrd1 + uncertInvSqrd2;
+        double sumObservedUncertainty = data1.PloidyEstimate * uncertInvSqrd1 + data2.PloidyEstimate * uncertInvSqrd2;
+
+        double estPloidy = sumObservedUncertainty / sumUncertainty;
+
+        double adjUncertainty = uncertInvSqrd1 * pow(max(data1.PloidyEstimate - estPloidy, data1.PloidyUncertainty/2),2);
+        adjUncertainty += uncertInvSqrd2 * pow(max(data2.PloidyEstimate - estPloidy, data2.PloidyUncertainty/2),2);
+
+
+        double estUncertainty = sqrt(2 * adjUncertainty / sumUncertainty);
+
+        return new PloidyCalcData(estPloidy, estUncertainty, true);
+    }
 
 
 }

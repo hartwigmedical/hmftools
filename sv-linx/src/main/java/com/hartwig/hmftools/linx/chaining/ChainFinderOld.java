@@ -2589,4 +2589,379 @@ public class ChainFinderOld
         LOGGER.debug("cluster({}) culled {} possible pairs", mClusterId, culledPairs);
     }
 
+    // new chain finder methods now no longer used
+
+        /*
+    private SvBreakend getNewReplicatedBreakend(SvChainState svConn, final SvBreakend breakend)
+    {
+        return getNewReplicatedBreakend(svConn, breakend, null);
+    }
+
+    private SvBreakend getNewReplicatedBreakend(SvChainState svConn, final SvBreakend breakend, final SvVarData skipSV)
+    {
+        // uses the original breakend is this is the first connection on that side
+        if (svConn.breakendCount(breakend.usesStart()) == 0 && skipSV != svConn.SV)
+            return breakend.getOrigBreakend();
+
+        // otherwise take a spare replicated breakend
+        for(SvBreakend repBreakend : svConn.getRepBreakends(breakend.usesStart()))
+        {
+            if(skipSV != null && repBreakend.getSV() == skipSV)
+                continue;
+
+            return repBreakend;
+        }
+
+        // check whether able to create anymore
+        if(svConn.maxUnlinked(false) == 0 || svConn.maxUnlinked(false) == 0)
+            return null;
+
+        // otherwise create a new replicated instance of the SV and cache its breakends
+        SvVarData replicatedSV = new SvVarData(svConn.SV, true);
+        // svConn.SV.setReplicatedCount(svConn.SV.getReplicatedCount() + 1);
+
+        svConn.addRepBreakend(replicatedSV.getBreakend(true));
+
+        if(!svConn.SV.isNullBreakend())
+            svConn.addRepBreakend(replicatedSV.getBreakend(false));
+
+        return replicatedSV.getBreakend(breakend.usesStart());
+    }
+    */
+
+    /*
+    private boolean addPairToChain(final SvLinkedPair origPair)
+    {
+        if(mLinkIndex == SPEC_LINK_INDEX)
+        {
+            LOGGER.debug("specific link index({}) pair({})", mLinkIndex, origPair.toString());
+        }
+
+        // attempt to add to existing chain
+        boolean addedToChain = false;
+        boolean[] pairToChain = {false, false};
+
+        SvLinkedPair newPair = !mHasReplication ? origPair : null;
+
+        boolean linkClosesChain = false;
+
+        for(SvChain chain : mChains)
+        {
+            // test this link against each end to the chain
+            boolean addToStart = false;
+            pairToChain[0] = pairToChain[1] = false; // reset for scenario where skipped adding to both ends of chain
+
+            for(int be = SE_START; be <= SE_END; ++be)
+            {
+                boolean chainStart = isStart(be);
+                final SvVarData chainSV = chain.getChainEndSV(chainStart);
+
+                if (chain.canAddLinkedPair(origPair, chainStart, true))
+                {
+                    addToStart = chainStart;
+
+                    // the new link must use the existing breakend's SV, not a replication version
+                    SvBreakend chainBreakend = chain.getOpenBreakend(chainStart);
+
+                    if (chainSV.equals(origPair.first(), true))
+                    {
+                        pairToChain[SE_START] = true;
+
+                        if(newPair != origPair)
+                        {
+                            // find or create an unused replication breaks for other end and create a new pair
+                            SvChainState svConn = mSvConnectionsMap.get(origPair.second());
+                            SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.getSecondBreakend());
+
+                            if(otherBreakend == null)
+                            {
+                                LOGGER.error("cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
+                                mIsValid = false;
+                                return false;
+                            }
+
+                            newPair = SvLinkedPair.from(otherBreakend, chainBreakend);
+
+                            if(origPair.isAssembled())
+                                newPair.setIsAssembled();
+                        }
+                    }
+                    else
+                    {
+                        pairToChain[SE_END] = true;
+
+                        if(newPair != origPair)
+                        {
+                            SvChainState svConn = mSvConnectionsMap.get(origPair.first());
+                            SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.getFirstBreakend());
+
+                            if(otherBreakend == null)
+                            {
+                                LOGGER.error("cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
+                                mIsValid = false;
+                                return false;
+                            }
+
+                            newPair = SvLinkedPair.from(otherBreakend, chainBreakend);
+
+                            if (origPair.isAssembled())
+                                newPair.setIsAssembled();
+                        }
+                    }
+                }
+            }
+
+            if(!pairToChain[SE_START] && !pairToChain[SE_END])
+            {
+                continue;
+            }
+
+            boolean checkCloseChain = pairToChain[SE_START] && pairToChain[SE_END];
+
+            if(checkCloseChain)
+            {
+                // allow the chain to be closed if this is the last pair other than excess DM DUP replicated SVs
+                if(isDoubleMinuteDup() && mSvConnectionsMap.size() == 1 && mSvConnectionsMap.get(mDoubleMinuteSVs.get(0)) != null)
+                    checkCloseChain = false;
+            }
+
+            if(checkCloseChain) // may not be relevant anymore
+            {
+                // the link can be added to both ends, which would close the chain - so search for an alternative SV on either end
+                // to keep it open while still adding the link
+                boolean replacementFound = false;
+
+                if(mHasReplication)
+                {
+                    for (int be = SE_START; be <= SE_END; ++be)
+                    {
+                        boolean chainStart = isStart(be);
+
+                        SvBreakend openBreakend = chain.getOpenBreakend(chainStart);
+
+                        if(openBreakend == null)
+                            continue; // eg ending on a SGL
+
+                        SvVarData chainSV = openBreakend.getSV();
+                        SvChainState svConn = mSvConnectionsMap.get(chainSV.getOrigSV());
+                        SvBreakend alternativeBreakend = getNewReplicatedBreakend(svConn, openBreakend, chainSV);
+
+                        if(alternativeBreakend != null)
+                        {
+                            replacementFound = true;
+
+                            if (newPair.first().equals(chainSV, true))
+                                newPair.replaceFirst(alternativeBreakend.getSV());
+                            else
+                                newPair.replaceSecond(alternativeBreakend.getSV());
+
+                            pairToChain[be] = false;
+                            addToStart = !chainStart;
+                            break;
+                        }
+                    }
+                }
+
+                if(!replacementFound)
+                {
+                    log(LOG_TYPE_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
+                            newPair.toString(), chain.id()));
+
+                    if(!mSkippedPairs.contains(newPair))
+                    {
+                        mPairSkipped = true;
+                        mSkippedPairs.add(origPair);
+                    }
+
+                    linkClosesChain = true;
+                    continue;
+                }
+            }
+
+            chain.addLink(newPair, addToStart);
+            addedToChain = true;
+
+            LOGGER.debug("index({}) method({}) adding linked pair({} {} len={}) to existing chain({}) {}",
+                    mLinkIndex, mLinkReason,
+                    newPair.toString(), newPair.assemblyInferredStr(), newPair.length(), chain.id(), addToStart ? "start" : "end");
+            break;
+        }
+
+        if(!addedToChain)
+        {
+            if(linkClosesChain)
+                return false; // skip this link for now
+
+            SvChain chain = new SvChain(mNextChainId++);
+            mChains.add(chain);
+
+            if(newPair == null)
+            {
+                SvBreakend[] newBreakends = new SvBreakend[SE_PAIR];
+
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    boolean isStart = isStart(be);
+                    SvBreakend origBreakend = origPair.getBreakend(isStart);
+
+                    SvChainState svConn = mSvConnectionsMap.get(origBreakend.getSV());
+
+                    newBreakends[be] = getNewReplicatedBreakend(svConn, origBreakend);
+                }
+
+                newPair = SvLinkedPair.from(newBreakends[SE_START], newBreakends[SE_END]);
+
+                if(origPair.isAssembled())
+                    newPair.setIsAssembled();
+            }
+
+            chain.addLink(newPair, true);
+            pairToChain[SE_START] = true;
+            pairToChain[SE_END] = true;
+
+            LOGGER.debug("index({}) method({}) adding linked pair({} {}) to new chain({})",
+                    mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), chain.id());
+        }
+
+        newPair.setLinkReason(mLinkReason, mLinkIndex);
+
+        registerNewLink(origPair, newPair, pairToChain);
+        ++mLinkIndex;
+
+        if(mRunValidation)
+            mDiagnostics.checkHasValidState(mLinkIndex);
+
+        if(addedToChain)
+        {
+            // now see if any partial chains can be linked
+            reconcileChains();
+        }
+
+        return true;
+    }
+    */
+
+
+    /*
+
+        private void registerNewLink(final SvLinkedPair origPair, final SvLinkedPair newPair, boolean[] pairToChain)
+    {
+        for (int be = SE_START; be <= SE_END; ++be)
+        {
+            boolean isStart = isStart(be);
+
+            final SvBreakend breakend = newPair.getBreakend(isStart);
+            final SvBreakend otherPairBreakend = newPair.getOtherBreakend(breakend).getOrigBreakend();
+            final SvBreakend origBreakend = breakend.getOrigBreakend();
+            SvVarData origSV = origBreakend.getSV();
+
+            // keep track of an replication SV
+            if(newPair != origPair && breakend.getSV().isReplicatedSv())
+            {
+                if(!mReplicatedSVs.contains(breakend.getSV()))
+                    mReplicatedSVs.add(breakend.getSV());
+            }
+
+            SvChainState svConn = mSvConnectionsMap.get(origSV);
+
+            // mUnlinkedReplicatedSVs.remove(breakend.getSV());
+            // final List<SvBreakend> breakendList = mUnlinkedBreakendMap.get(origBreakend);
+
+            if(svConn == null || svConn.maxUnlinked(breakend.usesStart()) == 0)
+            {
+                LOGGER.error("breakend({}) connections exhausted: {}",
+                        origBreakend.toString(), svConn != null ? svConn.toString() : "null");
+                mIsValid = false;
+                return;
+            }
+
+            if(breakend.getSV().isReplicatedSv())
+                svConn.removeRepBreakend(breakend);
+
+            svConn.add(breakend.usesStart());
+            svConn.addConnection(otherPairBreakend, breakend.usesStart());
+
+            final SvBreakend otherOrigBreakend = origSV.getBreakend(!breakend.usesStart());
+
+            // breakendList.remove(breakend);
+
+            boolean hasUnlinkedBreakend = true;
+            boolean svExhausted = false;
+            if(svConn.maxUnlinked(breakend.usesStart()) == 0)
+            {
+                // mUnlinkedBreakendMap.remove(origBreakend);
+                hasUnlinkedBreakend = false;
+
+                // LOGGER.debug("breakend({}) has no more possible links", breakend);
+
+                if(svConn.maxUnlinked(!breakend.usesStart()) == 0)
+                {
+                    svExhausted = true;
+
+                    if(origSV.isFoldback())
+                    {
+                        // remove if no other instances of this SV remain
+                        mFoldbacks.remove(origSV);
+                    }
+                    else if(mComplexDupCandidates.contains(origSV))
+                    {
+                        mComplexDupCandidates.remove(origSV);
+                    }
+                }
+            }
+
+            List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(origBreakend);
+
+            if (possibleLinks != null && !hasUnlinkedBreakend)
+            {
+                // not more replicated breakends exist so any possible links that depend on it
+                removePossibleLinks(possibleLinks, breakend);
+            }
+
+            if(!mHasReplication)
+            {
+                // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
+                possibleLinks = otherOrigBreakend != null && !mSvBreakendPossibleLinks.isEmpty()
+                        ? mSvBreakendPossibleLinks.get(otherOrigBreakend)
+                        : null;
+
+                if (possibleLinks != null)
+                {
+                    final SvBreakend otherOrigBreakendAlt = otherPairBreakend.getOtherBreakend();
+
+                    if (otherOrigBreakendAlt != null)
+                    {
+                        for (SvLinkedPair pair : possibleLinks)
+                        {
+                            if (pair.hasBreakend(otherOrigBreakend) && pair.hasBreakend(otherOrigBreakendAlt))
+                            {
+                                possibleLinks.remove(pair);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(mHasReplication)
+            {
+                // reduce replication counts for breakends which are added to a chain
+                if (pairToChain[be])
+                {
+                    checkSvComplete(svConn);
+
+                }
+            }
+        }
+
+    // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
+    if(!matchesExistingPair(origPair))
+    {
+    mUniquePairs.add(origPair);
+    }
+                    }
+
+                    */
+
+
 }

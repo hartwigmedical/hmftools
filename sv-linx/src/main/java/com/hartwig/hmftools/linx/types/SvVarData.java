@@ -349,34 +349,6 @@ public class SvVarData
         return max(getMaxAssembledBreakend(), (int)getRoundedPloidy(true));
     }
 
-    public double getRoundedCNChange()
-    {
-        double cnChgStart = copyNumberChange(true);
-        double cnChange;
-
-        if(!isNullBreakend())
-        {
-            // TEMP: before more rebust CN Change correction logic introduced
-            double cnChgEnd = copyNumberChange(false);
-
-            if(cnChgStart > SUSPECT_CN_CHANGE * 2 && cnChgEnd < SUSPECT_CN_CHANGE)
-                cnChange = cnChgStart;
-            else if(cnChgEnd > SUSPECT_CN_CHANGE * 2 && cnChgStart < SUSPECT_CN_CHANGE)
-                cnChange = cnChgEnd;
-            else
-                cnChange = (cnChgStart + cnChgEnd) * 0.5;
-        }
-        else
-        {
-            cnChange = cnChgStart;
-        }
-
-        if(cnChange >= 0.6)
-            return round(cnChange);
-        else
-            return round(cnChange/CN_ROUND_SIZE) * CN_ROUND_SIZE;
-    }
-
     public boolean hasInconsistentCopyNumberChange(boolean useStart)
     {
         return ploidy() - copyNumberChange(useStart) > 0.8;
@@ -429,30 +401,6 @@ public class SvVarData
     public final SvLinkedPair getLinkedPair(boolean isStart)
     {
         return mTiLinks.get(seIndex(isStart)).isEmpty() ? null : mTiLinks.get(seIndex(isStart)).get(0);
-    }
-
-    public void clearLinkedPairs(boolean inferredOnly)
-    {
-        if(!inferredOnly)
-        {
-            mTiLinks.get(SE_START).clear();
-            mTiLinks.get(SE_END).clear();
-        }
-        else
-        {
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                List<SvLinkedPair> links = mTiLinks.get(se);
-                int index = 0;
-                while(index < links.size())
-                {
-                    if(links.get(index).isInferred())
-                        links.remove(index);
-                    else
-                        ++index;
-                }
-            }
-        }
     }
 
     public void addLinkedPair(final SvLinkedPair link, boolean isStart)
@@ -694,6 +642,7 @@ public class SvVarData
     public boolean hasCalculatedPloidy() { return mHasCalcPloidy; }
     public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mPloidy; }
     public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mPloidy; }
+    public double ploidyUncertainty() { return mHasCalcPloidy ? mPloidy - mPloidyMin : 0; }
 
     public final SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
     {

@@ -31,9 +31,10 @@ public class SvChain {
     // link in the chain, and the 'second' SV links to its other breakend in the next link in the chain
     private List<SvVarData> mSvList;
     private List<SvLinkedPair> mLinkedPairs;
+    private double mPloidy;
+    private double mPloidyUncertainty;
 
     private boolean mIsClosedLoop;
-    private boolean mIsValid;
 
     private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
@@ -42,8 +43,9 @@ public class SvChain {
         mId = chainId;
         mSvList = Lists.newArrayList();
         mLinkedPairs = Lists.newArrayList();
+        mPloidy = 0;
+        mPloidyUncertainty = 0;
         mIsClosedLoop = false;
-        mIsValid = true;
     }
 
     public int id() { return mId; }
@@ -107,7 +109,7 @@ public class SvChain {
             // check that these SVs are at the start and end, otherwise the new link is invalid
             if((mSvList.get(0) == first && mSvList.get(lastIndex) != second) || (mSvList.get(0) == second && mSvList.get(lastIndex) != first))
             {
-                mIsValid = false;
+                LOGGER.error("cannot add new pair: {}", pair.toString());
                 return;
             }
 
@@ -140,8 +142,6 @@ public class SvChain {
                 }
             }
         }
-
-        setIsValid();
     }
 
     public void addLink(final SvLinkedPair pair, int index)
@@ -152,13 +152,39 @@ public class SvChain {
         mLinkedPairs.add(index, pair);
     }
 
-    public SvVarData getFirstSV() { return mSvList.isEmpty() ? null : mSvList.get(0); }
-    public SvVarData getLastSV() { return mSvList.isEmpty() ? null : mSvList.get(mSvList.size()-1); }
-    public SvVarData getChainEndSV(boolean isFirst) { return isFirst ? getFirstSV() : getLastSV(); }
+    public void setPloidyData(double ploidy, double uncertainty)
+    {
+        mPloidy = ploidy;
+        mPloidyUncertainty = uncertainty;
+    }
 
-    public SvLinkedPair getLinkedPair(boolean isStart) { return isStart ? getFirstLinkedPair() : getLastLinkedPair(); }
-    public SvLinkedPair getFirstLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(0); }
-    public SvLinkedPair getLastLinkedPair() { return mLinkedPairs.isEmpty() ? null : mLinkedPairs.get(mLinkedPairs.size()-1); }
+    public double ploidy() { return mPloidy; }
+    public double ploidyUncertainty() { return mPloidyUncertainty; }
+
+    public SvVarData getChainEndSV(boolean isFirst)
+    {
+        if(mSvList.isEmpty())
+            return null;
+
+        if (isFirst)
+            return mSvList.get(0);
+        else
+            return mSvList.get(mSvList.size() - 1);
+    }
+
+    public SvVarData getFirstSV() { return getChainEndSV(true); }
+    public SvVarData getLastSV() { return getChainEndSV(false); }
+
+    public SvLinkedPair getLinkedPair(boolean isStart)
+    {
+        if(mLinkedPairs.isEmpty())
+            return null;
+
+        if(isStart)
+            return mLinkedPairs.get(0);
+        else
+            return mLinkedPairs.get(mLinkedPairs.size()-1);
+    }
 
     public boolean firstLinkOpenOnStart()
     {
@@ -222,35 +248,34 @@ public class SvChain {
         return canAddLinkedPairToStart(pair) && canAddLinkedPairToEnd(pair);
     }
 
-    public void setIsValid()
+    public static boolean checkIsValid(final SvChain chain)
     {
-        if(mSvList.isEmpty() || mLinkedPairs.isEmpty())
+        if(chain.getSvCount() == 0 || chain.getLinkCount() == 0)
         {
-            mIsValid = false;
-            return;
+            return false;
         }
 
         // check for duplicate breakends
-        for(int i = 0; i < mLinkedPairs.size(); ++i)
+        for(int i = 0; i < chain.getLinkCount() - 1; ++i)
         {
-            final SvLinkedPair lp1 = mLinkedPairs.get(i);
+            final SvLinkedPair pair = chain.getLinkedPairs().get(i);
 
-            for(int j = i + 1; j< mLinkedPairs.size(); ++j)
-            {
-                final SvLinkedPair lp2 = mLinkedPairs.get(j);
+            if(pair.first() == pair.second() && !pair.isDupLink())
+                return false;
 
-                if(lp2.isDupLink())
-                    continue;
+            if(!chain.getSvList().contains(pair.first()) || !chain.getSvList().contains(pair.second()))
+                return false;
 
-                if(lp1.hasLinkClash(lp2))
-                {
-                    mIsValid = false;
-                    return;
-                }
-            }
+            final SvLinkedPair nextPair = chain.getLinkedPairs().get(i+1);
+
+            if(pair.second() != nextPair.first())
+                return false;
+
+            if(pair.secondLinkOnStart() == nextPair.firstLinkOnStart())
+                return false;
         }
 
-        mIsValid = true;
+        return true;
     }
 
     public void logLinks()

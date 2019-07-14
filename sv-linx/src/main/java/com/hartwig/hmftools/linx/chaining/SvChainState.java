@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -19,19 +20,15 @@ public class SvChainState
 {
     public final SvVarData SV;
 
-    public final int MinPloidy;
-    public final int Ploidy;
-    public final int MaxPloidy;
+    public final double MinPloidy;
+    public final double Ploidy;
+    public final double MaxPloidy;
 
-    private int[] mBreakendCount;
+    private double[] mBreakendCount;
 
     // unique connections made to other SVs
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
-
-    // replicated breakends for this SV
-    final List<SvBreakend> mRepBreakendsStart;
-    final List<SvBreakend> mRepBreakendsEnd;
 
     public SvChainState(final SvVarData var, boolean singlePloidy)
     {
@@ -46,35 +43,33 @@ public class SvChainState
         else
         {
             Ploidy = var.getImpliedPloidy();
-            MinPloidy = max((int) round(var.ploidyMin()), 1);
-            MaxPloidy = max((int) round(var.ploidyMax()), Ploidy);
+            MinPloidy = var.ploidyMin();
+            MaxPloidy = max(var.ploidyMax(), Ploidy);
         }
 
-        mBreakendCount = new int[SE_PAIR];
+        mBreakendCount = new double[SE_PAIR];
 
         mConnectionsStart = Lists.newArrayList();
         mConnectionsEnd = Lists.newArrayList();
-        mRepBreakendsEnd = Lists.newArrayList();
-        mRepBreakendsStart = Lists.newArrayList();
     }
 
-    public void add(boolean isStart) { ++mBreakendCount[seIndex(isStart)]; }
+    public void add(boolean isStart, double linkPloidy) { mBreakendCount[seIndex(isStart)] += linkPloidy; }
 
-    public int curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
-    public int breakendCount(int se) { return mBreakendCount[se]; }
-    public int breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
+    public double curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
+    public double breakendCount(int se) { return mBreakendCount[se]; }
+    public double breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
 
-    public int minUnlinked() { return max(MinPloidy - curentCount(), 0); }
-    public int maxUnlinked() { return max(MaxPloidy - curentCount(), 0); }
-    public int unlinked() { return max(Ploidy - curentCount(), 0); }
+    public double minUnlinked() { return max(MinPloidy - curentCount(), 0); }
+    public double maxUnlinked() { return max(MaxPloidy - curentCount(), 0); }
+    public double unlinked() { return max(Ploidy - curentCount(), 0); }
 
-    public int minUnlinked(boolean isStart) { return minUnlinked(seIndex(isStart)); }
-    public int maxUnlinked(boolean isStart) { return maxUnlinked(seIndex(isStart)); }
-    public int unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
+    public double minUnlinked(boolean isStart) { return minUnlinked(seIndex(isStart)); }
+    public double maxUnlinked(boolean isStart) { return maxUnlinked(seIndex(isStart)); }
+    public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
 
-    public int minUnlinked(int se) { return max(MinPloidy - mBreakendCount[se], 0); }
-    public int maxUnlinked(int se) { return max(MaxPloidy - mBreakendCount[se],0); }
-    public int unlinked(int se) { return max(Ploidy - mBreakendCount[se],0); }
+    public double minUnlinked(int se) { return max(MinPloidy - mBreakendCount[se], 0); }
+    public double maxUnlinked(int se) { return max(MaxPloidy - mBreakendCount[se],0); }
+    public double unlinked(int se) { return max(Ploidy - mBreakendCount[se],0); }
 
     public final List<SvBreakend> getConnections(boolean isStart) { return isStart ? mConnectionsStart : mConnectionsEnd; }
     public int uniqueConnections(boolean isStart) { return isStart ? mConnectionsStart.size() : mConnectionsEnd.size(); }
@@ -87,28 +82,33 @@ public class SvChainState
             mConnectionsEnd.add(breakend);
     }
 
-    public void addRepBreakend(final SvBreakend breakend)
+    public boolean overlaps(final SvChainState other)
     {
-        if(breakend.usesStart() && !mRepBreakendsStart.contains(breakend))
-            mRepBreakendsStart.add(breakend);
-        else if (!breakend.usesStart() && !mRepBreakendsEnd.contains(breakend))
-            mRepBreakendsEnd.add(breakend);
+        return !(MinPloidy > other.MaxPloidy || MaxPloidy < other.MinPloidy);
     }
 
-    public void removeRepBreakend(final SvBreakend breakend)
+    public boolean equals(final SvChainState other)
     {
-        if(breakend.usesStart())
-            mRepBreakendsStart.remove(breakend);
-        else if (!breakend.usesStart())
-            mRepBreakendsEnd.remove(breakend);
+        return copyNumbersEqual(Ploidy, other.Ploidy);
     }
-
-    public List<SvBreakend> getRepBreakends(boolean isStart) { return isStart ? mRepBreakendsStart : mRepBreakendsEnd; }
 
     public String toString()
     {
-        return String.format("id(%d) ploidy(%d-%d-%d) counts(s=%d e=%d)",
-                SV.dbId(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+        if(Ploidy > 10)
+        {
+            return String.format("id(%d) ploidy(%.0f-%.0f-%.0f) counts(s=%.0f e=%.0f)",
+                    SV.dbId(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+        }
+        else if(Ploidy < 0.5)
+        {
+            return String.format("id(%d) ploidy(%.2f-%.2f-%.2f) counts(s=%.2f e=%.2f)",
+                    SV.dbId(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+        }
+        else
+        {
+            return String.format("id(%d) ploidy(%.1f-%.1f-%.1f) counts(s=%.1f e=%.1f)",
+                    SV.dbId(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+        }
     }
 
 }
