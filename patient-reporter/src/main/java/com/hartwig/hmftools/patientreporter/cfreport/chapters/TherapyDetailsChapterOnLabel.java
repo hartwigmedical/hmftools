@@ -78,6 +78,8 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
+     //   List<EvidenceItem> mergedItems = mergeOnDrugType(evidence);
+
         final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
         for (EvidenceItem item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
@@ -95,6 +97,10 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
+
+//    private static List<EvidenceItem> mergeOnDrugType(final List<EvidenceItem> evidence) {
+//
+//    }
 
     @NotNull
     private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
