@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
+import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 
 import static org.junit.Assert.assertEquals;
@@ -64,6 +65,8 @@ public class ChainingTest
         assertFalse(chain.canAddLinkedPairToEnd(lp3));
         chain.addLink(lp3, true);
 
+        assertTrue(checkIsValid(chain));
+
         assertEquals(chain.getFirstSV(), var4);
         assertEquals(chain.getLastSV(), var3);
         assertEquals(chain.getSvList().get(1), var1);
@@ -77,6 +80,8 @@ public class ChainingTest
         chain.addLink(lp4, true);
 
         assertEquals(chain.getAssemblyLinkCount(), 2);
+
+        assertTrue(checkIsValid(chain));
 
         SvLinkedPair lp5 = new SvLinkedPair(var5, var3, LINK_TYPE_TI, false, false);
 
@@ -111,6 +116,84 @@ public class ChainingTest
         // check no link
         chainData = chain.breakendsAreChained(var5, false, var1, true);
         assertEquals(chainData[CHAIN_LINK_COUNT], 0);
+    }
+
+    @Test
+    public void testChainSplittingByFoldback()
+    {
+        SvTestHelper tester = new SvTestHelper();
+
+        final SvVarData var1 = createDel("1", "1", 300, 400);
+        final SvVarData var2 = createDel("2", "1", 500, 600);
+        final SvVarData var3 = createDel("3", "1", 700, 800);
+
+        // test adding linked pairs of various orientations to the start and end of a chain
+        SvChain chain = new SvChain(0);
+
+        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+
+        assertTrue(checkIsValid(chain));
+
+        // now add a foldback which will split and replicate the chain
+        SvVarData var4 = createInv("4", "1", 900, 1000, 1);
+
+        chain.foldbackChainOnLink(
+                SvLinkedPair.from(var4.getBreakend(true), var3.getBreakend(false)),
+                SvLinkedPair.from(var4.getBreakend(false), var3.getBreakend(false)));
+
+        assertEquals(6, chain.getLinkCount());
+        assertEquals(4, chain.getSvCount());
+        assertTrue(checkIsValid(chain));
+
+        // again but with a foldback connected at the start
+        chain = new SvChain(0);
+
+        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+
+        assertTrue(checkIsValid(chain));
+
+        // now add a foldback which will split and replicate the chain
+        var4 = createInv("4", "1", 100, 200, -1);
+
+        chain.foldbackChainOnLink(
+                SvLinkedPair.from(var1.getBreakend(true), var4.getBreakend(true)),
+                SvLinkedPair.from(var4.getBreakend(false), var1.getBreakend(true)));
+
+        assertEquals(6, chain.getLinkCount());
+        assertEquals(4, chain.getSvCount());
+        assertTrue(checkIsValid(chain));
+
+    }
+
+    @Test
+    public void testChainSplittingByComplexDup()
+    {
+        SvTestHelper tester = new SvTestHelper();
+
+        final SvVarData var1 = createDel("1", "1", 300, 400);
+        final SvVarData var2 = createDel("2", "1", 500, 600);
+        final SvVarData var3 = createDel("3", "1", 700, 800);
+
+        // test adding linked pairs of various orientations to the start and end of a chain
+        SvChain chain = new SvChain(0);
+
+        chain.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+
+        assertTrue(checkIsValid(chain));
+
+        // now add a foldback which will split and replicate the chain
+        SvVarData var4 = createDup("4", "1", 200, 900);
+
+        chain.duplicateChainOnLink(
+                SvLinkedPair.from(var4.getBreakend(true), var1.getBreakend(true)),
+                SvLinkedPair.from(var4.getBreakend(false), var3.getBreakend(false)));
+
+        assertEquals(6, chain.getLinkCount());
+        assertEquals(4, chain.getSvCount());
+        assertTrue(checkIsValid(chain));
     }
 
     @Test

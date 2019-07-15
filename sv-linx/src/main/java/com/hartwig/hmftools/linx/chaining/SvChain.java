@@ -248,6 +248,86 @@ public class SvChain {
         return canAddLinkedPairToStart(pair) && canAddLinkedPairToEnd(pair);
     }
 
+    public void foldbackChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)
+    {
+        // validate the links being added
+        final SvVarData chainVar;
+        if(pair1.first() == pair2.first() && pair1.second() == pair2.second())
+        {
+            chainVar = pair1.getFirstBreakend() == pair2.getFirstBreakend() ? pair1.first(): pair1.second();
+        }
+        else if(pair1.first() == pair2.second() && pair1.second() == pair2.first())
+        {
+            chainVar = pair1.getFirstBreakend() == pair2.getSecondBreakend() ? pair1.first(): pair1.second();
+        }
+        else
+        {
+            return;
+        }
+
+        boolean connectOnStart = chainVar == getFirstSV();
+        int linkCount = mLinkedPairs.size();
+
+        if(connectOnStart)
+        {
+            addLink(pair1, true);
+            addLink(pair2, true);
+
+            // the beginning of the chain will now form the middle
+            for(int index = 0; index < linkCount; ++index)
+            {
+                final SvLinkedPair pair = mLinkedPairs.get(2 + index * 2);
+                addLink(SvLinkedPair.from(pair.getFirstBreakend(), pair.getSecondBreakend()), true);
+            }
+        }
+        else
+        {
+            addLink(pair1, false);
+            addLink(pair2, false);
+
+            // the beginning of the chain will now form the middle
+            for(int index = linkCount - 1; index >= 0; --index)
+            {
+                final SvLinkedPair pair = mLinkedPairs.get(index);
+                addLink(SvLinkedPair.from(pair.getFirstBreakend(), pair.getSecondBreakend()), false);
+            }
+        }
+    }
+
+    public void duplicateChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)
+    {
+        // validate the links being added
+        final SvLinkedPair endPair;
+        final SvLinkedPair startPair;
+        if(canAddLinkedPairToEnd(pair1) && canAddLinkedPairToStart(pair2))
+        {
+            endPair = pair1;
+            startPair = pair2;
+        }
+        else if(canAddLinkedPairToEnd(pair2) && canAddLinkedPairToStart(pair1))
+        {
+            endPair = pair2;
+            startPair = pair1;
+        }
+        else
+        {
+            return;
+        }
+
+        int linkCount = mLinkedPairs.size();
+
+        addLink(endPair, false);
+        addLink(startPair, false);
+
+        // the beginning of the chain will now form the middle
+        for(int index = 0; index < linkCount; ++index)
+        {
+            final SvLinkedPair pair = mLinkedPairs.get(index);
+            addLink(SvLinkedPair.from(pair.getFirstBreakend(), pair.getSecondBreakend()), false);
+        }
+    }
+
+
     public static boolean checkIsValid(final SvChain chain)
     {
         if(chain.getSvCount() == 0 || chain.getLinkCount() == 0)

@@ -10,14 +10,19 @@ public class ProposedLinks
     public final List<SvLinkedPair> Links;
     public final SvChain ChainTarget;
     public final double Ploidy;
-    public final boolean ComplexType;
 
-    public ProposedLinks(List<SvLinkedPair> links, double ploidy, final SvChain targetChain, boolean complexType)
+    public final String LinkType;
+
+    public static String PL_TYPE_NONE = "None";
+    public static String PL_TYPE_FOLDBACK = "Foldback";
+    public static String PL_TYPE_COMPLEX_DUP = "ComplexDup";
+
+    public ProposedLinks(List<SvLinkedPair> links, double ploidy, final SvChain targetChain, final String linkType)
     {
         Links = links;
         Ploidy = ploidy;
         ChainTarget = targetChain;
-        ComplexType = complexType;
+        LinkType = linkType;
     }
 
     public ProposedLinks(SvLinkedPair link, double ploidy)
@@ -25,7 +30,7 @@ public class ProposedLinks
         Links = Lists.newArrayList(link);
         Ploidy = ploidy;
         ChainTarget = null;
-        ComplexType = false;
+        LinkType = PL_TYPE_NONE;
     }
 
 }

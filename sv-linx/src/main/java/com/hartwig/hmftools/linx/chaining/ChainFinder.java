@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -16,6 +17,8 @@ import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PL_TYPE_COMPLEX_DUP;
+import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PL_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -755,9 +758,6 @@ public class ChainFinder
                 if(chainBeStart == null || chainBeEnd == null)
                     continue;
 
-                chainBeStart = chainBeStart.getOrigBreakend();
-                chainBeEnd = chainBeEnd.getOrigBreakend();
-
                 SvLinkedPair[] matchingPair = {null, null};
 
                 for(int se = SE_START; se <= SE_END; ++se)
@@ -767,8 +767,6 @@ public class ChainFinder
 
                     if(chainBe == null)
                         continue;
-
-                    chainBe = chainBe.getOrigBreakend();
 
                     if(chainBe.getSV().getImpliedPloidy() < compDupPloidy * 2)
                         continue;
@@ -857,7 +855,7 @@ public class ChainFinder
         if(bestCompDupLinks.isEmpty())
             return Lists.newArrayList();
 
-        return Lists.newArrayList(new ProposedLinks(bestCompDupLinks, maxCompDupPloidy, matchedChain, true));
+        return Lists.newArrayList(new ProposedLinks(bestCompDupLinks, maxCompDupPloidy, matchedChain, PL_TYPE_COMPLEX_DUP));
     }
 
     private List<ProposedLinks> findFoldbackPairs()
@@ -967,7 +965,32 @@ public class ChainFinder
         if(bestFoldbackLinks.isEmpty())
             return Lists.newArrayList();
 
-        return Lists.newArrayList(new ProposedLinks(bestFoldbackLinks, maxFoldbackPloidy, null, true));
+        // check for an existing chain to add the foldback to
+        SvChain targetChain = null;
+
+        for(SvChain chain : mChains)
+        {
+            if(!copyNumbersEqual(maxFoldbackPloidy * 2, chain.ploidy()))
+                continue;
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                boolean isStart = isStart(se);
+                SvBreakend chainBe = chain.getOpenBreakend(isStart);
+
+                if (chainBe == null)
+                    continue;
+
+                if(chainBe == bestFoldbackLinks.get(0).getBreakend(true)
+                || chainBe == bestFoldbackLinks.get(0).getBreakend(false))
+                {
+                    targetChain = chain;
+                    break;
+                }
+            }
+        }
+
+        return Lists.newArrayList(new ProposedLinks(bestFoldbackLinks, maxFoldbackPloidy, targetChain, PL_TYPE_FOLDBACK));
     }
 
     private List<ProposedLinks> findSingleOptionPairs()
@@ -1196,7 +1219,7 @@ public class ChainFinder
         }
     }
 
-    private ProposedLinks findFewestOptionPairs(List<SvBreakend> breakendList, boolean isRestricted)
+    private List<ProposedLinks> findFewestOptionPairs(List<SvBreakend> breakendList, boolean isRestricted)
     {
         // of these pairs, do some have less alternatives links which could be made than others
         // eg if high-rep SVs are A and B, and possible links have been found A-C, A-D and B-E,
@@ -1260,7 +1283,8 @@ public class ChainFinder
         removeSkippedPairs(minLinkPairs);
 
         // TODO - only select one link, with the highest ploidy or best match
-        return new ProposedLinks(minLinkPairs, 0, null, false);
+        return Lists.newArrayList();
+        // return new ProposedLinks(minLinkPairs, 0, null, false);
     }
 
     private void processProposedLinks(List<ProposedLinks> proposedLinksList)
@@ -1368,7 +1392,6 @@ public class ChainFinder
         SvLinkedPair newPair = proposedLinks.Links.get(0);
 
         boolean[] pairLinkedOnFirst = {false, false};
-        boolean addedToChain = false;
         boolean addToStart = false;
         boolean linkClosesChain = false;
 
@@ -1415,34 +1438,59 @@ public class ChainFinder
                         continue;
                     }
                 }
+                else
+                {
+                    addToStart = canAddToStart;
+                }
 
                 boolean linkOnFirst = newPair.first() == chain.getFirstSV() || newPair.first() == chain.getLastSV();
 
                 // test ploidy match
                 boolean ploidyMatched = false;
 
-                if ((linkOnFirst && copyNumbersEqual(chain.ploidy(), newPair.first().ploidy()))
-                    || (!linkOnFirst && copyNumbersEqual(chain.ploidy(), newPair.second().ploidy())))
+                if ((linkOnFirst && !copyNumbersEqual(chain.ploidy(), newPair.first().ploidy()))
+                || (!linkOnFirst && !copyNumbersEqual(chain.ploidy(), newPair.second().ploidy())))
                 {
-                    ploidyMatched = true;
+                    continue;
                 }
-                else
-                {
-                    // this may be a candidate for splitting a chain
 
-                }
+                if(linkOnFirst)
+                    pairLinkedOnFirst[SE_START] = true;
+                else
+                    pairLinkedOnFirst[SE_END] = true;
+
+                targetChain = chain;
+                break;
             }
         }
 
-        if(targetChain != null)
+        boolean isNewChain = (targetChain == null);
+
+        if(!isNewChain)
         {
+            if (proposedLinks.LinkType == PL_TYPE_FOLDBACK || proposedLinks.LinkType == PL_TYPE_COMPLEX_DUP)
+            {
+                if(proposedLinks.LinkType == PL_TYPE_FOLDBACK)
+                    targetChain.foldbackChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
+                else
+                    targetChain.duplicateChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
 
-            targetChain.addLink(newPair, addToStart);
-            addedToChain = true;
+                double newPloidy = targetChain.ploidy() * 0.5;
+                double newUncertainty = targetChain.ploidyUncertainty() * sqrt(2);
+                targetChain.setPloidyData(newPloidy, newUncertainty);
+            }
+            else
+            {
+                for(SvLinkedPair pair : proposedLinks.Links)
+                {
+                    targetChain.addLink(pair, addToStart);
+                }
 
-            LOGGER.debug("index({}) method({}) adding linked pair({} {} len={}) to existing chain({}) {}",
-                    mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), newPair.length(),
-                    targetChain.id(), addToStart ? "start" : "end");
+                PloidyCalcData ploidyData = calcPloidyUncertainty(
+                        new PloidyCalcData(newPair.first()), new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
+
+                targetChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
+            }
         }
         else
         {
@@ -1452,32 +1500,41 @@ public class ChainFinder
             SvChain chain = new SvChain(mNextChainId++);
             mChains.add(chain);
 
-            chain.addLink(newPair, true);
+            targetChain = chain;
+
+            for(SvLinkedPair pair : proposedLinks.Links)
+            {
+                targetChain.addLink(pair, true);
+            }
 
             PloidyCalcData ploidyData = calcPloidyUncertainty(new PloidyCalcData(newPair.first()), new PloidyCalcData(newPair.second()));
             chain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
 
             pairLinkedOnFirst[SE_START] = true;
             pairLinkedOnFirst[SE_END] = true;
-
-            LOGGER.debug("index({}) method({}) adding linked pair({} {}) to new chain({}) new ploidy({})",
-                    mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), chain.id(),
-                    String.format("%.1f unc=%.1f", ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty));
         }
 
-        newPair.setLinkReason(mLinkReason, mLinkIndex);
+        for(SvLinkedPair pair : proposedLinks.Links)
+        {
+            LOGGER.debug("index({}) method({}) adding linked pair({} {} ploidy={}) to {} chain({}) ploidy({})",
+                    mLinkIndex, mLinkReason, newPair.toString(), pair.assemblyInferredStr(), proposedLinks.Ploidy,
+                    isNewChain ? "new" : "existing",
+                    targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
 
-        registerNewLink(newPair, pairLinkedOnFirst, proposedLinks.Ploidy);
-        ++mLinkIndex;
+            pair.setLinkReason(mLinkReason, mLinkIndex);
 
-        if(mRunValidation)
-            mDiagnostics.checkHasValidState(mLinkIndex);
+            registerNewLink(pair, pairLinkedOnFirst, proposedLinks.Ploidy);
+            ++mLinkIndex;
+        }
 
-        if(addedToChain)
+        if(!isNewChain)
         {
             // now see if any partial chains can be linked
             reconcileChains();
         }
+
+        if(mRunValidation)
+            mDiagnostics.checkHasValidState(mLinkIndex);
 
         return true;
     }
@@ -2054,6 +2111,9 @@ public class ChainFinder
             for (int index2 = index1 + 1; index2 < mChains.size(); ++index2)
             {
                 SvChain chain2 = mChains.get(index2);
+
+                if(!copyNumbersEqual(chain1.ploidy(), chain2.ploidy()))
+                    continue;
 
                 for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {

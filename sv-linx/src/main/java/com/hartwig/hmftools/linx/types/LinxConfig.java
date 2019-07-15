@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.types;
 
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 
 import java.io.BufferedReader;
@@ -135,7 +136,7 @@ public class LinxConfig
 
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
 
-        ChainingMethod = cmd.hasOption(CHAINING_METHOD) ? Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD)) : CHAIN_METHOD_NEW;
+        ChainingMethod = cmd.hasOption(CHAINING_METHOD) ? Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD)) : CHAIN_METHOD_OLD;
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
