@@ -175,7 +175,7 @@ public class LinxConfig
         LogVerbose = false;
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
-        ChainingMethod = CHAIN_METHOD_NEW;
+        ChainingMethod = CHAIN_METHOD_OLD;
     }
 
     public static void addCmdLineArgs(Options options)

@@ -302,5 +302,16 @@ public class ChainPloidyLimits
         return new PloidyCalcData(estPloidy, estUncertainty, true);
     }
 
+    public static boolean ploidyOverlap(double ploidy1, double uncertainty1, double ploidy2, double uncertainty2)
+    {
+        if(ploidy1 + uncertainty1 < ploidy2 - uncertainty2)
+            return false;
+
+        if(ploidy2 + uncertainty2 < ploidy1 - uncertainty1)
+            return false;
+
+        return true;
+    }
+
 
 }
