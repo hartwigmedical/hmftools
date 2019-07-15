@@ -31,6 +31,7 @@ public final class SummaryFile {
             if (parts.length == 2) {
                 String sampleId = parts[0].trim();
                 String summaryOfSample = parts[1].trim();
+                summaryOfSample = summaryOfSample.replace("/n", "\n");
                 sampleToSummaryMap.put(sampleId, summaryOfSample);
             } else {
                 LOGGER.warn("Suspicious line detected in sample summary csv: " + line);
