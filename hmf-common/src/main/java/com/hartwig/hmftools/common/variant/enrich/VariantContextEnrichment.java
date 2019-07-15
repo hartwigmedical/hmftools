@@ -9,6 +9,9 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public interface VariantContextEnrichment extends Consumer<VariantContext> {
 
+    @Override
+    void accept(@NotNull final VariantContext context);
+
     void flush();
 
     @NotNull

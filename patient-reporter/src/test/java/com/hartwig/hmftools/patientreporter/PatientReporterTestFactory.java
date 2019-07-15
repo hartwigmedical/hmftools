@@ -96,6 +96,8 @@ public final class PatientReporterTestFactory {
         return ImmutableGermlineVariant.builder()
                 .passFilter(true)
                 .gene(Strings.EMPTY)
+                .chromosome("1")
+                .position(600)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .totalReadCount(0)
@@ -123,7 +125,8 @@ public final class PatientReporterTestFactory {
                 .adjustedVAF(0D)
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
-                .notifyClinicalGeneticist(false);
+                .notifyClinicalGeneticist(false)
+                .gDNA("1:600");
     }
 
     @NotNull

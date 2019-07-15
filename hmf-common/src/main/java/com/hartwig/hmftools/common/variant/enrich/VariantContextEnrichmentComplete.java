@@ -4,9 +4,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.HighConfidenceEnrichment;
-import com.hartwig.hmftools.common.variant.RefContextEnrichment;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,30 +19,30 @@ public class VariantContextEnrichmentComplete implements VariantContextEnrichmen
     }
 
     private final KataegisEnrichment kataegisEnrichment;
-    private final RefContextEnrichment refContextEnrichment;
+    private final SomaticRefContextEnrichment somaticRefContextEnrichment;
     private final HighConfidenceEnrichment highConfidenceEnrichment;
 
     VariantContextEnrichmentComplete(@NotNull final IndexedFastaSequenceFile reference,
             @NotNull final Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull final Consumer<VariantContext> consumer) {
         highConfidenceEnrichment = new HighConfidenceEnrichment(highConfidenceRegions, consumer);
         kataegisEnrichment = new KataegisEnrichment(highConfidenceEnrichment);
-        refContextEnrichment = new RefContextEnrichment(reference, kataegisEnrichment);
+        somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
     }
 
     @Override
     public void flush() {
-        refContextEnrichment.flush();
+        somaticRefContextEnrichment.flush();
         kataegisEnrichment.flush();
     }
 
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        return kataegisEnrichment.enrichHeader(refContextEnrichment.enrichHeader(template));
+        return kataegisEnrichment.enrichHeader(somaticRefContextEnrichment.enrichHeader(template));
     }
 
     @Override
-    public void accept(final VariantContext context) {
-        refContextEnrichment.accept(context);
+    public void accept(@NotNull final VariantContext context) {
+        somaticRefContextEnrichment.accept(context);
     }
 }

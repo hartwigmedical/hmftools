@@ -253,6 +253,7 @@ CREATE TABLE sage
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
+/*
 CREATE TABLE brca
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -394,4 +395,4 @@ CREATE TABLE brca
     Allele_number_AMR_ExAC varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
-);
+);*/

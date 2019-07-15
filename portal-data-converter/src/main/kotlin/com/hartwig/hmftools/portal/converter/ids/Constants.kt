@@ -1,6 +1,0 @@
-package com.hartwig.hmftools.portal.converter.ids
-
-const val CPCT_STUDY_PATTERN = "CPCT02"
-const val DRUP_STUDY_PATTERN = "DRUP01"
-const val PATIENT_AND_HOSPITAL_NUMBER_PATTERN = "[0-9]{6}"
-const val PATIENT_ID_PATTERN = "($CPCT_STUDY_PATTERN|$DRUP_STUDY_PATTERN)$PATIENT_AND_HOSPITAL_NUMBER_PATTERN"

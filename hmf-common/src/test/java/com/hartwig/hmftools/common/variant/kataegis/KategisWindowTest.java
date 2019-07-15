@@ -23,7 +23,15 @@ public class KategisWindowTest {
         window.add(context2);
         assertEquals(2, window.count());
         assertEquals(100, window.averageDistance());
+    }
 
+    @Test
+    public void testAvgDistanceRounding() {
+        final KataegisWindow window = new KataegisWindow(KataegisQueueTest.create("1", 54730299, false));
+        for (int i = 0; i < 177; i++) {
+            window.add(KataegisQueueTest.create("1", 54906422, false));
+        }
+        assertEquals(1001, window.averageDistance());
     }
 
 }

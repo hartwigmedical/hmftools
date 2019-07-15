@@ -380,7 +380,7 @@ public class BachelorPostProcess
                 : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
 
         final PurityAdjustedSomaticVariantFactory purityAdjustmentFactory =
-                new PurityAdjustedSomaticVariantFactory(purityAdjuster, copyNumbers);
+                new PurityAdjustedSomaticVariantFactory(sampleId, purityAdjuster, copyNumbers);
 
         final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 

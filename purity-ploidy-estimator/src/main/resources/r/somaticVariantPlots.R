@@ -1,15 +1,17 @@
+library(VariantAnnotation)
 library(ggplot2)
 library(dplyr)
-library(VariantAnnotation)
 theme_set(theme_bw())
 
+sample = "COLO829T"
+purpleDir <- "~/hmf/analysis/COLO829T/purple"
+plotDir   <- "~/hmf/analysis/COLO829T/purple/plot"
 
 # Parse the arguments
 args <- commandArgs(trailing=T)
 sample <- args[1]
 purpleDir <- args[2]
 plotDir   <- args[3]
-
 
 vcf_data_frame<- function(vcf) {
   vcf.rowRanges = rowRanges(vcf)
@@ -20,14 +22,65 @@ vcf_data_frame<- function(vcf) {
   vcf.df = data.frame(
     chromosome = seqnames(vcf), 
     pos = start(vcf), 
-    ref = ref(vcf), 
+    ref = as.character(ref(vcf)), 
     alt = as.character(vcf.alt),  
     filter = as.character(vcf.rowRanges$FILTER), 
     minorAllelePloidy = vcf.info$PURPLE_MAP, 
     ploidy = vcf.info$PURPLE_PLOIDY, 
-    copyNumber = vcf.info$PURPLE_CN)
+    copyNumber = vcf.info$PURPLE_CN,
+    kataegis = vcf.info$KT, stringsAsFactors = F)
   
   return (vcf.df)
+}
+
+standard_mutation <- function(types) {
+  types = gsub("G>T", "C>A", types)
+  types = gsub("G>C", "C>G", types)
+  types = gsub("G>A", "C>T", types)
+  types = gsub("A>T", "T>A", types)
+  types = gsub("A>G", "T>C", types)
+  types = gsub("A>C", "T>G", types)
+  return(types)
+}
+
+rainfall_plot <- function(somaticVariants) {
+  
+  strandColours = c("#6bd692", "#7e6bd6")
+  strandColours = setNames(strandColours, c("Forward", "Reverse"))
+  
+  singleSubstitutionColours = c("#14B0EF","#060809","#E00714","#BFBEBF","#90CA4B","#E9BBB8")
+  singleSubstitutionColours = setNames(singleSubstitutionColours, c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G"))
+  
+  snps = somaticVariants %>% 
+    filter(filter == 'PASS', nchar(ref) == 1, nchar(alt) == 1) %>% 
+    mutate(
+      mutation = paste(ref, alt, sep = ">"), 
+      mutation = standard_mutation(mutation),
+      prevPos = lag(pos), 
+      nextPos = lead(pos),
+      prevPos = ifelse(is.na(prevPos), 0, prevPos),
+      nextPos = ifelse(is.na(nextPos), 0, nextPos),
+      prevDis = abs(pos - prevPos),
+      nextDis = abs(nextPos - pos),
+      distanceToNeighbour = pmin(prevDis, nextDis),
+      rank = row_number()) 
+  
+  kataegis = snps %>% mutate(ymin = min(distanceToNeighbour), ymax = max(distanceToNeighbour)) %>% 
+    filter(!is.na(kataegis)) %>% 
+    group_by(kataegis, ymin, ymax) %>%
+    summarise(xmin = min(rank), xmax = max(rank)) %>%
+    mutate(strand = ifelse(substring(kataegis, 1, 3) == "FWD", "Forward", "Reverse"))
+
+  p = ggplot() +
+    geom_rect(data = kataegis, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = strand), alpha = 0.6) + 
+    geom_point(data = snps, mapping = aes(x = rank, y = distanceToNeighbour, color = mutation), size = 0.1) +
+    scale_y_log10(labels = function(x) {format(x, scientific = FALSE)}) + 
+    ylab("Intermutation distance (bp)") + xlab("Mutation number") +
+    scale_color_manual(values = singleSubstitutionColours, name = "Mutation") + 
+    scale_fill_manual(values = strandColours, name = "Kataegis Regions") + 
+    guides(color = guide_legend(override.aes = list(size = 2)))
+  
+  return (p)
 }
 
 somatic_ploidy_pdf <- function(somatics) {
@@ -58,7 +111,11 @@ somatic_ploidy_pdf <- function(somatics) {
     xlab("Ploidy") + ylab("Count") + ggtitle("Somatic Variant Ploidy PDF")
 }
 
+vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
+somaticVariants = vcf_data_frame(vcf)
 
-somaticVariants = vcf_data_frame(readVcf(file = paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz")))
 somaticVariantPDF = somatic_ploidy_pdf(somaticVariants)
 ggsave(filename = paste0(plotDir, "/", sample, ".variant.png"), somaticVariantPDF, units = "in", height = 4, width = 4.8, scale = 1)
+
+rainfallPlot = rainfall_plot(somaticVariants)
+ggsave(filename = paste0(plotDir, "/", sample, ".variant.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)

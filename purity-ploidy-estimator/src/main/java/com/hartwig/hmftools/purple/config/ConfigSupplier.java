@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -126,10 +125,10 @@ public class ConfigSupplier {
         somaticConfig = SomaticConfig.createSomaticConfig(cmd);
         structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
 
+        refGenomeData = RefGenomeData.createRefGenomeConfig(cmd);
         cobaltData = CobaltData.createCobaltData(commonConfig);
         amberData = AmberData.createAmberData(commonConfig);
 
-        refGenomeData = RefGenomeData.createRefGenomeConfig(cmd, cobaltData);
     }
 
     @NotNull
@@ -185,11 +184,6 @@ public class ConfigSupplier {
     @NotNull
     public SmoothingConfig smoothingConfig() {
         return smoothingConfig;
-    }
-
-    private static void printHelp(@NotNull Options opt) {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Purity Ploidy Estimator (PURPLE)", opt);
     }
 
     @NotNull

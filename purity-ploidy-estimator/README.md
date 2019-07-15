@@ -61,6 +61,7 @@ output_dir | Path to the output directory. This directory will be created if it 
 amber | Path to AMBER output. This should correspond to the output_dir used in AMBER.
 cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
 gc_profile | Path to GC profile.
+ref_genome | Path to reference genome fasta file. 
 
 The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 A HG38 equivalent is also available.
@@ -79,7 +80,6 @@ db_enabled | None | This parameter has no arguments. Optionally include if you w
 db_user | None | Database username. Mandatory if db_enabled.
 db_pass | None | Database password. Mandatory if db_enabled.
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
-ref_genome | Detect | Will attempt to detect reference genome from COBALT output but failing that must be either hg18 or hg38.
 no_charts | NA | Disables creation of (non-circos) charts
 
 #### Optional Somatic Fit Arguments
@@ -585,6 +585,7 @@ PURPLE_CN_CHANGE | 1 or 2 | Purity adjusted change in copy number at each breake
 RECOVERED | 0 | Flag to indicate entry has been recovered
 RECOVERY_METHOD | 1 | Method used to recover, one of `UNBALANCED_SV_START`, `UNBALANCED_SV_END`, `UNSUPPORTED_BREAKEND_START`, `UNSUPPORTED_BREAKEND_END`
 RECOVERY_FILTER | n | Filter prior to recovery
+REFG | 1 | Ref genome surrounding break point
 
 #### Somatic Variant VCF
 
@@ -597,7 +598,16 @@ PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
 PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
 PURPLE_MAP | 1 | Purity adjusted minor allele ploidy surrounding variant location
 PURPLE_GERMLINE | 1 | Germline classification surrounding variant location, one of `HOM_DELETION`, `HET_DELETION`, `AMPLIFICATION`, `NOISE`, `DIPLOID`, `UNKNOWN`
+REP_S | 1 | Repeat sequence
+REP_C | 1 | Repeat sequence count
+MH | 1 | Microhomology
+KT | 1 | Forward/reverse kataegis id
+TNC | 1 | Tri-nucleotide context
 
+Somatic variants of type C>T and C>G in a TpCpN context are annotated as showing Kataegis ([Nik Zainal et al., 2012](https://www.ncbi.nlm.nih.gov/pubmed/22608084)) 
+if there are three or more mutations of that type, strand and context localised within a region with an average inter-mutation distance of 
+<= 1kb. The annotation describes the strand it was found on along with an id and is shared by grouped variants.
+ 
 ### Database
 
 PURPLE can optionally persist its output to a SQL database. This is particularly useful when querying data over a cohort. 
@@ -751,6 +761,16 @@ WHERE filter = 'PASS'
 GROUP BY 1;
 ```
 
+Regions of kataegis within a sample are queried with:
+```
+SELECT kataegis, min(chromosome) as chromosome, min(position) as start, max(position) as end,  
+       count(*), round((max(position) - min(position)) / (count(*) - 1))  as avgDistance
+FROM somaticVariant 
+WHERE sampleId = 'COLO829T' AND kataegis <> ''
+GROUP BY kataegis
+ORDER BY count(*) DESC;
+```
+
 ### CIRCOS
 Data for the CIRCOS plots is found in the `output_dir/circos` directory even if the `circos` parameter is not supplied. 
 This allows the figures to be generated after PURPLE has finished from the command line, eg:
@@ -832,11 +852,17 @@ Copy numbers are broken down by colour into their respective minor allele ploidy
   <img src="src/main/resources/readme/COLO829T.map.png" width="500" alt="Minor Allele Ploidy PDF">
 </p>
 
-If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant ploidy broken down by copy number:
+If a somatic variant VCF has been supplied, a similar figure will be produced showing the somatic variant ploidy broken down by copy number as 
+well as rainfall plot with kataegis clusters highlighted grey:
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.variant.png" width="500" alt="Somatic Variant Ploidy PDF">
 </p>
+
+<p align="center">
+  <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="700" alt="Somatic Rainfall">
+</p>
+
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
@@ -857,6 +883,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Consistent file headers
   - Fix whole genome duplication calculation
+  - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
+  - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 
+  - Added REF_G to structural vcf output
+  - Added variant rainfall plot
 - [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-30)
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)

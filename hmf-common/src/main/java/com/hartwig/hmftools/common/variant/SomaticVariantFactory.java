@@ -1,5 +1,18 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.enrich.HighConfidenceEnrichment.HIGH_CONFIDENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.PurityEnrichment.PURPLE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
@@ -23,7 +36,6 @@ import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactor
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.kataegis.KataegisEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
@@ -76,13 +88,6 @@ public class SomaticVariantFactory {
     private static final String ID_SEPARATOR = ";";
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
-
-    public static final String PURPLE_CN_INFO = "PURPLE_CN";
-    public static final String PURPLE_AF_INFO = "PURPLE_AF";
-    public static final String PURPLE_PLOIDY_INFO = "PURPLE_PLOIDY";
-    public static final String PURPLE_GERMLINE_INFO = "PURPLE_GERMLINE";
-    public static final String PURPLE_MINOR_ALLELE_PLOIDY_INFO = "PURPLE_MAP";
-    public static final String PURPLE_BIALLELIC_FLAG = "BIALLELIC";
 
     static final String PASS_FILTER = "PASS";
     private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
@@ -198,12 +203,12 @@ public class SomaticVariantFactory {
                 .recovered(context.hasAttribute(RECOVERED_FLAG))
                 .biallelic(context.hasAttribute(PURPLE_BIALLELIC_FLAG))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
-                .kataegis(context.getAttributeAsString(KataegisEnrichment.KATAEGIS_FLAG,Strings.EMPTY))
-                .trinucleotideContext(context.getAttributeAsString(RefContextEnrichment.TRINUCLEOTIDE_FLAG, Strings.EMPTY))
-                .microhomology(context.getAttributeAsString(RefContextEnrichment.MICROHOMOLOGY_FLAG, Strings.EMPTY))
-                .repeatCount(context.getAttributeAsInt(RefContextEnrichment.REPEAT_COUNT_FLAG, 0))
-                .repeatSequence(context.getAttributeAsString(RefContextEnrichment.REPEAT_SEQUENCE_FLAG, Strings.EMPTY))
-                .highConfidenceRegion(context.hasAttribute(HighConfidenceEnrichment.HIGH_CONFIDENCE_FLAG));
+                .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
+                .trinucleotideContext(context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY))
+                .microhomology(context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY))
+                .repeatCount(context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0))
+                .repeatSequence(context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY))
+                .highConfidenceRegion(context.hasAttribute(HIGH_CONFIDENCE_FLAG));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, canonicalAnnotationFactory);

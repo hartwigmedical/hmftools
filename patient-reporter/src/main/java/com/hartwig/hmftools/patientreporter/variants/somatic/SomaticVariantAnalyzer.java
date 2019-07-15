@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -51,10 +52,25 @@ public final class SomaticVariantAnalyzer {
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
-        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerVariant);
+        // extract somatic evidence for high drivers variants
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
+        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
+
+            String gene = entry.getKey().gene();
+            for (DriverCatalog catalog : driverCatalog) {
+                if (catalog.gene().equals(gene)) {
+                    if (catalog.driverLikelihood() > 0.8) {
+                        evidencePerVariantHighDriver.put(entry.getKey(), entry.getValue());
+
+                    }
+                }
+            }
+        }
+
+        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerVariantHighDriver);
 
         // Add all variants with filtered evidence that have not previously been added.
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
+        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariantHighDriver.entrySet()) {
             EnrichedSomaticVariant variant = entry.getKey();
             if (!variantsToReport.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
                 variantsToReport.add(variant);

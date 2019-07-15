@@ -65,11 +65,10 @@ public final class LoadClinicalData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    private static final String LIMS_DIRECTORY = "lims";
+    private static final String LIMS_DIRECTORY = "lims_dir";
 
-    private static final String CSV_OUT_DIR = "csv_out_dir";
+    private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
     private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
-    private static final String PORTAL_DATA_LINK = "portal_data_symlink";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
@@ -107,9 +106,8 @@ public final class LoadClinicalData {
                     sequencedPatientIds,
                     limsSampleDataPerPatient,
                     ecrfModels,
-                    cmd.getOptionValue(CSV_OUT_DIR),
-                    Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
-                    Optional.ofNullable(cmd.getOptionValue(PORTAL_DATA_LINK)));
+                    cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
+                    Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)));
         } else {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
@@ -202,8 +200,8 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Set<String> sequencedPatientIds,
-            @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient, @NotNull EcrfModels ecrfModels, @NotNull String csvOutputDir,
-            @NotNull Optional<String> tumorLocationSymlink, @NotNull Optional<String> portalDataLink) throws IOException {
+            @NotNull Map<String, List<SampleData>> limsSampleDataPerPatient, @NotNull EcrfModels ecrfModels,
+            @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
@@ -211,7 +209,7 @@ public final class LoadClinicalData {
         Map<String, Patient> patients =
                 loadAndInterpretPatients(limsSampleDataPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
 
-        DumpClinicalData.writeClinicalDumps(csvOutputDir, patients.values(), tumorLocationSymlink, portalDataLink);
+        DumpTumorLocationData.writeCuratedTumorLocationsToCSV(tumorLocationOutputDir, tumorLocationSymlink, patients.values());
 
         LOGGER.info("Clearing interpreted clinical tables in database.");
         dbAccess.clearClinicalTables();
@@ -397,7 +395,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(CSV_OUT_DIR));
+                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY));
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
@@ -430,9 +428,8 @@ public final class LoadClinicalData {
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
-        options.addOption(CSV_OUT_DIR, true, "Path towards the output directory for csv data dumps.");
-        options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of cancer type csv symlink.");
-        options.addOption(PORTAL_DATA_LINK, true, "Name of portal data csv symlink.");
+        options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
+        options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of tumor location csv symlink.");
 
         return options;
     }

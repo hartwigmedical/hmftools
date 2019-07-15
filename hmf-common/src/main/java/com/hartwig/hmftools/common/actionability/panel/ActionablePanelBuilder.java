@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberType;
 import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModelFactory;
-import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 
 import org.apache.logging.log4j.util.Strings;
@@ -31,7 +30,6 @@ public class ActionablePanelBuilder {
         final DrupActionabilityModel drup = DrupActionabilityModelFactory.buildFromCsv(drupLocation);
 
         addCopyNumbers(actionabilityAnalyzer.cnvAnalyzer());
-        addFusions(actionabilityAnalyzer.fusionAnalyzer());
         addVariants(actionabilityAnalyzer.variantAnalyzer());
         addDrup(drup);
     }
@@ -45,23 +43,6 @@ public class ActionablePanelBuilder {
             } else {
                 builder.deletion(true);
             }
-        });
-        return this;
-    }
-
-    @NotNull
-    public ActionablePanelBuilder addFusions(@NotNull final FusionEvidenceAnalyzer fusionAnalyser) {
-        fusionAnalyser.actionablePromiscuousThree()
-                .stream()
-                .filter(this::filterSource)
-                .forEach(x -> addActionable(x.gene(), x).fusion(true));
-        fusionAnalyser.actionablePromiscuousFive()
-                .stream()
-                .filter(this::filterSource)
-                .forEach(x -> addActionable(x.gene(), x).fusion(true));
-        fusionAnalyser.actionableFusionPairs().stream().filter(this::filterSource).forEach(x -> {
-            addActionable(x.threeGene(), x).fusion(true);
-            addActionable(x.fiveGene(), x).fusion(true);
         });
         return this;
     }
@@ -129,7 +110,6 @@ public class ActionablePanelBuilder {
                 .gene(gene)
                 .amplification(false)
                 .deletion(false)
-                .fusion(false)
                 .variant(false)
                 .drup(false)
                 .responsive(Strings.EMPTY)

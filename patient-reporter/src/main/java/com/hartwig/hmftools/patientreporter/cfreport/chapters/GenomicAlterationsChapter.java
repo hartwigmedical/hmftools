@@ -23,16 +23,15 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
-import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ActionableOrDriversChapter implements ReportChapter {
+public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private final AnalysedPatientReport patientReport;
 
-    public ActionableOrDriversChapter(@NotNull final AnalysedPatientReport patientReport) {
+    public GenomicAlterationsChapter(@NotNull final AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
     }
 
@@ -59,13 +58,12 @@ public class ActionableOrDriversChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 75, 60, 60, 40, 65, 35, 50, 45, 35 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Variant"),
-                        TableUtil.createHeaderCell("Impact"),
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 70, 80, 80, 60, 50, 70, 45, 40 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("position"),
+                        TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
                         TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"), TableUtil.createHeaderCell(),
-                        TableUtil.createHeaderCell("Clonality"), TableUtil.createHeaderCell("Biallelic"),
-                        TableUtil.createHeaderCell("Driver") });
+                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"),
+                        TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Driver") });
 
         final List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
@@ -75,6 +73,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             chart.setHeight(4);
 
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
+            contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(variant.hgvsCodingImpact()));
             contentTable.addCell(TableUtil.createContentCell(variant.hgvsProteinImpact()));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
@@ -86,8 +85,6 @@ public class ActionableOrDriversChapter implements ReportChapter {
                     variant.minorAllelePloidy(),
                     variant.adjustedVAF(),
                     hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.createContentCell(chart).setVerticalAlignment(VerticalAlignment.MIDDLE));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalityString(variant.clonality(), hasReliablePurityFit)));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
                     hasReliablePurityFit)));
@@ -98,7 +95,8 @@ public class ActionableOrDriversChapter implements ReportChapter {
                 .setPaddingTop(10)
                 .add(new Paragraph("* Marked gene(s) are included in the DRUP study and indicate potential eligibility in "
                         + "DRUP. Please note that the marking is NOT based on the specific mutation").addStyle(ReportResources.subTextStyle()))
-                .add(new Paragraph("reported for this sample, but only on a gene-level.").setPaddingLeft(5).addStyle(ReportResources.subTextStyle())));
+                .add(new Paragraph("reported for this sample, but only on a gene-level.").setPaddingLeft(5)
+                        .addStyle(ReportResources.subTextStyle())));
 
         if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
@@ -144,11 +142,11 @@ public class ActionableOrDriversChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 90, 82.5f, 82.5f, 37.5f, 37.5f, 40, 30, 100 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 95, 85, 85, 40, 40, 40, 30 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
                         TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell(""), TableUtil.createHeaderCell("Source") });
+                        TableUtil.createHeaderCell("") });
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
@@ -162,6 +160,7 @@ public class ActionableOrDriversChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(""));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

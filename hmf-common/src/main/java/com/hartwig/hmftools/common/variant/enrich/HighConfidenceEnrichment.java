@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.variant.enrich;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +47,7 @@ public class HighConfidenceEnrichment implements VariantContextEnrichment {
     }
 
     @Override
-    public void accept(final VariantContext context) {
+    public void accept(@NotNull final VariantContext context) {
         Optional<GenomeRegion> region = highConfidenceSelector.select(GenomePositions.create(context.getContig(), context.getStart()));
         if (region.isPresent()) {
             context.getCommonInfo().putAttribute(HIGH_CONFIDENCE_FLAG, true);

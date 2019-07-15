@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 
 public final class ChromosomeLengthFactory {
@@ -34,9 +35,14 @@ public final class ChromosomeLengthFactory {
 
     @NotNull
     public static List<ChromosomeLength> create(@NotNull final SAMFileHeader header) {
+        return create(header.getSequenceDictionary());
+    }
+
+    @NotNull
+    public static List<ChromosomeLength> create(@NotNull final SAMSequenceDictionary dictionary) {
         final List<ChromosomeLength> results = Lists.newArrayList();
 
-        for (final SAMSequenceRecord samSequenceRecord : header.getSequenceDictionary().getSequences()) {
+        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String sequenceName = samSequenceRecord.getSequenceName();
             if (HumanChromosome.contains(sequenceName)) {
                 results.add(ImmutableChromosomeLength.builder()
@@ -48,4 +54,5 @@ public final class ChromosomeLengthFactory {
 
         return results;
     }
+
 }

@@ -29,22 +29,27 @@ public final class ReportableVariantAnalyzer {
             @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : somaticVariantsReport) {
-            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
 
+            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
+            String genomicPosition = variant.chromosome() + ":" + variant.position();
             reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
                     .driverCategory(driverCategoryPerGene.get(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
                     .notifyClinicalGeneticist(false)
+                    .gDNA(genomicPosition)
                     .build());
         }
 
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         for (GermlineVariant germlineVariant : germlineVariantsToReport) {
+            String genomicPosition = germlineVariant.chromosome() + ":" + germlineVariant.position();
+
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
                     .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
+                    .gDNA(genomicPosition)
                     .build());
 
         }
