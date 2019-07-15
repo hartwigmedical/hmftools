@@ -110,7 +110,7 @@ public final class SomaticVariantAnalyzer {
                 return false;
             }
 
-            if (!panelGeneModel.oncoDriverGenes().contains(variant.gene()) || !panelGeneModel.tsgDriverGenes().contains(variant.gene())) {
+            if (!panelGeneModel.oncoDriverGenes().contains(variant.gene()) && !panelGeneModel.tsgDriverGenes().contains(variant.gene())) {
                 return false;
             }
 
