@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.actionability.drup;
 
-import java.util.Map;
 import java.util.Set;
-
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +13,5 @@ public abstract class DrupActionabilityModel {
 
     @NotNull
     public abstract Set<String> actionableGenes();
-
-    @NotNull
-    public abstract Map<String, DriverCategory> geneDriverCategoryMap();
 
 }

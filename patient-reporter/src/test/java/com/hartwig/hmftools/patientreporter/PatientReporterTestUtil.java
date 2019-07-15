@@ -35,16 +35,11 @@ public final class PatientReporterTestUtil {
     private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
+    private static final String DRUP_GENES_CSV = Resources.getResource("actionability/drup_genes.csv").getPath();
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
     private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
     private PatientReporterTestUtil() {
-    }
-
-    @NotNull
-    public static DrupActionabilityModel testDrupActionabilityModel() throws IOException {
-        return DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
     }
 
     @NotNull
@@ -64,7 +59,7 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static AnalysedReportData testAnalysedReportData() {
         try {
-            DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
+            DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
 
