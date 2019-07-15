@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

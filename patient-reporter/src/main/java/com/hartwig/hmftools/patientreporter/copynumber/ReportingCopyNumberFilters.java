@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFi
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 

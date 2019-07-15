@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.genepanel;
+package com.hartwig.hmftools.patientreporter.driver;
 
 import java.util.Set;
 

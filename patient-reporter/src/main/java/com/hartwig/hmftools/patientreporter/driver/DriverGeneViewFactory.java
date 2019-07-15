@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.genepanel;
+package com.hartwig.hmftools.patientreporter.driver;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;

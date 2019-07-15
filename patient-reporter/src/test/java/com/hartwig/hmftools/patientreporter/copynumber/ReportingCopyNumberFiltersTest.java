@@ -12,7 +12,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.driver.DriverGeneView;
 
 import org.junit.Test;
 
