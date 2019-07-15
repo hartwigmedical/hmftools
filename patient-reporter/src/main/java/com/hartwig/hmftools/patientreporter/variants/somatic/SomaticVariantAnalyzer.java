@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.driver.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
