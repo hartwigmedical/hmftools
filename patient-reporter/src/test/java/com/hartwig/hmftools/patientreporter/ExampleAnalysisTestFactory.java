@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
 
 import java.time.LocalDate;
@@ -22,11 +21,13 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
@@ -58,7 +59,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
-        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -86,7 +87,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                copyNumbers,
+                gainsAndLosses,
                 fusions,
                 disruptions,
                 CIRCOS_PATH,
@@ -111,7 +112,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -132,7 +133,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                copyNumbers,
+                gainsAndLosses,
                 fusions,
                 disruptions,
                 CIRCOS_PATH,
@@ -157,7 +158,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -178,7 +179,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                copyNumbers,
+                gainsAndLosses,
                 fusions,
                 disruptions,
                 CIRCOS_PATH,
@@ -581,15 +582,16 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> createCOLO829CopyNumbers() {
-        GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("10")
-                .chromosomeBand("q23.31")
+    private static List<ReportableGainLoss> createCOLO829GainsLosses() {
+        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
+                .chromosome("10")
+                .region("q23.31")
                 .gene("PTEN")
-                .minCopyNumber(0)
-                .maxCopyNumber(2)
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
                 .build();
 
-        return Lists.newArrayList(copyNumber1);
+        return Lists.newArrayList(gainLoss1);
     }
 
     @NotNull

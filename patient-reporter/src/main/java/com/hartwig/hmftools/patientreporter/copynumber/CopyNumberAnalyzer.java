@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -47,12 +46,17 @@ public final class CopyNumberAnalyzer {
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
 
-        List<GeneCopyNumber> reportableGeneCopyNumbers = extractReportableCopyNumbers(exomeGeneCopyNumbers, drivers);
+        List<ReportableGainLoss> reportableGainsAndLosses = toReportableGainsAndLosses(exomeGeneCopyNumbers, drivers);
 
         // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
+        Set<String> reportableGenes = Sets.newHashSet();
+        for (ReportableGainLoss gainLoss : reportableGainsAndLosses) {
+            reportableGenes.add(gainLoss.gene());
+        }
+
         for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
             GeneCopyNumber geneCopyNumber = entry.getKey();
-            if (!Collections.disjoint(entry.getValue(), filteredEvidence) && !reportableGeneCopyNumbers.contains(geneCopyNumber)) {
+            if (!Collections.disjoint(entry.getValue(), filteredEvidence) && !reportableGenes.contains(geneCopyNumber.gene())) {
                 LOGGER.warn("Copy number with evidence not reported: {}!", geneCopyNumber.gene());
             }
         }
@@ -63,19 +67,32 @@ public final class CopyNumberAnalyzer {
                 .ploidy(bestFit.ploidy())
                 .gender(purityContext.gender())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
-                .reportableGeneCopyNumbers(reportableGeneCopyNumbers)
+                .reportableGainsAndLosses(reportableGainsAndLosses)
                 .evidenceItems(filteredEvidence)
                 .build();
     }
 
     @NotNull
-    private static List<GeneCopyNumber> extractReportableCopyNumbers(@NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
+    private static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
             @NotNull List<DriverCatalog> drivers) {
         Set<String> driverGenes = Sets.newHashSet();
         for (DriverCatalog driver : drivers) {
             driverGenes.add(driver.gene());
         }
 
-        return exomeGeneCopyNumbers.stream().filter(copyNumber -> driverGenes.contains(copyNumber.gene())).collect(Collectors.toList());
+        List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
+        for (GeneCopyNumber copyNumber : exomeGeneCopyNumbers) {
+            if (driverGenes.contains(copyNumber.gene())) {
+                reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
+                        .chromosome(copyNumber.chromosome())
+                        .region(copyNumber.chromosomeBand())
+                        .gene(copyNumber.gene())
+                        .interpretation(CopyNumberInterpretation.fromCopyNumber(copyNumber))
+                        .copies(Math.round(Math.max(0, copyNumber.minCopyNumber())))
+                        .build());
+            }
+        }
+
+        return reportableGainsAndLosses;
     }
 }

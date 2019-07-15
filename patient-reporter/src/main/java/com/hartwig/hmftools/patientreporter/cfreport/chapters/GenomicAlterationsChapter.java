@@ -2,18 +2,17 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.GeneCopyNumbers;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -46,7 +45,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurityFit));
-        reportDocument.add(createGainsAndLossesTable(patientReport.geneCopyNumbers(), hasReliablePurityFit));
+        reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
     }
@@ -65,13 +64,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"),
                         TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Driver") });
 
-        final List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
+        List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
-            InlineBarChart chart = new InlineBarChart(hasReliablePurityFit ? variant.adjustedVAF() : 0, 0, 1);
-            chart.enabled(hasReliablePurityFit);
-            chart.setWidth(20);
-            chart.setHeight(4);
-
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(variant.hgvsCodingImpact()));
@@ -108,26 +102,25 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createGainsAndLossesTable(@NotNull List<GeneCopyNumber> copyNumbers, boolean hasReliablePurityFit) {
+    private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurityFit) {
         final String title = "Tumor specific gains & losses";
-        if (copyNumbers.isEmpty()) {
+        if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 45, 125 },
-                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Chromosome band"),
+                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"),
                         TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell("") });
 
-        final List<GeneCopyNumber> sortedCopyNumbers = GeneCopyNumbers.sort(copyNumbers);
-        for (GeneCopyNumber copyNumber : sortedCopyNumbers) {
-            Long reportableCopyNumber = Math.round(Math.max(0, copyNumber.minCopyNumber()));
-            contentTable.addCell(TableUtil.createContentCell(copyNumber.chromosome()));
-            contentTable.addCell(TableUtil.createContentCell(copyNumber.chromosomeBand()));
-            contentTable.addCell(TableUtil.createContentCell(copyNumber.gene()));
-            contentTable.addCell(TableUtil.createContentCell(GeneCopyNumbers.type(copyNumber)));
+        List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
+        for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
+            contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosome()));
+            contentTable.addCell(TableUtil.createContentCell(gainLoss.region()));
+            contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));
+            contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().text()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit
-                    ? String.valueOf(reportableCopyNumber)
+                    ? String.valueOf(gainLoss.copies())
                     : DataUtil.NA_STRING).setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.createContentCell(""));
         }

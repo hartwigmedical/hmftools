@@ -6,8 +6,8 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
@@ -55,7 +55,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract ChordAnalysis chordAnalysis();
 
     @NotNull
-    public abstract List<GeneCopyNumber> geneCopyNumbers();
+    public abstract List<ReportableGainLoss> gainsAndLosses();
 
     @NotNull
     public abstract List<ReportableGeneFusion> geneFusions();

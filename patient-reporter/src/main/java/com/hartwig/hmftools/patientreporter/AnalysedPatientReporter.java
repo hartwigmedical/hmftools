@@ -121,7 +121,7 @@ class AnalysedPatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                copyNumberAnalysis.reportableGeneCopyNumbers(),
+                copyNumberAnalysis.reportableGainsAndLosses(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),
                 circosFile,
@@ -255,7 +255,7 @@ class AnalysedPatientReporter {
         LOGGER.info(" Tumor mutational load: {}", report.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: {}", report.tumorMutationalBurden());
         LOGGER.info(" CHORD analysis HRD prediction: {}", report.chordAnalysis().hrdValue());
-        LOGGER.info(" Copy number events to report: {}", report.geneCopyNumbers().size());
+        LOGGER.info(" Number of gains and losses to report: {}", report.gainsAndLosses().size());
         LOGGER.info(" Gene fusions to report : {}", report.geneFusions().size());
         LOGGER.info(" Gene disruptions to report : {}", report.geneDisruptions().size());
 
