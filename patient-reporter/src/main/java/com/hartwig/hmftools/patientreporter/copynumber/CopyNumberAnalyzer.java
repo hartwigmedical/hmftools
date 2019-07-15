@@ -29,24 +29,6 @@ public final class CopyNumberAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyzer.class);
 
-    private static final Map<String, String> ARM_END_LOCUS_OVERRIDES = buildArmEndLocusOverrides();
-
-    private static Map<String, String> buildArmEndLocusOverrides() {
-        Map<String, String> armEndLocusOverrides = Maps.newHashMap();
-        armEndLocusOverrides.put("AC093642.5", "q telomere");
-        armEndLocusOverrides.put("AP001464.4", "q centromere");
-        armEndLocusOverrides.put("DOCK8", "p telomere");
-        armEndLocusOverrides.put("DUX4L7", "q telomere");
-        armEndLocusOverrides.put("LINC01001", "p telomere");
-        armEndLocusOverrides.put("OR4A5", "p centromere");
-        armEndLocusOverrides.put("OR4F21", "p telomere");
-        armEndLocusOverrides.put("PARD6G", "q telomere");
-        armEndLocusOverrides.put("PPP2R3B", "p telomere");
-        armEndLocusOverrides.put("RP11-417J8.3", "q centromere");
-        armEndLocusOverrides.put("SPATA31A7", "q centromere");
-        return armEndLocusOverrides;
-    }
-
     private CopyNumberAnalyzer() {
     }
 
@@ -100,10 +82,11 @@ public final class CopyNumberAnalyzer {
             driverGenes.add(driver.gene());
         }
 
+        Map<String, String> armEndLocusOverrides = buildArmEndLocusOverrides();
         List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
         for (GeneCopyNumber copyNumber : exomeGeneCopyNumbers) {
             if (driverGenes.contains(copyNumber.gene())) {
-                String armEndLocusOverride = ARM_END_LOCUS_OVERRIDES.get(copyNumber.gene());
+                String armEndLocusOverride = armEndLocusOverrides.get(copyNumber.gene());
                 reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
                         .chromosome(copyNumber.chromosome())
                         .region(armEndLocusOverride != null ? armEndLocusOverride : copyNumber.chromosomeBand())
@@ -115,5 +98,22 @@ public final class CopyNumberAnalyzer {
         }
 
         return reportableGainsAndLosses;
+    }
+
+    @NotNull
+    private static Map<String, String> buildArmEndLocusOverrides() {
+        Map<String, String> armEndLocusOverrides = Maps.newHashMap();
+        armEndLocusOverrides.put("AC093642.5", "q telomere");
+        armEndLocusOverrides.put("AP001464.4", "q centromere");
+        armEndLocusOverrides.put("DOCK8", "p telomere");
+        armEndLocusOverrides.put("DUX4L7", "q telomere");
+        armEndLocusOverrides.put("LINC01001", "p telomere");
+        armEndLocusOverrides.put("OR4A5", "p centromere");
+        armEndLocusOverrides.put("OR4F21", "p telomere");
+        armEndLocusOverrides.put("PARD6G", "q telomere");
+        armEndLocusOverrides.put("PPP2R3B", "p telomere");
+        armEndLocusOverrides.put("RP11-417J8.3", "q centromere");
+        armEndLocusOverrides.put("SPATA31A7", "q centromere");
+        return armEndLocusOverrides;
     }
 }
