@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,14 +45,6 @@ public final class SomaticVariantAnalyzer {
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull GeneModel panelGeneModel,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
-        double microsatelliteIndelsPerMb = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
-        int tumorMutationalLoad = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
-        double tumorMutationalBurden = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
-
-        List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(variants));
-        driverCatalog.addAll(TsgDrivers.drivers(variants));
-
         List<EnrichedSomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(panelGeneModel)).collect(Collectors.toList());
 
@@ -59,23 +52,16 @@ public final class SomaticVariantAnalyzer {
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
-        // Extract somatic evidence for high drivers variants
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
-            String gene = entry.getKey().gene();
-            for (DriverCatalog catalog : driverCatalog) {
-                if (catalog.gene().equals(gene)) {
-                    if (catalog.driverLikelihood() > 0.8) {
-                        evidencePerVariantHighDriver.put(entry.getKey(), entry.getValue());
-                    }
-                }
-            }
-        }
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        driverCatalog.addAll(OncoDrivers.drivers(variants));
+        driverCatalog.addAll(TsgDrivers.drivers(variants));
 
-        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerVariantHighDriver);
+        // Extract somatic evidence for high drivers variants into flat list.
+        List<EvidenceItem> filteredEvidence =
+                ReportableEvidenceItemFactory.reportableFlatList(filterHighDriverLikelihood(evidencePerVariant, driverCatalog));
 
         // Check that all variants with high level evidence are reported (since they are in the driver catalog).
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariantHighDriver.entrySet()) {
+        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
             EnrichedSomaticVariant variant = entry.getKey();
             if (!variantsToReport.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
                 LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
@@ -98,9 +84,28 @@ public final class SomaticVariantAnalyzer {
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 filteredEvidence,
                 driverCatalog,
-                microsatelliteIndelsPerMb,
-                tumorMutationalLoad,
-                tumorMutationalBurden);
+                MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants),
+                MutationalLoadAnalyzer.determineTumorMutationalLoad(variants),
+                MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants));
+    }
+
+    @NotNull
+    private static Map<EnrichedSomaticVariant, List<EvidenceItem>> filterHighDriverLikelihood(
+            @NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidence, @NotNull List<DriverCatalog> driverCatalog) {
+        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
+        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidence.entrySet()) {
+            String gene = entry.getKey().gene();
+            for (DriverCatalog catalog : driverCatalog) {
+                if (catalog.gene().equals(gene)) {
+                    DriverInterpretation interpretation = DriverInterpretation.interpret(catalog.driverLikelihood());
+                    if (interpretation == DriverInterpretation.HIGH) {
+                        evidencePerVariantHighDriver.put(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+        }
+
+        return evidencePerVariantHighDriver;
     }
 
     @NotNull

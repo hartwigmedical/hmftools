@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
+import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
@@ -163,17 +164,9 @@ public final class SomaticVariants {
 
     @NotNull
     public static String driverString(@Nullable Double driverLikelihood) {
-        if (driverLikelihood == null) {
-            return Strings.EMPTY;
-        }
+        DriverInterpretation interpretation = DriverInterpretation.interpret(driverLikelihood);
 
-        if (driverLikelihood > 0.8) {
-            return DRIVER_LIKELIHOOD_HIGH;
-        } else if (driverLikelihood > 0.2) {
-            return DRIVER_LIKELIHOOD_MEDIUM;
-        } else {
-            return DRIVER_LIKELIHOOD_LOW;
-        }
+        return interpretation != null ? interpretation.text() : Strings.EMPTY;
     }
 
     @NotNull
