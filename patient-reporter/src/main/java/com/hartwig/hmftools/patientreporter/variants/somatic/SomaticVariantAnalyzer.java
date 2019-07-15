@@ -110,20 +110,22 @@ public final class SomaticVariantAnalyzer {
                 return false;
             }
 
-            if (!panelGeneModel.somaticVariantGenes().contains(variant.gene())) {
+            if (!panelGeneModel.oncoDriverGenes().contains(variant.gene()) || !panelGeneModel.tsgDriverGenes().contains(variant.gene())) {
                 return false;
             }
 
-            CodingEffect effect = variant.canonicalCodingEffect();
-            DriverCategory category = panelGeneModel.category(variant.gene());
+            // Report all hotspots on our driver genes.
+            if (variant.isHotspot()) {
+                return true;
+            }
 
+            DriverCategory category = panelGeneModel.category(variant.gene());
             if (category == null) {
                 throw new IllegalStateException("Driver category not known for driver gene: " + variant.gene());
             }
 
-            if (variant.isHotspot()) {
-                return true;
-            } else if (category == DriverCategory.TSG) {
+            CodingEffect effect = variant.canonicalCodingEffect();
+            if (category == DriverCategory.TSG) {
                 return TSG_CODING_EFFECTS_TO_REPORT.contains(effect);
             } else {
                 assert category == DriverCategory.ONCO;

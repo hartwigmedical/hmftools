@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.genepanel;
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.immutables.value.Value;
@@ -25,14 +24,6 @@ public abstract class GeneModel {
 
     @NotNull
     public abstract Set<String> significantlyDeletedGenes();
-
-    @Value.Derived
-    public Set<String> somaticVariantGenes() {
-        Set<String> somaticVariantGenePanel = Sets.newHashSet();
-        somaticVariantGenePanel.addAll(oncoDriverGenes());
-        somaticVariantGenePanel.addAll(tsgDriverGenes());
-        return somaticVariantGenePanel;
-    }
 
     @Value.Derived
     public boolean isDeletionReportable(@NotNull String gene) {
