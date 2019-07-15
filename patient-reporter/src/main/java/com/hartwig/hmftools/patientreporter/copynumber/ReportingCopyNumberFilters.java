@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFi
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ final class ReportingCopyNumberFilters {
     }
 
     @NotNull
-    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull GeneModel panelGeneModel,
+    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull DriverGeneView panelDriverGeneView,
             @NotNull Gender gender, double averageTumorPloidy) {
         List<GeneCopyNumber> significantGeneCopyNumbers =
                 SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbers, averageTumorPloidy);
@@ -26,8 +26,8 @@ final class ReportingCopyNumberFilters {
         return significantGeneCopyNumbers.stream()
                 .filter(copyNumber -> includeInReport(copyNumber.minCopyNumber(),
                         HumanChromosome.valueOf(copyNumber).isDiploid(gender),
-                        panelGeneModel.isAmplificationReportable(copyNumber.gene()),
-                        panelGeneModel.isDeletionReportable(copyNumber.gene())))
+                        panelDriverGeneView.isAmplificationReportable(copyNumber.gene()),
+                        panelDriverGeneView.isDeletionReportable(copyNumber.gene())))
                 .collect(Collectors.toList());
     }
 

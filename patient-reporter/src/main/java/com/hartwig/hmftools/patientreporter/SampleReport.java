@@ -72,27 +72,19 @@ public abstract class SampleReport {
     @NotNull
     public abstract String hospitalPathologySampleId();
 
-    @NotNull
+    @Nullable
     @Value.Derived
-    public  String compareDates() {
-        String refDateString = DataUtil.formatDate(refArrivalDate());
+    public String earliestArrivalDate() {
         LocalDate refDate = refArrivalDate();
         LocalDate sampleDate = tumorArrivalDate();
 
-        String startDate = Strings.EMPTY;
-
-        if (refDate == null) {
-            refDateString = "NA";
+        if (sampleDate == null) {
+            return null;
+        } else if (refDate == null || sampleDate.isBefore(refDate)) {
+            return DataUtil.formatDate(sampleDate);
+        } else {
+            return DataUtil.formatDate(refDate);
         }
-
-        if (refDateString.equals("NA")) {
-            startDate = DataUtil.formatDate(sampleDate);
-        } else if (sampleDate.isAfter(refDate)){
-            startDate = DataUtil.formatDate(refDate);
-        } else if (sampleDate.isBefore(refDate)){
-            startDate = DataUtil.formatDate(sampleDate);
-        }
-        return startDate;
     }
 
     @NotNull

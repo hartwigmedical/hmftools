@@ -5,14 +5,14 @@ import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GeneModelFactory {
+public final class DriverGeneViewFactory {
 
-    private GeneModelFactory() {
+    private DriverGeneViewFactory() {
     }
 
     @NotNull
-    public static GeneModel create() {
-        return ImmutableGeneModel.of(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet(),
+    public static DriverGeneView create() {
+        return ImmutableDriverGeneView.of(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet(),
                 DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet(),
                 CNADrivers.amplificationTargets(),
                 CNADrivers.deletionTargets());

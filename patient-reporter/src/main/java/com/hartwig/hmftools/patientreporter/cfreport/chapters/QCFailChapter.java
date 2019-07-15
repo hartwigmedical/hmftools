@@ -283,8 +283,9 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph obtainedResults() {
+        String earliestArrivalDate = failReport.sampleReport().earliestArrivalDate();
         return createContentParagraphTwice("The results in this report have been obtained between ",
-                failReport.sampleReport().compareDates(),
+                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
                 " and ",
                 ReportResources.REPORT_DATE);
     }

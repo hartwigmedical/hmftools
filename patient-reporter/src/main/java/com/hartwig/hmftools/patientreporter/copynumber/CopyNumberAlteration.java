@@ -16,6 +16,5 @@ public enum CopyNumberAlteration {
         }
 
         return value > NORMAL_HUMAN_COPY_NUMBER ? GAIN : LOSS;
-
     }
 }

@@ -12,19 +12,19 @@ public class GermlineReportingModel {
     private static final Logger LOGGER = LogManager.getLogger(GermlineReportingModel.class);
 
     @NotNull
-    private final Map<String, Boolean> germlineGenesAndAndNotificationMap;
+    private final Map<String, Boolean> germlineGenesAndNotificationMap;
 
-    GermlineReportingModel(@NotNull final Map<String, Boolean> germlineGenesAndAndNotificationMap) {
-        this.germlineGenesAndAndNotificationMap = germlineGenesAndAndNotificationMap;
+    GermlineReportingModel(@NotNull final Map<String, Boolean> germlineGenesAndNotificationMap) {
+        this.germlineGenesAndNotificationMap = germlineGenesAndNotificationMap;
     }
 
     @NotNull
     public Set<String> reportableGermlineGenes() {
-        return germlineGenesAndAndNotificationMap.keySet();
+        return germlineGenesAndNotificationMap.keySet();
     }
 
     public boolean notifyAboutGene(@NotNull String germlineGene) {
-        Boolean notify = germlineGenesAndAndNotificationMap.get(germlineGene);
+        Boolean notify = germlineGenesAndNotificationMap.get(germlineGene);
         if (notify == null) {
             LOGGER.warn("Requested notification status for a gene that is not amongst set of reportable germline genes: " + germlineGene);
         }

@@ -90,7 +90,7 @@ class AnalysedPatientReporter {
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        reportData.panelGeneModel(),
+                        reportData.driverGeneView(),
                         reportData.drupActionabilityModel().actionableGenes(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
@@ -152,7 +152,7 @@ class AnalysedPatientReporter {
 
         return CopyNumberAnalyzer.run(purityContext,
                 exomeGeneCopyNumbers,
-                reportData.panelGeneModel(),
+                reportData.driverGeneView(),
                 reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
@@ -167,7 +167,7 @@ class AnalysedPatientReporter {
                 enrich(variants, gender, purity, reportData.highConfidenceRegions(), reportData.refGenomeFastaFile());
 
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                reportData.panelGeneModel(),
+                reportData.driverGeneView(),
                 reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
@@ -203,7 +203,7 @@ class AnalysedPatientReporter {
         } else {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    reportData.panelGeneModel(),
+                    reportData.driverGeneView(),
                     reportData.germlineReportingModel(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport());

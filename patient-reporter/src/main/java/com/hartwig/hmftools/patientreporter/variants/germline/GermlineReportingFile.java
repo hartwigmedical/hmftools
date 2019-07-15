@@ -31,8 +31,8 @@ public final class GermlineReportingFile {
 
             if (parts.length == 2) {
                 String gene = parts[0].trim();
-                String classificationGene = parts[1].trim().toLowerCase();
-                switch (classificationGene) {
+                String notifyGene = parts[1].trim().toLowerCase();
+                switch (notifyGene) {
                     case "true":
                         germlineGenesAndNotifyMap.put(gene, true);
                         break;
@@ -40,7 +40,7 @@ public final class GermlineReportingFile {
                         germlineGenesAndNotifyMap.put(gene, false);
                         break;
                     default:
-                        LOGGER.warn("Could not interpret classification in germline reporting genes: " + classificationGene);
+                        LOGGER.warn("Could not interpret notification string in germline reporting genes: " + notifyGene);
                 }
             } else {
                 LOGGER.warn("Suspicious line detected in germline reporting genes: " + line);

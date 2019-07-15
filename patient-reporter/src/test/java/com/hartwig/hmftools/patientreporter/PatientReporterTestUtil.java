@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneViewFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
@@ -65,7 +65,7 @@ public final class PatientReporterTestUtil {
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())
-                    .panelGeneModel(GeneModelFactory.create())
+                    .driverGeneView(DriverGeneViewFactory.create())
                     .drupActionabilityModel(drupActionabilityModel)
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
                     .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))

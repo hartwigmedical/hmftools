@@ -12,7 +12,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
 
 import org.junit.Test;
 
@@ -20,14 +20,14 @@ public class ReportingCopyNumberFiltersTest {
 
     @Test
     public void canFilterForReportingCorrectly() {
-        GeneModel geneModel = testAnalysedReportData().panelGeneModel();
+        DriverGeneView driverGeneView = testAnalysedReportData().driverGeneView();
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
         String gene = "DOES_NOT_EXIST";
-        assertFalse(geneModel.isDeletionReportable(gene));
+        assertFalse(driverGeneView.isDeletionReportable(gene));
         geneCopyNumbers.add(createTestCopyNumberBuilder().gene(gene).minCopyNumber(0).build());
 
-        List<GeneCopyNumber> filtered = ReportingCopyNumberFilters.filterForReporting(geneCopyNumbers, geneModel, Gender.MALE, 2D);
+        List<GeneCopyNumber> filtered = ReportingCopyNumberFilters.filterForReporting(geneCopyNumbers, driverGeneView, Gender.MALE, 2D);
 
         assertTrue(filtered.isEmpty());
     }

@@ -66,8 +66,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         }
 
         Paragraph sampleIdentificationLineOnReport;
-        sampleIdentificationLineOnReport =
-                createContentParagraph("The HMF sample ID is: ", patientReport.sampleReport().sampleId());
+        sampleIdentificationLineOnReport = createContentParagraph("The HMF sample ID is: ", patientReport.sampleReport().sampleId());
         if (type == LimsSampleType.WIDE) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().sampleId(),
@@ -81,8 +80,12 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
-        div.add(createContentParagraphTwice("The results in this report have been obtained between " , sampleReport.compareDates() , " and "
-                , ReportResources.REPORT_DATE));
+
+        String earliestArrivalDate = sampleReport.earliestArrivalDate();
+        div.add(createContentParagraphTwice("The results in this report have been obtained between ",
+                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
+                " and ",
+                ReportResources.REPORT_DATE));
         div.add(sampleIdentificationLineOnReport);
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
@@ -92,14 +95,16 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 DataUtil.formatDate(sampleReport.refArrivalDate()),
                 " with internal blood barcode ",
                 sampleReport.refBarcode()));
-        div.add(createContentParagraph("This experiment is performed according to lab procedures: " , sampleReport.labProcedures()));
+        div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
-        div.add(createContentParagraph("This report is addressed at: " , addressee));
+        div.add(createContentParagraph("This report is addressed at: ", addressee));
 
         if (type == LimsSampleType.CORE) {
-            div.add(createContentParagraph("The hospital patient ID is: " , sampleReport.hospitalPatientId()));
-            div.add(createContentParagraphTwice("The project name of sample is: " , sampleReport.projectName() , " and the submission ID is "
-                    , sampleReport.submissionId()));
+            div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
+            div.add(createContentParagraphTwice("The project name of sample is: ",
+                    sampleReport.projectName(),
+                    " and the submission ID is ",
+                    sampleReport.submissionId()));
             div.add(createContentParagraphRequest(sampleReport));
         }
         patientReport.comments().ifPresent(comments -> div.add(createContentParagraph("Comments: " + comments)));

@@ -8,7 +8,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -20,8 +19,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
-import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,10 +41,10 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull GeneModel panelGeneModel,
+    public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull DriverGeneView driverGeneView,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         List<EnrichedSomaticVariant> variantsToReport =
-                variants.stream().filter(includeFilter(panelGeneModel)).collect(Collectors.toList());
+                variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
@@ -56,9 +54,9 @@ public final class SomaticVariantAnalyzer {
         driverCatalog.addAll(OncoDrivers.drivers(variants));
         driverCatalog.addAll(TsgDrivers.drivers(variants));
 
-        // Extract somatic evidence for high drivers variants into flat list.
+        // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
         List<EvidenceItem> filteredEvidence =
-                ReportableEvidenceItemFactory.reportableFlatList(filterHighDriverLikelihood(evidencePerVariant, driverCatalog));
+                ReportableEvidenceItemFactory.reportableFlatListDriversOnly(evidencePerVariant, driverCatalog);
 
         // Check that all variants with high level evidence are reported (since they are in the driver catalog).
         for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
@@ -90,32 +88,13 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static Map<EnrichedSomaticVariant, List<EvidenceItem>> filterHighDriverLikelihood(
-            @NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidence, @NotNull List<DriverCatalog> driverCatalog) {
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidence.entrySet()) {
-            String gene = entry.getKey().gene();
-            for (DriverCatalog catalog : driverCatalog) {
-                if (catalog.gene().equals(gene)) {
-                    DriverInterpretation interpretation = DriverInterpretation.interpret(catalog.driverLikelihood());
-                    if (interpretation == DriverInterpretation.HIGH) {
-                        evidencePerVariantHighDriver.put(entry.getKey(), entry.getValue());
-                    }
-                }
-            }
-        }
-
-        return evidencePerVariantHighDriver;
-    }
-
-    @NotNull
-    private static Predicate<EnrichedSomaticVariant> includeFilter(@NotNull GeneModel panelGeneModel) {
+    private static Predicate<EnrichedSomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
         return variant -> {
             if (variant.isFiltered()) {
                 return false;
             }
 
-            if (!panelGeneModel.oncoDriverGenes().contains(variant.gene()) && !panelGeneModel.tsgDriverGenes().contains(variant.gene())) {
+            if (!driverGeneView.oncoDriverGenes().contains(variant.gene()) && !driverGeneView.tsgDriverGenes().contains(variant.gene())) {
                 return false;
             }
 
@@ -124,7 +103,7 @@ public final class SomaticVariantAnalyzer {
                 return true;
             }
 
-            DriverCategory category = panelGeneModel.category(variant.gene());
+            DriverCategory category = driverGeneView.category(variant.gene());
             if (category == null) {
                 throw new IllegalStateException("Driver category not known for driver gene: " + variant.gene());
             }

@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
-import com.hartwig.hmftools.patientreporter.genepanel.ImmutableGeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.genepanel.ImmutableDriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
@@ -150,8 +150,8 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static GeneModel createTestGeneModel(@NotNull String oncogene, @NotNull String tsg) {
-        return ImmutableGeneModel.builder()
+    public static DriverGeneView createTestDriverGeneView(@NotNull String oncogene, @NotNull String tsg) {
+        return ImmutableDriverGeneView.builder()
                 .addOncoDriverGenes(oncogene)
                 .addTsgDriverGenes(tsg)
                 .build();

@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class SomaticVariantAnalyzerTest {
 
     @Test
     public void onlyReportsAndCountsRelevantVariants() {
-        GeneModel geneModel = PatientReporterTestFactory.createTestGeneModel(RIGHT_GENE, "AnyGene");
+        DriverGeneView driverGeneView = PatientReporterTestFactory.createTestDriverGeneView(RIGHT_GENE, "AnyGene");
 
         List<EnrichedSomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
@@ -46,7 +46,7 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
         SomaticVariantAnalysis analysis =
-                SomaticVariantAnalyzer.run(variants, geneModel, testAnalysedReportData().actionabilityAnalyzer(), null);
+                SomaticVariantAnalyzer.run(variants, driverGeneView, testAnalysedReportData().actionabilityAnalyzer(), null);
 
         assertEquals(2, analysis.tumorMutationalLoad());
 

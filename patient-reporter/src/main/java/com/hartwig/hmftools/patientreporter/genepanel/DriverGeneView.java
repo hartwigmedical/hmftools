@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GeneModel {
+public abstract class DriverGeneView {
 
     @NotNull
     public abstract Set<String> oncoDriverGenes();

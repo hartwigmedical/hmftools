@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
@@ -28,7 +28,7 @@ public final class ReportableVariantAnalyzer {
 
     @NotNull
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull GeneModel panelGeneModel, @NotNull Set<String> drupActionableGenes,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView, @NotNull Set<String> drupActionableGenes,
             @NotNull List<GermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
@@ -39,7 +39,7 @@ public final class ReportableVariantAnalyzer {
             }
 
             reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
-                    .driverCategory(panelGeneModel.category(variant.gene()))
+                    .driverCategory(driverGeneView.category(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
                     .notifyClinicalGeneticist(false)
                     .build());
@@ -49,7 +49,7 @@ public final class ReportableVariantAnalyzer {
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         for (GermlineVariant germlineVariant : germlineVariantsToReport) {
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
-                    .driverCategory(panelGeneModel.category(germlineVariant.gene()))
+                    .driverCategory(driverGeneView.category(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
                     .build());
