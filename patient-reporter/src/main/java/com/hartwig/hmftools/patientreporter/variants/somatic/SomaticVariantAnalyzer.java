@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
@@ -30,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantAnalyzer {
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticVariantAnalyzer.class);
 
     private static final List<CodingEffect> TSG_CODING_EFFECTS_TO_REPORT =
             Lists.newArrayList(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE, CodingEffect.SPLICE);
