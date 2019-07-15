@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -20,12 +21,31 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CopyNumberAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyzer.class);
+
+    private static final Map<String, String> ARM_END_LOCUS_OVERRIDES = buildArmEndLocusOverrides();
+
+    private static Map<String, String> buildArmEndLocusOverrides() {
+        Map<String, String> armEndLocusOverrides = Maps.newHashMap();
+        armEndLocusOverrides.put("AC093642.5", "q telomere");
+        armEndLocusOverrides.put("AP001464.4", "q centromere");
+        armEndLocusOverrides.put("DOCK8", "p telomere");
+        armEndLocusOverrides.put("DUX4L7", "q telomere");
+        armEndLocusOverrides.put("LINC01001", "p telomere");
+        armEndLocusOverrides.put("OR4A5", "p centromere");
+        armEndLocusOverrides.put("OR4F21", "p telomere");
+        armEndLocusOverrides.put("PARD6G", "q telomere");
+        armEndLocusOverrides.put("PPP2R3B", "p telomere");
+        armEndLocusOverrides.put("RP11-417J8.3", "q centromere");
+        armEndLocusOverrides.put("SPATA31A7", "q centromere");
+        return armEndLocusOverrides;
+    }
 
     private CopyNumberAnalyzer() {
     }
@@ -83,10 +103,11 @@ public final class CopyNumberAnalyzer {
         List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
         for (GeneCopyNumber copyNumber : exomeGeneCopyNumbers) {
             if (driverGenes.contains(copyNumber.gene())) {
+                String armEndLocusOverride = ARM_END_LOCUS_OVERRIDES.get(copyNumber.gene());
                 reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
                         .chromosome(copyNumber.chromosome())
-                        .region(copyNumber.chromosomeBand())
-                        .gene(copyNumber.gene())
+                        .region(armEndLocusOverride != null ? armEndLocusOverride : copyNumber.chromosomeBand())
+                        .gene(armEndLocusOverride != null ? Strings.EMPTY : copyNumber.gene())
                         .interpretation(CopyNumberInterpretation.fromCopyNumber(copyNumber))
                         .copies(Math.round(Math.max(0, copyNumber.minCopyNumber())))
                         .build());
