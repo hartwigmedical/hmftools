@@ -32,11 +32,12 @@ final class AnalysedReportDataLoader {
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
         final SummaryModel summaryModel = SummaryFile.buildFromCsv(sampleSummaryCsv);
-        final GeneModel panelGeneModel = GeneModelFactory.create(drupActionabilityModel);
+        final GeneModel panelGeneModel = GeneModelFactory.create();
 
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
                 .panelGeneModel(panelGeneModel)
+                .drupActionabilityModel(drupActionabilityModel)
                 .actionabilityAnalyzer(actionabilityAnalyzer)
                 .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(fastaFileLocation)))
                 .highConfidenceRegions(BEDFileLoader.fromBedFile(highConfidenceBed))

@@ -3,7 +3,11 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
@@ -13,6 +17,8 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
+import com.hartwig.hmftools.patientreporter.genepanel.ImmutableGeneModel;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
@@ -144,10 +150,28 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static Map<String, DriverCategory> createTestDriverCategoryMap() {
-        Map<String, DriverCategory> driverCategoryMapMatch = Maps.newHashMap();
-        driverCategoryMapMatch.put(ONCOGENE, DriverCategory.ONCO);
-        driverCategoryMapMatch.put(TSG, DriverCategory.TSG);
-        return driverCategoryMapMatch;
+    public static GeneModel createTestGeneModel(@NotNull String oncogene, @NotNull String tsg) {
+        return ImmutableGeneModel.builder()
+                .addOncoDriverGenes(oncogene)
+                .addTsgDriverGenes(tsg)
+                .build();
+    }
+
+    @NotNull
+    public static DriverCatalog createTestDriverCatalogEntry(@NotNull String gene) {
+        return ImmutableDriverCatalog.builder()
+                .gene(gene)
+                .category(DriverCategory.ONCO)
+                .driver(DriverType.MUTATION)
+                .likelihoodMethod(LikelihoodMethod.NONE)
+                .driverLikelihood(0D)
+                .dndsLikelihood(0D)
+                .missense(0)
+                .nonsense(0)
+                .splice(0)
+                .inframe(0)
+                .frameshift(0)
+                .biallelic(false)
+                .build();
     }
 }

@@ -90,10 +90,10 @@ public class PatientReporterApplication {
         }
 
         LOGGER.info("Running patient reporter v" + VERSION);
+        String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
-            String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating qc-fail report for {}", tumorSample);
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
@@ -102,7 +102,6 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
-            String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
             LOGGER.info("Generating patient report for {}", tumorSample);
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
@@ -180,7 +179,8 @@ public class PatientReporterApplication {
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
         final QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
         if (qcFailReason == QCFailReason.UNDEFINED) {
-            LOGGER.warn(QC_FAIL_REASON + " has to be low_tumor_percentage, low_dna_yield, post_analysis_fail or shallow_seq_low_purity.");
+            LOGGER.warn(QC_FAIL_REASON + " has to be 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', "
+                    + "'shallow_seq_low_purity' or 'insufficient_tissue_delivered'.");
         } else {
             return true;
         }

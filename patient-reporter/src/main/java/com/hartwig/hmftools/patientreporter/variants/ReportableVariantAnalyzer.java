@@ -1,21 +1,19 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ReportableVariantAnalyzer {
 
@@ -24,17 +22,16 @@ public final class ReportableVariantAnalyzer {
 
     @NotNull
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull Map<String, DriverCategory> driverCategoryPerGene,
-            @NotNull Set<String> drupActionableGenes, @NotNull List<GermlineVariant> germlineVariantsToReport,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull GeneModel panelGeneModel, @NotNull Set<String> drupActionableGenes,
+            @NotNull List<GermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         for (EnrichedSomaticVariant variant : somaticVariantsReport) {
-
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
             String genomicPosition = variant.chromosome() + ":" + variant.position();
             reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
-                    .driverCategory(driverCategoryPerGene.get(variant.gene()))
-                    .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
+                    .driverCategory(catalog.category())
+                    .driverLikelihood(catalog.driverLikelihood())
                     .notifyClinicalGeneticist(false)
                     .gDNA(genomicPosition)
                     .build());
@@ -46,7 +43,7 @@ public final class ReportableVariantAnalyzer {
             String genomicPosition = germlineVariant.chromosome() + ":" + germlineVariant.position();
 
             reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
-                    .driverCategory(driverCategoryPerGene.get(germlineVariant.gene()))
+                    .driverCategory(panelGeneModel.category(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))
                     .gDNA(genomicPosition)
@@ -56,14 +53,14 @@ public final class ReportableVariantAnalyzer {
         return reportableVariants;
     }
 
-    @Nullable
+    @NotNull
     private static DriverCatalog catalogEntryForVariant(@NotNull List<DriverCatalog> driverCatalogList, @NotNull String gene) {
         for (DriverCatalog entry : driverCatalogList) {
             if (entry.gene().equals(gene)) {
                 return entry;
             }
         }
-        return null;
+        throw new IllegalStateException("Gene " + gene + " not present in driver catalog!");
     }
 
     @NotNull

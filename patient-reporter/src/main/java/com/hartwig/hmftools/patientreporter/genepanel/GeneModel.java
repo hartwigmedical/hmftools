@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.genepanel;
 
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -16,7 +15,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class GeneModel {
 
     @NotNull
-    public abstract Set<String> somaticVariantDriverGenes();
+    public abstract Set<String> oncoDriverGenes();
+
+    @NotNull
+    public abstract Set<String> tsgDriverGenes();
 
     @NotNull
     public abstract Set<String> significantlyAmplifiedGenes();
@@ -24,27 +26,32 @@ public abstract class GeneModel {
     @NotNull
     public abstract Set<String> significantlyDeletedGenes();
 
-    @NotNull
-    public abstract Set<String> drupActionableGenes();
-
-    @NotNull
-    public abstract Map<String, DriverCategory> geneDriverCategoryMap();
-
     @Value.Derived
     public Set<String> somaticVariantGenes() {
         Set<String> somaticVariantGenePanel = Sets.newHashSet();
-        somaticVariantGenePanel.addAll(somaticVariantDriverGenes());
-        somaticVariantGenePanel.addAll(drupActionableGenes());
+        somaticVariantGenePanel.addAll(oncoDriverGenes());
+        somaticVariantGenePanel.addAll(tsgDriverGenes());
         return somaticVariantGenePanel;
     }
 
     @Value.Derived
     public boolean isDeletionReportable(@NotNull String gene) {
-        return significantlyDeletedGenes().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.TSG;
+        return significantlyDeletedGenes().contains(gene) || tsgDriverGenes().contains(gene);
     }
 
     @Value.Derived
     public boolean isAmplificationReportable(@NotNull String gene) {
-        return significantlyAmplifiedGenes().contains(gene) || geneDriverCategoryMap().get(gene) == DriverCategory.ONCO;
+        return significantlyAmplifiedGenes().contains(gene) || oncoDriverGenes().contains(gene);
+    }
+
+    @Value.Derived
+    @Nullable
+    public DriverCategory category(@NotNull String gene) {
+        if (oncoDriverGenes().contains(gene)) {
+            return DriverCategory.ONCO;
+        } else if (tsgDriverGenes().contains(gene)) {
+            return DriverCategory.TSG;
+        }
+        return null;
     }
 }

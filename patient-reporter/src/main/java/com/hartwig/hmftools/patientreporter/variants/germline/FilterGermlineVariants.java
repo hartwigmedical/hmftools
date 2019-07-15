@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull GeneModel panelGeneModel, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
 
@@ -27,7 +27,7 @@ public final class FilterGermlineVariants {
             assert germlineVariant.passFilter();
 
             if (reportingGermlineGenes.contains(germlineVariant.gene())) {
-                if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) {
+                if (panelGeneModel.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
                     filteredGermlineVariant.add(germlineVariant);
                 } else {

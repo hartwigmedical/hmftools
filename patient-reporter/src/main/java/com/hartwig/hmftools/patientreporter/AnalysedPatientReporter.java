@@ -54,6 +54,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class AnalysedPatientReporter {
+
     private static final Logger LOGGER = LogManager.getLogger(AnalysedPatientReporter.class);
 
     @NotNull
@@ -89,8 +90,8 @@ class AnalysedPatientReporter {
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        reportData.panelGeneModel().geneDriverCategoryMap(),
-                        reportData.panelGeneModel().drupActionableGenes(),
+                        reportData.panelGeneModel(),
+                        reportData.drupActionabilityModel().actionableGenes(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         reportData.limsModel().germlineReportingChoice(tumorSample));
@@ -166,8 +167,7 @@ class AnalysedPatientReporter {
                 enrich(variants, gender, purity, reportData.highConfidenceRegions(), reportData.refGenomeFastaFile());
 
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                reportData.panelGeneModel().somaticVariantGenes(),
-                reportData.panelGeneModel().geneDriverCategoryMap(),
+                reportData.panelGeneModel(),
                 reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
@@ -203,8 +203,8 @@ class AnalysedPatientReporter {
         } else {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
+                    reportData.panelGeneModel(),
                     reportData.germlineReportingModel(),
-                    reportData.panelGeneModel().geneDriverCategoryMap(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport());
         }

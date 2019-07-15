@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
@@ -66,13 +65,13 @@ public final class PatientReporterTestUtil {
     public static AnalysedReportData testAnalysedReportData() {
         try {
             DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
-            GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())
-                    .panelGeneModel(geneModel)
+                    .panelGeneModel(GeneModelFactory.create())
+                    .drupActionabilityModel(drupActionabilityModel)
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
                     .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))
                     .highConfidenceRegions(TreeMultimap.create())

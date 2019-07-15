@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
@@ -20,6 +21,9 @@ public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
     public abstract GeneModel panelGeneModel();
+
+    @NotNull
+    public abstract DrupActionabilityModel drupActionabilityModel();
 
     @NotNull
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();

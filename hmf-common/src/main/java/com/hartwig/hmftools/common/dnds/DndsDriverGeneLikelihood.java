@@ -33,5 +33,4 @@ public abstract class DndsDriverGeneLikelihood {
     public boolean useBiallelic() {
         return !missense().equals(missenseBiallelic());
     }
-
 }

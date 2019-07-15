@@ -51,5 +51,4 @@ public final class DndsDriverGeneLikelihoodSupplier {
     private static InputStream resource(@NotNull final String resource) {
         return DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream(resource);
     }
-
 }
