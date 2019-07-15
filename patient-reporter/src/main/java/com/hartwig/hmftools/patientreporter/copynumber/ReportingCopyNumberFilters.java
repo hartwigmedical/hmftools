@@ -18,7 +18,7 @@ final class ReportingCopyNumberFilters {
     }
 
     @NotNull
-    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull DriverGeneView panelDriverGeneView,
+    static List<GeneCopyNumber> filterForReporting(@NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull DriverGeneView driverGeneView,
             @NotNull Gender gender, double averageTumorPloidy) {
         List<GeneCopyNumber> significantGeneCopyNumbers =
                 SignificantGeneCopyNumberFilter.filterForSignificance(geneCopyNumbers, averageTumorPloidy);
@@ -26,8 +26,8 @@ final class ReportingCopyNumberFilters {
         return significantGeneCopyNumbers.stream()
                 .filter(copyNumber -> includeInReport(copyNumber.minCopyNumber(),
                         HumanChromosome.valueOf(copyNumber).isDiploid(gender),
-                        panelDriverGeneView.isAmplificationReportable(copyNumber.gene()),
-                        panelDriverGeneView.isDeletionReportable(copyNumber.gene())))
+                        driverGeneView.isAmplificationReportable(copyNumber.gene()),
+                        driverGeneView.isDeletionReportable(copyNumber.gene())))
                 .collect(Collectors.toList());
     }
 
