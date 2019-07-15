@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.driver;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,8 +12,6 @@ public final class DriverGeneViewFactory {
     @NotNull
     public static DriverGeneView create() {
         return ImmutableDriverGeneView.of(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet(),
-                DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet(),
-                CNADrivers.amplificationTargets(),
-                CNADrivers.deletionTargets());
+                DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
     }
 }

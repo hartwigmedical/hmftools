@@ -3,33 +3,43 @@ package com.hartwig.hmftools.patientreporter.copynumber;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.driver.DriverGeneView;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CopyNumberAnalyzer {
+
+    private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyzer.class);
 
     private CopyNumberAnalyzer() {
     }
 
     @NotNull
     public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
-            @NotNull DriverGeneView driverGeneView, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation) {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
 
-        List<GeneCopyNumber> reportableGeneCopyNumbers =
-                ReportingCopyNumberFilters.filterForReporting(exomeGeneCopyNumbers, driverGeneView, purityContext.gender(), bestFit.ploidy());
+        CNADrivers copyNumberDrivers = new CNADrivers();
+        List<DriverCatalog> drivers = Lists.newArrayList();
+        drivers.addAll(copyNumberDrivers.amplifications(bestFit.ploidy(), exomeGeneCopyNumbers));
+        drivers.addAll(copyNumberDrivers.deletions(exomeGeneCopyNumbers));
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
@@ -37,11 +47,13 @@ public final class CopyNumberAnalyzer {
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
 
-        // Add gene copy numbers for which filtered evidence has been found but which were not selected yet.
+        List<GeneCopyNumber> reportableGeneCopyNumbers = extractReportableCopyNumbers(exomeGeneCopyNumbers, drivers);
+
+        // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
         for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
             GeneCopyNumber geneCopyNumber = entry.getKey();
             if (!Collections.disjoint(entry.getValue(), filteredEvidence) && !reportableGeneCopyNumbers.contains(geneCopyNumber)) {
-                reportableGeneCopyNumbers.add(geneCopyNumber);
+                LOGGER.warn("Copy number with evidence not reported: {}!", geneCopyNumber.gene());
             }
         }
 
@@ -54,5 +66,16 @@ public final class CopyNumberAnalyzer {
                 .reportableGeneCopyNumbers(reportableGeneCopyNumbers)
                 .evidenceItems(filteredEvidence)
                 .build();
+    }
+
+    @NotNull
+    private static List<GeneCopyNumber> extractReportableCopyNumbers(@NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
+            @NotNull List<DriverCatalog> drivers) {
+        Set<String> driverGenes = Sets.newHashSet();
+        for (DriverCatalog driver : drivers) {
+            driverGenes.add(driver.gene());
+        }
+
+        return exomeGeneCopyNumbers.stream().filter(copyNumber -> driverGenes.contains(copyNumber.gene())).collect(Collectors.toList());
     }
 }

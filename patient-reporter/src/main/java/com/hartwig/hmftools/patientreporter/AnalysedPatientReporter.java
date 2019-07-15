@@ -152,7 +152,6 @@ class AnalysedPatientReporter {
 
         return CopyNumberAnalyzer.run(purityContext,
                 exomeGeneCopyNumbers,
-                reportData.driverGeneView(),
                 reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }

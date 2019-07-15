@@ -19,22 +19,6 @@ public abstract class DriverGeneView {
     @NotNull
     public abstract Set<String> tsgDriverGenes();
 
-    @NotNull
-    public abstract Set<String> significantlyAmplifiedGenes();
-
-    @NotNull
-    public abstract Set<String> significantlyDeletedGenes();
-
-    @Value.Derived
-    public boolean isDeletionReportable(@NotNull String gene) {
-        return significantlyDeletedGenes().contains(gene) || tsgDriverGenes().contains(gene);
-    }
-
-    @Value.Derived
-    public boolean isAmplificationReportable(@NotNull String gene) {
-        return significantlyAmplifiedGenes().contains(gene) || oncoDriverGenes().contains(gene);
-    }
-
     @Value.Derived
     @Nullable
     public DriverCategory category(@NotNull String gene) {
