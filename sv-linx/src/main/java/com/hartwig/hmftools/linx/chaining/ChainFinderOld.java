@@ -981,7 +981,7 @@ public class ChainFinderOld
             }
 
             // check breakends are still available
-            if(getUnlinkedBreakendCount(nextPair.getFirstBreakend()) == 0 || getUnlinkedBreakendCount(nextPair.getSecondBreakend()) == 0)
+            if(getUnlinkedBreakendCount(nextPair.firstBreakend()) == 0 || getUnlinkedBreakendCount(nextPair.secondBreakend()) == 0)
             {
                 continue;
             }
@@ -2671,7 +2671,7 @@ public class ChainFinderOld
                         {
                             // find or create an unused replication breaks for other end and create a new pair
                             SvChainState svConn = mSvConnectionsMap.get(origPair.second());
-                            SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.getSecondBreakend());
+                            SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.secondBreakend());
 
                             if(otherBreakend == null)
                             {
@@ -2693,7 +2693,7 @@ public class ChainFinderOld
                         if(newPair != origPair)
                         {
                             SvChainState svConn = mSvConnectionsMap.get(origPair.first());
-                            SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.getFirstBreakend());
+                            SvBreakend otherBreakend = getNewReplicatedBreakend(svConn, origPair.firstBreakend());
 
                             if(otherBreakend == null)
                             {

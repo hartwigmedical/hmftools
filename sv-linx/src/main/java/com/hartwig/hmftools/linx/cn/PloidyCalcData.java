@@ -21,11 +21,4 @@ public class PloidyCalcData
         PloidyUncertainty = uncertainty;
         Valid = valid;
     }
-
-    public PloidyCalcData(final SvVarData var)
-    {
-        PloidyEstimate = var.ploidy();
-        PloidyUncertainty = var.ploidyUncertainty();
-        Valid = true;
-    }
 }

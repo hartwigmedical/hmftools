@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_AFTER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
-import static com.hartwig.hmftools.linx.types.SvArmCluster.typeToString;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
@@ -33,11 +31,9 @@ import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
@@ -46,7 +42,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -233,7 +228,7 @@ public class ClusterAnnotations
                     pair.setDBLenSecond(dbSecond != null ? dbSecond.length() : NO_DB_MARKER);
 
                     // whether this pair is on the same arm as the chain ends
-                    if(startEndArms.contains(pair.getFirstBreakend().getChrArm()))
+                    if(startEndArms.contains(pair.firstBreakend().getChrArm()))
                     {
                         pair.setOnArmOfOrigin(true);
                     }

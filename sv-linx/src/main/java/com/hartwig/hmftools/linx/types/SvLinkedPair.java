@@ -114,8 +114,8 @@ public class SvLinkedPair {
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
 
-    public final SvBreakend getFirstBreakend() { return mFirst.getBreakend(mFirstLinkOnStart); }
-    public final SvBreakend getSecondBreakend() { return mSecond.getBreakend(mSecondLinkOnStart); }
+    public final SvBreakend firstBreakend() { return mFirst.getBreakend(mFirstLinkOnStart); }
+    public final SvBreakend secondBreakend() { return mSecond.getBreakend(mSecondLinkOnStart); }
 
     public final String chromosome() { return mFirst.chromosome(mFirstLinkOnStart); }
 

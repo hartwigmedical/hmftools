@@ -16,8 +16,8 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MAX;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_OVERLAP;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.SINGLE_OPTION;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PL_TYPE_COMPLEX_DUP;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PL_TYPE_FOLDBACK;
+import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_COMPLEX_DUP;
+import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
@@ -94,24 +94,14 @@ public class ChainRuleSelector
             if(proposedLinks.stream().map(x -> x.Links.get(0)).anyMatch(y -> y == newPair))
                 continue;
 
-            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(newPair.getFirstBreakend());
-            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(newPair.getSecondBreakend());
+            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(newPair.firstBreakend());
+            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(newPair.secondBreakend());
 
             if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
 
-            ProposedLinks proposedLink = new ProposedLinks(newPair, min(ploidyFirst, ploidySecond), SINGLE_OPTION);
-
-            if(copyNumbersEqual(ploidyFirst, ploidySecond))
-            {
-                proposedLink.setPloidyMatch(PM_MATCHED);
-            }
-            else if(ploidyOverlap(ploidyFirst, newPair.getFirstBreakend().getSV().ploidyUncertainty(),
-                    ploidySecond, newPair.getSecondBreakend().getSV().ploidyUncertainty()))
-            {
-                proposedLink.setPloidyMatch(PM_OVERLAP);
-            }
-
+            ProposedLinks proposedLink = new ProposedLinks(newPair, SINGLE_OPTION);
+            proposedLink.addBreakendPloidies(newPair.firstBreakend(), ploidyFirst, newPair.secondBreakend(), ploidySecond);
             proposedLinks.add(proposedLink);
         }
 
@@ -228,17 +218,10 @@ public class ChainRuleSelector
                     }
 
                     ProposedLinks proposedLink = new ProposedLinks(
-                            Lists.newArrayList(pairStart, pairEnd), foldbackPloidy, CHAIN_SPLIT, targetChain, PL_TYPE_FOLDBACK);
+                            Lists.newArrayList(pairStart, pairEnd), CHAIN_SPLIT, targetChain, CONN_TYPE_FOLDBACK);
 
-                    if(copyNumbersEqual(foldbackPloidy * 2, nonFoldbackPloidy))
-                    {
-                        proposedLink.setPloidyMatch(PM_MATCHED);
-                    }
-                    else if(ploidyOverlap(foldbackPloidy * 2, foldback.ploidyUncertainty(),
-                            nonFoldbackPloidy, otherBreakend.getSV().ploidyUncertainty()))
-                    {
-                        proposedLink.setPloidyMatch(PM_OVERLAP);
-                    }
+                    proposedLink.addBreakendPloidies(foldbackStart, foldbackPloidy, otherBreakend, nonFoldbackPloidy/2);
+                    proposedLink.addBreakendPloidies(foldbackEnd, foldbackPloidy, otherBreakend, nonFoldbackPloidy/2,false);
 
                     newProposedLinks.add(proposedLink);
 
@@ -323,23 +306,15 @@ public class ChainRuleSelector
                     continue;
 
                 ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(matchingPair[SE_START], matchingPair[SE_END]),
-                        compDupPloidy, CHAIN_SPLIT, chain, PL_TYPE_COMPLEX_DUP);
+                        CHAIN_SPLIT, chain, CONN_TYPE_COMPLEX_DUP);
 
-                if(copyNumbersEqual(compDupPloidy * 2, chain.ploidy()))
-                {
-                    proposedLink.setPloidyMatch(PM_MATCHED);
-                }
-                else if(ploidyOverlap(compDupPloidy * 2, compDup.ploidyUncertainty(),
-                        chain.ploidy(), chain.ploidyUncertainty()))
-                {
-                    proposedLink.setPloidyMatch(PM_OVERLAP);
-                }
-
+                proposedLink.addBreakendPloidies(compDupBeStart, compDupPloidy, chainBeStart, chain.ploidy()/2);
+                proposedLink.addBreakendPloidies(compDupBeEnd, compDupPloidy, chainBeEnd, chain.ploidy()/2, false);
                 newProposedLinks.add(proposedLink);
 
-                mChainFinder.log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f -> %.1f)",
+                mChainFinder.log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f)",
                         compDup.id(), compDupPloidy, chainBeStart.toString(), chainBeEnd.toString(),
-                        chainBeStart.getSV().ploidyMin(), chainBeStart.getSV().ploidyMax()));
+                        chain.ploidy()));
 
                 /*
                 mDiagnostics.logCsv("COMP_DUP", compDup,
@@ -375,22 +350,15 @@ public class ChainRuleSelector
                     if(copyNumbersEqual(compDupPloidy * 2, otherBreakendPloidy2) || otherBreakendPloidy2 > compDupPloidy)
                     {
                         ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(pairStart, pairEnd),
-                                compDupPloidy, CHAIN_SPLIT, null, PL_TYPE_COMPLEX_DUP);
+                                CHAIN_SPLIT, null, CONN_TYPE_COMPLEX_DUP);
 
-                        if(copyNumbersEqual(compDupPloidy * 2, otherBreakendPloidy))
-                        {
-                            proposedLink.setPloidyMatch(PM_MATCHED);
-                        }
-                        else if(ploidyOverlap(compDupPloidy * 2, compDup.ploidyUncertainty(),
-                                otherBreakendPloidy, otherVar.ploidyUncertainty()))
-                        {
-                            proposedLink.setPloidyMatch(PM_OVERLAP);
-                        }
+                        proposedLink.addBreakendPloidies(compDupBeStart, compDupPloidy, otherBreakend, otherBreakendPloidy/2);
+                        proposedLink.addBreakendPloidies(compDupBeEnd, compDupPloidy, otherBreakend2, otherBreakendPloidy2/2, false);
 
                         newProposedLinks.add(proposedLink);
 
                         mChainFinder.log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with breakends(%s & %s) ploidy(%.1f -> %.1f)",
-                                compDup.id(), compDupPloidy, otherBreakend, otherBreakend2, otherVar.ploidyMin(), otherVar.ploidyMax()));
+                                compDup.id(), compDupPloidy, otherBreakend, otherBreakend2, otherBreakendPloidy, otherBreakendPloidy2));
                     }
 
                     break;
@@ -452,20 +420,8 @@ public class ChainRuleSelector
                 mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) of foldbacks with ploidy(%s & %s)",
                         pair.toString(), formatPloidy(foldbackPloidy), formatPloidy(otherBreakendPloidy)));
 
-                double avgPloidy = (foldbackPloidy + otherBreakendPloidy) * 0.5;
-
-                ProposedLinks proposedLink = new ProposedLinks(pair, avgPloidy, PLOIDY_MATCH);
-
-                if(copyNumbersEqual(foldbackPloidy, otherBreakendPloidy))
-                {
-                    proposedLink.setPloidyMatch(PM_MATCHED);
-                }
-                else if(ploidyOverlap(foldbackPloidy, breakend.getSV().ploidyUncertainty(),
-                        otherBreakendPloidy, otherBreakend.getSV().ploidyUncertainty()))
-                {
-                    proposedLink.setPloidyMatch(PM_OVERLAP);
-                }
-
+                ProposedLinks proposedLink = new ProposedLinks(pair, PLOIDY_MATCH);
+                proposedLink.addBreakendPloidies(breakend, foldbackPloidy, otherBreakend, otherBreakendPloidy);
                 newProposedLinks.add(proposedLink);
             }
         }
@@ -542,15 +498,16 @@ public class ChainRuleSelector
                     mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) with {} ploidy(%s & %s)",
                             pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
 
-                    double avgPloidy = (breakendPloidy + otherBreakendPloidy) * 0.5;
-
-                    if(!copyNumbersEqual(avgPloidy, currentMaxPloidy))
-                        currentMaxPloidy = avgPloidy;
+                    ProposedLinks proposedLink = new ProposedLinks(pair, PLOIDY_MATCH);
+                    proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
 
                     if(ploidyMatch == PM_MATCHED)
-                        newProposedLinks.add(new ProposedLinks(pair, avgPloidy, PLOIDY_MATCH));
+                        newProposedLinks.add(new ProposedLinks(pair, PLOIDY_MATCH));
                     else
-                        newProposedLinks.add(new ProposedLinks(pair, avgPloidy, PLOIDY_OVERLAP));
+                        newProposedLinks.add(new ProposedLinks(pair, PLOIDY_OVERLAP));
+
+                    if(!copyNumbersEqual(proposedLink.ploidy(), currentMaxPloidy))
+                        currentMaxPloidy = proposedLink.ploidy();
                 }
             }
         }
@@ -588,21 +545,20 @@ public class ChainRuleSelector
             if(mChainFinder.matchesExistingPair(nextPair))
                 continue;
 
-            double firstPloidy = mChainFinder.getUnlinkedBreakendCount(nextPair.getFirstBreakend());
-            double secondPloidy = mChainFinder.getUnlinkedBreakendCount(nextPair.getSecondBreakend());
+            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(nextPair.firstBreakend());
+            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(nextPair.secondBreakend());
 
-            if(firstPloidy == 0 || secondPloidy == 0)
+            if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
 
-            if(!copyNumbersEqual(firstPloidy, secondPloidy))
+            if(!copyNumbersEqual(ploidyFirst, ploidySecond))
                 continue;
 
             // take the average ploidy or calculate a weighted ploidy already?
             // if these links have already been partially used, then incorrect to calculate a weighted ploidy
-            double avgPloidy = (firstPloidy + secondPloidy) * 0.5;
-
-            ProposedLinks proposedLink = new ProposedLinks(nextPair, avgPloidy, ADJACENT);
+            ProposedLinks proposedLink = new ProposedLinks(nextPair, ADJACENT);
             proposedLink.addRule(PLOIDY_MATCH);
+            proposedLink.addBreakendPloidies(nextPair.firstBreakend(), ploidyFirst, nextPair.secondBreakend(), ploidySecond);
             newProposedLinks.add(proposedLink);
         }
 
@@ -639,21 +595,18 @@ public class ChainRuleSelector
             if(mChainFinder.matchesExistingPair(nextPair))
                 continue;
 
-            double firstPloidy = mChainFinder.getUnlinkedBreakendCount(nextPair.getFirstBreakend());
-            double secondPloidy = mChainFinder.getUnlinkedBreakendCount(nextPair.getSecondBreakend());
+            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(nextPair.firstBreakend());
+            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(nextPair.secondBreakend());
 
-            if(firstPloidy == 0 || secondPloidy == 0)
-                continue;
-
-            if(!copyNumbersEqual(firstPloidy, secondPloidy))
+            if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
 
             // take the average ploidy or calculate a weighted ploidy already?
             // if these links have already been partially used, then incorrect to calculate a weighted ploidy
-            double avgPloidy = (firstPloidy + secondPloidy) * 0.5;
 
-            ProposedLinks proposedLink = new ProposedLinks(nextPair, avgPloidy, ADJACENT);
+            ProposedLinks proposedLink = new ProposedLinks(nextPair, ADJACENT);
             proposedLink.addRule(PLOIDY_MATCH);
+            proposedLink.addBreakendPloidies(nextPair.firstBreakend(), ploidyFirst, nextPair.secondBreakend(), ploidySecond);
             newProposedLinks.add(proposedLink);
         }
 
@@ -666,10 +619,10 @@ public class ChainRuleSelector
 
         if(!proposedLinks.isEmpty())
         {
-            // take the highest from amongt the proposed links
-            double maxPloidy = proposedLinks.stream().mapToDouble(x -> x.Ploidy).max().getAsDouble();
+            // take the highest from amongst the proposed links
+            double maxPloidy = proposedLinks.stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
 
-            proposedLinks.stream().filter(x -> copyNumbersEqual(maxPloidy, x.Ploidy)).forEach(x -> x.addRule(PLOIDY_MAX));
+            proposedLinks.stream().filter(x -> copyNumbersEqual(maxPloidy, x.ploidy())).forEach(x -> x.addRule(PLOIDY_MAX));
             return proposedLinks;
         }
 
@@ -726,9 +679,9 @@ public class ChainRuleSelector
                     mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) with max ploidy(%s & %s)",
                             pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
 
-                    double avgPloidy = (breakendPloidy + otherBreakendPloidy) * 0.5;
-
-                    newProposedLinks.add(new ProposedLinks(pair, avgPloidy, PLOIDY_MAX));
+                    ProposedLinks proposedLink = new ProposedLinks(pair, PLOIDY_MAX);
+                    proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
+                    newProposedLinks.add(proposedLink);
                 }
             }
         }
@@ -756,9 +709,7 @@ public class ChainRuleSelector
             return Lists.newArrayList(shortestLink);
         }
 
-        long shortestDistance = 0;
-        SvLinkedPair shortestLink = null;
-        double linkPloidy = 0;
+        ProposedLinks shortestLink = null;
 
         for(SvChainState svConn : mSvConnectionsMap.values())
         {
@@ -794,15 +745,14 @@ public class ChainRuleSelector
                     if(otherBreakendPloidy == 0)
                         continue;
 
-                    if(shortestLink == null || pair.length() < shortestDistance)
+                    if(shortestLink == null || pair.length() < shortestLink.shortestLinkDistance())
                     {
-                        shortestDistance = pair.length();
-                        shortestLink = pair;
-                        linkPloidy = min(breakendPloidy, otherBreakendPloidy);
-                    }
+                        shortestLink = new ProposedLinks(pair, NEAREST);
+                        shortestLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
 
-                    mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) shortest ploidy(%s & %s)",
-                            pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
+                        mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) shortest ploidy(%s & %s)",
+                                pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
+                    }
                 }
             }
         }
@@ -810,7 +760,7 @@ public class ChainRuleSelector
         if(shortestLink == null)
             return Lists.newArrayList();
 
-        return Lists.newArrayList(new ProposedLinks(shortestLink, linkPloidy, NEAREST));
+        return Lists.newArrayList(shortestLink);
     }
 
     private static List<ProposedLinks> restrictProposedLinks(

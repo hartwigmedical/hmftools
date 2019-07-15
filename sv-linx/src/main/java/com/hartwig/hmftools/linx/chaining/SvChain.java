@@ -254,11 +254,11 @@ public class SvChain {
         final SvVarData chainVar;
         if(pair1.first() == pair2.first() && pair1.second() == pair2.second())
         {
-            chainVar = pair1.getFirstBreakend() == pair2.getFirstBreakend() ? pair1.first(): pair1.second();
+            chainVar = pair1.firstBreakend() == pair2.firstBreakend() ? pair1.first(): pair1.second();
         }
         else if(pair1.first() == pair2.second() && pair1.second() == pair2.first())
         {
-            chainVar = pair1.getFirstBreakend() == pair2.getSecondBreakend() ? pair1.first(): pair1.second();
+            chainVar = pair1.firstBreakend() == pair2.secondBreakend() ? pair1.first(): pair1.second();
         }
         else
         {
@@ -277,7 +277,7 @@ public class SvChain {
             for(int index = 0; index < linkCount; ++index)
             {
                 final SvLinkedPair pair = mLinkedPairs.get(2 + index * 2);
-                addLink(SvLinkedPair.from(pair.getFirstBreakend(), pair.getSecondBreakend()), true);
+                addLink(SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend()), true);
             }
         }
         else
@@ -289,7 +289,7 @@ public class SvChain {
             for(int index = linkCount - 1; index >= 0; --index)
             {
                 final SvLinkedPair pair = mLinkedPairs.get(index);
-                addLink(SvLinkedPair.from(pair.getFirstBreakend(), pair.getSecondBreakend()), false);
+                addLink(SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend()), false);
             }
         }
     }
@@ -323,7 +323,7 @@ public class SvChain {
         for(int index = 0; index < linkCount; ++index)
         {
             final SvLinkedPair pair = mLinkedPairs.get(index);
-            addLink(SvLinkedPair.from(pair.getFirstBreakend(), pair.getSecondBreakend()), false);
+            addLink(SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend()), false);
         }
     }
 
@@ -645,7 +645,7 @@ public class SvChain {
                 }
             }
 
-            sequenceStr += breakendSeqStr(pair.getSecondBreakend());
+            sequenceStr += breakendSeqStr(pair.secondBreakend());
             sequenceStr += CHAIN_SEQ_DELIM;
 
             if(i == chain.getLinkedPairs().size() - 1)

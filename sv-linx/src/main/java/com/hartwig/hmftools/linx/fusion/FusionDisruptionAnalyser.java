@@ -526,7 +526,7 @@ public class FusionDisruptionAnalyser
             {
                 SvLinkedPair prevPair = linkedPairs.get(lpIndex1 - 1);
                 lowerSV = prevPair.second();
-                lowerBreakend = prevPair.getSecondBreakend();
+                lowerBreakend = prevPair.secondBreakend();
             }
 
             // isSpecificSV(lowerSV);
@@ -556,7 +556,7 @@ public class FusionDisruptionAnalyser
                 {
                     SvLinkedPair pair = linkedPairs.get(lpIndex2);
                     upperSV = pair.first();
-                    upperBreakend = pair.getFirstBreakend();
+                    upperBreakend = pair.firstBreakend();
                 }
                 else
                 {
@@ -654,11 +654,11 @@ public class FusionDisruptionAnalyser
 
                         if(fusionLowerToUpper)
                         {
-                            fusionDirection = pair.getFirstBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+                            fusionDirection = pair.firstBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                         }
                         else
                         {
-                            fusionDirection = pair.getSecondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+                            fusionDirection = pair.secondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                         }
 
                         if(validTraversal && pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
@@ -849,7 +849,7 @@ public class FusionDisruptionAnalyser
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         // this includes subsequent links within the same chain and transcript
         SvLinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
-        boolean traverseUp = startPair.getFirstBreakend() == breakend; // whether to search up or down the chain
+        boolean traverseUp = startPair.firstBreakend() == breakend; // whether to search up or down the chain
 
         // TranscriptData transData = mGeneTransCollection.getTranscriptData(transcript.parent().StableId, transcript.StableId);
 
@@ -874,7 +874,7 @@ public class FusionDisruptionAnalyser
 
             // identify next exon after this TI
             // the breakend's transcript info cannot be used because it faces the opposite way from the fusing breakend
-            SvBreakend nextBreakend = traverseUp ? pair.getSecondBreakend() : pair.getFirstBreakend();
+            SvBreakend nextBreakend = traverseUp ? pair.secondBreakend() : pair.firstBreakend();
 
             // exit if the next breakend is now past the end of the transcript or if the breakend is down-stream of coding
             if(nextBreakend.orientation() == 1)

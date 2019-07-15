@@ -1489,8 +1489,8 @@ public class SvClusteringMethods {
 
         SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
 
-        SvBreakend be1 = tiPair.getFirstBreakend();
-        SvBreakend be2 = tiPair.getSecondBreakend();
+        SvBreakend be1 = tiPair.firstBreakend();
+        SvBreakend be2 = tiPair.secondBreakend();
         SvBreakend otherBe1 = be1.getOtherBreakend();
         SvBreakend otherBe2 = be2.getOtherBreakend();
         SvLinkedPair db1 = be1.getSV().getDBLink(be1.usesStart());
