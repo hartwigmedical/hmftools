@@ -40,7 +40,7 @@ public class FilterGermlineVariantsTest {
     public void checkForGermlineGenesReportedTSG() {
         GermlineReportingModel germlineReportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
 
-        List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true);
+        List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersMatch = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsMatch = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantMatch =
@@ -50,7 +50,7 @@ public class FilterGermlineVariantsTest {
                         variantsMatch);
         assertEquals(1, filteredGermlineVariantMatch.size()); // all three options matched
 
-        List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false);
+        List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatchBiallelic = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsNonMatchBiallelic = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -60,7 +60,7 @@ public class FilterGermlineVariantsTest {
                 variantsNonMatchBiallelic);
         assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
-        List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true);
+        List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatchVariant = createCopyNumberListForTSG(1);
         List<EnrichedSomaticVariant> variantsNonMatchVariant = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -70,7 +70,7 @@ public class FilterGermlineVariantsTest {
                 variantsNonMatchVariant);
         assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
-        List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true);
+        List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatchCopy = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsNonMatchCopy = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -80,7 +80,7 @@ public class FilterGermlineVariantsTest {
                 variantsNonMatchCopy);
         assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
-        List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false);
+        List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatch = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsNonMatch = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -90,7 +90,7 @@ public class FilterGermlineVariantsTest {
                 variantsNonMatch);
         assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
-        List<GermlineVariant> germlineVariantsOptionBiallelic = createTestGermlineVariantsTSGGene(true);
+        List<GermlineVariant> germlineVariantsOptionBiallelic = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersOptionBiallelic = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsOptionBiallelic = createEnrichedListForGene("AAAA");
         List<GermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -100,7 +100,7 @@ public class FilterGermlineVariantsTest {
                 variantsOptionBiallelic);
         assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
-        List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false);
+        List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersOptionVariant = createCopyNumberListForTSG(2);
         List<EnrichedSomaticVariant> variantsOptionVariant = createEnrichedListForGene(TSG);
         List<GermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -110,15 +110,25 @@ public class FilterGermlineVariantsTest {
                 variantsOptionVariant);
         assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
-        List<GermlineVariant> germlineVariantsOptionCopyNumber = createTestGermlineVariantsTSGGene(false);
-        List<GeneCopyNumber> geneCopyNumbersCopyNumber = createCopyNumberListForTSG(1);
-        List<EnrichedSomaticVariant> variantsOptionCopyNumber = createEnrichedListForGene("AAAA");
-        List<GermlineVariant> filteredGermlineVariantOptionCopyNumber = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsOptionCopyNumber, TEST_DRIVER_GENE_VIEW,
+        List<GermlineVariant> germlineVariantsOptionCopyNumberPartialLoss = createTestGermlineVariantsTSGGene(false, 1);
+        List<GeneCopyNumber> geneCopyNumbersCopyNumberPartialLoss = createCopyNumberListForTSG(1);
+        List<EnrichedSomaticVariant> variantsOptionCopyNumberPartialLoss = createEnrichedListForGene("AAAA");
+        List<GermlineVariant> filteredGermlineVariantOptionCopyNumberPartialLoss = FilterGermlineVariants.filterGermlineVariantsForReporting(
+                germlineVariantsOptionCopyNumberPartialLoss, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
-                geneCopyNumbersCopyNumber,
-                variantsOptionCopyNumber);
-        assertEquals(1, filteredGermlineVariantOptionCopyNumber.size()); // only match copy number
+                geneCopyNumbersCopyNumberPartialLoss,
+                variantsOptionCopyNumberPartialLoss);
+        assertEquals(0, filteredGermlineVariantOptionCopyNumberPartialLoss.size()); // only match copy number
+
+        List<GermlineVariant> germlineVariantsOptionCopyNumberFullLoss = createTestGermlineVariantsTSGGene(false, 2);
+        List<GeneCopyNumber> geneCopyNumbersCopyNumberFullLoss = createCopyNumberListForTSG(1);
+        List<EnrichedSomaticVariant> variantsOptionCopyNumberFullLoss = createEnrichedListForGene("AAAA");
+        List<GermlineVariant> filteredGermlineVariantOptionCopyNumberFullLoss = FilterGermlineVariants.filterGermlineVariantsForReporting(
+                germlineVariantsOptionCopyNumberFullLoss, TEST_DRIVER_GENE_VIEW,
+                germlineReportingModel,
+                geneCopyNumbersCopyNumberFullLoss,
+                variantsOptionCopyNumberFullLoss);
+        assertEquals(1, filteredGermlineVariantOptionCopyNumberFullLoss.size()); // only match copy number
     }
 
     @NotNull
@@ -127,10 +137,11 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    private static List<GermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelicFilter) {
+    private static List<GermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelicFilter, double copyNumber) {
         return Lists.newArrayList(PatientReporterTestFactory.createTestGermlineVariantBuilder()
                 .gene(TSG)
                 .biallelic(biallelicFilter)
+                .adjustedCopyNumber(copyNumber)
                 .build());
     }
 
