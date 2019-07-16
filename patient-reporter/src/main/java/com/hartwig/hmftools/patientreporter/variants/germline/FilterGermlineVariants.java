@@ -37,6 +37,7 @@ public final class FilterGermlineVariants {
 
                     boolean filterMinCopyNumberTumor = false;
                     GeneCopyNumber geneCopyNumber = lookupGeneCopyNumber(allGeneCopyNumbers, germlineVariant.gene());
+                    // TODO (DEV-835) Add additional filter on variant copy number (Math.round(germlineVariant.adjustedCopyNumber()) >= 2)
                     if (Math.round(geneCopyNumber.minCopyNumber()) <= 1) {
                         filterMinCopyNumberTumor = true;
                     }
