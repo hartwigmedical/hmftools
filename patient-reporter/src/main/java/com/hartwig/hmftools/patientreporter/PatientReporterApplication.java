@@ -71,7 +71,6 @@ public class PatientReporterApplication {
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String SAMPLE_SUMMARY_CSV = "sample_summary_csv";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     // Some additional optional params
     private static final String COMMENTS = "comments";
@@ -163,7 +162,6 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
                 cmd.getOptionValue(GERMLINE_GENES_CSV),
                 cmd.getOptionValue(SAMPLE_SUMMARY_CSV));
     }
@@ -173,7 +171,7 @@ public class PatientReporterApplication {
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_CSV)
                 && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd,
                 KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, DRUP_GENES_CSV) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd,
-                SAMPLE_SUMMARY_CSV) && fileExists(cmd, FASTA_FILE_LOCATION) && fileExists(cmd, HIGH_CONFIDENCE_BED);
+                SAMPLE_SUMMARY_CSV) && fileExists(cmd, FASTA_FILE_LOCATION);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
@@ -277,7 +275,6 @@ public class PatientReporterApplication {
         options.addOption(REF_SAMPLE, true, "The reference sample for the sample for which we are generating a report.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
         options.addOption(SAMPLE_SUMMARY_CSV, true, "Path towards a CSV containing the (clinical) summaries of the samples.");

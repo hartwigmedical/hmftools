@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
@@ -69,7 +68,6 @@ public final class PatientReporterTestUtil {
                     .drupActionabilityModel(drupActionabilityModel)
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
                     .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))
-                    .highConfidenceRegions(TreeMultimap.create())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
                     .build();

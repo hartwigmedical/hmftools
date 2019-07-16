@@ -9,21 +9,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
-import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -79,11 +74,7 @@ class AnalysedPatientReporter {
                 patientTumorLocation);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
-        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(tumorSample,
-                somaticVariantVcf,
-                copyNumberAnalysis.gender(),
-                copyNumberAnalysis.purity(),
-                patientTumorLocation);
+        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(tumorSample, somaticVariantVcf, patientTumorLocation);
         List<GermlineVariant> germlineVariantsToReport =
                 analyzeGermlineVariants(tumorSample, bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
@@ -150,20 +141,16 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        return CopyNumberAnalyzer.run(purityContext,
-                exomeGeneCopyNumbers,
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
+        return CopyNumberAnalyzer.run(purityContext, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull
-    private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf, @NotNull Gender gender,
-            double purity, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+    private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
+            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        List<EnrichedSomaticVariant> enrichedSomaticVariants =
-                enrich(variants, gender, purity, reportData.highConfidenceRegions(), reportData.refGenomeFastaFile());
+        List<EnrichedSomaticVariant> enrichedSomaticVariants = enrich(variants, reportData.refGenomeFastaFile());
 
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
                 reportData.driverGeneView(),
@@ -172,15 +159,9 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private static List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants, @NotNull Gender gender, double purity,
-            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile) {
-        double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
-        ClonalityFactory clonalityFactory = new ClonalityFactory(gender, purity, clonalPloidy);
-
-        EnrichedSomaticVariantFactory enrichedSomaticFactory =
-                new EnrichedSomaticVariantFactory(highConfidenceRegions, refGenomeFastaFile, clonalityFactory);
-
-        return enrichedSomaticFactory.enrich(variants);
+    private static List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants,
+            @NotNull IndexedFastaSequenceFile refGenomeFastaFile) {
+        return new EnrichedSomaticVariantFactory(refGenomeFastaFile).enrich(variants);
     }
 
     @NotNull
