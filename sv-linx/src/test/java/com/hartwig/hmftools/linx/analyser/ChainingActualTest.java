@@ -33,6 +33,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 import org.junit.Ignore;
 import org.junit.Test;
 
+// tests modelled on examples from actual samples
 public class ChainingActualTest
 {
     @Test

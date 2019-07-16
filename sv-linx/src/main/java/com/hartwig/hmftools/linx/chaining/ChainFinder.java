@@ -650,86 +650,18 @@ public class ChainFinder
         }
     }
 
-    /*
-    private List<ProposedLinks> findFewestOptionPairs(List<SvBreakend> breakendList, boolean isRestricted)
-    {
-        // of these pairs, do some have less alternatives links which could be made than others
-        // eg if high-rep SVs are A and B, and possible links have been found A-C, A-D and B-E,
-        // then count how many links could be made between C, D and E to other SVs, and then select the least restrictive
-        // say A-C is the only link C can make and B-D is the only link that D can make, then would want to make them both
-        int minPairCount = 0;
-        List<SvLinkedPair> minLinkPairs = Lists.newArrayList();
-
-        for(SvBreakend breakend : breakendList)
-        {
-            List<SvLinkedPair> possiblePairs = mSvBreakendPossibleLinks.get(breakend);
-
-            if (possiblePairs == null || possiblePairs.isEmpty())
-                continue;
-
-            if (minPairCount == 0 || possiblePairs.size() < minPairCount)
-            {
-                minLinkPairs.clear();
-                minPairCount = possiblePairs.size();
-            }
-
-            if (possiblePairs.size() == minPairCount)
-            {
-                for (SvLinkedPair pair : possiblePairs)
-                {
-                    if (!minLinkPairs.contains(pair))
-                        minLinkPairs.add(pair);
-                }
-            }
-
-            if (isRestricted)
-            {
-                // also check this max-rep SV's pairings to test how they are restricted
-                for (SvLinkedPair pair : possiblePairs)
-                {
-                    SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
-
-                    List<SvLinkedPair> otherPossiblePairs = mSvBreakendPossibleLinks.get(otherBreakend);
-
-                    if (otherPossiblePairs == null || otherPossiblePairs.isEmpty())
-                        continue; // logical assert
-
-                    if (minPairCount == 0 || otherPossiblePairs.size() < minPairCount)
-                    {
-                        minLinkPairs.clear();
-                        minPairCount = otherPossiblePairs.size();
-                    }
-
-                    if (otherPossiblePairs.size() == minPairCount)
-                    {
-                        for (SvLinkedPair otherPair : otherPossiblePairs)
-                        {
-                            if (!minLinkPairs.contains(otherPair))
-                                minLinkPairs.add(otherPair);
-                        }
-                    }
-                }
-            }
-        }
-
-        removeSkippedPairs(minLinkPairs);
-
-        // TODO - only select one link, with the highest ploidy or best match
-        return Lists.newArrayList();
-        // return new ProposedLinks(minLinkPairs, 0, null, false);
-    }
-    */
 
     private void processProposedLinks(List<ProposedLinks> proposedLinksList)
     {
-        // now the top candidates to link have been found, take the shortest of them and add this to a chain
-        // where possible, add links multiple times according to the min replication of the breakends involved
-        // after each link is added, check whether any breakend now has only one link option
         boolean linkAdded = false;
 
         while (!proposedLinksList.isEmpty())
         {
             ProposedLinks proposedLinks = proposedLinksList.get(0);
+
+            // in case an earlier link has invalidated the chain
+            if(proposedLinks.targetChain() != null && !mChains.contains(proposedLinks.targetChain()))
+                break;
 
             proposedLinksList.remove(0);
 
@@ -737,6 +669,9 @@ public class ChainFinder
 
             if(!mIsValid)
                 return;
+
+            if(proposedLinks.multiConnection()) // stop after the first complex link is made
+                break;
         }
 
         if(linkAdded)

@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.SINGLE_OPTION;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
+import static com.hartwig.hmftools.linx.types.SvLinkedPair.hasLinkClash;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -29,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svlink;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -768,76 +770,102 @@ public class ChainRuleSelector
 
     public List<ProposedLinks> findNearest(List<ProposedLinks> proposedLinks)
     {
-        if(!proposedLinks.isEmpty())
+        // sorts links into shortest first and purges any conflicting longer links with conflicting breakends
+        if(proposedLinks.isEmpty())
         {
-            long shortestDistance = 0;
-            ProposedLinks shortestLink = null;
-
-            // take the highest from amongt the proposed links
-            for(ProposedLinks proposedLink : proposedLinks)
+            for (SvChainState svConn : mSvConnectionsMap.values())
             {
-                if(shortestLink == null || proposedLink.shortestLinkDistance() < shortestDistance)
+                SvVarData var = svConn.SV;
+
+                // check whether this SV has any possible links with SVs of the same (remaining) rep count
+                for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    shortestDistance = proposedLink.shortestLinkDistance();
-                    shortestLink = proposedLink;
-                }
-            }
-
-            return Lists.newArrayList(shortestLink);
-        }
-
-        ProposedLinks shortestLink = null;
-
-        for(SvChainState svConn : mSvConnectionsMap.values())
-        {
-            SvVarData var = svConn.SV;
-
-            // check whether this SV has any possible links with SVs of the same (remaining) rep count
-            for(int be = SE_START; be <= SE_END; ++be)
-            {
-                if(var.isNullBreakend() && be == SE_END)
-                    continue;
-
-                boolean isStart = isStart(be);
-                double breakendPloidy = svConn.unlinked(be);
-
-                if(breakendPloidy == 0)
-                    continue;
-
-                final SvBreakend breakend = var.getBreakend(isStart);
-                final List<SvLinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
-
-                if(svLinks == null)
-                    continue;
-
-                for(final SvLinkedPair pair : svLinks)
-                {
-                    if(mSkippedPairs.contains(pair))
+                    if (var.isNullBreakend() && be == SE_END)
                         continue;
 
-                    SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+                    boolean isStart = isStart(be);
+                    double breakendPloidy = svConn.unlinked(be);
 
-                    double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
-
-                    if(otherBreakendPloidy == 0)
+                    if (breakendPloidy == 0)
                         continue;
 
-                    if(shortestLink == null || pair.length() < shortestLink.shortestLinkDistance())
+                    final SvBreakend breakend = var.getBreakend(isStart);
+                    final List<SvLinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
+
+                    if (svLinks == null)
+                        continue;
+
+                    for (final SvLinkedPair pair : svLinks)
                     {
-                        shortestLink = new ProposedLinks(pair, NEAREST);
-                        shortestLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
+                        if (mSkippedPairs.contains(pair))
+                            continue;
 
-                        LOGGER.trace("pair({}) shortest ploidy({} & {})",
-                                pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
+                        SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+
+                        double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+
+                        if (otherBreakendPloidy == 0)
+                            continue;
+
+                        ProposedLinks proposedLink = new ProposedLinks(pair, NEAREST);
+                        proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
+                        proposedLinks.add(proposedLink);
                     }
                 }
             }
         }
 
-        if(shortestLink == null)
-            return Lists.newArrayList();
+        List<ProposedLinks> shortestLinks = Lists.newArrayList();
 
-        return Lists.newArrayList(shortestLink);
+        for(final ProposedLinks proposedLink : proposedLinks)
+        {
+            int index = 0;
+            boolean addNew = true;
+            while(index < shortestLinks.size())
+            {
+                final ProposedLinks otherLink = shortestLinks.get(index);
+
+                // for proposed links with any breakend clash, just keep the shortest
+                if(hasLinkClash(proposedLink.Links, otherLink.Links))
+                {
+                    if(proposedLink.shortestLinkDistance() < otherLink.shortestLinkDistance())
+                    {
+                        shortestLinks.remove(index);
+                    }
+                    else
+                    {
+                        addNew = false;
+                        break;
+                    }
+                }
+
+                ++index;
+            }
+
+            if(!addNew)
+                continue;
+
+            // insert by shortest distance first
+            index = 0;
+            while(index < shortestLinks.size())
+            {
+                if(proposedLink.shortestLinkDistance() < shortestLinks.get(index).shortestLinkDistance())
+                    break;
+
+                ++index;
+            }
+
+            LOGGER.trace("adding shortest proposed link: {} index({})", proposedLink.toString(), index);
+
+            shortestLinks.add(index, proposedLink);
+        }
+
+        if(shortestLinks.size() > 1)
+        {
+            LOGGER.trace("found {} shortest non-clashing proposed links", proposedLinks.size());
+        }
+
+        return shortestLinks;
     }
 
     private static List<ProposedLinks> restrictProposedLinks(

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 
+import java.util.List;
+
 public class SvLinkedPair {
 
     private SvVarData mFirst;
@@ -314,5 +316,16 @@ public class SvLinkedPair {
     }
 
     public boolean isDupLink() { return mFirst == mSecond && mFirst.type() == DUP; }
+
+    public static boolean hasLinkClash(final List<SvLinkedPair> links1, final List<SvLinkedPair> links2)
+    {
+        for(final SvLinkedPair pair : links1)
+        {
+            if(links2.stream().anyMatch(x -> pair.hasLinkClash(x)))
+                return true;
+        }
+
+        return false;
+    }
 
 }
