@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
@@ -67,7 +66,6 @@ public final class PatientReporterTestFactory {
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
-                .clonality(Clonality.UNKNOWN)
                 .kataegis(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .position(0)

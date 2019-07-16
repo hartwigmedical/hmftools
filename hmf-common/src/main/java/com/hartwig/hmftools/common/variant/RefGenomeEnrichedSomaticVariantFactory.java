@@ -55,8 +55,7 @@ public class RefGenomeEnrichedSomaticVariantFactory {
                 .microhomology(Strings.EMPTY)
                 .repeatCount(0)
                 .repeatSequence(Strings.EMPTY)
-                .highConfidenceRegion(false)
-                .clonality(Clonality.UNKNOWN);
+                .highConfidenceRegion(false);
     }
 
     private static void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant,

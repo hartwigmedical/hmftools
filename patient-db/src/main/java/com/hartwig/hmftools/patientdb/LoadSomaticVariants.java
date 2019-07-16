@@ -11,15 +11,12 @@ import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
-import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
-import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -100,15 +97,8 @@ public class LoadSomaticVariants {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
 
-        final PurityAdjuster purityAdjuster = purityContext == null
-                ? new PurityAdjuster(Gender.FEMALE, 1, 1)
-                : new PurityAdjuster(purityContext.gender(), purityContext.bestFit().purity(), purityContext.bestFit().normFactor());
-
-        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
-
-        LOGGER.info("Determine clonality");
-        final ClonalityFactory clonality = ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy);
-        final List<EnrichedSomaticVariant> enrichedVariants = variants.stream().map(clonality::enrich).collect(Collectors.toList());
+        final List<EnrichedSomaticVariant> enrichedVariants =
+                variants.stream().map(x -> ImmutableEnrichedSomaticVariant.builder().from(x).build()).collect(Collectors.toList());
 
         LOGGER.info("Persisting variants to database");
         dbAccess.writeSomaticVariants(sample, enrichedVariants);

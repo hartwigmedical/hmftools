@@ -10,7 +10,6 @@ import java.util.List;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -75,14 +74,13 @@ class SomaticVariantDAO {
                     .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                     .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                     .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                    .clonality(Clonality.valueOf(record.getValue(SOMATICVARIANT.CLONALITY)))
+                    .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
                     .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                     .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                     .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
-                    .subclonalLikelihood(0)
                     .build());
         }
         return variants;
@@ -129,7 +127,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.MICROHOMOLOGY,
                     SOMATICVARIANT.REPEATSEQUENCE,
                     SOMATICVARIANT.REPEATCOUNT,
-                    SOMATICVARIANT.CLONALITY,
+                    SOMATICVARIANT.SUBCLONALLIKELIHOOD,
                     SOMATICVARIANT.BIALLELIC,
                     SOMATICVARIANT.HOTSPOT,
                     SOMATICVARIANT.MAPPABILITY,
@@ -173,7 +171,7 @@ class SomaticVariantDAO {
                 variant.microhomology(),
                 variant.repeatSequence(),
                 variant.repeatCount(),
-                variant.clonality(),
+                variant.subclonalLikelihood(),
                 variant.biallelic(),
                 variant.hotspot(),
                 DatabaseUtil.decimal(variant.mappability()),

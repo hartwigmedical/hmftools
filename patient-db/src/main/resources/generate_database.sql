@@ -285,7 +285,7 @@ CREATE TABLE somaticVariant
     copyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
-    clonality varchar(20) NOT NULL,
+    subclonalLikelihood DOUBLE PRECISION NOT NULL,
     biallelic BOOLEAN NOT NULL,
     hotspot varchar(20) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
