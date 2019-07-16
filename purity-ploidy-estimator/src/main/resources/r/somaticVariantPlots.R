@@ -43,6 +43,47 @@ standard_mutation <- function(types) {
   return(types)
 }
 
+clonality_plot <- function(somaticVariants, clonalityModel) {
+  clonalityVariants = somaticVariants %>% filter(filter == 'PASS')
+
+  combinedModel = clonalityModel %>% 
+    group_by(bucket) %>% 
+    summarise(bucketWeight = sum(bucketWeight))
+  
+  subclonalPercentage = clonalityModel %>% 
+    group_by(bucket) %>% 
+    mutate(totalWeight = sum(bucketWeight)) %>% 
+    filter(isSubclonal) %>%
+    summarise(
+      isSubclonal = T,
+      bucketWeight = sum(bucketWeight), 
+      subclonalLikelihood = ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight)))
+  
+  singleBlue = "#6baed6"
+  singleRed = "#d94701"
+  
+  pTop = ggplot() +
+    geom_histogram(data=clonalityVariants, aes(x = ploidy), binwidth = 0.05, fill=singleBlue, col=singleBlue,  alpha = .4) +
+    geom_line(data=combinedModel, aes(x = bucket, y = bucketWeight), position = "identity", alpha = 0.8) +
+    geom_line(data=clonalityModel, aes(x = bucket, y = bucketWeight, color = peak), position = "identity") +
+    geom_area(data=subclonalPercentage %>% filter(isSubclonal), aes(x = bucket, y = bucketWeight), position = "identity",  alpha = 0.3, fill = singleRed, color = singleRed) +
+    ggtitle("") + xlab("Ploidy") + ylab("") +
+    scale_y_continuous(expand=c(0.02, 0.02)) +
+    theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position="none") +
+    scale_x_continuous( expand=c(0.01, 0.01), limits = c(0, 3.5)) 
+  
+  pBottom = ggplot(data = subclonalPercentage) +
+    geom_bar(width = 0.05, aes(x = bucket, y = subclonalLikelihood), stat = "identity", fill=singleRed, col=singleRed,  alpha = 0.3) + 
+    theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
+    xlab("") + ylab("") +
+    scale_y_continuous(labels = c("0%", "25%","50%","75%","100%"), breaks = c(0, 0.25, 0.5, 0.75, 1), expand=c(0.02, 0.02), limits = c(0, 1)) +
+    scale_x_continuous( expand=c(0.01, 0.01), limits = c(0, 3.5)) 
+  
+  pFinal = cowplot::plot_grid(pTop, pBottom, ncol = 1, rel_heights = c(5, 1), align = "v")
+  return(pFinal)
+}
+
+
 rainfall_plot <- function(somaticVariants) {
   
   strandColours = c("#6bd692", "#7e6bd6")
@@ -115,7 +156,13 @@ vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
 somaticVariants = vcf_data_frame(vcf)
 
 somaticVariantPDF = somatic_ploidy_pdf(somaticVariants)
-ggsave(filename = paste0(plotDir, "/", sample, ".variant.png"), somaticVariantPDF, units = "in", height = 4, width = 4.8, scale = 1)
+ggsave(filename = paste0(plotDir, "/", sample, ".somatic.png"), somaticVariantPDF, units = "in", height = 4, width = 4.8, scale = 1)
 
 rainfallPlot = rainfall_plot(somaticVariants)
-ggsave(filename = paste0(plotDir, "/", sample, ".variant.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)
+ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)
+
+clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clonality.tsv"), sep = "\t", header = T) %>% 
+  mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak)) %>% filter(isValid)
+clonalityModelPlot = clonality_plot(somaticVariants, clonalityModel)
+ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
+

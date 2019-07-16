@@ -33,12 +33,13 @@ public class VariantContextEnrichmentComplete implements VariantContextEnrichmen
     public void flush() {
         somaticRefContextEnrichment.flush();
         kataegisEnrichment.flush();
+        highConfidenceEnrichment.flush();
     }
 
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        return kataegisEnrichment.enrichHeader(somaticRefContextEnrichment.enrichHeader(template));
+        return highConfidenceEnrichment.enrichHeader(kataegisEnrichment.enrichHeader(somaticRefContextEnrichment.enrichHeader(template)));
     }
 
     @Override

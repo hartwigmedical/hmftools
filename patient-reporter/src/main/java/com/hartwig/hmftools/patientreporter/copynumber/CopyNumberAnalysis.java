@@ -27,7 +27,7 @@ public abstract class CopyNumberAnalysis {
     public abstract List<GeneCopyNumber> exomeGeneCopyNumbers();
 
     @NotNull
-    public abstract List<GeneCopyNumber> reportableGeneCopyNumbers();
+    public abstract List<ReportableGainLoss> reportableGainsAndLosses();
 
     @NotNull
     public abstract List<EvidenceItem> evidenceItems();

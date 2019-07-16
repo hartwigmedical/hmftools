@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class ClonalityFactory {
 
     @NotNull

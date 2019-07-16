@@ -21,9 +21,10 @@ public final class SvAnalyzer {
 
     @NotNull
     public static SvAnalysis run(@NotNull List<ReportableGeneFusion> fusions, @NotNull List<ReportableDisruption> disruptions,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(disruptions, geneCopyNumbers);
+        List<ReportableGeneDisruption> reportableGeneDisruptions =
+                ReportableGeneDisruptionFactory.convert(disruptions, exomeGeneCopyNumbers);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
 

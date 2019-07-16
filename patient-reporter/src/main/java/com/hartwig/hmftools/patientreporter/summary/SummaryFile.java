@@ -15,6 +15,9 @@ import org.jetbrains.annotations.NotNull;
 public final class SummaryFile {
 
     private static final Logger LOGGER = LogManager.getLogger(SummaryFile.class);
+
+    private static final String LINE_BREAK_STRING = " <enter> ";
+
     private static final String SEPARATOR = ";";
 
     private SummaryFile() {
@@ -31,6 +34,7 @@ public final class SummaryFile {
             if (parts.length == 2) {
                 String sampleId = parts[0].trim();
                 String summaryOfSample = parts[1].trim();
+                summaryOfSample = summaryOfSample.replace(LINE_BREAK_STRING, "\n");
                 sampleToSummaryMap.put(sampleId, summaryOfSample);
             } else {
                 LOGGER.warn("Suspicious line detected in sample summary csv: " + line);

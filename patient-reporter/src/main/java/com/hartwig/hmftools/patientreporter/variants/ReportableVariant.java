@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 
 import org.immutables.value.Value;
@@ -37,8 +36,7 @@ public abstract class ReportableVariant implements AllelicDepth {
     @NotNull
     public abstract Hotspot hotspot();
 
-    @NotNull
-    public abstract Clonality clonality();
+    public abstract double clonalLikelihood();
 
     @Nullable
     public abstract DriverCategory driverCategory();

@@ -15,11 +15,10 @@ import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModelFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
@@ -36,16 +35,11 @@ public final class PatientReporterTestUtil {
     private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
-    private static final String DRUP_GENES_CSV = Resources.getResource("csv/drup_genes.csv").getPath();
+    private static final String DRUP_GENES_CSV = Resources.getResource("actionability/drup_genes.csv").getPath();
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
     private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
 
     private PatientReporterTestUtil() {
-    }
-
-    @NotNull
-    public static DrupActionabilityModel testDrupActionabilityModel() throws IOException {
-        return DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
     }
 
     @NotNull
@@ -65,14 +59,14 @@ public final class PatientReporterTestUtil {
     @NotNull
     public static AnalysedReportData testAnalysedReportData() {
         try {
-            DrupActionabilityModel drupActionabilityModel = testDrupActionabilityModel();
-            GeneModel geneModel = GeneModelFactory.create(drupActionabilityModel);
+            DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())
-                    .panelGeneModel(geneModel)
+                    .driverGeneView(DriverGeneViewFactory.create())
+                    .drupActionabilityModel(drupActionabilityModel)
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
                     .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))
                     .highConfidenceRegions(TreeMultimap.create())

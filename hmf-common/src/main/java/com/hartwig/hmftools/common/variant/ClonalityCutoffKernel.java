@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public final class ClonalityCutoffKernel {
 
     private static final Logger LOGGER = LogManager.getLogger(ClonalityCutoffKernel.class);

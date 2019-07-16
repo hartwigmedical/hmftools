@@ -69,7 +69,7 @@ public class KataegisQueue {
                     }
 
                     if (isWindowViable && candidate.test(peek)) {
-                        peek.getCommonInfo().putAttribute(KATAEGIS_FLAG, idPrefix + "_" + identifier);
+                        peek.getCommonInfo().putAttribute(KATAEGIS_FLAG, idPrefix + "_" + identifier, true);
                     }
 
                     consumer.accept(buffer.pollFirst());

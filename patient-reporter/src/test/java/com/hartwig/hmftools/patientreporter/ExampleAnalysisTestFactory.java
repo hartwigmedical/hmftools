@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
 
 import java.time.LocalDate;
@@ -22,11 +21,12 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
@@ -58,7 +58,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
-        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
@@ -86,7 +86,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                copyNumbers,
+                gainsAndLosses,
                 fusions,
                 disruptions,
                 CIRCOS_PATH,
@@ -111,7 +111,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -132,7 +132,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                copyNumbers,
+                gainsAndLosses,
                 fusions,
                 disruptions,
                 CIRCOS_PATH,
@@ -157,7 +157,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<GeneCopyNumber> copyNumbers = createCOLO829CopyNumbers();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -178,7 +178,7 @@ public final class ExampleAnalysisTestFactory {
                 tumorMutationalLoad,
                 tumorMutationalBurden,
                 chordAnalysis,
-                copyNumbers,
+                gainsAndLosses,
                 fusions,
                 disruptions,
                 CIRCOS_PATH,
@@ -222,6 +222,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Binimetinib + Encorafenib")
+                .drugsType("Chemo")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -231,6 +232,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cobimetinib + Vemurafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -240,6 +242,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -249,6 +252,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib + Trametinib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -258,6 +262,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Trametinib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -267,6 +272,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Vemurafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -276,6 +282,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("RO4987655")
+                .drugsType("Chemo")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:208")
@@ -339,6 +346,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Alpelisib + Cetuximab + Encorafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:17")
@@ -348,6 +356,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Bevacizumab")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -357,6 +366,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("CI-1040")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -366,6 +376,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("BRAF:V600E")
@@ -375,6 +386,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab + Encorafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:17")
@@ -384,6 +396,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab + Irinotecan + Vemurafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -393,6 +406,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib + Panitumumab + Trametinib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -402,6 +416,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Irinotecan")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -411,6 +426,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Oxaliplatin")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -420,6 +436,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Panitumumab")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("BRAF:V600E")
@@ -429,6 +446,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Vemurafenib")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:17")
@@ -438,6 +456,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
                 .drug("EGFR mAB inhibitor")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("PTEN:del")
@@ -447,6 +466,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
                 .drug("Everolimus")
+                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:213")
@@ -465,7 +485,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1799T>A")
                 .hgvsProteinImpact("p.Val600Glu")
                 .hotspot(Hotspot.HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(107)
                 .totalReadCount(161)
                 .adjustedCopyNumber(6)
@@ -484,7 +504,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.369_370delCG")
                 .hgvsProteinImpact("p.Gly124fs")
                 .hotspot(Hotspot.NEAR_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(44)
                 .totalReadCount(44)
                 .adjustedCopyNumber(2)
@@ -503,7 +523,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.2153C>T")
                 .hgvsProteinImpact("p.Pro718Leu")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(72)
                 .totalReadCount(107)
                 .adjustedCopyNumber(3)
@@ -522,7 +542,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .adjustedCopyNumber(4)
@@ -545,7 +565,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .adjustedCopyNumber(4)
@@ -564,7 +584,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .adjustedCopyNumber(4)
@@ -581,15 +601,16 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<GeneCopyNumber> createCOLO829CopyNumbers() {
-        GeneCopyNumber copyNumber1 = createTestCopyNumberBuilder().chromosome("10")
-                .chromosomeBand("q23.31")
+    private static List<ReportableGainLoss> createCOLO829GainsLosses() {
+        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
+                .chromosome("10")
+                .region("q23.31")
                 .gene("PTEN")
-                .minCopyNumber(0)
-                .maxCopyNumber(2)
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
                 .build();
 
-        return Lists.newArrayList(copyNumber1);
+        return Lists.newArrayList(gainLoss1);
     }
 
     @NotNull

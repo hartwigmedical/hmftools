@@ -10,34 +10,14 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class BachelorFile {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorFile.class);
 
     private static final String DELIMITER = ",";
-    private static final String BACHELOR_FILE_EXTENSION = "_germline_variants.csv";
-    private static final String BACHELOR_HAS_RUN_FILE = "bachelor_found_no_variants";
-    private static final String BACHELOR_HAS_FOUND_VARIANTS_FILE = "bachelor_output.csv";
 
     private BachelorFile() {
-    }
-
-    public static boolean hasBachelorRun(@NotNull String bachelorDirectory, @NotNull String sample) {
-        if (findBachelorFilePath(bachelorDirectory, sample) == null) {
-            final String bachelorHasRunPath = bachelorDirectory + File.separator + BACHELOR_HAS_RUN_FILE;
-            final String bachelorHasFoundVariantsPath = bachelorDirectory + File.separator + BACHELOR_HAS_FOUND_VARIANTS_FILE;
-            return Files.exists(new File(bachelorHasRunPath).toPath()) || Files.exists(new File(bachelorHasFoundVariantsPath).toPath());
-        }
-
-        return true;
-    }
-
-    @Nullable
-    public static String findBachelorFilePath(@NotNull String bachelorDirectory, @NotNull String sample) {
-        String path = bachelorDirectory + File.separator + sample + BACHELOR_FILE_EXTENSION;
-        return Files.exists(new File(path).toPath()) ? path : null;
     }
 
     @NotNull

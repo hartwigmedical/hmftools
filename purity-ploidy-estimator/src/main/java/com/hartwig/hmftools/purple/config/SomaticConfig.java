@@ -65,6 +65,14 @@ public interface SomaticConfig {
         return MIN_SOMATIC_UNADJUSTED_VAF;
     }
 
+    default double clonalityMaxPloidy() {
+        return 10;
+    }
+
+    default double clonalityBinWidth() {
+        return 0.05;
+    }
+
     @NotNull
     static SomaticConfig createSomaticConfig(@NotNull CommandLine cmd) throws ParseException {
         final Optional<File> file;

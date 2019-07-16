@@ -2,9 +2,10 @@ package com.hartwig.hmftools.patientreporter;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.patientreporter.genepanel.GeneModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
 import org.immutables.value.Value;
@@ -19,7 +20,10 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
-    public abstract GeneModel panelGeneModel();
+    public abstract DriverGeneView driverGeneView();
+
+    @NotNull
+    public abstract DrupActionabilityModel drupActionabilityModel();
 
     @NotNull
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();

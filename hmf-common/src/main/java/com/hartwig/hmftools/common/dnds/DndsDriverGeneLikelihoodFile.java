@@ -13,7 +13,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class DndsDriverGeneLikelihoodFile {
+final class DndsDriverGeneLikelihoodFile {
+
     private static final Logger LOGGER = LogManager.getLogger(DndsDriverGeneLikelihoodFile.class);
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";

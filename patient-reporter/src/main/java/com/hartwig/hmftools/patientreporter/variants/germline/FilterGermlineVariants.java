@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,25 +18,26 @@ public final class FilterGermlineVariants {
 
     @NotNull
     public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull Map<String, DriverCategory> driverCategoryPerGeneMap,
+            @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
-        List<GermlineVariant> filteredGermlineVariant = Lists.newArrayList();
+        List<GermlineVariant> filteredGermlineVariants = Lists.newArrayList();
 
         Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
             assert germlineVariant.passFilter();
 
             if (reportingGermlineGenes.contains(germlineVariant.gene())) {
-                if (driverCategoryPerGeneMap.get(germlineVariant.gene()) == DriverCategory.ONCO) {
+                // Note: Reporting germline genes may not necessarily be present in driverGeneView!
+                if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
-                    filteredGermlineVariant.add(germlineVariant);
+                    filteredGermlineVariants.add(germlineVariant);
                 } else {
                     // Only report germline variants on TSGs if there is a 2nd hit.
                     boolean filterBiallelic = germlineVariant.biallelic();
 
                     boolean filterMinCopyNumberTumor = false;
                     GeneCopyNumber geneCopyNumber = lookupGeneCopyNumber(allGeneCopyNumbers, germlineVariant.gene());
-                    if (Math.round(geneCopyNumber.minCopyNumber()) < 2) {
+                    if (Math.round(geneCopyNumber.minCopyNumber()) <= 1 && (Math.round(germlineVariant.adjustedCopyNumber()) >= 2)) {
                         filterMinCopyNumberTumor = true;
                     }
 
@@ -48,12 +49,12 @@ public final class FilterGermlineVariants {
                     }
 
                     if (filterBiallelic || filterMinCopyNumberTumor || filterSomaticVariantInSameGene) {
-                        filteredGermlineVariant.add(germlineVariant);
+                        filteredGermlineVariants.add(germlineVariant);
                     }
                 }
             }
         }
-        return filteredGermlineVariant;
+        return filteredGermlineVariants;
     }
 
     @NotNull

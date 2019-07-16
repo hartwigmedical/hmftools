@@ -18,7 +18,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAnd
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
-import com.hartwig.hmftools.patientreporter.cfreport.data.GeneCopyNumbers;
+import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
@@ -197,12 +197,12 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(String.valueOf(reportedVariants)).addStyle(
                 reportedVariantsStyle)));
 
-        final Set<String> amplifiedGenes = GeneCopyNumbers.amplifiedGenes(patientReport.geneCopyNumbers());
+        final Set<String> amplifiedGenes = GainsAndLosses.amplifiedGenes(patientReport.gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortSummaryGenes(amplifiedGenes)));
 
-        final Set<String> copyLossGenes = GeneCopyNumbers.lossGenes(patientReport.geneCopyNumbers());
+        final Set<String> copyLossGenes = GainsAndLosses.lostGenes(patientReport.gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortSummaryGenes(copyLossGenes)));

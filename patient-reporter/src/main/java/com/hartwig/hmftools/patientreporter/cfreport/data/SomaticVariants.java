@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
+import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
@@ -19,10 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariants {
-
-    private static final String DRIVER_LIKELIHOOD_HIGH = "High";
-    private static final String DRIVER_LIKELIHOOD_MEDIUM = "Medium";
-    private static final String DRIVER_LIKELIHOOD_LOW = "Low";
 
     private SomaticVariants() {
     }
@@ -131,24 +127,6 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String clonalityString(@NotNull Clonality clonality, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit) {
-            return DataUtil.NA_STRING;
-        }
-
-        switch (clonality) {
-            case CLONAL:
-                return "Clonal";
-            case SUBCLONAL:
-                return "Subclonal";
-            case INCONSISTENT:
-                return "Inconsistent";
-            default:
-                return Strings.EMPTY;
-        }
-    }
-
-    @NotNull
     public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
             return DataUtil.NA_STRING;
@@ -163,24 +141,16 @@ public final class SomaticVariants {
 
     @NotNull
     public static String driverString(@Nullable Double driverLikelihood) {
-        if (driverLikelihood == null) {
-            return Strings.EMPTY;
-        }
+        DriverInterpretation interpretation = DriverInterpretation.interpret(driverLikelihood);
 
-        if (driverLikelihood > 0.8) {
-            return DRIVER_LIKELIHOOD_HIGH;
-        } else if (driverLikelihood > 0.2) {
-            return DRIVER_LIKELIHOOD_MEDIUM;
-        } else {
-            return DRIVER_LIKELIHOOD_LOW;
-        }
+        return interpretation != null ? interpretation.text() : Strings.EMPTY;
     }
 
     @NotNull
     public static Set<String> driverGenesWithVariant(@NotNull List<ReportableVariant> variants) {
-        final Set<String> genes = Sets.newHashSet();
-        for (final ReportableVariant variant : variants) {
-            if (driverString(variant.driverLikelihood()).equals(DRIVER_LIKELIHOOD_HIGH)) {
+        Set<String> genes = Sets.newHashSet();
+        for (ReportableVariant variant : variants) {
+            if (DriverInterpretation.interpret(variant.driverLikelihood()) == DriverInterpretation.HIGH) {
                 genes.add(variant.gene());
             }
         }

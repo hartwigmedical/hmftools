@@ -54,6 +54,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class AnalysedPatientReporter {
+
     private static final Logger LOGGER = LogManager.getLogger(AnalysedPatientReporter.class);
 
     @NotNull
@@ -89,8 +90,8 @@ class AnalysedPatientReporter {
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
-                        reportData.panelGeneModel().geneDriverCategoryMap(),
-                        reportData.panelGeneModel().drupActionableGenes(),
+                        reportData.driverGeneView(),
+                        reportData.drupActionabilityModel().actionableGenes(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         reportData.limsModel().germlineReportingChoice(tumorSample));
@@ -120,7 +121,7 @@ class AnalysedPatientReporter {
                 somaticVariantAnalysis.tumorMutationalLoad(),
                 somaticVariantAnalysis.tumorMutationalBurden(),
                 chordAnalysis,
-                copyNumberAnalysis.reportableGeneCopyNumbers(),
+                copyNumberAnalysis.reportableGainsAndLosses(),
                 svAnalysis.reportableFusions(),
                 svAnalysis.reportableDisruptions(),
                 circosFile,
@@ -151,7 +152,6 @@ class AnalysedPatientReporter {
 
         return CopyNumberAnalyzer.run(purityContext,
                 exomeGeneCopyNumbers,
-                reportData.panelGeneModel(),
                 reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
@@ -166,8 +166,7 @@ class AnalysedPatientReporter {
                 enrich(variants, gender, purity, reportData.highConfidenceRegions(), reportData.refGenomeFastaFile());
 
         return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                reportData.panelGeneModel().somaticVariantGenes(),
-                reportData.panelGeneModel().geneDriverCategoryMap(),
+                reportData.driverGeneView(),
                 reportData.actionabilityAnalyzer(),
                 patientTumorLocation);
     }
@@ -203,8 +202,8 @@ class AnalysedPatientReporter {
         } else {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
+                    reportData.driverGeneView(),
                     reportData.germlineReportingModel(),
-                    reportData.panelGeneModel().geneDriverCategoryMap(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport());
         }
@@ -256,7 +255,7 @@ class AnalysedPatientReporter {
         LOGGER.info(" Tumor mutational load: {}", report.tumorMutationalLoad());
         LOGGER.info(" Tumor mutational burden: {}", report.tumorMutationalBurden());
         LOGGER.info(" CHORD analysis HRD prediction: {}", report.chordAnalysis().hrdValue());
-        LOGGER.info(" Copy number events to report: {}", report.geneCopyNumbers().size());
+        LOGGER.info(" Number of gains and losses to report: {}", report.gainsAndLosses().size());
         LOGGER.info(" Gene fusions to report : {}", report.geneFusions().size());
         LOGGER.info(" Gene disruptions to report : {}", report.geneDisruptions().size());
 

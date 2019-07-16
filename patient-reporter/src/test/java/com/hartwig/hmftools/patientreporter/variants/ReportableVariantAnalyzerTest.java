@@ -11,9 +11,11 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
@@ -26,6 +28,12 @@ public class ReportableVariantAnalyzerTest {
     private static final String GENE_WITH_NOTIFY = "GENE1";
     private static final String GENE_WITHOUT_NOTIFY = "GENE2";
 
+    private static final DriverGeneView TEST_DRIVER_GENE_VIEW =
+            PatientReporterTestFactory.createTestDriverGeneView(GENE_WITH_NOTIFY, GENE_WITHOUT_NOTIFY);
+    private static final List<DriverCatalog> TEST_DRIVER_CATALOG =
+            Lists.newArrayList(PatientReporterTestFactory.createTestDriverCatalogEntry(GENE_WITH_NOTIFY),
+                    PatientReporterTestFactory.createTestDriverCatalogEntry(GENE_WITHOUT_NOTIFY));
+
     @Test
     public void mergeWithoutGermlineVariantsWithDRUPActionabilityWorks() {
         EnrichedSomaticVariant variant1 =
@@ -37,8 +45,8 @@ public class ReportableVariantAnalyzerTest {
         Set<String> drupActionableGenes = Sets.newHashSet(GENE_WITH_NOTIFY);
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                Lists.newArrayList(),
-                Maps.newHashMap(),
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_VIEW,
                 drupActionableGenes,
                 Lists.newArrayList(),
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
@@ -64,8 +72,8 @@ public class ReportableVariantAnalyzerTest {
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                Lists.newArrayList(),
-                Maps.newHashMap(),
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_VIEW,
                 Sets.newHashSet(),
                 germlineVariantsToReport,
                 germlineReportingModel,
@@ -93,8 +101,8 @@ public class ReportableVariantAnalyzerTest {
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
-                Lists.newArrayList(),
-                Maps.newHashMap(),
+                TEST_DRIVER_CATALOG,
+                TEST_DRIVER_GENE_VIEW,
                 Sets.newHashSet(),
                 germlineVariantsToReport,
                 germlineReportingModel,
