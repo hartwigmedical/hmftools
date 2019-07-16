@@ -11,6 +11,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceDrugTypeMerger;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -78,7 +79,7 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-     //   List<EvidenceItem> mergedItems = mergeOnDrugType(evidence);
+      //  List<EvidenceItem> mergedItems = EvidenceDrugTypeMerger.merge(evidence);
 
         final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
         for (EvidenceItem item : sortedEvidence) {

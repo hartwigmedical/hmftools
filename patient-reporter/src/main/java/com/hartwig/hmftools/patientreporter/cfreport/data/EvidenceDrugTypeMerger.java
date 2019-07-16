@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +33,8 @@ public final class EvidenceDrugTypeMerger {
 
         for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
             List<EvidenceItem> itemsForKey = entry.getValue();
+
+
         }
 
 
