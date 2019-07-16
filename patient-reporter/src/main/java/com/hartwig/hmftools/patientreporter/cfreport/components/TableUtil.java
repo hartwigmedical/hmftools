@@ -79,11 +79,6 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Cell createHeaderCell() {
-        return createHeaderCell(1);
-    }
-
-    @NotNull
     private static Cell createHeaderCell(int colSpan) {
         Cell c = new Cell(1, colSpan);
         c.setHeight(23); // Set fixed height to create consistent spacing between table title and header
