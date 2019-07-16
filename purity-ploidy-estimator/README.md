@@ -27,6 +27,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [7. Structural Variant Recovery](#7-structural-variant-recovery)
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
+  + [10. Somatic enrichment](#10-somatic-enrichment)
 * [Output](#output)
   + [Files](#files)
   + [VCF](#VCF)
@@ -228,6 +229,7 @@ There are 9 key steps in the PURPLE pipeline described in detail below:
 7. Recovery of structural variants and filtering of single breakends
 8. Identification of germline copy number alterations that are homozygously deleted in the tumor
 9. QC Status for the tumor
+10. Somatic enrichment
 
 ### 1. Gender
 We examine both the AMBER and COBALT data to independently determine and validate the gender of the sample. 
@@ -479,6 +481,42 @@ PURPLE also provides a qc status that can fail for the following 3 reasons:
 - `FAIL_DELETED_GENES` - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
 - `FAIL_GENDER` - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
+### 10. Somatic Enrichment
+If a somatic VCF is supplied to PURPLE a purity enriched copy of it will be produced in the output directory. In addition to purity, PURPLE also includes the following enrichments.
+
+#### Kataegis 
+
+Somatic variants of type C>T and C>G in a TpCpN context are annotated as showing Kataegis ([Nik Zainal et al., 2012](https://www.ncbi.nlm.nih.gov/pubmed/22608084)) 
+if there are three or more mutations of that type, strand and context localised within a region with an average inter-mutation distance of 
+<= 1kb. The annotation describes the strand it was found on along with an id and is shared by grouped variants.
+
+#### Clonality and Biallelic status
+
+For each point mutation we determined the clonality and biallelic status by comparing the estimated ploidy of the variant to the local copy number at the exact base of the variant. 
+The ploidy of each variant is calculated by adjusting the observed VAF by the purity and then multiplying by the local copy number to work out the absolute number of chromatids that contain the variant. 
+
+We mark a mutation as biallelic (i.e. no wild type remaining) if Variant Ploidy > Local Copy Number - 0.5. 
+The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant. 
+For example, if the local copy number is 2 than any somatic variant with measured ploidy > 1.5 is marked as biallelic.
+
+For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
+
+First, we fit the somatic ploidies for each sample into a set of clonal and subclonal peaks. 
+
+We apply an iterative algorithm to find peaks in the ploidy distribution:
+  - Determine the peak by finding the highest density of variants within +/- 0.1 of every 0.01 ploidy bucket.
+  - Sample the variants within a 0.05 ploidy range around the peak. 
+  - For each sampled variant, use a binomial distribution to estimate the likelihood that the variant would appear in all other 0.05 ploidy buckets. 
+  - Sum the expected variants from the peak across all ploidy buckets and subtract from the distribution.
+  - Repeat the process with the next peak
+
+This process yields a set of ploidy peaks, each with a ploidy and a total density (i.e. count of variants). 
+To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the ploidy bucket at the peak itself. 
+After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample. 
+We mark a peak as subclonal if the peak ploidy < 0.85.
+
+Secondly, we can calculate the subclonal likelihood for any individual variant as the proportion of subclonal variants at that same ploidy. 
+
 ## Output
 
 ### Files
@@ -598,16 +636,13 @@ PURPLE_AF | 1 | Purity adjusted allelic frequency of variant
 PURPLE_CN | 1 | Purity adjusted copy number surrounding variant location
 PURPLE_MAP | 1 | Purity adjusted minor allele ploidy surrounding variant location
 PURPLE_GERMLINE | 1 | Germline classification surrounding variant location, one of `HOM_DELETION`, `HET_DELETION`, `AMPLIFICATION`, `NOISE`, `DIPLOID`, `UNKNOWN`
+BIALLELIC | 1 | Flag to indicate variant is biallelic
 REP_S | 1 | Repeat sequence
 REP_C | 1 | Repeat sequence count
+TNC | 1 | Tri-nucleotide context
 MH | 1 | Microhomology
 KT | 1 | Forward/reverse kataegis id
-TNC | 1 | Tri-nucleotide context
 
-Somatic variants of type C>T and C>G in a TpCpN context are annotated as showing Kataegis ([Nik Zainal et al., 2012](https://www.ncbi.nlm.nih.gov/pubmed/22608084)) 
-if there are three or more mutations of that type, strand and context localised within a region with an average inter-mutation distance of 
-<= 1kb. The annotation describes the strand it was found on along with an id and is shared by grouped variants.
- 
 ### Database
 
 PURPLE can optionally persist its output to a SQL database. This is particularly useful when querying data over a cohort. 
@@ -863,11 +898,13 @@ well as rainfall plot with kataegis clusters highlighted grey:
   <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="700" alt="Somatic Rainfall">
 </p>
 
-The following diagram illustrates the clonality model of a typical sample. 
+The following diagram illustrates the clonality model of a typical sample.
+ 
 The top figure shows the histogram of somatic ploidy for all SNV and INDEL in blue. 
-Superimposed are peaks in different colours fitted from the sample as described above while the black line shows the overall fitted ploidy distribution.  
+Superimposed are peaks in different colours fitted from the sample as described above while the black line shows the overall fitted ploidy distribution. 
 Red filled peaks are below the 0.85 subclonal threshold. 
-From this we can determine the likelihood of a variant being subclonal at any given ploidy as shown in the bottom half of the figure.   
+
+We can determine the likelihood of a variant being subclonal at any given ploidy as shown in the bottom half of the figure.   
 
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
