@@ -123,7 +123,7 @@ public final class PatientReporterTestFactory {
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(0)
                 .totalReadCount(0)
                 .adjustedCopyNumber(0)

@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
@@ -78,7 +77,7 @@ public final class ReportableVariantAnalyzer {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .adjustedVAF(variant.adjustedVAF())
                 .minorAllelePloidy(variant.minorAllelePloidy())
@@ -95,7 +94,7 @@ public final class ReportableVariantAnalyzer {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .hotspot(variant.hotspot())
-                .clonality(variant.clonality())
+                .clonalLikelihood(variant.clonalLikelihood())
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .adjustedVAF(variant.adjustedVAF())
                 .minorAllelePloidy(variant.minorAllelePloidy())

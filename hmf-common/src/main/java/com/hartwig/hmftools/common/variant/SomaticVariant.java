@@ -126,5 +126,4 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     default double clonalLikelihood() {
         return 1 - subclonalLikelihood();
     }
-
 }

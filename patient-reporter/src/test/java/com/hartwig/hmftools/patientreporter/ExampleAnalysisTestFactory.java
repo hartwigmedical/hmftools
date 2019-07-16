@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -466,7 +465,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1799T>A")
                 .hgvsProteinImpact("p.Val600Glu")
                 .hotspot(Hotspot.HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(107)
                 .totalReadCount(161)
                 .adjustedCopyNumber(6)
@@ -485,7 +484,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.369_370delCG")
                 .hgvsProteinImpact("p.Gly124fs")
                 .hotspot(Hotspot.NEAR_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(44)
                 .totalReadCount(44)
                 .adjustedCopyNumber(2)
@@ -504,7 +503,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.2153C>T")
                 .hgvsProteinImpact("p.Pro718Leu")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(72)
                 .totalReadCount(107)
                 .adjustedCopyNumber(3)
@@ -523,7 +522,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .adjustedCopyNumber(4)
@@ -546,7 +545,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .adjustedCopyNumber(4)
@@ -565,7 +564,7 @@ public final class ExampleAnalysisTestFactory {
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonality(Clonality.CLONAL)
+                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .adjustedCopyNumber(4)
