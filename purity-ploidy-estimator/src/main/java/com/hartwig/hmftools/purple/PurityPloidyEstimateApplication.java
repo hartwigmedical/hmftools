@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
@@ -48,6 +50,10 @@ import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
+import com.hartwig.hmftools.common.variant.clonality.PeakModel;
+import com.hartwig.hmftools.common.variant.clonality.PeakModelFactory;
+import com.hartwig.hmftools.common.variant.clonality.PeakModelFile;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.version.VersionInfo;
@@ -189,6 +195,12 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(bestFit.fit(), copyNumbers, amberGender, cobaltGender, geneCopyNumbers);
 
+            LOGGER.info("Modelling somatic peaks");
+            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
+                    new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(
+                            allSomatics);
+            final List<PeakModel> somaticPeaks = modelSomaticPeaks(configSupplier.somaticConfig(), enrichedSomatics);
+
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
@@ -201,11 +213,13 @@ public class PurityPloidyEstimateApplication {
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
+            PeakModelFile.write(PeakModelFile.generateFilename(outputDirectory, tumorSample), somaticPeaks);
 
-            LOGGER.info("Enriching somatic variants", outputDirectory);
+            LOGGER.info("Enriching somatic variants");
             new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig()).write(purityAdjuster,
                     copyNumbers,
-                    enrichedFittedRegions);
+                    enrichedFittedRegions,
+                    somaticPeaks);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -222,9 +236,7 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Generating charts");
-            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(
-                            allSomatics);
+
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
@@ -310,7 +322,10 @@ public class PurityPloidyEstimateApplication {
             final String outputPath = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.sv.vcf.gz";
 
             LOGGER.info("Loading structural variants from {}", filePath);
-            return new PurpleStructuralVariantSupplier(commonConfig.version(), filePath, outputPath, configSupplier.refGenomeConfig().refGenome());
+            return new PurpleStructuralVariantSupplier(commonConfig.version(),
+                    filePath,
+                    outputPath,
+                    configSupplier.refGenomeConfig().refGenome());
         } else {
             return new PurpleStructuralVariantSupplier();
         }
@@ -354,4 +369,22 @@ public class PurityPloidyEstimateApplication {
     private static DatabaseAccess databaseAccess(@NotNull final DBConfig dbConfig) throws SQLException {
         return new DatabaseAccess(dbConfig.user(), dbConfig.password(), dbConfig.url());
     }
+
+    @NotNull
+    private List<PeakModel> modelSomaticPeaks(@NotNull final SomaticConfig config, @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
+        final List<ModifiableWeightedPloidy> weightedPloidies = Lists.newArrayList();
+        for (PurityAdjustedSomaticVariant enrichedSomatic : enrichedSomatics) {
+            if (Doubles.lessThan(enrichedSomatic.ploidy(), config.clonalityMaxPloidy()) && !enrichedSomatic.isFiltered()
+                    && HumanChromosome.contains(enrichedSomatic.chromosome()) && HumanChromosome.fromString(enrichedSomatic.chromosome())
+                    .isAutosome()) {
+                weightedPloidies.add(ModifiableWeightedPloidy.create()
+                        .from(enrichedSomatic)
+                        .setPloidy(enrichedSomatic.ploidy())
+                        .setWeight(1));
+            }
+        }
+
+        return new PeakModelFactory(config.clonalityMaxPloidy(), config.clonalityBinWidth()).model(weightedPloidies);
+    }
+
 }

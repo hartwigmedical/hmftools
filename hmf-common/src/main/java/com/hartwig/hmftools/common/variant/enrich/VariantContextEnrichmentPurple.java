@@ -21,20 +21,15 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
     private final SomaticRefContextEnrichment somaticRefContextEnrichment;
     private final SubclonalLikelihoodEnrichment subclonalLikelihoodEnrichment;
 
-    public VariantContextEnrichmentPurple(@NotNull final String purpleVersion, @NotNull final String tumorSample,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
+    public VariantContextEnrichmentPurple(double clonalityMaxPloidy, double clonalityBinWidth, @NotNull final String purpleVersion,
+            @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+            @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> peakModel,
             @NotNull final Consumer<VariantContext> consumer) {
-        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(tumorSample, consumer);
-        purityEnrichment =
-                new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
+        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityMaxPloidy, clonalityBinWidth, peakModel, consumer);
+        purityEnrichment = new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, consumer);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
-    }
-
-    @NotNull
-    public List<PeakModel> clonalityModel() {
-        return subclonalLikelihoodEnrichment.peakModel();
     }
 
     @Override

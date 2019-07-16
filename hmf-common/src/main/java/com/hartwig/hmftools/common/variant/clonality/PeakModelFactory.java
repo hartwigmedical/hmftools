@@ -2,9 +2,11 @@ package com.hartwig.hmftools.common.variant.clonality;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -29,11 +31,13 @@ public class PeakModelFactory {
     private final double maxPloidy;
     private final double modelWidth;
     private final WeightedPloidyHistogram preciseHistogramFactory;
+    private final Map<String, BinomialDistribution> binomialDistributionMap;
 
     public PeakModelFactory(final double maxPloidy, final double modelWidth) {
         this.modelWidth = modelWidth;
         this.maxPloidy = maxPloidy;
         this.preciseHistogramFactory = new WeightedPloidyHistogram(maxPloidy, PEAK_BIN_WIDTH);
+        this.binomialDistributionMap = Maps.newHashMap();
     }
 
     @NotNull
@@ -81,7 +85,8 @@ public class PeakModelFactory {
             double unexplainedWeight = remainingWeight / initialWeight;
 
             LOGGER.debug("Peak: {}, Offset: {}, PeakAvgWeigh: {}, Unexplained: {}",
-                    new Object[] { FORMAT.format(peak), FORMAT.format(offset), FORMAT.format(peakAverageWeight), FORMAT.format(unexplainedWeight) });
+                    new Object[] { FORMAT.format(peak), FORMAT.format(offset), FORMAT.format(peakAverageWeight),
+                            FORMAT.format(unexplainedWeight) });
 
             if (Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT)) {
                 break;
@@ -166,7 +171,9 @@ public class PeakModelFactory {
 
     double ploidyLikelihood(double ploidy, @NotNull final WeightedPloidy weighted) {
 
-        final BinomialDistribution binomialDistribution = weighted.distribution();
+        final String binomialKey = weighted.alleleReadCount() + ":" + weighted.totalReadCount();
+        final BinomialDistribution binomialDistribution = binomialDistributionMap.computeIfAbsent(binomialKey,
+                s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
 
         double lowerBoundAlleleReadCount = Math.max(0, ploidy - modelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
         int lowerBoundAlleleReadCountRounded = (int) Math.round(lowerBoundAlleleReadCount);

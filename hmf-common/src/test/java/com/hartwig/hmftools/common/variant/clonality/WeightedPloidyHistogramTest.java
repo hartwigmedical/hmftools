@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -114,7 +113,7 @@ public class WeightedPloidyHistogramTest {
                     .setWeight(1);
 
             if (Doubles.lessThan(Double.valueOf(values[0]), 10)) {
-                result.add(ploidy.setDistribution(new BinomialDistribution(ploidy.totalReadCount(), ploidy.alleleFrequency())));
+                result.add(ploidy);
             }
         }
 
@@ -125,8 +124,7 @@ public class WeightedPloidyHistogramTest {
         return ModifiableWeightedPloidy.create()
                 .setPloidy(ploidy)
                 .setAlleleReadCount(alleleReadCount)
-                .setTotalReadCount(totalReadCount)
-                .setDistribution(new BinomialDistribution(totalReadCount, 1d * alleleReadCount / totalReadCount));
+                .setTotalReadCount(totalReadCount);
     }
 
 }

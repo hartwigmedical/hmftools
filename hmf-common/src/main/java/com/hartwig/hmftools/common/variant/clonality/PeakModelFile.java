@@ -19,7 +19,7 @@ public class PeakModelFile {
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.somatic.clonality.tsv";
 
-    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + EXTENSION;
     }
 
