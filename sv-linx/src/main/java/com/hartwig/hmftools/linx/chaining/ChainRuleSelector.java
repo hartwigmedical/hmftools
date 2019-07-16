@@ -78,7 +78,13 @@ public class ChainRuleSelector
 
         for(Map.Entry<SvBreakend, List<SvLinkedPair>> entry : mSvBreakendPossibleLinks.entrySet())
         {
-            if(entry.getValue().size() > 2 || entry.getValue().isEmpty())
+            if(entry.getValue().isEmpty())
+            {
+                LOGGER.warn("breakend({}) has no possibles left, should be purged", entry.getKey().toString());
+                continue;
+            }
+
+            if(entry.getValue().size() > 2)
                 continue;
 
             final SvLinkedPair newPair;

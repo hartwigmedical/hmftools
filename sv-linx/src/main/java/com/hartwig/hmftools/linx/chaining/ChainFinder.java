@@ -1084,31 +1084,8 @@ public class ChainFinder
                     removePossibleLinks(possibleLinks, breakend);
                 }
 
-                if (mComplexDupCandidates.isEmpty())
-                {
-                    // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
-                    // such a link can happen for a complex dup around a single SV, so skip if any of these exist
-                    possibleLinks = otherSvBreakend != null && !mSvBreakendPossibleLinks.isEmpty()
-                            ? mSvBreakendPossibleLinks.get(otherSvBreakend)
-                            : null;
-
-                    if (possibleLinks != null)
-                    {
-                        final SvBreakend otherOrigBreakendAlt = otherPairBreakend.getOtherBreakend();
-
-                        if (otherOrigBreakendAlt != null)
-                        {
-                            for (SvLinkedPair pair : possibleLinks)
-                            {
-                                if (pair.hasBreakend(otherSvBreakend) && pair.hasBreakend(otherOrigBreakendAlt))
-                                {
-                                    possibleLinks.remove(pair);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
+                if(otherSvBreakend != null)
+                    removeOppositeLinks(otherSvBreakend, otherPairBreakend);
             }
 
             // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
@@ -1119,6 +1096,43 @@ public class ChainFinder
         }
     }
 
+    private void removeOppositeLinks(final SvBreakend otherSvBreakend, final SvBreakend otherPairBreakend)
+    {
+        // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
+
+        // such a link can happen for a complex dup around a single SV, so skip if any of these exist
+        if (!mComplexDupCandidates.isEmpty())
+            return;
+
+        List<SvLinkedPair> otherBeLinks = mSvBreakendPossibleLinks.get(otherSvBreakend);
+
+        if (otherBeLinks == null)
+            return;
+
+        if(otherBeLinks.isEmpty())
+        {
+            mSvBreakendPossibleLinks.remove(otherSvBreakend);
+            return;
+        }
+
+        final SvBreakend otherOrigBreakendAlt = otherPairBreakend.getOtherBreakend();
+
+        if (otherOrigBreakendAlt == null)
+            return;
+
+        for (SvLinkedPair pair : otherBeLinks)
+        {
+            if (pair.hasBreakend(otherSvBreakend) && pair.hasBreakend(otherOrigBreakendAlt))
+            {
+                otherBeLinks.remove(pair);
+
+                if(otherBeLinks.isEmpty())
+                    mSvBreakendPossibleLinks.remove(otherSvBreakend);
+
+                return;
+            }
+        }
+    }
 
     private void checkSvComplete(final SvChainState svConn)
     {
@@ -1337,13 +1351,7 @@ public class ChainFinder
                 if(alreadyLinkedBreakend(lowerBreakend))
                     continue;
 
-                List<SvLinkedPair> lowerPairs = mSvBreakendPossibleLinks.get(lowerBreakend);
-
-                if(lowerPairs == null)
-                {
-                    lowerPairs = Lists.newArrayList();
-                    mSvBreakendPossibleLinks.put(lowerBreakend, lowerPairs);
-                }
+                List<SvLinkedPair> lowerPairs = null;
 
                 final SvVarData lowerSV = lowerBreakend.getSV();
 
@@ -1395,6 +1403,12 @@ public class ChainFinder
 
                         if(copyNumbersEqual(lowerPloidy, getUnlinkedBreakendCount(upperBreakend)))
                             mAdjacentMatchingPairs.add(newPair);
+                    }
+
+                    if(lowerPairs == null)
+                    {
+                        lowerPairs = Lists.newArrayList();
+                        mSvBreakendPossibleLinks.put(lowerBreakend, lowerPairs);
                     }
 
                     lowerPairs.add(newPair);
