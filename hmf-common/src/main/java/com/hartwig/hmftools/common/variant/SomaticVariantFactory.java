@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotationFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.NoSomaticEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -207,6 +208,7 @@ public class SomaticVariantFactory {
                 .microhomology(context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY))
                 .repeatCount(context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0))
                 .repeatSequence(context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY))
+                .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .highConfidenceRegion(context.hasAttribute(HIGH_CONFIDENCE_FLAG));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);

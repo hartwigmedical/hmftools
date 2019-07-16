@@ -74,10 +74,6 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
         return hotspot() == Hotspot.HOTSPOT;
     }
 
-    default boolean isNearHotspot() {
-        return hotspot() == Hotspot.NEAR_HOTSPOT;
-    }
-
     double mappability();
 
     default boolean isDBSNP() {
@@ -124,4 +120,11 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
 
     @NotNull
     String kataegis();
+
+    double subclonalLikelihood();
+
+    default double clonalLikelihood() {
+        return 1 - subclonalLikelihood();
+    }
+
 }

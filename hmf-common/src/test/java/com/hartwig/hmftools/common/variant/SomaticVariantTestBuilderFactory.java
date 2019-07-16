@@ -44,6 +44,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
+                .subclonalLikelihood(0)
                 .mappability(0D);
     }
 

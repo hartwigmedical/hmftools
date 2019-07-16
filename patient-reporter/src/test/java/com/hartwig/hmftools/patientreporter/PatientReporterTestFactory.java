@@ -94,6 +94,7 @@ public final class PatientReporterTestFactory {
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .ploidy(0)
                 .biallelic(true)
+                .subclonalLikelihood(0)
                 .mappability(0);
     }
 

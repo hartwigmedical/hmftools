@@ -82,6 +82,7 @@ class SomaticVariantDAO {
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
+                    .subclonalLikelihood(0)
                     .build());
         }
         return variants;
@@ -179,7 +180,7 @@ class SomaticVariantDAO {
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 variant.recovered(),
-                variant.kataegis().toString(),
+                variant.kataegis(),
                 timestamp);
     }
 

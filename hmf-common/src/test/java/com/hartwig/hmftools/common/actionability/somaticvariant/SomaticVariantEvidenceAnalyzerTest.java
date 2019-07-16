@@ -86,6 +86,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
+                .subclonalLikelihood(0)
                 .build();
 
         assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());
