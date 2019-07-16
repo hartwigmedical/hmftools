@@ -122,8 +122,9 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The data on which this report is based is generated "
                 + "from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
-        div.add(createContentParagraph("The results state in these report are based on the tested tumor and blood sample."));
-        div.add(createContentParagraph("the meetonzekerheid")); //TODO: check
+        div.add(createContentParagraph("The results stated in these report are based on the tested tumor and blood sample."));
+        //TODO: DEV-812 - Add remark about meet onzekerheid
+//        div.add(createContentParagraph("the meetonzekerheid"));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
 

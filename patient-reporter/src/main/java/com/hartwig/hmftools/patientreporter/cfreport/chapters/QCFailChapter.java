@@ -167,7 +167,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
         divColumn2.add(relatedSamples());
-        divColumn2.add(measurementReliability());
+        //TODO: DEV-812 - Add remark about meet onzekerheid
+       // divColumn2.add(measurementReliability());
         divColumn2.add((questionsText()));
         return divColumn2;
     }
@@ -215,7 +216,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
         divColumn2.add(relatedSamples());
-        divColumn2.add(measurementReliability());
+        //TODO: DEV-812 - Add remark about meet onzekerheid
+       // divColumn2.add(measurementReliability());
         divColumn2.add(questionsText());
         return divColumn2;
     }
@@ -266,20 +268,21 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
         divColumn2.add(relatedSamples());
-        divColumn2.add(measurementReliability());
+        //TODO: DEV-812 - Add remark about meet onzekerheid
+      //  divColumn2.add(measurementReliability());
         divColumn2.add(questionsText());
         return divColumn2;
     }
 
     @NotNull
     private static Paragraph relatedSamples() {
-        return createContentParagraph("The results state in these report are based on the tested tumor and blood sample.");
+        return createContentParagraph("The results stated in these report are based on the tested tumor and blood sample.");
     }
 
-    @NotNull
-    private static Paragraph measurementReliability() {
-        return createContentParagraph("de meetonzekerheid"); //TODO check
-    }
+//    @NotNull
+//    private static Paragraph measurementReliability() {
+//        return createContentParagraph("de meetonzekerheid"); //TODO check
+//    }
 
     @NotNull
     private Paragraph obtainedResults() {
