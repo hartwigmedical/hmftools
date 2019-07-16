@@ -10,9 +10,12 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceDrugTypeMerger {
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceDrugTypeMerger.class);
 
     private EvidenceDrugTypeMerger() {
     }
@@ -20,9 +23,14 @@ public final class EvidenceDrugTypeMerger {
     @NotNull
     public static List<EvidenceItem> merge(List<EvidenceItem> items) {
 
-        Map<Key, List<EvidenceItem>> mapEvidence = Maps.newHashMap();
+        Map<DrugsKey, List<EvidenceItem>> mapEvidence = Maps.newHashMap();
         for (EvidenceItem item : items) {
-            mapEvidence.put(new Key(item.event(), item.scope(), item.level(), item.response(), item.drugsType()), Lists.newArrayList(item));
+            mapEvidence.put(new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType()), Lists.newArrayList(item));
+        }
+
+
+        for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
+            List<EvidenceItem> itemsForKey = entry.getValue();
         }
 
 
@@ -30,7 +38,7 @@ public final class EvidenceDrugTypeMerger {
         return evidenceItems;
     }
 
-    private static class Key {
+    private static class DrugsKey {
 
         @NotNull
         private final String event;
@@ -47,7 +55,7 @@ public final class EvidenceDrugTypeMerger {
         @NotNull
         private final String drugType;
 
-        public Key(@NotNull final String event, @NotNull final EvidenceScope match, @NotNull final EvidenceLevel level,
+        public DrugsKey(@NotNull final String event, @NotNull final EvidenceScope match, @NotNull final EvidenceLevel level,
                 @NotNull final String response, @NotNull final String drugType) {
             this.event = event;
             this.match = match;
@@ -64,8 +72,8 @@ public final class EvidenceDrugTypeMerger {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final Key key = (Key) o;
-            return Objects.equals(event, key.event);
+            final DrugsKey drugsKey = (DrugsKey) o;
+            return Objects.equals(event, drugsKey.event);
         }
 
         @Override
