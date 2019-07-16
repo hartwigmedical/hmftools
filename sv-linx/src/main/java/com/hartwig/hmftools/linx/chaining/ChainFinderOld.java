@@ -5,9 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_INFO;
-import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_VERBOSE;
-import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_WARN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -549,14 +546,8 @@ public class ChainFinderOld
                         Integer otherRepCount = mSvReplicationMap.get(otherVar);
                         if(otherRepCount != null && otherRepCount == repCount)
                         {
-                            log(LOG_TYPE_VERBOSE, String.format("pair(%s) with matching high-rep count(%s)", pair.toString(), repCount));
+                            // logInfo(LOG_TYPE_VERBOSE, String.format("pair(%s) with matching high-rep count(%s)", pair.toString(), repCount));
                             newPairs.add(pair);
-
-                            if(var.getImpliedPloidy() != otherVar.getImpliedPloidy())
-                            {
-                                log(LOG_TYPE_WARN, String.format("ploidy-match SVs(%s & %s) have diff ploidies(%d & %d)",
-                                        var.id(), otherVar.id(), var.getImpliedPloidy(), otherVar.getImpliedPloidy()));
-                            }
                         }
                     }
                 }
@@ -657,7 +648,7 @@ public class ChainFinderOld
 
                 candidatePairs.add(matchingPair);
 
-                log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f -> %.1f)",
+                LOGGER.trace(String.format("comDup(%s) ploidy(%d) matched with chain breakends(%s & %s) ploidy(%.1f -> %.1f)",
                         compDup.id(), compDupPloidy, chainBeStart.toString(), chainBeEnd.toString(),
                         chainBeStart.getSV().ploidyMin(), chainBeStart.getSV().ploidyMax()));
             }
@@ -684,7 +675,7 @@ public class ChainFinderOld
                         SvLinkedPair[] linkPair = {pairStart, pairEnd};
                         candidatePairs.add(linkPair);
 
-                        log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%d) matched with breakends(%s & %s) ploidy(%.1f -> %.1f)",
+                        LOGGER.trace(String.format("comDup(%s) ploidy(%d) matched with breakends(%s & %s) ploidy(%.1f -> %.1f)",
                                 compDup.id(), compDupPloidy, otherBreakend, otherBreakend2, nonFbVar.ploidyMin(), nonFbVar.ploidyMax()));
                         break;
                     }
@@ -826,7 +817,7 @@ public class ChainFinderOld
                         SvLinkedPair[] linkPair = {pairStart, pairEnd};
                         candidatePairs.add(linkPair);
 
-                        log(LOG_TYPE_VERBOSE, String.format("foldback(%s) ploidy(%d) matched with breakend(%s) ploidy(%.1f -> %.1f)",
+                        LOGGER.trace(String.format("foldback(%s) ploidy(%d) matched with breakend(%s) ploidy(%.1f -> %.1f)",
                                 foldback.id(), foldbackPloidy, otherBreakend, nonFbVar.ploidyMin(), nonFbVar.ploidyMax()));
                         break;
                     }
@@ -934,7 +925,7 @@ public class ChainFinderOld
 
                 if(getUnlinkedBreakendCount(otherBreakend) == 1)
                 {
-                    log(LOG_TYPE_WARN, String.format("single-option pair(%s len=%d rep=%d) clashes with pair(%s len=%d rep=%d)",
+                    LOGGER.warn(String.format("single-option pair(%s len=%d rep=%d) clashes with pair(%s len=%d rep=%d)",
                             newPair.toString(), newPair.length(), minLinkCount,
                             otherPair.toString(), otherPair.length(), otherMinLinkCount));
                 }
@@ -952,7 +943,7 @@ public class ChainFinderOld
 
             if(canAdd)
             {
-                log(LOG_TYPE_VERBOSE, String.format("single-option pair(%s) limited by breakend(%s)",
+                LOGGER.trace(String.format("single-option pair(%s) limited by breakend(%s)",
                         newPair.toString(), limitingBreakend.toString()));
                 restrictedPairs.add(newPair);
             }
@@ -1042,7 +1033,7 @@ public class ChainFinderOld
             // these high-replication SVs yielded no possible links so remove them from consideration
             for (final SvVarData var : maxRepSVs)
             {
-                log(LOG_TYPE_VERBOSE, String.format("cluster(%s) removing high-replicated SV(%s %s)",
+                LOGGER.trace(String.format("cluster(%s) removing high-replicated SV(%s %s)",
                         mClusterId, var.posId(), var.type()));
 
                 mSvReplicationMap.remove(var);
@@ -1153,7 +1144,7 @@ public class ChainFinderOld
             SvLinkedPair shortestPair = null;
             for (SvLinkedPair pair : possiblePairs)
             {
-                log(LOG_TYPE_VERBOSE, String.format("method(%s) possible pair: %s length(%s)",
+                LOGGER.trace(String.format("method(%s) possible pair: %s length(%s)",
                         mLinkReason, pair.toString(), pair.length()));
 
                 if (shortestPair == null || pair.length() < shortestPair.length())
@@ -1164,7 +1155,7 @@ public class ChainFinderOld
 
             possiblePairs.remove(shortestPair);
 
-            // log(LOG_TYPE_VERBOSE, String.format("shortest possible pair: %s length(%s)", shortestPair.toString(), shortestPair.length()));
+            // logInfo(LOG_TYPE_VERBOSE, String.format("shortest possible pair: %s length(%s)", shortestPair.toString(), shortestPair.length()));
 
             int pairRepeatCount = 1;
 
@@ -1404,7 +1395,7 @@ public class ChainFinderOld
 
                 if(!replacementFound)
                 {
-                    log(LOG_TYPE_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
+                    LOGGER.trace(String.format("skipping linked pair(%s) would close existing chain(%d)",
                             newPair.toString(), chain.id()));
 
                     if(!mSkippedPairs.contains(newPair))
@@ -1905,7 +1896,7 @@ public class ChainFinderOld
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {
                             // this lower breakend cannot match with anything further upstream
-                            log(LOG_TYPE_VERBOSE, String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
+                            LOGGER.trace(String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
                                     i, lowerBreakend.toString(), j, upperBreakend.toString(), clusterAP));
 
                             break;
@@ -1968,13 +1959,13 @@ public class ChainFinderOld
                 {
                     if(otherSV == higherPloidyBreakend.getSV())
                     {
-                        log(LOG_TYPE_INFO, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
+                        LOGGER.debug(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
                                 var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(), higherPloidyBreakend.getSV().id(),
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
                     }
                     else
                     {
-                        log(LOG_TYPE_INFO, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
+                        LOGGER.debug(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
                                 var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(),
                                 otherSV.id(), otherSV.ploidyMin(), otherSV.ploidyMax(), higherPloidyBreakend.getSV().id(),
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
@@ -2145,19 +2136,6 @@ public class ChainFinderOld
         }
     }
 
-
-
-    private void log(int level, final String message)
-    {
-        if(level >= LOG_TYPE_VERBOSE && !mLogVerbose)
-            return;
-
-        if(level >= LOG_TYPE_INFO && !LOGGER.isDebugEnabled())
-            return;
-
-        LOGGER.debug(message);
-    }
-
     // old chaining methods
     private List<SvLinkedPair> findFoldbackPairs_old()
     {
@@ -2250,7 +2228,7 @@ public class ChainFinderOld
                 if(endsMatchedOnOtherVarStart < 2 && endsMatchedOnOtherVarEnd < 2)
                     continue;
 
-                log(LOG_TYPE_VERBOSE, String.format("SV(%s) ploidy(%d) foldback dual links: start(links=%d maxLinks=%d matched=%d) start(links=%d maxLinks=%d matched=%d)",
+                LOGGER.trace(String.format("SV(%s) ploidy(%d) foldback dual links: start(links=%d maxLinks=%d matched=%d) start(links=%d maxLinks=%d matched=%d)",
                         var.id(), varPloidy, startLinks.size(), maxLinkOnOtherVarStart, endsMatchedOnOtherVarStart,
                         endLinks.size(), maxLinkOnOtherVarEnd, endsMatchedOnOtherVarEnd));
 
@@ -2513,7 +2491,7 @@ public class ChainFinderOld
                 if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                 {
                     // this lower breakend cannot match with anything further upstream
-                    log(LOG_TYPE_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
+                    logInfo(LOG_TYPE_VERBOSE, String.format("breakend(%d: %s) limited by other(%d: %s) with clusterAP(%.2f)",
                             getClusterChrBreakendIndex(breakend), breakend.toString(), index, otherBreakend.toString(), clusterAP));
 
                     lastIndexValid = false;
@@ -2764,7 +2742,7 @@ public class ChainFinderOld
 
                 if(!replacementFound)
                 {
-                    log(LOG_TYPE_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
+                    logInfo(LOG_TYPE_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
                             newPair.toString(), chain.id()));
 
                     if(!mSkippedPairs.contains(newPair))

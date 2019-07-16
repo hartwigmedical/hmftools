@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_VERBOSE;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ADJACENT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.CHAIN_SPLIT;
@@ -16,8 +15,6 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MAX;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_OVERLAP;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.SINGLE_OPTION;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_COMPLEX_DUP;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
@@ -33,6 +30,9 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ChainRuleSelector
 {
     private ChainFinder mChainFinder;
@@ -46,6 +46,8 @@ public class ChainRuleSelector
     private final List<SvLinkedPair> mAdjacentMatchingPairs;
     private final List<SvLinkedPair> mAdjacentPairs;
     private final List<SvChain> mChains;
+
+    private static final Logger LOGGER = LogManager.getLogger(ChainRuleSelector.class);
 
     public ChainRuleSelector(
             final ChainFinder chainFinder,
@@ -284,8 +286,8 @@ public class ChainRuleSelector
 
                     newProposedLinks.add(proposedLink);
 
-                    mChainFinder.log(LOG_TYPE_VERBOSE, String.format("foldback(%s) ploidy(%s) matched with breakend(%s) ploidy(%s)",
-                            foldback.id(), formatPloidy(foldbackPloidy), otherBreakend, formatPloidy(nonFoldbackPloidy)));
+                    LOGGER.trace("foldback({}) ploidy({}) matched with breakend({}) ploidy({})",
+                            foldback.id(), formatPloidy(foldbackPloidy), otherBreakend, formatPloidy(nonFoldbackPloidy));
 
                     break;
                 }
@@ -376,9 +378,9 @@ public class ChainRuleSelector
 
                 newProposedLinks.add(proposedLink);
 
-                mChainFinder.log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%s) matched with chain breakends(%s & %s) ploidy(%s)",
+                LOGGER.trace("comDup({}) ploidy({}) matched with chain breakends({} & {}) ploidy({})",
                         compDup.id(), formatPloidy(compDupPloidy),
-                        chainBeStart.toString(), chainBeEnd.toString(), formatPloidy(chain.ploidy())));
+                        chainBeStart.toString(), chainBeEnd.toString(), formatPloidy(chain.ploidy()));
 
                 /*
                 mDiagnostics.logCsv("COMP_DUP", compDup,
@@ -426,9 +428,9 @@ public class ChainRuleSelector
 
                         newProposedLinks.add(proposedLink);
 
-                        mChainFinder.log(LOG_TYPE_VERBOSE, String.format("comDup(%s) ploidy(%s) matched with breakends(%s & %s) ploidy(%s & %s)",
+                        LOGGER.trace("comDup({}) ploidy({}) matched with breakends({} & {}) ploidy({} & {})",
                                 compDup.id(), formatPloidy(compDupPloidy),
-                                otherBreakend, otherBreakend2, formatPloidy(otherBreakendPloidy), formatPloidy(otherBreakendPloidy2)));
+                                otherBreakend, otherBreakend2, formatPloidy(otherBreakendPloidy), formatPloidy(otherBreakendPloidy2));
                     }
 
                     break;
@@ -486,8 +488,8 @@ public class ChainRuleSelector
                 if(proposedLinks.stream().map(x -> x.Links.get(0)).anyMatch(y -> y == pair))
                     continue;
 
-                mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) of foldbacks with ploidy(%s & %s)",
-                        pair.toString(), formatPloidy(foldbackPloidy), formatPloidy(otherBreakendPloidy)));
+                LOGGER.trace("pair({}) of foldbacks with ploidy({} & {})",
+                        pair.toString(), formatPloidy(foldbackPloidy), formatPloidy(otherBreakendPloidy));
 
                 ProposedLinks proposedLink = new ProposedLinks(pair, FOLDBACK);
                 proposedLink.addBreakendPloidies(breakend, foldbackPloidy, otherBreakend, otherBreakendPloidy);
@@ -564,8 +566,8 @@ public class ChainRuleSelector
                         continue;
                     }
 
-                    mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) with {} ploidy(%s & %s)",
-                            pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
+                    LOGGER.trace("pair({}) with {} ploidy({} & {})",
+                            pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
 
                     ProposedLinks proposedLink = new ProposedLinks(pair, PLOIDY_MATCH);
                     proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
@@ -745,8 +747,8 @@ public class ChainRuleSelector
 
                     currentMaxPloidy = max(minPairPloidy, currentMaxPloidy);
 
-                    mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) with max ploidy(%s & %s)",
-                            pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
+                    LOGGER.trace("pair({}) with max ploidy({} & {})",
+                            pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
 
                     ProposedLinks proposedLink = new ProposedLinks(pair, PLOIDY_MAX);
                     proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
@@ -819,8 +821,8 @@ public class ChainRuleSelector
                         shortestLink = new ProposedLinks(pair, NEAREST);
                         shortestLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
 
-                        mChainFinder.log(LOG_TYPE_VERBOSE, String.format("pair(%s) shortest ploidy(%s & %s)",
-                                pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy)));
+                        LOGGER.trace("pair({}) shortest ploidy({} & {})",
+                                pair.toString(), formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
                     }
                 }
             }

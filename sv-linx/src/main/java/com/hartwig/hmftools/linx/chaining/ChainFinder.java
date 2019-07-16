@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_INFO;
-import static com.hartwig.hmftools.linx.chaining.ChainDiagnostics.LOG_TYPE_VERBOSE;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
@@ -26,6 +24,8 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
+import static org.apache.logging.log4j.Level.TRACE;
+
 import java.util.List;
 import java.util.Map;
 
@@ -37,8 +37,10 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 /* ChainFinder - forms one or more chains from the SVs in a cluster
 
@@ -135,6 +137,7 @@ public class ChainFinder
     private int mLinkIndex; // incrementing value for each link added to any chain
     private boolean mIsValid;
     private boolean mLogVerbose;
+    private Level mLogLevel;
     private boolean mRunValidation;
     private boolean mUseAllelePloidies;
 
@@ -185,6 +188,7 @@ public class ChainFinder
 
         mHasReplication = false;
         mLogVerbose = false;
+        mLogLevel = LOGGER.getLevel();
         mRunValidation = false;
         mIsValid = true;
         mPairSkipped = false;
@@ -337,15 +341,6 @@ public class ChainFinder
             mOldFinder.initialise(cluster, svList);
     }
 
-    public void setLogVerbose(boolean toggle)
-    {
-        mLogVerbose = toggle;
-        setRunValidation(toggle);
-
-        if(mUseOld)
-            mOldFinder.setLogVerbose(toggle);
-    }
-
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
     public void setUseAllelePloidies(boolean toggle) { mUseAllelePloidies = toggle; }
 
@@ -373,6 +368,8 @@ public class ChainFinder
                     mClusterId, mAssembledLinks.size(), mSvList.size());
         }
 
+        enableLogVerbose();
+
         mClusterPloidyLimits.initialise(mClusterId, mChrBreakendMap);
 
         buildChains(assembledLinksOnly);
@@ -384,6 +381,8 @@ public class ChainFinder
         // mReplicatedSVs
 
         mDiagnostics.chainingComplete();
+
+        disableLogVerbose();
 
         if(!mIsValid)
         {
@@ -800,8 +799,8 @@ public class ChainFinder
                     }
                     else
                     {
-                        log(LOG_TYPE_VERBOSE, String.format("skipping linked pair(%s) would close existing chain(%d)",
-                                newPair.toString(), chain.id()));
+                        LOGGER.trace("skipping linked pair({}) would close existing chain({})",
+                                newPair.toString(), chain.id());
 
                         if (!mSkippedPairs.contains(newPair))
                         {
@@ -1125,7 +1124,7 @@ public class ChainFinder
     {
         if(svConn.breakendExhausted(true) && (svConn.SV.isNullBreakend() || svConn.breakendExhausted(false)))
         {
-            log(LOG_TYPE_VERBOSE, String.format("SV(%s) both breakends exhausted", svConn.toString()));
+            LOGGER.trace("SV({}) both breakends exhausted", svConn.toString());
             mSvConnectionsMap.remove(svConn.SV);
             mSvCompletedConnections.add(svConn);
         }
@@ -1432,8 +1431,8 @@ public class ChainFinder
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {
                             // this lower breakend cannot match with anything further upstream
-                            log(LOG_TYPE_VERBOSE, String.format("breakends lower(%d: %s) limited at upper(%d: %s) with clusterAP(%.2f)",
-                                    i, lowerBreakend.toString(), j, upperBreakend.toString(), clusterAP));
+                            LOGGER.trace("breakends lower({}: {}) limited at upper({}: {}) with clusterAP({})",
+                                    i, lowerBreakend.toString(), j, upperBreakend.toString(), formatPloidy(clusterAP));
 
                             break;
                         }
@@ -1495,13 +1494,13 @@ public class ChainFinder
                 {
                     if(otherSV == higherPloidyBreakend.getSV())
                     {
-                        log(LOG_TYPE_INFO, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
+                        logInfo(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
                                 var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(), higherPloidyBreakend.getSV().id(),
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
                     }
                     else
                     {
-                        log(LOG_TYPE_INFO, String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
+                        logInfo(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
                                 var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(),
                                 otherSV.id(), otherSV.ploidyMin(), otherSV.ploidyMax(), higherPloidyBreakend.getSV().id(),
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
@@ -1716,20 +1715,37 @@ public class ChainFinder
         }
     }
 
-    protected void log(int level, final String message)
+    protected void logInfo(final String message)
     {
-        if(level >= LOG_TYPE_VERBOSE && !mLogVerbose)
-            return;
-
-        if(level >= LOG_TYPE_INFO && !LOGGER.isDebugEnabled())
-            return;
-
-        if(level <= LOG_TYPE_INFO)
-        {
-            mDiagnostics.addMessage(level, message);
-        }
-
+        mDiagnostics.addMessage(message);
         LOGGER.debug(message);
+    }
+
+    public void setLogVerbose(boolean toggle)
+    {
+        mLogVerbose = toggle;
+        setRunValidation(toggle);
+
+        if(mUseOld)
+            mOldFinder.setLogVerbose(toggle);
+    }
+
+    private void enableLogVerbose()
+    {
+        if(!mLogVerbose)
+            return;
+
+        mLogLevel = LOGGER.getLevel();
+        Configurator.setRootLevel(TRACE);
+    }
+
+    private void disableLogVerbose()
+    {
+        if(!mLogVerbose)
+            return;
+
+        // restore logging
+        Configurator.setRootLevel(mLogLevel);
     }
 
 }

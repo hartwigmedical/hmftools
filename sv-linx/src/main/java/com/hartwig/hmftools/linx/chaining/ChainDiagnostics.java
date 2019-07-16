@@ -46,11 +46,6 @@ public class ChainDiagnostics
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvLinkedPair> mUniquePairs;
 
-    public static final int LOG_TYPE_ERROR = 0;
-    public static final int LOG_TYPE_WARN = 1;
-    public static final int LOG_TYPE_INFO = 2;
-    public static final int LOG_TYPE_VERBOSE = 3;
-
     private static final Logger LOGGER = LogManager.getLogger(ChainDiagnostics.class);
 
     public ChainDiagnostics(final Map<SvVarData,SvChainState> svConnMap, final List<SvChainState> svCompleteConns,
@@ -112,23 +107,9 @@ public class ChainDiagnostics
         mInitialComplexDup.addAll(complexDups);
     }
 
-    private static String logTypeStr(int type)
+    public void addMessage(final String msg)
     {
-        switch(type)
-        {
-            case LOG_TYPE_ERROR: return "Error";
-            case LOG_TYPE_WARN: return "Warn";
-            case LOG_TYPE_INFO: return "Info";
-            default: return "Verbose";
-        }
-    }
-
-    public void addMessage(int level, final String msg)
-    {
-        if(level <= LOG_TYPE_WARN)
-            ++mWarnings;
-
-        mLogMessages.add(String.format("%s: %s", logTypeStr(level), msg));
+        mLogMessages.add(String.format("INFO: %s", msg));
     }
 
     public void diagnoseChains()
@@ -220,7 +201,7 @@ public class ChainDiagnostics
         if(mMaxClusterSize == 0)
             return;
 
-        LOGGER.info("CHAIN_DIAG: {},{},{},{}", mSampleId, mClusterId, var.id(), otherInfo);
+        LOGGER.info("CHAIN_DIAG: {},{},{},{},{}", type, mSampleId, mClusterId, var.id(), otherInfo);
     }
 
     public void chainingComplete()

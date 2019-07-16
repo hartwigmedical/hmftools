@@ -149,7 +149,7 @@ public class ChainingComplexTest
         // simple chain with replicated section: centromere - A - B - C - D - DUP - B - C - D - E - telomere,
         // where D is a complex DUP around the section B - C - D
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        tester.logVerbose(false);
 
         final SvVarData varA = createTestSv("1", "1", "1", 1000,5000, 1, 1, INV, 1);
         final SvVarData varB = createTestSv("2", "1", "1", 4000,9000, -1, 1, DUP, 2);
