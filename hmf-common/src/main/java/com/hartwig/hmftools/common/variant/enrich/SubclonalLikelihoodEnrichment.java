@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.variant.clonality.SubclonalLikelihoodFactory;
 import com.hartwig.hmftools.common.variant.filter.PassingFilter;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -27,8 +25,6 @@ import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
-
-    private static final Logger LOGGER = LogManager.getLogger(SubclonalLikelihoodEnrichment.class);
 
     private static final double MAX_PLOIDY = 10;
     private static final double BIN_WIDTH = 0.05;
@@ -83,7 +79,6 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
 
     @Override
     public void flush() {
-        LOGGER.info("Enriching somatics with subclonal likelihood");
         peakModel.addAll(peakModelFactory.model(ploidies));
         final List<SubclonalLikelihood> likelihoods = SubclonalLikelihoodFactory.subclonalLikelihood(BIN_WIDTH, peakModel);
 

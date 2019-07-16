@@ -73,7 +73,6 @@ public class SomaticVCF {
                 final String peakModelFilename =
                         PeakModelFile.generateFilenameForWriting(commonConfig.outputDirectory(), commonConfig.tumorSample());
                 PeakModelFile.write(peakModelFilename, enricher.clonalityModel());
-
             }
         }
     }

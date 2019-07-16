@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class PeakModelFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(PeakModelFactory.class);
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     private static final int PEAK_BIN_COUNT = 10;
     private static final double PEAK_BIN_WIDTH = 0.01;
@@ -80,10 +80,8 @@ public class PeakModelFactory {
             double remainingWeight = positiveWeight(weightedPloidies);
             double unexplainedWeight = remainingWeight / initialWeight;
 
-            LOGGER.debug("Peak: {}, PeakAvgWeigh: {}, Unexplained: {}",
-                    FORMAT.format(peak),
-                    FORMAT.format(peakAverageWeight),
-                    FORMAT.format(unexplainedWeight));
+            LOGGER.debug("Peak: {}, Offset: {}, PeakAvgWeigh: {}, Unexplained: {}",
+                    new Object[] { FORMAT.format(peak), FORMAT.format(offset), FORMAT.format(peakAverageWeight), FORMAT.format(unexplainedWeight) });
 
             if (Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT)) {
                 break;
@@ -93,7 +91,9 @@ public class PeakModelFactory {
         // Scale results
         double totalModelWeight = peakModel.stream().filter(PeakModel::isValid).mapToDouble(PeakModel::bucketWeight).sum();
         double weightScalingFactor = initialWeight / totalModelWeight;
-        return peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * weightScalingFactor)).collect(Collectors.toList());
+        LOGGER.debug("Weight scaling factor {}", weightScalingFactor);
+
+        return peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
     }
 
     private double positiveWeight(@NotNull final List<? extends WeightedPloidy> weightedPloidies) {

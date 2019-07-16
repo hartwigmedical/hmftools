@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
@@ -112,7 +113,9 @@ public class WeightedPloidyHistogramTest {
                     .setTotalReadCount(Integer.valueOf(values[2]))
                     .setWeight(1);
 
-            result.add(ploidy.setDistribution(new BinomialDistribution(ploidy.totalReadCount(), ploidy.alleleFrequency())));
+            if (Doubles.lessThan(Double.valueOf(values[0]), 10)) {
+                result.add(ploidy.setDistribution(new BinomialDistribution(ploidy.totalReadCount(), ploidy.alleleFrequency())));
+            }
         }
 
         return result;

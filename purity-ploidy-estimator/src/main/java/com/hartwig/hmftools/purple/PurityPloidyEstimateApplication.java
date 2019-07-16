@@ -200,8 +200,9 @@ public class PurityPloidyEstimateApplication {
                     germlineDeletions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
-
             structuralVariants.write(purityAdjuster, copyNumbers);
+
+            LOGGER.info("Enriching somatic variants", outputDirectory);
             new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig()).write(purityAdjuster,
                     copyNumbers,
                     enrichedFittedRegions);
