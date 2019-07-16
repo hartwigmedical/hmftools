@@ -285,6 +285,11 @@ public class ChainPloidyLimits
         if(!data1.Valid || !data2.Valid)
             return new PloidyCalcData(0, 0, false);
 
+        if(data1.PloidyUncertainty == 0)
+            return new PloidyCalcData(data1.PloidyEstimate, 0, true);
+        else if(data2.PloidyUncertainty == 0)
+            return new PloidyCalcData(data2.PloidyEstimate, 0, true);
+
         double uncertInvSqrd1 = 1 / pow(data1.PloidyUncertainty, 2);
         double uncertInvSqrd2 = 1 / pow(data2.PloidyUncertainty, 2);
 

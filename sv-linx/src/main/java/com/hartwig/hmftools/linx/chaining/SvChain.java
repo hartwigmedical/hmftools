@@ -59,20 +59,20 @@ public class SvChain {
 
     public void addLink(final SvLinkedPair pair, boolean addToStart)
     {
+        if(!mSvList.contains(pair.first()))
+            mSvList.add(pair.first());
+
+        if(!mSvList.contains(pair.second()))
+            mSvList.add(pair.second());
+
         if(mLinkedPairs.isEmpty())
         {
             mLinkedPairs.add(pair);
-
-            mSvList.add(pair.first());
-
-            if(!mSvList.contains(pair.second()))
-                mSvList.add(pair.second());
-
             return;
         }
 
-        if(mLinkedPairs.contains(pair))
-            return;
+        // if(mLinkedPairs.contains(pair)) // can legitimately occur when reconciling chains
+        //    return;
 
         // check ordering and switch if required so that the 'first' SV always links to the preceding link and vice versa
         if((addToStart && pair.second() != mLinkedPairs.get(0).first())
@@ -85,63 +85,6 @@ public class SvChain {
             mLinkedPairs.add(0, pair); // insert at front
         else
             mLinkedPairs.add(pair);
-
-        final SvVarData first = pair.first();
-        final SvVarData second = pair.second();
-
-        boolean containsFirst = mSvList.contains(first);
-        boolean containsSecond = mSvList.contains(second);
-        boolean sameSV = (first == second);
-
-        if(mSvList.isEmpty())
-        {
-            LOGGER.error("invalid empty list");
-            return;
-        }
-
-        // it's possible for the list to only contain a single SV (if it's a DM DUP)
-        int lastIndex = mSvList.size() - 1;
-        int secondLastIndex = mSvList.size() >= 2 ? mSvList.size() - 2 : 0;
-        int secondIndex = mSvList.size() >= 2 ? 1 : 0;
-
-        if(containsFirst && containsSecond && !sameSV)
-        {
-            // check that these SVs are at the start and end, otherwise the new link is invalid
-            if((mSvList.get(0) == first && mSvList.get(lastIndex) != second) || (mSvList.get(0) == second && mSvList.get(lastIndex) != first))
-            {
-                LOGGER.error("cannot add new pair: {}", pair.toString());
-                return;
-            }
-
-            // no need to add an SV twice (ie to both start and end)
-            mIsClosedLoop = true;
-        }
-        else
-        {
-            if (addToStart)
-            {
-                if (mSvList.get(0) == first || mSvList.get(secondIndex) == first)
-                {
-                    // second SV is the new one here
-                    mSvList.add(0, second);
-                }
-                else
-                {
-                    mSvList.add(0, first);
-               }
-            }
-            else
-            {
-                if (mSvList.get(secondLastIndex) == first || mSvList.get(lastIndex) == first)
-                {
-                    mSvList.add(second);
-                }
-                else
-                {
-                    mSvList.add(first);
-                }
-            }
-        }
     }
 
     public void addLink(final SvLinkedPair pair, int index)
@@ -161,15 +104,15 @@ public class SvChain {
     public double ploidy() { return mPloidy; }
     public double ploidyUncertainty() { return mPloidyUncertainty; }
 
-    public SvVarData getChainEndSV(boolean isFirst)
+    public SvVarData getChainEndSV(boolean isStart)
     {
-        if(mSvList.isEmpty())
+        if(mLinkedPairs.isEmpty())
             return null;
 
-        if (isFirst)
-            return mSvList.get(0);
+        if(isStart)
+            return mLinkedPairs.get(0).first();
         else
-            return mSvList.get(mSvList.size() - 1);
+            return mLinkedPairs.get(mLinkedPairs.size() - 1).second();
     }
 
     public SvVarData getFirstSV() { return getChainEndSV(true); }
@@ -195,11 +138,6 @@ public class SvChain {
     public final SvBreakend getOpenBreakend(boolean isStart)
     {
         return isStart ? getFirstSV().getBreakend(firstLinkOpenOnStart()) : getLastSV().getBreakend(lastLinkOpenOnStart());
-    }
-
-    public boolean isClosedLoop()
-    {
-        return mIsClosedLoop || (mSvList.size() == 1 && mSvList.get(0).type() == DUP);
     }
 
     public boolean isConsistent()
@@ -245,7 +183,36 @@ public class SvChain {
 
     public boolean linkWouldCloseChain(final SvLinkedPair pair)
     {
-        return canAddLinkedPairToStart(pair) && canAddLinkedPairToEnd(pair);
+        final SvBreakend chainStart = getOpenBreakend(true);
+        final SvBreakend chainEnd = getOpenBreakend(false);
+
+        if(pair.firstBreakend() == chainStart && pair.secondBreakend() == chainEnd)
+            return true;
+        else if(pair.firstBreakend() == chainEnd && pair.secondBreakend() == chainStart)
+            return true;
+        else
+            return false;
+    }
+
+    public boolean isClosedLoop()
+    {
+        return mIsClosedLoop || (mSvList.size() == 1 && mSvList.get(0).type() == DUP);
+    }
+
+    public void closeChain()
+    {
+        final SvBreakend chainStart = getOpenBreakend(true);
+        final SvBreakend chainEnd = getOpenBreakend(false);
+
+        if(!chainStart.chromosome().equals(chainEnd.chromosome()))
+        {
+            LOGGER.error("chain({}) cannot close chain with ends: {} & {}",
+                    mId, chainStart.toString(), chainEnd.toString());
+            return;
+        }
+
+        mLinkedPairs.add(SvLinkedPair.from(chainEnd, chainStart));
+        mIsClosedLoop = true;
     }
 
     public void foldbackChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)
@@ -277,7 +244,9 @@ public class SvChain {
             for(int index = 0; index < linkCount; ++index)
             {
                 final SvLinkedPair pair = mLinkedPairs.get(2 + index * 2);
-                addLink(SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend()), true);
+                final SvLinkedPair newPair = SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend());
+                newPair.setLinkReason(pair.getLinkReason(), pair.getLinkIndex());
+                addLink(newPair, true);
             }
         }
         else
@@ -289,7 +258,9 @@ public class SvChain {
             for(int index = linkCount - 1; index >= 0; --index)
             {
                 final SvLinkedPair pair = mLinkedPairs.get(index);
-                addLink(SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend()), false);
+                final SvLinkedPair newPair = SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend());
+                newPair.setLinkReason(pair.getLinkReason(), pair.getLinkIndex());
+                addLink(newPair, false);
             }
         }
     }
@@ -323,7 +294,9 @@ public class SvChain {
         for(int index = 0; index < linkCount; ++index)
         {
             final SvLinkedPair pair = mLinkedPairs.get(index);
-            addLink(SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend()), false);
+            final SvLinkedPair newPair = SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend());
+            newPair.setLinkReason(pair.getLinkReason(), pair.getLinkIndex());
+            addLink(newPair, false);
         }
     }
 

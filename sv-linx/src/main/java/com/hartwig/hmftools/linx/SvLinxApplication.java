@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.setSvGeneData;
-import static com.hartwig.hmftools.linx.types.LinxConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.types.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.types.SvVarData;

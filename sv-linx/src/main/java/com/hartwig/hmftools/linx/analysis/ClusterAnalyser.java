@@ -71,7 +71,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.types.LinxConfig;
+import com.hartwig.hmftools.linx.LinxConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.types;
+package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
@@ -175,7 +175,7 @@ public class LinxConfig
         LogVerbose = false;
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
-        ChainingMethod = CHAIN_METHOD_OLD;
+        ChainingMethod = CHAIN_METHOD_NEW;
     }
 
     public static void addCmdLineArgs(Options options)

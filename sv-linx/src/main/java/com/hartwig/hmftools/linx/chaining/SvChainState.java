@@ -30,6 +30,8 @@ public class SvChainState
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
 
+    private static final double EXHAUSTED_PLOIDY_LEVEL = 0.2;
+
     public SvChainState(final SvVarData var, boolean singlePloidy)
     {
         SV = var;
@@ -59,17 +61,19 @@ public class SvChainState
     public double breakendCount(int se) { return mBreakendCount[se]; }
     public double breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
 
+    public boolean breakendExhausted(int se) { return unlinked(se) <= EXHAUSTED_PLOIDY_LEVEL; }
+    public boolean breakendExhausted(boolean isStart) { return unlinked(isStart) <= EXHAUSTED_PLOIDY_LEVEL; }
+
+    public double unlinked() { return max(Ploidy - curentCount(), 0); }
+    public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
+    public double unlinked(int se) { return max(Ploidy - mBreakendCount[se],0); }
+
     public double minUnlinked() { return max(MinPloidy - curentCount(), 0); }
     public double maxUnlinked() { return max(MaxPloidy - curentCount(), 0); }
-    public double unlinked() { return max(Ploidy - curentCount(), 0); }
-
-    public double minUnlinked(boolean isStart) { return minUnlinked(seIndex(isStart)); }
-    public double maxUnlinked(boolean isStart) { return maxUnlinked(seIndex(isStart)); }
-    public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
-
     public double minUnlinked(int se) { return max(MinPloidy - mBreakendCount[se], 0); }
     public double maxUnlinked(int se) { return max(MaxPloidy - mBreakendCount[se],0); }
-    public double unlinked(int se) { return max(Ploidy - mBreakendCount[se],0); }
+    public double minUnlinked(boolean isStart) { return minUnlinked(seIndex(isStart)); }
+    public double maxUnlinked(boolean isStart) { return maxUnlinked(seIndex(isStart)); }
 
     public final List<SvBreakend> getConnections(boolean isStart) { return isStart ? mConnectionsStart : mConnectionsEnd; }
     public int uniqueConnections(boolean isStart) { return isStart ? mConnectionsStart.size() : mConnectionsEnd.size(); }

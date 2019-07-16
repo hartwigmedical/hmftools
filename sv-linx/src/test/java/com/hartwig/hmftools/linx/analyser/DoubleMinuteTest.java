@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DoubleMinuteTest
@@ -54,6 +55,7 @@ public class DoubleMinuteTest
         assertTrue(cluster.getChains().get(0).isClosedLoop());
     }
 
+    @Ignore
     @Test
     public void testChainedDM()
     {
@@ -85,6 +87,7 @@ public class DoubleMinuteTest
         // assertTrue(cluster.getChains().get(0).isClosedLoop());
     }
 
+    @Ignore
     @Test
     public void testChainedDMWithMinors()
     {

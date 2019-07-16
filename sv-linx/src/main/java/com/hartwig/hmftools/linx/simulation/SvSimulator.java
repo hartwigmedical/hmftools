@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.simulation;
 
-import static com.hartwig.hmftools.linx.types.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.types.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

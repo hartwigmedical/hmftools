@@ -25,10 +25,10 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_SHORT_INV;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.reportGeneOverlaps;
-import static com.hartwig.hmftools.linx.types.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.types.LinxConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.types.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

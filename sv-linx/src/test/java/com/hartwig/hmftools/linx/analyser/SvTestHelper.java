@@ -32,7 +32,7 @@ import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
-import com.hartwig.hmftools.linx.types.LinxConfig;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;

@@ -18,10 +18,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_COMPLEX_DUP;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_NONE;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -184,7 +181,7 @@ public class ChainFinder
 
         mRuleSelector = new ChainRuleSelector(this,
                 mSvBreakendPossibleLinks, mSvConnectionsMap, mSkippedPairs, mFoldbacks, mComplexDupCandidates,
-                mAdjacentPairs, mAdjacentMatchingPairs, mChains);
+                mAdjacentMatchingPairs, mAdjacentPairs, mChains);
 
         mHasReplication = false;
         mLogVerbose = false;
@@ -401,7 +398,7 @@ public class ChainFinder
         {
             if(!checkIsValid(chain))
             {
-                LOGGER.error("cluster({}) has invalid chain({})");
+                LOGGER.error("cluster({}) has invalid chain({})", mClusterId, chain.id());
                 chain.logLinks();
                 mIsValid = false;
             }
@@ -600,6 +597,7 @@ public class ChainFinder
             }
 
             proposedLinks = mRuleSelector.findPloidyMatchPairs(proposedLinks);
+            mRuleSelector.cullByPriority(proposedLinks);
             if (proposedLinks.size() == 1)
             {
                 return proposedLinks;
@@ -763,19 +761,23 @@ public class ChainFinder
 
         SvLinkedPair newPair = proposedLinks.Links.get(0);
 
-        boolean[] pairLinkedOnFirst = {false, false};
+        boolean pairLinkedOnFirst = false;
         boolean addToStart = false;
         boolean linkClosesChain = false;
         boolean matchesChainPloidy = false;
         double newSvPloidy = 0;
-        boolean[] linksExhausted = {false, false};
 
         SvChain targetChain = null;
 
         if(proposedLinks.targetChain() != null)
         {
             targetChain = proposedLinks.targetChain();
-            matchesChainPloidy = proposedLinks.ploidyMatchType() != PM_NONE;
+            matchesChainPloidy = proposedLinks.linkPloidyMatch();
+            newSvPloidy = proposedLinks.ploidy();
+        }
+        else if(proposedLinks.multiConnection())
+        {
+            // if no chain has been specified then don't search for one - this is managed by the specific rule
         }
         else
         {
@@ -787,7 +789,7 @@ public class ChainFinder
                 if (!canAddToStart && !canAddToEnd)
                     continue;
 
-                boolean couldCloseChain = canAddToStart && canAddToEnd;
+                boolean couldCloseChain = (canAddToStart && canAddToEnd) ? chain.linkWouldCloseChain(newPair) : false;
 
                 if (couldCloseChain)
                 {
@@ -816,92 +818,86 @@ public class ChainFinder
                     addToStart = canAddToStart;
                 }
 
-                boolean linkOnFirst = newPair.first() == chain.getFirstSV() || newPair.first() == chain.getLastSV();
+                pairLinkedOnFirst = newPair.first() == chain.getFirstSV() || newPair.first() == chain.getLastSV();
 
-                final SvBreakend chainBreakend = linkOnFirst ? newPair.firstBreakend() : newPair.secondBreakend();
-                final SvBreakend newBreakend = linkOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
+                final SvBreakend chainBreakend = pairLinkedOnFirst ? newPair.firstBreakend() : newPair.secondBreakend();
+                final SvBreakend newBreakend = pairLinkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
 
                 newSvPloidy = proposedLinks.breakendPloidy(newBreakend);
 
-                double expectedChainPloidy = proposedLinks.chainConnectType() != CONN_TYPE_NONE ? chain.ploidy()/2 : chain.ploidy();
-
-                // if ploidy matches, take this chain, otherwise search for a better option
-                // boolean ploidyMatched = copyNumbersEqual(chain.ploidy(), newSvPloidy)
-                //        || ploidyOverlap(chain.ploidy(), chain.ploidyUncertainty(), newSvPloidy, newBreakend.getSV().ploidyUncertainty());
-
-                boolean ploidyMatched = copyNumbersEqual(proposedLinks.breakendPloidy(chainBreakend), expectedChainPloidy);
+                // boolean ploidyMatched = copyNumbersEqual(proposedLinks.breakendPloidy(chainBreakend), chain.ploidy());
+                boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy());
 
                 // check whether a match was expected
-                if(!ploidyMatched && proposedLinks.ploidyMatchType() != PM_NONE)
+                if(!ploidyMatched && proposedLinks.linkPloidyMatch())
                     continue;
-
-                if(linkOnFirst)
-                    pairLinkedOnFirst[SE_START] = true;
-                else
-                    pairLinkedOnFirst[SE_END] = true;
 
                 targetChain = chain;
 
                 if(ploidyMatched)
                 {
                     matchesChainPloidy = true;
-                    linksExhausted[SE_START] = linksExhausted[SE_END] = true;
                     break;
-                }
-                else
-                {
-                    if(!linkOnFirst == (newSvPloidy < chain.ploidy()))
-                    {
-                        linksExhausted[SE_START] = true;
-                    }
-                    else
-                    {
-                        linksExhausted[SE_END] = true;
-                    }
                 }
             }
         }
 
         boolean isNewChain = (targetChain == null);
+        boolean reconcileChains = !isNewChain;
 
         if(!isNewChain)
         {
             // scenarios:
             // - ploidy matches - add the new link and recalculate the chain ploidy
-            // - foldback of complex dup with 2-1 ploidy match - replicate the chain accordingly and halve the chain ploidy
-            // - foldback of complex dup with chain greater than 2x the foldback or complex dup
+            // - foldback or complex dup with 2-1 ploidy match - replicate the chain accordingly and halve the chain ploidy
+            // - foldback or complex dup with chain greater than 2x the foldback or complex dup
             //      - split off the excess and then replicate and halve the remainder
+            // - foldback where the foldback itself is a chain, connecting to a single other breakend which may also be chained
+            //      - here it is not the foldback chain which needs replicating or splitting but the other one
             // - normal link with chain ploidy higher - split off the chain
             // - normal link with chain ploidy lower - only allocate the matched ploidy for the new link
-            if(!matchesChainPloidy && targetChain.ploidy() > newSvPloidy)
+            boolean requiresChainSplit = false;
+
+            if(!matchesChainPloidy)
+            {
+                if(!proposedLinks.multiConnection())
+                    requiresChainSplit = (targetChain.ploidy() > newSvPloidy);
+                else
+                    requiresChainSplit = (targetChain.ploidy() > newSvPloidy * 2);
+            }
+
+            if(requiresChainSplit)
             {
                 SvChain newChain = new SvChain(mNextChainId++);
                 mChains.add(newChain);
 
+                // copy the existing links into a new chain and set to the ploidy difference
                 for(final SvLinkedPair pair : targetChain.getLinkedPairs())
                 {
                     newChain.addLink(pair, false);
                 }
 
-                if(proposedLinks.chainConnectType() == CONN_TYPE_NONE)
+                if(!proposedLinks.multiConnection())
                 {
                     newChain.setPloidyData(targetChain.ploidy() - newSvPloidy, targetChain.ploidyUncertainty());
                     targetChain.setPloidyData(newSvPloidy, targetChain.ploidyUncertainty());
                 }
                 else if(targetChain.ploidy() > newSvPloidy * 2)
                 {
-                    // chain will have its ploidy halved anyway so just split off the excess
+                    // chain will have its ploidy halved a  nyway so just split off the excess
                     newChain.setPloidyData(targetChain.ploidy() - newSvPloidy * 2, targetChain.ploidyUncertainty());
                     targetChain.setPloidyData(newSvPloidy * 2, targetChain.ploidyUncertainty());
                 }
 
-                LOGGER.debug("new chain({}) ploidy({}) from chain({} ploidy({}) from new SV ploidy({})",
+                LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
                         newChain.id(), formatPloidy(newChain.ploidy()),
                         targetChain.id(), formatPloidy(targetChain.ploidy()), formatPloidy(newSvPloidy));
             }
 
-            if (proposedLinks.chainConnectType() == CONN_TYPE_FOLDBACK || proposedLinks.chainConnectType() == CONN_TYPE_COMPLEX_DUP)
+            if (proposedLinks.multiConnection())
             {
+                LOGGER.debug("duplicating chain({}) for multi-connect {}", targetChain.id(), proposedLinks.chainConnectType());
+
                 if(proposedLinks.chainConnectType() == CONN_TYPE_FOLDBACK)
                     targetChain.foldbackChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
                 else
@@ -913,16 +909,24 @@ public class ChainFinder
             }
             else
             {
-                for(SvLinkedPair pair : proposedLinks.Links)
+                targetChain.addLink(proposedLinks.Links.get(0), addToStart);
+
+                final SvBreakend newSvBreakend =  pairLinkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
+
+                PloidyCalcData ploidyData;
+
+                if(!proposedLinks.linkPloidyMatch())
                 {
-                    targetChain.addLink(pair, addToStart);
+                    ploidyData = calcPloidyUncertainty(
+                            new PloidyCalcData(proposedLinks.ploidy(), newSvBreakend.ploidyUncertainty()),
+                            new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
                 }
-
-                final SvBreakend newBreakend =  pairLinkedOnFirst[SE_START] ? newPair.secondBreakend() : newPair.firstBreakend();
-
-                PloidyCalcData ploidyData = calcPloidyUncertainty(
-                        new PloidyCalcData(proposedLinks.breakendPloidy(newBreakend), newBreakend.getSV().ploidyUncertainty()),
-                        new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
+                else
+                {
+                    ploidyData = calcPloidyUncertainty(
+                            new PloidyCalcData(proposedLinks.breakendPloidy(newSvBreakend), newSvBreakend.ploidyUncertainty()),
+                            new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
+                }
 
                 targetChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
             }
@@ -932,42 +936,71 @@ public class ChainFinder
             if(linkClosesChain)
                 return false; // skip this link for now
 
-            SvChain chain = new SvChain(mNextChainId++);
-            mChains.add(chain);
-
-            targetChain = chain;
-
-            for(SvLinkedPair pair : proposedLinks.Links)
+            // where more than one links is being added, they may not be able to be added to the same chain
+            // eg a chained foldback replicating another breakend - the chain reconciliation step will joing them back up
+            SvChain newChain = null;
+            for(final SvLinkedPair pair : proposedLinks.Links)
             {
-                targetChain.addLink(pair, true);
+                if(newChain != null)
+                {
+                    if (newChain.canAddLinkedPairToStart(pair))
+                    {
+                        newChain.addLink(pair, true);
+                    }
+                    else if (newChain.canAddLinkedPairToEnd(pair))
+                    {
+                        newChain.addLink(pair, false);
+                    }
+                    else
+                    {
+                        newChain = null;
+                        reconcileChains = true;
+                    }
+                }
+
+                if(newChain == null)
+                {
+                    newChain = new SvChain(mNextChainId++);
+                    mChains.add(newChain);
+                    targetChain = newChain;
+
+                    newChain.addLink(pair, true);
+
+                    PloidyCalcData ploidyData;
+
+                    if(!proposedLinks.linkPloidyMatch() || proposedLinks.multiConnection())
+                    {
+                        ploidyData = calcPloidyUncertainty(
+                                new PloidyCalcData(proposedLinks.ploidy(), newPair.first().ploidyUncertainty()),
+                                new PloidyCalcData(proposedLinks.ploidy(), newPair.second().ploidyUncertainty()));
+                    }
+                    else
+                    {
+                        ploidyData = calcPloidyUncertainty(
+                                new PloidyCalcData(proposedLinks.breakendPloidy(newPair.firstBreakend()), newPair.first().ploidyUncertainty()),
+                                new PloidyCalcData(proposedLinks.breakendPloidy(newPair.secondBreakend()), newPair.second().ploidyUncertainty()));
+                    }
+
+                    newChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
+                }
             }
-
-            PloidyCalcData ploidyData = calcPloidyUncertainty(
-                    new PloidyCalcData(proposedLinks.breakendPloidy(newPair.firstBreakend()), newPair.first().ploidyUncertainty()),
-                    new PloidyCalcData(proposedLinks.breakendPloidy(newPair.secondBreakend()), newPair.second().ploidyUncertainty()));
-
-            chain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
-
-            pairLinkedOnFirst[SE_START] = true;
-            pairLinkedOnFirst[SE_END] = true;
         }
 
         final String topRule = proposedLinks.topRule().toString();
 
         for(SvLinkedPair pair : proposedLinks.Links)
         {
-            LOGGER.debug("index({}) method({}) adding linked pair({} {} ploidy={}) to {} chain({}) ploidy({})",
-                    mLinkIndex, topRule, newPair.toString(), pair.assemblyInferredStr(), proposedLinks.ploidy(),
-                    isNewChain ? "new" : "existing",
+            LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to {} chain({}) ploidy({})",
+                    mLinkIndex, topRule, pair.toString(), proposedLinks.ploidy(), isNewChain ? "new" : "existing",
                     targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
 
             pair.setLinkReason(topRule, mLinkIndex);
-
-            registerNewLink(pair, pairLinkedOnFirst, proposedLinks);
-            ++mLinkIndex;
         }
 
-        if(!isNewChain)
+        registerNewLink(proposedLinks);
+        ++mLinkIndex;
+
+        if(reconcileChains)
         {
             // now see if any partial chains can be linked
             reconcileChains();
@@ -979,123 +1012,120 @@ public class ChainFinder
         return true;
     }
 
-    private void registerNewLink(final SvLinkedPair newPair, boolean[] pairToChain, final ProposedLinks proposedLink)
+    private void registerNewLink(final ProposedLinks proposedLink)
     {
-        for (int be = SE_START; be <= SE_END; ++be)
+        List<SvBreakend> exhaustedBreakends = Lists.newArrayList();
+
+        for(final SvLinkedPair newPair : proposedLink.Links)
         {
-            boolean isStart = isStart(be);
-
-            final SvBreakend breakend = newPair.getBreakend(isStart);
-            final SvBreakend otherPairBreakend = newPair.getOtherBreakend(breakend);
-            final SvVarData var = breakend.getSV();
-
-            SvChainState svConn = mSvConnectionsMap.get(var);
-
-            if(svConn == null || svConn.maxUnlinked(breakend.usesStart()) < MIN_PLOIDY)
+            for (int se = SE_START; se <= SE_END; ++se)
             {
-                LOGGER.error("breakend({}) connections exhausted: {}",
-                        breakend.toString(), svConn != null ? svConn.toString() : "null");
-                mIsValid = false;
-                return;
-            }
+                boolean isStart = isStart(se);
 
-            if(proposedLink.ploidyMatchType() == PM_NONE)
-            {
-                svConn.add(breakend.usesStart(), proposedLink.ploidy());
-            }
-            else
-            {
-                // the links matched so exhaust this breakend
-                svConn.add(breakend.usesStart(), svConn.unlinked(breakend.usesStart()));
-            }
+                final SvBreakend breakend = newPair.getBreakend(isStart);
 
-            svConn.addConnection(otherPairBreakend, breakend.usesStart());
+                if(exhaustedBreakends.contains(breakend))
+                    continue;
 
-            final SvBreakend otherSvBreakend = var.getBreakend(!breakend.usesStart());
+                final SvBreakend otherPairBreakend = newPair.getOtherBreakend(breakend);
+                final SvVarData var = breakend.getSV();
 
-            boolean hasUnlinkedBreakend = true;
+                SvChainState svConn = mSvConnectionsMap.get(var);
 
-            boolean svExhausted = false;
-            if(svConn.maxUnlinked(breakend.usesStart()) == 0)
-            {
-                // mUnlinkedBreakendMap.remove(origBreakend);
-                hasUnlinkedBreakend = false;
+                svConn.addConnection(otherPairBreakend, breakend.usesStart());
 
-                // LOGGER.debug("breakend({}) has no more possible links", breakend);
-
-                if(svConn.maxUnlinked(!breakend.usesStart()) == 0)
+                if (svConn == null || svConn.breakendExhausted(breakend.usesStart()))
                 {
-                    svExhausted = true;
+                    LOGGER.error("breakend({}) breakend already exhausted: {} with proposedLink({})",
+                            breakend.toString(), svConn != null ? svConn.toString() : "null", proposedLink.toString());
+                    mIsValid = false;
+                    return;
+                }
 
-                    if(var.isFoldback())
+                if (proposedLink.breakendPloidyMatched(breakend))
+                {
+                    // the links matched so exhaust this breakend
+                    svConn.add(breakend.usesStart(), svConn.unlinked(breakend.usesStart()));
+                    exhaustedBreakends.add(breakend);
+                }
+                else
+                {
+                    svConn.add(breakend.usesStart(), proposedLink.ploidy());
+                }
+
+                final SvBreakend otherSvBreakend = var.getBreakend(!breakend.usesStart());
+
+                boolean hasUnlinkedBreakend = true;
+
+                if (svConn.breakendExhausted(breakend.usesStart()))
+                {
+                    hasUnlinkedBreakend = false;
+
+                    if (svConn.breakendExhausted(!breakend.usesStart()))
                     {
-                        // remove if no other instances of this SV remain
-                        mFoldbacks.remove(var);
-                    }
-                    else if(mComplexDupCandidates.contains(var))
-                    {
-                        mComplexDupCandidates.remove(var);
+                        checkSvComplete(svConn);
+
+                        if (var.isFoldback())
+                        {
+                            // remove if no other instances of this SV remain
+                            mFoldbacks.remove(var);
+                        }
+                        else if (mComplexDupCandidates.contains(var))
+                        {
+                            mComplexDupCandidates.remove(var);
+                        }
                     }
                 }
-            }
 
-            List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
+                List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
 
-            if (possibleLinks != null && !hasUnlinkedBreakend)
-            {
-                // not more replicated breakends exist so any possible links that depend on it
-                removePossibleLinks(possibleLinks, breakend);
-            }
-
-            if(!mHasReplication)
-            {
-                // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
-                possibleLinks = otherSvBreakend != null && !mSvBreakendPossibleLinks.isEmpty()
-                        ? mSvBreakendPossibleLinks.get(otherSvBreakend)
-                        : null;
-
-                if (possibleLinks != null)
+                if (possibleLinks != null && !hasUnlinkedBreakend)
                 {
-                    final SvBreakend otherOrigBreakendAlt = otherPairBreakend.getOtherBreakend();
+                    // not more replicated breakends exist so any possible links that depend on it
+                    removePossibleLinks(possibleLinks, breakend);
+                }
 
-                    if (otherOrigBreakendAlt != null)
+                if (mComplexDupCandidates.isEmpty())
+                {
+                    // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
+                    // such a link can happen for a complex dup around a single SV, so skip if any of these exist
+                    possibleLinks = otherSvBreakend != null && !mSvBreakendPossibleLinks.isEmpty()
+                            ? mSvBreakendPossibleLinks.get(otherSvBreakend)
+                            : null;
+
+                    if (possibleLinks != null)
                     {
-                        for (SvLinkedPair pair : possibleLinks)
+                        final SvBreakend otherOrigBreakendAlt = otherPairBreakend.getOtherBreakend();
+
+                        if (otherOrigBreakendAlt != null)
                         {
-                            if (pair.hasBreakend(otherSvBreakend) && pair.hasBreakend(otherOrigBreakendAlt))
+                            for (SvLinkedPair pair : possibleLinks)
                             {
-                                possibleLinks.remove(pair);
-                                break;
+                                if (pair.hasBreakend(otherSvBreakend) && pair.hasBreakend(otherOrigBreakendAlt))
+                                {
+                                    possibleLinks.remove(pair);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
 
-            if(mHasReplication)
+            // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
+            if (!matchesExistingPair(newPair))
             {
-                // reduce replication counts for breakends which are added to a chain
-                if (pairToChain[be])
-                {
-                    checkSvComplete(svConn);
-                }
+                mUniquePairs.add(newPair);
             }
-        }
-
-        // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
-        if(!matchesExistingPair(newPair))
-        {
-            mUniquePairs.add(newPair);
         }
     }
 
-    private static final double MIN_PLOIDY = 0.2;
 
     private void checkSvComplete(final SvChainState svConn)
     {
-        if(svConn.maxUnlinked(true) < MIN_PLOIDY && (svConn.SV.isNullBreakend() || svConn.maxUnlinked(false) < MIN_PLOIDY))
+        if(svConn.breakendExhausted(true) && (svConn.SV.isNullBreakend() || svConn.breakendExhausted(false)))
         {
-            log(LOG_TYPE_VERBOSE, String.format("SV(%s) connections exhausted", svConn.toString()));
+            log(LOG_TYPE_VERBOSE, String.format("SV(%s) both breakends exhausted", svConn.toString()));
             mSvConnectionsMap.remove(svConn.SV);
             mSvCompletedConnections.add(svConn);
         }
@@ -1107,9 +1137,7 @@ public class ChainFinder
         if(svConn == null)
             return 0;
 
-        double breakendPloidy = svConn.unlinked(breakend.usesStart());
-
-        return breakendPloidy >= MIN_PLOIDY ? breakendPloidy : 0;
+        return !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
     }
 
     protected double getUnlinkedCount(final SvVarData var)
@@ -1118,7 +1146,7 @@ public class ChainFinder
         if(svConn == null)
             return 0;
 
-        if(svConn.unlinked(SE_START) < MIN_PLOIDY || svConn.unlinked(SE_END) < MIN_PLOIDY)
+        if(svConn.breakendExhausted(SE_START) || svConn.breakendExhausted(SE_END))
             return 0;
 
         return min(svConn.unlinked(SE_START), svConn.unlinked(SE_END));
@@ -1223,24 +1251,22 @@ public class ChainFinder
         return false;
     }
 
-    private void removePossibleLinks(List<SvLinkedPair> possibleLinks, SvBreakend fullyLinkedBreakend)
+    private void removePossibleLinks(List<SvLinkedPair> possibleLinks, SvBreakend exhaustedBreakend)
     {
         if(possibleLinks == null || possibleLinks.isEmpty())
             return;
-
-        final SvVarData linkedSV = fullyLinkedBreakend.getOrigSV();
-        final SvBreakend origBreakend = fullyLinkedBreakend.getOrigBreakend();
 
         int index = 0;
         while (index < possibleLinks.size())
         {
             SvLinkedPair possibleLink = possibleLinks.get(index);
-            if (possibleLink.hasBreakend(linkedSV, fullyLinkedBreakend.usesStart()))
+
+            if (possibleLink.hasBreakend(exhaustedBreakend))
             {
                 // remove this from consideration
                 possibleLinks.remove(index);
 
-                SvBreakend otherBreakend = possibleLink.getBreakend(true) == origBreakend ?
+                SvBreakend otherBreakend = possibleLink.getBreakend(true) == exhaustedBreakend ?
                         possibleLink.getBreakend(false) : possibleLink.getBreakend(true);
 
                 // and remove the pair which was cached in the other breakend's possibles list
@@ -1274,7 +1300,7 @@ public class ChainFinder
         if(possibleLinks.isEmpty())
         {
             //LOGGER.debug("breakend({}) has no more possible links", origBreakend);
-            mSvBreakendPossibleLinks.remove(origBreakend);
+            mSvBreakendPossibleLinks.remove(exhaustedBreakend);
         }
     }
 
@@ -1518,8 +1544,11 @@ public class ChainFinder
             {
                 SvChain chain2 = mChains.get(index2);
 
-                if(!copyNumbersEqual(chain1.ploidy(), chain2.ploidy()))
+                if(!copyNumbersEqual(chain1.ploidy(), chain2.ploidy())
+                && !ploidyOverlap(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty()))
+                {
                     continue;
+                }
 
                 for (int be1 = SE_START; be1 <= SE_END; ++be1)
                 {
@@ -1531,8 +1560,9 @@ public class ChainFinder
 
                         if (chain1.canAddLinkedPair(chain2.getLinkedPair(c2Start), c1Start, false))
                         {
-                            LOGGER.debug("merging chain({} links={}) with chain({} links={})",
-                                    chain1.id(), chain1.getLinkCount(), chain2.id(), chain2.getLinkCount());
+                            LOGGER.debug("merging chain({} links={}) {} to chain({} links={}) {}",
+                                    chain1.id(), chain1.getLinkCount(), c1Start ? "start" : "end",
+                                    chain2.id(), chain2.getLinkCount(), c2Start ? "start" : "end");
 
                             if(c2Start)
                             {

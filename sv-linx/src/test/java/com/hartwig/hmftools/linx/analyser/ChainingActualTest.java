@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -34,7 +35,6 @@ import org.junit.Test;
 
 public class ChainingActualTest
 {
-    @Ignore
     @Test
     public void testActualComplexChaining()
     {
@@ -57,16 +57,30 @@ public class ChainingActualTest
 
             SOLUTION:
 
-            09:16:20.469 [main] [DEBUG] chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
-            09:16:20.469 [main] [DEBUG] chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
-            09:16:20.470 [main] [DEBUG] chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
-            09:16:20.470 [main] [DEBUG] chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
-            09:16:20.470 [main] [DEBUG] chain(0) 4: pair(77 3:24565108:start & 79 3:26664498:end) TI inferred len=2099390
-            09:16:20.470 [main] [DEBUG] chain(0) 5: pair(79 3:26663922:start & 88r 3:26431918:start) TI inferred len=232004
-            09:16:20.470 [main] [DEBUG] chain(0) 6: pair(88r 6:26194040:end & 89 6:26194406:end) TI assembly len=366
-            09:16:20.470 [main] [DEBUG] chain(0) 7: pair(89 6:26194117:start & 88 6:26194040:end) TI assembly len=77
-            09:16:20.470 [main] [DEBUG] chain(0) 8: pair(88 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
-            09:16:20.470 [main] [DEBUG] chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
+            chain(0): 3_P_C - s_77_e - s_119_e - e_120_s - e_113_s - e_77_s - e_79_s - s_88_e - s_89_e - e_88_s - s_79_e - s_78_e - sgl_unclear
+            chain(0) 0: pair(77 3:24566180:end & 119 3:25400602:start) Inferred FOLDBACK length(834422) index(4)
+            chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) Assembly ASMB length(183) index(0)
+            chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) Assembly ASMB length(198) index(1)
+            chain(0) 3: pair(113 3:25401059:start & 77r 3:24566180:end) Inferred FOLDBACK length(834879) index(5)
+            chain(0) 4: pair(77r 3:24565108:start & 79r 3:26664498:end) Inferred ONLY length(2099390) index(9)
+            chain(0) 5: pair(79r 3:26663922:start & 88 3:26431918:start) Inferred FOLDBACK length(232004) index(7)
+            chain(0) 6: pair(88 6:26194040:end & 89 6:26194117:start) Assembly ASMB length(77) index(2)
+            chain(0) 7: pair(89 6:26194406:end & 88r 6:26194040:end) Assembly ASMB length(366) index(3)
+            chain(0) 8: pair(88r 3:26431918:start & 79 3:26663922:start) Inferred FOLDBACK length(232004) index(6)
+            chain(0) 9: pair(79 3:26664498:end & 78 3:25331584 SGL-on-known) Inferred ONLY length(1332914) index(8)
+
+            previously:
+
+            chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
+            chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
+            chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
+            chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
+            chain(0) 4: pair(77 3:24565108:start & 79 3:26664498:end) TI inferred len=2099390
+            chain(0) 5: pair(79 3:26663922:start & 88r 3:26431918:start) TI inferred len=232004
+            chain(0) 6: pair(88r 6:26194040:end & 89 6:26194406:end) TI assembly len=366
+            chain(0) 7: pair(89 6:26194117:start & 88 6:26194040:end) TI assembly len=77
+            chain(0) 8: pair(88 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
+            chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
          */
 
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks

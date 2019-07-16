@@ -52,7 +52,7 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.types.LinxConfig;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;

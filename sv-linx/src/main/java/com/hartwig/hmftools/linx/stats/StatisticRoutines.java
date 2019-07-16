@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.stats.GenericSampleData.SAMPLE_CAT_1_INDEX;
 import static com.hartwig.hmftools.linx.stats.GenericSampleData.SAMPLE_CAT_2_INDEX;
-import static com.hartwig.hmftools.linx.types.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.types.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.types.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
