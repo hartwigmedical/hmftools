@@ -98,8 +98,9 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
         for (final VariantContext context : buffer) {
 
             final double ploidy = context.getAttributeAsDouble(PurityEnrichment.PURPLE_PLOIDY_INFO, MAX_PLOIDY);
-            if (Doubles.lessThan(ploidy, MAX_PLOIDY)) {
-                int key = (int) Math.round(ploidy / BIN_WIDTH);
+            int key = (int) Math.round(ploidy / BIN_WIDTH);
+            if (key < subclonalLikelihoods.length) {
+
                 double variantLikelihood = Math.round(subclonalLikelihoods[key] * 1000d) / 1000d;
                 if (!Doubles.isZero(variantLikelihood)) {
                     context.getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, variantLikelihood);
