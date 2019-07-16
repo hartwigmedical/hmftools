@@ -18,4 +18,13 @@ public class SummaryFileTest {
 
         assertEquals(1, summaryModel.summaryCount());
     }
+
+    @Test
+    public void summaryFromCSVWithNewLines() throws IOException {
+
+        SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
+        String summary = summaryModel.findSummaryForSample("sample");
+
+        assertEquals(3, summary.split("\n").length);
+    }
 }
