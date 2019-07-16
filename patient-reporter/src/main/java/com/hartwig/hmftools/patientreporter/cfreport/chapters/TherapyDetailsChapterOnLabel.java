@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceItemMerger;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -79,10 +80,10 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-      //  List<EvidenceItem> mergedItems = EvidenceDrugTypeMerger.merge(evidence);
+        List<EvidenceItemMerger> mergedItems = EvidenceDrugTypeMerger.merge(evidence);
 
-        final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
-        for (EvidenceItem item : sortedEvidence) {
+        final List<EvidenceItemMerger> sortedEvidence = EvidenceItems.sort(mergedItems);
+        for (EvidenceItemMerger item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 
             contentTable.addCell(TableUtil.createContentCell(item.event()));
@@ -98,10 +99,6 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
-
-//    private static List<EvidenceItem> mergeOnDrugType(final List<EvidenceItem> evidence) {
-//
-//    }
 
     @NotNull
     private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
