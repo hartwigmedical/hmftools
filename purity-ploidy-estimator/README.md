@@ -757,7 +757,6 @@ java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleSomaticVariants \
     -tumor COLO829T \
     -purple_dir /path/to/COLO829/purple \
     -somatic_vcf /path/to/COLO829/COLO829T.purple.somatic.vcf.gz \
-    -ref_genome /path/to/Homo_sapiens.GRCh37.GATK.illumina.fasta \   
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```

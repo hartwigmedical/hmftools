@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.variants.somatic;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -22,9 +21,9 @@ final class MicrosatelliteAnalyzer {
     private MicrosatelliteAnalyzer() {
     }
 
-    static double determineMicrosatelliteIndelsPerMb(@NotNull List<EnrichedSomaticVariant> variants) {
+    static double determineMicrosatelliteIndelsPerMb(@NotNull List<SomaticVariant> variants) {
         int indelCount = 0;
-        for (EnrichedSomaticVariant variant : variants) {
+        for (SomaticVariant variant : variants) {
             if (isPassIndel(variant) && repeatContextIsRelevant(variant.repeatCount(), variant.repeatSequence())) {
                 indelCount++;
             }

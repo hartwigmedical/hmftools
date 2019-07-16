@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -27,25 +26,25 @@ public final class TsgDrivers {
     }
 
     @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final List<EnrichedSomaticVariant> variants) {
+    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants) {
         return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants);
     }
 
     @NotNull
     private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
-            @NotNull final List<EnrichedSomaticVariant> variants) {
+            @NotNull final List<SomaticVariant> variants) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         final Map<VariantType, Long> variantTypeCountsBiallelic = variantTypeCount(SomaticVariant::biallelic, variants);
         final Map<VariantType, Long> variantTypeCountsNonBiallelic = variantTypeCount(x -> !x.biallelic(), variants);
 
-        final Map<String, List<EnrichedSomaticVariant>> codingVariants = codingVariantsByGene(likelihoodsByGene.keySet(), variants);
+        final Map<String, List<SomaticVariant>> codingVariants = codingVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
             final DndsDriverGeneLikelihood likelihood = likelihoodsByGene.get(gene);
 
-            final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
+            final List<SomaticVariant> geneVariants = codingVariants.get(gene);
             driverCatalog.add(geneDriver(likelihood,
                     geneVariants,
                     variantTypeCounts,
@@ -58,7 +57,7 @@ public final class TsgDrivers {
 
     @NotNull
     static DriverCatalog geneDriver(@NotNull final DndsDriverGeneLikelihood likelihood,
-            @NotNull final List<EnrichedSomaticVariant> geneVariants, @NotNull final Map<VariantType, Long> standardCounts,
+            @NotNull final List<SomaticVariant> geneVariants, @NotNull final Map<VariantType, Long> standardCounts,
             @NotNull final Map<VariantType, Long> biallelicCounts, @NotNull final Map<VariantType, Long> nonBiallelicCounts) {
         geneVariants.sort(new TsgImpactComparator());
 

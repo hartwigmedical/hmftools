@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -27,23 +26,23 @@ public final class OncoDrivers {
     }
 
     @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final List<EnrichedSomaticVariant> variants) {
+    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants) {
         return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants);
     }
 
     @NotNull
     private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverImpactLikelihood> likelihoodsByGene,
-            @NotNull final List<EnrichedSomaticVariant> variants) {
+            @NotNull final List<SomaticVariant> variants) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
-        final Map<String, List<EnrichedSomaticVariant>> codingVariants = oncogenicVariantsByGene(likelihoodsByGene.keySet(), variants);
+        final Map<String, List<SomaticVariant>> codingVariants = oncogenicVariantsByGene(likelihoodsByGene.keySet(), variants);
 
         for (String gene : codingVariants.keySet()) {
             final DndsDriverImpactLikelihood geneMissenseLikelihood = likelihoodsByGene.get(gene);
-            final List<EnrichedSomaticVariant> geneVariants = codingVariants.get(gene);
+            final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
             driverCatalog.add(geneDriver(sampleSNVCount, gene, geneMissenseLikelihood, geneVariants));
         }
@@ -52,8 +51,8 @@ public final class OncoDrivers {
     }
 
     @NotNull
-    private static Map<String, List<EnrichedSomaticVariant>> oncogenicVariantsByGene(@NotNull final Set<String> genes,
-            @NotNull final List<EnrichedSomaticVariant> variants) {
+    private static Map<String, List<SomaticVariant>> oncogenicVariantsByGene(@NotNull final Set<String> genes,
+            @NotNull final List<SomaticVariant> variants) {
         return variants.stream()
                 .filter(x -> genes.contains(x.gene()))
                 .filter(x -> isMissense(x) || isInframeIndel(x) || x.hotspot() == Hotspot.HOTSPOT)
@@ -62,7 +61,7 @@ public final class OncoDrivers {
 
     @NotNull
     static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
-            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<EnrichedSomaticVariant> geneVariants) {
+            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<SomaticVariant> geneVariants) {
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
         long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
@@ -100,11 +99,11 @@ public final class OncoDrivers {
         return builder.driverLikelihood(driverLikelihood).build();
     }
 
-    private static boolean isMissense(@NotNull final EnrichedSomaticVariant variant) {
+    private static boolean isMissense(@NotNull final SomaticVariant variant) {
         return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
     }
 
-    private static boolean isInframeIndel(@NotNull final EnrichedSomaticVariant variant) {
+    private static boolean isInframeIndel(@NotNull final SomaticVariant variant) {
         return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE
                 && variant.repeatCount() <= MAX_REPEAT_COUNT;
     }

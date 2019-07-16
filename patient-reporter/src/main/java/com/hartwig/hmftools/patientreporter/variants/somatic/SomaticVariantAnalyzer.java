@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
@@ -41,13 +41,13 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static SomaticVariantAnalysis run(@NotNull List<EnrichedSomaticVariant> variants, @NotNull DriverGeneView driverGeneView,
+    public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull DriverGeneView driverGeneView,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
-        List<EnrichedSomaticVariant> variantsToReport =
+        List<SomaticVariant> variantsToReport =
                 variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
@@ -59,8 +59,8 @@ public final class SomaticVariantAnalyzer {
                 ReportableEvidenceItemFactory.reportableFlatListDriversOnly(evidencePerVariant, driverCatalog);
 
         // Check that all variants with high level evidence are reported (since they are in the driver catalog).
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
-            EnrichedSomaticVariant variant = entry.getKey();
+        for (Map.Entry<SomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
+            SomaticVariant variant = entry.getKey();
             if (!variantsToReport.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
                 LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
             }
@@ -69,7 +69,7 @@ public final class SomaticVariantAnalyzer {
         // Check that we miss no drivers
         for (DriverCatalog driver : driverCatalog) {
             boolean reported = false;
-            for (EnrichedSomaticVariant variant : variantsToReport) {
+            for (SomaticVariant variant : variantsToReport) {
                 if (variant.gene().equals(driver.gene())) {
                     reported = true;
                 }
@@ -88,7 +88,7 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static Predicate<EnrichedSomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
+    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
         return variant -> {
             if (variant.isFiltered()) {
                 return false;

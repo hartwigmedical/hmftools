@@ -60,7 +60,7 @@ public class SomaticVariantFactory {
         final VariantContextFilter filter = new AlwaysPassFilter();
         final SomaticEnrichment enrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, enrichment, VariantContextEnrichmentFactory.none());
+        return new SomaticVariantFactory(filter, enrichment, VariantContextEnrichmentFactory.noEnrichment());
     }
 
     @NotNull
@@ -69,12 +69,17 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
+    public static SomaticVariantFactory passOnlyInstance(@NotNull VariantContextEnrichmentFactory factory) {
+        return new SomaticVariantFactory(new PassingVariantFilter(), new NoSomaticEnrichment(), factory);
+    }
+
+    @NotNull
     public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.addAll(Arrays.asList(filters));
         final SomaticEnrichment noEnrichment = new NoSomaticEnrichment();
 
-        return new SomaticVariantFactory(filter, noEnrichment, VariantContextEnrichmentFactory.none());
+        return new SomaticVariantFactory(filter, noEnrichment, VariantContextEnrichmentFactory.noEnrichment());
     }
 
     @NotNull

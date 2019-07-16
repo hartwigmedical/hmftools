@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class SomaticVariantAnalysis {
 
     @NotNull
-    public abstract List<EnrichedSomaticVariant> variantsToReport();
+    public abstract List<SomaticVariant> variantsToReport();
 
     @NotNull
     public abstract List<EvidenceItem> evidenceItems();

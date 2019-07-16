@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -42,10 +42,10 @@ public class ReportableEvidenceItemFactoryTest {
 
     @Test
     public void selectHighDriverVariantForEvidence() {
-        EnrichedSomaticVariant variant =
+        SomaticVariant variant =
                 PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene("GENE").build();
 
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
+        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
 
         evidencePerVariant.put(variant, Lists.newArrayList(evidenceBuilder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build()));
 
@@ -59,10 +59,10 @@ public class ReportableEvidenceItemFactoryTest {
 
     @Test
     public void filterNoneHighDriverVariantsOutForEvidence() {
-        EnrichedSomaticVariant variant =
+        SomaticVariant variant =
                 PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene("GENE").build();
 
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
+        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
 
         evidencePerVariant.put(variant, Lists.newArrayList(evidenceBuilder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build()));
 

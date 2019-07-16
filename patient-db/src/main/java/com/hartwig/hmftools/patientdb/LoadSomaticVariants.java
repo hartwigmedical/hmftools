@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
@@ -97,16 +95,12 @@ public class LoadSomaticVariants {
             LOGGER.warn("Unable to retrieve purple data. Enrichment may be incomplete.");
         }
 
-        final List<EnrichedSomaticVariant> enrichedVariants =
-                variants.stream().map(x -> ImmutableEnrichedSomaticVariant.builder().from(x).build()).collect(Collectors.toList());
-
         LOGGER.info("Persisting variants to database");
-        dbAccess.writeSomaticVariants(sample, enrichedVariants);
+        dbAccess.writeSomaticVariants(sample, variants);
 
         LOGGER.info("Generating driver catalog");
         final CNADrivers cnaDrivers = new CNADrivers();
-        final List<EnrichedSomaticVariant> passingVariants =
-                enrichedVariants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
+        final List<SomaticVariant> passingVariants = variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
         final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(passingVariants);
         final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(passingVariants);
         driverCatalog.addAll(tsgCatalog);

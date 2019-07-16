@@ -6,8 +6,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -19,12 +19,12 @@ public class OncoDriversTest {
 
     private static final double UNADJUSTED_LIKELIHOOD = 0.5;
 
-    private EnrichedSomaticVariant frameshiftHotspot;
-    private EnrichedSomaticVariant frameshiftNearHotspot;
-    private EnrichedSomaticVariant inframe;
-    private EnrichedSomaticVariant invalidInframe;
-    private EnrichedSomaticVariant frameshift;
-    private EnrichedSomaticVariant missense;
+    private SomaticVariant frameshiftHotspot;
+    private SomaticVariant frameshiftNearHotspot;
+    private SomaticVariant inframe;
+    private SomaticVariant invalidInframe;
+    private SomaticVariant frameshift;
+    private SomaticVariant missense;
     private DndsDriverImpactLikelihood likelihood;
 
     private OncoDrivers oncoDrivers;
@@ -103,9 +103,9 @@ public class OncoDriversTest {
     }
 
     @NotNull
-    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, int repeatCount,
+    private static SomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, int repeatCount,
             @NotNull Hotspot hotspot) {
-        return SomaticVariantTestBuilderFactory.createEnriched()
+        return SomaticVariantTestBuilderFactory.create()
                 .type(type)
                 .canonicalCodingEffect(codingEffect)
                 .repeatCount(repeatCount)

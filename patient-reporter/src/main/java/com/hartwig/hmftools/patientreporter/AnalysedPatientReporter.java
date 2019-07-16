@@ -19,10 +19,9 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -45,8 +44,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class AnalysedPatientReporter {
 
@@ -147,21 +144,14 @@ class AnalysedPatientReporter {
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
+
+        //TODO: Once we have bumped PURPLE we can remove the REF_GENOME enrichment
+        final List<SomaticVariant> variants =
+                SomaticVariantFactory.passOnlyInstance(VariantContextEnrichmentFactory.refGenomeEnrichment(reportData.refGenomeFastaFile()))
+                        .fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        List<EnrichedSomaticVariant> enrichedSomaticVariants = enrich(variants, reportData.refGenomeFastaFile());
-
-        return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
-                reportData.driverGeneView(),
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
-    }
-
-    @NotNull
-    private static List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants,
-            @NotNull IndexedFastaSequenceFile refGenomeFastaFile) {
-        return new EnrichedSomaticVariantFactory(refGenomeFastaFile).enrich(variants);
+        return SomaticVariantAnalyzer.run(variants, reportData.driverGeneView(), reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull
