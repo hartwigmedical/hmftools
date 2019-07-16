@@ -863,6 +863,16 @@ well as rainfall plot with kataegis clusters highlighted grey:
   <img src="src/main/resources/readme/SAMPLE.variant.rainfall.png" width="700" alt="Somatic Rainfall">
 </p>
 
+The following diagram illustrates the clonality model of a typical sample. 
+The top figure shows the histogram of somatic ploidy for all SNV and INDEL in blue. 
+Superimposed are peaks in different colours fitted from the sample as described above while the black line shows the overall fitted ploidy distribution.  
+Red filled peaks are below the 0.85 subclonal threshold. 
+From this we can determine the likelihood of a variant being subclonal at any given ploidy as shown in the bottom half of the figure.   
+
+<p align="center">
+  <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
+</p>
+
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data including generation of CIRCOS diagram but excluding database writing.
