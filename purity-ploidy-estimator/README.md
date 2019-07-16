@@ -928,6 +928,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Added subclonal likelihood model and figure
   - Consistent file headers
   - Fix whole genome duplication calculation
   - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
