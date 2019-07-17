@@ -150,10 +150,7 @@ public final class PatientReporterTestFactory {
 
     @NotNull
     public static DriverGeneView createTestDriverGeneView(@NotNull String oncogene, @NotNull String tsg) {
-        return ImmutableDriverGeneView.builder()
-                .addOncoDriverGenes(oncogene)
-                .addTsgDriverGenes(tsg)
-                .build();
+        return ImmutableDriverGeneView.builder().addOncoDriverGenes(oncogene).addTsgDriverGenes(tsg).build();
     }
 
     @NotNull
@@ -161,7 +158,7 @@ public final class PatientReporterTestFactory {
         return ImmutableDriverCatalog.builder()
                 .gene(gene)
                 .chromosome("1")
-                .chromosomeBand("1p")
+                .chromosomeBand("p12")
                 .category(DriverCategory.ONCO)
                 .driver(DriverType.MUTATION)
                 .likelihoodMethod(LikelihoodMethod.NONE)
