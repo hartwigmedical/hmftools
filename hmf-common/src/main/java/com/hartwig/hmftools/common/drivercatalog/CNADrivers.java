@@ -47,8 +47,8 @@ public class CNADrivers {
         this.amplificationTargets = amplificationTargets();
         this.oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
 
-        final Map<String, String> rawMap = deletionTargets();
-        deletionBandMap = rawMap.entrySet()
+        Map<String, String> rawMap = deletionTargets();
+        this.deletionBandMap = rawMap.entrySet()
                 .stream()
                 .filter(x -> !x.getValue().equals("NA"))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
