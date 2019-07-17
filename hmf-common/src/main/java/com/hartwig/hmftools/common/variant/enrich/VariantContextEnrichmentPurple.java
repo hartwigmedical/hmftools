@@ -27,7 +27,7 @@ public class VariantContextEnrichmentPurple implements VariantContextEnrichment 
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> peakModel,
             @NotNull final Consumer<VariantContext> consumer) {
         subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityMaxPloidy, clonalityBinWidth, peakModel, consumer);
-        purityEnrichment = new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, consumer);
+        purityEnrichment = new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
     }
