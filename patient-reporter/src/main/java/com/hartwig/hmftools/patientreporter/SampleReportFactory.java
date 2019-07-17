@@ -20,17 +20,11 @@ public final class SampleReportFactory {
     }
 
     @NotNull
-    public static SampleReport fromLimsAndHospitalModel(@NotNull String tumorSample, @Nullable String refSample, @NotNull Lims lims,
+    public static SampleReport fromLimsAndHospitalModel(@NotNull String tumorSample, @NotNull String refSample, @NotNull Lims lims,
             @NotNull HospitalModel hospitalModel, @Nullable PatientTumorLocation patientTumorLocation) {
-        ImmutableSampleReport.Builder builder = ImmutableSampleReport.builder();
-
-        // Ref sample is not resolved and also not relevant when generating QC Fail reports.
-        if (refSample != null) {
-            LocalDate arrivalDateRefSample = lims.arrivalDate(refSample);
-            if (arrivalDateRefSample == null) {
-                LOGGER.warn("Could not find arrival date for ref sample: " + refSample);
-            }
-            builder.refArrivalDate(arrivalDateRefSample);
+        LocalDate arrivalDateRefSample = lims.arrivalDate(refSample);
+        if (arrivalDateRefSample == null) {
+            LOGGER.warn("Could not find arrival date for ref sample: " + refSample);
         }
 
         LocalDate arrivalDateTumorSample = lims.arrivalDate(tumorSample);
@@ -40,9 +34,10 @@ public final class SampleReportFactory {
 
         HospitalQuery hospitalQuery = hospitalModel.queryHospitalDataForSample(tumorSample);
 
-        return builder.sampleId(tumorSample)
+        return ImmutableSampleReport.builder().sampleId(tumorSample)
                 .patientTumorLocation(patientTumorLocation)
                 .refBarcode(lims.refBarcode(tumorSample))
+                .refArrivalDate(arrivalDateRefSample)
                 .tumorBarcode(lims.tumorBarcode(tumorSample))
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .purityShallowSeq(lims.purityShallowSeq(tumorSample))

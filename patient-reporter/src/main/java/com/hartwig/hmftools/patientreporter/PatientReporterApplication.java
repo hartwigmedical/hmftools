@@ -90,6 +90,7 @@ public class PatientReporterApplication {
 
         LOGGER.info("Running patient reporter v" + VERSION);
         String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
+        String refSample = cmd.getOptionValue(REF_SAMPLE);
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
@@ -97,7 +98,7 @@ public class PatientReporterApplication {
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
-            QCFailReport report = reporter.run(tumorSample, reason, cmd.getOptionValue(COMMENTS));
+            QCFailReport report = reporter.run(tumorSample, refSample, reason, cmd.getOptionValue(COMMENTS));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
@@ -186,7 +187,7 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForReportWriter(@NotNull CommandLine cmd) {
-        return valueExists(cmd, TUMOR_SAMPLE) && dirExists(cmd, OUTPUT_DIRECTORY);
+        return valueExists(cmd, TUMOR_SAMPLE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd, OUTPUT_DIRECTORY);
     }
 
     private static boolean validInputForBaseReportData(@NotNull CommandLine cmd) {
