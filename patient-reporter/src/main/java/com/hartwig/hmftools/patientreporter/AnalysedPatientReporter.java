@@ -211,7 +211,7 @@ class AnalysedPatientReporter {
     private static void printReportState(@NotNull AnalysedPatientReport report) {
         LocalDate tumorArrivalDate = report.sampleReport().tumorArrivalDate();
         String formattedTumorArrivalDate =
-                tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "?";
+                tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "N/A";
 
         LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().sampleId());
         LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);
