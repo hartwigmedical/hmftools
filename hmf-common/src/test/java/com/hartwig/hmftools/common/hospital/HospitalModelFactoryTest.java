@@ -14,7 +14,7 @@ public class HospitalModelFactoryTest {
 
     @Test
     public void canReadFromHospitalDirectory() throws IOException {
-        final HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(HOSPITAL_RESOURCE);
+        HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(HOSPITAL_RESOURCE);
 
         assertEquals(2, hospitalModel.hospitalCount());
         assertEquals(1, hospitalModel.sampleHospitalMapping().size());

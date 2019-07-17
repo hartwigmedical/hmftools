@@ -15,59 +15,60 @@ public class HospitalModelTest {
 
     @Test
     public void canDeterminePIForCPCTAndDrupAndWide() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        final HospitalData hospital = hospitalModel.hospitalPerId("01");
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
-        assertEquals("CpctPI", HospitalModel.determinePI("CPCT02010001", hospital));
-        assertEquals("DrupPI", HospitalModel.determinePI("DRUP01010001", hospital));
-        assertEquals("WidePI", HospitalModel.determinePI("WIDE01010001", hospital));
+        assertEquals("CpctPI", HospitalModel.determinePIName("CPCT02010001", hospital));
+        assertEquals("DrupPI", HospitalModel.determinePIName("DRUP01010001", hospital));
+        assertEquals("WidePI", HospitalModel.determinePIName("WIDE01010001", hospital));
 
         // Revert to CPCT PI with '*' for DRUP PI & recipients
-        final HospitalData hospital2 = hospitalModel.hospitalPerId("02");
+        HospitalData hospital2 = hospitalModel.hospitalPerId("02");
         assertNotNull(hospital2);
-        assertEquals("CpctPI2", HospitalModel.determinePI("CPCT02010001", hospital2));
-        assertEquals("CpctPI2", HospitalModel.determinePI("DRUP01010001", hospital2));
+        assertEquals("CpctPI2", HospitalModel.determinePIName("CPCT02010001", hospital2));
+        assertEquals("CpctPI2", HospitalModel.determinePIName("DRUP01010001", hospital2));
 
         assertNull(hospitalModel.hospitalPerId("03"));
     }
 
     @Test
     public void canDetermineEmailPIForCPCTAndDrupAndWide() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        final HospitalData hospital = hospitalModel.hospitalPerId("01");
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        HospitalData hospital = hospitalModel.hospitalPerId("01");
         assertNotNull(hospital);
         assertEquals("WIDE Recip", HospitalModel.determinePIEmail("WIDE01010001", hospital));
         assertEquals("CPCT Recip", HospitalModel.determinePIEmail("CPCT02010001", hospital));
         assertEquals("DRUP Recip", HospitalModel.determinePIEmail("DRUP01010001", hospital));
 
         // Revert to CPCT PI with '*' for DRUP PI & recipients
-        final HospitalData hospital2 = hospitalModel.hospitalPerId("02");
+        HospitalData hospital2 = hospitalModel.hospitalPerId("02");
         assertNotNull(hospital2);
         assertEquals("CPCT Recip2", HospitalModel.determinePIEmail("CPCT02010001", hospital2));
     }
 
     @Test
     public void extractHospitalName() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("ExtHosp1", hospitalModel.externalHospitalName("WIDE01010001"));
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("ExtHosp1", hospitalModel.queryHospitalDataForSample("WIDE01010001").hospitalName());
     }
 
     @Test
     public void extractPIName() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("WidePI", hospitalModel.PIName("WIDE01010001"));
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("WidePI", hospitalModel.queryHospitalDataForSample("WIDE01010001").principalInvestigatorName());
     }
 
     @Test
     public void extractPIEmail() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("WIDE Recip", hospitalModel.PIEmail("WIDE01010001"));
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("WIDE Recip", hospitalModel.queryHospitalDataForSample("WIDE01010001").principalInvestigatorEmail());
     }
 
     @Test
     public void canReadHospitalNameAndAddress() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        final HospitalData hospital = hospitalModel.hospitalPerId("01");
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        HospitalData hospital = hospitalModel.hospitalPerId("01");
+
         assertNotNull(hospital);
         assertEquals("ExtHosp1", hospital.externalHospitalName());
         assertEquals("Zip", hospital.addressZip());
@@ -76,15 +77,14 @@ public class HospitalModelTest {
 
     @Test
     public void canLookupAddresseeForSample() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-
-        assertEquals("CpctPI, ExtHosp1, Zip City", hospitalModel.fullAddresseeString("CPCT02010001T"));
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("CpctPI, ExtHosp1, Zip City", hospitalModel.queryHospitalDataForSample("CPCT02010001T").fullAddresseeString());
     }
 
     @Test
     public void canLookupAddressForCORESample() {
-        final HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("ExtHosp1, Zip City", hospitalModel.fullAddresseeString("CORE18001224T"));
+        HospitalModel hospitalModel = buildTestHospitalModel();
+        assertEquals("ExtHosp1, Zip City", hospitalModel.queryHospitalDataForSample("CORE18001224T").fullAddresseeString());
     }
 
     @NotNull

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.hospital.HospitalModel;
+import com.hartwig.hmftools.common.hospital.HospitalQuery;
 import com.hartwig.hmftools.common.lims.Lims;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +38,8 @@ public final class SampleReportFactory {
             LOGGER.warn("Could not find arrival date for tumor sample: " + tumorSample);
         }
 
+        HospitalQuery hospitalQuery = hospitalModel.queryHospitalDataForSample(tumorSample);
+
         return builder.sampleId(tumorSample)
                 .patientTumorLocation(patientTumorLocation)
                 .refBarcode(lims.refBarcode(tumorSample))
@@ -45,10 +48,10 @@ public final class SampleReportFactory {
                 .purityShallowSeq(lims.purityShallowSeq(tumorSample))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(tumorSample))
                 .labProcedures(lims.labProcedures(tumorSample))
-                .addressee(hospitalModel.fullAddresseeString(tumorSample))
-                .hospitalName(hospitalModel.externalHospitalName(tumorSample))
-                .hospitalPIName(hospitalModel.PIName(tumorSample))
-                .hospitalPIEmail(hospitalModel.PIEmail(tumorSample))
+                .addressee(hospitalQuery.fullAddresseeString())
+                .hospitalName(hospitalQuery.hospitalName())
+                .hospitalPIName(hospitalQuery.principalInvestigatorName())
+                .hospitalPIEmail(hospitalQuery.principalInvestigatorEmail())
                 .projectName(lims.projectName(tumorSample))
                 .requesterName(lims.requesterName(tumorSample))
                 .requesterEmail(lims.requesterEmail(tumorSample))
