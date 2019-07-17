@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -48,7 +47,7 @@ public final class CopyNumberAnalyzer {
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.reportableFlatList(evidencePerGeneCopyNumber);
 
-        List<ReportableGainLoss> reportableGainsAndLosses = toReportableGainsAndLosses(exomeGeneCopyNumbers, drivers);
+        List<ReportableGainLoss> reportableGainsAndLosses = toReportableGainsAndLosses(drivers);
 
         // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
         Set<String> reportableGenes = Sets.newHashSet();
@@ -75,44 +74,20 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull List<DriverCatalog> drivers) {
-        Set<String> driverGenes = Sets.newHashSet();
-        for (DriverCatalog driver : drivers) {
-            driverGenes.add(driver.gene());
-        }
-
-        Map<String, String> armEndLocusOverrides = buildArmEndLocusOverrides();
+    private static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<DriverCatalog> drivers) {
         List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
-        for (GeneCopyNumber copyNumber : exomeGeneCopyNumbers) {
-            if (driverGenes.contains(copyNumber.gene())) {
-                String armEndLocusOverride = armEndLocusOverrides.get(copyNumber.gene());
-                reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
-                        .chromosome(copyNumber.chromosome())
-                        .region(armEndLocusOverride != null ? armEndLocusOverride : copyNumber.chromosomeBand())
-                        .gene(armEndLocusOverride != null ? Strings.EMPTY : copyNumber.gene())
-                        .interpretation(CopyNumberInterpretation.fromCopyNumber(copyNumber))
-                        .copies(Math.round(Math.max(0, copyNumber.minCopyNumber())))
-                        .build());
-            }
+        for (DriverCatalog driver : drivers) {
+            boolean isMere = driver.chromosomeBand().contains("mere");
+            reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
+                    .chromosome(driver.chromosome())
+                    .region(driver.chromosomeBand())
+                    .gene(isMere ? Strings.EMPTY : driver.gene())
+                    .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
+                    .copies(Math.round(Math.max(0, driver.minCopyNumber())))
+                    .build());
         }
 
         return reportableGainsAndLosses;
     }
 
-    @NotNull
-    private static Map<String, String> buildArmEndLocusOverrides() {
-        Map<String, String> armEndLocusOverrides = Maps.newHashMap();
-        armEndLocusOverrides.put("AC093642.5", "q telomere");
-        armEndLocusOverrides.put("AP001464.4", "q centromere");
-        armEndLocusOverrides.put("DOCK8", "p telomere");
-        armEndLocusOverrides.put("DUX4L7", "q telomere");
-        armEndLocusOverrides.put("LINC01001", "p telomere");
-        armEndLocusOverrides.put("OR4A5", "p centromere");
-        armEndLocusOverrides.put("OR4F21", "p telomere");
-        armEndLocusOverrides.put("PARD6G", "q telomere");
-        armEndLocusOverrides.put("PPP2R3B", "p telomere");
-        armEndLocusOverrides.put("RP11-417J8.3", "q centromere");
-        armEndLocusOverrides.put("SPATA31A7", "q centromere");
-        return armEndLocusOverrides;
-    }
 }
