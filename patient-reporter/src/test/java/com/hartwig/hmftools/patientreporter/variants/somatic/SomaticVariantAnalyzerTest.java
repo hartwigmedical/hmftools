@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testA
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -45,8 +46,11 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        SomaticVariantAnalysis analysis =
-                SomaticVariantAnalyzer.run(variants, driverGeneView, testAnalysedReportData().actionabilityAnalyzer(), null);
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
+                driverGeneView,
+                testAnalysedReportData().actionabilityAnalyzer(),
+                null,
+                Collections.emptyList());
 
         assertEquals(2, analysis.tumorMutationalLoad());
 

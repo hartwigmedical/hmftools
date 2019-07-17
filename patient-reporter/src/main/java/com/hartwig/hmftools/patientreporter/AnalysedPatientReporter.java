@@ -71,7 +71,8 @@ class AnalysedPatientReporter {
                 patientTumorLocation);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
-        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(tumorSample, somaticVariantVcf, patientTumorLocation);
+        SomaticVariantAnalysis somaticVariantAnalysis =
+                analyzeSomaticVariants(tumorSample, somaticVariantVcf, patientTumorLocation, copyNumberAnalysis.exomeGeneCopyNumbers());
         List<GermlineVariant> germlineVariantsToReport =
                 analyzeGermlineVariants(tumorSample, bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
@@ -143,7 +144,7 @@ class AnalysedPatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
 
         //TODO: Once we have bumped PURPLE we can remove the REF_GENOME enrichment
         final List<SomaticVariant> variants =
@@ -151,7 +152,11 @@ class AnalysedPatientReporter {
                         .fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        return SomaticVariantAnalyzer.run(variants, reportData.driverGeneView(), reportData.actionabilityAnalyzer(), patientTumorLocation);
+        return SomaticVariantAnalyzer.run(variants,
+                reportData.driverGeneView(),
+                reportData.actionabilityAnalyzer(),
+                patientTumorLocation,
+                exomeGeneCopyNumbers);
     }
 
     @NotNull

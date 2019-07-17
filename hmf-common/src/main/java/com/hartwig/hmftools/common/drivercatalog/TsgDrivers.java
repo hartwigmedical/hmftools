@@ -13,12 +13,15 @@ import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class TsgDrivers {
 
@@ -26,13 +29,16 @@ public final class TsgDrivers {
     }
 
     @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants) {
-        return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants);
+    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants,
+            @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+        return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants, geneCopyNumbers);
     }
 
     @NotNull
     private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
-            @NotNull final List<SomaticVariant> variants) {
+            @NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList) {
+        final Map<String, GeneCopyNumber> geneCopyNumbers =
+                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
@@ -49,16 +55,17 @@ public final class TsgDrivers {
                     geneVariants,
                     variantTypeCounts,
                     variantTypeCountsBiallelic,
-                    variantTypeCountsNonBiallelic));
+                    variantTypeCountsNonBiallelic,
+                    geneCopyNumbers.get(gene)));
         }
 
         return driverCatalog;
     }
 
     @NotNull
-    static DriverCatalog geneDriver(@NotNull final DndsDriverGeneLikelihood likelihood,
-            @NotNull final List<SomaticVariant> geneVariants, @NotNull final Map<VariantType, Long> standardCounts,
-            @NotNull final Map<VariantType, Long> biallelicCounts, @NotNull final Map<VariantType, Long> nonBiallelicCounts) {
+    static DriverCatalog geneDriver(@NotNull final DndsDriverGeneLikelihood likelihood, @NotNull final List<SomaticVariant> geneVariants,
+            @NotNull final Map<VariantType, Long> standardCounts, @NotNull final Map<VariantType, Long> biallelicCounts,
+            @NotNull final Map<VariantType, Long> nonBiallelicCounts, @Nullable GeneCopyNumber geneCopyNumber) {
         geneVariants.sort(new TsgImpactComparator());
 
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
@@ -86,6 +93,7 @@ public final class TsgDrivers {
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
+                .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {

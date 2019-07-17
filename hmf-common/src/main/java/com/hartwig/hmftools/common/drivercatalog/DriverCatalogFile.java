@@ -64,6 +64,7 @@ public class DriverCatalogFile {
                 .add("inframe")
                 .add("frameshift")
                 .add("biallelic")
+                .add("minCopyNumber")
                 .toString();
     }
 
@@ -81,6 +82,7 @@ public class DriverCatalogFile {
                 .add(String.valueOf(ratio.inframe()))
                 .add(String.valueOf(ratio.frameshift()))
                 .add(String.valueOf(ratio.biallelic()))
+                .add(String.valueOf(ratio.minCopyNumber()))
                 .toString();
     }
 
@@ -99,7 +101,8 @@ public class DriverCatalogFile {
                 .splice(Long.valueOf(values[8]))
                 .inframe(Long.valueOf(values[9]))
                 .frameshift(Long.valueOf(values[10]))
-                .biallelic(Boolean.valueOf(values[11]));
+                .biallelic(Boolean.valueOf(values[11]))
+                .minCopyNumber(Double.valueOf(values[12]));
 
         return builder.build();
     }

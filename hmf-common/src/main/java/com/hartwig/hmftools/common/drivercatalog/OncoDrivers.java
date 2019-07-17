@@ -11,12 +11,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class OncoDrivers {
 
@@ -26,15 +29,18 @@ public final class OncoDrivers {
     }
 
     @NotNull
-    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants) {
-        return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants);
+    public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants,
+            @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
+        return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants, geneCopyNumbers);
     }
 
     @NotNull
     private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverImpactLikelihood> likelihoodsByGene,
-            @NotNull final List<SomaticVariant> variants) {
+            @NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
+        final Map<String, GeneCopyNumber> geneCopyNumbers =
+                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
@@ -44,7 +50,7 @@ public final class OncoDrivers {
             final DndsDriverImpactLikelihood geneMissenseLikelihood = likelihoodsByGene.get(gene);
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
-            driverCatalog.add(geneDriver(sampleSNVCount, gene, geneMissenseLikelihood, geneVariants));
+            driverCatalog.add(geneDriver(sampleSNVCount, gene, geneMissenseLikelihood, geneVariants, geneCopyNumbers.get(gene)));
         }
 
         return driverCatalog;
@@ -61,7 +67,8 @@ public final class OncoDrivers {
 
     @NotNull
     static DriverCatalog geneDriver(long sampleSNVCount, @NotNull final String gene,
-            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<SomaticVariant> geneVariants) {
+            @NotNull final DndsDriverImpactLikelihood missenseLikelihood, @NotNull final List<SomaticVariant> geneVariants,
+            @Nullable GeneCopyNumber geneCopyNumber) {
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
         long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
@@ -81,6 +88,7 @@ public final class OncoDrivers {
                 .inframe(inframeVariants)
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
+                .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .likelihoodMethod(missenseVariants > 0 ? LikelihoodMethod.DNDS : LikelihoodMethod.NONE);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {

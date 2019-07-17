@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.region.TranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -47,10 +46,9 @@ public class CNADrivers {
     public List<DriverCatalog> amplifications(final double ploidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() / ploidy > MIN_COPY_NUMBER_RELATIVE_INCREASE)
-                .map(TranscriptRegion::gene)
-                .filter(x -> oncoGenes.contains(x) | amplificationTargets.contains(x))
+                .filter(x -> oncoGenes.contains(x.gene()) | amplificationTargets.contains(x.gene()))
                 .map(x -> ImmutableDriverCatalog.builder()
-                        .gene(x)
+                        .gene(x.gene())
                         .missense(0)
                         .nonsense(0)
                         .inframe(0)
@@ -60,8 +58,9 @@ public class CNADrivers {
                         .driverLikelihood(1)
                         .driver(DriverType.AMP)
                         .likelihoodMethod(LikelihoodMethod.AMP)
-                        .category(tsGenes.contains(x) ? DriverCategory.TSG : DriverCategory.ONCO)
+                        .category(tsGenes.contains(x.gene()) ? DriverCategory.TSG : DriverCategory.ONCO)
                         .biallelic(false)
+                        .minCopyNumber(x.minCopyNumber())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -71,10 +70,9 @@ public class CNADrivers {
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
                 .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
-                .map(TranscriptRegion::gene)
-                .filter(x -> tsGenes.contains(x) | deletionTargets.contains(x))
+                .filter(x -> tsGenes.contains(x.gene()) | deletionTargets.contains(x.gene()))
                 .map(x -> ImmutableDriverCatalog.builder()
-                        .gene(x)
+                        .gene(x.gene())
                         .missense(0)
                         .nonsense(0)
                         .inframe(0)
@@ -84,8 +82,9 @@ public class CNADrivers {
                         .driverLikelihood(1)
                         .driver(DriverType.DEL)
                         .likelihoodMethod(LikelihoodMethod.DEL)
-                        .category(oncoGenes.contains(x) ? DriverCategory.ONCO : DriverCategory.TSG)
+                        .category(oncoGenes.contains(x.gene()) ? DriverCategory.ONCO : DriverCategory.TSG)
                         .biallelic(true)
+                        .minCopyNumber(x.minCopyNumber())
                         .build())
                 .collect(Collectors.toList());
     }

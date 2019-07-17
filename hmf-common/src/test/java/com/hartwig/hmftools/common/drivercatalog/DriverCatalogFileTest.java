@@ -40,6 +40,7 @@ public class DriverCatalogFileTest {
                 .inframe(random.nextLong())
                 .frameshift(random.nextLong())
                 .biallelic(random.nextBoolean())
+                .minCopyNumber(random.nextDouble())
                 .build();
     }
 

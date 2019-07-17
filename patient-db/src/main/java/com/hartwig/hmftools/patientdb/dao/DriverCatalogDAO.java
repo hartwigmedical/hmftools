@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep14;
+import org.jooq.InsertValuesStep15;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -36,7 +36,7 @@ class DriverCatalogDAO {
         deleteForSample(sample);
 
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep14 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep15 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.GENE,
                     DRIVERCATALOG.DRIVER,
@@ -50,13 +50,14 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.INFRAME,
                     DRIVERCATALOG.FRAMESHIFT,
                     DRIVERCATALOG.BIALLELIC,
+                    DRIVERCATALOG.MINCOPYNUMBER,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep15 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
         //noinspection unchecked
         inserter.values(sample,
@@ -72,6 +73,7 @@ class DriverCatalogDAO {
                 entry.inframe(),
                 entry.frameshift(),
                 entry.biallelic(),
+                entry.minCopyNumber(),
                 timestamp);
     }
 
@@ -99,6 +101,7 @@ class DriverCatalogDAO {
                     .inframe(record.getValue(DRIVERCATALOG.INFRAME))
                     .frameshift(record.getValue(DRIVERCATALOG.FRAMESHIFT))
                     .biallelic(record.getValue(DRIVERCATALOG.BIALLELIC) != 0)
+                    .minCopyNumber(record.getValue(DRIVERCATALOG.MINCOPYNUMBER))
                     .build();
 
             dcList.add(driverCatalog);

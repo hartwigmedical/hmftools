@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -42,17 +43,17 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull DriverGeneView driverGeneView,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
-        List<SomaticVariant> variantsToReport =
-                variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
+            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) {
+        List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(OncoDrivers.drivers(variants));
-        driverCatalog.addAll(TsgDrivers.drivers(variants));
+        driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
+        driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
 
         // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
         List<EvidenceItem> filteredEvidence =

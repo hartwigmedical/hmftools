@@ -101,8 +101,8 @@ public class LoadSomaticVariants {
         LOGGER.info("Generating driver catalog");
         final CNADrivers cnaDrivers = new CNADrivers();
         final List<SomaticVariant> passingVariants = variants.stream().filter(x -> !x.isFiltered()).collect(Collectors.toList());
-        final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(passingVariants);
-        final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(passingVariants);
+        final List<DriverCatalog> driverCatalog = OncoDrivers.drivers(passingVariants, geneCopyNumbers);
+        final List<DriverCatalog> tsgCatalog = TsgDrivers.drivers(passingVariants, geneCopyNumbers);
         driverCatalog.addAll(tsgCatalog);
         if (purityContext != null) {
             driverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));

@@ -75,8 +75,7 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
-            @NotNull List<DriverCatalog> drivers) {
+    private static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull List<DriverCatalog> drivers) {
         Set<String> driverGenes = Sets.newHashSet();
         for (DriverCatalog driver : drivers) {
             driverGenes.add(driver.gene());

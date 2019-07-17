@@ -716,6 +716,7 @@ CREATE TABLE driverCatalog
     frameshift int NOT NULL,
     inframe int NOT NULL,
     biallelic BOOLEAN NOT NULL,
+    minCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId, gene),
     INDEX(gene)

@@ -136,6 +136,7 @@ public class ReportableEvidenceItemFactoryTest {
                 .splice(0)
                 .inframe(0)
                 .frameshift(0)
+                .minCopyNumber(0)
                 .biallelic(false);
     }
 }

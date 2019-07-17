@@ -171,6 +171,7 @@ public final class PatientReporterTestFactory {
                 .inframe(0)
                 .frameshift(0)
                 .biallelic(false)
+                .minCopyNumber(0)
                 .build();
     }
 }

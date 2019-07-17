@@ -36,4 +36,5 @@ public interface DriverCatalog {
 
     boolean biallelic();
 
+    double minCopyNumber();
 }
