@@ -11,14 +11,11 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public final class EvidenceDrugTypeMergerTest {
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceDrugTypeMergerTest.class);
 
     @Test
     public void evidenceMergerUnknownDrugsType() {
@@ -59,7 +56,7 @@ public final class EvidenceDrugTypeMergerTest {
     }
 
     @Test
-    public void evidenceMergerknownDrugsType() {
+    public void evidenceMergerknownDrugsTypeDifferentDrugsType() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
 
@@ -98,7 +95,7 @@ public final class EvidenceDrugTypeMergerTest {
     }
 
     @Test
-    public void evidenceMergerknownDrugsTypeMore() {
+    public void evidenceMergerknownDrugsTypeMoreDifferentOptions() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
 
