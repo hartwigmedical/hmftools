@@ -107,6 +107,9 @@ public final class EvidenceDrugTypeMerger {
                 return false;
             }
             final DrugsKey drugsKey = (DrugsKey) o;
+            if (drugsKey.drugType.equals("Unknown") || drugsKey.drugType.equals(Strings.EMPTY)) {
+                return false;
+            }
             return Objects.equals(event, drugsKey.event) && Objects.equals(match, drugsKey.match) && Objects.equals(level, drugsKey.level)
                     && Objects.equals(response, drugsKey.response) && Objects.equals(drugType, drugsKey.drugType) && Objects.equals(source,
                     drugsKey.source);
