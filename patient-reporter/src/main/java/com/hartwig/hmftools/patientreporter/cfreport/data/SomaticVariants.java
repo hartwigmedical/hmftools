@@ -8,7 +8,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.variants.ClonalInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
@@ -119,7 +118,31 @@ public final class SomaticVariants {
 
     @NotNull
     public static String clonalString(double clonalLikelihood) {
-        return ClonalInterpretation.interpret(clonalLikelihood).text();
+        if (clonalLikelihood > 0.95) {
+            return ">95%";
+        } else if (clonalLikelihood > 0.9) {
+            return "90-95%";
+        } else if (clonalLikelihood > 0.8) {
+            return "80-90%";
+        } else if (clonalLikelihood > 0.7) {
+            return "70-80%";
+        } else if (clonalLikelihood > 0.6) {
+            return "60-70%";
+        } else if (clonalLikelihood > 0.5) {
+            return "50-60%";
+        } else if (clonalLikelihood > 0.4) {
+            return "40-50%";
+        } else if (clonalLikelihood > 0.3) {
+            return "30-40%";
+        } else if (clonalLikelihood > 0.2) {
+            return "20-30%";
+        } else if (clonalLikelihood > 0.1) {
+            return "10-20%";
+        } else if (clonalLikelihood > 0.05) {
+            return "5-10%";
+        } else  {
+            return "<5%";
+        }
     }
 
     @NotNull
