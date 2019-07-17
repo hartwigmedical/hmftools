@@ -77,7 +77,7 @@ public final class ReportableVariantAnalyzer {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .totalPloidy(variant.adjustedCopyNumber())
-                .allelePloidy(variant.adjustedCopyNumber() * variant.adjustedVAF())
+                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .biallelic(variant.biallelic());
@@ -93,7 +93,7 @@ public final class ReportableVariantAnalyzer {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .totalPloidy(variant.adjustedCopyNumber())
-                .allelePloidy(variant.adjustedCopyNumber() * variant.adjustedVAF())
+                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
@@ -102,6 +102,10 @@ public final class ReportableVariantAnalyzer {
     @NotNull
     private static String toGDNA(@NotNull GenomePosition genomePosition) {
         return genomePosition.chromosome() + ":" + genomePosition.position();
+    }
+
+    private static double calcAllelePloidy(double adjustedCopyNumber, double adjustedVAF) {
+        return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }
 
