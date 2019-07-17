@@ -36,7 +36,7 @@ public final class PatientReporterTestUtil {
 
     private static final String DRUP_GENES_CSV = Resources.getResource("actionability/drup_genes.csv").getPath();
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
-    private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.tsv").getPath();
+    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("csv/sample_summary.tsv").getPath();
 
     private PatientReporterTestUtil() {
     }
@@ -60,7 +60,7 @@ public final class PatientReporterTestUtil {
         try {
             DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
-            SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_CSV);
+            SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())
