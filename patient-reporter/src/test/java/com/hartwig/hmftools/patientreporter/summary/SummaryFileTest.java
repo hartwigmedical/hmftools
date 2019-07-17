@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class SummaryFileTest {
 
-    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("csv/sample_summary.tsv").getPath();
+    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     @Test
     public void summaryFromCSVWithNewLines() throws IOException {

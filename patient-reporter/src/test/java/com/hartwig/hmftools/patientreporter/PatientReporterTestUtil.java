@@ -35,8 +35,8 @@ public final class PatientReporterTestUtil {
     private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
     private static final String DRUP_GENES_CSV = Resources.getResource("actionability/drup_genes.csv").getPath();
-    private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
-    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("csv/sample_summary.tsv").getPath();
+    private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("germline/germline_genes_reporting.csv").getPath();
+    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     private PatientReporterTestUtil() {
     }
