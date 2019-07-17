@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
@@ -175,80 +176,81 @@ public class ChainFinderOld
 
         mClusterId = cluster.id();
         mUniqueSVs.addAll(cluster.getSVs());
-        mReplicatedSVs.addAll(cluster.getSVs(true));
+        mReplicatedSVs.addAll(cluster.getSVs());
         mFoldbacks.addAll(cluster.getFoldbacks());
         mAssembledLinks.addAll(cluster.getAssemblyLinkedPairs());
         mChrBreakendMap = cluster.getChrBreakendMap();
         mHasReplication = cluster.requiresReplication();
         mIsClusterSubset = false;
+
+        if(mHasReplication)
+            createReplicatedSVs(cluster);
     }
 
-    public void initialise(SvCluster cluster, final List<SvVarData> svList)
+    private void createReplicatedSVs(SvCluster cluster)
     {
-        // chain a specific subset of a cluster's SVs
-        clear();
-
-        mIsClusterSubset = true;
-        mClusterId = cluster.id();
-
-        mChrBreakendMap = Maps.newHashMap();
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        // replicate the SVs which have a higher copy number than their peers
+        for(SvVarData var : mUniqueSVs)
         {
-            final List<SvBreakend> breakendList = Lists.newArrayList();
-
-            for (final SvBreakend breakend : entry.getValue())
-            {
-                if (svList.contains(breakend.getSV()))
-                {
-                    mSubsetBreakendClusterIndexMap.put(breakend, breakendList.size());
-                    breakendList.add(breakend);
-                }
-            }
-
-            if (!breakendList.isEmpty())
-            {
-                mChrBreakendMap.put(entry.getKey(), breakendList);
-            }
-        }
-
-        for(SvVarData var : svList)
-        {
-            mReplicatedSVs.add(var);
-
-            if(var.isReplicatedSv())
-            {
-                mHasReplication = true;
+            if (var.getReplicatedCount() <= 1)
                 continue;
-            }
 
-            mUniqueSVs.add(var);
-
-            if(var.isFoldback() && mFoldbacks.contains(var))
-                mFoldbacks.add(var);
-
-            for(int se = SE_START; se <= SE_END; ++se)
+            for (int j = 1; j < var.getReplicatedCount(); ++j)
             {
-                // only add an assembled link if it has a partner in the provided SV set, and can be replicated equally
-                for (SvLinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
-                {
-                    final SvVarData otherVar = link.getOtherSV(var);
-
-                    if(!svList.contains(otherVar))
-                        continue;
-
-                    int maxRepCount = mHasReplication ? min(max(var.getReplicatedCount(),1), max(otherVar.getReplicatedCount(),1)) : 1;
-
-                    long currentLinkCount = mAssembledLinks.stream().filter(x -> x.matches(link)).count();
-
-                    if(currentLinkCount < maxRepCount)
-                    {
-                        mAssembledLinks.add(link);
-                    }
-                }
+                SvVarData newVar = new SvVarData(var, true);
+                mReplicatedSVs.add(newVar);
+                // cluster.addVariant(newVar);
             }
         }
     }
+
+    public void compareChains(final List<SvChain> otherChains)
+    {
+        int matchedCount = 0;
+
+        final List<SvChain> unmatchedChains = Lists.newArrayList(otherChains);
+
+        for (final SvChain chain : mUniqueChains)
+        {
+            boolean matched = false;
+            for (final SvChain otherChain : unmatchedChains)
+            {
+                if (chain.identicalChain(otherChain, false, true))
+                {
+                    unmatchedChains.remove(otherChain);
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (matched)
+            {
+                ++matchedCount;
+            }
+            else
+            {
+                LOGGER.debug("cluster({}) old-chain({}) unmatched:", mClusterId, chain.id());
+                chain.logLinks();
+            }
+        }
+
+        for (final SvChain chain : unmatchedChains)
+        {
+            LOGGER.debug("cluster({}) new-chain({}) unmatched:", mClusterId, chain.id());
+            chain.logLinks();
+        }
+
+        if(matchedCount == mUniqueChains.size() && matchedCount == otherChains.size())
+        {
+            LOGGER.debug("cluster({}) all {} old and new chains match", mClusterId, mUniqueChains.size());
+        }
+        else
+        {
+            LOGGER.debug("cluster({}) oldChains({}) newChains({}) matched({})",
+                    mClusterId, mUniqueChains.size(), otherChains.size(), matchedCount);
+        }
+    }
+
 
     public void setLogVerbose(boolean toggle)
     {
@@ -257,10 +259,8 @@ public class ChainFinderOld
     }
 
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
-    public void setUseAllelePloidies(boolean toggle) { mUseAllelePloidies = toggle; }
 
     public final List<SvChain> getUniqueChains() { return mUniqueChains; }
-    public double getValidAllelePloidySegmentPerc() { return mClusterPloidyLimits.getValidAllelePloidySegmentPerc(); }
 
     public void formChains(boolean assembledLinksOnly)
     {
@@ -269,7 +269,7 @@ public class ChainFinderOld
 
         if (mUniqueSVs.size() >= 4)
         {
-            LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({} rep={})",
+            LOGGER.debug("cluster({}) old starting chaining with assemblyLinks({}) svCount({} rep={})",
                     mClusterId, mAssembledLinks.size(), mUniqueSVs.size(), mReplicatedSVs.size());
         }
 
@@ -278,6 +278,7 @@ public class ChainFinderOld
         buildChains(assembledLinksOnly);
 
         removeIdenticalChains();
+        swapOutReplicatedSVs();
 
         int unlinkedBreakendCount = (int)mUnlinkedBreakendMap.values().stream().count();
 
@@ -289,14 +290,14 @@ public class ChainFinderOld
                 unlinkedSVs.add(var);
         }
 
-        LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
+        LOGGER.debug("cluster({}) old chaining finished: chains({} unique={} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
                 mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mUnlinkedReplicatedSVs.size(), unlinkedSVs.size(),
                 mUnlinkedBreakendMap.size(), unlinkedBreakendCount);
 
 
         if(!mIsValid)
         {
-            LOGGER.warn("cluster({}) chain finding failed", mClusterId);
+            LOGGER.warn("cluster({}) old chain finding failed", mClusterId);
             return;
         }
     }
@@ -332,6 +333,34 @@ public class ChainFinderOld
         }
     }
 
+    private void swapOutReplicatedSVs()
+    {
+        if(!mHasReplication)
+            return;
+
+        for(SvChain chain : mUniqueChains)
+        {
+            for(SvLinkedPair pair : chain.getLinkedPairs())
+            {
+                pair.replaceFirst(pair.first().getOrigSV());
+                pair.replaceSecond(pair.second().getOrigSV());
+            }
+
+            List<SvVarData> svList = chain.getSvList();
+
+            for(int i = 0; i < svList.size(); ++i)
+            {
+                if(!svList.get(i).isReplicatedSv())
+                    continue;
+
+                svList.set(i, svList.get(i).getOrigSV());
+            }
+        }
+
+        mReplicatedSVs.clear();
+    }
+
+
     public void addChains(SvCluster cluster)
     {
         // add these chains to the cluster, but skip any which are identical to existing ones,
@@ -362,17 +391,7 @@ public class ChainFinderOld
 
         // any identical chains (including precise subsets of longer chains) will have their replicated SVs entirely removed
         if(!mUniqueChains.contains(newChain))
-        {
-            boolean allReplicatedSVs = newChain.getSvCount(false) == 0;
-
-            // remove these replicated SVs as well as the replicated chain
-            if(allReplicatedSVs)
-            {
-                newChain.getSvList().stream().forEach(x -> cluster.removeReplicatedSv(x));
-            }
-
             return;
-        }
 
         cluster.addChain(newChain, false);
     }

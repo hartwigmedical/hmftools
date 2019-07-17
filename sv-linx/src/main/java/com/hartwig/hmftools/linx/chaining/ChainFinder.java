@@ -130,9 +130,11 @@ public class ChainFinder
     // temporary support for old chain finder
     private ChainFinderOld mOldFinder;
     private boolean mUseOld;
+    private boolean mRunOldComparison;
 
     public static final int CHAIN_METHOD_OLD = 0;
     public static final int CHAIN_METHOD_NEW = 1;
+    public static final int CHAIN_METHOD_COMPARE = 2;
 
     private int mLinkIndex; // incrementing value for each link added to any chain
     private boolean mIsValid;
@@ -141,15 +143,6 @@ public class ChainFinder
     private boolean mRunValidation;
     private boolean mUseAllelePloidies;
 
-    private static final String LR_METHOD_ASMB = "ASMB";
-    private static final String LR_METHOD_ONLY = "ONLY";
-    private static final String LR_METHOD_FOLDBACK = "FOLDBACK";
-    private static final String LR_METHOD_ADJAC = "ADJAC";
-    private static final String LR_METHOD_PL_MATCH = "PL_MATCH";
-    private static final String LR_METHOD_PL_MAX = "PL_MAX";
-    private static final String LR_METHOD_SHORT = "SHORT";
-    private static final String LR_METHOD_CMP_DUP = "CMP_DUP";
-    private static final String LR_METHOD_DM_DUP = "DM_DUP";
     private static final String LR_METHOD_DM_CLOSE = "DM_CLOSE";
 
     // self-analysis only
@@ -203,12 +196,19 @@ public class ChainFinder
 
         mOldFinder = new ChainFinderOld();
         mUseOld = false;
+        mRunOldComparison = false;
     }
 
-    public void setUseOldMethod(boolean toggle)
+    public void setUseOldMethod(boolean toggle, boolean runComparison)
     {
         LOGGER.info("using {} chain-finder", toggle ? "old" : "new");
         mUseOld = toggle;
+
+        if(!mUseOld && runComparison)
+        {
+            LOGGER.info("running chaining comparison");
+            mRunOldComparison = true;
+        }
     }
 
     public void clear()
@@ -267,7 +267,7 @@ public class ChainFinder
         mHasReplication = cluster.requiresReplication();
         mIsClusterSubset = false;
 
-        if(mUseOld)
+        if(mUseOld || mRunOldComparison)
             mOldFinder.initialise(cluster);
     }
 
@@ -336,9 +336,6 @@ public class ChainFinder
         }
 
         mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
-
-        if(mUseOld)
-            mOldFinder.initialise(cluster, svList);
     }
 
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
@@ -353,10 +350,12 @@ public class ChainFinder
 
     public void formChains(boolean assembledLinksOnly)
     {
-        if(mUseOld)
+        if(mUseOld || mRunOldComparison)
         {
             mOldFinder.formChains(assembledLinksOnly);
-            return;
+
+            if(mUseOld)
+                return;
         }
 
         if(mSvList.size() < 2)
@@ -377,10 +376,10 @@ public class ChainFinder
         checkChains();
         removeIdenticalChains();
 
-        // TODO add any replicated SVs to the cluster
-        // mReplicatedSVs
-
         mDiagnostics.chainingComplete();
+
+        if(mRunOldComparison)
+            mOldFinder.compareChains(mUniqueChains);
 
         disableLogVerbose();
 

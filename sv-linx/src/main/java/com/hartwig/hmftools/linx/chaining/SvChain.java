@@ -71,20 +71,25 @@ public class SvChain {
             return;
         }
 
-        // if(mLinkedPairs.contains(pair)) // can legitimately occur when reconciling chains
-        //    return;
+        SvLinkedPair newPair = pair;
+
+        if(mLinkedPairs.contains(pair)) // can legitimately occur when reconciling chains
+        {
+            newPair = SvLinkedPair.from(pair.firstBreakend(), pair.secondBreakend());
+            newPair.setLinkReason(pair.getLinkReason(), pair.getLinkIndex());
+        }
 
         // check ordering and switch if required so that the 'first' SV always links to the preceding link and vice versa
-        if((addToStart && pair.second() != mLinkedPairs.get(0).first())
-        || (!addToStart && pair.first() != mLinkedPairs.get(mLinkedPairs.size() - 1).second()))
+        if((addToStart && newPair.second() != mLinkedPairs.get(0).first())
+        || (!addToStart && newPair.first() != mLinkedPairs.get(mLinkedPairs.size() - 1).second()))
         {
-            pair.switchSVs();
+            newPair.switchSVs();
         }
 
         if(addToStart)
-            mLinkedPairs.add(0, pair); // insert at front
+            mLinkedPairs.add(0, newPair); // insert at front
         else
-            mLinkedPairs.add(pair);
+            mLinkedPairs.add(newPair);
     }
 
     public void addLink(final SvLinkedPair pair, int index)
@@ -522,24 +527,68 @@ public class SvChain {
 
     public boolean identicalChain(final SvChain other, boolean allowSubsets)
     {
+        return identicalChain(other, allowSubsets, false);
+    }
+
+    public boolean sameLinks(final SvChain other)
+    {
+        if(other.getLinkCount() != mLinkedPairs.size())
+            return false;
+
+        for(final SvLinkedPair pair : mLinkedPairs)
+        {
+            if(!other.getLinkedPairs().stream().anyMatch(x -> x.matches(pair)))
+                return false;
+        }
+
+        return true;
+    }
+
+    public boolean identicalChain(final SvChain other, boolean allowSubsets, boolean allowSameLinks)
+    {
+        // form a chain in reverse to compare
+        final SvChain otherChain = other;
+
+        /*
+        if(!reversed)
+        {
+            otherChain = other;
+        }
+        else
+        {
+            otherChain = new SvChain(other.id());
+            for(int i = mLinkedPairs.size() - 1; i >= 0; --i)
+            {
+                final SvLinkedPair pair = other.getLinkedPairs().get(i);
+                SvLinkedPair reversePair = SvLinkedPair.from(pair.secondBreakend(), pair.firstBreakend());
+                otherChain.addLink(reversePair, false);
+            }
+        }
+        */
+
         // same SVs forming same links in the same order
-        final List<SvLinkedPair> otherLinks = other.getLinkedPairs();
+        final List<SvLinkedPair> otherLinks = otherChain.getLinkedPairs();
 
         if(mLinkedPairs.size() == otherLinks.size())
         {
+            boolean exactMatch = true;
+
             for(int i = 0; i < mLinkedPairs.size(); ++i)
             {
                 final SvLinkedPair pair = mLinkedPairs.get(i);
                 final SvLinkedPair otherPair = otherLinks.get(i);
 
-                if(!pair.first().equals(otherPair.first(), true))
-                    return false;
-
-                if(!pair.second().equals(otherPair.second(), true))
-                    return false;
+                if(!pair.first().equals(otherPair.first(), true) || !pair.second().equals(otherPair.second(), true))
+                {
+                    exactMatch = false;
+                    break;
+                }
             }
 
-            return true;
+            if(exactMatch)
+                return true;
+
+            return allowSameLinks && sameLinks(other);
         }
         else
         {
@@ -558,7 +607,7 @@ public class SvChain {
                 if(j >= shorterLinks.size())
                     break;
 
-                final SvLinkedPair otherPair = other.getLinkedPairs().get(j);
+                final SvLinkedPair otherPair = otherChain.getLinkedPairs().get(j);
 
                 boolean linksMatch = pair.first().equals(otherPair.first(), true)
                     && pair.second().equals(otherPair.second(), true);

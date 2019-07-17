@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
@@ -35,7 +36,6 @@ public class ChainingComplexTest
     {
         // vanilla BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
-        // tester.setChaininMethod(CHAIN_METHOD_OLD);
         tester.logVerbose(true);
 
         final SvVarData varA = createTestSv("0", "1", "1", 2000,3000, -1, -1, INV,  3);
@@ -189,7 +189,7 @@ public class ChainingComplexTest
         // but assembled fragments are inserted into each of the foldbacks, requiring linking to make use of matching ploidy
         SvTestHelper tester = new SvTestHelper();
 
-        // tester.setChaininMethod(CHAIN_METHOD_OLD);
+        // tester.setChaininMethod(CHAIN_METHOD_COMPARE);
         tester.logVerbose(true);
 
         final SvVarData varA1 = createTestSv("0", "1", "1", 2000,5500, -1, -1, INV, 4);
