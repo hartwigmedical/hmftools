@@ -41,8 +41,6 @@ public final class EvidenceDrugTypeMerger {
             EvidenceItem itemsForKey = entry.getValue();
             if (mapEvidence.containsKey(entry.getKey())) {
                 drug.add(itemsForKey.drug());
-            } else {
-                drug.add(itemsForKey.drug());
             }
 
             for (String drugs : drug) {
