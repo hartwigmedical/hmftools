@@ -73,10 +73,10 @@ public class TherapyDetailsChapterOffLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-        List<EvidenceItemMerger> mergedItems = EvidenceDrugTypeMerger.merge(evidence);
+      //  List<EvidenceItemMerger> mergedItems = EvidenceDrugTypeMerger.merge(evidence);
 
-        final List<EvidenceItemMerger> sortedEvidence = EvidenceItems.sort(mergedItems);
-        for (EvidenceItemMerger item : sortedEvidence) {
+        final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
+        for (EvidenceItem item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 
             contentTable.addCell(TableUtil.createContentCell(item.event()));

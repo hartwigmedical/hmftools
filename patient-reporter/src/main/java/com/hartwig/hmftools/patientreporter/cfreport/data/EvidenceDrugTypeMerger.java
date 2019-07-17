@@ -12,7 +12,10 @@ import com.hartwig.hmftools.common.actionability.EvidenceItemMerger;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItemMerger;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.DetailsAndDisclaimerChapter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,39 +23,50 @@ public final class EvidenceDrugTypeMerger {
     private EvidenceDrugTypeMerger() {
     }
 
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceDrugTypeMerger.class);
+
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
         StringBuilder drugsString = new StringBuilder();
 
-        Map<DrugsKey, EvidenceItem> mapEvidence = Maps.newHashMap();
+        Map<DrugsKey, List<EvidenceItem>> mapEvidence = Maps.newHashMap();
         for (EvidenceItem item : items) {
-            mapEvidence.put(new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType(), item.source()), item);
-        }
+            DrugsKey drugsKey = new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType(), item.source());
+            if (mapEvidence.containsKey(drugsKey) ) {
+                List<EvidenceItem> itemsForKey = mapEvidence.get(drugsKey);
+                itemsForKey.add(item);
+                mapEvidence.put(drugsKey, itemsForKey);
+                LOGGER.info(item);
+            } else {
+                mapEvidence.put(drugsKey, Lists.newArrayList(item));
 
-        List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
-        List<String> drug = Lists.newArrayList();
-        for (Map.Entry<DrugsKey, EvidenceItem> entry : mapEvidence.entrySet()) {
-            EvidenceItem itemsForKey = entry.getValue();
-            drug.add(itemsForKey.drug());
-
-            for (String drugs : drug) {
-                drugsString.append(drugs).append(", ");
             }
 
-            drugsString.deleteCharAt(drugsString.lastIndexOf(","));
 
-            evidenceItems.add(ImmutableEvidenceItemMerger.builder()
-                    .event(itemsForKey.event())
-                    .source(itemsForKey.source())
-                    .reference(itemsForKey.reference())
-                    .drug(itemsForKey.drugsType() + " (" + drugsString + ")")
-                    .level(itemsForKey.level())
-                    .response(itemsForKey.response())
-                    .isOnLabel(itemsForKey.isOnLabel())
-                    .cancerType(itemsForKey.cancerType())
-                    .scope(itemsForKey.scope())
-                    .build());
         }
+
+
+        List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
+        for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
+            List<EvidenceItem> itemsForKey = entry.getValue();
+
+
+            //drugsString.deleteCharAt(drugsString.lastIndexOf(","));
+            for (EvidenceItem itemValue: itemsForKey) {
+                evidenceItems.add(ImmutableEvidenceItemMerger.builder()
+                        .event(itemValue.event())
+                        .source(itemValue.source())
+                        .reference(itemValue.reference())
+                        .drug(itemValue.drugsType() + " (" + drugsString + ")")
+                        .level(itemValue.level())
+                        .response(itemValue.response())
+                        .isOnLabel(itemValue.isOnLabel())
+                        .cancerType(itemValue.cancerType())
+                        .scope(itemValue.scope())
+                        .build());
+            }
+        }
+        LOGGER.info(evidenceItems);
         return evidenceItems;
     }
 
@@ -98,9 +112,8 @@ public final class EvidenceDrugTypeMerger {
             if (drugsKey.drugType.equals("Unknown") || drugsKey.drugType.equals(Strings.EMPTY)) {
                 return false;
             }
-            return Objects.equals(event, drugsKey.event) && Objects.equals(match, drugsKey.match) && Objects.equals(level, drugsKey.level)
-                    && Objects.equals(response, drugsKey.response) && Objects.equals(drugType, drugsKey.drugType) && Objects.equals(source,
-                    drugsKey.source);
+            return Objects.equals(event, drugsKey.event) && match == drugsKey.match && level == drugsKey.level && Objects.equals(response,
+                    drugsKey.response) && Objects.equals(drugType, drugsKey.drugType) && source == drugsKey.source;
         }
 
         @Override
