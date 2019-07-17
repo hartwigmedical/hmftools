@@ -18,8 +18,8 @@ public final class GainsAndLosses {
     @NotNull
     public static List<ReportableGainLoss> sort(@NotNull List<ReportableGainLoss> reportableGainsAndLosses) {
         return reportableGainsAndLosses.stream().sorted((gainLoss1, gainLoss2) -> {
-            String location1 = GeneUtil.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.region());
-            String location2 = GeneUtil.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.region());
+            String location1 = GeneUtil.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.chromosomeBand());
+            String location2 = GeneUtil.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.chromosomeBand());
 
             if (location1.equals(location2)) {
                 return gainLoss1.gene().compareTo(gainLoss2.gene());

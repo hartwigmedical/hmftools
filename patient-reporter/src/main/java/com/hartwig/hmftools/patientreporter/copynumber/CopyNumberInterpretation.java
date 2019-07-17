@@ -33,6 +33,6 @@ public enum CopyNumberInterpretation {
             return Doubles.greaterThan(copyNumber.maxCopyNumber(), 0.5) ? PARTIAL_LOSS : FULL_LOSS;
         }
 
-        throw new IllegalArgumentException();
+        throw new IllegalStateException("Driver not an AMP or DEL: " + copyNumber);
     }
 }

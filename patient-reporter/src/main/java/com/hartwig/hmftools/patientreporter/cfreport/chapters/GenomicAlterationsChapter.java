@@ -116,7 +116,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
         for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosome()));
-            contentTable.addCell(TableUtil.createContentCell(gainLoss.region()));
+            contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().text()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit

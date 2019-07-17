@@ -604,7 +604,7 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableGainLoss> createCOLO829GainsLosses() {
         ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
                 .chromosome("10")
-                .region("q23.31")
+                .chromosomeBand("q23.31")
                 .gene("PTEN")
                 .copies(0)
                 .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
@@ -668,7 +668,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static ImmutableEvidenceItem.Builder evidenceBuilder() {
-        return ImmutableEvidenceItem.builder().drugsType(Strings.EMPTY).cancerType(Strings.EMPTY);
+        return ImmutableEvidenceItem.builder().cancerType(Strings.EMPTY);
     }
 
     @NotNull

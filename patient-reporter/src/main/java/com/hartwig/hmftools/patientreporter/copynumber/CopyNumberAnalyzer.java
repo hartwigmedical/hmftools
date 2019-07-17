@@ -36,10 +36,10 @@ public final class CopyNumberAnalyzer {
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
 
-        CNADrivers copyNumberDrivers = new CNADrivers();
+        CNADrivers copyNumberDriverModel = new CNADrivers();
         List<DriverCatalog> drivers = Lists.newArrayList();
-        drivers.addAll(copyNumberDrivers.amplifications(bestFit.ploidy(), exomeGeneCopyNumbers));
-        drivers.addAll(copyNumberDrivers.deletions(exomeGeneCopyNumbers));
+        drivers.addAll(copyNumberDriverModel.amplifications(bestFit.ploidy(), exomeGeneCopyNumbers));
+        drivers.addAll(copyNumberDriverModel.deletions(exomeGeneCopyNumbers));
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
@@ -66,7 +66,6 @@ public final class CopyNumberAnalyzer {
                 .hasReliablePurityFit(purityContext.status() != FittedPurityStatus.NO_TUMOR)
                 .purity(bestFit.purity())
                 .ploidy(bestFit.ploidy())
-                .gender(purityContext.gender())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
                 .evidenceItems(filteredEvidence)
@@ -77,11 +76,10 @@ public final class CopyNumberAnalyzer {
     private static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<DriverCatalog> drivers) {
         List<ReportableGainLoss> reportableGainsAndLosses = Lists.newArrayList();
         for (DriverCatalog driver : drivers) {
-            boolean isMere = driver.chromosomeBand().contains("mere");
             reportableGainsAndLosses.add(ImmutableReportableGainLoss.builder()
                     .chromosome(driver.chromosome())
-                    .region(driver.chromosomeBand())
-                    .gene(isMere ? Strings.EMPTY : driver.gene())
+                    .chromosomeBand(driver.chromosomeBand())
+                    .gene(isCentromereOrTelomere(driver) ? Strings.EMPTY : driver.gene())
                     .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
                     .copies(Math.round(Math.max(0, driver.minCopyNumber())))
                     .build());
@@ -90,4 +88,8 @@ public final class CopyNumberAnalyzer {
         return reportableGainsAndLosses;
     }
 
+    private static boolean isCentromereOrTelomere(@NotNull DriverCatalog driver) {
+        String band = driver.chromosomeBand().toLowerCase();
+        return band.contains("centromere") || band.contains("telomere");
+    }
 }

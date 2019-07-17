@@ -91,7 +91,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
                         "Genes are reported as being disrupted if their canonical transcript has been disrupted",
-                        "The range of the disruption is indicated by the intron/exon/promoter region of the break point "
+                        "The range of the disruption is indicated by the intron/exon/promoter chromosomeBand of the break point "
                                 + "and the direction the disruption faces.",
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS "
                                 + "(insertion), SGL (single) or BND (translocation)." })));

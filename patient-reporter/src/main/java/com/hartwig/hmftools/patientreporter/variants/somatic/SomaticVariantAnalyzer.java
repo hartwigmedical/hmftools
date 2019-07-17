@@ -95,31 +95,29 @@ public final class SomaticVariantAnalyzer {
                 return false;
             }
 
-            if (!driverGeneView.oncoDriverGenes().contains(variant.gene()) && !driverGeneView.tsgDriverGenes().contains(variant.gene())) {
-                return false;
-            }
+            if (driverGeneView.oncoDriverGenes().contains(variant.gene()) || driverGeneView.tsgDriverGenes().contains(variant.gene())) {
+                if (variant.isHotspot()) {
+                    return true;
+                }
 
-            // Report all hotspots on our driver genes.
-            if (variant.isHotspot()) {
-                return true;
-            }
+                DriverCategory category = driverGeneView.category(variant.gene());
+                if (category == null) {
+                    throw new IllegalStateException("Driver category not known for driver gene: " + variant.gene());
+                }
 
-            DriverCategory category = driverGeneView.category(variant.gene());
-            if (category == null) {
-                throw new IllegalStateException("Driver category not known for driver gene: " + variant.gene());
-            }
-
-            CodingEffect effect = variant.canonicalCodingEffect();
-            if (category == DriverCategory.TSG) {
-                return TSG_CODING_EFFECTS_TO_REPORT.contains(effect);
-            } else {
-                assert category == DriverCategory.ONCO;
-                if (ONCO_GENES_WITH_SPLICE_EFFECTS.contains(variant.gene())) {
-                    return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect) || effect == CodingEffect.SPLICE;
+                CodingEffect effect = variant.canonicalCodingEffect();
+                if (category == DriverCategory.TSG) {
+                    return TSG_CODING_EFFECTS_TO_REPORT.contains(effect);
                 } else {
-                    return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
+                    assert category == DriverCategory.ONCO;
+                    if (ONCO_GENES_WITH_SPLICE_EFFECTS.contains(variant.gene())) {
+                        return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect) || effect == CodingEffect.SPLICE;
+                    } else {
+                        return ONCO_CODING_EFFECTS_TO_REPORT.contains(effect);
+                    }
                 }
             }
+            return false;
         };
     }
 }
