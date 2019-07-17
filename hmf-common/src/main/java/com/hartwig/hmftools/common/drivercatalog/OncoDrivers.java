@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,6 +78,8 @@ public final class OncoDrivers {
         long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
+                .chromosome(geneVariants.get(0).chromosome())
+                .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
                 .gene(gene)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
@@ -89,6 +92,7 @@ public final class OncoDrivers {
                 .frameshift(frameshiftVariants)
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
                 .likelihoodMethod(missenseVariants > 0 ? LikelihoodMethod.DNDS : LikelihoodMethod.NONE);
 
         if (geneVariants.stream().anyMatch(SomaticVariant::isHotspot)) {

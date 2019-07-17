@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,5 +34,18 @@ public enum CopyNumberInterpretation {
         } else {
             return FULL_LOSS;
         }
+    }
+
+    @NotNull
+    public static CopyNumberInterpretation fromCNADriver(@NotNull DriverCatalog copyNumber) {
+        if (copyNumber.driver() == DriverType.AMP) {
+            return GAIN;
+        }
+
+        if (copyNumber.driver() == DriverType.DEL) {
+            return Doubles.greaterThan(copyNumber.maxCopyNumber(), 0.5) ? PARTIAL_LOSS : FULL_LOSS;
+        }
+
+        throw new IllegalArgumentException();
     }
 }

@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
@@ -21,24 +23,37 @@ public class CNADrivers {
     private final Set<String> tsGenes;
     private final Set<String> amplificationTargets;
     private final Set<String> deletionTargets;
+    private final Map<String, String> deletionBandMap;
 
     @NotNull
-    public static Set<String> amplificationTargets() {
+    private static Set<String> amplificationTargets() {
         final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
         return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
     }
 
     @NotNull
-    public static Set<String> deletionTargets() {
+    private static Map<String, String> deletionTargets() {
+        final Map<String, String> result = Maps.newHashMap();
         final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/DeletionTargets.tsv");
-        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());
+        new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(line -> {
+            final String[] values = line.split("\t");
+            result.put(values[0], values[1]);
+        });
+
+        return result;
     }
 
     public CNADrivers() {
         this.amplificationTargets = amplificationTargets();
         this.oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
 
-        this.deletionTargets = deletionTargets();
+        final Map<String, String> rawMap = deletionTargets();
+        deletionBandMap = rawMap.entrySet()
+                .stream()
+                .filter(x -> !x.getValue().equals("NA"))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        this.deletionTargets = rawMap.keySet();
         this.tsGenes = DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet();
     }
 
@@ -48,6 +63,8 @@ public class CNADrivers {
                 .filter(x -> x.minCopyNumber() / ploidy > MIN_COPY_NUMBER_RELATIVE_INCREASE)
                 .filter(x -> oncoGenes.contains(x.gene()) | amplificationTargets.contains(x.gene()))
                 .map(x -> ImmutableDriverCatalog.builder()
+                        .chromosome(x.chromosome())
+                        .chromosomeBand(x.chromosomeBand())
                         .gene(x.gene())
                         .missense(0)
                         .nonsense(0)
@@ -61,6 +78,7 @@ public class CNADrivers {
                         .category(tsGenes.contains(x.gene()) ? DriverCategory.TSG : DriverCategory.ONCO)
                         .biallelic(false)
                         .minCopyNumber(x.minCopyNumber())
+                        .maxCopyNumber(x.maxCopyNumber())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -72,6 +90,8 @@ public class CNADrivers {
                 .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
                 .filter(x -> tsGenes.contains(x.gene()) | deletionTargets.contains(x.gene()))
                 .map(x -> ImmutableDriverCatalog.builder()
+                        .chromosome(x.chromosome())
+                        .chromosomeBand(deletionBandMap.getOrDefault(x.gene(), x.chromosomeBand()))
                         .gene(x.gene())
                         .missense(0)
                         .nonsense(0)
@@ -85,6 +105,7 @@ public class CNADrivers {
                         .category(oncoGenes.contains(x.gene()) ? DriverCategory.ONCO : DriverCategory.TSG)
                         .biallelic(true)
                         .minCopyNumber(x.minCopyNumber())
+                        .maxCopyNumber(x.maxCopyNumber())
                         .build())
                 .collect(Collectors.toList());
     }

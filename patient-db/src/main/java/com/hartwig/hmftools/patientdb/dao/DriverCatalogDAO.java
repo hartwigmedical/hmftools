@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep15;
+import org.jooq.InsertValuesStep18;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -36,8 +36,10 @@ class DriverCatalogDAO {
         deleteForSample(sample);
 
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep15 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep18 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
+                    DRIVERCATALOG.CHROMOSOME,
+                    DRIVERCATALOG.CHROMOSOMEBAND,
                     DRIVERCATALOG.GENE,
                     DRIVERCATALOG.DRIVER,
                     DRIVERCATALOG.CATEGORY,
@@ -51,16 +53,19 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.FRAMESHIFT,
                     DRIVERCATALOG.BIALLELIC,
                     DRIVERCATALOG.MINCOPYNUMBER,
+                    DRIVERCATALOG.MAXCOPYNUMBER,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep15 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
         //noinspection unchecked
         inserter.values(sample,
+                entry.chromosome(),
+                entry.chromosomeBand(),
                 entry.gene(),
                 entry.driver(),
                 entry.category(),
@@ -74,6 +79,7 @@ class DriverCatalogDAO {
                 entry.frameshift(),
                 entry.biallelic(),
                 entry.minCopyNumber(),
+                entry.maxCopyNumber(),
                 timestamp);
     }
 
@@ -90,6 +96,8 @@ class DriverCatalogDAO {
         for (Record record : result) {
             final DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
+                    .chromosome(record.getValue(DRIVERCATALOG.CHROMOSOME))
+                    .chromosomeBand(record.getValue(DRIVERCATALOG.CHROMOSOMEBAND))
                     .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
@@ -102,6 +110,7 @@ class DriverCatalogDAO {
                     .frameshift(record.getValue(DRIVERCATALOG.FRAMESHIFT))
                     .biallelic(record.getValue(DRIVERCATALOG.BIALLELIC) != 0)
                     .minCopyNumber(record.getValue(DRIVERCATALOG.MINCOPYNUMBER))
+                    .maxCopyNumber(record.getValue(DRIVERCATALOG.MAXCOPYNUMBER))
                     .build();
 
             dcList.add(driverCatalog);

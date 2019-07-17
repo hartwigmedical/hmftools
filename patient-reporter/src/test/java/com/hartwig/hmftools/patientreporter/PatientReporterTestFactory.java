@@ -160,6 +160,8 @@ public final class PatientReporterTestFactory {
     public static DriverCatalog createTestDriverCatalogEntry(@NotNull String gene) {
         return ImmutableDriverCatalog.builder()
                 .gene(gene)
+                .chromosome("1")
+                .chromosomeBand("1p")
                 .category(DriverCategory.ONCO)
                 .driver(DriverType.MUTATION)
                 .likelihoodMethod(LikelihoodMethod.NONE)
@@ -172,6 +174,7 @@ public final class PatientReporterTestFactory {
                 .frameshift(0)
                 .biallelic(false)
                 .minCopyNumber(0)
+                .maxCopyNumber(0)
                 .build();
     }
 }

@@ -704,6 +704,8 @@ CREATE TABLE driverCatalog
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     category varchar(255) NOT NULL,
     driver varchar(255) NOT NULL,
@@ -717,6 +719,7 @@ CREATE TABLE driverCatalog
     inframe int NOT NULL,
     biallelic BOOLEAN NOT NULL,
     minCopyNumber DOUBLE PRECISION NOT NULL,
+    maxCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId, gene),
     INDEX(gene)

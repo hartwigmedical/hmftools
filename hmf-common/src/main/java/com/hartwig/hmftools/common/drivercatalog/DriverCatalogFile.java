@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class DriverCatalogFile {
 
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    static final String HEADER_PREFIX = "gene";
+    static final String HEADER_PREFIX = "chromosome";
     private static final String DELIMITER = "\t";
     private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
 
@@ -52,7 +52,10 @@ public class DriverCatalogFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("gene")
+        return new StringJoiner(DELIMITER, "", "")
+                .add("chromosome")
+                .add("chromosomeBand")
+                .add("gene")
                 .add("driver")
                 .add("category")
                 .add("likelihoodMethod")
@@ -65,12 +68,16 @@ public class DriverCatalogFile {
                 .add("frameshift")
                 .add("biallelic")
                 .add("minCopyNumber")
+                .add("maxCopyNumber")
                 .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final DriverCatalog ratio) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.gene()))
+        return new StringJoiner(DELIMITER)
+                .add(String.valueOf(ratio.chromosome()))
+                .add(String.valueOf(ratio.chromosomeBand()))
+                .add(String.valueOf(ratio.gene()))
                 .add(String.valueOf(ratio.driver()))
                 .add(String.valueOf(ratio.category()))
                 .add(String.valueOf(ratio.likelihoodMethod()))
@@ -83,6 +90,7 @@ public class DriverCatalogFile {
                 .add(String.valueOf(ratio.frameshift()))
                 .add(String.valueOf(ratio.biallelic()))
                 .add(String.valueOf(ratio.minCopyNumber()))
+                .add(String.valueOf(ratio.maxCopyNumber()))
                 .toString();
     }
 
@@ -90,19 +98,22 @@ public class DriverCatalogFile {
     private static DriverCatalog fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
         ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
-                .gene(values[0])
-                .driver(DriverType.valueOf(values[1]))
-                .category(DriverCategory.valueOf(values[2]))
-                .likelihoodMethod(LikelihoodMethod.valueOf(values[3]))
-                .driverLikelihood(Double.valueOf(values[4]))
-                .dndsLikelihood(Double.valueOf(values[5]))
-                .missense(Long.valueOf(values[6]))
-                .nonsense(Long.valueOf(values[7]))
-                .splice(Long.valueOf(values[8]))
-                .inframe(Long.valueOf(values[9]))
-                .frameshift(Long.valueOf(values[10]))
-                .biallelic(Boolean.valueOf(values[11]))
-                .minCopyNumber(Double.valueOf(values[12]));
+                .chromosome(values[0])
+                .chromosomeBand(values[1])
+                .gene(values[2])
+                .driver(DriverType.valueOf(values[3]))
+                .category(DriverCategory.valueOf(values[4]))
+                .likelihoodMethod(LikelihoodMethod.valueOf(values[5]))
+                .driverLikelihood(Double.valueOf(values[6]))
+                .dndsLikelihood(Double.valueOf(values[7]))
+                .missense(Long.valueOf(values[8]))
+                .nonsense(Long.valueOf(values[9]))
+                .splice(Long.valueOf(values[10]))
+                .inframe(Long.valueOf(values[11]))
+                .frameshift(Long.valueOf(values[12]))
+                .biallelic(Boolean.valueOf(values[13]))
+                .minCopyNumber(Double.valueOf(values[14]))
+                .maxCopyNumber(Double.valueOf(values[15]));
 
         return builder.build();
     }

@@ -126,6 +126,8 @@ public class ReportableEvidenceItemFactoryTest {
     private static ImmutableDriverCatalog.Builder catalogBuilder(@NotNull String gene) {
         return ImmutableDriverCatalog.builder()
                 .gene(gene)
+                .chromosome("1")
+                .chromosomeBand("1p")
                 .driverLikelihood(0D)
                 .category(DriverCategory.ONCO)
                 .driver(DriverType.MUTATION)
@@ -137,6 +139,7 @@ public class ReportableEvidenceItemFactoryTest {
                 .inframe(0)
                 .frameshift(0)
                 .minCopyNumber(0)
+                .maxCopyNumber(0)
                 .biallelic(false);
     }
 }
