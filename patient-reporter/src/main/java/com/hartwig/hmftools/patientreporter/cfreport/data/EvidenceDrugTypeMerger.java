@@ -13,63 +13,51 @@ import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItemMerger;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceDrugTypeMerger {
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceDrugTypeMerger.class);
 
     private EvidenceDrugTypeMerger() {
     }
 
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
-        LOGGER.info(items);
-        Map<DrugsKey, List<EvidenceItem>> mapEvidence = Maps.newHashMap();
+        StringBuilder drugsString = new StringBuilder();
+
+        Map<DrugsKey, EvidenceItem> mapEvidence = Maps.newHashMap();
         for (EvidenceItem item : items) {
-            LOGGER.info(item);
-            mapEvidence.put(new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType(), item.source()),
-                    Lists.newArrayList(item));
+            mapEvidence.put(new DrugsKey(item.event(),
+                    item.scope(),
+                    item.level(),
+                    item.response(),
+                    item.drugsType(),
+                    item.source()), item);
         }
-        LOGGER.info(mapEvidence);
+
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
         List<String> drug = Lists.newArrayList();
-
-        for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
-            LOGGER.info(entry);
-            List<EvidenceItem> itemsForKey = entry.getValue();
-           // LOGGER.info("itemsForKey: " + itemsForKey);
+        for (Map.Entry<DrugsKey, EvidenceItem> entry : mapEvidence.entrySet()) {
+            EvidenceItem itemsForKey = entry.getValue();
             if (mapEvidence.containsKey(entry.getKey())) {
-                for (EvidenceItem itemValues : itemsForKey) {
-                   // LOGGER.info("item: " + item);
-                    if (!itemValues.drugsType().equals(Strings.EMPTY) || !itemValues.drugsType().equals("Unknown")) {
-                        drug.add(itemValues.drug());
-                    } else {
-                        drug.add(itemValues.drug());
-                    }
-                }
+                drug.add(itemsForKey.drug());
             }
 
-            StringBuilder drugsString = new StringBuilder();
             for (String drugs : drug) {
                 drugsString.append(drugs).append(",");
             }
 
-            for (EvidenceItem item : itemsForKey) {
-                evidenceItems.add(ImmutableEvidenceItemMerger.builder()
-                        .event(item.event())
-                        .source(item.source())
-                        .reference(item.reference())
-                        .drug(item.drugsType() + " (" + drugsString + ")")
-                        .level(item.level())
-                        .response(item.response())
-                        .isOnLabel(item.isOnLabel())
-                        .cancerType(item.cancerType())
-                        .scope(item.scope())
-                        .build());
-            }
+            evidenceItems.add(ImmutableEvidenceItemMerger.builder()
+                    .event(itemsForKey.event())
+                    .source(itemsForKey.source())
+                    .reference(itemsForKey.reference())
+                    .drug(itemsForKey.drugsType() + " (" + drugsString + ")")
+                    .level(itemsForKey.level())
+                    .response(itemsForKey.response())
+                    .isOnLabel(itemsForKey.isOnLabel())
+                    .cancerType(itemsForKey.cancerType())
+                    .scope(itemsForKey.scope())
+                    .build());
         }
         return evidenceItems;
     }
@@ -94,6 +82,8 @@ public final class EvidenceDrugTypeMerger {
         @NotNull
         private final ActionabilitySource source;
 
+
+
         public DrugsKey(@NotNull final String event, @NotNull final EvidenceScope match, @NotNull final EvidenceLevel level,
                 @NotNull final String response, @NotNull final String drugType, @NotNull final ActionabilitySource source) {
             this.event = event;
@@ -113,6 +103,9 @@ public final class EvidenceDrugTypeMerger {
                 return false;
             }
             final DrugsKey drugsKey = (DrugsKey) o;
+            if (drugsKey.drugType.equals("Unknown") || drugsKey.drugType.equals(Strings.EMPTY)) {
+                return false;
+            }
             return Objects.equals(event, drugsKey.event) && Objects.equals(match, drugsKey.match) && Objects.equals(level, drugsKey.level)
                     && Objects.equals(response, drugsKey.response) && Objects.equals(drugType, drugsKey.drugType) && Objects.equals(source,
                     drugsKey.source);
