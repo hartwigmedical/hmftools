@@ -574,16 +574,14 @@ public class ChainRuleSelector
                         continue;
                     }
 
-                    LOGGER.trace("pair({}) with {} ploidy({} & {})",
-                            pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
+                    // LOGGER.trace("pair({}) with {} ploidy({} & {})",
+                    //        pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
 
-                    ProposedLinks proposedLink = new ProposedLinks(pair, PLOIDY_MATCH);
+                    ProposedLinks proposedLink = (ploidyMatch == PM_MATCHED) ?
+                            new ProposedLinks(pair, PLOIDY_MATCH) : new ProposedLinks(pair, PLOIDY_OVERLAP);
+
                     proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
-
-                    if(ploidyMatch == PM_MATCHED)
-                        newProposedLinks.add(new ProposedLinks(pair, PLOIDY_MATCH));
-                    else
-                        newProposedLinks.add(new ProposedLinks(pair, PLOIDY_OVERLAP));
+                    newProposedLinks.add(proposedLink);
 
                     if(!copyNumbersEqual(proposedLink.ploidy(), currentMaxPloidy))
                         currentMaxPloidy = proposedLink.ploidy();

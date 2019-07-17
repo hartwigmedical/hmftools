@@ -43,7 +43,7 @@ public class ChainingActualTest
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
         SvTestHelper tester = new SvTestHelper();
-        tester.setChaininMethod(CHAIN_METHOD_COMPARE);
+        tester.setChaininMethod(CHAIN_METHOD_NEW);
         tester.logVerbose(true);
 
         /*

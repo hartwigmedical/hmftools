@@ -136,7 +136,7 @@ public class LinxConfig
 
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
 
-        ChainingMethod = cmd.hasOption(CHAINING_METHOD) ? Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD)) : CHAIN_METHOD_OLD;
+        ChainingMethod = cmd.hasOption(CHAINING_METHOD) ? Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD)) : CHAIN_METHOD_NEW;
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);

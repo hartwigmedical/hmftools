@@ -211,4 +211,15 @@ public class ProposedLinks
                 mChainConnectType, mPloidyMatchType, mShortestDistance, mPriority);
     }
 
+    public boolean isValid()
+    {
+        if(Links.isEmpty() || Links.size() > 2)
+            return false;
+
+        if(mBreakendPloidyMatched.isEmpty() || mBreakendPloidy.isEmpty())
+            return false;
+
+        return mPloidy > 0;
+    }
+
 }

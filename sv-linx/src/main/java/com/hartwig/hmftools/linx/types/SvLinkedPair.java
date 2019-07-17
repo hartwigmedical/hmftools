@@ -93,6 +93,17 @@ public class SvLinkedPair {
         return new SvLinkedPair(first.getSV(), second.getSV(), LINK_TYPE_TI, first.usesStart(), second.usesStart());
     }
 
+    public static SvLinkedPair copy(final SvLinkedPair other)
+    {
+        SvLinkedPair newPair = SvLinkedPair.from(other.firstBreakend(), other.secondBreakend());
+        newPair.setLinkReason(other.getLinkReason(), other.getLinkIndex());
+
+        if(other.isAssembled())
+            newPair.setIsAssembled();
+
+        return newPair;
+    }
+
     public final SvVarData first() { return mFirst; }
     public final SvVarData second() { return mSecond; }
 

@@ -206,6 +206,9 @@ public class ChainFinderOld
 
     public void compareChains(final List<SvChain> otherChains)
     {
+        if(otherChains.isEmpty() && mUniqueChains.isEmpty())
+            return;
+
         int matchedCount = 0;
 
         final List<SvChain> unmatchedChains = Lists.newArrayList(otherChains);
@@ -246,7 +249,7 @@ public class ChainFinderOld
         }
         else
         {
-            LOGGER.debug("cluster({}) oldChains({}) newChains({}) matched({})",
+            LOGGER.info("cluster({}) chaining mismatch: old({}) new({}) matched({})",
                     mClusterId, mUniqueChains.size(), otherChains.size(), matchedCount);
         }
     }

@@ -6,12 +6,16 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
+import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -114,6 +118,74 @@ public class ChainingSimpleTest
         chainData = chain.breakendsAreChained(var5, false, var1, true);
         assertEquals(chainData[CHAIN_LINK_COUNT], 0);
     }
+
+    @Test
+    public void testChainReconciliation()
+    {
+        SvVarData var1 = createDel("1", "1", 100, 150);
+        SvVarData var2 = createDel("2", "1", 200, 250);
+        SvVarData var3 = createDel("3", "1", 300, 350);
+        SvVarData var4 = createDel("4", "1", 400, 450);
+        SvVarData var5 = createDel("5", "1", 500, 550);
+        SvVarData var6 = createDel("6", "1", 600, 650);
+        SvVarData var7 = createDel("7", "1", 700, 750);
+
+        SvChain chain1 = new SvChain(1);
+        chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain1.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+
+        SvChain chain2 = new SvChain(2);
+        chain2.addLink(SvLinkedPair.from(var3.getBreakend(false), var4.getBreakend(true)), true);
+        chain2.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
+
+        List<SvChain> chainList = Lists.newArrayList(chain1, chain2);
+
+        reconcileChains(chainList);
+
+        assertTrue(chainList.size() == 1);
+        assertEquals(4, chain1.getLinkCount());
+        assertEquals(5, chain1.getSvCount());
+        assertTrue(checkIsValid(chain1));
+
+        // reset and try again with 3 chains
+        chain1 = new SvChain(1);
+        chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain1.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+
+        SvChain chain3 = new SvChain(3);
+        chain3.addLink(SvLinkedPair.from(var5.getBreakend(false), var6.getBreakend(true)), true);
+        chain3.addLink(SvLinkedPair.from(var6.getBreakend(false), var7.getBreakend(true)), false);
+
+        chainList = Lists.newArrayList(chain3, chain1, chain2);
+
+        reconcileChains(chainList);
+
+        assertTrue(chainList.size() == 1);
+        assertEquals(6, chain3.getLinkCount());
+        assertEquals(7, chain3.getSvCount());
+        assertTrue(checkIsValid(chain3));
+
+        // check cannot merge chains on the inner starting SVs
+        chain1 = new SvChain(1);
+        chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
+        chain1.addLink(SvLinkedPair.from(var2.getBreakend(false), var3.getBreakend(true)), false);
+
+        chain2 = new SvChain(2);
+        chain2.addLink(SvLinkedPair.from(var2.getBreakend(false), var4.getBreakend(true)), true);
+        chain2.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), false);
+
+        chainList = Lists.newArrayList(chain1, chain2);
+        reconcileChains(chainList);
+
+        assertTrue(chainList.size() == 2);
+
+        chainList = Lists.newArrayList(chain2, chain1);
+        reconcileChains(chainList);
+
+        assertTrue(chainList.size() == 2);
+
+    }
+
 
     @Test
     public void testChainSplittingByFoldback()

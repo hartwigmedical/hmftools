@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
+import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
@@ -390,19 +391,6 @@ public class ChainFinder
         }
     }
 
-    private void checkChains()
-    {
-        for(final SvChain chain : mChains)
-        {
-            if(!checkIsValid(chain))
-            {
-                LOGGER.error("cluster({}) has invalid chain({})", mClusterId, chain.id());
-                chain.logLinks();
-                mIsValid = false;
-            }
-        }
-    }
-
     private void removeIdenticalChains()
     {
         if(!mHasReplication)
@@ -461,7 +449,8 @@ public class ChainFinder
 
             if(LOGGER.isDebugEnabled())
             {
-                LOGGER.debug("cluster({}) added chain({}) with {} linked pairs:", mClusterId, chain.id(), chain.getLinkCount());
+                LOGGER.debug("cluster({}) added chain({}) ploidy({}) with {} linked pairs:",
+                        mClusterId, chain.id(), formatPloidy(chain.ploidy()), chain.getLinkCount());
                 chain.logLinks();
             }
 
@@ -664,6 +653,12 @@ public class ChainFinder
 
             proposedLinksList.remove(0);
 
+            if(!proposedLinks.isValid())
+            {
+                LOGGER.error("cluster({}) skipping invalid proposed links: {}", mClusterId, proposedLinks.toString());
+                continue;
+            }
+
             linkAdded |= addLinks(proposedLinks);
 
             if(!mIsValid)
@@ -679,8 +674,8 @@ public class ChainFinder
         }
     }
 
-    private static int SPEC_LINK_INDEX = -1;
-    // private static int SPEC_LINK_INDEX = 26;
+    // private static int SPEC_LINK_INDEX = -1;
+    private static int SPEC_LINK_INDEX = 16;
 
     private boolean addLinks(final ProposedLinks proposedLinks)
     {
@@ -693,6 +688,11 @@ public class ChainFinder
         // if the chain has a matching ploidy then recalculate it with the new SV's ploidy and uncertainty
 
         SvLinkedPair newPair = proposedLinks.Links.get(0);
+
+        if(mLinkIndex == SPEC_LINK_INDEX)
+        {
+            LOGGER.debug("specific index({})", mLinkIndex);
+        }
 
         boolean pairLinkedOnFirst = false;
         boolean addToStart = false;
@@ -753,7 +753,7 @@ public class ChainFinder
 
                 pairLinkedOnFirst = newPair.first() == chain.getFirstSV() || newPair.first() == chain.getLastSV();
 
-                final SvBreakend chainBreakend = pairLinkedOnFirst ? newPair.firstBreakend() : newPair.secondBreakend();
+                // final SvBreakend chainBreakend = pairLinkedOnFirst ? newPair.firstBreakend() : newPair.secondBreakend();
                 final SvBreakend newBreakend = pairLinkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
 
                 newSvPloidy = proposedLinks.breakendPloidy(newBreakend);
@@ -805,10 +805,7 @@ public class ChainFinder
                 mChains.add(newChain);
 
                 // copy the existing links into a new chain and set to the ploidy difference
-                for(final SvLinkedPair pair : targetChain.getLinkedPairs())
-                {
-                    newChain.addLink(pair, false);
-                }
+                newChain.copyFrom(targetChain);
 
                 if(!proposedLinks.multiConnection())
                 {
@@ -870,7 +867,7 @@ public class ChainFinder
                 return false; // skip this link for now
 
             // where more than one links is being added, they may not be able to be added to the same chain
-            // eg a chained foldback replicating another breakend - the chain reconciliation step will joing them back up
+            // eg a chained foldback replicating another breakend - the chain reconciliation step will join them back up
             SvChain newChain = null;
             for(final SvLinkedPair pair : proposedLinks.Links)
             {
@@ -936,11 +933,14 @@ public class ChainFinder
         if(reconcileChains)
         {
             // now see if any partial chains can be linked
-            reconcileChains();
+            reconcileChains(mChains);
         }
 
         if(mRunValidation)
+        {
+            checkChains();
             mDiagnostics.checkHasValidState(mLinkIndex);
+        }
 
         return true;
     }
@@ -964,6 +964,13 @@ public class ChainFinder
                 final SvVarData var = breakend.getSV();
 
                 SvChainState svConn = mSvConnectionsMap.get(var);
+
+                if(otherPairBreakend == null || breakend == null)
+                {
+                    LOGGER.error("invalid reference");
+                    mIsValid = false;
+                    return;
+                }
 
                 svConn.addConnection(otherPairBreakend, breakend.usesStart());
 
@@ -1478,80 +1485,6 @@ public class ChainFinder
         }
     }
 
-    private void reconcileChains()
-    {
-        int index1 = 0;
-        while(index1 < mChains.size())
-        {
-            SvChain chain1 = mChains.get(index1);
-
-            boolean chainsMerged = false;
-
-            for (int index2 = index1 + 1; index2 < mChains.size(); ++index2)
-            {
-                SvChain chain2 = mChains.get(index2);
-
-                if(!copyNumbersEqual(chain1.ploidy(), chain2.ploidy())
-                && !ploidyOverlap(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty()))
-                {
-                    continue;
-                }
-
-                for (int be1 = SE_START; be1 <= SE_END; ++be1)
-                {
-                    boolean c1Start = isStart(be1);
-
-                    for (int be2 = SE_START; be2 <= SE_END; ++be2)
-                    {
-                        boolean c2Start = isStart(be2);
-
-                        if (chain1.canAddLinkedPair(chain2.getLinkedPair(c2Start), c1Start, false))
-                        {
-                            LOGGER.debug("merging chain({} links={}) {} to chain({} links={}) {}",
-                                    chain1.id(), chain1.getLinkCount(), c1Start ? "start" : "end",
-                                    chain2.id(), chain2.getLinkCount(), c2Start ? "start" : "end");
-
-                            if(c2Start)
-                            {
-                                // merge chains and remove the latter
-                                for (SvLinkedPair linkedPair : chain2.getLinkedPairs())
-                                {
-                                    chain1.addLink(linkedPair, c1Start);
-                                }
-                            }
-                            else
-                            {
-                                // add in reverse
-                                for (int index = chain2.getLinkedPairs().size() - 1; index >= 0; --index)
-                                {
-                                    SvLinkedPair linkedPair = chain2.getLinkedPairs().get(index);
-                                    chain1.addLink(linkedPair, c1Start);
-                                }
-                            }
-
-                            mChains.remove(index2);
-
-                            chainsMerged = true;
-                            break;
-                        }
-
-                    }
-
-                    if (chainsMerged)
-                        break;
-                }
-
-                if (chainsMerged)
-                    break;
-            }
-
-            if (!chainsMerged)
-            {
-                ++index1;
-            }
-        }
-    }
-
     protected boolean isDoubleMinuteDup()
     {
         return mDoubleMinuteSVs.size() == 1 && mDoubleMinuteSVs.get(0).type() == DUP;
@@ -1658,6 +1591,40 @@ public class ChainFinder
                     pair.setLinkReason(LR_METHOD_DM_CLOSE, mLinkIndex++);
 
                     LOGGER.debug("cluster({}) closed DM chain", mClusterId);
+                }
+            }
+        }
+    }
+
+    private void checkChains()
+    {
+        for(final SvChain chain : mChains)
+        {
+            if(!checkIsValid(chain))
+            {
+                LOGGER.error("cluster({}) has invalid chain({})", mClusterId, chain.id());
+                chain.logLinks();
+                mIsValid = false;
+            }
+        }
+
+        // check no 2 chains have the same link reference
+        for(int i = 0; i < mChains.size() - 1; ++i)
+        {
+            final SvChain chain1 = mChains.get(i);
+
+            for(int j = i + 1; j < mChains.size(); ++j)
+            {
+                final SvChain chain2 = mChains.get(j);
+
+                for(final SvLinkedPair pair : chain2.getLinkedPairs())
+                {
+                    if(chain1.getLinkedPairs().stream().anyMatch(x -> x == pair))
+                    {
+                        LOGGER.error("cluster({}) chain({}) and chain({}) share pair({})",
+                                mClusterId, chain1.id(), chain2.id(), pair.toString());
+                        mIsValid = false;
+                    }
                 }
             }
         }
