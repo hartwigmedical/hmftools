@@ -40,9 +40,7 @@ public final class EvidenceDrugTypeMerger {
         for (Map.Entry<DrugsKey, EvidenceItem> entry : mapEvidence.entrySet()) {
             EvidenceItem itemsForKey = entry.getValue();
             if (mapEvidence.containsKey(entry.getKey())) {
-                if (!itemsForKey.drugsType().equals(Strings.EMPTY) || !itemsForKey.drugsType().equals("Unknown")) {
-                    drug.add(itemsForKey.drug());
-                }
+                drug.add(itemsForKey.drug());
             } else {
                 drug.add(itemsForKey.drug());
             }
