@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -45,16 +44,7 @@ public class DriverGeneData
             return !mEvents.isEmpty();
 
         if(DriverData.driver() == DEL)
-        {
-            if(DriverData.likelihoodMethod() == LikelihoodMethod.DEL)
-            {
-                return mEvents.size() >= 2;
-            }
-            else
-            {
-                return !mEvents.isEmpty();
-            }
-        }
+            return mEvents.size() >= 2;
 
         return mEvents.size() > 1;
     }
