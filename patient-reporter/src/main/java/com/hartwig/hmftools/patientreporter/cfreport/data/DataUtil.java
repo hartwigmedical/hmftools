@@ -26,7 +26,7 @@ public final class DataUtil {
 
     @NotNull
     public static String formatDate(@Nullable LocalDate date) {
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return date != null ? formatter.format(date) : NA_STRING;
     }
 }

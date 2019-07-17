@@ -71,7 +71,7 @@ public class TherapyDetailsChapterOffLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-        final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
+        List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
         for (EvidenceItem item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 

@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceItemMerger;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItemMerger;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.DetailsAndDisclaimerChapter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,10 +19,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceDrugTypeMerger {
-    private EvidenceDrugTypeMerger() {
-    }
 
     private static final Logger LOGGER = LogManager.getLogger(EvidenceDrugTypeMerger.class);
+
+    private EvidenceDrugTypeMerger() {
+    }
 
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
@@ -41,8 +41,6 @@ public final class EvidenceDrugTypeMerger {
                 mapEvidence.put(drugsKey, Lists.newArrayList(item));
 
             }
-
-
         }
 
 
