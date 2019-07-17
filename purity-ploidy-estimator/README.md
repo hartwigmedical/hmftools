@@ -219,7 +219,7 @@ While these steps are specific to Strelka, these principles can be applied to ot
 
 ## Algorithm
 
-There are 9 key steps in the PURPLE pipeline described in detail below:
+There are 10 key steps in the PURPLE pipeline described in detail below:
 1. Gender determination
 2. Segmentation
 3. Sample purity and ploidy fitting
