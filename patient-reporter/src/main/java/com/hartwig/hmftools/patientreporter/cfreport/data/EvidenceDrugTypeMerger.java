@@ -26,21 +26,28 @@ public final class EvidenceDrugTypeMerger {
 
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
-
+        LOGGER.info(items);
         Map<DrugsKey, List<EvidenceItem>> mapEvidence = Maps.newHashMap();
         for (EvidenceItem item : items) {
+            LOGGER.info(item);
             mapEvidence.put(new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType(), item.source()),
                     Lists.newArrayList(item));
         }
+        LOGGER.info(mapEvidence);
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
         List<String> drug = Lists.newArrayList();
 
         for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
+            LOGGER.info(entry);
             List<EvidenceItem> itemsForKey = entry.getValue();
+           // LOGGER.info("itemsForKey: " + itemsForKey);
             if (mapEvidence.containsKey(entry.getKey())) {
-                for (EvidenceItem item : itemsForKey) {
-                    if (!item.drugsType().equals(Strings.EMPTY) || !item.drugsType().equals("Unknown")) {
-                        drug.add(item.drug());
+                for (EvidenceItem itemValues : itemsForKey) {
+                   // LOGGER.info("item: " + item);
+                    if (!itemValues.drugsType().equals(Strings.EMPTY) || !itemValues.drugsType().equals("Unknown")) {
+                        drug.add(itemValues.drug());
+                    } else {
+                        drug.add(itemValues.drug());
                     }
                 }
             }
