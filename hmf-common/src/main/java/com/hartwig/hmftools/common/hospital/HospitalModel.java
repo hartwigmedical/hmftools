@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalModel {
+
     private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
     private static final String NA_STRING = "N/A";
 
@@ -80,13 +81,14 @@ public abstract class HospitalModel {
             // These are the old core names, we need to manually map them.
             final HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sample);
             if (hospitalSampleMapping == null) {
-                LOGGER.error("Cannot find sample hospital mapping for sample " + sample);
+                LOGGER.error("Cannot find sample hospital mapping for sample {}.", sample);
                 return null;
             } else {
                 hospital = findByHospital(hospitalSampleMapping.internalHospitalName());
                 if (hospital == null) {
-                    LOGGER.error(
-                            "Cannot find hospital details for sample " + sample + " using " + hospitalSampleMapping.internalHospitalName());
+                    LOGGER.error("Cannot find hospital details for sample {} using {}.",
+                            sample,
+                            hospitalSampleMapping.internalHospitalName());
                     return null;
                 }
             }
@@ -118,7 +120,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private static String extractHospitalIdFromSample(@NotNull final String sample) {
+    private static String extractHospitalIdFromSample(@NotNull String sample) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT || type == LimsSampleType.WIDE
@@ -127,11 +129,10 @@ public abstract class HospitalModel {
             return sample.substring(6, 8);
         }
 
-        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital) {
+    private static void checkAddresseeFields(@NotNull String sample, @NotNull HospitalData hospital) {
         final List<String> missingFields = Lists.newArrayList();
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
