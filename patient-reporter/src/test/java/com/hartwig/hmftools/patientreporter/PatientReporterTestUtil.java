@@ -36,7 +36,7 @@ public final class PatientReporterTestUtil {
 
     private static final String DRUP_GENES_CSV = Resources.getResource("actionability/drup_genes.csv").getPath();
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("csv/germline_genes_reporting.csv").getPath();
-    private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
+    private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.tsv").getPath();
 
     private PatientReporterTestUtil() {
     }

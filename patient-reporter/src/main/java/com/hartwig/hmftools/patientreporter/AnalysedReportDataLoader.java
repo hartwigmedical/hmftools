@@ -23,12 +23,12 @@ final class AnalysedReportDataLoader {
 
     @NotNull
     static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir, @NotNull String drupGeneCsv,
-            @NotNull String fastaFileLocation, @NotNull String germlineGenesCsv, @NotNull String sampleSummaryCsv) throws IOException {
+            @NotNull String fastaFileLocation, @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTSV) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(drupGeneCsv);
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
-        final SummaryModel summaryModel = SummaryFile.buildFromCsv(sampleSummaryCsv);
+        final SummaryModel summaryModel = SummaryFile.buildFromCsv(sampleSummaryTSV);
 
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
