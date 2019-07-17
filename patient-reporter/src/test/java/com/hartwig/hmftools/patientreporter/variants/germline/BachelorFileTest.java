@@ -18,7 +18,7 @@ public class BachelorFileTest {
 
     @Test
     public void canReadTestBachelorFile() throws IOException {
-        List<GermlineVariant> germlineVariants = BachelorFile.loadBachelorFile(BACHELOR_FILE);
+        List<GermlineVariant> germlineVariants = BachelorFile.loadBachelorCsv(BACHELOR_FILE);
 
         assertEquals(1, germlineVariants.size());
 
@@ -31,7 +31,6 @@ public class BachelorFileTest {
         assertEquals(75, variant.totalReadCount());
         assertEquals(1.99, variant.adjustedCopyNumber(), EPSILON);
         assertEquals(-0.1, variant.adjustedVAF(), EPSILON);
-        assertEquals(0.0, variant.minorAllelePloidy(), EPSILON);
         assertFalse(variant.biallelic());
     }
 }

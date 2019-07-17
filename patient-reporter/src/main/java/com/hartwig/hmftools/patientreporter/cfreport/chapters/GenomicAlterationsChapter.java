@@ -57,12 +57,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 70, 70, 80, 80, 60, 50, 70, 45, 40 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("position"),
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 60, 60, 60, 50, 50 },
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
                         TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
                         TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Ploidy (VAF)"),
-                        TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Driver") });
+                        TableUtil.createHeaderCell("Ploidy").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Hotspot"),
+                        TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Clonal"),
+                        TableUtil.createHeaderCell("Driver") });
 
         List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
@@ -74,14 +76,17 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(
+                    SomaticVariants.ploidyString(variant.allelePloidy(), hasReliablePurityFit)
+                            + " / ").setFont(ReportResources.fontBold())
+                    .add(new Text(SomaticVariants.ploidyString(variant.totalPloidy(),
+                            hasReliablePurityFit)).setFont(ReportResources.fontRegular()))
+                    .setTextAlignment(TextAlignment.CENTER)));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot())));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.ploidyVaf(variant.adjustedCopyNumber(),
-                    variant.minorAllelePloidy(),
-                    variant.adjustedVAF(),
-                    hasReliablePurityFit)));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
                     hasReliablePurityFit)));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalString(variant.clonalLikelihood())));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.driverString(variant.driverLikelihood())));
         }
 
@@ -119,9 +124,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().text()));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit
-                    ? String.valueOf(gainLoss.copies())
-                    : DataUtil.NA_STRING).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
+                    .setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 

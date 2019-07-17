@@ -76,11 +76,10 @@ public final class ReportableVariantAnalyzer {
                 .hgvsProteinImpact(variant.hgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
+                .totalPloidy(variant.adjustedCopyNumber())
+                .allelePloidy(variant.adjustedCopyNumber() * variant.adjustedVAF())
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .adjustedCopyNumber(variant.adjustedCopyNumber())
-                .adjustedVAF(variant.adjustedVAF())
-                .minorAllelePloidy(variant.minorAllelePloidy())
                 .biallelic(variant.biallelic());
     }
 
@@ -93,11 +92,10 @@ public final class ReportableVariantAnalyzer {
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
+                .totalPloidy(variant.adjustedCopyNumber())
+                .allelePloidy(variant.adjustedCopyNumber() * variant.adjustedVAF())
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
-                .adjustedCopyNumber(variant.adjustedCopyNumber())
-                .adjustedVAF(variant.adjustedVAF())
-                .minorAllelePloidy(variant.minorAllelePloidy())
                 .biallelic(variant.biallelic());
     }
 

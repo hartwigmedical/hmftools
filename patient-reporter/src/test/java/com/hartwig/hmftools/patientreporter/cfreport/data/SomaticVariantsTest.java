@@ -34,42 +34,4 @@ public class SomaticVariantsTest {
         assertEquals(variant3, sortedVariants.get(1));
         assertEquals(variant2, sortedVariants.get(2));
     }
-
-    @Test
-    public void negativeMinorAllelePloidyWorks() {
-        assertEquals("AAAAAAA", SomaticVariants.descriptiveBAF(7, -1));
-    }
-
-    @Test
-    public void descriptiveBAFWorksAroundBoundary() {
-        assertEquals("AA", SomaticVariants.descriptiveBAF(2, 2));
-        assertEquals("", SomaticVariants.descriptiveBAF(-12, 0));
-    }
-
-    @Test
-    public void descriptiveBAFWorksForTypicalCases() {
-        assertEquals("AA", SomaticVariants.descriptiveBAF(2, 0));
-        assertEquals("AB", SomaticVariants.descriptiveBAF(2, 1));
-        assertEquals("AB", SomaticVariants.descriptiveBAF(2, 1.4));
-        assertEquals("AA", SomaticVariants.descriptiveBAF(2, 1.6));
-        assertEquals("AA", SomaticVariants.descriptiveBAF(2, 2));
-
-        assertEquals("AAA", SomaticVariants.descriptiveBAF(3, 0));
-        assertEquals("AAB", SomaticVariants.descriptiveBAF(3, 1.5));
-        assertEquals("AAB", SomaticVariants.descriptiveBAF(3, 2.49));
-        assertEquals("AAA", SomaticVariants.descriptiveBAF(3, 2.51));
-        assertEquals("AAA", SomaticVariants.descriptiveBAF(3, 3));
-
-        assertEquals("AAAA", SomaticVariants.descriptiveBAF(4, 0));
-        assertEquals("AAAA", SomaticVariants.descriptiveBAF(4, 0.1));
-        assertEquals("AABB", SomaticVariants.descriptiveBAF(4, 2));
-        assertEquals("AABB", SomaticVariants.descriptiveBAF(4, 2.49));
-        assertEquals("AAAB", SomaticVariants.descriptiveBAF(4, 2.51));
-        assertEquals("AAAB", SomaticVariants.descriptiveBAF(4, 3.49));
-        assertEquals("AAAA", SomaticVariants.descriptiveBAF(4, 3.51));
-        assertEquals("AAAA", SomaticVariants.descriptiveBAF(4, 3.8));
-        assertEquals("AAAA", SomaticVariants.descriptiveBAF(4, 4));
-
-        assertEquals("A[12x]", SomaticVariants.descriptiveBAF(12, 0));
-    }
 }

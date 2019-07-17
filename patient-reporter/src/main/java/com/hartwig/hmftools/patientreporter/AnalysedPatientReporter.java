@@ -168,7 +168,7 @@ class AnalysedPatientReporter {
         }
 
         List<GermlineVariant> variants =
-                BachelorFile.loadBachelorFile(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+                BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sample);
