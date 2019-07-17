@@ -12,16 +12,11 @@ import com.hartwig.hmftools.common.actionability.EvidenceItemMerger;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItemMerger;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceDrugTypeMerger {
-    private static final Logger LOGGER = LogManager.getLogger(PatientReporterApplication.class);
-
     private EvidenceDrugTypeMerger() {
     }
 
@@ -31,21 +26,14 @@ public final class EvidenceDrugTypeMerger {
 
         Map<DrugsKey, EvidenceItem> mapEvidence = Maps.newHashMap();
         for (EvidenceItem item : items) {
-            mapEvidence.put(new DrugsKey(item.event(),
-                    item.scope(),
-                    item.level(),
-                    item.response(),
-                    item.drugsType(),
-                    item.source()), item);
+            mapEvidence.put(new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType(), item.source()), item);
         }
 
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
         List<String> drug = Lists.newArrayList();
         for (Map.Entry<DrugsKey, EvidenceItem> entry : mapEvidence.entrySet()) {
             EvidenceItem itemsForKey = entry.getValue();
-            if (mapEvidence.containsKey(entry.getKey())) {
-                drug.add(itemsForKey.drug());
-            }
+            drug.add(itemsForKey.drug());
 
             for (String drugs : drug) {
                 drugsString.append(drugs).append(", ");
@@ -87,8 +75,6 @@ public final class EvidenceDrugTypeMerger {
 
         @NotNull
         private final ActionabilitySource source;
-
-
 
         public DrugsKey(@NotNull final String event, @NotNull final EvidenceScope match, @NotNull final EvidenceLevel level,
                 @NotNull final String response, @NotNull final String drugType, @NotNull final ActionabilitySource source) {
