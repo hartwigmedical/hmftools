@@ -35,7 +35,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37.",
                         "Transcripts used for reporting can be found on https://resources.hartwigmedicalfoundation.nl in directory "
-                                + " Patient-Reporting and are generally the canonical transcripts as defined by Ensembl.",
+                                + "Patient-Reporting and are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor "
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The (implied) tumor purity is the percentage of tumor cells in the biopsy based on analysis of "
@@ -43,7 +43,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
-                        "The CGI, OncoKb and CiViC knowledgebases are used to annotate variants of all types with "
+                        "The CGI, OncoKB and CIViC knowledgebases are used to annotate variants of all types with "
                                 + "clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain "
                                 + "evidence item or drug-biomarker is missing from the knowledgebases it will also not be "
                                 + "included in this report.",
@@ -55,11 +55,8 @@ public class ExplanationChapter implements ReportChapter {
                 .add(createContentDiv(new String[] {
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
                                 + "number of reads on the mutated position.",
-                        "The 'Ploidy (VAF)' field displays the tumor ploidy for the observed position. The ploidy has "
-                                + "been adjusted for the implied tumor purity and is shown as a proportion of "
-                                + "A’s and B’s (e.g. AAABB for 3 copies of A, and 2 copies of B). The copy number is the "
-                                + "sum of A’s and B’s. The VAF value is the alternative allele frequency after "
-                                + "correction for tumor purity.",
+                        "The 'Ploidy' field displays the number of alleles on which this variant is present in the tumor"
+                                + " versus the copy number of this position in the tumor",
                         "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
                                 + "(and is including variants with loss-of-heterozygosity).",
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. A "
@@ -81,17 +78,17 @@ public class ExplanationChapter implements ReportChapter {
                         "Any gene with less than 0.5 copies along the entire canonical transcript is reported as a full loss.",
                         "Any gene where only a part along the canonical transcript has less than 0.5 copies is reported "
                                 + "as a partial loss.",
-                        "Any gene with more copies than 3 times the average tumor ploidy is reported as a gain." })));
+                        "Any relevant gene with more copies than 3 times the average tumor ploidy is reported as a gain." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
-                        "Fusions are restricted to those in a known fusion list based on CiViC, OncoKB, CGI and COSMIC",
+                        "Fusions are restricted to those in a known fusion list based on CIViC, OncoKB, CGI and COSMIC",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
                         "Genes are reported as being disrupted if their canonical transcript has been disrupted",
-                        "The range of the disruption is indicated by the intron/exon/promoter chromosomeBand of the break point "
+                        "The range of the disruption is indicated by the intron/exon/promoter region of the break point "
                                 + "and the direction the disruption faces.",
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS "
                                 + "(insertion), SGL (single) or BND (translocation)." })));
