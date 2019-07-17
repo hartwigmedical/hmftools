@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -55,15 +54,116 @@ public final class EvidenceDrugTypeMergerTest {
                 .source(ActionabilitySource.ONCOKB)
                 .scope(EvidenceScope.SPECIFIC)
                 .build());
-      //  LOGGER.info(evidenceItems);
-     //   LOGGER.info(EvidenceDrugTypeMerger.merge(evidenceItems));
 
-        assertEquals(1, EvidenceDrugTypeMerger.merge(evidenceItems).size());
+        assertEquals(3, EvidenceDrugTypeMerger.merge(evidenceItems).size());
+    }
+
+    @Test
+    public void evidenceMergerknownDrugsType() {
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+        ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("A + B")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("D")
+                .drugsType("Chemo")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("C")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Response")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
 
 
+        assertEquals(3, EvidenceDrugTypeMerger.merge(evidenceItems).size());
+    }
+
+    @Test
+    public void evidenceMergerknownDrugsTypeMore() {
+        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+        ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("A + B")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("D")
+                .drugsType("Chemo")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("C")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Response")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.BROAD)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("S")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("E + F + G")
+                .drugsType("Chemo")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.CIVIC)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("P")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Response")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.BROAD)
+                .build());
 
 
-
+        assertEquals(4, EvidenceDrugTypeMerger.merge(evidenceItems).size());
     }
 
     @NotNull
