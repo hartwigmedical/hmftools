@@ -60,7 +60,7 @@ public final class PatientReporterTestUtil {
         try {
             DrupActionabilityModel drupActionabilityModel = DrupActionabilityModelFactory.buildFromCsv(DRUP_GENES_CSV);
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
-            SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
+            SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_CSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(testReportData())

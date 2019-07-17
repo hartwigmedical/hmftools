@@ -24,7 +24,7 @@ public final class SummaryFile {
     }
 
     @NotNull
-    public static SummaryModel buildFromCsv(@NotNull String sampleSummaryTsv) throws IOException {
+    public static SummaryModel buildFromTsv(@NotNull String sampleSummaryTsv) throws IOException {
         List<String> linesSampleSummary = LineReader.build().readLines(new File(sampleSummaryTsv).toPath(), line -> line.length() > 0);
 
         Map<String, String> sampleToSummaryMap = Maps.newHashMap();

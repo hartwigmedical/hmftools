@@ -14,7 +14,7 @@ public class SummaryFileTest {
 
     @Test
     public void summaryFromCSVWithNewLines() throws IOException {
-        SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_TSV);
+        SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
         String summary = summaryModel.findSummaryForSample("sample");
