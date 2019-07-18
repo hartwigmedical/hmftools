@@ -633,7 +633,7 @@ public class SvVarData
 
     public void setPloidyRecalcData(double minPloidy, double maxPloidy)
     {
-        if(maxPloidy < mPloidy)
+        if(maxPloidy == 0)
         {
             // suggests an error in the calculation
             mPloidyMax = mPloidy;
