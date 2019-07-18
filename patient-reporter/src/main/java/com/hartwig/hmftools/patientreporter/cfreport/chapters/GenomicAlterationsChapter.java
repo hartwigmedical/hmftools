@@ -27,6 +27,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
+    // TODO Remove this toggle-off once purple v2.31 is in production
+    private static final boolean DISPLAY_CLONAL_COLUMN = false;
+
     @NotNull
     private final AnalysedPatientReport patientReport;
 
@@ -57,14 +60,24 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 60, 60, 60, 50, 50 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
-                        TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
-                        TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("Ploidy").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("Hotspot"),
-                        TableUtil.createHeaderCell("Biallelic"), TableUtil.createHeaderCell("Clonal"),
-                        TableUtil.createHeaderCell("Driver") });
+        Table contentTable;
+        if (DISPLAY_CLONAL_COLUMN) {
+            contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 60, 60, 60, 50, 50 },
+                    new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
+                            TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
+                            TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Ploidy").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Biallelic"),
+                            TableUtil.createHeaderCell("Clonal"), TableUtil.createHeaderCell("Driver") });
+        } else {
+            contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 60, 60, 60, 50 },
+                    new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
+                            TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
+                            TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Ploidy").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Biallelic"),
+                            TableUtil.createHeaderCell("Driver") });
+        }
 
         List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
         for (ReportableVariant variant : sortedVariants) {
@@ -77,8 +90,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
-                    SomaticVariants.ploidyString(variant.allelePloidy(), hasReliablePurityFit)
-                            + " / ").setFont(ReportResources.fontBold())
+                    SomaticVariants.ploidyString(variant.allelePloidy(), hasReliablePurityFit) + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(SomaticVariants.ploidyString(variant.totalPloidy(),
                             hasReliablePurityFit)).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
@@ -86,7 +98,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
                     hasReliablePurityFit)));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalString(variant.clonalLikelihood())));
+            if (DISPLAY_CLONAL_COLUMN) {
+                contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalString(variant.clonalLikelihood())));
+            }
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.driverString(variant.driverLikelihood())));
         }
 
