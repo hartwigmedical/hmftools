@@ -21,25 +21,47 @@ public final class ReportableGeneFusionFile {
     public static final String FILE_EXTENSION = ".linx.fusions.tsv";
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
-    {
+    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> read(final String filePath) throws IOException
-    {
+    public static List<ReportableGeneFusion> read(final String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<ReportableGeneFusion> fusions) throws IOException
-    {
+    @NotNull
+    public static List<ReportableGeneFusion> readFromDetailedFusionFile(@NotNull String filePath) throws IOException {
+        // TODO Remove this function since it is a work-around for bug known under DEV-833
+        List<String> lines = Files.readAllLines(new File(filePath).toPath());
+        List<ReportableGeneFusion> reportableGeneFusions = Lists.newArrayList();
+
+        // Skip header
+        for (int i = 1; i < lines.size(); i++) {
+            String[] values = lines.get(i).split(",");
+            // Filter on reportable = true
+            if (Boolean.valueOf(values[1])) {
+                reportableGeneFusions.add(ImmutableReportableGeneFusion.builder()
+                        .geneStart(values[17])
+                        .geneContextStart(context(values[21], Integer.valueOf(values[23]), false))
+                        .geneTranscriptStart(values[19])
+                        .geneEnd(values[44])
+                        .geneContextEnd(context(values[48], Integer.valueOf(values[50]), true))
+                        .geneTranscriptEnd(values[46])
+                        .ploidy(fusionPloidy(Double.valueOf(values[15]), Double.valueOf(values[42])))
+                        .build());
+            }
+        }
+
+        return reportableGeneFusions;
+    }
+
+    public static void write(@NotNull final String filename, @NotNull List<ReportableGeneFusion> fusions) throws IOException {
         Files.write(new File(filename).toPath(), toLines(fusions));
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<ReportableGeneFusion> fusions)
-    {
+    private static List<String> toLines(@NotNull final List<ReportableGeneFusion> fusions) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         fusions.stream().map(ReportableGeneFusionFile::toString).forEach(lines::add);
@@ -47,16 +69,13 @@ public final class ReportableGeneFusionFile {
     }
 
     @NotNull
-    private static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines)
-    {
+    private static List<ReportableGeneFusion> fromLines(@NotNull List<String> lines) {
         return lines.stream().filter(x -> !x.startsWith("geneStart")).map(ReportableGeneFusionFile::fromString).collect(toList());
     }
 
     @NotNull
-    private static String header()
-    {
-        return new StringJoiner(DELIMITER)
-                .add("geneStart")
+    private static String header() {
+        return new StringJoiner(DELIMITER).add("geneStart")
                 .add("geneContextStart")
                 .add("geneTranscriptStart")
                 .add("geneEnd")
@@ -95,10 +114,8 @@ public final class ReportableGeneFusionFile {
                 .build();
     }
 
-    public static String context(final String regionType, int exon, boolean isEnd)
-    {
-        switch (regionType)
-        {
+    public static String context(final String regionType, int exon, boolean isEnd) {
+        switch (regionType) {
             case "Upstream":
                 return "Promoter Region";
             case "Exonic":
@@ -110,8 +127,7 @@ public final class ReportableGeneFusionFile {
         return String.format("ERROR: %s", regionType);
     }
 
-    public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy)
-    {
+    public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy) {
         return (upstreamPloidy + downstreamPloidy) * 0.5;
     }
 }

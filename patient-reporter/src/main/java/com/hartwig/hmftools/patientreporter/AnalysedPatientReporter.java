@@ -188,7 +188,8 @@ class AnalysedPatientReporter {
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+        // TODO Replace with normal fusion file rather than detailed fusions once DEV-833 is fixed.
+        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.readFromDetailedFusionFile(linxFusionTsv);
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
         List<ReportableDisruption> disruptions = ReportableDisruptionFile.read(linxDisruptionTsv);
