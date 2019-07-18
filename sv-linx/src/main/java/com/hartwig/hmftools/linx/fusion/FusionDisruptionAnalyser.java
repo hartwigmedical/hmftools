@@ -1097,10 +1097,10 @@ public class FusionDisruptionAnalyser
                 reportedFusions.add(ImmutableReportableGeneFusion.builder()
                         .geneStart(fusion.upstreamTrans().geneName())
                         .geneTranscriptStart(fusion.upstreamTrans().StableId)
-                        .geneContextStart(context(fusion.upstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, false))
+                        .geneContextStart(context(fusion.upstreamTrans()))
                         .geneEnd(fusion.downstreamTrans().geneName())
                         .geneTranscriptEnd(fusion.downstreamTrans().StableId)
-                        .geneContextEnd(context(fusion.downstreamTrans().regionType(), fusion.upstreamTrans().ExonDownstream, true))
+                        .geneContextEnd(context(fusion.downstreamTrans()))
                         .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
                         .build());
             }

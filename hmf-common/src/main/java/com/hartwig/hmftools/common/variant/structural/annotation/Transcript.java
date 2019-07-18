@@ -53,14 +53,14 @@ public class Transcript {
     private String mProteinFeaturesKept;
     private String mProteinFeaturesLost;
 
-    public static String TRANS_REGION_TYPE_UPSTREAM = "Upstream"; // promotor and earlier
-    public static String TRANS_REGION_TYPE_EXONIC = "Exonic";
-    public static String TRANS_REGION_TYPE_INTRONIC = "Intronic";
+    public static final String TRANS_REGION_TYPE_UPSTREAM = "Upstream"; // promotor and earlier
+    public static final String TRANS_REGION_TYPE_EXONIC = "Exonic";
+    public static final String TRANS_REGION_TYPE_INTRONIC = "Intronic";
 
-    public static String TRANS_CODING_TYPE_CODING = "Coding";
-    public static String TRANS_CODING_TYPE_5P_UTR = "5P_UTR";
-    public static String TRANS_CODING_TYPE_3P_UTR = "3P_UTR";
-    public static String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
+    public static final String TRANS_CODING_TYPE_CODING = "Coding";
+    public static final String TRANS_CODING_TYPE_5P_UTR = "5P_UTR";
+    public static final String TRANS_CODING_TYPE_3P_UTR = "3P_UTR";
+    public static final String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
     private static final int STOP_CODON_LENGTH = 3;
 

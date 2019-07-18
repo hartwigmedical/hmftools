@@ -2,6 +2,10 @@ package com.hartwig.hmftools.common.variant.structural.annotation;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_REGION_TYPE_EXONIC;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_REGION_TYPE_INTRONIC;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_REGION_TYPE_UPSTREAM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -95,19 +99,19 @@ public final class ReportableGeneFusionFile {
                 .build();
     }
 
-    public static String context(final String regionType, int exon, boolean isEnd)
+    public static String context(final Transcript transcript)
     {
-        switch (regionType)
+        switch (transcript.regionType())
         {
-            case "Upstream":
+            case TRANS_REGION_TYPE_UPSTREAM:
                 return "Promoter Region";
-            case "Exonic":
-                return String.format("Exon %d", exon);
-            case "Intronic":
-                return String.format("Intron %d", isEnd ? exon - 1 : exon);
+            case TRANS_REGION_TYPE_EXONIC:
+                return String.format("Exon %d", transcript.ExonUpstream);
+            case TRANS_REGION_TYPE_INTRONIC:
+                return String.format("Intron %d", transcript.isUpstream() ? transcript.ExonUpstream : transcript.ExonDownstream);
         }
 
-        return String.format("ERROR: %s", regionType);
+        return String.format("ERROR: %s", transcript.regionType());
     }
 
     public static double fusionPloidy(double downstreamPloidy, double upstreamPloidy)
