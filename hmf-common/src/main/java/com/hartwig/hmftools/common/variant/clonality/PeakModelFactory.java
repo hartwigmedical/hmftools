@@ -120,7 +120,7 @@ public class PeakModelFactory {
 
         double offset = offset(peak);
 
-        int maxBucket = bucket(maxPloidy);
+        int maxBucket = bucket(maxPloidy) + 1;
         double[] result = new double[maxBucket];
         double[] weight = scalingFactor(peak, peakPloidies);
 

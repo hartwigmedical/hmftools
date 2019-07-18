@@ -131,6 +131,7 @@ public class WeightedPloidyHistogramTest {
     private static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount) {
         return ModifiableWeightedPloidy.create()
                 .setPloidy(ploidy)
+                .setWeight(1)
                 .setAlleleReadCount(alleleReadCount)
                 .setTotalReadCount(totalReadCount);
     }

@@ -25,9 +25,8 @@ public class PealModelFactoryTest {
         long startTime = new Date().getTime();
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
         List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
-        double[] histogram = victim.histogram(ploidies);
 
-        double peakPloidy = victim.peakPloidy(10, histogram);
+        double peakPloidy = victim.peakPloidy(10, ploidies);
 
         System.out.println();
         PeakModelFactory factory = new PeakModelFactory(10, 0.05);
