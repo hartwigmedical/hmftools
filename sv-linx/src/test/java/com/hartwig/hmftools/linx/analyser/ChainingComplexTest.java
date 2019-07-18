@@ -273,5 +273,50 @@ public class ChainingComplexTest
         assertEquals(6, chain.getLinkCount());
     }
 
+    @Test
+    public void testComplexMultiAssemblyChain()
+    {
+        // chain with more than breakend connecting via assembly to other breakends
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 2000,1000, 1, -1, DEL, 5);
+        final SvVarData var2 = createTestSv("2", "1", "1", 1500,9000, 1, 1, INV, 5);
+        final SvVarData var3 = createTestSv("3", "1", "1", 1200,6000, 1, -1, DEL, 4);
+        final SvVarData var4 = createTestSv("4", "1", "2", 1300,200, -1, 1, BND, 2);
+        final SvVarData var5 = createTestSv("5", "1", "2", 1400,500, -1, -1, BND, 1);
+        final SvVarData var6 = createTestSv("6", "1", "1", 100,900, 1, -1, DEL, 2);
+        final SvVarData var7 = createTestSv("7", "1", "1", 800,2000, -1, -1, INV, 1);
+        final SvVarData var8 = createTestSv("8", "1", "1", 1100,10000, 1, 1, INV, 2);
+
+        var1.setAssemblyData(false, "asmb12;asmb18;asmb13");
+        var2.setAssemblyData(true, "asmb12;asmb24;asmb25");
+        var3.setAssemblyData(true, "asmb13;asmb36;asmb37");
+        var4.setAssemblyData(true, "asmb24");
+        var5.setAssemblyData(true, "asmb25");
+        var6.setAssemblyData(false, "asmb36");
+        var7.setAssemblyData(true, "asmb37");
+        var8.setAssemblyData(true, "asmb18");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+
+        tester.preClusteringInit(true);
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(7, cluster.getAssemblyLinkedPairs().size());
+
+        int assemblyChainedLinks = cluster.getChains().stream().mapToInt(x -> x.getAssemblyLinkCount()).sum();
+        assertEquals(7, assemblyChainedLinks);
+    }
 
 }

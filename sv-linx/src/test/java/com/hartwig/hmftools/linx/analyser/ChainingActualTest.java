@@ -240,15 +240,12 @@ public class ChainingActualTest
         // assertTrue(chain.isClosedLoop());
     }
 
-
-    @Ignore
     @Test
     public void testActualSimpleChaining1()
     {
-        // based on CPCT02010325T clusterId 37, where the shortest TI of 76 bases is actually ignored so as to make 2 chains
+        // based on a sample where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         SvTestHelper tester = new SvTestHelper();
-        // tester.logVerbose(true);
-        // tester.Analyser.getChainFinder().setMaxPossibleLinks(2);
+        tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv("7821420","18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
         final SvVarData var2 = createTestSv("7821421","X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");

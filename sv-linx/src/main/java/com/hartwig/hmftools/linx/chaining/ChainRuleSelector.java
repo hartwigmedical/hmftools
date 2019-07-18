@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
@@ -14,7 +15,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.NEAREST;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MAX;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_OVERLAP;
-import static com.hartwig.hmftools.linx.chaining.ChainingRule.SINGLE_OPTION;
+import static com.hartwig.hmftools.linx.chaining.ChainingRule.ONLY;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
@@ -30,7 +31,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svlink;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -86,8 +86,10 @@ public class ChainRuleSelector
                 continue;
             }
 
-            if(entry.getValue().size() > 2)
+            if(entry.getValue().size() >= 2) // disable connections to an INV for now
                 continue;
+
+            SvBreakend limitingBreakend = entry.getKey();
 
             final SvLinkedPair newPair;
 
@@ -96,7 +98,10 @@ public class ChainRuleSelector
                 // consider a link only to an INV as a single option
                 final SvLinkedPair pair1 = entry.getValue().get(0);
                 final SvLinkedPair pair2 = entry.getValue().get(1);
-                if(pair1.first() == pair2.first() && pair1.second() == pair2.second())
+                final SvVarData otherSv1 = pair1.getOtherSV(limitingBreakend.getSV());
+                final SvVarData otherSv2 = pair2.getOtherSV(limitingBreakend.getSV());
+
+                if(otherSv1 == otherSv2 && otherSv1.type() == INV)
                 {
                     newPair = pair1.length() < pair2.length() ? pair1 : pair2;
                 }
@@ -109,8 +114,6 @@ public class ChainRuleSelector
             {
                 newPair = entry.getValue().get(0);
             }
-
-            SvBreakend limitingBreakend = entry.getKey();
 
             // special case for DM DUPs - because they can link with themselves at the end, don't restrict their connectivity earlier on
             if(mChainFinder.isDoubleMinuteDup(limitingBreakend.getSV()))
@@ -129,7 +132,7 @@ public class ChainRuleSelector
             if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
 
-            ProposedLinks proposedLink = new ProposedLinks(newPair, SINGLE_OPTION);
+            ProposedLinks proposedLink = new ProposedLinks(newPair, ONLY);
             proposedLink.addBreakendPloidies(newPair.firstBreakend(), ploidyFirst, newPair.secondBreakend(), ploidySecond);
 
             // check for another proposed link with a clashing breakend, and if found take the lower ploidy and short link
@@ -138,8 +141,9 @@ public class ChainRuleSelector
             while(index < proposedLinks.size())
             {
                 final ProposedLinks otherLink = proposedLinks.get(index);
+                final SvLinkedPair otherPair = otherLink.Links.get(0);
 
-                if(otherLink.Links.get(0).hasLinkClash(newPair))
+                if(otherPair.hasLinkClash(newPair) || otherPair.oppositeMatch(newPair))
                 {
                     if (copyNumbersEqual(otherLink.ploidy(), proposedLink.ploidy()))
                     {
@@ -304,7 +308,7 @@ public class ChainRuleSelector
 
         // now check for a match between any previously identified proposed links and this set
         // note that to preserve the additional proposed-link info for complex links, the higher rule is considered 'new'
-        return restrictProposedLinks(newProposedLinks, proposedLinks, SINGLE_OPTION);
+        return restrictProposedLinks(newProposedLinks, proposedLinks, ONLY);
     }
 
     public List<ProposedLinks> findComplexDupPairs(List<ProposedLinks> proposedLinks)
@@ -446,7 +450,7 @@ public class ChainRuleSelector
             }
         }
 
-        return restrictProposedLinks(newProposedLinks, proposedLinks, SINGLE_OPTION);
+        return restrictProposedLinks(newProposedLinks, proposedLinks, ONLY);
     }
 
     public List<ProposedLinks> findFoldbackToFoldbackPairs(final List<ProposedLinks> proposedLinks)

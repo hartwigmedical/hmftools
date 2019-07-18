@@ -82,6 +82,8 @@ public class ChainDiagnostics
 
     public void setSampleId(final String sampleId) { mSampleId = sampleId; }
 
+    public int unlinkedSvCount() { return mUnlinkedSvCount; }
+
     public void clear()
     {
         mLogMessages.clear();
@@ -185,8 +187,8 @@ public class ChainDiagnostics
                         svConn.Ploidy, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
                 logCsv("MULTI_CONN", svConn.SV,
-                        String.format("conns(%d) ploid(%d-%d-%d) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
-                                connectionCount, svConn.MinPloidy, svConn.Ploidy, svConn.MaxPloidy,
+                        String.format("conns(%d) ploidy(%s-%s-%s) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
+                                connectionCount, formatPloidy(svConn.MinPloidy), formatPloidy(svConn.Ploidy), formatPloidy(svConn.MaxPloidy),
                                 foldbackCons, compDupCons, assembledLinks, otherSVs));
 
                 ++invalidCount;
@@ -212,7 +214,8 @@ public class ChainDiagnostics
         mUnlinkedBreakendCount = mSvConnectionsMap.values().stream()
                 .mapToInt(x -> (x.breakendCount(true) == 0 ? 1 : 0) + (x.breakendCount(false) == 0 ? 1 : 0)).sum();
 
-        mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream().filter(x -> x.curentCount() == 0).count();
+        mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream()
+                .filter(x -> x.breakendCount(true) == 0 && x.breakendCount(false) == 0).count();
 
         if(mHasReplication)
         {
@@ -221,7 +224,7 @@ public class ChainDiagnostics
 
             double unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
 
-            LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} unique={}) breakends({} reps={})",
+            LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} ploidy={}) breakends({} ploidy={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
                     mUnlinkedSvCount, formatPloidy(unlinkedPloidySVs), mUnlinkedBreakendCount, formatPloidy(unlinkedPloidyBreakends));
         }

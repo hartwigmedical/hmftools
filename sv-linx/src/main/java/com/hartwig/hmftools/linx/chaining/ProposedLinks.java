@@ -183,6 +183,11 @@ public class ProposedLinks
         return mBreakendPloidyMatched.get(breakend);
     }
 
+    public void overrideBreakendPloidyMatched(final SvBreakend breakend)
+    {
+        mBreakendPloidyMatched.put(breakend, false);
+    }
+
     public final String ploidyMatchType() { return mPloidyMatchType; }
     public boolean linkPloidyMatch() { return mPloidyMatchType != PM_NONE; }
 

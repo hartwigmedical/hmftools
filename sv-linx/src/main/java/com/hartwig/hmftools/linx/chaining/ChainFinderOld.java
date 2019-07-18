@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -56,6 +57,7 @@ public class ChainFinderOld
     private final List<SvChain> mChains;
     private final List<SvChain> mUniqueChains;
     private int mNextChainId;
+    private int mUnlinkedSvCount;
 
     // the key is a 'original' unreplicated breakend, the values are the set of remaining replicated breakends
     private final Map<SvBreakend, List<SvBreakend>> mUnlinkedBreakendMap;
@@ -130,6 +132,7 @@ public class ChainFinderOld
         mPairSkipped = false;
         mNextChainId = 0;
         mLinkIndex = 0;
+        mUnlinkedSvCount = 0;
         mMaxPossibleLinks = DEFAULT_MAX_POSSIBLE_LINKS;
         mLinkReason = "";
         mUseAllelePloidies = false;
@@ -161,6 +164,7 @@ public class ChainFinderOld
 
         mNextChainId = 0;
         mLinkIndex = 0;
+        mUnlinkedSvCount = 0;
         mIsValid = true;
         mPairSkipped = false;
     }
@@ -204,10 +208,23 @@ public class ChainFinderOld
         }
     }
 
-    public void compareChains(final List<SvChain> otherChains)
+    public void compareChains(final String sampleId, final List<SvChain> otherChains, int unlinkedSvCount)
     {
         if(otherChains.isEmpty() && mUniqueChains.isEmpty())
             return;
+
+        // for now only compare small-ish chains or those without SGLs
+        if(mUniqueSVs.size() <= 2 || mUniqueSVs.size() > 20)
+            return;
+
+        if(mUniqueSVs.stream().anyMatch(x -> x.isNullBreakend()))
+            return;
+
+        if(mUniqueSVs.size() <= SMALL_CLUSTER_SIZE
+        && mUniqueSVs.stream().filter(SvVarData::isSimpleType).count() == mUniqueSVs.size())
+        {
+            return;
+        }
 
         int matchedCount = 0;
 
@@ -249,8 +266,18 @@ public class ChainFinderOld
         }
         else
         {
-            LOGGER.info("cluster({}) chaining mismatch: old({}) new({}) matched({})",
-                    mClusterId, mUniqueChains.size(), otherChains.size(), matchedCount);
+            if(mUnlinkedSvCount == 0 && unlinkedSvCount == 0)
+            {
+                LOGGER.debug("sampleId({}) cluster({}) svCount({}) type({}) chaining mismatch: old({}) new({}) matched({}) all SVs linked",
+                        sampleId, mClusterId, mUniqueSVs.size(), mHasReplication ? "replicated" : "simple",
+                        mUniqueChains.size(), otherChains.size(), matchedCount);
+            }
+            else
+            {
+                LOGGER.info("sampleId({}) cluster({}) svCount({}) type({}) chaining mismatch: old({}) new({}) matched({}) unlinkedSVs(new={} old={})",
+                        sampleId, mClusterId, mUniqueSVs.size(), mHasReplication ? "replicated" : "simple",
+                        mUniqueChains.size(), otherChains.size(), matchedCount, unlinkedSvCount, mUnlinkedSvCount);
+            }
         }
     }
 
@@ -293,8 +320,10 @@ public class ChainFinderOld
                 unlinkedSVs.add(var);
         }
 
+        mUnlinkedSvCount = unlinkedSVs.size();
+
         LOGGER.debug("cluster({}) old chaining finished: chains({} unique={} links={}) unlinked SVs({} unique={}) breakends({} reps={})",
-                mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mUnlinkedReplicatedSVs.size(), unlinkedSVs.size(),
+                mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mUnlinkedReplicatedSVs.size(), mUnlinkedSvCount,
                 mUnlinkedBreakendMap.size(), unlinkedBreakendCount);
 
 
@@ -947,7 +976,7 @@ public class ChainFinderOld
 
                 if(getUnlinkedBreakendCount(otherBreakend) == 1)
                 {
-                    LOGGER.warn(String.format("single-option pair(%s len=%d rep=%d) clashes with pair(%s len=%d rep=%d)",
+                    LOGGER.debug(String.format("single-option pair(%s len=%d rep=%d) clashes with pair(%s len=%d rep=%d)",
                             newPair.toString(), newPair.length(), minLinkCount,
                             otherPair.toString(), otherPair.length(), otherMinLinkCount));
                 }
@@ -1277,11 +1306,6 @@ public class ChainFinderOld
 
     private boolean addPairToChain(final SvLinkedPair origPair)
     {
-        if(mLinkIndex == SPEC_LINK_INDEX)
-        {
-            LOGGER.debug("specific link index({}) pair({})", mLinkIndex, origPair.toString());
-        }
-
         // attempt to add to existing chain
         boolean addedToChain = false;
         boolean[] pairToChain = {false, false};
@@ -1323,6 +1347,8 @@ public class ChainFinderOld
             if(origPair.isAssembled())
                 newPair.setIsAssembled();
         }
+
+        newPair.setLinkReason(mLinkReason, mLinkIndex);
 
         boolean linkClosesChain = false;
 
@@ -1454,8 +1480,6 @@ public class ChainFinderOld
             LOGGER.debug("index({}) method({}) adding linked pair({} {}) to new chain({})",
                     mLinkIndex, mLinkReason, newPair.toString(), newPair.assemblyInferredStr(), chain.id());
         }
-
-        newPair.setLinkReason(mLinkReason, mLinkIndex);
 
         registerNewLink(origPair, newPair, pairToChain);
         ++mLinkIndex;

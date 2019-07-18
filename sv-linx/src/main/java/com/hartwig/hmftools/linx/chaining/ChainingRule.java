@@ -6,7 +6,7 @@ import static java.lang.Math.pow;
 public enum ChainingRule
 {
     ASSEMBLY,
-    SINGLE_OPTION,
+    ONLY,
     CHAIN_SPLIT,
     FOLDBACK,
     PLOIDY_MATCH,
@@ -19,7 +19,7 @@ public enum ChainingRule
     {
         switch(rule)
         {
-            case SINGLE_OPTION: return 8;
+            case ONLY: return 8;
             case CHAIN_SPLIT: return 7;
             case FOLDBACK: return 6;
             case PLOIDY_MATCH: return 5;
