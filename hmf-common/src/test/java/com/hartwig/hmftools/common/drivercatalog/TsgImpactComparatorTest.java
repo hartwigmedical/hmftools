@@ -13,7 +13,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -23,12 +23,12 @@ import org.junit.Test;
 
 public class TsgImpactComparatorTest {
 
-    private EnrichedSomaticVariant missense;
-    private EnrichedSomaticVariant nonsense;
-    private EnrichedSomaticVariant spliceIndel;
-    private EnrichedSomaticVariant spliceSNP;
-    private EnrichedSomaticVariant frameshift;
-    private EnrichedSomaticVariant inframe;
+    private SomaticVariant missense;
+    private SomaticVariant nonsense;
+    private SomaticVariant spliceIndel;
+    private SomaticVariant spliceSNP;
+    private SomaticVariant frameshift;
+    private SomaticVariant inframe;
 
     @Before
     public void setup() {
@@ -52,7 +52,7 @@ public class TsgImpactComparatorTest {
 
     @Test
     public void testSorting() {
-        final List<EnrichedSomaticVariant> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
+        final List<SomaticVariant> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
         Collections.shuffle(list);
 
         list.sort(new TsgImpactComparator());
@@ -65,7 +65,7 @@ public class TsgImpactComparatorTest {
     }
 
     @NotNull
-    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect) {
-        return SomaticVariantTestBuilderFactory.createEnriched().type(type).canonicalCodingEffect(codingEffect).build();
+    private static SomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect) {
+        return SomaticVariantTestBuilderFactory.create().type(type).canonicalCodingEffect(codingEffect).build();
     }
 }

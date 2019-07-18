@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
@@ -36,12 +36,10 @@ public class ReportableVariantAnalyzerTest {
 
     @Test
     public void mergeWithoutGermlineVariantsWithDRUPActionabilityWorks() {
-        EnrichedSomaticVariant variant1 =
-                PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITH_NOTIFY).build();
-        EnrichedSomaticVariant variant2 =
-                PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build();
+        SomaticVariant variant1 = PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITH_NOTIFY).build();
+        SomaticVariant variant2 = PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build();
 
-        List<EnrichedSomaticVariant> variantsToReport = Lists.newArrayList(variant1, variant2);
+        List<SomaticVariant> variantsToReport = Lists.newArrayList(variant1, variant2);
         Set<String> drupActionableGenes = Sets.newHashSet(GENE_WITH_NOTIFY);
 
         List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
@@ -65,7 +63,7 @@ public class ReportableVariantAnalyzerTest {
 
     @Test
     public void mergeSomaticAndGermlineVariantWithNotifyGermline() {
-        List<EnrichedSomaticVariant> variantsToReport =
+        List<SomaticVariant> variantsToReport =
                 Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build());
 
         List<GermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
@@ -94,7 +92,7 @@ public class ReportableVariantAnalyzerTest {
 
     @Test
     public void mergeSomaticAndGermlineVariantWithoutNotifyGermline() {
-        List<EnrichedSomaticVariant> variantsToReport =
+        List<SomaticVariant> variantsToReport =
                 Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(GENE_WITHOUT_NOTIFY).build());
 
         List<GermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();

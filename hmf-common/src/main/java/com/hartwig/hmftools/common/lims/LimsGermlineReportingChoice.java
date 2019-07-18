@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.lims;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public enum LimsGermlineReportingChoice {
@@ -10,8 +8,6 @@ public enum LimsGermlineReportingChoice {
     NONE_ALLOW_FAMILY,
     NONE,
     UNKNOWN;
-
-    private static final Logger LOGGER = LogManager.getLogger(LimsGermlineReportingChoice.class);
 
     @NotNull
     static LimsGermlineReportingChoice fromLimsGermlineReportingChoiceString(@NotNull String germlineReportingChoiceString,
@@ -31,9 +27,8 @@ public enum LimsGermlineReportingChoice {
                     throw new IllegalStateException(
                             "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingChoiceString);
             }
-        } else {
-            LOGGER.info("Patient is not participating in WIDE study: " + sampleId);
-            return UNKNOWN;
         }
+
+        return UNKNOWN;
     }
 }

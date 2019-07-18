@@ -27,7 +27,7 @@ public final class GeneFusions {
 
     @NotNull
     public static Set<String> uniqueGeneFusions(@NotNull final List<ReportableGeneFusion> fusions) {
-        final Set<String> genes = Sets.newHashSet();
+        Set<String> genes = Sets.newHashSet();
         for (ReportableGeneFusion fusion : fusions) {
             genes.add(name(fusion));
         }

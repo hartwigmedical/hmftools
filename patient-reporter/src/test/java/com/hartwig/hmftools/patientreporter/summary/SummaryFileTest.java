@@ -10,11 +10,11 @@ import org.junit.Test;
 
 public class SummaryFileTest {
 
-    private static final String SAMPLE_SUMMARY_CSV = Resources.getResource("csv/sample_summary.csv").getPath();
+    private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     @Test
     public void summaryFromCSVWithNewLines() throws IOException {
-        SummaryModel summaryModel = SummaryFile.buildFromCsv(SAMPLE_SUMMARY_CSV);
+        SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
         String summary = summaryModel.findSummaryForSample("sample");

@@ -40,8 +40,6 @@ public abstract class GermlineVariant implements GenomePosition, AllelicDepth {
 
     public abstract double adjustedCopyNumber();
 
-    public abstract double minorAllelePloidy();
-
     public abstract boolean biallelic();
 
 }

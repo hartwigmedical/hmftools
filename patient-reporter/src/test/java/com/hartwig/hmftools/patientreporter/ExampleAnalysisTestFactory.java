@@ -46,11 +46,11 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     public static AnalysedPatientReport buildCOLO829() {
         final boolean hasReliablePurityFit = true;
-        final double impliedTumorPurity = 0.98;
+        final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
-        final int tumorMutationalLoad = 182;
-        final double tumorMutationalBurden = 13.6324;
-        final double microsatelliteIndelsPerMb = 0.1179;
+        final int tumorMutationalLoad = 180;
+        final double tumorMutationalBurden = 13.6;
+        final double microsatelliteIndelsPerMb = 0.12;
 
         final ReportData reportData = testReportData();
 
@@ -222,7 +222,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Binimetinib + Encorafenib")
-                .drugsType("Chemo")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -232,7 +231,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cobimetinib + Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -242,7 +240,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -252,7 +249,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib + Trametinib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -262,7 +258,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Trametinib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -272,7 +267,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -282,7 +276,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("RO4987655")
-                .drugsType("Chemo")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:208")
@@ -300,16 +293,6 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
 
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.SPECIFIC)
-                .acronym("COWBOY")
-                .reference("EXT6687 (NL58446.091.16)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.SPECIFIC)
-                .acronym("IMPemBra")
-                .reference("EXT8846 (NL54421.031.15)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.BROAD)
                 .acronym("LXH254 in tumors with MAPK pathway alterations")
                 .reference("EXT10453 (NL55506.078.15)")
@@ -322,17 +305,12 @@ public final class ExampleAnalysisTestFactory {
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.SPECIFIC)
                 .acronym("PROCLAIM-001")
-                .reference("EXT10151 (NL59299.042.17)")
+                .reference("EXT10241 (NL59299.042.17)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.SPECIFIC)
                 .acronym("REDUCTOR")
                 .reference("EXT6690 (NL45261.031.13)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.SPECIFIC)
-                .acronym("REPOSIT")
-                .reference("EXT6699 (NL48639.031.14)")
                 .build());
 
         return trials;
@@ -346,7 +324,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Alpelisib + Cetuximab + Encorafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:17")
@@ -356,7 +333,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Bevacizumab")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -366,7 +342,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("CI-1040")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -376,7 +351,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("BRAF:V600E")
@@ -386,7 +360,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab + Encorafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:17")
@@ -396,7 +369,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab + Irinotecan + Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -406,7 +378,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib + Panitumumab + Trametinib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -416,7 +387,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Irinotecan")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -426,7 +396,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Oxaliplatin")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -436,7 +405,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Panitumumab")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("BRAF:V600E")
@@ -446,7 +414,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:17")
@@ -456,7 +423,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
                 .drug("EGFR mAB inhibitor")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("PTEN:del")
@@ -466,7 +432,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
                 .drug("Everolimus")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:213")
@@ -482,79 +447,94 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
                 .isDrupActionable(true)
+                .notifyClinicalGeneticist(false)
+                .driverCategory(DriverCategory.ONCO)
+                .gDNA("7:140453136")
                 .hgvsCodingImpact("c.1799T>A")
                 .hgvsProteinImpact("p.Val600Glu")
+                .alleleReadCount(154)
+                .totalReadCount(225)
+                .allelePloidy(4.1)
+                .totalPloidy(6.1)
                 .hotspot(Hotspot.HOTSPOT)
-                .clonalLikelihood(1D)
-                .alleleReadCount(107)
-                .totalReadCount(161)
-                .adjustedCopyNumber(6)
-                .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(0.67)
-                .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(1D)
-                .notifyClinicalGeneticist(false)
-                .gDNA("7:140453136")
+                .clonalLikelihood(1D)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
                 .isDrupActionable(true)
-                .hgvsCodingImpact("c.369_370delCG")
-                .hgvsProteinImpact("p.Gly124fs")
-                .hotspot(Hotspot.NEAR_HOTSPOT)
-                .clonalLikelihood(1D)
-                .alleleReadCount(44)
-                .totalReadCount(44)
-                .adjustedCopyNumber(2)
-                .minorAllelePloidy(0)
-                .biallelic(true)
-                .adjustedVAF(1D)
-                .driverCategory(DriverCategory.TSG)
-                .driverLikelihood(0.9)
                 .notifyClinicalGeneticist(false)
-                .gDNA("9:21971092")
+                .driverCategory(DriverCategory.TSG)
+                .gDNA("9:21971153")
+                .hgvsCodingImpact("c.203_204delCG")
+                .hgvsProteinImpact("p.Ala68fs")
+                .alleleReadCount(94)
+                .totalReadCount(94)
+                .allelePloidy(2D)
+                .totalPloidy(2D)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .biallelic(true)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0.9)
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
-                .gene("SF3B1")
+                .gene("TERT")
                 .isDrupActionable(false)
-                .hgvsCodingImpact("c.2153C>T")
-                .hgvsProteinImpact("p.Pro718Leu")
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .clonalLikelihood(1D)
-                .alleleReadCount(72)
-                .totalReadCount(107)
-                .adjustedCopyNumber(3)
-                .minorAllelePloidy(1)
-                .biallelic(false)
-                .adjustedVAF(0.68)
-                .driverCategory(DriverCategory.ONCO)
-                .driverLikelihood(0.5)
                 .notifyClinicalGeneticist(false)
-                .gDNA("2:198266779")
+                .driverCategory(DriverCategory.ONCO)
+                .gDNA("5:1295228")
+                .hgvsCodingImpact("c.-125_-124delCCinsTT")
+                .hgvsProteinImpact(Strings.EMPTY)
+                .alleleReadCount(49)
+                .totalReadCount(49)
+                .allelePloidy(2D)
+                .totalPloidy(2D)
+                .hotspot(Hotspot.HOTSPOT)
+                .biallelic(false)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0.85)
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
+                .gene("SF3B1")
+                .isDrupActionable(false)
+                .notifyClinicalGeneticist(false)
+                .driverCategory(DriverCategory.ONCO)
+                .gDNA("2:198266779")
+                .hgvsCodingImpact("c.2153C>T")
+                .hgvsProteinImpact("p.Pro718Leu")
+                .alleleReadCount(76)
+                .totalReadCount(115)
+                .allelePloidy(2D)
+                .totalPloidy(3.1)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .biallelic(false)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0.5)
+                .build();
+
+        ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .gene("TP63")
                 .isDrupActionable(false)
+                .notifyClinicalGeneticist(false)
+                .driverCategory(DriverCategory.TSG)
+                .gDNA("3:189604330")
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
+                .alleleReadCount(52)
+                .totalReadCount(119)
+                .allelePloidy(1.8)
+                .totalPloidy(4D)
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .clonalLikelihood(1D)
-                .alleleReadCount(48)
-                .totalReadCount(103)
-                .adjustedCopyNumber(4)
-                .minorAllelePloidy(2)
                 .biallelic(false)
-                .adjustedVAF(0.47)
-                .driverCategory(DriverCategory.TSG)
+                .clonalLikelihood(1D)
                 .driverLikelihood(0.1)
-                .notifyClinicalGeneticist(false)
-                .gDNA("3:189604330")
                 .build();
-        return Lists.newArrayList(variant1, variant2, variant3, variant4);
+
+        return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
     }
 
     @NotNull
@@ -562,39 +542,37 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("TP63")
                 .isDrupActionable(false)
+                .notifyClinicalGeneticist(false)
+                .driverCategory(DriverCategory.TSG)
+                .gDNA("3:189604330")
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
-                .adjustedCopyNumber(4)
-                .minorAllelePloidy(2)
+                .allelePloidy(2.1)
+                .totalPloidy(4.1)
                 .biallelic(false)
-                .adjustedVAF(0.5)
-                .driverCategory(DriverCategory.TSG)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .clonalLikelihood(0.47)
                 .driverLikelihood(0.1)
-                .notifyClinicalGeneticist(false)
-                .gDNA("3:189604330")
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("KIT")
                 .isDrupActionable(false)
+                .notifyClinicalGeneticist(true)
+                .driverCategory(DriverCategory.TSG)
+                .gDNA("3:81627197")
                 .hgvsCodingImpact("c.1497G>T")
                 .hgvsProteinImpact("p.Met499Ile")
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .clonalLikelihood(1D)
                 .alleleReadCount(48)
                 .totalReadCount(103)
-                .adjustedCopyNumber(4)
-                .minorAllelePloidy(2)
+                .allelePloidy(1.3)
+                .totalPloidy(2.5)
+                .hotspot(Hotspot.NON_HOTSPOT)
                 .biallelic(true)
-                .adjustedVAF(0.5)
-                .driverCategory(DriverCategory.TSG)
+                .clonalLikelihood(0.68)
                 .driverLikelihood(0.1)
-                .notifyClinicalGeneticist(true)
-                .gDNA("3:81627197")
                 .build();
 
         return Lists.newArrayList(variant1, variant2);
@@ -604,7 +582,7 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableGainLoss> createCOLO829GainsLosses() {
         ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
                 .chromosome("10")
-                .region("q23.31")
+                .chromosomeBand("q23.31")
                 .gene("PTEN")
                 .copies(0)
                 .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)

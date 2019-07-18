@@ -19,6 +19,9 @@ import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEv
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+// NOTE: PLEASE DO NOT DELETE THIS... CURRENTLY USED AS PART OF THE GENE PANEL PROCESS
+// TODO: Move this somewhere it can be run automatically, like into the knowledgebase perhaps?
+@SuppressWarnings("unused")
 public class ActionablePanelBuilder {
 
     private static final Set<String> EXCLUDE = Sets.newHashSet("iclusion");

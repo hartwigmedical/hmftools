@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,20 +40,27 @@ public final class FittedPurityFile {
     @NotNull
     static PurityContext fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        ImmutablePurityContext.Builder builder =  ImmutablePurityContext.builder()
+        ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder()
                 .score(score(values))
                 .bestFit(bestFit(values))
                 .gender(gender(values))
                 .status(status(values))
                 .polyClonalProportion(polyClonalProportion(values))
                 .version(values[14])
+                .microsatelliteIndelsPerMb(0)
+                .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
                 .wholeGenomeDuplication(false);
 
         if (values.length > 16) {
             builder.wholeGenomeDuplication(Boolean.valueOf(values[16]));
         }
 
-        return  builder.build();
+        if (values.length > 18) {
+            builder.microsatelliteIndelsPerMb(Double.valueOf(values[17]));
+            builder.microsatelliteStatus(MicrosatelliteStatus.valueOf(values[18]));
+        }
+
+        return builder.build();
     }
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
@@ -96,6 +104,8 @@ public final class FittedPurityFile {
                 .add("version")
                 .add("somaticPenalty")
                 .add("wholeGenomeDuplication")
+                .add("msIndelsPerMb")
+                .add("msStatus")
                 .toString();
     }
 
@@ -120,6 +130,8 @@ public final class FittedPurityFile {
                 .add(String.valueOf(context.version()))
                 .add(FORMAT.format(purity.somaticPenalty()))
                 .add(String.valueOf(context.wholeGenomeDuplication()))
+                .add(String.valueOf(context.microsatelliteIndelsPerMb()))
+                .add(String.valueOf(context.microsatelliteStatus()))
                 .toString();
     }
 

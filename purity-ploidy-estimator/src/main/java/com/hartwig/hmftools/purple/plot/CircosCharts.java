@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -60,34 +59,32 @@ class CircosCharts {
         this.baseCircosReferenceSample = config.circosDirectory() + File.separator + referenceSample;
     }
 
-
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
             @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
-            throws IOException, ExecutionException, InterruptedException {
+            @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs) throws IOException {
 
         writeConfig(gender);
         writeCopyNumbers(copyNumber);
         writeEnrichedSomatics(somaticVariants);
         writeStructuralVariants(structuralVariants);
-        writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS,regions));
+        writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS, regions));
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
+    }
 
-        final List<Future<Object>> futures = Lists.newArrayList();
+    @NotNull
+    public List<Future<Integer>> chartFutures() {
+        final List<Future<Integer>> futures = Lists.newArrayList();
         final Optional<String> circosBinary = config.circosBinary();
         if (circosBinary.isPresent()) {
             futures.add(executorService.submit(() -> generateCircos(circosBinary.get(), "input")));
             futures.add(executorService.submit(() -> generateCircos(circosBinary.get(), "circos")));
         }
 
-        for (final Future<Object> future : futures) {
-            // This (intentionally) has side effect of alerting users to any exceptions
-            future.get();
-        }
+        return futures;
     }
 
     @Nullable
-    private Object generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException {
+    private Integer generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException {
         CircosExecution execution = new CircosExecution(executable);
 
         final String inputConfig = confFile(type);
@@ -110,6 +107,7 @@ class CircosCharts {
         CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos", fittedRegions, ObservedRegion::observedNormalRatio);
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos", fittedRegions, ObservedRegion::observedTumorRatio);
     }
+
     private void writeBafs(@NotNull final List<AmberBAF> bafs) throws IOException {
         CircosFileWriter.writePositions(baseCircosTumorSample + ".baf.circos", bafs, AmberBAF::tumorBAF);
     }
@@ -122,16 +120,17 @@ class CircosCharts {
 
     private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
         CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snp(somaticVariants)));
-        CircosINDELWriter.writePositions(baseCircosTumorSample + ".indel.circos", Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
+        CircosINDELWriter.writePositions(baseCircosTumorSample + ".indel.circos",
+                Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
     }
 
     private void writeConfig(@NotNull final Gender gender) throws IOException {
         writeConfig(gender, "circos");
         writeConfig(gender, "input");
         if (isHg38) {
-            copyResourceToCircos("gaps_hg38.txt" ,"gaps.txt");
+            copyResourceToCircos("gaps_hg38.txt", "gaps.txt");
         } else {
-            copyResourceToCircos("gaps_hg19.txt" ,"gaps.txt");
+            copyResourceToCircos("gaps_hg19.txt", "gaps.txt");
         }
     }
 

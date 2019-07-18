@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ public final class FilterGermlineVariants {
     @NotNull
     public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<EnrichedSomaticVariant> variantsToReport) {
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport) {
         List<GermlineVariant> filteredGermlineVariants = Lists.newArrayList();
 
         Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
@@ -42,7 +42,7 @@ public final class FilterGermlineVariants {
                     }
 
                     boolean filterSomaticVariantInSameGene = false;
-                    for (EnrichedSomaticVariant variant : variantsToReport) {
+                    for (SomaticVariant variant : variantsToReport) {
                         if (variant.gene().equals(germlineVariant.gene())) {
                             filterSomaticVariantInSameGene = true;
                         }

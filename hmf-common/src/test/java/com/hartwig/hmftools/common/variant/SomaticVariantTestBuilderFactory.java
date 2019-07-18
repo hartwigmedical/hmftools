@@ -50,6 +50,6 @@ public final class SomaticVariantTestBuilderFactory {
 
     @NotNull
     public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
-        return ImmutableEnrichedSomaticVariant.builder().from(create().build()).clonality(Clonality.UNKNOWN);
+        return ImmutableEnrichedSomaticVariant.builder().from(create().build());
     }
 }

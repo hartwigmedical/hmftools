@@ -16,7 +16,7 @@ public abstract class ReportableGainLoss {
     public abstract String chromosome();
 
     @NotNull
-    public abstract String region();
+    public abstract String chromosomeBand();
 
     @NotNull
     public abstract String gene();

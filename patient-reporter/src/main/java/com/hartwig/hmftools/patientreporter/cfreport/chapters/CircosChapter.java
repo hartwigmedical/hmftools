@@ -37,7 +37,7 @@ public class CircosChapter implements ReportChapter {
     public final void render(@NotNull Document reportDocument) throws IOException {
         final String circosPath = patientReport.circosPath();
         try {
-            final Image circosImage = new Image(ImageDataFactory.create(circosPath));
+            Image circosImage = new Image(ImageDataFactory.create(circosPath));
             circosImage.setMaxHeight(400);
             circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
             circosImage.setMarginBottom(8);

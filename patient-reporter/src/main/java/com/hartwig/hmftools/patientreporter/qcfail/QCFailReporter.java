@@ -20,16 +20,17 @@ public class QCFailReporter {
     }
 
     @NotNull
-    public QCFailReport run(@NotNull String sample, @NotNull QCFailReason reason, @Nullable String comments) {
-        QCFailStudy study = QCFailStudy.fromSample(sample);
+    public QCFailReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull QCFailReason reason,
+            @Nullable String comments) {
+        QCFailStudy study = QCFailStudy.fromSample(tumorSample);
 
         assert study != null;
 
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(), sample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(), tumorSample);
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sample,
-                null,
+        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
+                refSample,
                 reportData.limsModel(),
                 reportData.hospitalModel(),
                 patientTumorLocation);

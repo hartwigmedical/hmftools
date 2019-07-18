@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import static com.google.common.base.Strings.repeat;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,7 +8,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 
@@ -69,32 +66,12 @@ public final class SomaticVariants {
         return geneSuffix.isEmpty() ? variant.gene() : variant.gene() + " " + geneSuffix;
     }
 
-    @NotNull
-    public static String ploidyVaf(double adjustedCopyNumber, double minorAllelePloidy, double adjustedVAF, boolean hasReliablePurityFit) {
+    public static String ploidyString(double ploidy, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
             return DataUtil.NA_STRING;
         }
 
-        return descriptiveBAF(adjustedCopyNumber, minorAllelePloidy) + " (" + DataUtil.formatPercentage(MathUtil.mapPercentageClamped(
-                adjustedVAF,
-                0,
-                1)) + ")";
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static String descriptiveBAF(double adjustedCopyNumber, double minorAllelePloidy) {
-        int totalAlleleCount = (int) Math.max(0, Math.round(adjustedCopyNumber));
-        int minorAlleleCount = (int) Math.max(0, Math.round(minorAllelePloidy));
-        int majorAlleleCount = Math.max(0, totalAlleleCount - minorAlleleCount);
-
-        return formatBAFField("A", Math.max(minorAlleleCount, majorAlleleCount)) + formatBAFField("B",
-                Math.min(minorAlleleCount, majorAlleleCount));
-    }
-
-    @NotNull
-    private static String formatBAFField(@NotNull String allele, int count) {
-        return count < 10 ? repeat(allele, count) : allele + "[" + count + "x]";
+        return String.valueOf(Math.round(Math.max(0, ploidy) * 10) / 10D);
     }
 
     @VisibleForTesting
@@ -128,14 +105,43 @@ public final class SomaticVariants {
 
     @NotNull
     public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit) {
-            return DataUtil.NA_STRING;
-        }
-
-        if (driverCategory != DriverCategory.ONCO) {
-            return biallelic ? "Yes" : "No";
+        if (driverCategory == DriverCategory.TSG) {
+            if (hasReliablePurityFit) {
+                return biallelic ? "Yes" : "No";
+            } else {
+                return DataUtil.NA_STRING;
+            }
         } else {
             return Strings.EMPTY;
+        }
+    }
+
+    @NotNull
+    public static String clonalString(double clonalLikelihood) {
+        if (clonalLikelihood > 0.95) {
+            return ">95%";
+        } else if (clonalLikelihood > 0.9) {
+            return "90-95%";
+        } else if (clonalLikelihood > 0.8) {
+            return "80-90%";
+        } else if (clonalLikelihood > 0.7) {
+            return "70-80%";
+        } else if (clonalLikelihood > 0.6) {
+            return "60-70%";
+        } else if (clonalLikelihood > 0.5) {
+            return "50-60%";
+        } else if (clonalLikelihood > 0.4) {
+            return "40-50%";
+        } else if (clonalLikelihood > 0.3) {
+            return "30-40%";
+        } else if (clonalLikelihood > 0.2) {
+            return "20-30%";
+        } else if (clonalLikelihood > 0.1) {
+            return "10-20%";
+        } else if (clonalLikelihood > 0.05) {
+            return "5-10%";
+        } else  {
+            return "<5%";
         }
     }
 

@@ -40,14 +40,14 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
     @Override
     public final void render(@NotNull final Document reportDocument) {
-        final DecimalFormat noDecimalFormat = new DecimalFormat("#");
-        final DecimalFormat singleDecimalFormat = new DecimalFormat("#.#");
-        final DecimalFormat doubleDecimalFormat = new DecimalFormat("#.##");
+        DecimalFormat noDecimalFormat = new DecimalFormat("#");
+        DecimalFormat singleDecimalFormat = new DecimalFormat("#.#");
+        DecimalFormat doubleDecimalFormat = new DecimalFormat("#.##");
 
-        final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+        boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 
-        final double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        final String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+        double hrDeficiency = patientReport.chordAnalysis().hrdValue();
+        String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", hasReliablePurityFit);
         hrChart.enabled(hasReliablePurityFit);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
@@ -57,17 +57,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
                 hrChart));
 
-        final double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
+        double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
 
-        final String microSatelliteStabilityString =
-                hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " "
-                        + new DecimalFormat("#.##").format(microSatelliteStability) : DataUtil.NA_STRING;
-        BarChart satelliteChart = new BarChart(microSatelliteStability,
-                MicroSatelliteStatus.RANGE_MIN,
-                MicroSatelliteStatus.RANGE_MAX,
-                "MSS",
-                "MSI",
-                false);
+        String microSatelliteStabilityString =
+                hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " " + doubleDecimalFormat.format(
+                        microSatelliteStability) : DataUtil.NA_STRING;
+        BarChart satelliteChart =
+                new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI", false);
         satelliteChart.enabled(hasReliablePurityFit);
         satelliteChart.scale(InlineBarChart.LOG10_SCALE);
         satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX },
@@ -84,8 +80,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "score greater than 4.0 are considered microsatellite unstable (MSI).",
                 satelliteChart));
 
-        final int mutationalLoad = patientReport.tumorMutationalLoad();
-        final String mutationalLoadString = hasReliablePurityFit
+        int mutationalLoad = patientReport.tumorMutationalLoad();
+        String mutationalLoadString = hasReliablePurityFit
                 ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
                 : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
@@ -105,8 +101,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "immunotherapy within the DRUP study.",
                 mutationalLoadChart));
 
-        final double mutationalBurden = patientReport.tumorMutationalBurden();
-        final String mutationalBurdenString =
+        double mutationalBurden = patientReport.tumorMutationalBurden();
+        String mutationalBurdenString =
                 hasReliablePurityFit ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb" : DataUtil.NA_STRING;
         BarChart mutationalBurdenChart =
                 new BarChart(mutationalBurden, MutationalBurden.RANGE_MIN, MutationalBurden.RANGE_MAX, "Low", "High", false);

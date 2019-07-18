@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -24,11 +24,11 @@ import org.junit.Test;
 public class TsgDriversTest {
 
     private DndsDriverGeneLikelihood geneLikelihood;
-    private EnrichedSomaticVariant missense;
-    private EnrichedSomaticVariant nonsense;
-    private EnrichedSomaticVariant indel;
-    private EnrichedSomaticVariant hotspot;
-    private EnrichedSomaticVariant biallelic;
+    private SomaticVariant missense;
+    private SomaticVariant nonsense;
+    private SomaticVariant indel;
+    private SomaticVariant hotspot;
+    private SomaticVariant biallelic;
 
     @Before
     public void setup() {
@@ -57,7 +57,7 @@ public class TsgDriversTest {
     public void testHotspotFirst() {
         final Map<VariantType, Long> counts = countMap(5161, 10000);
         final DriverCatalog victim =
-                TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense), counts, counts, counts);
+                TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(1, victim.dndsLikelihood(), 0.01);
@@ -66,7 +66,7 @@ public class TsgDriversTest {
     @Test
     public void testBiallelicSecond() {
         final Map<VariantType, Long> counts = countMap(5161, 10000);
-        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(biallelic, missense), counts, counts, counts);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(biallelic, missense), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.BIALLELIC, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
@@ -75,7 +75,7 @@ public class TsgDriversTest {
     @Test
     public void testSingleMissense() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
-        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense), counts, counts, counts);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.33, victim.driverLikelihood(), 0.01);
         assertEquals(0.87, victim.dndsLikelihood(), 0.01);
@@ -84,7 +84,7 @@ public class TsgDriversTest {
     @Test
     public void testMultiMissense() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
-        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, counts);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.97, victim.driverLikelihood(), 0.01);
         assertEquals(0.87, victim.dndsLikelihood(), 0.01);
@@ -93,7 +93,7 @@ public class TsgDriversTest {
     @Test
     public void testSingleNonsense() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
-        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(nonsense), counts, counts, counts);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(nonsense), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.74, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
@@ -102,7 +102,7 @@ public class TsgDriversTest {
     @Test
     public void testMixed() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
-        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, nonsense), counts, counts, counts);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, nonsense), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(0.98, victim.dndsLikelihood(), 0.01);
@@ -111,7 +111,7 @@ public class TsgDriversTest {
     @Test
     public void testIndel() {
         final Map<VariantType, Long> counts = countMap(351610, 10000);
-        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(indel), counts, counts, counts);
+        final DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(indel), counts, counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(1, victim.dndsLikelihood(), 0.01);
@@ -127,10 +127,10 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    private static EnrichedSomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot,
+    private static SomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, boolean hotspot,
             double vaf) {
         boolean biallelic = Doubles.greaterOrEqual(2 * vaf, 1.5);
-        return SomaticVariantTestBuilderFactory.createEnriched()
+        return SomaticVariantTestBuilderFactory.create()
                 .type(type)
                 .canonicalCodingEffect(codingEffect)
                 .hotspot(hotspot ? Hotspot.HOTSPOT : Hotspot.NON_HOTSPOT)

@@ -4,13 +4,14 @@ import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testA
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
@@ -33,7 +34,7 @@ public class SomaticVariantAnalyzerTest {
     public void onlyReportsAndCountsRelevantVariants() {
         DriverGeneView driverGeneView = PatientReporterTestFactory.createTestDriverGeneView(RIGHT_GENE, "AnyGene");
 
-        List<EnrichedSomaticVariant> variants =
+        List<SomaticVariant> variants =
                 Lists.newArrayList(builder().gene(RIGHT_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(RIGHT_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build(),
                         builder().gene(RIGHT_GENE).canonicalCodingEffect(SPLICE).worstCodingEffect(SPLICE).build(),
@@ -45,8 +46,11 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        SomaticVariantAnalysis analysis =
-                SomaticVariantAnalyzer.run(variants, driverGeneView, testAnalysedReportData().actionabilityAnalyzer(), null);
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
+                driverGeneView,
+                testAnalysedReportData().actionabilityAnalyzer(),
+                null,
+                Collections.emptyList());
 
         assertEquals(2, analysis.tumorMutationalLoad());
 
@@ -55,7 +59,7 @@ public class SomaticVariantAnalyzerTest {
     }
 
     @NotNull
-    private static ImmutableEnrichedSomaticVariant.Builder builder() {
-        return SomaticVariantTestBuilderFactory.createEnriched().filter(PASS_FILTER);
+    private static ImmutableSomaticVariantImpl.Builder builder() {
+        return SomaticVariantTestBuilderFactory.create().filter(PASS_FILTER);
     }
 }

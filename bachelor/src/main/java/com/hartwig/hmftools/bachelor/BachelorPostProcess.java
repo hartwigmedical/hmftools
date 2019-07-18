@@ -30,8 +30,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
-import com.hartwig.hmftools.common.variant.ClonalityFactory;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
@@ -384,11 +382,6 @@ public class BachelorPostProcess
 
         final List<PurityAdjustedSomaticVariant> purityAdjustedVariants = purityAdjustmentFactory.create(variants);
 
-        final List<PurityAdjustedSomaticVariant> validVariants =
-                purityAdjustedVariants.stream().filter(x -> !Double.isNaN(x.ploidy())).collect(Collectors.toList());
-
-        final double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(validVariants);
-
         for (PurityAdjustedSomaticVariant var : purityAdjustedVariants)
         {
             for (BachelorGermlineVariant bachRecord : bachRecords)
@@ -421,10 +414,7 @@ public class BachelorPostProcess
 
         LOGGER.debug("Sample({}) enriching variants", sampleId);
 
-        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(
-                mHighConfidenceRegions,
-                mIndexedFastaSeqFile,
-                ClonalityFactory.fromPurityAdjuster(purityAdjuster, clonalPloidy));
+        final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(mIndexedFastaSeqFile);
 
         final List<EnrichedSomaticVariant> enrichedVariants = enrichedSomaticVariantFactory.enrich(purityAdjustedVariants);
 

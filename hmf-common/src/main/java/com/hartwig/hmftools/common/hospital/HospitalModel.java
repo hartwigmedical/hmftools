@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HospitalModel {
+
     private static final Logger LOGGER = LogManager.getLogger(HospitalModel.class);
     private static final String NA_STRING = "N/A";
 
@@ -27,49 +28,33 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
-    @NotNull
-    @VisibleForTesting
-    public String externalHospitalName(@NotNull String sample) {
-        final HospitalData hospital = findHospitalForSample(sample);
-        return hospital != null ? hospital.externalHospitalName() : NA_STRING;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    public String PIName(@NotNull String sample) {
-        final HospitalData hospital = findHospitalForSample(sample);
-        return hospital != null ? determinePI(sample, hospital) : NA_STRING;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    public String PIEmail(@NotNull String sample) {
-        final HospitalData hospital = findHospitalForSample(sample);
-        return hospital != null ? determinePIEmail(sample, hospital) : NA_STRING;
-    }
-
-    @Nullable
-    public String fullAddresseeString(@NotNull String sample) {
-        final HospitalData hospital = findHospitalForSample(sample);
-
-        if (hospital == null) {
-            return null;
-        }
-
-        checkAddresseeFields(sample, hospital);
-
-        String hospitalPI = determinePI(sample, hospital);
-        String hospitalAddress = hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
-        return hospitalPI.isEmpty() ? hospitalAddress : hospitalPI + ", " + hospitalAddress;
-    }
-
     public int hospitalCount() {
         return hospitalPerId().values().size();
     }
 
+    @NotNull
+    public HospitalQuery queryHospitalDataForSample(@NotNull String sample) {
+        HospitalData hospital = findHospitalForSample(sample);
+        return ImmutableHospitalQuery.builder()
+                .hospitalName(hospital != null ? hospital.externalHospitalName() : NA_STRING)
+                .fullAddresseeString(hospital != null ? fullAddresseeString(sample, hospital) : NA_STRING)
+                .principalInvestigatorName(hospital != null ? determinePIName(sample, hospital) : NA_STRING)
+                .principalInvestigatorEmail(hospital != null ? determinePIEmail(sample, hospital) : NA_STRING)
+                .build();
+    }
+
+    @NotNull
+    private static String fullAddresseeString(@NotNull String sample, @NotNull HospitalData hospital) {
+        checkAddresseeFields(sample, hospital);
+
+        String hospitalPI = determinePIName(sample, hospital);
+        String hospitalAddress = hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
+        return hospitalPI.isEmpty() ? hospitalAddress : hospitalPI + ", " + hospitalAddress;
+    }
+
     @Nullable
     @VisibleForTesting
-    HospitalData hospitalPerId(@Nullable final String hospitalId) {
+    HospitalData hospitalPerId(@Nullable String hospitalId) {
         return hospitalPerId().get(hospitalId);
     }
 
@@ -78,28 +63,29 @@ public abstract class HospitalModel {
         final HospitalData hospital;
         if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
             // These are the old core names, we need to manually map them.
-            final HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sample);
+            HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sample);
             if (hospitalSampleMapping == null) {
-                LOGGER.error("Cannot find sample hospital mapping for sample " + sample);
+                LOGGER.error("Cannot find sample hospital mapping for sample {}.", sample);
                 return null;
             } else {
                 hospital = findByHospital(hospitalSampleMapping.internalHospitalName());
                 if (hospital == null) {
-                    LOGGER.error(
-                            "Cannot find hospital details for sample " + sample + " using " + hospitalSampleMapping.internalHospitalName());
+                    LOGGER.error("Cannot find hospital details for sample {} using {}.",
+                            sample,
+                            hospitalSampleMapping.internalHospitalName());
                     return null;
                 }
             }
         } else {
-            final String hospitalId = extractHospitalIdFromSample(sample);
+            String hospitalId = extractHospitalIdFromSample(sample);
             if (hospitalId == null) {
-                LOGGER.warn("Could not extract hospital ID for sample " + sample);
+                LOGGER.warn("Could not find hospital for sample: {}", sample);
                 return null;
             }
 
             hospital = hospitalPerId().get(hospitalId);
             if (hospital == null) {
-                LOGGER.warn("Hospital model does not contain id " + hospitalId);
+                LOGGER.warn("Hospital model does not contain id {}.", hospitalId);
                 return null;
             }
         }
@@ -118,7 +104,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private static String extractHospitalIdFromSample(@NotNull final String sample) {
+    private static String extractHospitalIdFromSample(@NotNull String sample) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT || type == LimsSampleType.WIDE
@@ -127,15 +113,14 @@ public abstract class HospitalModel {
             return sample.substring(6, 8);
         }
 
-        LOGGER.warn("Sample parameter: " + sample + " is not in CPCT/DRUP/WIDE/CORE format");
         return null;
     }
 
-    private static void checkAddresseeFields(@NotNull final String sample, @NotNull final HospitalData hospital) {
-        final List<String> missingFields = Lists.newArrayList();
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+    private static void checkAddresseeFields(@NotNull String sample, @NotNull HospitalData hospital) {
+        List<String> missingFields = Lists.newArrayList();
 
-        if (type != LimsSampleType.CORE && determinePI(sample, hospital).isEmpty()) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        if (type != LimsSampleType.CORE && determinePIName(sample, hospital).isEmpty()) {
             missingFields.add("requester");
         }
         if (hospital.externalHospitalName().isEmpty()) {
@@ -147,6 +132,7 @@ public abstract class HospitalModel {
         if (hospital.addressCity().isEmpty()) {
             missingFields.add("city");
         }
+
         if (!missingFields.isEmpty()) {
             LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
         }
@@ -154,7 +140,7 @@ public abstract class HospitalModel {
 
     @NotNull
     @VisibleForTesting
-    static String determinePI(@NotNull final String sample, @NotNull final HospitalData hospital) {
+    static String determinePIName(@NotNull final String sample, @NotNull final HospitalData hospital) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
 
         if (type == LimsSampleType.CPCT) {
@@ -189,6 +175,7 @@ public abstract class HospitalModel {
         } else if (type == LimsSampleType.WIDE) {
             return extractPIEmailFromRecipientList(hospital.wideRecipients());
         }
+
         return Strings.EMPTY;
     }
 

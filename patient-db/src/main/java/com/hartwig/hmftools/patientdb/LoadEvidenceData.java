@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -72,12 +73,12 @@ public class LoadEvidenceData {
 
         LOGGER.info("Reading somatic variants from DB");
         List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
-        List<EnrichedSomaticVariant> passSomaticVariants = extractPassSomaticVariants(variants);
+        List<SomaticVariant> passSomaticVariants = extractPassSomaticVariants(variants);
 
         LOGGER.info("All somatic Variants: " + variants.size());
         LOGGER.info("PASS somatic Variants: " + passSomaticVariants.size());
 
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariant =
+        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, primaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
@@ -120,9 +121,9 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<EnrichedSomaticVariant> extractPassSomaticVariants(@NotNull List<EnrichedSomaticVariant> somaticVariant) {
-        List<EnrichedSomaticVariant> passSomaticVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : somaticVariant) {
+    private static List<SomaticVariant> extractPassSomaticVariants(@NotNull List<EnrichedSomaticVariant> somaticVariant) {
+        List<SomaticVariant> passSomaticVariants = Lists.newArrayList();
+        for (SomaticVariant variant : somaticVariant) {
             if (!variant.isFiltered()) {
                 passSomaticVariants.add(variant);
             }

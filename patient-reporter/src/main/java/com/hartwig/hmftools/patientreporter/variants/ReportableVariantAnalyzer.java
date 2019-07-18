@@ -7,8 +7,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
@@ -26,12 +26,12 @@ public final class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<EnrichedSomaticVariant> somaticVariantsReport,
+    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView, @NotNull Set<String> drupActionableGenes,
             @NotNull List<GermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        for (EnrichedSomaticVariant variant : somaticVariantsReport) {
+        for (SomaticVariant variant : somaticVariantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
             if (catalog == null) {
                 LOGGER.warn("No driver entry found for gene {}!", variant.gene());
@@ -76,16 +76,15 @@ public final class ReportableVariantAnalyzer {
                 .hgvsProteinImpact(variant.hgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
+                .totalPloidy(variant.adjustedCopyNumber())
+                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .adjustedCopyNumber(variant.adjustedCopyNumber())
-                .adjustedVAF(variant.adjustedVAF())
-                .minorAllelePloidy(variant.minorAllelePloidy())
                 .biallelic(variant.biallelic());
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull EnrichedSomaticVariant variant) {
+    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
                 .gDNA(toGDNA(variant))
@@ -93,17 +92,20 @@ public final class ReportableVariantAnalyzer {
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
+                .totalPloidy(variant.adjustedCopyNumber())
+                .allelePloidy(calcAllelePloidy(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
-                .adjustedCopyNumber(variant.adjustedCopyNumber())
-                .adjustedVAF(variant.adjustedVAF())
-                .minorAllelePloidy(variant.minorAllelePloidy())
                 .biallelic(variant.biallelic());
     }
 
     @NotNull
     private static String toGDNA(@NotNull GenomePosition genomePosition) {
         return genomePosition.chromosome() + ":" + genomePosition.position();
+    }
+
+    private static double calcAllelePloidy(double adjustedCopyNumber, double adjustedVAF) {
+        return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }
 

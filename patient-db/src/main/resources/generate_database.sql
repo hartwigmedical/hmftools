@@ -285,7 +285,7 @@ CREATE TABLE somaticVariant
     copyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
-    clonality varchar(20) NOT NULL,
+    subclonalLikelihood DOUBLE PRECISION NOT NULL,
     biallelic BOOLEAN NOT NULL,
     hotspot varchar(20) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
@@ -335,6 +335,8 @@ CREATE TABLE purity
     maxPloidy DOUBLE PRECISION not null,
     minDiploidProportion DOUBLE PRECISION not null,
     maxDiploidProportion DOUBLE PRECISION not null,
+    msIndelsPerMb DOUBLE PRECISION not null,
+    msStatus varchar(10) not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -704,6 +706,8 @@ CREATE TABLE driverCatalog
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     category varchar(255) NOT NULL,
     driver varchar(255) NOT NULL,
@@ -716,6 +720,8 @@ CREATE TABLE driverCatalog
     frameshift int NOT NULL,
     inframe int NOT NULL,
     biallelic BOOLEAN NOT NULL,
+    minCopyNumber DOUBLE PRECISION NOT NULL,
+    maxCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId, gene),
     INDEX(gene)

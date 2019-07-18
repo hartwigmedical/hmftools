@@ -219,7 +219,7 @@ While these steps are specific to Strelka, these principles can be applied to ot
 
 ## Algorithm
 
-There are 9 key steps in the PURPLE pipeline described in detail below:
+There are 10 key steps in the PURPLE pipeline described in detail below:
 1. Gender determination
 2. Segmentation
 3. Sample purity and ploidy fitting
@@ -544,6 +544,8 @@ MinPurity | 0.95 | Minimum purity with score within 10% of best
 MaxPurity | 1.00 | Maximum purity with score within 10% of best
 MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
 MaxPloidy | 3.13 | Maximum ploidy with score within 10% of best
+msIndelsPerMb | 0.1186 | Microsatellite indels per mega base
+msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied
 
 #### Purity Range File
 
@@ -757,7 +759,6 @@ java -cp purple.jar com.hartwig.hmftools.patientdb.LoadPurpleSomaticVariants \
     -tumor COLO829T \
     -purple_dir /path/to/COLO829/purple \
     -somatic_vcf /path/to/COLO829/COLO829T.purple.somatic.vcf.gz \
-    -ref_genome /path/to/Homo_sapiens.GRCh37.GATK.illumina.fasta \   
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
 ```
@@ -928,6 +929,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Added microsatellite status
+  - Added subclonal likelihood model and figure
   - Consistent file headers
   - Fix whole genome duplication calculation
   - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.

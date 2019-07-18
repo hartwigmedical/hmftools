@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,10 +32,10 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<EvidenceItem> reportableFlatListDriversOnly(@NotNull Map<EnrichedSomaticVariant, List<EvidenceItem>> evidenceItemMap,
+    public static List<EvidenceItem> reportableFlatListDriversOnly(@NotNull Map<SomaticVariant, List<EvidenceItem>> evidenceItemMap,
             @NotNull List<DriverCatalog> driverCatalog) {
-        Map<EnrichedSomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
-        for (Map.Entry<EnrichedSomaticVariant, List<EvidenceItem>> entry : evidenceItemMap.entrySet()) {
+        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
+        for (Map.Entry<SomaticVariant, List<EvidenceItem>> entry : evidenceItemMap.entrySet()) {
             String gene = entry.getKey().gene();
             for (DriverCatalog catalog : driverCatalog) {
                 if (catalog.gene().equals(gene)) {

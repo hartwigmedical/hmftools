@@ -21,7 +21,7 @@ public final class BachelorFile {
     }
 
     @NotNull
-    public static List<GermlineVariant> loadBachelorFile(@NotNull String filePath) throws IOException {
+    public static List<GermlineVariant> loadBachelorCsv(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
@@ -59,7 +59,6 @@ public final class BachelorFile {
                 .alleleReadCount(altReadCount)
                 .adjustedVAF(Double.valueOf(values[19]))
                 .adjustedCopyNumber(Double.valueOf(values[18]))
-                .minorAllelePloidy(Double.valueOf(values[31]))
                 .biallelic(Boolean.valueOf(values[27].trim()))
                 .build();
     }

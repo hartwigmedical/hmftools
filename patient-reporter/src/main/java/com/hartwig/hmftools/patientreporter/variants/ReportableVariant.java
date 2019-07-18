@@ -33,6 +33,10 @@ public abstract class ReportableVariant implements AllelicDepth {
     @Override
     public abstract int alleleReadCount();
 
+    public abstract double totalPloidy();
+
+    public abstract double allelePloidy();
+
     @NotNull
     public abstract Hotspot hotspot();
 
@@ -43,12 +47,6 @@ public abstract class ReportableVariant implements AllelicDepth {
 
     @Nullable
     public abstract Double driverLikelihood();
-
-    public abstract double adjustedVAF();
-
-    public abstract double adjustedCopyNumber();
-
-    public abstract double minorAllelePloidy();
 
     public abstract boolean biallelic();
 

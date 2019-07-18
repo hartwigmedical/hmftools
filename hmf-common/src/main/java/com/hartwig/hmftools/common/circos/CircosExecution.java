@@ -21,7 +21,7 @@ public class CircosExecution {
     }
 
     @Nullable
-    public Object generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile, @NotNull final String errorPath)
+    public Integer generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile, @NotNull final String errorPath)
             throws IOException, InterruptedException {
         final File redirectErrorFile = new File(errorPath + File.separator + outputFile + ".error");
         final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");
@@ -49,7 +49,7 @@ public class CircosExecution {
             System.exit(1);
         }
 
-        return null;
+        return 0;
     }
 
 }

@@ -18,14 +18,14 @@ public final class SummaryFile {
 
     private static final String LINE_BREAK_STRING = " <enter> ";
 
-    private static final String SEPARATOR = ";";
+    private static final String SEPARATOR = "\t";
 
     private SummaryFile() {
     }
 
     @NotNull
-    public static SummaryModel buildFromCsv(@NotNull String sampleSummaryCsv) throws IOException {
-        List<String> linesSampleSummary = LineReader.build().readLines(new File(sampleSummaryCsv).toPath(), line -> line.length() > 0);
+    public static SummaryModel buildFromTsv(@NotNull String sampleSummaryTsv) throws IOException {
+        List<String> linesSampleSummary = LineReader.build().readLines(new File(sampleSummaryTsv).toPath(), line -> line.length() > 0);
 
         Map<String, String> sampleToSummaryMap = Maps.newHashMap();
 
@@ -37,7 +37,7 @@ public final class SummaryFile {
                 summaryOfSample = summaryOfSample.replace(LINE_BREAK_STRING, "\n");
                 sampleToSummaryMap.put(sampleId, summaryOfSample);
             } else {
-                LOGGER.warn("Suspicious line detected in sample summary csv: " + line);
+                LOGGER.warn("Suspicious line detected in sample summary tsv: " + line);
             }
         }
 

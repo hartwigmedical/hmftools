@@ -1,48 +1,49 @@
 package com.hartwig.hmftools.purple.plot;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.r.RExecutor;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class RCharts {
-
-    private static final Logger LOGGER = LogManager.getLogger(RCharts.class);
 
     private final ConfigSupplier configSupplier;
     private final CommonConfig commonConfig;
     private final ChartConfig chartConfig;
+    private final ExecutorService executorService;
 
-    RCharts(final ConfigSupplier configSupplier) {
+    RCharts(final ConfigSupplier configSupplier, final ExecutorService executorService) {
         this.configSupplier = configSupplier;
         this.commonConfig = configSupplier.commonConfig();
         this.chartConfig = configSupplier.chartConfig();
+        this.executorService = executorService;
     }
 
-    void generateRCharts() throws InterruptedException, IOException {
+    @NotNull
+    List<Future<Integer>> chartFutures() {
 
-        int copyNumberResult = RExecutor.executeFromClasspath("r/copyNumberPlots.R",
+        final List<Future<Integer>> result = Lists.newArrayList();
+
+        result.add(executorService.submit(() -> RExecutor.executeFromClasspath("r/copyNumberPlots.R",
                 commonConfig.tumorSample(),
                 commonConfig.outputDirectory(),
-                chartConfig.plotDirectory());
-        if (copyNumberResult != 0) {
-            LOGGER.warn("Error generating R copy number plots.");
-        }
+                chartConfig.plotDirectory())));
 
-        if(configSupplier.somaticConfig().file().isPresent()) {
-            int somaticResult = RExecutor.executeFromClasspath("r/somaticVariantPlots.R",
+        if (configSupplier.somaticConfig().file().isPresent()) {
+            result.add(executorService.submit(() -> RExecutor.executeFromClasspath("r/somaticVariantPlots.R",
                     commonConfig.tumorSample(),
                     commonConfig.outputDirectory(),
-                    chartConfig.plotDirectory());
-            if (somaticResult != 0) {
-                LOGGER.warn("Error generating R somatic variant plots.");
-            }
+                    chartConfig.plotDirectory())));
         }
+
+        return result;
     }
 
 }

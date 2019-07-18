@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
@@ -160,7 +161,7 @@ public class DatabaseAccess implements AutoCloseable {
         amberDAO.write(sampleId, amber);
     }
 
-    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull List<EnrichedSomaticVariant> variants) {
+    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull final List<SomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
     }
 

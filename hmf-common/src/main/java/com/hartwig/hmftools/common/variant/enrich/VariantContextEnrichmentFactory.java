@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -12,8 +13,8 @@ public interface VariantContextEnrichmentFactory {
     @NotNull
     VariantContextEnrichment create(@NotNull final Consumer<VariantContext> consumer);
 
-
-    static VariantContextEnrichmentFactory none() {
+    @NotNull
+    static VariantContextEnrichmentFactory noEnrichment() {
         return consumer -> new VariantContextEnrichment() {
             @Override
             public void flush() {
@@ -31,6 +32,11 @@ public interface VariantContextEnrichmentFactory {
                 consumer.accept(context);
             }
         };
+    }
+
+    @NotNull
+    static VariantContextEnrichmentFactory refGenomeEnrichment(@NotNull final IndexedFastaSequenceFile reference) {
+        return consumer -> new SomaticRefContextEnrichment(reference, consumer);
     }
 
 }

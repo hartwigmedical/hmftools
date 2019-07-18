@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.purity;
 
+import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.immutables.value.Value;
@@ -8,7 +9,7 @@ import org.immutables.value.Value;
 public abstract class PurityContext {
 
     public abstract String version();
-    
+
     public abstract Gender gender();
 
     public abstract FittedPurity bestFit();
@@ -20,4 +21,8 @@ public abstract class PurityContext {
     public abstract double polyClonalProportion();
 
     public abstract boolean wholeGenomeDuplication();
+
+    public abstract double microsatelliteIndelsPerMb();
+
+    public abstract MicrosatelliteStatus microsatelliteStatus();
 }

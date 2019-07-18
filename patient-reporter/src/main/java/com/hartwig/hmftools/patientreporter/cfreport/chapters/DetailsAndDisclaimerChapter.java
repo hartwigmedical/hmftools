@@ -81,11 +81,13 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
 
-        String earliestArrivalDate = sampleReport.earliestArrivalDate();
-        div.add(createContentParagraphTwice("The results in this report have been obtained between ",
-                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
-                " and ",
-                ReportResources.REPORT_DATE));
+        // TODO (DEV-812): Create CAR first before to add this to report.
+        //        String earliestArrivalDate = sampleReport.earliestArrivalDate();
+        //        div.add(createContentParagraphTwice("The results in this report have been obtained between ",
+        //                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
+        //                " and ",
+        //                ReportResources.REPORT_DATE));
+
         div.add(sampleIdentificationLineOnReport);
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
@@ -122,9 +124,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The data on which this report is based is generated "
                 + "from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
-        div.add(createContentParagraph("The results stated in these report are based on the tested tumor and blood sample."));
-        //TODO: DEV-812 - Add remark about meet onzekerheid
-//        div.add(createContentParagraph("the meetonzekerheid"));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
 

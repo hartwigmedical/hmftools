@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,14 +24,15 @@ public enum CopyNumberInterpretation {
     }
 
     @NotNull
-    public static CopyNumberInterpretation fromCopyNumber(@NotNull GeneCopyNumber copyNumber) {
-        // Assume the copy number is significant.
-        if (copyNumber.minCopyNumber() > 2) {
+    public static CopyNumberInterpretation fromCNADriver(@NotNull DriverCatalog copyNumber) {
+        if (copyNumber.driver() == DriverType.AMP) {
             return GAIN;
-        } else if (copyNumber.maxCopyNumber() > 0.5) {
-            return PARTIAL_LOSS;
-        } else {
-            return FULL_LOSS;
         }
+
+        if (copyNumber.driver() == DriverType.DEL) {
+            return Doubles.greaterThan(copyNumber.maxCopyNumber(), 0.5) ? PARTIAL_LOSS : FULL_LOSS;
+        }
+
+        throw new IllegalStateException("Driver not an AMP or DEL: " + copyNumber);
     }
 }

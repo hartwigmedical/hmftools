@@ -9,25 +9,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.ClonalityCutoffKernel;
-import com.hartwig.hmftools.common.variant.ClonalityFactory;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -50,8 +44,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class AnalysedPatientReporter {
 
@@ -79,11 +71,8 @@ class AnalysedPatientReporter {
                 patientTumorLocation);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
-        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(tumorSample,
-                somaticVariantVcf,
-                copyNumberAnalysis.gender(),
-                copyNumberAnalysis.purity(),
-                patientTumorLocation);
+        SomaticVariantAnalysis somaticVariantAnalysis =
+                analyzeSomaticVariants(tumorSample, somaticVariantVcf, patientTumorLocation, copyNumberAnalysis.exomeGeneCopyNumbers());
         List<GermlineVariant> germlineVariantsToReport =
                 analyzeGermlineVariants(tumorSample, bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
@@ -150,37 +139,24 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        return CopyNumberAnalyzer.run(purityContext,
-                exomeGeneCopyNumbers,
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
+        return CopyNumberAnalyzer.run(purityContext, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull
-    private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf, @NotNull Gender gender,
-            double purity, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
+    private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
+
+        //TODO: Once we have bumped PURPLE we can remove the REF_GENOME enrichment
+        final List<SomaticVariant> variants =
+                SomaticVariantFactory.passOnlyInstance(VariantContextEnrichmentFactory.refGenomeEnrichment(reportData.refGenomeFastaFile()))
+                        .fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        List<EnrichedSomaticVariant> enrichedSomaticVariants =
-                enrich(variants, gender, purity, reportData.highConfidenceRegions(), reportData.refGenomeFastaFile());
-
-        return SomaticVariantAnalyzer.run(enrichedSomaticVariants,
+        return SomaticVariantAnalyzer.run(variants,
                 reportData.driverGeneView(),
                 reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
-    }
-
-    @NotNull
-    private static List<EnrichedSomaticVariant> enrich(@NotNull List<SomaticVariant> variants, @NotNull Gender gender, double purity,
-            @NotNull Multimap<String, GenomeRegion> highConfidenceRegions, @NotNull IndexedFastaSequenceFile refGenomeFastaFile) {
-        double clonalPloidy = ClonalityCutoffKernel.clonalCutoff(variants);
-        ClonalityFactory clonalityFactory = new ClonalityFactory(gender, purity, clonalPloidy);
-
-        EnrichedSomaticVariantFactory enrichedSomaticFactory =
-                new EnrichedSomaticVariantFactory(highConfidenceRegions, refGenomeFastaFile, clonalityFactory);
-
-        return enrichedSomaticFactory.enrich(variants);
+                patientTumorLocation,
+                exomeGeneCopyNumbers);
     }
 
     @NotNull
@@ -192,7 +168,7 @@ class AnalysedPatientReporter {
         }
 
         List<GermlineVariant> variants =
-                BachelorFile.loadBachelorFile(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+                BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sample);
@@ -235,7 +211,7 @@ class AnalysedPatientReporter {
     private static void printReportState(@NotNull AnalysedPatientReport report) {
         LocalDate tumorArrivalDate = report.sampleReport().tumorArrivalDate();
         String formattedTumorArrivalDate =
-                tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "?";
+                tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "N/A";
 
         LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().sampleId());
         LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);

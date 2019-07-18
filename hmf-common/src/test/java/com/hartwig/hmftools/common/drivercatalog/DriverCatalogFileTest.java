@@ -28,6 +28,8 @@ public class DriverCatalogFileTest {
     @NotNull
     private static DriverCatalog createRandomScore(@NotNull Random random) {
         return ImmutableDriverCatalog.builder()
+                .chromosome("" + random.nextLong())
+                .chromosomeBand("" + random.nextLong())
                 .gene("" + random.nextLong())
                 .driver(DriverType.values()[random.nextInt(DriverType.values().length)])
                 .category(DriverCategory.values()[random.nextInt(DriverCategory.values().length)])
@@ -40,6 +42,8 @@ public class DriverCatalogFileTest {
                 .inframe(random.nextLong())
                 .frameshift(random.nextLong())
                 .biallelic(random.nextBoolean())
+                .minCopyNumber(random.nextDouble())
+                .maxCopyNumber(random.nextDouble())
                 .build();
     }
 

@@ -3,7 +3,10 @@ package com.hartwig.hmftools.purple.somatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.msi.MicrosatelliteIndels;
+import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -32,6 +35,7 @@ public class SomaticVCF {
     private final String inputVCF;
     private final String outputVCF;
     private boolean enabled;
+    private final MicrosatelliteIndels microsatelliteIndels;
 
     public SomaticVCF(final CommonConfig commonConfig, final SomaticConfig somaticConfig, final RefGenomeData refGenomeData) {
         this.commonConfig = commonConfig;
@@ -40,6 +44,15 @@ public class SomaticVCF {
         this.inputVCF = enabled ? somaticConfig.file().get().toString() : "";
         this.refGenomeData = refGenomeData;
         this.somaticConfig = somaticConfig;
+        this.microsatelliteIndels = new MicrosatelliteIndels();
+    }
+
+    public double microsatelliteIndelsPerMb() {
+        return microsatelliteIndels.microsatelliteIndelsPerMb();
+    }
+
+    public MicrosatelliteStatus microsatelliteStatus() {
+        return enabled ? MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb()) : MicrosatelliteStatus.UNKNOWN;
     }
 
     public void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
@@ -55,6 +68,8 @@ public class SomaticVCF {
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
+                final Consumer<VariantContext> consumer = microsatelliteIndels.andThen(writer::add);
+
                 final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(somaticConfig.clonalityMaxPloidy(),
                         somaticConfig.clonalityBinWidth(),
                         commonConfig.version(),
@@ -64,7 +79,7 @@ public class SomaticVCF {
                         copyNumbers,
                         fittedRegions,
                         somaticPeaks,
-                        writer::add);
+                        consumer);
 
                 final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
                 writer.writeHeader(header);

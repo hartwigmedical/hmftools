@@ -69,9 +69,8 @@ public class PatientReporterApplication {
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
-    private static final String SAMPLE_SUMMARY_CSV = "sample_summary_csv";
+    private static final String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     // Some additional optional params
     private static final String COMMENTS = "comments";
@@ -91,6 +90,7 @@ public class PatientReporterApplication {
 
         LOGGER.info("Running patient reporter v" + VERSION);
         String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
+        String refSample = cmd.getOptionValue(REF_SAMPLE);
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
@@ -98,7 +98,7 @@ public class PatientReporterApplication {
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
-            QCFailReport report = reporter.run(tumorSample, reason, cmd.getOptionValue(COMMENTS));
+            QCFailReport report = reporter.run(tumorSample, refSample, reason, cmd.getOptionValue(COMMENTS));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
@@ -163,9 +163,8 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
                 cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
-                cmd.getOptionValue(HIGH_CONFIDENCE_BED),
                 cmd.getOptionValue(GERMLINE_GENES_CSV),
-                cmd.getOptionValue(SAMPLE_SUMMARY_CSV));
+                cmd.getOptionValue(SAMPLE_SUMMARY_TSV));
     }
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
@@ -173,7 +172,7 @@ public class PatientReporterApplication {
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_CSV)
                 && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd,
                 KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, DRUP_GENES_CSV) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd,
-                SAMPLE_SUMMARY_CSV) && fileExists(cmd, FASTA_FILE_LOCATION) && fileExists(cmd, HIGH_CONFIDENCE_BED);
+                SAMPLE_SUMMARY_TSV) && fileExists(cmd, FASTA_FILE_LOCATION);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
@@ -188,7 +187,7 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForReportWriter(@NotNull CommandLine cmd) {
-        return valueExists(cmd, TUMOR_SAMPLE) && dirExists(cmd, OUTPUT_DIRECTORY);
+        return valueExists(cmd, TUMOR_SAMPLE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd, OUTPUT_DIRECTORY);
     }
 
     private static boolean validInputForBaseReportData(@NotNull CommandLine cmd) {
@@ -277,10 +276,9 @@ public class PatientReporterApplication {
         options.addOption(REF_SAMPLE, true, "The reference sample for the sample for which we are generating a report.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Path towards the high confidence BED file.");
         options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
-        options.addOption(SAMPLE_SUMMARY_CSV, true, "Path towards a CSV containing the (clinical) summaries of the samples.");
+        options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");

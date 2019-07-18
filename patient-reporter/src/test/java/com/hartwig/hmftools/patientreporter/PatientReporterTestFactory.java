@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.Clonality;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
@@ -41,7 +40,7 @@ public final class PatientReporterTestFactory {
                 .start(1)
                 .end(2)
                 .gene(Strings.EMPTY)
-                .chromosome("1")
+                .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .minRegionStart(0)
                 .minRegionStartSupport(SegmentSupport.NONE)
@@ -54,7 +53,7 @@ public final class PatientReporterTestFactory {
                 .somaticRegions(1)
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
-                .transcriptID("trans")
+                .transcriptID(Strings.EMPTY)
                 .transcriptVersion(0)
                 .minMinorAllelePloidy(0);
     }
@@ -67,7 +66,6 @@ public final class PatientReporterTestFactory {
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
-                .clonality(Clonality.UNKNOWN)
                 .kataegis(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .position(0)
@@ -103,15 +101,14 @@ public final class PatientReporterTestFactory {
         return ImmutableGermlineVariant.builder()
                 .passFilter(true)
                 .gene(Strings.EMPTY)
-                .chromosome("1")
-                .position(600)
+                .chromosome(Strings.EMPTY)
+                .position(0)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .totalReadCount(0)
                 .alleleReadCount(0)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0)
-                .minorAllelePloidy(1D)
                 .biallelic(false);
     }
 
@@ -119,6 +116,7 @@ public final class PatientReporterTestFactory {
     public static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
                 .gene(Strings.EMPTY)
+                .gDNA(Strings.EMPTY)
                 .isDrupActionable(false)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
@@ -126,14 +124,12 @@ public final class PatientReporterTestFactory {
                 .clonalLikelihood(1D)
                 .alleleReadCount(0)
                 .totalReadCount(0)
-                .adjustedCopyNumber(0)
-                .minorAllelePloidy(0)
+                .allelePloidy(0D)
+                .totalPloidy(0)
                 .biallelic(false)
-                .adjustedVAF(0D)
                 .driverCategory(DriverCategory.ONCO)
                 .driverLikelihood(0D)
-                .notifyClinicalGeneticist(false)
-                .gDNA("1:600");
+                .notifyClinicalGeneticist(false);
     }
 
     @NotNull
@@ -152,16 +148,15 @@ public final class PatientReporterTestFactory {
 
     @NotNull
     public static DriverGeneView createTestDriverGeneView(@NotNull String oncogene, @NotNull String tsg) {
-        return ImmutableDriverGeneView.builder()
-                .addOncoDriverGenes(oncogene)
-                .addTsgDriverGenes(tsg)
-                .build();
+        return ImmutableDriverGeneView.builder().addOncoDriverGenes(oncogene).addTsgDriverGenes(tsg).build();
     }
 
     @NotNull
     public static DriverCatalog createTestDriverCatalogEntry(@NotNull String gene) {
         return ImmutableDriverCatalog.builder()
                 .gene(gene)
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
                 .category(DriverCategory.ONCO)
                 .driver(DriverType.MUTATION)
                 .likelihoodMethod(LikelihoodMethod.NONE)
@@ -173,6 +168,8 @@ public final class PatientReporterTestFactory {
                 .inframe(0)
                 .frameshift(0)
                 .biallelic(false)
+                .minCopyNumber(0)
+                .maxCopyNumber(0)
                 .build();
     }
 }

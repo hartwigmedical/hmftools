@@ -9,6 +9,12 @@ import org.jetbrains.annotations.Nullable;
 public interface DriverCatalog {
 
     @NotNull
+    String chromosome();
+
+    @NotNull
+    String chromosomeBand();
+
+    @NotNull
     String gene();
 
     @NotNull
@@ -36,4 +42,7 @@ public interface DriverCatalog {
 
     boolean biallelic();
 
+    double minCopyNumber();
+
+    double maxCopyNumber();
 }
