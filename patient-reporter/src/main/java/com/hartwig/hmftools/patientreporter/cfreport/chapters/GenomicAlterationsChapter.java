@@ -62,21 +62,26 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         Table contentTable;
         if (DISPLAY_CLONAL_COLUMN) {
-            contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 60, 60, 60, 50, 50 },
+            contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 40, 30, 60, 60, 50, 50 },
                     new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
                             TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
                             TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("Ploidy").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Biallelic"),
-                            TableUtil.createHeaderCell("Clonal"), TableUtil.createHeaderCell("Driver") });
+                            TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("VAF").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Biallelic").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Hotspot").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Clonal").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
         } else {
-            contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 60, 60, 60, 50 },
+            contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 40, 30, 60, 60, 50 },
                     new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
                             TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
                             TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("Ploidy").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Biallelic"),
-                            TableUtil.createHeaderCell("Driver") });
+                            TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("VAF").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Biallelic").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Hotspot").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
         }
 
         List<ReportableVariant> sortedVariants = SomaticVariants.sort(reportableVariants);
@@ -89,19 +94,21 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(
-                    SomaticVariants.ploidyString(variant.allelePloidy(), hasReliablePurityFit) + " / ").setFont(ReportResources.fontBold())
-                    .add(new Text(SomaticVariants.ploidyString(variant.totalPloidy(),
-                            hasReliablePurityFit)).setFont(ReportResources.fontRegular()))
-                    .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot())));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.ploidyString(variant.totalPloidy(), hasReliablePurityFit))
+                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.vafString(variant, hasReliablePurityFit))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
-                    hasReliablePurityFit)));
+                    hasReliablePurityFit)).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot()))
+                    .setTextAlignment(TextAlignment.CENTER));
             if (DISPLAY_CLONAL_COLUMN) {
-                contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalString(variant.clonalLikelihood())));
+                contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalString(variant.clonalLikelihood()))
+                        .setTextAlignment(TextAlignment.CENTER));
             }
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.driverString(variant.driverLikelihood())));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.driverString(variant.driverLikelihood()))
+                    .setTextAlignment(TextAlignment.CENTER));
         }
 
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())

@@ -52,7 +52,7 @@
         <hmf-bachelor.version>1.7</hmf-bachelor.version>
         <hmf-health-checker.version>3.1</hmf-health-checker.version>
         <hmf-patient-db.version>3.24</hmf-patient-db.version>
-        <hmf-patient-reporter.version>7.0</hmf-patient-reporter.version>
+        <hmf-patient-reporter.version>7.1</hmf-patient-reporter.version>
         <hmf-sv-linx.version>1.0</hmf-sv-linx.version>
 
         <amber.version>2.5</amber.version>
