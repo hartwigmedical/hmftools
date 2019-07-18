@@ -223,7 +223,7 @@ public class ChainRuleSelector
                 }
             }
 
-            int origFoldbackPloidy = foldback.getImpliedPloidy();
+            double origFoldbackPloidy = foldback.ploidy();
 
             double foldbackPloidy = min(
                     mChainFinder.getUnlinkedBreakendCount(foldbackStart),
@@ -247,7 +247,7 @@ public class ChainRuleSelector
                 SvVarData nonFbVar = pairStart.getOtherSV(foldback);
                 SvBreakend otherBreakend = pairStart.getOtherBreakend(foldbackStart);
 
-                if(nonFbVar.getImpliedPloidy() < origFoldbackPloidy)
+                if(nonFbVar.ploidy() < origFoldbackPloidy)
                     continue;
 
                 double nonFoldbackPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
@@ -564,6 +564,9 @@ public class ChainRuleSelector
 
                     double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
 
+                    if(otherBreakendPloidy == 0)
+                        continue;
+
                     String ploidyMatch = PM_NONE;
                     if(copyNumbersEqual(otherBreakendPloidy, breakendPloidy))
                     {
@@ -840,8 +843,10 @@ public class ChainRuleSelector
                         break;
                     }
                 }
-
-                ++index;
+                else
+                {
+                    ++index;
+                }
             }
 
             if(!addNew)

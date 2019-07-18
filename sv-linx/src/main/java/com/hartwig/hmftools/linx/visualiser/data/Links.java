@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static java.lang.Math.round;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +81,7 @@ public class Links
                 .endPosition(file.PosEnd)
                 .endOrientation(file.OrientEnd)
                 .endInfo(file.InfoEnd)
-                .traverseCount(file.TraverseCount)
+                .traverseCount((int)round(file.Ploidy))
                 .build();
     }
 

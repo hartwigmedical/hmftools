@@ -312,11 +312,6 @@ public class SvTestHelper
         return null;
     }
 
-    public void setDefaultPloidyCalcData()
-    {
-        AllVariants.stream().forEach(x -> x.setPloidyRecalcData(x.getSvData().ploidy(), x.getSvData().ploidy()));
-    }
-
     private double calcActualBaf(double copyNumber, double nonDisruptedAP)
     {
         if(copyNumber == 0)

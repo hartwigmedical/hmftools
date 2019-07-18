@@ -922,7 +922,7 @@ public class ChainFinder
         for(SvLinkedPair pair : proposedLinks.Links)
         {
             LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to {} chain({}) ploidy({})",
-                    mLinkIndex, topRule, pair.toString(), proposedLinks.ploidy(), isNewChain ? "new" : "existing",
+                    mLinkIndex, topRule, pair.toString(), formatPloidy(proposedLinks.ploidy()), isNewChain ? "new" : "existing",
                     targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
         }
 
@@ -947,6 +947,7 @@ public class ChainFinder
     private void registerNewLink(final ProposedLinks proposedLink)
     {
         List<SvBreakend> exhaustedBreakends = Lists.newArrayList();
+        boolean canUseMaxPloidy = proposedLink.topRule() == ASSEMBLY;
 
         for(final SvLinkedPair newPair : proposedLink.Links)
         {
@@ -971,7 +972,8 @@ public class ChainFinder
                     return;
                 }
 
-                if (svConn == null || svConn.breakendExhausted(breakend.usesStart()))
+                if (svConn == null || (!canUseMaxPloidy && svConn.breakendExhausted(breakend.usesStart()))
+                || (canUseMaxPloidy && svConn.breakendExhaustedVsMax(breakend.usesStart())))
                 {
                     LOGGER.error("breakend({}) breakend already exhausted: {} with proposedLink({})",
                             breakend.toString(), svConn != null ? svConn.toString() : "null", proposedLink.toString());
@@ -981,22 +983,33 @@ public class ChainFinder
 
                 svConn.addConnection(otherPairBreakend, breakend.usesStart());
 
-                if (proposedLink.breakendPloidyMatched(breakend))
+                boolean breakendExhausted = proposedLink.breakendPloidyMatched(breakend);
+
+                if (breakendExhausted)
                 {
                     // the links matched so exhaust this breakend
-                    svConn.add(breakend.usesStart(), svConn.unlinked(breakend.usesStart()));
+                    svConn.add(breakend.usesStart(), max(svConn.unlinked(breakend.usesStart()), proposedLink.ploidy()));
                     exhaustedBreakends.add(breakend);
                 }
                 else
                 {
                     svConn.add(breakend.usesStart(), proposedLink.ploidy());
+
+                    if(canUseMaxPloidy)
+                    {
+                        breakendExhausted = svConn.breakendExhaustedVsMax(breakend.usesStart());
+                    }
+                    else
+                    {
+                        breakendExhausted = svConn.breakendExhausted(breakend.usesStart());
+                    }
                 }
 
                 final SvBreakend otherSvBreakend = var.getBreakend(!breakend.usesStart());
 
                 boolean hasUnlinkedBreakend = true;
 
-                if (svConn.breakendExhausted(breakend.usesStart()))
+                if (breakendExhausted)
                 {
                     hasUnlinkedBreakend = false;
 
@@ -1093,13 +1106,27 @@ public class ChainFinder
         return !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
     }
 
+    protected double getMaxUnlinkedBreakendCount(final SvBreakend breakend)
+    {
+        SvChainState svConn = mSvConnectionsMap.get(breakend.getSV());
+        if(svConn == null)
+            return 0;
+
+        if(!svConn.breakendExhausted(breakend.usesStart()))
+            return svConn.unlinked(breakend.usesStart());
+        else if(!svConn.breakendExhaustedVsMax(breakend.usesStart()))
+            return svConn.maxUnlinked(breakend.usesStart());
+        else
+            return 0;
+    }
+
     protected double getUnlinkedCount(final SvVarData var)
     {
         SvChainState svConn = mSvConnectionsMap.get(var);
         if(svConn == null)
             return 0;
 
-        if(svConn.breakendExhausted(SE_START) || svConn.breakendExhausted(SE_END))
+        if(svConn.breakendExhausted(true) || svConn.breakendExhausted(false))
             return 0;
 
         return min(svConn.unlinked(SE_START), svConn.unlinked(SE_END));
@@ -1144,8 +1171,8 @@ public class ChainFinder
             final SvBreakend firstBreakend = pair.firstBreakend();
             final SvBreakend secondBreakend = pair.secondBreakend();
 
-            boolean firstHasSingleConn = firstBreakend.getSV().getAssembledLinkedPairs(firstBreakend.usesStart()).size() == 1;
-            boolean secondHasSingleConn = secondBreakend.getSV().getAssembledLinkedPairs(secondBreakend.usesStart()).size() == 1;
+            boolean firstHasSingleConn = firstBreakend.getSV().getMaxAssembledBreakend() <= 1;
+            boolean secondHasSingleConn = secondBreakend.getSV().getMaxAssembledBreakend() <= 1;
 
             double firstPloidy = getUnlinkedBreakendCount(firstBreakend);
             double secondPloidy = getUnlinkedBreakendCount(secondBreakend);
@@ -1185,27 +1212,29 @@ public class ChainFinder
                 final SvBreakend firstBreakend = pair.firstBreakend();
                 final SvBreakend secondBreakend = pair.secondBreakend();
 
+                boolean firstHasSingleConn = singleLinkBreakends.contains(firstBreakend);
+                boolean secondHasSingleConn = singleLinkBreakends.contains(secondBreakend);
+
+                double firstPloidy = firstHasSingleConn ? getUnlinkedBreakendCount(firstBreakend) : getMaxUnlinkedBreakendCount(firstBreakend);
+                double secondPloidy = secondHasSingleConn ? getUnlinkedBreakendCount(secondBreakend) : getMaxUnlinkedBreakendCount(secondBreakend);
+
                 // for the breakend which has other links to make, want to avoid indicating it has been matched
                 ProposedLinks proposedLink = new ProposedLinks(pair, ASSEMBLY);
-                proposedLink.addBreakendPloidies(
-                        firstBreakend, breakendPloidies.get(firstBreakend),
-                        secondBreakend, breakendPloidies.get(secondBreakend));
+                proposedLink.addBreakendPloidies(firstBreakend, firstPloidy, secondBreakend, secondPloidy);
 
-                if(!singleLinkBreakends.contains(firstBreakend) && proposedLink.breakendPloidyMatched(firstBreakend))
+                if(!firstHasSingleConn && proposedLink.breakendPloidyMatched(firstBreakend))
                 {
                     proposedLink.overrideBreakendPloidyMatched(firstBreakend);
                 }
-                else if(!singleLinkBreakends.contains(secondBreakend) && proposedLink.breakendPloidyMatched(secondBreakend))
+                else if(!secondHasSingleConn && proposedLink.breakendPloidyMatched(secondBreakend))
                 {
                     proposedLink.overrideBreakendPloidyMatched(secondBreakend);
                 }
 
-                LOGGER.debug("assembly pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
+                LOGGER.debug("assembly multi-sgl-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
                         pair.toString(), formatPloidy(proposedLink.ploidy()),
-                        formatPloidy(proposedLink.breakendPloidy(firstBreakend)),
-                        firstBreakend.getSV().getAssembledLinkedPairs(firstBreakend.usesStart()).size(),
-                        formatPloidy(proposedLink.breakendPloidy(secondBreakend)),
-                        secondBreakend.getSV().getAssembledLinkedPairs(secondBreakend.usesStart()).size());
+                        formatPloidy(proposedLink.breakendPloidy(firstBreakend)), firstBreakend.getSV().getMaxAssembledBreakend(),
+                        formatPloidy(proposedLink.breakendPloidy(secondBreakend)), secondBreakend.getSV().getMaxAssembledBreakend());
 
                 addLinks(proposedLink);
                 assemblyLinks.remove(index);
@@ -1240,8 +1269,8 @@ public class ChainFinder
                 break;
             }
 
-            double firstPloidy = getUnlinkedBreakendCount(firstBreakend);
-            double secondPloidy = getUnlinkedBreakendCount(secondBreakend);
+            double firstPloidy = getMaxUnlinkedBreakendCount(firstBreakend);
+            double secondPloidy = getMaxUnlinkedBreakendCount(secondBreakend);
 
             if(firstPloidy == 0 || secondPloidy == 0)
             {
@@ -1279,10 +1308,20 @@ public class ChainFinder
                 continue;
             }
 
-            LOGGER.debug("assembly pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
+            if(firstRemainingLinks > 1 && proposedLink.breakendPloidyMatched(firstBreakend))
+            {
+                proposedLink.overrideBreakendPloidyMatched(firstBreakend);
+            }
+
+            if(secondRemainingLinks > 1 && proposedLink.breakendPloidyMatched(secondBreakend))
+            {
+                proposedLink.overrideBreakendPloidyMatched(secondBreakend);
+            }
+
+            LOGGER.debug("assembly multi-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
                     pair.toString(), formatPloidy(proposedLink.ploidy()),
-                    formatPloidy(firstPloidy), firstBreakend.getSV().getAssembledLinkedPairs(firstBreakend.usesStart()).size(),
-                    formatPloidy(secondPloidy), secondBreakend.getSV().getAssembledLinkedPairs(secondBreakend.usesStart()).size());
+                    formatPloidy(firstPloidy), firstBreakend.getSV().getMaxAssembledBreakend(),
+                    formatPloidy(secondPloidy), secondBreakend.getSV().getMaxAssembledBreakend());
 
             addLinks(proposedLink);
             linkedPair = true;

@@ -70,19 +70,6 @@ public class ChainingActualTest
             chain(0) 7: pair(89 6:26194406:end & 88r 6:26194040:end) Assembly ASMB length(366) index(3)
             chain(0) 8: pair(88r 3:26431918:start & 79 3:26663922:start) Inferred FOLDBACK length(232004) index(6)
             chain(0) 9: pair(79 3:26664498:end & 78 3:25331584 SGL-on-known) Inferred ONLY length(1332914) index(8)
-
-            previously:
-
-            chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
-            chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
-            chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
-            chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
-            chain(0) 4: pair(77 3:24565108:start & 79 3:26664498:end) TI inferred len=2099390
-            chain(0) 5: pair(79 3:26663922:start & 88r 3:26431918:start) TI inferred len=232004
-            chain(0) 6: pair(88r 6:26194040:end & 89 6:26194406:end) TI assembly len=366
-            chain(0) 7: pair(89 6:26194117:start & 88 6:26194040:end) TI assembly len=77
-            chain(0) 8: pair(88 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
-            chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
          */
 
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
@@ -115,6 +102,28 @@ public class ChainingActualTest
         tester.AllVariants.add(var6);
         tester.AllVariants.add(var7);
         tester.AllVariants.add(var8);
+
+        /*
+        Id	Ploidy	PloidyMin	PloidyMax
+
+    1	77	3.83	3.52	4.52
+    2	78	1.88	1.03	2.88
+    3	79	5.22	3.43	4.97
+    4	88	3.22	2.62	4.41
+    5	89	1.43	0.71	2.33
+    6	113	1.77	1.19	2.61
+    7	119	2.16	1.28	3.05
+    8	120	2.22	1.45	2.8
+         */
+
+        var1.setPloidyRecalcData(3.52, 4.52);
+        var2.setPloidyRecalcData(1.03, 2.88);
+        var3.setPloidyRecalcData(3.43, 4.97);
+        var4.setPloidyRecalcData(2.62, 4.41);
+        var5.setPloidyRecalcData(0.71, 2.33);
+        var6.setPloidyRecalcData(1.19, 2.61);
+        var7.setPloidyRecalcData(1.28, 3.05);
+        var8.setPloidyRecalcData(1.45, 2.80);
 
         tester.preClusteringInit();
 

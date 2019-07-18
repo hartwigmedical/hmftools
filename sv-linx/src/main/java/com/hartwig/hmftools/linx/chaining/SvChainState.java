@@ -24,6 +24,8 @@ public class SvChainState
     public final double Ploidy;
     public final double MaxPloidy;
 
+    private final double mExhaustedLevel;
+
     private double[] mBreakendCount;
 
     // unique connections made to other SVs
@@ -44,10 +46,19 @@ public class SvChainState
         }
         else
         {
-            Ploidy = var.getImpliedPloidy();
+//            Ploidy = var.getImpliedPloidy();
+//            MinPloidy = var.ploidyMin();
+//            MaxPloidy = max(var.ploidyMax(), Ploidy);
+            Ploidy = var.ploidy();
             MinPloidy = var.ploidyMin();
             MaxPloidy = max(var.ploidyMax(), Ploidy);
         }
+
+        // cater for low ploidies
+        if(Ploidy < EXHAUSTED_PLOIDY_LEVEL * 1.5)
+            mExhaustedLevel = EXHAUSTED_PLOIDY_LEVEL * 0.5;
+        else
+            mExhaustedLevel = EXHAUSTED_PLOIDY_LEVEL;
 
         mBreakendCount = new double[SE_PAIR];
 
@@ -58,11 +69,16 @@ public class SvChainState
     public void add(boolean isStart, double linkPloidy) { mBreakendCount[seIndex(isStart)] += linkPloidy; }
 
     public double curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
-    public double breakendCount(int se) { return mBreakendCount[se]; }
     public double breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
 
-    public boolean breakendExhausted(int se) { return unlinked(se) <= EXHAUSTED_PLOIDY_LEVEL; }
-    public boolean breakendExhausted(boolean isStart) { return unlinked(isStart) <= EXHAUSTED_PLOIDY_LEVEL; }
+    public boolean breakendExhausted(boolean isStart)
+    {
+        if(breakendCount(isStart) == 0)
+            return false;
+
+        return unlinked(isStart) <= mExhaustedLevel;
+    }
+    public boolean breakendExhaustedVsMax(boolean isStart) { return maxUnlinked(isStart) <= mExhaustedLevel; }
 
     public double unlinked() { return max(Ploidy - curentCount(), 0); }
     public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
@@ -71,9 +87,7 @@ public class SvChainState
     public double minUnlinked() { return max(MinPloidy - curentCount(), 0); }
     public double maxUnlinked() { return max(MaxPloidy - curentCount(), 0); }
     public double minUnlinked(int se) { return max(MinPloidy - mBreakendCount[se], 0); }
-    public double maxUnlinked(int se) { return max(MaxPloidy - mBreakendCount[se],0); }
-    public double minUnlinked(boolean isStart) { return minUnlinked(seIndex(isStart)); }
-    public double maxUnlinked(boolean isStart) { return maxUnlinked(seIndex(isStart)); }
+    public double maxUnlinked(boolean isStart) { return max(MaxPloidy - mBreakendCount[seIndex(isStart)],0); }
 
     public final List<SvBreakend> getConnections(boolean isStart) { return isStart ? mConnectionsStart : mConnectionsEnd; }
     public int uniqueConnections(boolean isStart) { return isStart ? mConnectionsStart.size() : mConnectionsEnd.size(); }

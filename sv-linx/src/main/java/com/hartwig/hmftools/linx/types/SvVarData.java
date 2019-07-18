@@ -633,9 +633,18 @@ public class SvVarData
 
     public void setPloidyRecalcData(double minPloidy, double maxPloidy)
     {
-        mPloidyMin = minPloidy;
-        mPloidyMax = maxPloidy;
-        mPloidy = (mPloidyMin + mPloidyMax) * 0.5;
+        if(maxPloidy < mPloidy)
+        {
+            // suggests an error in the calculation
+            mPloidyMax = mPloidy;
+        }
+        else
+        {
+            mPloidyMin = minPloidy;
+            mPloidyMax = maxPloidy;
+            mPloidy = (mPloidyMin + mPloidyMax) * 0.5;
+        }
+
         mHasCalcPloidy = true;
     }
 
