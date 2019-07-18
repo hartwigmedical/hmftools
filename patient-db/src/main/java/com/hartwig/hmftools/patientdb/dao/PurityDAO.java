@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
@@ -64,6 +65,8 @@ class PurityDAO {
                 .bestFit(purity)
                 .score(score)
                 .wholeGenomeDuplication(result.getValue(PURITY.WHOLEGENOMEDUPLICATION) == 1)
+                .microsatelliteStatus(MicrosatelliteStatus.valueOf(result.getValue(PURITY.MSSTATUS)))
+                .microsatelliteIndelsPerMb(result.getValue(PURITY.MSINDELSPERMB))
                 .version(result.getValue(PURITY.VERSION))
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
@@ -129,6 +132,8 @@ class PurityDAO {
                 PURITY.MAXPLOIDY,
                 PURITY.POLYCLONALPROPORTION,
                 PURITY.WHOLEGENOMEDUPLICATION,
+                PURITY.MSINDELSPERMB,
+                PURITY.MSSTATUS,
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
@@ -149,6 +154,8 @@ class PurityDAO {
                         DatabaseUtil.decimal(score.maxPloidy()),
                         DatabaseUtil.decimal(purity.polyClonalProportion()),
                         purity.wholeGenomeDuplication() ? (byte) 1 : (byte) 0,
+                        DatabaseUtil.decimal(purity.microsatelliteIndelsPerMb()),
+                        purity.microsatelliteStatus().toString(),
                         timestamp)
                 .execute();
     }

@@ -335,6 +335,8 @@ CREATE TABLE purity
     maxPloidy DOUBLE PRECISION not null,
     minDiploidProportion DOUBLE PRECISION not null,
     maxDiploidProportion DOUBLE PRECISION not null,
+    msIndelsPerMb DOUBLE PRECISION not null,
+    msStatus varchar(10) not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

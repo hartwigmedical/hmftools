@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,8 @@ public class FittedPurityFileTest {
                 .status(FittedPurityStatus.values()[random.nextInt(FittedPurityStatus.values().length)])
                 .polyClonalProportion(nextDouble(random))
                 .wholeGenomeDuplication(random.nextBoolean())
+                .microsatelliteIndelsPerMb(random.nextDouble())
+                .microsatelliteStatus(MicrosatelliteStatus.MSI)
                 .build();
 
         final List<String> lines = toLines(input);

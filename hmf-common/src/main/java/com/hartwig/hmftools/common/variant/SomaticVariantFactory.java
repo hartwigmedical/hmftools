@@ -94,7 +94,7 @@ public class SomaticVariantFactory {
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
 
-    static final String PASS_FILTER = "PASS";
+    public static final String PASS_FILTER = "PASS";
     private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
 
     @NotNull

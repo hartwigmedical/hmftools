@@ -544,6 +544,8 @@ MinPurity | 0.95 | Minimum purity with score within 10% of best
 MaxPurity | 1.00 | Maximum purity with score within 10% of best
 MinPloidy | 3.08 | Minimum ploidy with score within 10% of best 
 MaxPloidy | 3.13 | Maximum ploidy with score within 10% of best
+msIndelsPerMb | 0.1186 | Microsatellite indels per mega base
+msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied
 
 #### Purity Range File
 
@@ -927,6 +929,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Added microsatellite status
   - Added subclonal likelihood model and figure
   - Consistent file headers
   - Fix whole genome duplication calculation

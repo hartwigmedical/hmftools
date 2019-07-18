@@ -179,16 +179,6 @@ public class PurityPloidyEstimateApplication {
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
-            final PurityContext purityContext = ImmutablePurityContext.builder()
-                    .version(version.version())
-                    .bestFit(bestFit.fit())
-                    .status(bestFit.status())
-                    .gender(cobaltGender)
-                    .score(bestFit.score())
-                    .polyClonalProportion(polyclonalProportion(copyNumbers))
-                    .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
-                    .build();
-
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
 
@@ -200,6 +190,22 @@ public class PurityPloidyEstimateApplication {
                     new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(
                             allSomatics);
             final List<PeakModel> somaticPeaks = modelSomaticPeaks(configSupplier.somaticConfig(), enrichedSomatics);
+
+            LOGGER.info("Enriching somatic variants");
+            final SomaticVCF somaticVCF = new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig());
+            somaticVCF.write(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
+
+            final PurityContext purityContext = ImmutablePurityContext.builder()
+                    .version(version.version())
+                    .bestFit(bestFit.fit())
+                    .status(bestFit.status())
+                    .gender(cobaltGender)
+                    .score(bestFit.score())
+                    .polyClonalProportion(polyclonalProportion(copyNumbers))
+                    .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
+                    .microsatelliteIndelsPerMb(somaticVCF.microsatelliteIndelsPerMb())
+                    .microsatelliteStatus(somaticVCF.microsatelliteStatus())
+                    .build();
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
@@ -214,12 +220,6 @@ public class PurityPloidyEstimateApplication {
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(outputDirectory, tumorSample), somaticPeaks);
-
-            LOGGER.info("Enriching somatic variants");
-            new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig()).write(purityAdjuster,
-                    copyNumbers,
-                    enrichedFittedRegions,
-                    somaticPeaks);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -371,7 +371,8 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private List<PeakModel> modelSomaticPeaks(@NotNull final SomaticConfig config, @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
+    private List<PeakModel> modelSomaticPeaks(@NotNull final SomaticConfig config,
+            @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
         final List<ModifiableWeightedPloidy> weightedPloidies = Lists.newArrayList();
         for (PurityAdjustedSomaticVariant enrichedSomatic : enrichedSomatics) {
             if (Doubles.lessThan(enrichedSomatic.ploidy(), config.clonalityMaxPloidy()) && !enrichedSomatic.isFiltered()
