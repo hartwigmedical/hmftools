@@ -33,7 +33,7 @@ public class WeightedPloidyHistogram {
     @NotNull
     public double[] histogram(@NotNull final Collection<? extends WeightedPloidy> ploidies) {
         int maxBucket = bucket(maxPloidy);
-        double[] result = new double[maxBucket];
+        double[] result = new double[maxBucket + 1];
 
         for (final WeightedPloidy ploidy : ploidies) {
 
@@ -50,7 +50,7 @@ public class WeightedPloidyHistogram {
         return peakPloidy(peakBinCount, histogram(ploidies));
     }
 
-    public double peakPloidy(int peakBinCount, @NotNull double[] histogram) {
+    private double peakPloidy(int peakBinCount, @NotNull double[] histogram) {
         int peakBucket = peakBucket(peakBinCount, histogram);
         return ploidy(peakBucket);
     }

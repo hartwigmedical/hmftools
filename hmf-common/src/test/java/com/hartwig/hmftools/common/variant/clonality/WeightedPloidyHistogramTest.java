@@ -17,6 +17,14 @@ import org.junit.Test;
 public class WeightedPloidyHistogramTest {
 
     @Test
+    public void testMaxBucket() {
+        final double max = 5;
+        final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(max, 0.01);
+        victim.histogram(Lists.newArrayList(create(max, 20, 40)));
+    }
+
+
+    @Test
     public void testBucketWithOffset() {
         final WeightedPloidyHistogram negativeOffset = new WeightedPloidyHistogram(10, 0.05, -0.02);
         assertEquals(1, negativeOffset.bucket(0.05));
