@@ -239,15 +239,24 @@ public class SvChain {
 
         if(connectOnStart)
         {
+            List<SvLinkedPair> existingLinks = Lists.newArrayList(mLinkedPairs);
+
             addLink(pair1, true);
             addLink(pair2, true);
 
             // the beginning of the chain will now form the middle
+            for(SvLinkedPair pair : existingLinks)
+            {
+                addLink(pair, true);
+            }
+
+            /*
             for(int index = 0; index < linkCount; ++index)
             {
                 final SvLinkedPair pair = mLinkedPairs.get(2 + index * 2);
                 addLink(pair, true);
             }
+            */
         }
         else
         {

@@ -190,6 +190,9 @@ public class ChainRuleSelector
 
         for(SvVarData foldback : mFoldbacks)
         {
+            if(foldback.isSingleBreakendFoldback())
+                continue;
+
             boolean isChainedFoldback = foldback.isChainedFoldback();
 
             if(isChainedFoldback)
@@ -434,9 +437,6 @@ public class ChainRuleSelector
                                 compDupBeStart, compDupBeEnd, compDupPloidy,
                                 otherBreakend, otherBreakendPloidy, otherBreakend2, otherBreakendPloidy2,
                                 otherBreakendPloidy, otherBreakend.ploidyUncertainty());
-
-                        // proposedLink.addBreakendPloidies(compDupBeStart, compDupPloidy, otherBreakend, otherBreakendPloidy/2);
-                        // proposedLink.addBreakendPloidies(compDupBeEnd, compDupPloidy, otherBreakend2, otherBreakendPloidy2/2, false);
 
                         newProposedLinks.add(proposedLink);
 

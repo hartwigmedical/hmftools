@@ -762,7 +762,8 @@ public class ChainFinder
                 newSvPloidy = proposedLinks.breakendPloidy(newBreakend);
 
                 // boolean ploidyMatched = copyNumbersEqual(proposedLinks.breakendPloidy(chainBreakend), chain.ploidy());
-                boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy());
+                boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy())
+                        || ploidyOverlap(proposedLinks.ploidy(), chain.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty());
 
                 // check whether a match was expected
                 if(!ploidyMatched && proposedLinks.linkPloidyMatch())

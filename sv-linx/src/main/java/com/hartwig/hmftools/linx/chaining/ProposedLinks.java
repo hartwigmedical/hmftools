@@ -224,6 +224,12 @@ public class ProposedLinks
         if(mBreakendPloidyMatched.isEmpty() || mBreakendPloidy.isEmpty())
             return false;
 
+        if(Links.size() == 1 && mBreakendPloidy.size() != 2)
+            return false;
+
+        if(Links.size() == 2 && mBreakendPloidy.size() < 3)
+            return false;
+
         return mPloidy > 0;
     }
 

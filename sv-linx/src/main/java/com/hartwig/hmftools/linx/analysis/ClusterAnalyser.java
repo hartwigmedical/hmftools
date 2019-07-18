@@ -446,6 +446,10 @@ public class ClusterAnalyser {
         {
             isSpecificCluster(cluster);
         }
+        else
+        {
+            isSpecificCluster(cluster);
+        }
 
         int svCount = cluster.getSvCount();
 
