@@ -208,14 +208,14 @@ public class ChainDiagnostics
 
     public void chainingComplete()
     {
-        if(!LOGGER.isDebugEnabled())
-            return;
-
         mUnlinkedBreakendCount = mSvConnectionsMap.values().stream()
                 .mapToInt(x -> (x.breakendCount(true) == 0 ? 1 : 0) + (x.breakendCount(false) == 0 ? 1 : 0)).sum();
 
         mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream()
                 .filter(x -> x.breakendCount(true) == 0 && x.breakendCount(false) == 0).count();
+
+        if(!LOGGER.isDebugEnabled())
+            return;
 
         if(mHasReplication)
         {

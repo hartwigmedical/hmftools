@@ -87,6 +87,9 @@ public class ProposedLinks
             final SvBreakend otherStart, double otherPloidyStart,
             final SvBreakend otherEnd, double otherPloidyEnd, double otherRelativePloidy, double otherUncertainty)
     {
+        if(compDupPloidy == 0 || otherPloidyStart == 0 || otherPloidyEnd== 0)
+            return;
+
         mChainConnectType = CONN_TYPE_COMPLEX_DUP;
 
         if (copyNumbersEqual(compDupPloidy * 2, otherRelativePloidy))
@@ -118,9 +121,12 @@ public class ProposedLinks
             final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackPloidy,
             final SvBreakend otherBreakend, double otherPloidy, double otherRelativePloidy, double otherUncertainty)
     {
+        if(foldbackPloidy == 0 || otherPloidy == 0)
+            return;
+
         mChainConnectType = CONN_TYPE_FOLDBACK;
 
-        if (copyNumbersEqual(foldbackPloidy* 2, otherRelativePloidy))
+        if (copyNumbersEqual(foldbackPloidy * 2, otherRelativePloidy))
         {
             mPloidyMatchType = PM_MATCHED;
         }
@@ -147,6 +153,9 @@ public class ProposedLinks
             final SvBreakend breakend1, double ploidy1,
             final SvBreakend breakend2, double ploidy2)
     {
+        if(ploidy1 == 0 || ploidy2 == 0)
+            return;
+
         mBreakendPloidy.put(breakend1, ploidy1);
         mBreakendPloidy.put(breakend2, ploidy2);
 
@@ -159,15 +168,18 @@ public class ProposedLinks
             mPloidyMatchType = PM_OVERLAP;
         }
 
+        mPloidy = min(ploidy1, ploidy2);
+
         if(mPloidyMatchType == PM_NONE)
         {
-            mPloidy = min(ploidy1, ploidy2);
             mBreakendPloidyMatched.put(breakend1, Doubles.equal(ploidy1, mPloidy));
             mBreakendPloidyMatched.put(breakend2, Doubles.equal(ploidy2, mPloidy));
         }
         else
         {
-            mPloidy = (ploidy1 + ploidy2) * 0.5;
+            // no longer taking the average since no only is this usually above the ploidy of one of the breakends, but can
+            // be above the max ploidy too
+            // mPloidy = (ploidy1 + ploidy2) * 0.5;
             mBreakendPloidyMatched.put(breakend1, true);
             mBreakendPloidyMatched.put(breakend2, true);
         }

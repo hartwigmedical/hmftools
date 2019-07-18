@@ -329,7 +329,7 @@ public class ChainFinderOld
 
         if(!mIsValid)
         {
-            LOGGER.warn("cluster({}) old chain finding failed", mClusterId);
+            LOGGER.warn("OLD CF: cluster({}) old chain finding failed", mClusterId);
             return;
         }
     }
@@ -1329,12 +1329,12 @@ public class ChainFinderOld
                 // tolerate missed assembly links while a more robust approach is determined for ploidy discrepancies
                 if(origPair.isAssembled())
                 {
-                    LOGGER.warn("cluster({}) missed assembly link", mClusterId);
+                    LOGGER.debug("cluster({}) missed assembly link", mClusterId);
                     return false;
                 }
 
                 mIsValid = false;
-                LOGGER.error("new pair breakendStart({} valid={}) and breakendEnd({} valid={}) no unlinked match found",
+                LOGGER.error("OLD CF: new pair breakendStart({} valid={}) and breakendEnd({} valid={}) no unlinked match found",
                         origPair.getBreakend(true).toString(), unlinkedBeFirst != null,
                         origPair.getBreakend(false).toString(), unlinkedBeSecond != null);
 
@@ -1651,7 +1651,7 @@ public class ChainFinderOld
 
             if(breakendList == null || breakendList.isEmpty())
             {
-                LOGGER.error("breakend({}) list already empty", origBreakend.toString());
+                LOGGER.error("OLD CF: breakend({}) list already empty", origBreakend.toString());
                 mIsValid = false;
                 return;
             }
@@ -2356,7 +2356,7 @@ public class ChainFinderOld
 
     public void setMaxPossibleLinks(int maxLinks)
     {
-        LOGGER.warn("incremental link finding disabled");
+        LOGGER.warn("OLD CF: incremental link finding disabled");
 
         /*
         if(maxLinks == 0)
@@ -2699,7 +2699,7 @@ public class ChainFinderOld
 
                             if(otherBreakend == null)
                             {
-                                LOGGER.error("cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
+                                LOGGER.error("OLD CF: cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
                                 mIsValid = false;
                                 return false;
                             }
@@ -2721,7 +2721,7 @@ public class ChainFinderOld
 
                             if(otherBreakend == null)
                             {
-                                LOGGER.error("cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
+                                LOGGER.error("OLD CF: cluster({}) SV({}) invalid state", mClusterId, svConn.SV.id());
                                 mIsValid = false;
                                 return false;
                             }
@@ -2893,7 +2893,7 @@ public class ChainFinderOld
 
             if(svConn == null || svConn.maxUnlinked(breakend.usesStart()) == 0)
             {
-                LOGGER.error("breakend({}) connections exhausted: {}",
+                LOGGER.error("OLD CF: breakend({}) connections exhausted: {}",
                         origBreakend.toString(), svConn != null ? svConn.toString() : "null");
                 mIsValid = false;
                 return;

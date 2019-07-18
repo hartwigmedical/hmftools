@@ -138,6 +138,8 @@ public class ChainFinder
     public static final int CHAIN_METHOD_NEW = 1;
     public static final int CHAIN_METHOD_COMPARE = 2;
 
+    public static final double MIN_CHAINING_PLOIDY_LEVEL = 0.05;
+
     private int mLinkIndex; // incrementing value for each link added to any chain
     private boolean mIsValid;
     private boolean mLogVerbose;
@@ -380,7 +382,7 @@ public class ChainFinder
 
         mDiagnostics.chainingComplete();
 
-        if(mRunOldComparison)
+        if(mRunOldComparison && mIsValid)
             mOldFinder.compareChains(mSampleId, mUniqueChains, mDiagnostics.unlinkedSvCount());
 
         disableLogVerbose();
@@ -968,13 +970,12 @@ public class ChainFinder
 
                 if(otherPairBreakend == null || breakend == null)
                 {
-                    LOGGER.error("invalid reference");
+                    LOGGER.error("cluster({}) invalid breakend in proposed link: {}", mClusterId, proposedLink.toString());
                     mIsValid = false;
                     return;
                 }
 
-                if (svConn == null || (!canUseMaxPloidy && svConn.breakendExhausted(breakend.usesStart()))
-                || (canUseMaxPloidy && svConn.breakendExhaustedVsMax(breakend.usesStart())))
+                if (svConn == null || svConn.breakendExhaustedVsMax(breakend.usesStart()))
                 {
                     LOGGER.error("breakend({}) breakend already exhausted: {} with proposedLink({})",
                             breakend.toString(), svConn != null ? svConn.toString() : "null", proposedLink.toString());
@@ -988,7 +989,7 @@ public class ChainFinder
 
                 if (breakendExhausted)
                 {
-                    // the links matched so exhaust this breakend
+                    // this proposed link fully allocates the breakend
                     svConn.add(breakend.usesStart(), max(svConn.unlinked(breakend.usesStart()), proposedLink.ploidy()));
                     exhaustedBreakends.add(breakend);
                 }
@@ -1146,6 +1147,13 @@ public class ChainFinder
                 proposedLink.addBreakendPloidies(
                         pair.getBreakend(true), getUnlinkedBreakendCount(pair.getBreakend(true)),
                         pair.getBreakend(false), getUnlinkedBreakendCount(pair.getBreakend(false)));
+
+                if(!proposedLink.isValid())
+                {
+                    LOGGER.debug("cluster({}) skipping assembled link({}) with low ploidy", mClusterId, proposedLink);
+                    continue;
+                }
+
                 addLinks(proposedLink);
             }
 
@@ -1177,6 +1185,15 @@ public class ChainFinder
 
             double firstPloidy = getUnlinkedBreakendCount(firstBreakend);
             double secondPloidy = getUnlinkedBreakendCount(secondBreakend);
+
+            if(firstPloidy == 0 || secondPloidy == 0)
+            {
+                LOGGER.debug("cluster({}) skipping assembled pair({}) with low ploidy({} & {})",
+                        mClusterId, pair, formatPloidy(firstPloidy), formatPloidy(secondPloidy));
+
+                assemblyLinks.remove(index);
+                continue;
+            }
 
             if(firstHasSingleConn && secondHasSingleConn)
             {
@@ -1556,12 +1573,16 @@ public class ChainFinder
 
     private void checkIsComplexDupSV(SvBreakend lowerPloidyBreakend, SvBreakend higherPloidyBreakend)
     {
+        // check if the lower ploidy SV connects to both ends of another SV to replicate it
         SvVarData var = lowerPloidyBreakend.getSV();
 
         if(var.isNullBreakend() || var.type() == DEL)
             return;
 
         if(mComplexDupCandidates.contains(var))
+            return;
+
+        if(mSvConnectionsMap.get(var) == null)
             return;
 
         if(var.ploidyMin() * 2 > higherPloidyBreakend.getSV().ploidyMax())
@@ -1638,6 +1659,14 @@ public class ChainFinder
         // make a cache of all unchained breakends in those of replicated SVs
         for(final SvVarData var : mSvList)
         {
+            if(var.ploidy() <= MIN_CHAINING_PLOIDY_LEVEL)
+            {
+                // for now skip these
+                LOGGER.debug("cluster({}) skipping SV({}) with low ploidy({} min={} max={})",
+                        mClusterId, var.id(), formatPloidy(var.ploidy()), formatPloidy(var.ploidyMin()), formatPloidy(var.ploidyMax()));
+                continue;
+            }
+
             mSvConnectionsMap.put(var, new SvChainState(var, !mHasReplication));
         }
     }

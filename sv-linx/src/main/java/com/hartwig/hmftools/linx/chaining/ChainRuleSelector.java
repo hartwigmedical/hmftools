@@ -328,6 +328,9 @@ public class ChainRuleSelector
         {
             double compDupPloidy = mChainFinder.getUnlinkedCount(compDup);
 
+            if(compDupPloidy == 0)
+                continue;
+
             SvBreakend compDupBeStart = compDup.getBreakend(true);
             SvBreakend compDupBeEnd = compDup.getBreakend(false);
 

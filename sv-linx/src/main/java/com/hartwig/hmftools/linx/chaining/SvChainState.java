@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -32,7 +31,7 @@ public class SvChainState
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
 
-    private static final double EXHAUSTED_PLOIDY_LEVEL = 0.2;
+    private static final double EXHAUSTED_PLOIDY_PERC = 0.1;
 
     public SvChainState(final SvVarData var, boolean singlePloidy)
     {
@@ -46,19 +45,12 @@ public class SvChainState
         }
         else
         {
-//            Ploidy = var.getImpliedPloidy();
-//            MinPloidy = var.ploidyMin();
-//            MaxPloidy = max(var.ploidyMax(), Ploidy);
             Ploidy = var.ploidy();
             MinPloidy = var.ploidyMin();
             MaxPloidy = max(var.ploidyMax(), Ploidy);
         }
 
-        // cater for low ploidies
-        if(Ploidy < EXHAUSTED_PLOIDY_LEVEL * 1.5)
-            mExhaustedLevel = EXHAUSTED_PLOIDY_LEVEL * 0.5;
-        else
-            mExhaustedLevel = EXHAUSTED_PLOIDY_LEVEL;
+        mExhaustedLevel = EXHAUSTED_PLOIDY_PERC * Ploidy;
 
         mBreakendCount = new double[SE_PAIR];
 
