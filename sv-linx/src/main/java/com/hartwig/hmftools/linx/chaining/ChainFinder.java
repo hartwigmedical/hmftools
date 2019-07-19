@@ -972,9 +972,7 @@ public class ChainFinder
         {
             for (int se = SE_START; se <= SE_END; ++se)
             {
-                boolean isStart = isStart(se);
-
-                final SvBreakend breakend = newPair.getBreakend(isStart);
+                final SvBreakend breakend = newPair.getBreakend(isStart(se));
 
                 if(exhaustedBreakends.contains(breakend))
                     continue;
@@ -1007,7 +1005,6 @@ public class ChainFinder
                 {
                     // this proposed link fully allocates the breakend
                     svConn.add(breakend.usesStart(), max(svConn.unlinked(breakend.usesStart()), proposedLink.ploidy()));
-                    exhaustedBreakends.add(breakend);
                 }
                 else
                 {
@@ -1017,40 +1014,10 @@ public class ChainFinder
                             : svConn.breakendExhausted(breakend.usesStart());
                 }
 
+                if(breakendExhausted)
+                    exhaustedBreakends.add(breakend);
+
                 final SvBreakend otherSvBreakend = var.getBreakend(!breakend.usesStart());
-
-                boolean hasUnlinkedBreakend = true;
-
-                if (breakendExhausted)
-                {
-                    hasUnlinkedBreakend = false;
-
-                    boolean otherBreakendExhausted = canUseMaxPloidy ? svConn.breakendExhaustedVsMax(breakend.usesStart())
-                            : svConn.breakendExhausted(breakend.usesStart());
-
-                    if (otherBreakendExhausted)
-                    {
-                        checkSvComplete(svConn);
-
-                        if (var.isFoldback())
-                        {
-                            // remove if no other instances of this SV remain
-                            mFoldbacks.remove(var);
-                        }
-                        else if (mComplexDupCandidates.contains(var))
-                        {
-                            mComplexDupCandidates.remove(var);
-                        }
-                    }
-                }
-
-                List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
-
-                if (possibleLinks != null && !hasUnlinkedBreakend)
-                {
-                    // not more replicated breakends exist so any possible links that depend on it
-                    removePossibleLinks(possibleLinks, breakend);
-                }
 
                 if(otherSvBreakend != null)
                     removeOppositeLinks(otherSvBreakend, otherPairBreakend);
@@ -1060,6 +1027,43 @@ public class ChainFinder
             if (!matchesExistingPair(newPair))
             {
                 mUniquePairs.add(newPair);
+            }
+        }
+
+        // clean up breakends and SVs which have been fully allocated
+        for(final SvBreakend breakend : exhaustedBreakends)
+        {
+            final SvVarData var = breakend.getSV();
+
+            SvChainState svConn = mSvConnectionsMap.get(var);
+
+            if(svConn != null)
+            {
+                boolean otherBreakendExhausted = canUseMaxPloidy ? svConn.breakendExhaustedVsMax(!breakend.usesStart())
+                        : svConn.breakendExhausted(!breakend.usesStart());
+
+                if (otherBreakendExhausted)
+                {
+                    checkSvComplete(svConn);
+
+                    if (var.isFoldback())
+                    {
+                        // remove if no other instances of this SV remain
+                        mFoldbacks.remove(var);
+                    }
+                    else if (mComplexDupCandidates.contains(var))
+                    {
+                        mComplexDupCandidates.remove(var);
+                    }
+                }
+            }
+
+            List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
+
+            if (possibleLinks != null)
+            {
+                // since this breakend has been exhausted, remove any links which depend on it
+                removePossibleLinks(possibleLinks, breakend);
             }
         }
     }
@@ -1249,6 +1253,14 @@ public class ChainFinder
                 double firstPloidy = firstHasSingleConn ? getUnlinkedBreakendCount(firstBreakend) : getMaxUnlinkedBreakendCount(firstBreakend);
                 double secondPloidy = secondHasSingleConn ? getUnlinkedBreakendCount(secondBreakend) : getMaxUnlinkedBreakendCount(secondBreakend);
 
+                if(firstPloidy == 0 || secondPloidy == 0)
+                {
+                    LOGGER.debug("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
+                            mClusterId, pair.toString(), formatPloidy(firstPloidy), formatPloidy(secondPloidy));
+                    assemblyLinks.remove(index);
+                    continue;
+                }
+
                 // for the breakend which has other links to make, want to avoid indicating it has been matched
                 ProposedLinks proposedLink = new ProposedLinks(pair, ASSEMBLY);
                 proposedLink.addBreakendPloidies(firstBreakend, firstPloidy, secondBreakend, secondPloidy);
@@ -1305,7 +1317,7 @@ public class ChainFinder
 
             if(firstPloidy == 0 || secondPloidy == 0)
             {
-                LOGGER.warn("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
+                LOGGER.debug("cluster({}) pair({}) assembly links already exhausted: first({}) second({})",
                         mClusterId, pair.toString(), formatPloidy(firstPloidy), formatPloidy(secondPloidy));
                 bothMultiPairs.remove(index);
                 continue;

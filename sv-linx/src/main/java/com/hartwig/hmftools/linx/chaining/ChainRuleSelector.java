@@ -509,6 +509,9 @@ public class ChainRuleSelector
 
                 double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
 
+                if(otherBreakendPloidy == 0)
+                    continue;
+
                 if(mSkippedPairs.contains(pair))
                     continue;
 
