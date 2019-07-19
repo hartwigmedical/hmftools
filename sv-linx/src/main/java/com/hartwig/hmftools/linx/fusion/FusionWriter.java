@@ -2,14 +2,24 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.context;
+import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.fusionPloidy;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,6 +39,58 @@ public class FusionWriter
 
     }
 
+    public void writeSampleData(final String sampleId, final List<GeneFusion> fusions, final List<Transcript> disruptions)
+    {
+        // write sample files for patient reporter
+        List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
+        List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
+        for(final GeneFusion fusion : fusions)
+        {
+            if(fusion.reportable())
+            {
+                reportedFusions.add(ImmutableReportableGeneFusion.builder()
+                        .geneStart(fusion.upstreamTrans().geneName())
+                        .geneTranscriptStart(fusion.upstreamTrans().StableId)
+                        .geneContextStart(context(fusion.upstreamTrans()))
+                        .geneEnd(fusion.downstreamTrans().geneName())
+                        .geneTranscriptEnd(fusion.downstreamTrans().StableId)
+                        .geneContextEnd(context(fusion.downstreamTrans()))
+                        .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
+                        .build());
+            }
+        }
+
+        for(final Transcript transcript : disruptions)
+        {
+            final GeneAnnotation gene = transcript.parent();
+
+            reportedDisruptions.add(ImmutableReportableDisruption.builder()
+                    .svId(gene.id())
+                    .chromosome(gene.chromosome())
+                    .orientation(gene.orientation())
+                    .strand(gene.Strand)
+                    .chrBand(gene.karyotypeBand())
+                    .gene(transcript.geneName())
+                    .type(gene.type().toString())
+                    .ploidy(gene.ploidy())
+                    .exonUp(transcript.ExonUpstream)
+                    .exonDown(transcript.ExonDownstream)
+                    .build());
+        }
+
+        try
+        {
+            final String fusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, sampleId);
+            ReportableGeneFusionFile.write(fusionsFile, reportedFusions);
+
+            final String disruptionsFile = ReportableDisruptionFile.generateFilename(mOutputDir, sampleId);
+            ReportableDisruptionFile.write(disruptionsFile, reportedDisruptions);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write fusions file: {}", e.toString());
+        }
+    }
     public void initialiseOutputFile(final String fileName)
     {
         try

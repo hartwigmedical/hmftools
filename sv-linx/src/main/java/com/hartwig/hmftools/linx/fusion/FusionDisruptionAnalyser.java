@@ -301,7 +301,7 @@ public class FusionDisruptionAnalyser
 
         if(mConfig.isSingleSample())
         {
-            writeSampleData();
+            mFusionWriter.writeSampleData(mSampleId, mFusions, mDisruptions);
         }
 
         List<GeneFusion> uniqueFusions = extractUniqueFusions();
@@ -1087,58 +1087,7 @@ public class FusionDisruptionAnalyser
         annotationDAO.writeBreakendsAndFusions(mSampleId, transcriptsToUpload, fusionsToUpload);
     }
 
-    private void writeSampleData()
-    {
-        // write sample files for patient reporter
-        List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
-        List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
-        for(final GeneFusion fusion : mFusions)
-        {
-            if(fusion.reportable())
-            {
-                reportedFusions.add(ImmutableReportableGeneFusion.builder()
-                        .geneStart(fusion.upstreamTrans().geneName())
-                        .geneTranscriptStart(fusion.upstreamTrans().StableId)
-                        .geneContextStart(context(fusion.upstreamTrans()))
-                        .geneEnd(fusion.downstreamTrans().geneName())
-                        .geneTranscriptEnd(fusion.downstreamTrans().StableId)
-                        .geneContextEnd(context(fusion.downstreamTrans()))
-                        .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
-                        .build());
-            }
-        }
 
-        for(final Transcript transcript : mDisruptions)
-        {
-            final GeneAnnotation gene = transcript.parent();
-
-            reportedDisruptions.add(ImmutableReportableDisruption.builder()
-                    .svId(gene.id())
-                    .chromosome(gene.chromosome())
-                    .orientation(gene.orientation())
-                    .strand(gene.Strand)
-                    .chrBand(gene.karyotypeBand())
-                    .gene(transcript.geneName())
-                    .type(gene.type().toString())
-                    .ploidy(gene.ploidy())
-                    .exonUp(transcript.ExonUpstream)
-                    .exonDown(transcript.ExonDownstream)
-                    .build());
-        }
-
-        try
-        {
-            final String fusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, mSampleId);
-            ReportableGeneFusionFile.write(fusionsFile, reportedFusions);
-
-            final String disruptionsFile = ReportableDisruptionFile.generateFilename(mOutputDir, mSampleId);
-            ReportableDisruptionFile.write(disruptionsFile, reportedDisruptions);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write fusions file: {}", e.toString());
-        }
-    }
 
     private void writeFusionData(final GeneFusion fusion)
     {
