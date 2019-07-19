@@ -32,6 +32,7 @@ public class SvChainState
     private final List<SvBreakend> mConnectionsEnd;
 
     private static final double EXHAUSTED_PLOIDY_PERC = 0.1;
+    private static final double EXHAUSTED_PLOIDY_ABS = 0.2;
 
     public SvChainState(final SvVarData var, boolean singlePloidy)
     {
@@ -50,7 +51,7 @@ public class SvChainState
             MaxPloidy = max(var.ploidyMax(), Ploidy);
         }
 
-        mExhaustedLevel = EXHAUSTED_PLOIDY_PERC * Ploidy;
+        mExhaustedLevel = min(EXHAUSTED_PLOIDY_PERC * Ploidy, EXHAUSTED_PLOIDY_ABS);
 
         mBreakendCount = new double[SE_PAIR];
 

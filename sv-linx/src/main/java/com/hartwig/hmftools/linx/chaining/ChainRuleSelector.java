@@ -269,12 +269,12 @@ public class ChainRuleSelector
                         continue;
 
                     SvChain targetChain = null;
-                    for(SvChain chain : mChains)
+                    for (SvChain chain : mChains)
                     {
-                        if(!copyNumbersEqual(foldbackPloidy * 2, chain.ploidy()) && chain.ploidy() <= foldbackPloidy)
+                        if (!copyNumbersEqual(foldbackPloidy * 2, chain.ploidy()) && chain.ploidy() <= foldbackPloidy)
                             continue;
 
-                        for(int se = SE_START; se <= SE_END; ++se)
+                        for (int se = SE_START; se <= SE_END; ++se)
                         {
                             boolean isStart = isStart(se);
                             SvBreakend chainBe = chain.getOpenBreakend(isStart);
@@ -282,7 +282,7 @@ public class ChainRuleSelector
                             if (chainBe == null)
                                 continue;
 
-                            if(chainBe == otherBreakend || chainBe == otherBreakend)
+                            if (chainBe == otherBreakend || chainBe == otherBreakend)
                             {
                                 targetChain = chain;
                                 break;
@@ -290,8 +290,10 @@ public class ChainRuleSelector
                         }
                     }
 
+                    // only specify a target chain if the foldback is a single SV which can be inserted to replicate it
                     ProposedLinks proposedLink = new ProposedLinks(
-                            Lists.newArrayList(pairStart, pairEnd), CHAIN_SPLIT, targetChain);
+                            Lists.newArrayList(pairStart, pairEnd), CHAIN_SPLIT,
+                            !isChainedFoldback ? targetChain : null);
 
                     double linkedPloidy = targetChain != null ? targetChain.ploidy() : nonFoldbackPloidy;
 
@@ -352,6 +354,12 @@ public class ChainRuleSelector
                 if(chainBeStart == null || chainBeEnd == null)
                     continue;
 
+                if(chainBeStart.getSV() == compDup || chainBeEnd.getSV() == compDup)
+                    continue;
+
+                if(chainBeStart == chainBeEnd)
+                    continue;
+
                 double chainStartPloidy = mChainFinder.getUnlinkedBreakendCount(chainBeStart);
                 double chainEndPloidy = mChainFinder.getUnlinkedBreakendCount(chainBeEnd);
 
@@ -385,6 +393,10 @@ public class ChainRuleSelector
                 }
 
                 if(matchingPair[SE_START] == null || matchingPair[SE_END] == null)
+                    continue;
+
+                // must be different breakends
+                if(matchingPair[SE_START].getOtherBreakend(compDupBeStart) == matchingPair[SE_END].getOtherBreakend(compDupBeEnd))
                     continue;
 
                 ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(matchingPair[SE_START], matchingPair[SE_END]),

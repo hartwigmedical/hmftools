@@ -82,6 +82,22 @@ public class ProposedLinks
 
     public double ploidy() { return mPloidy; }
 
+    public void setLowerPloidy(double ploidy)
+    {
+        if(ploidy >= mPloidy || multiConnection())
+            return;
+
+        mPloidy = ploidy;
+
+        // this may change whether a link is exhausted
+        for(Map.Entry<SvBreakend,Double> entry : mBreakendPloidy.entrySet())
+        {
+            final SvBreakend breakend = entry.getKey();
+            double bePloidy = entry.getValue();
+            mBreakendPloidyMatched.put(breakend, Doubles.equal(bePloidy, mPloidy));
+        }
+    }
+
     public void addComDupBreakends(
             final SvBreakend compDupStart, final SvBreakend compDupEnd, double compDupPloidy,
             final SvBreakend otherStart, double otherPloidyStart,
