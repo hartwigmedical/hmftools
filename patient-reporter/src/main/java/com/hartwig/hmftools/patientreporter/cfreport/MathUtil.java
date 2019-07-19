@@ -9,10 +9,6 @@ public final class MathUtil {
         return map(value, inMin, inMax, 0, 100);
     }
 
-    public static double mapPercentageClamped(final double value, final double inMin, final double inMax) {
-        return mapClamped(value, inMin, inMax, 0, 100);
-    }
-
     public static double map(final double value, final double inMin, final double inMax, final double outMin, final double outMax) {
         // Remap v from [inMin, inMax] to [outMin, outMax]
         return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
