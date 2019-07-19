@@ -60,13 +60,13 @@ public class ChainLinkAllocator
             final List<SvVarData> doubleMinuteSVs)
     {
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
-        mSvConnectionsMap = Maps.newHashMap();
-        mSvCompletedConnections = Lists.newArrayList();
         mFoldbacks = foldbacks;
         mComplexDupCandidates = complexDupCandidates;
         mChains = chains;
         mDoubleMinuteSVs = doubleMinuteSVs;
 
+        mSvConnectionsMap = Maps.newHashMap();
+        mSvCompletedConnections = Lists.newArrayList();
         mUniquePairs = Lists.newArrayList();
         mSkippedPairs = Lists.newArrayList();
         mIsValid = true;
@@ -90,12 +90,14 @@ public class ChainLinkAllocator
     public void initialise(int clusterId)
     {
         mClusterId = clusterId;
+
         mIsValid = true;
         mLinkIndex = 0;
         mPairSkipped = false;
+        mNextChainId = 0;
+
         mUniquePairs.clear();
         mSkippedPairs.clear();
-        mNextChainId = 0;
         mSvConnectionsMap.clear();
         mSvCompletedConnections.clear();
     }
@@ -693,6 +695,25 @@ public class ChainLinkAllocator
     protected boolean isDoubleMinuteDup(final SvVarData var)
     {
         return isDoubleMinuteDup() && mDoubleMinuteSVs.get(0) == var;
+    }
+
+    private void removeSkippedPairs(List<SvLinkedPair> possiblePairs)
+    {
+        // some pairs are temporarily unavailable for use (eg those which would close a chain)
+        // to to avoid continually trying to add them, keep them out of consideration until a new links is added
+        if(mSkippedPairs.isEmpty())
+            return;
+
+        int index = 0;
+        while(index < possiblePairs.size())
+        {
+            SvLinkedPair pair = possiblePairs.get(index);
+
+            if(mSkippedPairs.contains(pair))
+                possiblePairs.remove(index);
+            else
+                ++index;
+        }
     }
 
 }

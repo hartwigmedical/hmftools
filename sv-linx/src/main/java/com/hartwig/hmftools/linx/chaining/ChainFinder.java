@@ -83,7 +83,6 @@ public class ChainFinder
     private final Map<SvBreakend,Integer> mSubsetBreakendClusterIndexMap;
 
     // chaining state
-    private final List<SvLinkedPair> mSkippedPairs; // pairs which would close a chain, temporarily ignored
     private final List<SvVarData> mComplexDupCandidates; // identified SVs which duplication another SV
     private final List<SvLinkedPair> mAdjacentMatchingPairs;
     private final List<SvLinkedPair> mAdjacentPairs;
@@ -144,7 +143,6 @@ public class ChainFinder
         mComplexDupCandidates = Lists.newArrayList();
         mChains = Lists.newArrayList();
         mUniqueChains = Lists.newArrayList();
-        mSkippedPairs = Lists.newArrayList();
         mSvBreakendPossibleLinks = Maps.newHashMap();
         mReplicatedSVs = Lists.newArrayList();
         mReplicatedBreakends = Lists.newArrayList();
@@ -202,7 +200,6 @@ public class ChainFinder
         mComplexDupCandidates.clear();
         mChains.clear();
         mUniqueChains.clear();
-        mSkippedPairs.clear();
         mSvBreakendPossibleLinks.clear();
         mReplicatedSVs.clear();
         mReplicatedBreakends.clear();
@@ -601,27 +598,6 @@ public class ChainFinder
         proposedLinks = mRuleSelector.findNearest(proposedLinks);
         return proposedLinks;
     }
-
-
-    private void removeSkippedPairs(List<SvLinkedPair> possiblePairs)
-    {
-        // some pairs are temporarily unavailable for use (eg those which would close a chain)
-        // to to avoid continually trying to add them, keep them out of consideration until a new links is added
-        if(mSkippedPairs.isEmpty())
-            return;
-
-        int index = 0;
-        while(index < possiblePairs.size())
-        {
-            SvLinkedPair pair = possiblePairs.get(index);
-
-            if(mSkippedPairs.contains(pair))
-                possiblePairs.remove(index);
-            else
-                ++index;
-        }
-    }
-
 
     private void addAssemblyLinksToChains()
     {

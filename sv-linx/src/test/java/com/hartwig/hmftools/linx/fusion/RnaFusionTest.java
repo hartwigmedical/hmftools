@@ -68,7 +68,7 @@ public class RnaFusionTest
 
         addTransExonData(geneTransCache, geneId2, transDataList);
 
-        FusionFinder fusionAnalyser = new FusionFinder(null, geneTransCache, "");
+        FusionFinder fusionAnalyser = new FusionFinder(null, geneTransCache);
 
         // test positive strand
 

@@ -24,7 +24,7 @@ import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep13;
+import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep18;
 import org.jooq.Record;
 import org.jooq.Record2;
@@ -135,7 +135,7 @@ public class StructuralVariantFusionDAO
 
         for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
-            final InsertValuesStep13 fusionInserter = context.insertInto(SVFUSION,
+            final InsertValuesStep14 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -148,7 +148,8 @@ public class StructuralVariantFusionDAO
                     SVFUSION.CHAINTERMINATED,
                     SVFUSION.DOMAINSKEPT,
                     SVFUSION.DOMAINSLOST,
-                    SVFUSION.SKIPPEDEXONS);
+                    SVFUSION.SKIPPEDEXONSUP,
+                    SVFUSION.SKIPPEDEXONSDOWN);
 
             //noinspection unchecked
             batch.forEach(fusion -> fusionInserter.values(timestamp,
@@ -163,7 +164,8 @@ public class StructuralVariantFusionDAO
                     fusion.isTerminated(),
                     DatabaseUtil.checkStringLength(fusion.downstreamTrans().getProteinFeaturesKept(), SVFUSION.DOMAINSKEPT),
                     DatabaseUtil.checkStringLength(fusion.downstreamTrans().getProteinFeaturesLost(), SVFUSION.DOMAINSLOST),
-                    fusion.getExonsSkipped(true) + fusion.getExonsSkipped(false)));
+                    fusion.getExonsSkipped(true),
+                    fusion.getExonsSkipped(false)));
 
             fusionInserter.execute();
         }

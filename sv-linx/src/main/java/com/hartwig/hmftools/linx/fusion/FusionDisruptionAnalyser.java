@@ -66,6 +66,7 @@ public class FusionDisruptionAnalyser
 {
     private FusionFinder mFusionFinder;
     private DisruptionFinder mDisruptionFinder;
+    private FusionWriter mFusionWriter;
 
     private String mSampleId;
     private String mOutputDir;
@@ -100,6 +101,7 @@ public class FusionDisruptionAnalyser
     public FusionDisruptionAnalyser()
     {
         mFusionFinder = null;
+        mFusionWriter = null;
         mDisruptionFinder = null;
         mGeneTransCollection = new SvGeneTranscriptCollection();
         mOutputDir = "";
@@ -135,7 +137,8 @@ public class FusionDisruptionAnalyser
 
         mConfig = config;
         mGeneTransCollection = ensemblDataCache;
-        mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
+        mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
+        mFusionWriter = new FusionWriter(mOutputDir);
         mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache);
 
         populateKnownFusionGenes();
@@ -146,9 +149,8 @@ public class FusionDisruptionAnalyser
 
             if (!mSkipFusionCheck)
             {
-                String annotationHeaders = "PhaseMatched,ClusterId,ClusterCount,ResolvedType,OverlapUp,OverlapDown,ChainInfo";
                 String fusionFileName = mConfig.hasMultipleSamples() ? "SVA_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
-                mFusionFinder.initialiseOutputFile(fusionFileName, annotationHeaders);
+                mFusionWriter.initialiseOutputFile(fusionFileName);
             }
 
             if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
@@ -1143,7 +1145,7 @@ public class FusionDisruptionAnalyser
         // write fusions in detail
         if (fusion.reportable() || !mLogReportableOnly)
         {
-            mFusionFinder.writeFusionData(fusion, mSampleId);
+            mFusionWriter.writeFusionData(fusion, mSampleId);
         }
 
         if(fusion.reportable() && mVisWriter != null)
@@ -1200,7 +1202,7 @@ public class FusionDisruptionAnalyser
         }
 
         if(mFusionFinder != null)
-            mFusionFinder.onCompleted();
+            mFusionWriter.close();
 
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.close();
