@@ -66,12 +66,23 @@ public final class SomaticVariants {
         return geneSuffix.isEmpty() ? variant.gene() : variant.gene() + " " + geneSuffix;
     }
 
+    @NotNull
     public static String ploidyString(double ploidy, boolean hasReliablePurityFit) {
         if (!hasReliablePurityFit) {
             return DataUtil.NA_STRING;
         }
 
-        return String.valueOf(Math.round(Math.max(0, ploidy) * 10) / 10D);
+        return String.valueOf(Math.round(Math.max(0, ploidy)));
+    }
+
+    @NotNull
+    public static String vafString(@NotNull ReportableVariant variant, boolean hasReliablePurityFit) {
+        if (!hasReliablePurityFit) {
+            return DataUtil.NA_STRING;
+        }
+        double vaf = variant.allelePloidy() / variant.totalPloidy();
+
+        return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
 
     @VisibleForTesting

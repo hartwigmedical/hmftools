@@ -46,10 +46,6 @@ standard_mutation <- function(types) {
 clonality_plot <- function(somaticVariants, clonalityModel) {
   clonalityVariants = somaticVariants %>% filter(filter == 'PASS')
 
-  combinedModel = clonalityModel %>% 
-    group_by(bucket) %>% 
-    summarise(bucketWeight = sum(bucketWeight))
-  
   subclonalPercentage = clonalityModel %>% 
     group_by(bucket) %>% 
     mutate(totalWeight = sum(bucketWeight)) %>% 
@@ -58,15 +54,30 @@ clonality_plot <- function(somaticVariants, clonalityModel) {
       isSubclonal = T,
       bucketWeight = sum(bucketWeight), 
       subclonalLikelihood = ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight)))
+
+  nonResidualModel = clonalityModel %>% filter(peak != 0)
+
+  nonResidualSubclonalPercentage = nonResidualModel %>%
+    group_by(bucket) %>%
+    mutate(totalWeight = sum(bucketWeight)) %>%
+    filter(isSubclonal) %>%
+    summarise(
+    isSubclonal = T,
+    bucketWeight = sum(bucketWeight),
+    subclonalLikelihood = ifelse(bucketWeight == 0, 0, bucketWeight / max(totalWeight)))
+
+  combinedModel = nonResidualModel %>%
+    group_by(bucket) %>% 
+    summarise(bucketWeight = sum(bucketWeight))
   
   singleBlue = "#6baed6"
   singleRed = "#d94701"
   
   pTop = ggplot() +
     geom_histogram(data=clonalityVariants, aes(x = ploidy), binwidth = 0.05, fill=singleBlue, col=singleBlue,  alpha = .4) +
-    geom_line(data=combinedModel, aes(x = bucket, y = bucketWeight), position = "identity", alpha = 0.8) +
-    geom_line(data=clonalityModel, aes(x = bucket, y = bucketWeight, color = peak), position = "identity") +
-    geom_area(data=subclonalPercentage %>% filter(isSubclonal), aes(x = bucket, y = bucketWeight), position = "identity",  alpha = 0.3, fill = singleRed, color = singleRed) +
+    geom_line(data=combinedModel , aes(x = bucket, y = bucketWeight), position = "identity", alpha = 0.8) +
+    geom_line(data=nonResidualModel, aes(x = bucket, y = bucketWeight, color = peak), position = "identity") +
+    geom_area(data=nonResidualSubclonalPercentage %>% filter(isSubclonal), aes(x = bucket, y = bucketWeight), position = "identity",  alpha = 0.3, fill = singleRed, color = singleRed) +
     ggtitle("") + xlab("Ploidy") + ylab("") +
     scale_y_continuous(expand=c(0.02, 0.02)) +
     theme(panel.border = element_blank(), panel.grid.minor = element_blank(), axis.ticks = element_blank(), legend.position="none") +
@@ -164,5 +175,6 @@ ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfal
 clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clonality.tsv"), sep = "\t", header = T) %>% 
   mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak)) %>% filter(isValid)
 clonalityModelPlot = clonality_plot(somaticVariants, clonalityModel)
+clonalityModelPlot
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 

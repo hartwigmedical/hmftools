@@ -42,6 +42,10 @@ public class PeakModelFactory {
 
     @NotNull
     public List<PeakModel> model(@NotNull final List<ModifiableWeightedPloidy> weightedPloidies) {
+        boolean hasValidSubclonalPeaks = false;
+        final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(0.85, modelWidth);
+        double[] residualHistogramActual = residualHistogram.histogram(weightedPloidies);
+
         final List<ModifiablePeakModel> peakModel = Lists.newArrayList();
         double initialWeight = positiveWeight(weightedPloidies);
 
@@ -69,6 +73,7 @@ public class PeakModelFactory {
             // Add results
             boolean isValidPeak = Doubles.greaterOrEqual(peakAverageWeight, MIN_AVERAGE_WEIGHT);
             boolean isSubclonal = Doubles.lessThan(peak, CLONAL_PLOIDY);
+            hasValidSubclonalPeaks |= (isSubclonal && isValidPeak);
             for (int bucket = 0; bucket < peakHistogram.length; bucket++) {
                 final ModifiablePeakModel model = ModifiablePeakModel.create()
                         .setBucket(bucket * modelWidth)
@@ -98,7 +103,47 @@ public class PeakModelFactory {
         double weightScalingFactor = initialWeight / totalModelWeight;
         LOGGER.debug("Weight scaling factor {}", weightScalingFactor);
 
-        return peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
+        final List<PeakModel> all = peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
+        if (hasValidSubclonalPeaks) {
+            return all;
+        }
+
+        // Find residual
+        final List<PeakModel> validOnly = all.stream().filter(PeakModel::isValid).collect(Collectors.toList());
+        final double[] residualHistogramModel = residualHistogram.modelHistogram(validOnly);
+        all.addAll(residuals(residualHistogramActual, residualHistogramModel));
+
+        return all;
+    }
+
+    @NotNull
+    private List<PeakModel> residuals(double[] residualHistogramActual, double[] residualHistogramModel) {
+        List<PeakModel> result = Lists.newArrayList();
+
+        for (int i = 0; i < residualHistogramActual.length; i++) {
+            double actualWeight = residualHistogramActual[i];
+            double modelWeight = residualHistogramModel[i];
+
+            final double residualPercent;
+            if (Doubles.isZero(actualWeight)) {
+                residualPercent = 1;
+            } else {
+                residualPercent = (actualWeight - modelWeight) / actualWeight;
+            }
+
+            if (Doubles.greaterThan(residualPercent, 0)) {
+                result.add(ModifiablePeakModel.create()
+                        .setBucket(i * modelWidth)
+                        .setPeak(0)
+                        .setBucketWeight(residualPercent)
+                        .setPeakAvgWeight(1)
+                        .setIsSubclonal(true)
+                        .setIsValid(true));
+            }
+
+        }
+
+        return result;
     }
 
     private double positiveWeight(@NotNull final List<? extends WeightedPloidy> weightedPloidies) {
@@ -120,7 +165,7 @@ public class PeakModelFactory {
 
         double offset = offset(peak);
 
-        int maxBucket = bucket(maxPloidy);
+        int maxBucket = bucket(maxPloidy) + 1;
         double[] result = new double[maxBucket];
         double[] weight = scalingFactor(peak, peakPloidies);
 

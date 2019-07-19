@@ -16,6 +16,14 @@ import org.junit.Test;
 public class CNADriversTest {
 
     @Test
+    public void testDeletionsInGermlineAsStillReportable() {
+        final GeneCopyNumber del = createTestCopyNumberBuilder("APC").germlineHet2HomRegions(1).germlineHomRegions(1).build();
+        List<DriverCatalog> drivers = new CNADrivers().deletions(Lists.newArrayList(del));
+        assertEquals(1, drivers.size());
+        assertEquals("APC", drivers.get(0).gene());
+    }
+
+    @Test
     public void testChromosomeBand() {
         GeneCopyNumber mapped = createTestCopyNumberBuilder("AC093642.5").build();
         GeneCopyNumber unmapped = createTestCopyNumberBuilder("APC").build();

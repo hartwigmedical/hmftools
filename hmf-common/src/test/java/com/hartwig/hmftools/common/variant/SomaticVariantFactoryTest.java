@@ -165,7 +165,6 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void testNearPonLogicAppliedEvenWhenFiltersApplied() throws IOException {
-
         final List<SomaticVariant> unfiltered =
                 SomaticVariantFactory.unfilteredInstance().fromVCFFile("sample", NEAR_PON_FILTERED_INDEL_FILE);
         assertEquals(2, unfiltered.size());

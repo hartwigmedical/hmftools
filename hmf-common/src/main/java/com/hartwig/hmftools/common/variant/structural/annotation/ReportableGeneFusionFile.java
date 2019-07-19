@@ -59,8 +59,7 @@ public final class ReportableGeneFusionFile {
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
-                .add("geneStart")
+        return new StringJoiner(DELIMITER).add("geneStart")
                 .add("geneContextStart")
                 .add("geneTranscriptStart")
                 .add("geneEnd")
@@ -71,7 +70,8 @@ public final class ReportableGeneFusionFile {
     }
 
     @NotNull
-    private static String toString(@NotNull ReportableGeneFusion fusion) {
+    private static String toString(@NotNull ReportableGeneFusion fusion)
+    {
         return new StringJoiner(DELIMITER).add(String.valueOf(fusion.geneStart()))
                 .add(String.valueOf(fusion.geneContextStart()))
                 .add(String.valueOf(fusion.geneTranscriptStart()))
@@ -83,7 +83,8 @@ public final class ReportableGeneFusionFile {
     }
 
     @NotNull
-    private static ReportableGeneFusion fromString(@NotNull String line) {
+    private static ReportableGeneFusion fromString(@NotNull String line)
+    {
         String[] values = line.split(DELIMITER);
 
         int index = 0;
