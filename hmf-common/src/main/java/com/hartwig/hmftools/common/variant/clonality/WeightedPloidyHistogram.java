@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.clonality;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 
@@ -32,14 +33,24 @@ public class WeightedPloidyHistogram {
 
     @NotNull
     public double[] histogram(@NotNull final Collection<? extends WeightedPloidy> ploidies) {
+        return histogram(ploidies, WeightedPloidy::ploidy, WeightedPloidy::weight);
+    }
+
+    @NotNull
+    public double[] modelHistogram(@NotNull final Collection<? extends PeakModel> model) {
+        return histogram(model, PeakModel::bucket, PeakModel::bucketWeight);
+    }
+
+    @NotNull
+    private <T> double[] histogram(@NotNull final Collection<T> elements, Function<T, Double> ploidy, Function<T, Double> weight) {
         int maxBucket = bucket(maxPloidy);
         double[] result = new double[maxBucket + 1];
 
-        for (final WeightedPloidy ploidy : ploidies) {
+        for (final T element : elements) {
 
-            int bucket = bucket(ploidy.ploidy());
+            int bucket = bucket(ploidy.apply(element));
             if (bucket <= maxBucket) {
-                result[bucket] = result[bucket] + ploidy.weight();
+                result[bucket] = result[bucket] + weight.apply(element);
             }
         }
 

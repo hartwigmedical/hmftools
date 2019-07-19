@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.common.variant.clonality;
 
-import java.util.List;
-import java.util.Map;
+import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.List;
+
 import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -12,36 +11,35 @@ import org.jetbrains.annotations.NotNull;
 public class SubclonalLikelihoodFactory {
 
     private static final double MAX_PLOIDY = 2;
+    private final double[] subclonalLikelihood;
+    private final WeightedPloidyHistogram histogram;
 
-    public static List<SubclonalLikelihood> subclonalLikelihood(double binWidth, @NotNull final List<PeakModel> peakModel) {
-        final List<SubclonalLikelihood> result = Lists.newArrayList();
-        final Map<Integer, ModifiableSubclonalLikelihood> clonalityMap = Maps.newHashMap();
+    public SubclonalLikelihoodFactory(double binWidth, @NotNull final List<PeakModel> peakModel) {
 
-        for (final PeakModel entry : peakModel) {
-            if (entry.isValid() && Doubles.lessThan(entry.peak(), MAX_PLOIDY)) {
-                int key = (int) Math.round(entry.bucket() / binWidth);
-                final ModifiableSubclonalLikelihood likelihood = clonalityMap.computeIfAbsent(key,
-                        integer -> ModifiableSubclonalLikelihood.create()
-                                .setBucket(entry.bucket())
-                                .setClonalWeight(0)
-                                .setSubclonalWeight(0));
+        histogram = new WeightedPloidyHistogram(MAX_PLOIDY, binWidth);
+        final List<PeakModel> validPeaks = peakModel.stream().filter(PeakModel::isValid).collect(toList());
+        double[] clonalHistogram = histogram.modelHistogram(validPeaks.stream().filter(x -> !x.isSubclonal()).collect(toList()));
+        double[] subclonalHistogram = histogram.modelHistogram(validPeaks.stream().filter(PeakModel::isSubclonal).collect(toList()));
 
-                if (entry.isSubclonal()) {
-                    likelihood.setSubclonalWeight(likelihood.subclonalWeight() + entry.bucketWeight());
-                } else {
-                    likelihood.setClonalWeight(likelihood.clonalWeight() + entry.bucketWeight());
-                }
+        subclonalLikelihood = new double[clonalHistogram.length];
+        for (int i = 0; i < clonalHistogram.length; i++) {
+            double clonal = clonalHistogram[i];
+            double subclonal = subclonalHistogram[i];
+            double total = clonal + subclonal;
+            if (Doubles.greaterThan(total, 0)) {
+                double likelihood = subclonal / (clonal + subclonal);
+                subclonalLikelihood[i] = likelihood;
             }
         }
+    }
 
-        for (final ModifiableSubclonalLikelihood entry : clonalityMap.values()) {
-            double likelihood = entry.subclonalWeight() / (entry.subclonalWeight() + entry.clonalWeight());
-            if (!Doubles.isZero(likelihood)) {
-                result.add(entry.setLikelihood(likelihood));
-            }
+    public double subclonalLikelihood(double ploidy) {
+        int bucket = histogram.bucket(ploidy);
+        if (bucket < subclonalLikelihood.length) {
+            return subclonalLikelihood[bucket];
         }
 
-        return result;
+        return 0;
     }
 
 }
