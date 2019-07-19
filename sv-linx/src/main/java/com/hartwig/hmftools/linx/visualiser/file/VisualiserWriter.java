@@ -149,7 +149,7 @@ public class VisualiserWriter
             int chainCount = chains.isEmpty() ? 1 : chains.size();
             int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
 
-            int repeatCount = (int)var.getRoundedPloidy(true);
+            // int repeatCount = (int)var.getRoundedPloidy(true);
 
             for(int i = 0; i < chainCount; ++i)
             {
@@ -165,7 +165,7 @@ public class VisualiserWriter
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
                         beStart.getSV().getFoldbackLink(beStart.usesStart()).isEmpty() ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
                         beEnd!= null ? (beEnd.getSV().getFoldbackLink(beEnd.usesStart()).isEmpty() ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
-                        repeatCount));
+                        var.ploidy()));
             }
         }
 
@@ -205,7 +205,8 @@ public class VisualiserWriter
             for (final SvChain chain : cluster.getChains())
             {
                 // log the start of the chain
-                boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true);
+                boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true); // closed loop chains eg DMs
+                double chainPloidy = chain.ploidy();
 
                 if(!chain.isClosedLoop())
                 {
@@ -214,8 +215,7 @@ public class VisualiserWriter
                     if (breakend != null)
                     {
                         segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
-                                getPositionValue(breakend, true), getPositionValue(breakend, false),
-                                startsOnEnd ? 2 : 1));
+                                getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy));
                     }
                 }
 
@@ -238,19 +238,24 @@ public class VisualiserWriter
 
                     uniquePairs.add(pair);
 
-                    int pairRepeatCount = pair.repeatCount();
-
-                    // check for duplicate links - would only exist in non-identical chains since these have already been removed
-                    for (final SvChain otherChain : cluster.getChains())
+                    if(chainPloidy == 0)
                     {
-                        pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
+                        int pairRepeatCount = pair.repeatCount();
+
+                        // check for duplicate links - would only exist in non-identical chains since these have already been removed
+                        for (final SvChain otherChain : cluster.getChains())
+                        {
+                            pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
+                        }
+
+                        chainPloidy = pairRepeatCount;
                     }
 
                     final SvBreakend beStart = pair.getBreakend(true);
                     final SvBreakend beEnd = pair.getBreakend(false);
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(),
-                            beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), pairRepeatCount));
+                            beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), chainPloidy));
                 }
 
                 if(!chain.isClosedLoop())
@@ -261,7 +266,7 @@ public class VisualiserWriter
                     if (breakend != null && !startsOnEnd)
                     {
                         segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
-                                getPositionValue(breakend, true), getPositionValue(breakend, false), 1));
+                                getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy));
                     }
                 }
             }

@@ -82,11 +82,30 @@ public class ProposedLinks
 
     public double ploidy() { return mPloidy; }
 
+    public void setLowerPloidy(double ploidy)
+    {
+        if(ploidy >= mPloidy || multiConnection())
+            return;
+
+        mPloidy = ploidy;
+
+        // this may change whether a link is exhausted
+        for(Map.Entry<SvBreakend,Double> entry : mBreakendPloidy.entrySet())
+        {
+            final SvBreakend breakend = entry.getKey();
+            double bePloidy = entry.getValue();
+            mBreakendPloidyMatched.put(breakend, Doubles.equal(bePloidy, mPloidy));
+        }
+    }
+
     public void addComDupBreakends(
             final SvBreakend compDupStart, final SvBreakend compDupEnd, double compDupPloidy,
             final SvBreakend otherStart, double otherPloidyStart,
             final SvBreakend otherEnd, double otherPloidyEnd, double otherRelativePloidy, double otherUncertainty)
     {
+        if(compDupPloidy == 0 || otherPloidyStart == 0 || otherPloidyEnd== 0)
+            return;
+
         mChainConnectType = CONN_TYPE_COMPLEX_DUP;
 
         if (copyNumbersEqual(compDupPloidy * 2, otherRelativePloidy))
@@ -118,9 +137,12 @@ public class ProposedLinks
             final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackPloidy,
             final SvBreakend otherBreakend, double otherPloidy, double otherRelativePloidy, double otherUncertainty)
     {
+        if(foldbackPloidy == 0 || otherPloidy == 0)
+            return;
+
         mChainConnectType = CONN_TYPE_FOLDBACK;
 
-        if (copyNumbersEqual(foldbackPloidy* 2, otherRelativePloidy))
+        if (copyNumbersEqual(foldbackPloidy * 2, otherRelativePloidy))
         {
             mPloidyMatchType = PM_MATCHED;
         }
@@ -147,6 +169,9 @@ public class ProposedLinks
             final SvBreakend breakend1, double ploidy1,
             final SvBreakend breakend2, double ploidy2)
     {
+        if(ploidy1 == 0 || ploidy2 == 0)
+            return;
+
         mBreakendPloidy.put(breakend1, ploidy1);
         mBreakendPloidy.put(breakend2, ploidy2);
 
@@ -159,15 +184,18 @@ public class ProposedLinks
             mPloidyMatchType = PM_OVERLAP;
         }
 
+        mPloidy = min(ploidy1, ploidy2);
+
         if(mPloidyMatchType == PM_NONE)
         {
-            mPloidy = min(ploidy1, ploidy2);
             mBreakendPloidyMatched.put(breakend1, Doubles.equal(ploidy1, mPloidy));
             mBreakendPloidyMatched.put(breakend2, Doubles.equal(ploidy2, mPloidy));
         }
         else
         {
-            mPloidy = (ploidy1 + ploidy2) * 0.5;
+            // no longer taking the average since no only is this usually above the ploidy of one of the breakends, but can
+            // be above the max ploidy too
+            // mPloidy = (ploidy1 + ploidy2) * 0.5;
             mBreakendPloidyMatched.put(breakend1, true);
             mBreakendPloidyMatched.put(breakend2, true);
         }
@@ -181,6 +209,11 @@ public class ProposedLinks
     public boolean breakendPloidyMatched(final SvBreakend breakend)
     {
         return mBreakendPloidyMatched.get(breakend);
+    }
+
+    public void overrideBreakendPloidyMatched(final SvBreakend breakend)
+    {
+        mBreakendPloidyMatched.put(breakend, false);
     }
 
     public final String ploidyMatchType() { return mPloidyMatchType; }
@@ -209,6 +242,23 @@ public class ProposedLinks
         return String.format("pair(%s) rule(%s) ploidy(%s) type(%s) match(%s) length(%d) priority(%d)",
                 Links.get(0).toString(), mRules.get(0), formatPloidy(mPloidy),
                 mChainConnectType, mPloidyMatchType, mShortestDistance, mPriority);
+    }
+
+    public boolean isValid()
+    {
+        if(Links.isEmpty() || Links.size() > 2)
+            return false;
+
+        if(mBreakendPloidyMatched.isEmpty() || mBreakendPloidy.isEmpty())
+            return false;
+
+        if(Links.size() == 1 && mBreakendPloidy.size() != 2)
+            return false;
+
+        if(Links.size() == 2 && mBreakendPloidy.size() < 3)
+            return false;
+
+        return mPloidy > 0;
     }
 
 }

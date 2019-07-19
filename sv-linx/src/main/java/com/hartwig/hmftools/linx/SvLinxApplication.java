@@ -54,7 +54,8 @@ public class SvLinxApplication
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG)) {
+        if (cmd.hasOption(LOG_DEBUG))
+        {
             Configurator.setRootLevel(Level.DEBUG);
         }
 

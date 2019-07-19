@@ -108,20 +108,10 @@ public class SvBreakend {
         return cnData.minorAllelePloidy();
     }
 
-    public double actualBaf(boolean usePrevious)
-    {
-        SvCNData cnData = mSV.getCopyNumberData(mUsesStart, usePrevious);
-
-        if(cnData == null)
-            return 0;
-
-        return cnData.ActualBaf;
-    }
-
     public boolean isAssembledLink()
     {
         return mSV.getAssemblyMatchType(mUsesStart) == ASSEMBLY_MATCH_MATCHED;
     }
-
+    public final SvLinkedPair getDBLink() { return mSV.getDBLink(mUsesStart); }
 
 }

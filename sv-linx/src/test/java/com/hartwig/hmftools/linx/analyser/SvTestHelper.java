@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.analysis.SvSampleAnalyser.setSvCopyNumberData;
@@ -96,7 +97,9 @@ public class SvTestHelper
         Config.ChainingMethod = method;
 
         if(method == CHAIN_METHOD_OLD)
-            Analyser.getChainFinder().setUseOldMethod(true);
+            Analyser.getChainFinder().setUseOldMethod(true, false);
+        else if(method == CHAIN_METHOD_COMPARE)
+            Analyser.getChainFinder().setUseOldMethod(false, true);
     }
 
     public void preClusteringInit()
@@ -307,11 +310,6 @@ public class SvTestHelper
         }
 
         return null;
-    }
-
-    public void setDefaultPloidyCalcData()
-    {
-        AllVariants.stream().forEach(x -> x.setPloidyRecalcData(x.getSvData().ploidy(), x.getSvData().ploidy()));
     }
 
     private double calcActualBaf(double copyNumber, double nonDisruptedAP)

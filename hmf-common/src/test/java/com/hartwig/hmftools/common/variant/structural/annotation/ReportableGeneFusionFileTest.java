@@ -12,6 +12,7 @@ import org.junit.Test;
 
 public class ReportableGeneFusionFileTest {
 
+    /*
     private static final String DETAILED_FUSION_FILE =Resources.getResource("variant/structural/fusions_detailed.csv").getPath();
 
     @Test
@@ -33,4 +34,5 @@ public class ReportableGeneFusionFileTest {
         assertNotNull(ploidy);
         assertEquals(1.98, ploidy, 1.0E-10);
     }
+    */
 }

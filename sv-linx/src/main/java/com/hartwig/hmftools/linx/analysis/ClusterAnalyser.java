@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
@@ -120,7 +121,9 @@ public class ClusterAnalyser {
         }
 
         if(mConfig.ChainingMethod == CHAIN_METHOD_OLD)
-            mChainFinder.setUseOldMethod(true);
+            mChainFinder.setUseOldMethod(true, false);
+        else if(mConfig.ChainingMethod == CHAIN_METHOD_COMPARE)
+            mChainFinder.setUseOldMethod(false, true);
 
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
@@ -263,7 +266,7 @@ public class ClusterAnalyser {
             boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedPloidy();
 
             mLinkFinder.findAssembledLinks(cluster);
-            applySvPloidyReplication(cluster);
+            cluster.applySvPloidyReplication(mConfig.ChainingMethod != CHAIN_METHOD_NEW, mConfig.ChainingSvLimit);
 
             if(isSimple)
                 mDmFinder.analyseCluster(cluster);
@@ -301,12 +304,10 @@ public class ClusterAnalyser {
 
             cluster.dissolveLinksAndChains();
 
-            cluster.removeReplicatedSvs();
-
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
             mDmFinder.analyseCluster(cluster, true);
 
-            applySvPloidyReplication(cluster);
+            cluster.applySvPloidyReplication(mConfig.ChainingMethod != CHAIN_METHOD_NEW, mConfig.ChainingSvLimit);
 
             // no need to re-find assembled TIs
 
@@ -347,81 +348,6 @@ public class ClusterAnalyser {
                 mClusteringMethods.getDelCutoffLength(), mClusteringMethods.getDupCutoffLength(), mConfig.ProximityDistance);
     }
 
-    private void applySvPloidyReplication(SvCluster cluster)
-    {
-        if(!cluster.hasVariedPloidy() && !cluster.requiresReplication())
-            return;
-
-        // use the relative copy number change to replicate some SVs within a cluster
-        // isSpecificCluster(cluster);
-
-        // first establish the lowest copy number change
-        double clusterMinPloidy = cluster.getMinPloidy();
-        double clusterMaxPloidy = cluster.getMaxPloidy();
-
-        if(clusterMinPloidy <= 0)
-        {
-            LOGGER.debug("cluster({}) warning: invalid ploidy variation(min={} max={})",
-                    cluster.id(), clusterMinPloidy, clusterMaxPloidy);
-            return;
-        }
-
-        // check for samples with a broad range of ploidies, not just concentrated in a few SVs
-        int totalReplicationCount = 0;
-        double replicationFactor = 1;
-
-        for(SvVarData var : cluster.getSVs())
-        {
-            int svPloidy = var.getImpliedPloidy();
-            int svMultiple = (int)max(round(svPloidy / clusterMinPloidy),1);
-            totalReplicationCount += svMultiple;
-        }
-
-        int replicationCap = mConfig.ChainingSvLimit > 0 ? min(mConfig.ChainingSvLimit, DEFAULT_CHAINING_SV_LIMIT) : DEFAULT_CHAINING_SV_LIMIT;
-        if(totalReplicationCount > replicationCap)
-        {
-            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
-                    cluster.id(), totalReplicationCount, cluster.getSvCount(), clusterMinPloidy, clusterMaxPloidy, replicationCap);
-
-            replicationFactor = replicationCap / (double)totalReplicationCount;
-        }
-
-        // replicate the SVs which have a higher copy number than their peers
-        for(SvVarData var : cluster.getSVs())
-        {
-            int svPloidy = var.getImpliedPloidy();
-            int maxAssemblyBreakends = var.getMaxAssembledBreakend();
-
-            int svMultiple = (int)round(svPloidy / clusterMinPloidy);
-
-            if(maxAssemblyBreakends > 1)
-                svMultiple = max(svMultiple, maxAssemblyBreakends);
-
-            svMultiple = max((int)round(svMultiple * replicationFactor), 1);
-
-            if(svMultiple <= 1)
-                continue;
-
-            LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
-                    cluster.id(), var.posId(), svMultiple, svPloidy, clusterMinPloidy);
-
-            if(mConfig.ChainingMethod == CHAIN_METHOD_NEW)
-            {
-                if(!cluster.requiresReplication())
-                    cluster.setRequiresReplication();
-            }
-            else
-            {
-                var.setReplicatedCount(svMultiple);
-
-                for (int j = 1; j < svMultiple; ++j)
-                {
-                    SvVarData newVar = new SvVarData(var, true);
-                    cluster.addVariant(newVar);
-                }
-            }
-        }
-    }
 
     public void applyComplexClusteringRules()
     {
@@ -521,10 +447,17 @@ public class ClusterAnalyser {
             isSpecificCluster(cluster);
         }
 
-        if(mConfig.ChainingSvLimit > 0 && cluster.getSvCount(true) > mConfig.ChainingSvLimit)
+        int svCount = cluster.getSvCount();
+
+        if(mConfig.ChainingMethod == CHAIN_METHOD_OLD)
+        {
+            svCount += cluster.getSVs().stream().mapToInt(x -> x.getReplicatedCount()).sum();
+        }
+
+        if(mConfig.ChainingSvLimit > 0 && svCount > mConfig.ChainingSvLimit)
         {
             LOGGER.info("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
-                    mSampleId, cluster.id(), cluster.getSvCount(), cluster.getSvCount(true));
+                    mSampleId, cluster.id(), cluster.getSvCount(), svCount);
             return;
         }
 

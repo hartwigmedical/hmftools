@@ -22,11 +22,11 @@ public class VisSegmentFile
     public final String Chromosome;
     public final String PosStart;
     public final String PosEnd;
-    public final int TraverseCount;
+    public final double LinkPloidy;
 
 
     public VisSegmentFile(final String sampleId, int clusterId, int chainId, final String chromosome,
-            final String posStart, final String posEnd, int traverseCount)
+            final String posStart, final String posEnd, double linkPloidy)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -34,7 +34,7 @@ public class VisSegmentFile
         Chromosome = chromosome;
         PosStart = posStart;
         PosEnd = posEnd;
-        TraverseCount = traverseCount;
+        LinkPloidy = linkPloidy;
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_segments.tsv";
@@ -81,7 +81,7 @@ public class VisSegmentFile
                 .add("Chromosome")
                 .add("PosStart")
                 .add("PosEnd")
-                .add("TraverseCount")
+                .add("LinkPloidy")
                 .toString();
     }
 
@@ -95,7 +95,7 @@ public class VisSegmentFile
                 .add(String.valueOf(segment.Chromosome))
                 .add(String.valueOf(segment.PosStart))
                 .add(String.valueOf(segment.PosEnd))
-                .add(String.valueOf(segment.TraverseCount))
+                .add(String.valueOf(segment.LinkPloidy))
                 .toString();
     }
 
@@ -113,7 +113,7 @@ public class VisSegmentFile
                 values[index++],
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]));
+                Double.valueOf(values[index++]));
     }
 
 }

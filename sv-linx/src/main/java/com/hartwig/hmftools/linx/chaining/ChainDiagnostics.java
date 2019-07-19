@@ -46,11 +46,6 @@ public class ChainDiagnostics
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<SvLinkedPair> mUniquePairs;
 
-    public static final int LOG_TYPE_ERROR = 0;
-    public static final int LOG_TYPE_WARN = 1;
-    public static final int LOG_TYPE_INFO = 2;
-    public static final int LOG_TYPE_VERBOSE = 3;
-
     private static final Logger LOGGER = LogManager.getLogger(ChainDiagnostics.class);
 
     public ChainDiagnostics(final Map<SvVarData,SvChainState> svConnMap, final List<SvChainState> svCompleteConns,
@@ -87,6 +82,8 @@ public class ChainDiagnostics
 
     public void setSampleId(final String sampleId) { mSampleId = sampleId; }
 
+    public int unlinkedSvCount() { return mUnlinkedSvCount; }
+
     public void clear()
     {
         mLogMessages.clear();
@@ -112,23 +109,9 @@ public class ChainDiagnostics
         mInitialComplexDup.addAll(complexDups);
     }
 
-    private static String logTypeStr(int type)
+    public void addMessage(final String msg)
     {
-        switch(type)
-        {
-            case LOG_TYPE_ERROR: return "Error";
-            case LOG_TYPE_WARN: return "Warn";
-            case LOG_TYPE_INFO: return "Info";
-            default: return "Verbose";
-        }
-    }
-
-    public void addMessage(int level, final String msg)
-    {
-        if(level <= LOG_TYPE_WARN)
-            ++mWarnings;
-
-        mLogMessages.add(String.format("%s: %s", logTypeStr(level), msg));
+        mLogMessages.add(String.format("INFO: %s", msg));
     }
 
     public void diagnoseChains()
@@ -204,8 +187,8 @@ public class ChainDiagnostics
                         svConn.Ploidy, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
                 logCsv("MULTI_CONN", svConn.SV,
-                        String.format("conns(%d) ploid(%d-%d-%d) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
-                                connectionCount, svConn.MinPloidy, svConn.Ploidy, svConn.MaxPloidy,
+                        String.format("conns(%d) ploidy(%s-%s-%s) foldbacks(%d) compDups(%d) asmb(%d) otherSVs(%s)",
+                                connectionCount, formatPloidy(svConn.MinPloidy), formatPloidy(svConn.Ploidy), formatPloidy(svConn.MaxPloidy),
                                 foldbackCons, compDupCons, assembledLinks, otherSVs));
 
                 ++invalidCount;
@@ -220,18 +203,19 @@ public class ChainDiagnostics
         if(mMaxClusterSize == 0)
             return;
 
-        LOGGER.info("CHAIN_DIAG: {},{},{},{}", mSampleId, mClusterId, var.id(), otherInfo);
+        LOGGER.info("CHAIN_DIAG: {},{},{},{},{}", type, mSampleId, mClusterId, var.id(), otherInfo);
     }
 
     public void chainingComplete()
     {
-        if(!LOGGER.isDebugEnabled())
-            return;
-
         mUnlinkedBreakendCount = mSvConnectionsMap.values().stream()
                 .mapToInt(x -> (x.breakendCount(true) == 0 ? 1 : 0) + (x.breakendCount(false) == 0 ? 1 : 0)).sum();
 
-        mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream().filter(x -> x.curentCount() == 0).count();
+        mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream()
+                .filter(x -> x.breakendCount(true) == 0 && x.breakendCount(false) == 0).count();
+
+        if(!LOGGER.isDebugEnabled())
+            return;
 
         if(mHasReplication)
         {
@@ -240,7 +224,7 @@ public class ChainDiagnostics
 
             double unlinkedPloidySVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
 
-            LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} unique={}) breakends({} reps={})",
+            LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} ploidy={}) breakends({} ploidy={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
                     mUnlinkedSvCount, formatPloidy(unlinkedPloidySVs), mUnlinkedBreakendCount, formatPloidy(unlinkedPloidyBreakends));
         }

@@ -31,14 +31,14 @@ public class VisSvDataFile
     public final long PosEnd;
     public final byte OrientStart;
     public final byte OrientEnd;
-    public final int TraverseCount;
+    public final double Ploidy;
 
     public static final String INFO_TYPE_NORMAL = "NORMAL";
     public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
 
     public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
             StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, final String chrStart, final String chrEnd, long posStart, long posEnd,
-            byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, int traverseCount)
+            byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, double ploidy)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -54,7 +54,7 @@ public class VisSvDataFile
         OrientEnd = orientEnd;
         InfoStart = infoStart;
         InfoEnd = infoEnd;
-        TraverseCount = traverseCount;
+        Ploidy = ploidy;
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_sv_data.tsv";
@@ -109,7 +109,7 @@ public class VisSvDataFile
                 .add("OrientEnd")
                 .add("InfoStart")
                 .add("InfoEnd")
-                .add("TraverseCount")
+                .add("Ploidy")
                 .toString();
     }
 
@@ -131,7 +131,7 @@ public class VisSvDataFile
                 .add(String.valueOf(svData.OrientEnd))
                 .add(String.valueOf(svData.InfoStart))
                 .add(String.valueOf(svData.InfoEnd))
-                .add(String.valueOf(svData.TraverseCount))
+                .add(String.valueOf(svData.Ploidy))
                 .toString();
     }
 
@@ -157,7 +157,7 @@ public class VisSvDataFile
                 Byte.valueOf(values[index++]),
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]));
+                Double.valueOf(values[index++]));
     }
 
 }

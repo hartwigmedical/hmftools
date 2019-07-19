@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -21,6 +23,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_CLUSTER_ID;
+import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PERCENT;
 
@@ -54,7 +57,6 @@ public class SvCluster
     private List<String> mAnnotationList;
 
     private List<SvVarData> mSVs;
-    private List<SvVarData> mReplicatedSVs; // combined original and replicated SV
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
@@ -69,7 +71,6 @@ public class SvCluster
     private long mSyntheticTILength;
     private long mSyntheticLength;
 
-    private boolean mHasReplicatedSVs;
     private boolean mRequiresReplication;
 
     // cached lists of identified special cases
@@ -105,7 +106,6 @@ public class SvCluster
     {
         mId = clusterId;
         mSVs = Lists.newArrayList();
-        mReplicatedSVs = Lists.newArrayList();
         mArmGroups = Lists.newArrayList();
         mArmClusters = Lists.newArrayList();
         mTypeCounts = new int[StructuralVariantType.values().length];
@@ -140,7 +140,6 @@ public class SvCluster
         mRecalcRemoteSVStatus = false;
         mIsSubclonal = false;
 
-        mHasReplicatedSVs = false;
         mRequiresReplication = false;
 
         mMinPloidy = 0;
@@ -155,12 +154,10 @@ public class SvCluster
     public int id() { return mId; }
 
     public int getSvCount() { return mSVs.size(); }
-    public int getSvCount(boolean includeReplicated) { return includeReplicated ? mReplicatedSVs.size() : mSVs.size(); }
 
     public final String getDesc() { return mDesc; }
 
     public final List<SvVarData> getSVs() { return mSVs; }
-    public final List<SvVarData> getSVs(boolean includeReplicated) { return includeReplicated ? mReplicatedSVs : mSVs; }
     public final SvVarData getSV(int index) { return index < mSVs.size() ? mSVs.get(index) : null; }
 
     public void addVariant(final SvVarData var)
@@ -171,18 +168,14 @@ public class SvCluster
             return;
         }
 
-        if(!var.isReplicatedSv())
-        {
-            mSVs.add(var);
-            mRequiresRecalc = true;
+        mSVs.add(var);
+        mRequiresRecalc = true;
 
-            mAnnotationList.clear();
-            mDoubleMinuteSVs.clear();
-        }
+        mAnnotationList.clear();
+        mDoubleMinuteSVs.clear();
 
         var.setCluster(this);
 
-        mReplicatedSVs.add(var);
         mUnchainedSVs.add(var);
 
         if(!mHasLinkingLineElements)
@@ -196,99 +189,51 @@ public class SvCluster
 
         // isSpecificSV(var.id())
 
-        if(var.isReplicatedSv())
-        {
-            mHasReplicatedSVs = true;
-        }
+        if(var.isNoneSegment())
+            ++mInferredSvCount;
         else
+            ++mTypeCounts[typeAsInt(var.type())];
+
+        if (var.type() == BND || var.isCrossArm())
+            mRecalcRemoteSVStatus = true;
+
+        addSvToChrBreakendMap(var, mChrBreakendMap);
+
+        // keep track of all SVs in their respective chromosomal arms
+        for (int be = SE_START; be <= SE_END; ++be)
         {
-            if(var.isNoneSegment())
-                ++mInferredSvCount;
-            else
-                ++mTypeCounts[typeAsInt(var.type())];
+            if (be == SE_END && var.isNullBreakend())
+                continue;
 
-            if (var.type() == BND || var.isCrossArm())
-                mRecalcRemoteSVStatus = true;
+            if (be == SE_END && var.isLocal())
+                continue;
 
-            addSvToChrBreakendMap(var, mChrBreakendMap);
+            boolean useStart = isStart(be);
 
-            // keep track of all SVs in their respective chromosomal arms
-            for (int be = SE_START; be <= SE_END; ++be)
+            boolean groupFound = false;
+            for (SvArmGroup armGroup : mArmGroups)
             {
-                if (be == SE_END && var.isNullBreakend())
-                    continue;
-
-                if (be == SE_END && var.isLocal())
-                    continue;
-
-                boolean useStart = isStart(be);
-
-                boolean groupFound = false;
-                for (SvArmGroup armGroup : mArmGroups)
+                if (armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
                 {
-                    if (armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
-                    {
-                        armGroup.addVariant(var);
-                        groupFound = true;
-                        break;
-                    }
-                }
-
-                if (!groupFound)
-                {
-                    SvArmGroup armGroup = new SvArmGroup(this, var.chromosome(useStart), var.arm(useStart));
                     armGroup.addVariant(var);
-                    mArmGroups.add(armGroup);
+                    groupFound = true;
+                    break;
                 }
             }
-        }
-    }
 
-    public void removeReplicatedSvs()
-    {
-        if(!mHasReplicatedSVs)
-            return;
-
-        int i = 0;
-        while(i < mReplicatedSVs.size())
-        {
-            SvVarData var = mReplicatedSVs.get(i);
-
-            if(var.isReplicatedSv())
+            if (!groupFound)
             {
-                removeReplicatedSv(var);
-            }
-            else
-            {
-                ++i;
+                SvArmGroup armGroup = new SvArmGroup(this, var.chromosome(useStart), var.arm(useStart));
+                armGroup.addVariant(var);
+                mArmGroups.add(armGroup);
             }
         }
-    }
-
-    public void removeReplicatedSv(final SvVarData var)
-    {
-        if(!var.isReplicatedSv())
-            return;
-
-        mReplicatedSVs.remove(var);
-        mUnchainedSVs.remove(var);
-
-        // deregister from the original SV
-        if(var.getReplicatedSv() != null)
-        {
-            int newReplicationCount = max(var.getReplicatedSv().getReplicatedCount() - 1, 0);
-            var.getReplicatedSv().setReplicatedCount(newReplicationCount);
-        }
-
-        // retest cluster status again
-        mHasReplicatedSVs = mReplicatedSVs.size() > mSVs.size();
-        mRequiresRecalc = true;
     }
 
     public List<SvArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
-    public boolean requiresReplication() { return mHasReplicatedSVs || mRequiresReplication; }
+    public boolean requiresReplication() { return mRequiresReplication; }
 
     public void setRequiresReplication()
     {
@@ -359,15 +304,10 @@ public class SvCluster
     public void dissolveLinksAndChains()
     {
         mUnchainedSVs.clear();
-        mUnchainedSVs.addAll(mReplicatedSVs);
         mChains.clear();
-
-        // mLinkedPairs.clear();
-        /// mLinkedPairs.addAll(mAssemblyLinkedPairs);
     }
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
-
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
     public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
@@ -423,7 +363,7 @@ public class SvCluster
 
     private void addVariantLists(final SvCluster other)
     {
-        for(final SvVarData var : other.getSVs(true))
+        for(final SvVarData var : other.getSVs())
         {
             addVariant(var);
         }
@@ -496,7 +436,7 @@ public class SvCluster
         if(!mRequiresRecalc)
             return;
 
-        mConsistencyCount = calcConsistency(mReplicatedSVs);
+        mConsistencyCount = calcConsistency(mSVs);
 
         mIsConsistent = (mConsistencyCount == 0);
 
@@ -554,10 +494,9 @@ public class SvCluster
                 otherInfo = appendStr(otherInfo, String.format("unlnk-bnd=%d", mUnlinkedRemoteSVs.size()), ' ');
             }
 
-            LOGGER.debug(String.format("cluster(%d) complex SVs(%d rep=%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
-                    id(), getSvCount(), getSvCount(true), getDesc(), mResolvedType,
-                    getArmCount(), getConsistencyCount(),
-                    mChains.size(), chainedPerc, mHasReplicatedSVs, otherInfo));
+            LOGGER.debug(String.format("cluster(%d) complex SVs(%d) desc(%s res=%s) arms(%d) consis(%d) chains(%d perc=%.2f) replic(%s) %s",
+                    id(), getSvCount(), getDesc(), mResolvedType, getArmCount(), getConsistencyCount(),
+                    mChains.size(), chainedPerc, mRequiresReplication, otherInfo));
         }
     }
 
@@ -1058,5 +997,77 @@ public class SvCluster
     public boolean hasAnnotation(final String annotation) { return mAnnotationList.contains(annotation); }
 
     public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
+
+
+    public void applySvPloidyReplication(boolean replicateSVs, int chainingSvLimit)
+    {
+        if(!hasVariedPloidy() && !requiresReplication())
+            return;
+
+        // use the relative copy number change to replicate some SVs within a cluster
+        // isSpecificCluster(this);
+
+        // first establish the lowest copy number change
+        double clusterMinPloidy = getMinPloidy();
+        double clusterMaxPloidy = getMaxPloidy();
+
+        if(clusterMinPloidy <= 0)
+        {
+            LOGGER.debug("cluster({}) warning: invalid ploidy variation(min={} max={})",
+                    mId, clusterMinPloidy, clusterMaxPloidy);
+            return;
+        }
+
+        // check for samples with a broad range of ploidies, not just concentrated in a few SVs
+        int totalReplicationCount = 0;
+        double replicationFactor = 1;
+
+        for(SvVarData var : mSVs)
+        {
+            int svPloidy = var.getImpliedPloidy();
+            int svMultiple = (int)max(round(svPloidy / clusterMinPloidy),1);
+            totalReplicationCount += svMultiple;
+        }
+
+        int replicationCap = chainingSvLimit > 0 ? min(chainingSvLimit, DEFAULT_CHAINING_SV_LIMIT) : DEFAULT_CHAINING_SV_LIMIT;
+        if(totalReplicationCount > replicationCap)
+        {
+            LOGGER.debug("cluster({}) totalRepCount({}) vs svCount({}) with cluster ploidy(min={} min={}) will be scaled vs limit({})",
+                    mId, totalReplicationCount, getSvCount(), clusterMinPloidy, clusterMaxPloidy, replicationCap);
+
+            replicationFactor = replicationCap / (double)totalReplicationCount;
+        }
+
+        // replicate the SVs which have a higher copy number than their peers
+        for(SvVarData var : mSVs)
+        {
+            int svPloidy = var.getImpliedPloidy();
+            int maxAssemblyBreakends = var.getMaxAssembledBreakend();
+
+            int svMultiple = (int)round(svPloidy / clusterMinPloidy);
+
+            if(maxAssemblyBreakends > 1)
+                svMultiple = max(svMultiple, maxAssemblyBreakends);
+
+            svMultiple = max((int)round(svMultiple * replicationFactor), 1);
+
+            if(svMultiple <= 1)
+                continue;
+
+            LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
+                    mId, var.posId(), svMultiple, svPloidy, clusterMinPloidy);
+
+            if(!requiresReplication())
+                setRequiresReplication();
+
+            if(replicateSVs)
+            {
+                // replicated SVs are only created and added in the old chain-finder
+                var.setReplicatedCount(svMultiple);
+            }
+        }
+    }
+
+
 
 }

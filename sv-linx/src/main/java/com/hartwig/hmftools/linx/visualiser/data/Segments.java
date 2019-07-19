@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.linx.visualiser.circos.Span.maxPositionPerChromosome;
 import static com.hartwig.hmftools.linx.visualiser.circos.Span.minPositionPerChromosome;
 
@@ -150,7 +152,7 @@ public class Segments {
                 .track(0)
                 .startTerminal(SegmentTerminal.fromString(file.PosStart))
                 .endTerminal(SegmentTerminal.fromString(file.PosEnd))
-                .traverseCount(file.TraverseCount)
+                .traverseCount((int)round(file.LinkPloidy))
                 .build();
     }
 

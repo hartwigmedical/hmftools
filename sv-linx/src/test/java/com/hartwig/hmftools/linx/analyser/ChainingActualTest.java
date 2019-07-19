@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
@@ -33,6 +34,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 import org.junit.Ignore;
 import org.junit.Test;
 
+// tests modelled on examples from actual samples
 public class ChainingActualTest
 {
     @Test
@@ -68,30 +70,16 @@ public class ChainingActualTest
             chain(0) 7: pair(89 6:26194406:end & 88r 6:26194040:end) Assembly ASMB length(366) index(3)
             chain(0) 8: pair(88r 3:26431918:start & 79 3:26663922:start) Inferred FOLDBACK length(232004) index(6)
             chain(0) 9: pair(79 3:26664498:end & 78 3:25331584 SGL-on-known) Inferred ONLY length(1332914) index(8)
-
-            previously:
-
-            chain(0) 0: pair(78 3:25331584 SGL-on-known & 119 3:25400602:start) TI inferred len=69018
-            chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) TI assembly len=183
-            chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) TI assembly len=198
-            chain(0) 3: pair(113 3:25401059:start & 77 3:24566180:end) TI inferred len=834879
-            chain(0) 4: pair(77 3:24565108:start & 79 3:26664498:end) TI inferred len=2099390
-            chain(0) 5: pair(79 3:26663922:start & 88r 3:26431918:start) TI inferred len=232004
-            chain(0) 6: pair(88r 6:26194040:end & 89 6:26194406:end) TI assembly len=366
-            chain(0) 7: pair(89 6:26194117:start & 88 6:26194040:end) TI assembly len=77
-            chain(0) 8: pair(88 3:26431918:start & 79r 3:26663922:start) TI inferred len=232004
-            chain(0) 9: pair(79r 3:26664498:end & 77r 3:24565108:start) TI inferred len=2099390
          */
 
-        // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
-        final SvVarData var1 = createTestSv("77", "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.96, "");
-        final SvVarData var2 = createTestSv("78", "3", "0", 25331584, -1, -1, 1, SGL, 12.2, 0, 2.06, 0, 2.12, "");
-        final SvVarData var3 = createTestSv("79", "3", "3", 26663922, 26664498, 1, 1, INV, 11.9, 8.0, 3.94, 3.94, 4.26, "");
-        final SvVarData var4 = createTestSv("88", "3", "6", 26431918, 26194040, -1, -1, BND, 11.9, 7.3, 3.85, 3.65, 3.77, "");
-        final SvVarData var5 = createTestSv("89", "6", "6", 26194117, 26194406, 1, 1, INV, 7.3, 5.3, 2.06, 1.43, 1.5, "");
+        final SvVarData var1 = createTestSv("77", "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.83, "");
+        final SvVarData var2 = createTestSv("78", "3", "0", 25331584, -1, -1, 1, SGL, 12.2, 0, 2.06, 0, 1.88, "");
+        final SvVarData var3 = createTestSv("79", "3", "3", 26663922, 26664498, 1, 1, INV, 11.9, 8.0, 3.94, 3.94, 5.22, "");
+        final SvVarData var4 = createTestSv("88", "3", "6", 26431918, 26194040, -1, -1, BND, 11.9, 7.3, 3.85, 3.65, 3.22, "");
+        final SvVarData var5 = createTestSv("89", "6", "6", 26194117, 26194406, 1, 1, INV, 7.3, 5.3, 2.06, 1.43, 1.43, "");
         final SvVarData var6 = createTestSv("113", "3", "10", 25401059, 60477224, 1, -1, BND, 9.9, 4.1, 1.92, 2.02, 1.77, "");
-        final SvVarData var7 = createTestSv("119", "3", "12", 25400602, 72666892, 1, -1, BND, 12.2, 5.2, 2.22, 2.18, 2.19, "");
-        final SvVarData var8 = createTestSv("120", "10", "12", 60477422, 72667075, 1, 1, BND, 4.1, 5.2, 2.01, 2.16, 2.26, "");
+        final SvVarData var7 = createTestSv("119", "3", "12", 25400602, 72666892, 1, -1, BND, 12.2, 5.2, 2.22, 2.18, 2.16, "");
+        final SvVarData var8 = createTestSv("120", "10", "12", 60477422, 72667075, 1, 1, BND, 4.1, 5.2, 2.01, 2.16, 2.22, "");
 
         // mark assembled links
         var4.setAssemblyData(false, "asmb1a;asmb1b");
@@ -113,6 +101,28 @@ public class ChainingActualTest
         tester.AllVariants.add(var6);
         tester.AllVariants.add(var7);
         tester.AllVariants.add(var8);
+
+        /*
+        Id	Ploidy	PloidyMin	PloidyMax
+
+    1	77	3.83	3.52	4.52
+    2	78	1.88	1.03	2.88
+    3	79	5.22	3.43	4.97
+    4	88	3.22	2.62	4.41
+    5	89	1.43	0.71	2.33
+    6	113	1.77	1.19	2.61
+    7	119	2.16	1.28	3.05
+    8	120	2.22	1.45	2.8
+         */
+
+        var1.setPloidyRecalcData(3.52, 4.52);
+        var2.setPloidyRecalcData(1.03, 2.88);
+        var3.setPloidyRecalcData(3.43, 4.97);
+        var4.setPloidyRecalcData(2.62, 4.41);
+        var5.setPloidyRecalcData(0.71, 2.33);
+        var6.setPloidyRecalcData(1.19, 2.61);
+        var7.setPloidyRecalcData(1.28, 3.05);
+        var8.setPloidyRecalcData(1.45, 2.80);
 
         tester.preClusteringInit();
 
@@ -238,15 +248,12 @@ public class ChainingActualTest
         // assertTrue(chain.isClosedLoop());
     }
 
-
-    @Ignore
     @Test
     public void testActualSimpleChaining1()
     {
-        // based on CPCT02010325T clusterId 37, where the shortest TI of 76 bases is actually ignored so as to make 2 chains
+        // based on a sample where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         SvTestHelper tester = new SvTestHelper();
-        // tester.logVerbose(true);
-        // tester.Analyser.getChainFinder().setMaxPossibleLinks(2);
+        tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv("7821420","18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
         final SvVarData var2 = createTestSv("7821421","X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");

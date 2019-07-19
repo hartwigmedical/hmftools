@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
@@ -35,7 +36,6 @@ public class ChainingComplexTest
     {
         // vanilla BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
-        // tester.setChaininMethod(CHAIN_METHOD_OLD);
         tester.logVerbose(true);
 
         final SvVarData varA = createTestSv("0", "1", "1", 2000,3000, -1, -1, INV,  3);
@@ -149,7 +149,7 @@ public class ChainingComplexTest
         // simple chain with replicated section: centromere - A - B - C - D - DUP - B - C - D - E - telomere,
         // where D is a complex DUP around the section B - C - D
         SvTestHelper tester = new SvTestHelper();
-        tester.logVerbose(true);
+        tester.logVerbose(false);
 
         final SvVarData varA = createTestSv("1", "1", "1", 1000,5000, 1, 1, INV, 1);
         final SvVarData varB = createTestSv("2", "1", "1", 4000,9000, -1, 1, DUP, 2);
@@ -189,7 +189,7 @@ public class ChainingComplexTest
         // but assembled fragments are inserted into each of the foldbacks, requiring linking to make use of matching ploidy
         SvTestHelper tester = new SvTestHelper();
 
-        // tester.setChaininMethod(CHAIN_METHOD_OLD);
+        // tester.setChaininMethod(CHAIN_METHOD_COMPARE);
         tester.logVerbose(true);
 
         final SvVarData varA1 = createTestSv("0", "1", "1", 2000,5500, -1, -1, INV, 4);
@@ -273,5 +273,144 @@ public class ChainingComplexTest
         assertEquals(6, chain.getLinkCount());
     }
 
+    @Test
+    public void testComplexMultiAssemblyChain()
+    {
+        // chain with more than breakend connecting via assembly to other breakends
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 2000,1000, 1, -1, DEL, 5);
+        final SvVarData var2 = createTestSv("2", "1", "1", 1500,9000, 1, 1, INV, 5);
+        final SvVarData var3 = createTestSv("3", "1", "1", 1200,6000, 1, -1, DEL, 4);
+        final SvVarData var4 = createTestSv("4", "1", "2", 1300,200, -1, 1, BND, 2);
+        final SvVarData var5 = createTestSv("5", "1", "2", 1400,500, -1, -1, BND, 1);
+        final SvVarData var6 = createTestSv("6", "1", "1", 100,900, 1, -1, DEL, 2);
+        final SvVarData var7 = createTestSv("7", "1", "1", 800,2000, -1, -1, INV, 1);
+        final SvVarData var8 = createTestSv("8", "1", "1", 1100,10000, 1, 1, INV, 2);
+
+        var1.setAssemblyData(false, "asmb12;asmb18;asmb13");
+        var2.setAssemblyData(true, "asmb12;asmb24;asmb25");
+        var3.setAssemblyData(true, "asmb13;asmb36;asmb37");
+        var4.setAssemblyData(true, "asmb24");
+        var5.setAssemblyData(true, "asmb25");
+        var6.setAssemblyData(false, "asmb36");
+        var7.setAssemblyData(true, "asmb37");
+        var8.setAssemblyData(true, "asmb18");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+        tester.AllVariants.add(var8);
+
+        tester.preClusteringInit(true);
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(7, cluster.getAssemblyLinkedPairs().size());
+
+        int assemblyChainedLinks = cluster.getChains().stream().mapToInt(x -> x.getAssemblyLinkCount()).sum();
+        assertEquals(7, assemblyChainedLinks);
+    }
+
+    @Test
+    public void testBFBChainWith2ChainedFoldbacks()
+    {
+        // BFB of the form telomere - 3 - 4 - 3 - 1 - 2 - 1 - 3 - 4 - 3 - R5 - centromere, where R is the resolving SV
+        SvTestHelper tester = new SvTestHelper();
+
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 1000,2000, -1, -1, INV, 2);
+        final SvVarData var2 = createTestSv("2", "1", "1", 3000,4000, 1, 1, INV, 1);
+
+        final SvVarData var3 = createTestSv("3", "1", "1", 6000,7000, 1, -1, DEL, 4);
+        final SvVarData var4 = createTestSv("4", "1", "1", 9000,10000, 1, 1, INV, 2);
+        final SvVarData var5 = createTestSv("5", "1", "1", 5000,15000, -1, -1, INV, 1);
+        final SvVarData var6 = createTestSv("6", "1", "2", 15500,1000, 1, 1, BND, 1);
+
+        var1.setAssemblyData(true, "asmb12s;asmb12e");
+        var2.setAssemblyData(true, "asmb12s");
+        var2.setAssemblyData(false, "asmb12e");
+
+        var3.setAssemblyData(false, "asmb34s;asmb34e");
+        var4.setAssemblyData(true, "asmb34s");
+        var4.setAssemblyData(false, "asmb34e");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(var1.isFoldback());
+        assertTrue(var3.isFoldback());
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(10, chain.getLinkCount());
+        assertEquals(6, chain.getSvCount());
+        assertEquals(1, chain.ploidy(), 0.01);
+    }
+
+    @Test
+    public void testBFBChainToComplexChain()
+    {
+        // chained foldback connects to higher ploidy chained section
+        SvTestHelper tester = new SvTestHelper();
+
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "2", 1000,1000, -1, -1, BND, 1);
+        final SvVarData var2 = createTestSv("2", "1", "2", 2000,3000, -1, 1, BND, 1);
+
+        final SvVarData var3 = createTestSv("3", "1", "2", 10000,20000, 1, -1, BND, 2);
+        final SvVarData var4 = createTestSv("4", "1", "2", 11000,25000, -1, 1, BND, 2);
+        final SvVarData var5 = createTestSv("5", "1", "3", 28000,2000, 1, 1, BND, 1);
+
+        var1.setAssemblyData(false, "asmb12");
+        var2.setAssemblyData(false, "asmb12");
+
+        var3.setAssemblyData(false, "asmb34");
+        var4.setAssemblyData(false, "asmb34");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+
+        tester.preClusteringInit(true);
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(var1.isFoldback());
+        assertTrue(var2.isFoldback());
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(6, chain.getLinkCount());
+        assertEquals(5, chain.getSvCount());
+        assertEquals(1, chain.ploidy(), 0.01);
+    }
 
 }
