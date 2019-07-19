@@ -37,12 +37,11 @@ import org.apache.logging.log4j.Logger;
 
 public class ChainRuleSelector
 {
-    private ChainFinder mChainFinder;
+    private ChainLinkAllocator mLinkAllocator;
 
     // references from chain-finder
     private Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
     private final Map<SvVarData, SvChainState> mSvConnectionsMap;
-    private final List<SvLinkedPair> mSkippedPairs;
     private final List<SvVarData> mComplexDupCandidates;
     private final List<SvVarData> mFoldbacks;
     private final List<SvLinkedPair> mAdjacentMatchingPairs;
@@ -52,20 +51,17 @@ public class ChainRuleSelector
     private static final Logger LOGGER = LogManager.getLogger(ChainRuleSelector.class);
 
     public ChainRuleSelector(
-            final ChainFinder chainFinder,
+            final ChainLinkAllocator linkAllocator,
             final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
-            final Map<SvVarData, SvChainState> svConnectionsMap,
-            final List<SvLinkedPair> skippedPairs,
             final List<SvVarData> foldbacks,
             final List<SvVarData> complexDupCandidates,
             final List<SvLinkedPair> adjacentMatchingPairs,
             final List<SvLinkedPair> adjacentPairs,
             final List<SvChain> chains)
     {
-        mChainFinder = chainFinder;
+        mLinkAllocator = linkAllocator;
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
-        mSvConnectionsMap = svConnectionsMap;
-        mSkippedPairs = skippedPairs;
+        mSvConnectionsMap = linkAllocator.getSvConnectionsMap();
         mFoldbacks = foldbacks;
         mComplexDupCandidates = complexDupCandidates;
         mAdjacentMatchingPairs = adjacentMatchingPairs;
@@ -116,18 +112,18 @@ public class ChainRuleSelector
             }
 
             // special case for DM DUPs - because they can link with themselves at the end, don't restrict their connectivity earlier on
-            if(mChainFinder.isDoubleMinuteDup(limitingBreakend.getSV()))
+            if(mLinkAllocator.isDoubleMinuteDup(limitingBreakend.getSV()))
                 continue;
 
-            if(mSkippedPairs.contains(newPair))
+            if(mLinkAllocator.hasSkippedPairs(newPair))
                 continue;
 
             // avoid the second breakend also being a limiting factor and so adding this link twice
             if(proposedLinks.stream().map(x -> x.Links.get(0)).anyMatch(y -> y == newPair))
                 continue;
 
-            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(newPair.firstBreakend());
-            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(newPair.secondBreakend());
+            double ploidyFirst = mLinkAllocator.getUnlinkedBreakendCount(newPair.firstBreakend());
+            double ploidySecond = mLinkAllocator.getUnlinkedBreakendCount(newPair.secondBreakend());
 
             if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
@@ -229,8 +225,8 @@ public class ChainRuleSelector
             double origFoldbackPloidy = foldback.ploidy();
 
             double foldbackPloidy = min(
-                    mChainFinder.getUnlinkedBreakendCount(foldbackStart),
-                    mChainFinder.getUnlinkedBreakendCount(foldbackEnd));
+                    mLinkAllocator.getUnlinkedBreakendCount(foldbackStart),
+                    mLinkAllocator.getUnlinkedBreakendCount(foldbackEnd));
 
             if(foldbackPloidy == 0)
                 continue;
@@ -253,7 +249,7 @@ public class ChainRuleSelector
                 if(nonFbVar.ploidy() < origFoldbackPloidy)
                     continue;
 
-                double nonFoldbackPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+                double nonFoldbackPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend);
 
                 // foldback ploidy must be half or less to match for a potential chain split
                 if(!copyNumbersEqual(foldbackPloidy * 2, nonFoldbackPloidy) && nonFoldbackPloidy <= foldbackPloidy)
@@ -328,7 +324,7 @@ public class ChainRuleSelector
         // for a complex DUP of the form D - A - D, where A has double ploidy of D, and both ends of D connect to both ends of A
         for(SvVarData compDup : mComplexDupCandidates)
         {
-            double compDupPloidy = mChainFinder.getUnlinkedCount(compDup);
+            double compDupPloidy = mLinkAllocator.getUnlinkedCount(compDup);
 
             if(compDupPloidy == 0)
                 continue;
@@ -360,8 +356,8 @@ public class ChainRuleSelector
                 if(chainBeStart == chainBeEnd)
                     continue;
 
-                double chainStartPloidy = mChainFinder.getUnlinkedBreakendCount(chainBeStart);
-                double chainEndPloidy = mChainFinder.getUnlinkedBreakendCount(chainBeEnd);
+                double chainStartPloidy = mLinkAllocator.getUnlinkedBreakendCount(chainBeStart);
+                double chainEndPloidy = mLinkAllocator.getUnlinkedBreakendCount(chainBeEnd);
 
                 if(chainStartPloidy == 0 || chainEndPloidy == 0)
                     continue;
@@ -427,7 +423,7 @@ public class ChainRuleSelector
                 SvVarData otherVar = pairStart.getOtherSV(compDup);
                 SvBreakend otherBreakend = pairStart.getOtherBreakend(compDupBeStart);
 
-                double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+                double otherBreakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend);
 
                 if(!copyNumbersEqual(compDupPloidy * 2, otherBreakendPloidy) && otherBreakendPloidy <= compDupPloidy)
                     continue;
@@ -441,7 +437,7 @@ public class ChainRuleSelector
                     if(otherBreakend.getSV() != otherBreakend2.getSV())
                         continue;
 
-                    double otherBreakendPloidy2 = mChainFinder.getUnlinkedBreakendCount(otherBreakend2);
+                    double otherBreakendPloidy2 = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend2);
 
                     if(copyNumbersEqual(compDupPloidy * 2, otherBreakendPloidy2) || otherBreakendPloidy2 > compDupPloidy)
                     {
@@ -490,7 +486,7 @@ public class ChainRuleSelector
 
         for(SvBreakend breakend : foldbackBreakends)
         {
-            double foldbackPloidy = mChainFinder.getUnlinkedBreakendCount(breakend);
+            double foldbackPloidy = mLinkAllocator.getUnlinkedBreakendCount(breakend);
 
             if(foldbackPloidy == 0)
                 continue;
@@ -507,12 +503,12 @@ public class ChainRuleSelector
                 if(!foldbackBreakends.contains(otherBreakend))
                     continue;
 
-                double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+                double otherBreakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend);
 
                 if(otherBreakendPloidy == 0)
                     continue;
 
-                if(mSkippedPairs.contains(pair))
+                if(mLinkAllocator.hasSkippedPairs(pair))
                     continue;
 
                 if(proposedLinks.stream().map(x -> x.Links.get(0)).anyMatch(y -> y == pair))
@@ -575,12 +571,12 @@ public class ChainRuleSelector
                     if(addedLinks.contains(pair))
                         continue;
 
-                    if(mSkippedPairs.contains(pair))
+                    if(mLinkAllocator.hasSkippedPairs(pair))
                         continue;
 
                     SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
 
-                    double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+                    double otherBreakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend);
 
                     if(otherBreakendPloidy == 0)
                         continue;
@@ -644,11 +640,11 @@ public class ChainRuleSelector
 
             mAdjacentMatchingPairs.remove(0);
 
-            if(mChainFinder.matchesExistingPair(nextPair))
+            if(mLinkAllocator.matchesExistingPair(nextPair))
                 continue;
 
-            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(nextPair.firstBreakend());
-            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(nextPair.secondBreakend());
+            double ploidyFirst = mLinkAllocator.getUnlinkedBreakendCount(nextPair.firstBreakend());
+            double ploidySecond = mLinkAllocator.getUnlinkedBreakendCount(nextPair.secondBreakend());
 
             if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
@@ -694,11 +690,11 @@ public class ChainRuleSelector
 
             mAdjacentPairs.remove(0);
 
-            if(mChainFinder.matchesExistingPair(nextPair))
+            if(mLinkAllocator.matchesExistingPair(nextPair))
                 continue;
 
-            double ploidyFirst = mChainFinder.getUnlinkedBreakendCount(nextPair.firstBreakend());
-            double ploidySecond = mChainFinder.getUnlinkedBreakendCount(nextPair.secondBreakend());
+            double ploidyFirst = mLinkAllocator.getUnlinkedBreakendCount(nextPair.firstBreakend());
+            double ploidySecond = mLinkAllocator.getUnlinkedBreakendCount(nextPair.secondBreakend());
 
             if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
@@ -761,12 +757,12 @@ public class ChainRuleSelector
                     if(addedLinks.contains(pair))
                         continue;
 
-                    if(mSkippedPairs.contains(pair))
+                    if(mLinkAllocator.hasSkippedPairs(pair))
                         continue;
 
                     SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
 
-                    double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+                    double otherBreakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend);
 
                     if(otherBreakendPloidy == 0)
                         continue;
@@ -820,12 +816,12 @@ public class ChainRuleSelector
 
                     for (final SvLinkedPair pair : svLinks)
                     {
-                        if (mSkippedPairs.contains(pair))
+                        if (mLinkAllocator.hasSkippedPairs(pair))
                             continue;
 
                         SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
 
-                        double otherBreakendPloidy = mChainFinder.getUnlinkedBreakendCount(otherBreakend);
+                        double otherBreakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend);
 
                         if (otherBreakendPloidy == 0)
                             continue;
