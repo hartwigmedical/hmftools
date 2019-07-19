@@ -37,12 +37,12 @@ public class PurityEnrichment implements VariantContextEnrichment {
     private final PurityAdjustedSomaticVariantFactory factory;
     private final Consumer<VariantContext> consumer;
 
-    public PurityEnrichment(@NotNull final String purpleVersion, @NotNull final String tumorSample,
+    PurityEnrichment(@NotNull final String purpleVersion, @NotNull final String tumorSample,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final Consumer<VariantContext> consumer) {
         this.purpleVersion = purpleVersion;
         this.consumer = consumer;
-        factory = new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, fittedRegions);
+        this.factory = new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, fittedRegions);
     }
 
     @Override
