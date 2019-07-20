@@ -315,6 +315,17 @@ public class FusionDisruptionAnalyser
             uniqueFusions.forEach(x -> writeFusionData(x));
         }
 
+        if(LOGGER.isDebugEnabled())
+        {
+            for(final GeneFusion fusion : uniqueFusions)
+            {
+                LOGGER.debug("fusion({}-{}) reportable({}) cluster({}) SVs({} & {})",
+                        fusion.upstreamTrans().parent().GeneName, fusion.downstreamTrans().parent().GeneName,
+                        fusion.reportable(), fusion.getAnnotations().clusterId(),
+                        fusion.upstreamTrans().parent().id(), fusion.downstreamTrans().parent().id());
+            }
+        }
+
         if(dbAccess != null && mConfig.UploadToDB)
         {
             uploadData(svList, uniqueFusions, dbAccess);

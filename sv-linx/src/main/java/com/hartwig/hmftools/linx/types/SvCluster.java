@@ -1060,11 +1060,12 @@ public class SvCluster
             if(!requiresReplication())
                 setRequiresReplication();
 
-            if(replicateSVs)
-            {
-                // replicated SVs are only created and added in the old chain-finder
+            //if(replicateSVs)
+            //{
+                // replicated SVs are only created and added in the old chain-finder but for now record the count
+                // since it used in the chaining SV limit
                 var.setReplicatedCount(svMultiple);
-            }
+            // }
         }
     }
 

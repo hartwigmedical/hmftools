@@ -137,7 +137,7 @@ public class LinkFinder
         return false;
     }
 
-    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start, boolean checkCopyNumberMatch)
+    public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
     {
         // templated insertions are allowed to traverse the centromere
         if(v1.position(v1Start) < 0 || v2.position(v2Start) < 0)
@@ -160,20 +160,6 @@ public class LinkFinder
 
         if(!breakendsFace)
             return false;
-
-        if(checkCopyNumberMatch)
-        {
-            boolean skipReplicated = v1.isReplicatedSv() || v1.getReplicatedCount() > 0 || v2.isReplicatedSv() || v2.getReplicatedCount() > 0;
-
-            if(!skipReplicated)
-            {
-                double cn1 = v1.copyNumberChange(v1Start);
-                double cn2 = v2.copyNumberChange(v2Start);
-
-                if(!copyNumbersEqual(cn1, cn2))
-                    return false;
-            }
-        }
 
         return true;
     }
@@ -311,7 +297,7 @@ public class LinkFinder
                         long distance = abs(var1.position(v1Start) - var2.position(v2Start));
                         int minTiLength = max(var1.getMinTemplatedLength(v1Start), var2.getMinTemplatedLength(v2Start));
 
-                        if (!areLinkedSection(var1, var2, v1Start, v2Start, !cluster.requiresReplication()) || distance < minTiLength)
+                        if (!areLinkedSection(var1, var2, v1Start, v2Start) || distance < minTiLength)
                             continue;
 
                         // form a new TI from these 2 BEs

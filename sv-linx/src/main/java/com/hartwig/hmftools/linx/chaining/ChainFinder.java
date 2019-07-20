@@ -378,10 +378,13 @@ public class ChainFinder
 
             for(final SvChain chain : mUniqueChains)
             {
-                if (chain.identicalChain(newChain, true))
+                if (chain.identicalChain(newChain, false))
                 {
-                    LOGGER.debug("cluster({}) skipping duplicate chain({}) vs origChain({})",
-                            mClusterId, newChain.id(), chain.id());
+                    LOGGER.debug("cluster({}) skipping duplicate chain({}) ploidy({}) vs origChain({}) ploidy({})",
+                            mClusterId, newChain.id(), formatPloidy(newChain.ploidy()), chain.id(), formatPloidy(chain.ploidy()));
+
+                    // combine the ploidies
+                    chain.setPloidyData(chain.ploidy() + newChain.ploidy(), chain.ploidyUncertainty());
 
                     // record repeated links
                     for(SvLinkedPair pair : chain.getLinkedPairs())
@@ -1167,7 +1170,7 @@ public class ChainFinder
 
         if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend())
         {
-            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart(), false))
+            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
             {
                 SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
 

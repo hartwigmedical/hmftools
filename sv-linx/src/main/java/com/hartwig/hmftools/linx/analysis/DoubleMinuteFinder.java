@@ -375,7 +375,7 @@ public class DoubleMinuteFinder
 
         if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend())
         {
-            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart(), false))
+            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
             {
                 SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
 
