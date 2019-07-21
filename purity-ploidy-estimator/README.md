@@ -525,7 +525,7 @@ PURPLE generates a number of tab separated output files as described in the foll
 
 #### Purity File 
 
-The purity file `TUMOR.purple.purity` contains a single row with a summary of the purity fit:
+The purity file `TUMOR.purple.purity.tsv` contains a single row with a summary of the purity fit:
 
 Column  | Example Value | Description
 ---|---|---
@@ -549,7 +549,7 @@ msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if soma
 
 #### Purity Range File
 
-The purity range file `TUMOR.purple.purity.range` file summarises the best fit per purity sorted by score. 
+The purity range file `TUMOR.purple.purity.range.tsv` file summarises the best fit per purity sorted by score. 
 Descriptions of the fields are the same as above.
 
 Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
@@ -560,7 +560,7 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 #### Copy Number File
 
-The copy number file `TUMOR.purple.cnv` contains the copy number profile of all (contiguous) segments of the tumor sample:
+The copy number file `TUMOR.purple.cnv.somatic.tsv` contains the copy number profile of all (contiguous) segments of the tumor sample:
 
 Column  | Example Value | Description
 ---|---|---
@@ -583,7 +583,7 @@ MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
 
 #### Gene Copy Number File
 
-The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterations of each gene in the HMF gene panel:
+The gene copy number file `TUMOR.purple.cnv.gene.tsv` summarises copy number alterations of each gene in the HMF gene panel:
 
 Column  | Example Value | Description
 ---|---|---
@@ -932,6 +932,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Added microsatellite status
   - Added subclonal likelihood model and figure
   - Consistent file headers
+  - Consistent file names
   - Fix whole genome duplication calculation
   - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
   - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 

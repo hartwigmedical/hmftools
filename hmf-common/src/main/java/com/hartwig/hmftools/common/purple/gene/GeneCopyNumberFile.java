@@ -31,8 +31,7 @@ public final class GeneCopyNumberFile {
 
     @NotNull
     public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
-        //TODO: Once support for reading new / old filename has trickled down to patient report, update this to use new extension!
-        return basePath + File.separator + sample + EXTENSION_OLD;
+        return basePath + File.separator + sample + EXTENSION;
     }
 
     @NotNull

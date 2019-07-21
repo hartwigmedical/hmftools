@@ -8,9 +8,9 @@ sample <- args[1]
 purpleDir <- args[2]
 plotDir   <- args[3]
 
-#sample = "CPCT02010503T"
-#purpleDir = "~/hmf/analysis/CPCT02010503T/purple"
-#plotDir = "~/hmf/analysis/CPCT02010503T/purple/plot"
+#sample = "COLO829T"
+#purpleDir = "~/hmf/analysis/COLO829T/purple"
+#plotDir = "~/hmf/analysis/COLO829T/purple/plot"
 
 purity_ploidy_range_plot <- function(range) {
 
@@ -149,7 +149,7 @@ copynumber_pdf <- function(copyNumberRegions) {
         xlab("Copy Number") + ylab("Baf Count") + ggtitle("Copy Number PDF")
 }
 
-copyNumbers = read.table(file = paste0(purpleDir, "/", sample, ".purple.cnv"), sep = "\t", header = T, comment.char = "!") %>%
+copyNumbers = read.table(file = paste0(purpleDir, "/", sample, ".purple.cnv.somatic.tsv"), sep = "\t", header = T, comment.char = "!") %>%
   mutate(chromosome = gsub("chr", "", chromosome))
 
 copyNumberPDF = copynumber_pdf(copyNumbers)
@@ -158,7 +158,7 @@ ggsave(filename = paste0(plotDir, "/", sample, ".copynumber.png"), copyNumberPDF
 minorAllelePloidyPDF = minor_allele_ploidy_pdf(copyNumbers)
 ggsave(filename = paste0(plotDir, "/", sample, ".map.png"), minorAllelePloidyPDF, units = "in", height = 4, width = 4.8, scale = 1)
 
-rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range"), sep = "\t", header = T, comment.char = "!") %>%
+rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range.tsv"), sep = "\t", header = T, comment.char = "!") %>%
     select(purity, ploidy, score)
 rangePlot = purity_ploidy_range_plot(rangeDF)
 ggsave(filename = paste0(plotDir, "/", sample, ".purity.range.png"), rangePlot, units = "in", height = 4, width = 4.8, scale = 1)
