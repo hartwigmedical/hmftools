@@ -40,6 +40,7 @@ public class SvChain {
     private double mPloidyUncertainty;
 
     private boolean mIsClosedLoop;
+    private int mLinkSum; // simple comparison check
 
     private static final Logger LOGGER = LogManager.getLogger(SvChain.class);
 
@@ -51,6 +52,7 @@ public class SvChain {
         mPloidy = 0;
         mPloidyUncertainty = 0;
         mIsClosedLoop = false;
+        mLinkSum = 0;
     }
 
     public int id() { return mId; }
@@ -71,6 +73,8 @@ public class SvChain {
             mSvList.add(pair.second());
 
         SvLinkedPair newPair = SvLinkedPair.copy(pair);
+
+        mLinkSum += pair.first().dbId() + pair.second().dbId();
 
         if(mLinkedPairs.isEmpty())
         {
@@ -216,6 +220,8 @@ public class SvChain {
 
         mLinkedPairs.add(SvLinkedPair.from(chainEnd, chainStart));
         mIsClosedLoop = true;
+
+        mLinkSum += chainEnd.getSV().dbId() + chainStart.getSV().dbId();
     }
 
     public void foldbackChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)
@@ -251,14 +257,6 @@ public class SvChain {
             {
                 addLink(pair, true);
             }
-
-            /*
-            for(int index = 0; index < linkCount; ++index)
-            {
-                final SvLinkedPair pair = mLinkedPairs.get(2 + index * 2);
-                addLink(pair, true);
-            }
-            */
         }
         else
         {
@@ -322,12 +320,15 @@ public class SvChain {
 
     public static void reconcileChains(final List<SvChain> chains, boolean checkChainSplits, int nextChainId)
     {
+        // join 2 chains into a single chain if they have the same SV's opposing breakends on their ends
+        // if the chains differ in ploidy then either skip merging them or split off (copy) the larger ploidy chain before joining
+        if(chains.size() <= 1)
+            return;
+
         // look for chains with opposite breakends of the same SV
         int index1 = 0;
 
-        // List<SvChain> newChains = Lists.newArrayList();
-
-        while(index1 < chains.size())
+        while(index1 < chains.size() - 1)
         {
             SvChain chain1 = chains.get(index1);
 
@@ -339,6 +340,16 @@ public class SvChain {
 
                 if(chain1 == chain2)
                     continue;
+
+                if(checkChainSplits && chain1.identicalChain(chain2, false, false))
+                {
+                    chain1.setPloidyData(chain1.ploidy() + chain2.ploidy(), chain1.ploidyUncertainty());
+                    chains.remove(index2);
+                    chainsMerged = true;
+                    break;
+                }
+
+                // skip chains which have the same SVs on both ends
 
                 boolean ploidyMatched = copyNumbersEqual(chain1.ploidy(), chain2.ploidy())
                         || ploidyOverlap(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
@@ -377,12 +388,16 @@ public class SvChain {
                             SvChain higherPloidyChain = chain1.ploidy() > chain2.ploidy() ? chain1 : chain2;
                             SvChain lowerPloidyChain = higherPloidyChain == chain1 ? chain2 : chain1;
 
-                            LOGGER.debug("splitting chain({}) ploidy({}) vs chain({}) ploidy({}) into new chain({})",
-                                    higherPloidyChain.id(), formatPloidy(higherPloidyChain.ploidy()),
-                                    lowerPloidyChain.id(), formatPloidy(lowerPloidyChain.ploidy()), newChain.id());
-
                             newChain.copyFrom(higherPloidyChain);
                             newChain.setPloidyData(higherPloidyChain.ploidy() - lowerPloidyChain.ploidy(), higherPloidyChain.ploidyUncertainty());
+
+                            LOGGER.debug("splitting chain({}) ploidy({}) vs chain({}) ploidy({}) into new chain({}) ploidy({})",
+                                    higherPloidyChain.id(), formatPloidy(higherPloidyChain.ploidy()),
+                                    lowerPloidyChain.id(), formatPloidy(lowerPloidyChain.ploidy()),
+                                    newChain.id(), formatPloidy(newChain.ploidy()));
+
+                            higherPloidyChain.setPloidyData(lowerPloidyChain.ploidy(), higherPloidyChain.ploidyUncertainty());
+
                             chains.add(newChain);
                         }
 
@@ -668,12 +683,17 @@ public class SvChain {
         return true;
     }
 
-    public boolean identicalChain(final SvChain other, boolean allowSubsets, boolean allowSameLinks)
+    public int linkSum() { return mLinkSum; }
+
+    public boolean identicalChain(final SvChain otherChain, boolean allowSubsets, boolean allowSameLinks)
     {
-        // form a chain in reverse to compare
-        final SvChain otherChain = other;
+        if(mLinkSum != otherChain.linkSum())
+            return false;
 
         /*
+        // form a chain in reverse to compare
+
+        final SvChain otherChain = other;
         if(!reversed)
         {
             otherChain = other;
@@ -712,7 +732,7 @@ public class SvChain {
             if(exactMatch)
                 return true;
 
-            return allowSameLinks && sameLinks(other);
+            return allowSameLinks && sameLinks(otherChain);
         }
         else
         {

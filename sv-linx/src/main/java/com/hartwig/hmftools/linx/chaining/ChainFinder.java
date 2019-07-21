@@ -233,6 +233,7 @@ public class ChainFinder
         mHasReplication = cluster.requiresReplication();
         mIsClusterSubset = false;
         mLinkAllocator.initialise(mClusterId);
+        mRuleSelector.initialise(mClusterId, mHasReplication);
 
         if(mUseOld || mRunOldComparison)
             mOldFinder.initialise(cluster);
@@ -303,7 +304,8 @@ public class ChainFinder
         }
 
         mLinkAllocator.initialise(mClusterId);
-        mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
+        mRuleSelector.initialise(mClusterId, mHasReplication);
+
         mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
     }
 
@@ -487,7 +489,7 @@ public class ChainFinder
             mLinkAllocator.clearPairSkipped();
             int lastAddedIndex = mLinkAllocator.getLinkIndex();
 
-            List<ProposedLinks> proposedLinks = findProposedLinks();
+            List<ProposedLinks> proposedLinks = mRuleSelector.findProposedLinks();
 
             if(proposedLinks.isEmpty())
             {
@@ -530,76 +532,6 @@ public class ChainFinder
         reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
 
         checkDoubleMinuteChains();
-    }
-
-    private List<ProposedLinks> findProposedLinks()
-    {
-        // proceed through the link-finding methods in priority
-        List<ProposedLinks> proposedLinks = mRuleSelector.findSingleOptionPairs();
-
-        if(proposedLinks.size() == 1)
-        {
-            return proposedLinks;
-        }
-
-        if (mHasReplication)
-        {
-            proposedLinks = mRuleSelector.findFoldbackPairs(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-
-            proposedLinks = mRuleSelector.findComplexDupPairs(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-
-            proposedLinks = mRuleSelector.findFoldbackToFoldbackPairs(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-
-            proposedLinks = mRuleSelector.findPloidyMatchPairs(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-
-            proposedLinks = mRuleSelector.findAdjacentPairs(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-
-            proposedLinks = mRuleSelector.findHighestPloidy(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-        }
-        else
-        {
-            proposedLinks = mRuleSelector.findAdjacentMatchingPairs(proposedLinks);
-            mRuleSelector.cullByPriority(proposedLinks);
-            if (proposedLinks.size() == 1)
-            {
-                return proposedLinks;
-            }
-        }
-
-        proposedLinks = mRuleSelector.findNearest(proposedLinks);
-        return proposedLinks;
     }
 
     private void addAssemblyLinksToChains()

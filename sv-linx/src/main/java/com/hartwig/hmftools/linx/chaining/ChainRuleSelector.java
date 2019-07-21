@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.hasLinkClash;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.List;
@@ -38,6 +39,9 @@ import org.apache.logging.log4j.Logger;
 public class ChainRuleSelector
 {
     private ChainLinkAllocator mLinkAllocator;
+
+    private int mClusterId;
+    private boolean mHasReplication;
 
     // references from chain-finder
     private Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
@@ -69,7 +73,83 @@ public class ChainRuleSelector
         mChains = chains;
     }
 
-    public List<ProposedLinks> findSingleOptionPairs()
+    public void initialise(int clusterId, boolean clusterHasReplication)
+    {
+        mHasReplication = clusterHasReplication;
+        mClusterId = clusterId;
+    }
+
+    public List<ProposedLinks> findProposedLinks()
+    {
+        // proceed through the link-finding methods in priority
+        List<ProposedLinks> proposedLinks = findSingleOptionPairs();
+
+        if(proposedLinks.size() == 1)
+        {
+            return proposedLinks;
+        }
+
+        if (mHasReplication)
+        {
+            proposedLinks = findFoldbackPairs(proposedLinks);
+            cullByPriority(proposedLinks);
+
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+
+            proposedLinks = findComplexDupPairs(proposedLinks);
+            cullByPriority(proposedLinks);
+
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+
+            proposedLinks = findFoldbackToFoldbackPairs(proposedLinks);
+            cullByPriority(proposedLinks);
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+
+            proposedLinks = findPloidyMatchPairs(proposedLinks);
+            cullByPriority(proposedLinks);
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+
+            proposedLinks = findAdjacentPairs(proposedLinks);
+            cullByPriority(proposedLinks);
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+
+            proposedLinks = findHighestPloidy(proposedLinks);
+            cullByPriority(proposedLinks);
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+        }
+        else
+        {
+            proposedLinks = findAdjacentMatchingPairs(proposedLinks);
+            cullByPriority(proposedLinks);
+            if (proposedLinks.size() == 1)
+            {
+                return proposedLinks;
+            }
+        }
+
+        proposedLinks = findNearest(proposedLinks);
+        return proposedLinks;
+    }
+
+    private List<ProposedLinks> findSingleOptionPairs()
     {
         // find all breakends with only one other link options, or only to both breakends of the same SV - ie an INV
         List<ProposedLinks> proposedLinks = Lists.newArrayList();
@@ -86,6 +166,8 @@ public class ChainRuleSelector
                 continue;
 
             SvBreakend limitingBreakend = entry.getKey();
+
+            // isSpecificSV(limitingBreakend.getSV());
 
             final SvLinkedPair newPair;
 
@@ -118,7 +200,7 @@ public class ChainRuleSelector
             if(mLinkAllocator.hasSkippedPairs(newPair))
                 continue;
 
-            // avoid the second breakend also being a limiting factor and so adding this link twice
+            // skip the duplicate link stored against the other breakend
             if(proposedLinks.stream().map(x -> x.Links.get(0)).anyMatch(y -> y == newPair))
                 continue;
 
@@ -139,7 +221,13 @@ public class ChainRuleSelector
                 final ProposedLinks otherLink = proposedLinks.get(index);
                 final SvLinkedPair otherPair = otherLink.Links.get(0);
 
-                if(otherPair.hasLinkClash(newPair) || otherPair.oppositeMatch(newPair))
+                if(!otherPair.hasLinkClash(newPair) && !otherPair.oppositeMatch(newPair))
+                {
+                    ++index;
+                    continue;
+                }
+
+                if(mHasReplication)
                 {
                     if (copyNumbersEqual(otherLink.ploidy(), proposedLink.ploidy()))
                     {
@@ -150,8 +238,8 @@ public class ChainRuleSelector
                         }
 
                         proposedLinks.remove(otherLink);
-                        continue;
                     }
+                    /*
                     else if (proposedLink.ploidy() > otherLink.ploidy())
                     {
                         addNew = false;
@@ -160,11 +248,22 @@ public class ChainRuleSelector
                     else
                     {
                         proposedLinks.remove(otherLink);
-                        continue;
-                    }
-                }
+                    }*/
 
-                ++index;
+                    // keep both for now and let downstream rules decide
+                    ++index;
+                }
+                else
+                {
+                    if (proposedLink.shortestLinkDistance() > otherLink.shortestLinkDistance())
+                    {
+                        addNew = false;
+                        break;
+                    }
+
+                    proposedLinks.remove(otherLink);
+
+                }
             }
 
             if(addNew)
@@ -174,7 +273,7 @@ public class ChainRuleSelector
         return proposedLinks;
     }
 
-    public List<ProposedLinks> findFoldbackPairs(final List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findFoldbackPairs(final List<ProposedLinks> proposedLinks)
     {
         // both ends of a foldback connect to one end of another SV with ploidy >= 2x
 
@@ -312,7 +411,7 @@ public class ChainRuleSelector
         return restrictProposedLinks(newProposedLinks, proposedLinks, ONLY);
     }
 
-    public List<ProposedLinks> findComplexDupPairs(List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findComplexDupPairs(List<ProposedLinks> proposedLinks)
     {
         // both ends of a foldback or complex DUP connect to one end of another SV with ploidy >= 2x
         if(mComplexDupCandidates.isEmpty())
@@ -464,7 +563,7 @@ public class ChainRuleSelector
         return restrictProposedLinks(newProposedLinks, proposedLinks, ONLY);
     }
 
-    public List<ProposedLinks> findFoldbackToFoldbackPairs(final List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findFoldbackToFoldbackPairs(final List<ProposedLinks> proposedLinks)
     {
         // look for 2 foldbacks facing each other
         if(mFoldbacks.isEmpty())
@@ -527,7 +626,7 @@ public class ChainRuleSelector
         return restrictProposedLinks(proposedLinks, newProposedLinks, FOLDBACK);
     }
 
-    public List<ProposedLinks> findPloidyMatchPairs(List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findPloidyMatchPairs(List<ProposedLinks> proposedLinks)
     {
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
@@ -613,7 +712,7 @@ public class ChainRuleSelector
         return newProposedLinks;
     }
 
-    public List<ProposedLinks> findAdjacentMatchingPairs(List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findAdjacentMatchingPairs(List<ProposedLinks> proposedLinks)
     {
         if(mAdjacentMatchingPairs.isEmpty())
             return proposedLinks;
@@ -663,7 +762,7 @@ public class ChainRuleSelector
         return restrictProposedLinks(proposedLinks, newProposedLinks, ADJACENT);
     }
 
-    public List<ProposedLinks> findAdjacentPairs(List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findAdjacentPairs(List<ProposedLinks> proposedLinks)
     {
         if(mAdjacentPairs.isEmpty())
             return proposedLinks;
@@ -711,7 +810,7 @@ public class ChainRuleSelector
         return restrictProposedLinks(proposedLinks, newProposedLinks, ADJACENT);
     }
 
-    public List<ProposedLinks> findHighestPloidy(List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findHighestPloidy(List<ProposedLinks> proposedLinks)
     {
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
@@ -787,7 +886,7 @@ public class ChainRuleSelector
         return newProposedLinks;
     }
 
-    public List<ProposedLinks> findNearest(List<ProposedLinks> proposedLinks)
+    private List<ProposedLinks> findNearest(List<ProposedLinks> proposedLinks)
     {
         // sorts links into shortest first and purges any conflicting longer links with conflicting breakends
         if(proposedLinks.isEmpty())
@@ -883,7 +982,7 @@ public class ChainRuleSelector
 
         if(shortestLinks.size() > 1)
         {
-            LOGGER.trace("found {} shortest non-clashing proposed links", proposedLinks.size());
+            LOGGER.trace("found {} shortest non-clashing proposed links", shortestLinks.size());
         }
 
         return shortestLinks;
@@ -925,7 +1024,7 @@ public class ChainRuleSelector
         return false;
     }
 
-    public static void cullByPriority(List<ProposedLinks> proposedLinks)
+    private static void cullByPriority(List<ProposedLinks> proposedLinks)
     {
         if(proposedLinks.size() <= 1)
             return;
