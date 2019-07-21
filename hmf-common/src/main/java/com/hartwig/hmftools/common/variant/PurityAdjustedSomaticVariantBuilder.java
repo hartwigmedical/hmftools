@@ -44,7 +44,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
 
             @Override
             public PurityAdjustedSomaticVariantBuilder adjustedVAF(final double vaf) {
-                builder.getCommonInfo().putAttribute(PURPLE_AF_INFO, vaf);
+                builder.getCommonInfo().putAttribute(PURPLE_AF_INFO, String.format("%.4f", vaf));
                 return this;
             }
 
