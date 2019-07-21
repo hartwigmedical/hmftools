@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class SubclonalLikelihoddFactoryTest {
+public class SubclonalLikelihoodFactoryTest {
 
     @Test
     public void testSubclonalLikelihood() {
@@ -20,7 +20,7 @@ public class SubclonalLikelihoddFactoryTest {
                 createModel(false, true, 0.05, 1),
                 createModel(false, true, 0.1, 1));
 
-        final SubclonalLikelihoodFactory victim = new SubclonalLikelihoodFactory(0.05, model);
+        final SubclonalLikelihood victim = new SubclonalLikelihood(0.05, model);
         assertEquals(1, victim.subclonalLikelihood(0.01), 0.01);
 
         assertEquals(0.5, victim.subclonalLikelihood(0.025), 0.01);
@@ -36,13 +36,13 @@ public class SubclonalLikelihoddFactoryTest {
                 createModel(false, false, 0.05, 1),
                 createModel(false, true, 0.05, 1));
 
-        final SubclonalLikelihoodFactory victim = new SubclonalLikelihoodFactory(0.05, model);
+        final SubclonalLikelihood victim = new SubclonalLikelihood(0.05, model);
         assertEquals(2d/3d, victim.subclonalLikelihood(0.05), 0.01);
     }
 
     @Test
     public void testOutsideRange() {
-        final SubclonalLikelihoodFactory victim = new SubclonalLikelihoodFactory(0.05, Lists.newArrayList());
+        final SubclonalLikelihood victim = new SubclonalLikelihood(0.05, Lists.newArrayList());
         assertEquals(0, victim.subclonalLikelihood(0.05), 0.01);
     }
 
