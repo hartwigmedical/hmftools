@@ -42,11 +42,11 @@ public class Links
         return result.isPresent() ? result : findEndLink(position, links);
     }
 
-    public static int linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links)
+    public static double linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links)
     {
-        return Links.findStartLink(position, links).map(Link::traverseCount).orElse(0) + Links.findEndLink(position, links)
-                .map(Link::traverseCount)
-                .orElse(0);
+        return Links.findStartLink(position, links).map(Link::ploidy).orElse((double)0) + Links.findEndLink(position, links)
+                .map(Link::ploidy)
+                .orElse((double)0);
     }
 
     @NotNull
@@ -81,7 +81,7 @@ public class Links
                 .endPosition(file.PosEnd)
                 .endOrientation(file.OrientEnd)
                 .endInfo(file.InfoEnd)
-                .traverseCount((int)round(file.Ploidy))
+                .ploidy(file.Ploidy)
                 .build();
     }
 

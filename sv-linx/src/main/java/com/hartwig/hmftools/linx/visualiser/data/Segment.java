@@ -24,7 +24,7 @@ public abstract class Segment implements GenomeRegion
 
     public abstract int track();
 
-    public abstract int traverseCount();
+    public abstract double ploidy();
 
     public abstract SegmentTerminal startTerminal();
 

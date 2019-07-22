@@ -40,7 +40,7 @@ public abstract class Link
 
     public abstract String endInfo();
 
-    public abstract int traverseCount();
+    public abstract double ploidy();
 
     public boolean connectorsOnly()
     {

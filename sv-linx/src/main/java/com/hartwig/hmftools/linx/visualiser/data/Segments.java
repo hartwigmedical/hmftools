@@ -45,7 +45,7 @@ public class Segments {
                 .track(0)
                 .startTerminal(SegmentTerminal.TELOMERE)
                 .endTerminal(SegmentTerminal.TELOMERE)
-                .traverseCount(0)
+                .ploidy(0)
                 .build();
     }
 
@@ -62,7 +62,7 @@ public class Segments {
                 .track(0)
                 .startTerminal(SegmentTerminal.CENTROMERE)
                 .endTerminal(SegmentTerminal.CENTROMERE)
-                .traverseCount(0)
+                .ploidy(0)
                 .build();
     }
 
@@ -152,7 +152,7 @@ public class Segments {
                 .track(0)
                 .startTerminal(SegmentTerminal.fromString(file.PosStart))
                 .endTerminal(SegmentTerminal.fromString(file.PosEnd))
-                .traverseCount((int)round(file.LinkPloidy))
+                .ploidy(file.LinkPloidy)
                 .build();
     }
 

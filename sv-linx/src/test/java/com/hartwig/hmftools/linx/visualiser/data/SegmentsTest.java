@@ -42,7 +42,7 @@ public class SegmentsTest
                 .track(1)
                 .startTerminal(SegmentTerminal.NONE)
                 .endTerminal(SegmentTerminal.NONE)
-                .traverseCount(0)
+                .ploidy(0)
                 .build();
     }
 
