@@ -296,6 +296,7 @@ public class ChainRuleSelector
     private void updateFoldbackBreakends()
     {
         List<SvBreakend> processedBreakends = Lists.newArrayList(); // to avoid double-counting
+        List<SvBreakend[]> existingChainedPairs = Lists.newArrayList();
 
         if(!mFoldbacksInitialised)
         {
@@ -362,6 +363,12 @@ public class ChainRuleSelector
                     continue;
                 }
 
+                // will be checked against current chains next up
+                if(foldbackStart == foldbackEnd || foldbackStart.getSV() != foldbackEnd.getSV())
+                {
+                    existingChainedPairs.add(breakendPair);
+                }
+
                 processedBreakends.add(foldbackStart);
                 processedBreakends.add(foldbackEnd);
 
@@ -391,10 +398,40 @@ public class ChainRuleSelector
             if(chainStart != chainEnd && abs(chainStart.getClusterChrPosIndex() - chainEnd.getClusterChrPosIndex()) != 1)
                 continue;
 
-            LOGGER.debug("chain({}) adding chained foldback breakends({} & {})", chain.id(), chainStart, chainEnd);
-
             final SvBreakend[] breakendPair = { chainStart, chainEnd };
-            mFoldbackBreakendPairs.add(breakendPair);
+
+            if(containsBreakendPair(existingChainedPairs, breakendPair))
+            {
+                removeBreakendPair(existingChainedPairs, breakendPair);
+            }
+
+            if(!containsBreakendPair(mFoldbackBreakendPairs, breakendPair))
+            {
+                LOGGER.debug("chain({}) adding chained foldback breakends({} & {})", chain.id(), chainStart, chainEnd);
+                mFoldbackBreakendPairs.add(breakendPair);
+            }
+        }
+
+        // remove any chained foldbacks no longer supported by the current set of chains
+        existingChainedPairs.stream().forEach(x -> removeBreakendPair(mFoldbackBreakendPairs, x));
+    }
+
+    private boolean containsBreakendPair(final List<SvBreakend[]> pairs, final SvBreakend[] pair)
+    {
+        return pairs.stream().anyMatch(x -> (x[0] == pair[0] && x[1] == pair[1]) || (x[0] == pair[1] && x[1] == pair[0]));
+    }
+
+    private void removeBreakendPair(final List<SvBreakend[]> pairs, final SvBreakend[] pair)
+    {
+        for(int i = 0; i < pairs.size(); ++i)
+        {
+            SvBreakend[] otherPair = pairs.get(i);
+
+            if ((otherPair[0] == pair[0] && otherPair[1] == pair[1]) || (otherPair[0] == pair[1] && otherPair[1] == pair[0]))
+            {
+                pairs.remove(i);
+                return;
+            }
         }
     }
 
@@ -523,6 +560,9 @@ public class ChainRuleSelector
                 {
                     foldbackPloidy = maxFoldbackChainPloidy;
                 }
+
+                if(foldbackPloidy == 0)
+                    continue;
 
                 // compare ploidies again
                 if(!copyNumbersEqual(foldbackPloidy * 2, nonFoldbackPloidy) && nonFoldbackPloidy <= foldbackPloidy)
