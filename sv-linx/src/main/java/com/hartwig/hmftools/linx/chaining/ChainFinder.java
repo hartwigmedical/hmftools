@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.SPEC_LINK_INDEX;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
@@ -488,6 +489,13 @@ public class ChainFinder
         {
             mLinkAllocator.clearPairSkipped();
             int lastAddedIndex = mLinkAllocator.getLinkIndex();
+
+            /*
+            if(lastAddedIndex == SPEC_LINK_INDEX)
+            {
+                LOGGER.debug("specifc link index({})", lastAddedIndex);
+            }
+            */
 
             List<ProposedLinks> proposedLinks = mRuleSelector.findProposedLinks();
 

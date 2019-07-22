@@ -155,8 +155,8 @@ public class ChainLinkAllocator
         }
     }
 
-    private static int SPEC_LINK_INDEX = -1;
-    // private static int SPEC_LINK_INDEX = 16;
+    // protected static int SPEC_LINK_INDEX = -1;
+    protected static int SPEC_LINK_INDEX = 32;
 
     public boolean addLinks(final ProposedLinks proposedLinks)
     {

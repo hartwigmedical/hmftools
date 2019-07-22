@@ -695,10 +695,11 @@ public class ChainRuleSelector
 
                     proposedLink.addBreakendPloidies(breakend, breakendPloidy, otherBreakend, otherBreakendPloidy);
 
-                    if(ploidyMatch == PM_MATCHED)
-                        break;
-
                     bestProposedLink = proposedLink;
+                    addedLinks.add(pair);
+
+                    if(ploidyMatch == PM_MATCHED) // no need to keep searching through this breakend
+                        break;
 
                     // if(!copyNumbersEqual(proposedLink.ploidy(), currentMaxPloidy))
                     //    currentMaxPloidy = proposedLink.ploidy();
