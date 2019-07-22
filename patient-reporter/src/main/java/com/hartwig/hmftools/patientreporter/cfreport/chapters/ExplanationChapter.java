@@ -56,6 +56,7 @@ public class ExplanationChapter implements ReportChapter {
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
                                 + "number of reads on the mutated position.",
                         "The 'Copies' field indicates the number of alleles present in the tumor on this particular mutated position.",
+                        "The 'VAF' field gives the percentage of alleles on which this variant is present in the tumor.",
                         "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
                                 + "(and is including variants with loss-of-heterozygosity).",
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. A "
