@@ -64,7 +64,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         if (DISPLAY_CLONAL_COLUMN) {
             contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 40, 30, 60, 60, 50, 50 },
                     new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
-                            TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
+                            TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Protein"),
                             TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("VAF").setTextAlignment(TextAlignment.CENTER),
@@ -75,7 +75,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         } else {
             contentTable = TableUtil.createReportContentTable(new float[] { 60, 70, 80, 70, 60, 40, 30, 60, 60, 50 },
                     new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Position"),
-                            TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Impact"),
+                            TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Protein"),
                             TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("VAF").setTextAlignment(TextAlignment.CENTER),
