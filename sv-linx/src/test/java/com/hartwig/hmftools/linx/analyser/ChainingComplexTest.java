@@ -205,7 +205,7 @@ public class ChainingComplexTest
     @Test
     public void testBFBChainWith2ChainedFoldbacks()
     {
-        // BFB of the form telomere - 3 - 4 - 3 - 1 - 2 - 1 - 3 - 4 - 3 - R5 - centromere, where R is the resolving SV
+        // BFB of the form telomere - 3 - 4 - 3 - 1 - 2 - 1 - 3 - 4 - 3 - R5-6 - centromere, where R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
 
         tester.logVerbose(true);

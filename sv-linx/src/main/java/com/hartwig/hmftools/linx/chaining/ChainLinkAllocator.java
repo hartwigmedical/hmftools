@@ -519,12 +519,8 @@ public class ChainLinkAllocator
                 {
                     checkSvComplete(svConn);
 
-                    if (var.isFoldback())
-                    {
-                        // remove if no other instances of this SV remain
-                        mFoldbacks.remove(var);
-                    }
-                    else if (mComplexDupCandidates.get(var) != null)
+                    // could be moved to rule selector
+                    if (mComplexDupCandidates.get(var) != null)
                     {
                         mComplexDupCandidates.remove(var);
                     }
@@ -649,6 +645,41 @@ public class ChainLinkAllocator
             return 0;
 
         return !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
+    }
+
+    protected double getChainLimitedBreakendPloidy(final SvBreakend breakend)
+    {
+        SvChainState svConn = mSvConnectionsMap.get(breakend.getSV());
+        if (svConn == null)
+            return 0;
+
+        double unlinkedPloidy = !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
+
+        if(unlinkedPloidy == 0)
+            return 0;
+
+        // if the breakend is the open end of a chain, then the chain's ploidy is a limit on the max which can assigned
+        double maxChainPloidy = 0;
+        double totalChainPloidy = 0;
+
+        for(final SvChain chain : mChains)
+        {
+            if((chain.getOpenBreakend(true) == breakend || chain.getOpenBreakend(false) == breakend))
+            {
+                totalChainPloidy += chain.ploidy();
+                maxChainPloidy = max(maxChainPloidy, chain.ploidy());
+            }
+        }
+
+        if(maxChainPloidy > 0)
+        {
+            double unchainedPloidy = max(svConn.Ploidy - totalChainPloidy, 0);
+            return max(maxChainPloidy, unchainedPloidy);
+        }
+        else
+        {
+            return unlinkedPloidy;
+        }
     }
 
     protected double getMaxUnlinkedBreakendCount(final SvBreakend breakend)

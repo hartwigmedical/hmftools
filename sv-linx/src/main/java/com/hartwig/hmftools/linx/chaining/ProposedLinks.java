@@ -259,7 +259,10 @@ public class ProposedLinks
             return false;
 
         if(Links.size() == 2 && mBreakendPloidy.size() < 3)
-            return false;
+        {
+            if(Links.get(0) != Links.get(1))
+                return false;
+        }
 
         return mPloidy > 0;
     }

@@ -352,7 +352,12 @@ public class SvChain {
                     break;
                 }
 
-                // skip chains which have the same SVs on both ends
+                // avoid merging chains which close a loop
+                // final SvLinkedPair chain2Pair = SvLinkedPair.from(
+                //        chain2.getOpenBreakend(true).getOtherBreakend(), chain2.getOpenBreakend(false).getOtherBreakend());
+
+                // if(chain1.linkWouldCloseChain(chain2Pair))
+                //    continue;
 
                 boolean ploidyMatched = copyNumbersEqual(chain1.ploidy(), chain2.ploidy())
                         || ploidyOverlap(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
