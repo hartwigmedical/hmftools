@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.EvidenceItemMerger;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceDrugTypeMerger;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -71,8 +73,10 @@ public class TherapyDetailsChapterOffLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-        List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
-        for (EvidenceItem item : sortedEvidence) {
+        List<EvidenceItemMerger> mergedItems = EvidenceDrugTypeMerger.merge(evidence);
+
+        List<EvidenceItemMerger> sortedEvidence = EvidenceItems.sort(mergedItems);
+        for (EvidenceItemMerger item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
 
             contentTable.addCell(TableUtil.createContentCell(item.event()));
