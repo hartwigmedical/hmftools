@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_PLOIDY
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
+import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -47,7 +48,7 @@ public class ChainLinkAllocator
 
     // references
     private final List<SvVarData> mFoldbacks;
-    private final List<SvVarData> mComplexDupCandidates;
+    private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates;
     private final List<SvChain> mChains;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
@@ -56,7 +57,7 @@ public class ChainLinkAllocator
             final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
             final List<SvChain> chains,
             final List<SvVarData> foldbacks,
-            final List<SvVarData> complexDupCandidates,
+            final Map<SvVarData,List<SvLinkedPair>> complexDupCandidates,
             final List<SvVarData> doubleMinuteSVs)
     {
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
@@ -316,9 +317,9 @@ public class ChainLinkAllocator
 
             if (proposedLinks.multiConnection())
             {
-                LOGGER.debug("duplicating chain({}) for multi-connect {}", targetChain.id(), proposedLinks.chainConnectType());
+                LOGGER.debug("duplicating chain({}) for multi-connect {}", targetChain.id(), proposedLinks.getSplittingRule());
 
-                if (proposedLinks.chainConnectType() == CONN_TYPE_FOLDBACK)
+                if (proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
                     targetChain.foldbackChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
                 else
                     targetChain.duplicateChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
@@ -523,7 +524,7 @@ public class ChainLinkAllocator
                         // remove if no other instances of this SV remain
                         mFoldbacks.remove(var);
                     }
-                    else if (mComplexDupCandidates.contains(var))
+                    else if (mComplexDupCandidates.get(var) != null)
                     {
                         mComplexDupCandidates.remove(var);
                     }

@@ -33,6 +33,7 @@ public class ChainDiagnostics
     private int mUnlinkedBreakendCount;
     private int mUnlinkedSvCount;
     private int mWarnings;
+    private int mLastProgressIndex;
 
     // references from chain finder
     private int mClusterId;
@@ -63,6 +64,7 @@ public class ChainDiagnostics
         mUnlinkedBreakendCount = 0;
         mWarnings = 0;
         mClusterCount = 0;
+        mLastProgressIndex = 0;
         mSampleId = "";
 
         mSvConnectionsMap = svConnMap;
@@ -89,6 +91,7 @@ public class ChainDiagnostics
         mLogMessages.clear();
         mWarnings = 0;
         mClusterCount = 0;
+        mLastProgressIndex = 0;
     }
 
     public void initialise(int clusterId, boolean hasReplication)
@@ -290,10 +293,11 @@ public class ChainDiagnostics
         if(!mHasReplication || mSvConnectionsMap.size() < 100)
             return;
 
-        if((linkIndex % 100) == 0)
+        if(linkIndex >= mLastProgressIndex + 100)
         {
-            LOGGER.debug("cluster({}) chaining progress: SVs(incomplete={} complete={}) partialChains({})",
-                    mClusterId, mSvConnectionsMap.size(), mSvCompletedConnections.size(), mChains.size());
+            mLastProgressIndex = linkIndex;
+            LOGGER.debug("cluster({}) chaining progress: index({}) SVs(incomplete={} complete={}) partialChains({})",
+                    mClusterId, linkIndex, mSvConnectionsMap.size(), mSvCompletedConnections.size(), mChains.size());
         }
     }
 

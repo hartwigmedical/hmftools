@@ -83,7 +83,7 @@ public class ChainFinder
     private final Map<SvBreakend,Integer> mSubsetBreakendClusterIndexMap;
 
     // chaining state
-    private final List<SvVarData> mComplexDupCandidates; // identified SVs which duplication another SV
+    private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates; // identified SVs which duplication another SV
     private final List<SvLinkedPair> mAdjacentMatchingPairs;
     private final List<SvLinkedPair> mAdjacentPairs;
 
@@ -140,7 +140,7 @@ public class ChainFinder
         mAdjacentMatchingPairs = Lists.newArrayList();
         mAdjacentPairs = Lists.newArrayList();
         mSubsetBreakendClusterIndexMap = Maps.newHashMap();
-        mComplexDupCandidates = Lists.newArrayList();
+        mComplexDupCandidates = Maps.newHashMap();
         mChains = Lists.newArrayList();
         mUniqueChains = Lists.newArrayList();
         mSvBreakendPossibleLinks = Maps.newHashMap();
@@ -480,7 +480,7 @@ public class ChainFinder
 
         determinePossibleLinks();
 
-        mDiagnostics.setPriorityData(mComplexDupCandidates, mFoldbacks);
+        mDiagnostics.setPriorityData(Lists.newArrayList(mComplexDupCandidates.keySet()), mFoldbacks);
 
         int iterationsWithoutNewLinks = 0; // protection against loops
 
@@ -529,7 +529,8 @@ public class ChainFinder
             mDiagnostics.checkProgress(mLinkAllocator.getLinkIndex());
         }
 
-        reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
+        if(mChains.size() < 50)
+            reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
 
         checkDoubleMinuteChains();
     }
@@ -784,7 +785,6 @@ public class ChainFinder
         // add possible links to a list ordered from shortest to longest length
         // do not chain past a zero cluster allele ploidy
         // identify potential complex DUP candidates along the way
-        // for the special case of foldbacks, add every possible link they can make
 
         for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
@@ -931,13 +931,17 @@ public class ChainFinder
         if(var.isNullBreakend() || var.type() == DEL)
             return;
 
-        if(mComplexDupCandidates.contains(var))
+        if(mComplexDupCandidates.keySet().contains(var))
             return;
 
         if(mLinkAllocator.getSvConnectionsMap().get(var) == null)
             return;
 
         if(var.ploidyMin() * 2 > higherPloidyBreakend.getSV().ploidyMax())
+            return;
+
+        // skip very different ploidy-ratio breakends
+        if(var.ploidyMax() * 4 < higherPloidyBreakend.getSV().ploidyMin())
             return;
 
         boolean lessThanMax = var.ploidyMax() < higherPloidyBreakend.getSV().ploidyMin();
@@ -977,6 +981,9 @@ public class ChainFinder
             {
                 if(lessThanMax || var.ploidyMax() < otherSV.ploidyMin())
                 {
+                    List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerPloidyBreakend, higherPloidyBreakend),
+                            SvLinkedPair.from(otherBreakend, breakend));
+
                     if(otherSV == higherPloidyBreakend.getSV())
                     {
                         logInfo(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
@@ -991,7 +998,7 @@ public class ChainFinder
                                 higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
                     }
 
-                    mComplexDupCandidates.add(var);
+                    mComplexDupCandidates.put(var, links);
                 }
             }
 

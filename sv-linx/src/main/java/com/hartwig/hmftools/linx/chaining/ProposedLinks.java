@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
+import static com.hartwig.hmftools.linx.chaining.ChainingRule.COMP_DUP_SPLIT;
+import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.calcRulePriority;
 
 import java.util.List;
@@ -25,7 +27,6 @@ public class ProposedLinks
 
     // for complex types, the chain which is being replicated by the foldback or complex dup
     private SvChain mChainTarget;
-    private String mChainConnectType;
 
     private double mPloidy; // the min ploidy if the breakends differ, otherwise the median
     private Map<SvBreakend, Double> mBreakendPloidy;
@@ -53,7 +54,6 @@ public class ProposedLinks
         mBreakendPloidy = Maps.newHashMap();
         mBreakendPloidyMatched = Maps.newHashMap();
         mChainTarget = null;
-        mChainConnectType = CONN_TYPE_NONE;
         mPloidyMatchType = PM_NONE;
 
         mShortestDistance = link.length();
@@ -70,14 +70,21 @@ public class ProposedLinks
         mBreakendPloidy = Maps.newHashMap();
         mBreakendPloidyMatched = Maps.newHashMap();
         mChainTarget = targetChain;
-        mChainConnectType = CONN_TYPE_NONE;
         mPloidyMatchType = PM_NONE;
 
         mShortestDistance = Links.stream().mapToLong(x -> x.length()).min().getAsLong();
     }
 
     public final SvChain targetChain() { return mChainTarget; }
-    public final String chainConnectType() { return mChainConnectType; };
+
+    public final ChainingRule getSplittingRule()
+    {
+        if(mRules.contains(FOLDBACK_SPLIT))
+            return FOLDBACK_SPLIT;
+        else
+            return COMP_DUP_SPLIT;
+    }
+
     public final boolean multiConnection() { return Links.size() > 1; };
 
     public double ploidy() { return mPloidy; }
@@ -105,8 +112,6 @@ public class ProposedLinks
     {
         if(compDupPloidy == 0 || otherPloidyStart == 0 || otherPloidyEnd== 0)
             return;
-
-        mChainConnectType = CONN_TYPE_COMPLEX_DUP;
 
         if (copyNumbersEqual(compDupPloidy * 2, otherRelativePloidy))
         {
@@ -139,8 +144,6 @@ public class ProposedLinks
     {
         if(foldbackPloidy == 0 || otherPloidy == 0)
             return;
-
-        mChainConnectType = CONN_TYPE_FOLDBACK;
 
         if (copyNumbersEqual(foldbackPloidy * 2, otherRelativePloidy))
         {
@@ -239,9 +242,9 @@ public class ProposedLinks
 
     public String toString()
     {
-        return String.format("pair(%s) rule(%s) ploidy(%s) type(%s) match(%s) length(%d) priority(%d)",
+        return String.format("pair(%s) rule(%s) ploidy(%s) match(%s) length(%d) priority(%d)",
                 Links.get(0).toString(), mRules.get(0), formatPloidy(mPloidy),
-                mChainConnectType, mPloidyMatchType, mShortestDistance, mPriority);
+                mPloidyMatchType, mShortestDistance, mPriority);
     }
 
     public boolean isValid()
