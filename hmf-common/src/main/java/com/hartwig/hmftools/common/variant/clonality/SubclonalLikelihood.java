@@ -1,20 +1,45 @@
 package com.hartwig.hmftools.common.variant.clonality;
 
-import org.immutables.value.Value;
+import static java.util.stream.Collectors.toList;
+
+import java.util.List;
+
+import com.hartwig.hmftools.common.numeric.Doubles;
+
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface SubclonalLikelihood {
+public class SubclonalLikelihood {
 
-    double bucket();
+    private static final double MAX_PLOIDY = 2;
+    private final double[] subclonalLikelihood;
+    private final WeightedPloidyHistogram histogram;
 
-    double likelihood();
+    public SubclonalLikelihood(double binWidth, @NotNull final List<PeakModel> peakModel) {
 
-    double clonalWeight();
+        histogram = new WeightedPloidyHistogram(MAX_PLOIDY, binWidth);
+        final List<PeakModel> validPeaks = peakModel.stream().filter(PeakModel::isValid).collect(toList());
+        double[] clonalHistogram = histogram.modelHistogram(validPeaks.stream().filter(x -> !x.isSubclonal()).collect(toList()));
+        double[] subclonalHistogram = histogram.modelHistogram(validPeaks.stream().filter(PeakModel::isSubclonal).collect(toList()));
 
-    double subclonalWeight();
+        subclonalLikelihood = new double[clonalHistogram.length];
+        for (int i = 0; i < clonalHistogram.length; i++) {
+            double clonal = clonalHistogram[i];
+            double subclonal = subclonalHistogram[i];
+            double total = clonal + subclonal;
+            if (Doubles.greaterThan(total, 0)) {
+                double likelihood = subclonal / (clonal + subclonal);
+                subclonalLikelihood[i] = likelihood;
+            }
+        }
+    }
+
+    public double subclonalLikelihood(double ploidy) {
+        int bucket = histogram.bucket(ploidy);
+        if (bucket < subclonalLikelihood.length) {
+            return subclonalLikelihood[bucket];
+        }
+
+        return 0;
+    }
 
 }

@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
-import com.hartwig.hmftools.common.variant.clonality.SubclonalLikelihoodFactory;
+import com.hartwig.hmftools.common.variant.clonality.SubclonalLikelihood;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,14 +21,14 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
 
     private final double maxPloidy;
     private final Consumer<VariantContext> consumer;
-    private final SubclonalLikelihoodFactory likelihoodFactory;
+    private final SubclonalLikelihood likelihoodFactory;
 
     SubclonalLikelihoodEnrichment(double maxPloidy, double binWidth, @NotNull final List<PeakModel> peakModel,
             @NotNull final Consumer<VariantContext> consumer) {
         this.maxPloidy = maxPloidy;
         this.consumer = consumer;
 
-        likelihoodFactory = new SubclonalLikelihoodFactory(binWidth, peakModel);
+        likelihoodFactory = new SubclonalLikelihood(binWidth, peakModel);
 
     }
 

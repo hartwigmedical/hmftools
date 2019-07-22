@@ -23,15 +23,15 @@ public class PeakModelFile {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<PeakModel> bafs) throws IOException {
-        Files.write(new File(filename).toPath(), toLines(bafs));
+    public static void write(@NotNull final String filename, @NotNull final List<PeakModel> model) throws IOException {
+        Files.write(new File(filename).toPath(), toLines(model));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<PeakModel> purity) {
+    private static List<String> toLines(@NotNull final List<PeakModel> model) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().map(PeakModelFile::toString).forEach(lines::add);
+        model.stream().map(PeakModelFile::toString).forEach(lines::add);
         return lines;
     }
 
