@@ -206,7 +206,7 @@ public class SvChain {
         return mIsClosedLoop || (mSvList.size() == 1 && mSvList.get(0).type() == DUP);
     }
 
-    public void closeChain()
+    public void closeChain(final String reason, int linkIndex)
     {
         final SvBreakend chainStart = getOpenBreakend(true);
         final SvBreakend chainEnd = getOpenBreakend(false);
@@ -218,7 +218,10 @@ public class SvChain {
             return;
         }
 
-        mLinkedPairs.add(SvLinkedPair.from(chainEnd, chainStart));
+        SvLinkedPair link = SvLinkedPair.from(chainEnd, chainStart);
+        link.setLinkReason(reason, linkIndex);
+
+        mLinkedPairs.add(link);
         mIsClosedLoop = true;
 
         mLinkSum += chainEnd.getSV().dbId() + chainStart.getSV().dbId();

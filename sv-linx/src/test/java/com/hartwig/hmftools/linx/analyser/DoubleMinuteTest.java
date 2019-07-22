@@ -16,6 +16,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -55,7 +56,6 @@ public class DoubleMinuteTest
         assertTrue(cluster.getChains().get(0).isClosedLoop());
     }
 
-    @Ignore
     @Test
     public void testChainedDM()
     {
@@ -83,11 +83,12 @@ public class DoubleMinuteTest
         assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
 
         assertTrue(cluster.getChains().size() == 1);
-        // assertEquals(2, cluster.getChains().get(0).getLinkCount());
-        // assertTrue(cluster.getChains().get(0).isClosedLoop());
+        SvChain chain = cluster.getChains().get(0);
+        assertEquals(2, chain.getLinkCount());
+        assertEquals(2, chain.getSvCount());
+        assertTrue(chain.isClosedLoop());
     }
 
-    @Ignore
     @Test
     public void testChainedDMWithMinors()
     {
@@ -136,7 +137,9 @@ public class DoubleMinuteTest
         assertTrue(cluster.getDoubleMinuteSVs().contains(var4));
 
         assertTrue(cluster.getChains().size() == 1);
-        // assertTrue(cluster.getChains().get(0).isClosedLoop());
+        SvChain chain = cluster.getChains().get(0);
+        assertEquals(18, chain.getLinkCount());
+        assertEquals(6, chain.getSvCount());
     }
 
     @Test

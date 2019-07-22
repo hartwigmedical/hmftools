@@ -307,7 +307,7 @@ public class ChainFinder
         mLinkAllocator.initialise(mClusterId);
         mRuleSelector.initialise(mClusterId, mHasReplication);
 
-        mDoubleMinuteSVs.addAll(cluster.getDoubleMinuteSVs());
+        mDoubleMinuteSVs.addAll(svList);
     }
 
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
@@ -447,19 +447,7 @@ public class ChainFinder
 
         // any identical chains (including precise subsets of longer chains) will have their replicated SVs entirely removed
         if(!mUniqueChains.contains(newChain))
-        {
-            /* the replicated SVs from outside the chain finder will no longer match
-            boolean allReplicatedSVs = newChain.getSvCount(false) == 0;
-
-            // remove these replicated SVs as well as the replicated chain
-            if(allReplicatedSVs)
-            {
-                newChain.getSvList().stream().forEach(x -> cluster.removeReplicatedSv(x));
-            }
-            */
-
             return;
-        }
 
         cluster.addChain(newChain, false, true);
     }
@@ -1021,16 +1009,6 @@ public class ChainFinder
         return breakend.isAssembledLink() && mLinkAllocator.getUnlinkedBreakendCount(breakend) == 0;
     }
 
-    protected boolean isDoubleMinuteDup(final SvVarData var)
-    {
-        return mLinkAllocator.isDoubleMinuteDup(var);
-    }
-
-    protected double getUnlinkedCount(final SvVarData var)
-    {
-        return mLinkAllocator.getUnlinkedCount(var);
-    }
-
     private void checkDoubleMinuteChains()
     {
         // if there is a single chain which contains all DM SVs, attempt to close the chain
@@ -1041,71 +1019,6 @@ public class ChainFinder
             return;
 
         SvChain chain = mChains.get(0);
-
-        // allow any excess breakends from a single DM DUP to be added to the chain
-        /* probably no point since just creates replicated identical links and won't impact visualisation
-
-        if(isDoubleMinuteDup())
-        {
-            final SvVarData dupDM = mDoubleMinuteSVs.get(0);
-            final SvBreakend dupStart = dupDM.getBreakend(true);
-            final SvBreakend dupEnd = dupDM.getBreakend(false);
-
-            int remainingBreakends = min(getUnlinkedBreakendCount(dupStart), getUnlinkedBreakendCount(dupEnd));
-
-            if(remainingBreakends > 0)
-            {
-                LOGGER.debug("cluster({}) adding DUP pair to DM chain {} times", mClusterId, remainingBreakends);
-
-                if(chain.getFirstSV().equals(dupDM, true) || chain.getLastSV().equals(dupDM, true))
-                {
-                    final List<SvBreakend> startBreakendList = mUnlinkedBreakendMap.get(dupStart);
-                    final List<SvBreakend> endBreakendList = mUnlinkedBreakendMap.get(dupEnd);
-
-                    // work out which end of the chain has this DUP if any
-                    boolean linkOnStart = chain.getFirstSV().equals(dupDM, true);
-
-                    for(int i = 0; i < remainingBreakends; ++i)
-                    {
-                        SvBreakend chainBreakend = chain.getOpenBreakend(linkOnStart);
-
-                        SvBreakend otherBreakendOrig = dupStart == chainBreakend.getOrigBreakend() ? dupEnd : dupStart;
-                        SvBreakend otherBreakend = findUnlinkedMatchingBreakend(otherBreakendOrig);
-
-                        if(otherBreakend == null || chainBreakend.getSV() == otherBreakend.getSV())
-                            break;
-
-                        SvLinkedPair newLink = SvLinkedPair.from(chainBreakend, otherBreakend);
-
-                        chain.addLink(newLink, linkOnStart);
-                        newLink.setLinkReason(LR_METHOD_DM_DUP, mLinkIndex++);
-
-                        if(chainBreakend.usesStart())
-                        {
-                            startBreakendList.remove(chainBreakend);
-                            endBreakendList.remove(otherBreakend);
-                        }
-                        else
-                        {
-                            startBreakendList.remove(otherBreakend);
-                            endBreakendList.remove(chainBreakend);
-                        }
-                    }
-                }
-                else
-                {
-                    // just add the extra links even though they're not in the correct location
-                    for(int i = 0; i < remainingBreakends; ++i)
-                    {
-                        SvLinkedPair newLink = SvLinkedPair.from(dupStart, dupEnd);
-
-                        chain.addLink(newLink, 0);
-                        newLink.setLinkReason(LR_METHOD_DM_DUP, mLinkIndex++);
-                    }
-                }
-            }
-        }
-        */
 
         int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x, true)).count();
 
@@ -1123,9 +1036,7 @@ public class ChainFinder
 
                 if (chain.linkWouldCloseChain(pair))
                 {
-                    chain.addLink(pair, true);
-                    pair.setLinkReason(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
-
+                    chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
                     LOGGER.debug("cluster({}) closed DM chain", mClusterId);
                 }
             }

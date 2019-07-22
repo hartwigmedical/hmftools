@@ -85,7 +85,7 @@ public class ChainingSimpleTest
         assertTrue(chain.canAddLinkedPairToEnd(lp5));
         assertTrue(chain.linkWouldCloseChain(lp5));
 
-        chain.closeChain();
+        chain.closeChain("CLOSE", 0);
         assertTrue(chain.isClosedLoop());
         assertEquals(5, chain.getLinkCount());
 

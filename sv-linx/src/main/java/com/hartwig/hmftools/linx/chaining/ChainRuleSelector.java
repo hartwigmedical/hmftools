@@ -258,7 +258,8 @@ public class ChainRuleSelector
                     else
                     {
                         proposedLinks.remove(otherLink);
-                    }*/
+                    }
+                    */
 
                     // keep both for now and let downstream rules decide
                     ++index;
