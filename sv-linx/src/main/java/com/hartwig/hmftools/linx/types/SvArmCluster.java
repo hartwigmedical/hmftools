@@ -216,7 +216,7 @@ public class SvArmCluster
 
         if((foldbackCount % 2) == 2)
         {
-            LOGGER.warn("cluster({}) armgGroup({}) has invalid foldback count({})", mCluster.id(), toString(), foldbackCount);
+            LOGGER.warn("cluster({}) armGroup({}) has invalid foldback count({})", mCluster.id(), toString(), foldbackCount);
         }
         else
         {

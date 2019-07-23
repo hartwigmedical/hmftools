@@ -79,8 +79,6 @@ public class StatisticRoutines
         statsRoutines.loadConfig(cmd, outputDir);
         statsRoutines.runStatistics();
         LOGGER.info("run complete");
-
-        LOGGER.info("multiple-biopsy analysis complete");
     }
 
     private static Options createBasicOptions()

@@ -261,10 +261,10 @@ public class DriverGeneAnnotator
         if(driverGene.category() == TSG && driverGene.driver() == DriverType.DEL)
             return true;
 
-        if(driverGene.category() == TSG && driverGene.likelihoodMethod() == LikelihoodMethod.BIALLELIC)
+        if(driverGene.category() == TSG && driverGene.biallelic())
         {
             // need to look for an LOH
-            return driverGene.biallelic();
+            return true;
         }
 
         if(driverGene.category() == ONCO && driverGene.driver() == DriverType.AMP)
