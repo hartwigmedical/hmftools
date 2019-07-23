@@ -219,19 +219,6 @@ public class ClusterAnnotations
                     // how many SVs are traversed by this link
                     pair.setTraversedSVCount(getTraversedSvCount(cluster, breakendList,
                             pair.getBreakend(true).getChrPosIndex(), pair.getBreakend(false).getChrPosIndex()));
-
-                    // closest DB info
-                    SvLinkedPair dbFirst = pair.first().getDBLink(pair.firstLinkOnStart());
-                    SvLinkedPair dbSecond = pair.second().getDBLink(pair.secondLinkOnStart());
-
-                    pair.setDBLenFirst(dbFirst != null ? dbFirst.length() : NO_DB_MARKER);
-                    pair.setDBLenSecond(dbSecond != null ? dbSecond.length() : NO_DB_MARKER);
-
-                    // whether this pair is on the same arm as the chain ends
-                    if(startEndArms.contains(pair.firstBreakend().getChrArm()))
-                    {
-                        pair.setOnArmOfOrigin(true);
-                    }
                 }
             }
         }
@@ -344,9 +331,8 @@ public class ClusterAnnotations
     }
 
     private static int CHAIN_TI_COUNT = 0;
-    private static int CHAIN_TI_DB_COUNT = 1;
-    private static int CHAIN_TI_SHORT_COUNT = 2;
-    private static int CHAIN_TI_ASMB_COUNT = 3;
+    private static int CHAIN_TI_SHORT_COUNT = 1;
+    private static int CHAIN_TI_ASMB_COUNT = 2;
 
     public static void annotateChainedClusters(final SvCluster cluster, long proximityCutoff)
     {
@@ -414,17 +400,12 @@ public class ClusterAnnotations
             if(!endChrArm.isEmpty())
                 armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
 
-            int shortTICount = 0;
-            long chainLinkLength = 0;
-
             for(final SvLinkedPair pair : chain.getLinkedPairs())
             {
                 final SvVarData first = pair.first();
 
                 if(pair.first().type() == SGL || pair.second().type() == SGL)
                     continue;
-
-                chainLinkLength += pair.length();
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
@@ -438,16 +419,9 @@ public class ClusterAnnotations
 
                 ++armData[CHAIN_TI_COUNT];
 
-                if((pair.getDBLenFirst() > NO_DB_MARKER && pair.getDBLenFirst() <= proximityCutoff)
-                || (pair.getDBLenSecond() > NO_DB_MARKER && pair.getDBLenSecond() <= proximityCutoff))
-                {
-                    ++armData[CHAIN_TI_DB_COUNT];
-                }
-
                 if(pair.length() <= SHORT_TI_LENGTH)
                 {
                     ++armData[CHAIN_TI_SHORT_COUNT];
-                    ++shortTICount;
 
                     if(pair.isAssembled())
                         ++armData[CHAIN_TI_ASMB_COUNT];

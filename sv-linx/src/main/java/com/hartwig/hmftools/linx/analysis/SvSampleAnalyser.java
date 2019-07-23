@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
@@ -770,8 +772,8 @@ public class SvSampleAnalyser {
             mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
             mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType");
-            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,IsAssembled,TILength");
-            mLinksFileWriter.write(",NextSvDist,NextClusteredSvDist,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
+            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Ploidy,PloidyUncertainty");
+            mLinksFileWriter.write(",IsAssembled,TILength,NextSvDist,NextClusteredSvDist,TraversedSVCount");
             mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
             mLinksFileWriter.write(",Id1,Id2,ChrArm,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
             mLinksFileWriter.newLine();
@@ -801,38 +803,42 @@ public class SvSampleAnalyser {
                     boolean chainConsistent = chain.isConsistent();
 
                     List<SvLinkedPair> uniquePairs = Lists.newArrayList();
+                    final List<SvLinkedPair> chainLinks = chain.getLinkedPairs();
 
-                    for (int chainIndex = 0; chainIndex < chain.getLinkedPairs().size(); ++chainIndex)
+                    for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                     {
-                        final SvLinkedPair pair = chain.getLinkedPairs().get(chainIndex);
+                        final SvLinkedPair pair = chainLinks.get(chainIndex);
 
                         if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
                             continue;
 
                         uniquePairs.add(pair);
 
+                        String chainIndexStr = String.valueOf(chainIndex);
+
+                        for(int j = chainIndex + 1; j < chainLinks.size(); ++j)
+                        {
+                            if(chainLinks.get(j).matches(pair))
+                            {
+                                chainIndexStr = appendStr(chainIndexStr, String.valueOf(j), ';');
+                            }
+                        }
+
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd = pair.getBreakend(false);
 
                         if(mLinksFileWriter != null)
                         {
-
-//                            mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType");
-//                            mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChrArm,IsAssembled,TILength");
-//                            mLinksFileWriter.write(",NextSvDist,NextClusteredSvDist,TraversedSVCount,DBLenStart,DBLenEnd,OnArmOfOrigin");
-//                            mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
-//                            mLinksFileWriter.write(",Id1,Id2,PosStart,PosEnd,LocTopTypeStart,LocTopTypeEnd,GeneStart,GeneEnd,ExonMatch");
-
                             mLinksFileWriter.write(String.format("%s,%d,%s,%d,%s",
                                     mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType()));
 
-                            mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%d",
-                                    chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex()));
+                            mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%d,%s,%s,%.3f",
+                                    chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex(),
+                                    chainIndexStr, formatPloidy(chain.ploidy()), chain.ploidyUncertainty()));
 
-                            mLinksFileWriter.write(String.format(",%s,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s",
+                            mLinksFileWriter.write(String.format(",%s,%d,%d,%d,%d,%s,%d,%s",
                                     pair.isAssembled(), pair.length(),
                                     pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
-                                    pair.getDBLenFirst(), pair.getDBLenSecond(), pair.onArmOfOrigin(),
                                     pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
 
                             SvArmCluster acStart = cluster.findArmCluster(beStart);

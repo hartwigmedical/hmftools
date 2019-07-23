@@ -21,12 +21,9 @@ public class SvLinkedPair {
     // other annotations
     private String mLinkReason;
     private int mLinkIndex;
-    private int mDBLenFirst;
-    private int mDBLenSecond;
     private int mTraversedSVCount;
     private int mNextSvDistance;
     private int mNextClusteredSvDistance;
-    private boolean mOnArmOfOrigin;
     private String mLocationType;
     private int mOverlapCount;
     private boolean mHasCopyNumberGain;
@@ -57,12 +54,9 @@ public class SvLinkedPair {
 
         mLinkReason = "";
         mLinkIndex = -1;
-        mDBLenFirst = 0;
-        mDBLenSecond = 0;
         mTraversedSVCount = 0;
         mNextSvDistance = 0;
         mNextClusteredSvDistance = 0;
-        mOnArmOfOrigin = false;
         mLocationType = LOCATION_TYPE_UNCLEAR;
         mOverlapCount = 0;
         mHasCopyNumberGain = false;
@@ -158,12 +152,6 @@ public class SvLinkedPair {
 
     public int getLinkIndex() { return mLinkIndex; }
 
-    public void setDBLenFirst(int length) { mDBLenFirst = length; }
-    public int getDBLenFirst() { return mDBLenFirst; }
-
-    public void setDBLenSecond(int length) { mDBLenSecond = length; }
-    public int getDBLenSecond() { return mDBLenSecond; }
-
     public void setNextSVData(int distance, int clusterDistance)
     {
         mNextSvDistance = distance;
@@ -172,9 +160,6 @@ public class SvLinkedPair {
 
     public long getNextSvDistance() { return mNextSvDistance; }
     public long getNextClusteredSvDistance() { return mNextClusteredSvDistance; }
-
-    public void setOnArmOfOrigin(boolean toggle) { mOnArmOfOrigin = toggle; }
-    public boolean onArmOfOrigin() { return mOnArmOfOrigin; }
 
     public void setLocationType(final String type) { mLocationType = type; }
     public final String locationType() { return mLocationType; }
