@@ -594,8 +594,8 @@ Gene  | CDKN2A | Name of gene
 MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
 MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
 SomaticRegions | 1 | Count of somatic copy number regions this gene spans
-GermlineHomRegions | 0 | Number of regions spanned by this gene that are homozygously deleted in the germline
-GermlineHet2HomRegions | 0 | Number of regions spanned by this gene that are heterozygously deleted in the germline and homozygously deleted in the tumor
+GermlineHomDeletionRegions | 0 | Number of regions spanned by this gene that are homozygously deleted in the germline
+GermlineHetToHomDeletionRegions | 0 | Number of regions spanned by this gene that are both heterozygously deleted in the germline and homozygously deleted in the tumor
 TranscriptId | ENST00000498124 | Ensembl Transcript ID
 TranscriptVersion | 1 | Ensembl Transcript ID Version
 ChromosomeBand | p21.3 | Chromosome Band of the gene
