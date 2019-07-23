@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>ensembl-db</artifactId>
-    <version>89</version>
+    <version>${ensembl.version}</version>
     <packaging>jar</packaging>
     <name>HMF Tools - Ensembl Database Bindings</name>
 

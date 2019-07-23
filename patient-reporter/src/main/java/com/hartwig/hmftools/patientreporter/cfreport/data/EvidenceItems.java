@@ -17,7 +17,7 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static List<EvidenceItem> sort(@NotNull final List<EvidenceItem> evidenceItems) {
+    public static List<EvidenceItemMerger> sort(@NotNull final List<EvidenceItemMerger> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
             if (item1.level().equals(item2.level())) {
                 if (item1.event().equals(item2.event())) {
@@ -32,7 +32,7 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull final EvidenceItem item) {
+    public static String sourceUrl(@NotNull final EvidenceItemMerger item) {
         String source = item.source().sourceName();
         String reference = item.reference();
         String gene = item.event();
