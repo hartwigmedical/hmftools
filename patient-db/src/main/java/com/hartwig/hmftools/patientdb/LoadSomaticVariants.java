@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,7 +18,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentComplete;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentLoadSomatics;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -32,7 +31,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
@@ -43,7 +41,6 @@ public class LoadSomaticVariants {
     private static final String SAMPLE = "sample";
     private static final String HOTSPOT = "hotspot";
     private static final String VCF_FILE = "vcf_file";
-    private static final String REF_GENOME = "ref_genome";
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -57,7 +54,6 @@ public class LoadSomaticVariants {
         final CommandLine cmd = createCommandLine(args, options);
         final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-        final String fastaFileLocation = cmd.getOptionValue(REF_GENOME);
         final String sample = cmd.getOptionValue(SAMPLE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
         final CompoundFilter filter = new CompoundFilter(true);
@@ -78,14 +74,10 @@ public class LoadSomaticVariants {
         LOGGER.info("Reading high confidence bed file: {}", highConfidenceBed);
         final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
-        LOGGER.info("Loading indexed fasta reference file: {}", fastaFileLocation);
-        IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(fastaFileLocation));
-
         LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
         final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(filter,
                 compoundEnrichment,
-                VariantContextEnrichmentComplete.factory(indexedFastaSequenceFile, highConfidenceRegions))
-                .fromVCFFile(sample, vcfFileLocation);
+                VariantContextEnrichmentLoadSomatics.factory(highConfidenceRegions)).fromVCFFile(sample, vcfFileLocation);
 
         LOGGER.info("Querying purple database");
         final List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
@@ -118,7 +110,6 @@ public class LoadSomaticVariants {
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
-        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
         options.addOption(VCF_FILE, true, "Path to the vcf file.");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file.");
         options.addOption(DB_USER, true, "Database user name.");
