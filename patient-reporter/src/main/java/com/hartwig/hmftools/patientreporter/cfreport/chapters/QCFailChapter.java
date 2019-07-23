@@ -151,6 +151,7 @@ public class QCFailChapter implements ReportChapter {
                 failReport.sampleReport().sampleId(),
                 " and the tissue ID of pathology is: ",
                 failReport.sampleReport().hospitalPathologySampleId()));
+        divColumn1.add(obtainedResults());
         divColumn1.add(tumorSampleDataText());
         divColumn1.add(bloodSampleDataText());
         return divColumn1;
@@ -165,6 +166,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add((recipientText()));
         divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
+        divColumn2.add(relatedSamples());
+        divColumn2.add(sentivityResults());
         divColumn2.add((questionsText()));
         return divColumn2;
     }
@@ -193,6 +196,7 @@ public class QCFailChapter implements ReportChapter {
                 failReport.sampleReport().projectName(),
                 " and the submission ID is ",
                 failReport.sampleReport().submissionId()));
+        divColumn1.add(obtainedResults());
         divColumn1.add(tumorSampleDataText());
         divColumn1.add(bloodSampleDataText());
         return divColumn1;
@@ -210,6 +214,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
+        divColumn2.add(relatedSamples());
+        divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
     }
@@ -242,6 +248,7 @@ public class QCFailChapter implements ReportChapter {
                         .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
         divColumn1.add(createContentParagraph("The HMF sample ID is ", failReport.sampleReport().sampleId()));
+        divColumn1.add(obtainedResults());
         divColumn1.add(tumorSampleDataText());
         divColumn1.add(bloodSampleDataText());
         divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
@@ -258,24 +265,32 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(recipientText());
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
+        divColumn2.add(relatedSamples());
+        divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
     }
 
-    // TODO (DEV-812): Create CAR first
-    //    @NotNull
-    //    private static Paragraph relatedSamples() {
-    //        return createContentParagraph("The results stated in these report are based on the tested tumor and blood sample.");
-    //    }
+    @NotNull
+    private static Paragraph relatedSamples() {
+        return createContentParagraph("The results stated in these report are based on the tested tumor and blood sample.");
+    }
 
-    //    @NotNull
-    //    private Paragraph obtainedResults() {
-    //        String earliestArrivalDate = failReport.sampleReport().earliestArrivalDate();
-    //        return createContentParagraphTwice("The results in this report have been obtained between ",
-    //                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
-    //                " and ",
-    //                ReportResources.REPORT_DATE);
-    //    }
+    @NotNull
+    private Paragraph obtainedResults() {
+        String earliestArrivalDate = failReport.sampleReport().earliestArrivalDate();
+        return createContentParagraphTwice("The results in this report have been obtained between ",
+                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
+                " and ",
+                ReportResources.REPORT_DATE);
+    }
+
+    @NotNull
+    private Paragraph sentivityResults() {
+        return createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
+                + "of somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a "
+                + "purity above 20%, the test has a sensitivity of >90%.");
+    }
 
     @NotNull
     private static Paragraph versionPatientReport() {
