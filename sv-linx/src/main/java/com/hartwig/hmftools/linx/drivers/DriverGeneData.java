@@ -46,7 +46,7 @@ public class DriverGeneData
         if(DriverData.driver() == DEL)
             return mEvents.size() >= 2;
 
-        return mEvents.size() > 1;
+        return mEvents.size() >= 1;
     }
 
     public String toString()
