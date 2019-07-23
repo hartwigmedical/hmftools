@@ -330,6 +330,7 @@ public class SvChain {
 
         // look for chains with opposite breakends of the same SV
         int index1 = 0;
+        boolean skippedChainClosing = false;
 
         while(index1 < chains.size() - 1)
         {
@@ -353,11 +354,19 @@ public class SvChain {
                 }
 
                 // avoid merging chains which close a loop
-                // final SvLinkedPair chain2Pair = SvLinkedPair.from(
-                //        chain2.getOpenBreakend(true).getOtherBreakend(), chain2.getOpenBreakend(false).getOtherBreakend());
+                /*
+                if(chain2.getOpenBreakend(true) != null && chain2.getOpenBreakend(false) != null)
+                {
+                    final SvLinkedPair chain2Pair = SvLinkedPair.from(
+                            chain2.getOpenBreakend(true).getOtherBreakend(), chain2.getOpenBreakend(false).getOtherBreakend());
 
-                // if(chain1.linkWouldCloseChain(chain2Pair))
-                //    continue;
+                    if (chain1.linkWouldCloseChain(chain2Pair))
+                    {
+                        skippedChainClosing = true;
+                        continue;
+                    }
+                }
+                */
 
                 boolean ploidyMatched = copyNumbersEqual(chain1.ploidy(), chain2.ploidy())
                         || ploidyOverlap(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
@@ -448,6 +457,13 @@ public class SvChain {
             if (!chainsMerged)
             {
                 ++index1;
+            }
+            else if(skippedChainClosing)
+            {
+                // need to retry from the beginning
+                skippedChainClosing = false;
+                index1 = 0;
+
             }
         }
     }

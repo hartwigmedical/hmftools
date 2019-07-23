@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep17;
+import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep22;
 import org.jooq.InsertValuesStep5;
 import org.jooq.InsertValuesStep9;
@@ -144,7 +144,7 @@ class StructuralVariantClusterDAO
 
         for (List<LinxLink> batch : Iterables.partition(links, DB_BATCH_INSERT_SIZE))
         {
-            InsertValuesStep17 inserter = context.insertInto(SVLINK,
+            InsertValuesStep18 inserter = context.insertInto(SVLINK,
                     SVLINK.SAMPLEID,
                     SVLINK.MODIFIED,
                     SVLINK.CLUSTERID,
@@ -161,6 +161,7 @@ class StructuralVariantClusterDAO
                     SVLINK.TRAVERSEDSVCOUNT,
                     SVLINK.LINKLENGTH,
                     SVLINK.PLOIDY,
+                    SVLINK.PLOIDYUNCERTAINTY,
                     SVLINK.PSEUDOGENEINFO);
 
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
@@ -168,14 +169,14 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep17 inserter, final String sample, final LinxLink link)
+    private static void addRecord(Timestamp timestamp, InsertValuesStep18 inserter, final String sample, final LinxLink link)
     {
         //noinspection unchecked
         inserter.values(sample,
                 timestamp,
                 link.clusterId(),
                 link.chainId(),
-                link.chainIndex(),
+                DatabaseUtil.checkStringLength(link.chainIndex(), SVLINK.CHAININDEX),
                 link.chainCount(),
                 link.lowerSvId(),
                 link.upperSvId(),
@@ -186,7 +187,8 @@ class StructuralVariantClusterDAO
                 link.assembled(),
                 link.traversedSVCount(),
                 link.length(),
-                DatabaseUtil.decimal(link.ploidy()),
+                link.ploidy(),
+                link.ploidyUncertainty(),
                 link.pseudogeneInfo());
     }
 

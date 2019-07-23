@@ -793,8 +793,6 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getSvCount();
 
-                // isSpecificCluster(cluster);
-
                 List<SvChain> chains = cluster.getChains();
 
                 for (final SvChain chain : chains)
@@ -858,13 +856,11 @@ public class SvSampleAnalyser {
                         {
                             final String linkArm = beStart.arm() == beEnd.arm() ? beStart.arm() : beStart.arm() + "_" + beEnd.arm();
 
-                            double ploidy = DatabaseUtil.decimal((beStart.getSV().ploidy() + beEnd.getSV().ploidy()) * 0.5);
-
                             linksData.add(ImmutableLinxLink.builder()
                                     .clusterId(cluster.id())
                                     .chainId(chain.id())
                                     .chainCount(chainSvCount)
-                                    .chainIndex(chainIndex)
+                                    .chainIndex(chainIndexStr)
                                     .lowerSvId(beStart.getOrigSV().dbId())
                                     .upperSvId(beEnd.getOrigSV().dbId())
                                     .lowerBreakendIsStart(beStart.usesStart())
@@ -874,7 +870,8 @@ public class SvSampleAnalyser {
                                     .assembled(pair.isAssembled())
                                     .traversedSVCount(pair.getTraversedSVCount())
                                     .length(pair.length())
-                                    .ploidy(ploidy)
+                                    .ploidy(DatabaseUtil.decimal(chain.ploidy()))
+                                    .ploidyUncertainty(DatabaseUtil.decimal(chain.ploidyUncertainty()))
                                     .pseudogeneInfo(pair.getExonMatchData())
                                     .build());
                         }

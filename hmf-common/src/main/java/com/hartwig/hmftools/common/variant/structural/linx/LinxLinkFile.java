@@ -67,6 +67,7 @@ public class LinxLinkFile
                 .add("traversedSVCount")
                 .add("length")
                 .add("ploidy")
+                .add("ploidyUncertainty")
                 .add("pseudogeneInfo")
                 .toString();
     }
@@ -88,6 +89,7 @@ public class LinxLinkFile
                 .add(String.valueOf(svData.traversedSVCount()))
                 .add(String.valueOf(svData.length()))
                 .add(String.valueOf(svData.ploidy()))
+                .add(String.valueOf(svData.ploidyUncertainty()))
                 .add(String.valueOf(svData.pseudogeneInfo()))
                 .toString();
     }
@@ -102,7 +104,7 @@ public class LinxLinkFile
         return ImmutableLinxLink.builder()
                 .clusterId(Integer.valueOf(values[index++]))
                 .chainId(Integer.valueOf(values[index++]))
-                .chainIndex(Integer.valueOf(values[index++]))
+                .chainIndex(values[index++])
                 .chainCount(Integer.valueOf(values[index++]))
                 .upperSvId(Integer.valueOf(values[index++]))
                 .lowerSvId(Integer.valueOf(values[index++]))
@@ -114,6 +116,7 @@ public class LinxLinkFile
                 .traversedSVCount(Integer.valueOf(values[index++]))
                 .length(Long.valueOf(values[index++]))
                 .ploidy(Integer.valueOf(values[index++]))
+                .ploidyUncertainty(Integer.valueOf(values[index++]))
                 .pseudogeneInfo(values[index++])
                 .build();
     }

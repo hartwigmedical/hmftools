@@ -7,7 +7,7 @@ public abstract class LinxLink
 {
     public abstract int clusterId();
     public abstract int chainId();
-    public abstract int chainIndex();
+    public abstract String chainIndex();
     public abstract int chainCount();
     public abstract int lowerSvId();
     public abstract int upperSvId();
@@ -19,5 +19,6 @@ public abstract class LinxLink
     public abstract int traversedSVCount();
     public abstract long length();
     public abstract double ploidy();
+    public abstract double ploidyUncertainty();
     public abstract String pseudogeneInfo();
 }
