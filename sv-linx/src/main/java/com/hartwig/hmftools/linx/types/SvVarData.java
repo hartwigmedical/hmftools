@@ -653,6 +653,11 @@ public class SvVarData
     public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mPloidy; }
     public double ploidyUncertainty() { return mHasCalcPloidy ? mPloidy - mPloidyMin : 0; }
 
+    public double calcVaf(boolean isStart)
+    {
+        return copyNumberChange(isStart) / copyNumber(isStart);
+    }
+
     public final SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
     {
         return isStart ? (isPrevious ? mCnDataPrevStart : mCnDataPostStart) : (isPrevious ? mCnDataPrevEnd : mCnDataPostEnd);

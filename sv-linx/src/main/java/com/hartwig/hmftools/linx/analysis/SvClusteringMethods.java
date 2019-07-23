@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
@@ -38,6 +40,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -98,7 +101,6 @@ public class SvClusteringMethods {
     }
 
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public final List<LohEvent> getLohEventList() { return mLohEventList; }
     public int getNextClusterId() { return mNextClusterId++; }
 
     public void setSampleCnEventData(final List<LohEvent> lohEvents, List<HomLossEvent> homLossEvents)
@@ -123,7 +125,10 @@ public class SvClusteringMethods {
             ResolvedType exclusionReason = NONE;
             if(var.type() != SGL)
             {
-                exclusionReason = DUP_BE;
+                if(var.isEquivBreakend())
+                    exclusionReason = DUP_BE;
+                else
+                    exclusionReason = LOW_VAF;
             }
             else
             {
@@ -254,9 +259,6 @@ public class SvClusteringMethods {
                 currentIndex = nextIndex;
             }
         }
-
-        // no longer necessary since is done after all merging and resolving is complete
-        // splitDelClusters(clusters);
     }
 
     public static void addClusterReasons(final SvVarData var1, final SvVarData var2, final String clusterReason)
@@ -264,53 +266,6 @@ public class SvClusteringMethods {
         var1.addClusterReason(clusterReason, var2.id());
         var2.addClusterReason(clusterReason, var1.id());
         // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
-    }
-
-    public static void checkClusteringClonalDiscrepancy(final SvVarData var1, final SvVarData var2, final String clusterReason)
-    {
-        boolean varLowCns1 = hasLowCNChangeSupport(var1);
-        boolean varLowCns2 = hasLowCNChangeSupport(var2);
-
-        if(varLowCns1 == varLowCns2)
-            return;
-
-        // skip if SVs are within range of each other given uncertainty or if ploidy is above the low-support level
-        if(var1.ploidyMin() > LOW_CN_CHANGE_SUPPORT && var2.ploidyMin() > LOW_CN_CHANGE_SUPPORT)
-            return;
-
-        if((varLowCns1 && var1.ploidyMax() >= var2.ploidyMin()) || (varLowCns2 && var2.ploidyMax() >= var1.ploidyMin()))
-            return;
-
-        boolean hasAssembledLink = false;
-
-        for(int be1 = SE_START; be1 <= SE_END; ++be1)
-        {
-            for(int be2 = SE_START; be2 <= SE_END; ++be2)
-            {
-                if (haveLinkedAssemblies(var1, var2, isStart(be1), isStart(be2)))
-                {
-                    hasAssembledLink = true;
-                    break;
-                }
-            }
-        }
-
-        // log to CSV for clustering analysis
-
-        // SvId1,SvId2,ClusterReason,HasAssembly,Ploidy1,Ploidy2,PloidyMin1,PloidyMin2,PloidyMax1,PloidyMax2,
-        // CNChgStart1,CNChgStart2,CNChgEnd1,CNChgEnd2,CNStart1,CNStart2,CNEnd1,CNEnd2
-
-        String output = String.format("%s,%s,%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                var1.id(), var2.id(), clusterReason, hasAssembledLink,
-                var1.ploidy(), var2.ploidy(), var1.ploidyMin(), var2.ploidyMin(), var1.ploidyMax(), var2.ploidyMax());
-
-        output += String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                var1.copyNumberChange(true), var2.copyNumberChange(true),
-                var1.copyNumberChange(false), var2.copyNumberChange(false),
-                var1.copyNumber(true), var2.copyNumber(true),
-                var1.copyNumber(false), var2.copyNumber(false));
-
-        LOGGER.info("INCONS_PLOIDY_CLUSTER: {}", output);
     }
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
@@ -1205,41 +1160,86 @@ public class SvClusteringMethods {
             addSvToChrBreakendMap(var, mChrBreakendMap);
         }
 
-        markAndRemoveDuplicationBreakends();
-
-        // cache indicies for faster look-up
-        for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        // set indices
+        for(List<SvBreakend> breakendList : mChrBreakendMap.values())
         {
-            List<SvBreakend> breakendList = entry.getValue();
-
             for (int i = 0; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                breakend.setChrPosIndex(i);
+                breakendList.get(i).setChrPosIndex(i);
             }
         }
+
+        filterExcludedBreakends();
     }
 
-    public static int PERMITED_SGL_DUP_BE_DISTANCE = 1;
-    public static int PERMITED_DUP_BE_DISTANCE = 35;
+    private static final double LOW_VAF_THRESHOLD = 0.2;
+    private static final int SHORT_INV_DISTANCE = 100;
+    private static final int ISOLATED_BND_DISTANCE = 5000;
 
-    private void markAndRemoveDuplicationBreakends()
+    public static final int PERMITED_SGL_DUP_BE_DISTANCE = 1;
+    public static final int PERMITED_DUP_BE_DISTANCE = 35;
+
+    private boolean isIsolatedLowVafBnd(final SvVarData var)
     {
-        List<SvVarData> dupSVs = Lists.newArrayList();
+        if(!hasLowCNChangeSupport(var))
+            return false;
 
-        // first find and mark duplicate breakends
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            final SvBreakend breakend = var.getBreakend(isStart(se));
+            final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
+
+            int i = breakend.getChrPosIndex();
+
+            boolean isolatedDown = (i == 0) ? true
+                    : breakend.position() - breakendList.get(i - 1).position() >= ISOLATED_BND_DISTANCE;
+
+            boolean isolatedUp = (i >= breakendList.size() - 1) ? true
+                    : breakendList.get(i + 1).position() - breakend.position() >= ISOLATED_BND_DISTANCE;
+
+            if(!isolatedDown || !isolatedUp)
+                return false;
+
+        }
+
+        return true;
+    }
+
+    private boolean isLowVafInversion(final SvBreakend breakend, final SvBreakend nextBreakend)
+    {
+        final SvVarData var = breakend.getSV();
+
+        if(nextBreakend.getSV() != var || nextBreakend.position() - breakend.position() > SHORT_INV_DISTANCE)
+            return false;
+
+        return hasLowCNChangeSupport(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
+    }
+
+    private void filterExcludedBreakends()
+    {
+        // filter out duplicate breakends and low-CN change support INVs and BNDs
+        // breakends aren't actually removed until all chromosomes have been processed so that the indices can be preserved for various tests
+        Map<String,List<SvBreakend>> breakendRemovalMap = Maps.newHashMap();
+
         for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
+            final String chromosome = entry.getKey();
             List<SvBreakend> breakendList = entry.getValue();
 
             int breakendCount = breakendList.size();
 
-            List<SvBreakend> removalList = Lists.newArrayList();
+            List<SvBreakend> removalList = breakendRemovalMap.get(chromosome);
 
-            for(int i = 0; i < breakendList.size(); ++i)
+            if(removalList == null)
+            {
+                removalList = Lists.newArrayList();
+                breakendRemovalMap.put(chromosome, removalList);
+            }
+
+            for(int i = 0; i < breakendCount; ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
-                SvVarData var = breakend.getSV();
+                final SvVarData var = breakend.getSV();
 
                 if(var.isNoneSegment())
                     continue;
@@ -1255,10 +1255,28 @@ public class SvClusteringMethods {
                     continue;
                 }
 
+                if(var.type() == BND && isIsolatedLowVafBnd(var))
+                {
+                    LOGGER.debug("SV({}) filtered low VAF isolated BND", var.id());
+                    removalList.add(breakend);
+                    removeRemoteBreakend(breakend.getOtherBreakend(), breakendRemovalMap);
+                    mExcludedSVs.add(var);
+                    continue;
+                }
+
                 if(i >= breakendCount - 1)
                     break;
 
                 SvBreakend nextBreakend = breakendList.get(i + 1);
+
+                if(var.type() == INV && isLowVafInversion(breakend, nextBreakend))
+                {
+                    LOGGER.debug("SV({}) filtered low VAF / CN change INV", var.id());
+                    removalList.add(breakend);
+                    removalList.add(nextBreakend);
+                    mExcludedSVs.add(var);
+                    continue;
+                }
 
                 if(nextBreakend.getSV() == var)
                     continue;
@@ -1312,8 +1330,7 @@ public class SvClusteringMethods {
                             }
                             else
                             {
-                                List<SvBreakend> otherList = mChrBreakendMap.get(otherBe.chromosome());
-                                otherList.remove(otherBe);
+                                removeRemoteBreakend(otherBe, breakendRemovalMap);
                             }
                         }
                         else
@@ -1327,16 +1344,45 @@ public class SvClusteringMethods {
                             }
                             else
                             {
-                                List<SvBreakend> otherList = mChrBreakendMap.get(nextOtherBe.chromosome());
-                                otherList.remove(nextOtherBe);
+                                removeRemoteBreakend(nextOtherBe, breakendRemovalMap);
                             }
                         }
                     }
                 }
             }
-
-            removalList.stream().forEach(x -> breakendList.remove(x));
         }
+
+        // now remove filtered breakends
+        for(Map.Entry<String,List<SvBreakend>> entry : breakendRemovalMap.entrySet())
+        {
+            final List<SvBreakend> removalList = entry.getValue();
+
+            if(removalList.isEmpty())
+                continue;
+
+            final List<SvBreakend> breakendList = mChrBreakendMap.get(entry.getKey());
+            removalList.stream().forEach(x -> breakendList.remove(x));
+
+            // and reset indices after excluding breakends
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                breakend.setChrPosIndex(i);
+            }
+        }
+    }
+
+    private void removeRemoteBreakend(final SvBreakend breakend, Map<String,List<SvBreakend>> breakendRemovalMap)
+    {
+        List<SvBreakend> otherList = breakendRemovalMap.get(breakend.chromosome());
+        if(otherList == null)
+        {
+            otherList = Lists.newArrayList();
+            breakendRemovalMap.put(breakend.chromosome(), otherList);
+
+        }
+
+        otherList.add(breakend);
     }
 
     public void annotateNearestSvData()
@@ -1456,239 +1502,5 @@ public class SvClusteringMethods {
 
         return true;
     }
-
-
-    // old synthetic classification methods
-
-    /*
-    public void markInversionPairTypes(SvCluster cluster)
-    {
-        // determine overlap configurations
-
-        // 4 types of inversion pairs
-//        1. DEL with enclosed inverted TI (also know as 'Reciprocal INV') - Have 2 DSB and a ’TI' from the middle which is inverted.
-//            - outer breakends face out (the DEL)
-//            - TI enclosed
-//        2. DEL with external inverted TI
-//            - resultant type = DEL
-//            - length = other 2 breakends
-//        3. DUP with external inverted TI
-//            - 2 x TIs, but TI breakends don't overlap
-//            - type = DUP
-//            - TI and DUP length are interchangable, but choose shorter for TI
-//        4. DUP with enclosed inverted TI
-//            - no overlapping breakends
-//            - TI from the innermost 2
-//            - outer breakends face in
-//            - resultant type = DUP
-//            - length is outside 2 breakends (ie the other 2)
-
-        // first test for a reciprocal inversion, marked by having 2 DBs and the TI > 50% of the length of the synthetic DEL
-        if(cluster.getLinkedPairs().isEmpty())
-            return;
-
-        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
-
-        SvBreakend be1 = tiPair.firstBreakend();
-        SvBreakend be2 = tiPair.secondBreakend();
-        SvBreakend otherBe1 = be1.getOtherBreakend();
-        SvBreakend otherBe2 = be2.getOtherBreakend();
-        SvLinkedPair db1 = be1.getSV().getDBLink(be1.usesStart());
-        SvLinkedPair db2 = be2.getSV().getDBLink(be2.usesStart());
-
-        if(db1 != null && db1.hasBreakend(otherBe2) && db2 != null && db2.hasBreakend(otherBe1))
-        {
-            long syntheticLength = abs(otherBe2.position() - otherBe1.position());
-
-            if(tiPair.length() > 0.5 * syntheticLength)
-            {
-                cluster.setSyntheticData(syntheticLength, tiPair.length());
-                boolean isResolved = syntheticLength < mDelDupCutoffLength;
-                cluster.setResolved(isResolved, RESOLVED_TYPE_RECIPROCAL_INV);
-                return;
-            }
-        }
-
-        resolveSyntheticDelDupCluster(cluster);
-    }
-
-    private boolean resolveSyntheticDelDupCluster(SvCluster cluster)
-    {
-        if(cluster.getLinkedPairs().isEmpty() || cluster.requiresReplication())
-            return false;
-
-        // first work out if there are 1 or 2 templated insertions
-        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
-
-        SvBreakend lowerBreakend = tiPair.getBreakend(true);
-        SvBreakend upperBreakend = tiPair.getBreakend(false);
-
-        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
-        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
-
-        if(otherBe1.orientation() == otherBe2.orientation())
-            return false;
-
-        if(otherBe1.arm() != otherBe2.arm())
-            return false;
-
-        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
-        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
-            return false;
-
-        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
-        // otherwise it's a DEL
-        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
-        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
-
-        // the TI is considered enclosed if boths its ends are within the bounds of the synthetic DEL or DUP
-        // this needs to allow for either end of the TI facing the breakends of a synthetic DEL but within its min TI distance
-        int lowerMinTILengthBuffer = (lowerBreakend.position() < otherLowerBe.position() && otherLowerBe.orientation() == 1) ?
-                getMinTemplatedInsertionLength(lowerBreakend, otherLowerBe) : 0;
-
-        int upperMinTILengthBuffer = (upperBreakend.position() > otherUpperBe.position() && otherUpperBe.orientation() == -1) ?
-                getMinTemplatedInsertionLength(upperBreakend, otherUpperBe) : 0;
-
-        boolean isTIEnclosed = lowerBreakend.position() >= otherLowerBe.position() - lowerMinTILengthBuffer
-                && upperBreakend.position() <= otherUpperBe.position() + upperMinTILengthBuffer;
-
-        String resolvedType = "";
-        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
-
-        if(otherLowerBe.orientation() == 1)
-        {
-            resolvedType = isTIEnclosed ? RESOLVED_TYPE_DEL_INT_TI : RESOLVED_TYPE_DEL_EXT_TI;
-        }
-        else
-        {
-            // no longer calling a DEL with overlap less than the minimum TI distance a DEL
-            resolvedType = isTIEnclosed ? RESOLVED_TYPE_DUP_INT_TI : RESOLVED_TYPE_DUP_EXT_TI;
-        }
-
-        // correct for DB subtracting 1
-        // int delDupLength = otherPair.linkType() == LINK_TYPE_DB ? otherPair.length() + 1 : otherPair.length();
-
-        boolean isResolved = syntheticLength < mDelDupCutoffLength;
-        cluster.setResolved(isResolved, resolvedType);
-        cluster.setSyntheticData(syntheticLength, tiPair.length());
-
-        return true;
-    }
-
-    public void markBndPairTypes(SvCluster cluster)
-    {
-        final SvVarData var1 = cluster.getSV(0);
-        final SvVarData var2 = cluster.getSV(1);
-
-        // possible configurations:
-//            1. Reciprocal Translocation
-//            - 2 DBs, no overlappying breakends OR
-//            - TIs converted to DBs since too short
-//
-//            2. One set of breakends facing (the TI) the other facing away (the DEL)
-//            - DEL with TI
-//
-//            3. Two sets of facing breakends so 2 TIs
-//            - but rather than a closed loop, one set remain unlinked (the overlap being the DUP)
-
-        // isSpecificCluster(cluster);
-
-        if(cluster.getLinkedPairs().isEmpty())
-        {
-            if(arePairedDeletionBridges(var1, var2))
-                cluster.setResolved(true, RESOLVED_TYPE_RECIPROCAL_TRANS);
-
-            return;
-        }
-
-        // first work out if there are 1 or 2 templated insertions
-        SvLinkedPair tiPair = cluster.getLinkedPairs().get(0);
-
-        SvBreakend lowerBreakend = tiPair.getBreakend(true);
-        SvBreakend upperBreakend = tiPair.getBreakend(false);
-
-        SvBreakend otherBe1 = lowerBreakend.getOtherBreakend();
-        SvBreakend otherBe2 = upperBreakend.getOtherBreakend();
-
-        if(otherBe1.orientation() == otherBe2.orientation())
-            return;
-
-        if(otherBe1.arm() != otherBe2.arm() || !otherBe1.chromosome().equals(otherBe2.chromosome()))
-            return;
-
-        // avoid classifying synthetics where the TI crosses other clusters due to uncertainty
-        if(tiPair.isInferred() && tiTraversesComplexSVs(cluster, tiPair))
-            return;
-
-        // if the other breakends face each other beyond the min TI length, this is a synthetic DUP
-        // otherwise it's a DEL
-        SvBreakend otherLowerBe = otherBe1.position() < otherBe2.position() ? otherBe1 : otherBe2;
-        SvBreakend otherUpperBe = otherLowerBe == otherBe1 ? otherBe2 : otherBe1;
-
-        String resolvedType = "";
-        long syntheticLength = otherUpperBe.position() - otherLowerBe.position();
-
-        if(otherLowerBe.orientation() == 1)
-        {
-            resolvedType = RESOLVED_TYPE_DEL_EXT_TI;
-        }
-        else
-        {
-            resolvedType = RESOLVED_TYPE_DUP_EXT_TI;
-        }
-
-        boolean isResolved = syntheticLength < mDelDupCutoffLength;
-        cluster.setResolved(isResolved, resolvedType);
-        cluster.setSyntheticData(syntheticLength, tiPair.length());
-    }
-
-    public boolean markDelDupPairTypes(SvCluster cluster)
-    {
-        if(cluster.getTypeCount(DUP) == 2)
-        {
-            // to prevent misclassification of otherwise randomly clustered DUPs, require an assembled TI
-            if(cluster.getAssemblyLinkedPairs().size() != 1)
-                return false;
-        }
-
-        return resolveSyntheticDelDupCluster(cluster);
-    }
-
-        private boolean tiTraversesComplexSVs(final SvCluster cluster, final SvLinkedPair pair)
-    {
-        // count any non-trivial cluster's SVs crossed by this pair
-        final SvBreakend firstBreakend = pair.first().getBreakend(pair.firstLinkOnStart());
-        final SvBreakend secondBreakend = pair.second().getBreakend(pair.secondLinkOnStart());
-        int lowerIndex = min(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-        int upperIndex = max(firstBreakend.getChrPosIndex(), secondBreakend.getChrPosIndex());
-
-        if(lowerIndex >= upperIndex - 1)
-            return false;
-
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(firstBreakend.chromosome());
-
-        for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
-        {
-            final SvCluster otherCluster = breakendList.get(i).getSV().getCluster();
-
-            if(otherCluster == cluster)
-                continue;
-
-            if (otherCluster.getResolvedType() == RESOLVED_TYPE_SIMPLE_SV
-            || otherCluster.getResolvedType() == LINE
-            || otherCluster.getResolvedType() == RESOLVED_TYPE_RECIPROCAL_TRANS
-            || isFilteredResolvedType(otherCluster.getResolvedType()))
-            {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    */
-
 
 }

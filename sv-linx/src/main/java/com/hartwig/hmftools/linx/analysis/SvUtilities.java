@@ -69,32 +69,29 @@ public class SvUtilities {
             if(be == SE_END && var.isNullBreakend())
                 continue;
 
-            boolean useStart = isStart(be);
+            SvBreakend breakend = var.getBreakend(isStart(be));
 
-            final String chr = var.chromosome(useStart);
-            long position = var.position(useStart);
+            long position = breakend.position();
 
-            if (!chrBreakendMap.containsKey(chr))
+            List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
+
+            if (breakendList == null)
             {
-                List<SvBreakend> breakendList = Lists.newArrayList();
-                breakendList.add(var.getBreakend(useStart));
-                chrBreakendMap.put(chr, breakendList);
-                continue;
+                breakendList = Lists.newArrayList();
+                chrBreakendMap.put(breakend.chromosome(), breakendList);
             }
 
-            // otherwise add the variant in order by ascending position
-            List<SvBreakend> breakendList = chrBreakendMap.get(chr);
-
+            // add the variant in order by ascending position
             int index = 0;
             for (; index < breakendList.size(); ++index)
             {
-                final SvBreakend breakend = breakendList.get(index);
+                final SvBreakend otherBreakend = breakendList.get(index);
 
-                if (position < breakend.position())
+                if (position < otherBreakend.position())
                     break;
             }
 
-            breakendList.add(index, var.getBreakend(useStart));
+            breakendList.add(index, breakend);
         }
     }
 

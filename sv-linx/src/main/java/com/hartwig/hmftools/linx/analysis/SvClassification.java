@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.INF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUPS;
@@ -123,7 +124,7 @@ public class SvClassification
 
     public static boolean isFilteredResolvedType(final ResolvedType resolvedType)
     {
-        return resolvedType.equals(DUP_BE);
+        return resolvedType.equals(DUP_BE) || resolvedType.equals(LOW_VAF);
     }
 
     public static void setClusterResolvedState(

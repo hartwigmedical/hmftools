@@ -4,6 +4,7 @@ public enum ResolvedType
 {
     NONE,
     DUP_BE,
+    LOW_VAF,
     LINE,
     DEL,
     DUP,

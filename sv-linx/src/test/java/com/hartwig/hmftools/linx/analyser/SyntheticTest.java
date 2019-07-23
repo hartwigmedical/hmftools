@@ -656,44 +656,6 @@ public class SyntheticTest
         assertEquals(500, cluster.getSyntheticTILength());
     }
 
-    @Ignore
-    @Test
-    public void testSyntheticDelOrDupExcludedCases()
-    {
-        SvTestHelper tester = new SvTestHelper();
-
-        // non-TI breakends cannot be on different arms - makes them inconsistent any way
-
-        // DUP enclosing DEL
-        SvVarData var1 = createDup(tester.nextVarId(), "1", 100, 150000000);
-        SvVarData var2 = createDel(tester.nextVarId(), "1", 130000000, 140000000);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(2, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.getClusters().get(0);
-
-        // assertTrue(cluster.getResolvedType() == NONE);
-
-        // 2 INVs but with a complex breakend in the middle of the TI
-        var1 = createInv(tester.nextVarId(), "1", 100, 50000, 1);
-        var2 = createInv(tester.nextVarId(), "1", 300, 20000, -1);
-
-        SvVarData sgl = createSgl(tester.nextVarId(), "1", 35000, 1, false);
-
-        tester.clearClustersAndSVs();
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(sgl);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(2, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.getResolvedType() == COMPLEX);
-    }
-
     private void addAndCluster(SvTestHelper tester, SvVarData var1, SvVarData var2)
     {
         tester.clearClustersAndSVs();

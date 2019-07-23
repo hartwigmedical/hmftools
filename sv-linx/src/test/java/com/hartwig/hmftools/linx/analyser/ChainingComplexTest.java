@@ -379,7 +379,7 @@ public class ChainingComplexTest
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        tester.setChaininMethod(CHAIN_METHOD_OLD);
+        // tester.setChaininMethod(CHAIN_METHOD_OLD);
 
         final SvVarData var1 = createTestSv("1", "1", "1", 2000,3000, -1, -1, INV, 5);
         final SvVarData var2 = createTestSv("2", "1", "1", 9000,10000, 1, 1, INV, 3);

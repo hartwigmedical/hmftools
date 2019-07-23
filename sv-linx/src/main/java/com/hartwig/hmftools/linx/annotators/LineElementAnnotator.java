@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
 
@@ -124,7 +125,7 @@ public class LineElementAnnotator {
             -  every variant in the cluster is part of a KNOWN line element
         */
 
-        if(cluster.getResolvedType() == DUP_BE)
+        if(isFilteredResolvedType(cluster.getResolvedType()))
             return;
 
         // isSpecificCluster(cluster);
