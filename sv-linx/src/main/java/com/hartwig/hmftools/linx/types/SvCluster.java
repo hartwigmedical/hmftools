@@ -359,6 +359,11 @@ public class SvCluster
             // retain status as a LINE cluster
             markAsLine();
         }
+
+        // merge in fully assembled chains only
+        other.getChains().stream()
+                .filter(x -> x.getAssemblyLinkCount() == x.getLinkCount())
+                .forEach(x -> mChains.add(x));
     }
 
     private void addVariantLists(final SvCluster other)

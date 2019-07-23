@@ -49,6 +49,7 @@ import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHE
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
@@ -443,9 +444,7 @@ public class ClusterAnalyser {
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
         if(!assembledLinksOnly)
-        {
             isSpecificCluster(cluster);
-        }
 
         int svCount = cluster.getSvCount();
 
@@ -1216,8 +1215,6 @@ public class ClusterAnalyser {
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
                 SvBreakend beBack = null;
 
-                int skippedAssemblies = 0;
-
                 int j = i + 1;
                 while(j < breakendList.size())
                 {
@@ -1241,7 +1238,6 @@ public class ClusterAnalyser {
                         {
                             // skip over both these assembled links
                             j += 2;
-                            ++skippedAssemblies;
                             continue;
                         }
                     }
