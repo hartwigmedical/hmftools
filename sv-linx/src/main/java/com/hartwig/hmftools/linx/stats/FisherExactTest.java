@@ -24,6 +24,19 @@ public class FisherExactTest
         }
     }
 
+    public double calc(int withAwithB, int withANoB, int noAWithB, int noAnoB, double expectedCount)
+    {
+        if(withAwithB > expectedCount)
+        {
+            return getRightTailedP(withAwithB, noAWithB, withANoB, noAnoB);
+        }
+        else
+        {
+            return getLeftTailedP(withAwithB, noAWithB, withANoB, noAnoB);
+        }
+    }
+
+
     // a = with A, with B
     // b = no A, with B
     // c = with A, no B
