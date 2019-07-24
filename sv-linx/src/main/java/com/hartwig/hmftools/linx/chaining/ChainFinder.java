@@ -242,7 +242,7 @@ public class ChainFinder
 
     public void initialise(SvCluster cluster, final List<SvVarData> svList)
     {
-        // chain a specific subset of a cluster's SVs
+        // chain a specific subset of a cluster's SVs - current used to test double-minute completeness
         clear();
 
         mIsClusterSubset = true;
@@ -478,12 +478,10 @@ public class ChainFinder
             mLinkAllocator.clearPairSkipped();
             int lastAddedIndex = mLinkAllocator.getLinkIndex();
 
-            /*
             if(lastAddedIndex == SPEC_LINK_INDEX)
             {
                 LOGGER.debug("specifc link index({})", lastAddedIndex);
             }
-            */
 
             List<ProposedLinks> proposedLinks = mRuleSelector.findProposedLinks();
 
@@ -856,7 +854,8 @@ public class ChainFinder
                     {
                         SvBreakend middleBreakend = breakendList.get(i + 1);
 
-                        if(lowerBreakend.getDBLink() == middleBreakend.getDBLink() || upperBreakend.getDBLink() == middleBreakend.getDBLink())
+                        if((lowerBreakend.getDBLink() != null && lowerBreakend.getDBLink() == middleBreakend.getDBLink())
+                        || (upperBreakend.getDBLink() != null && upperBreakend.getDBLink() == middleBreakend.getDBLink()))
                             areAdjacent = true;
                     }
 

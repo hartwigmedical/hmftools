@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBAC
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.List;
@@ -156,7 +157,7 @@ public class ChainLinkAllocator
     }
 
     protected static int SPEC_LINK_INDEX = -1;
-    // protected static int SPEC_LINK_INDEX = 32;
+    // protected static int SPEC_LINK_INDEX = 23;
 
     public boolean addLinks(final ProposedLinks proposedLinks)
     {
@@ -198,8 +199,47 @@ public class ChainLinkAllocator
         }
         else
         {
+            // if one of the breakends in this new link has its other breakend in another chain and is exhausted, then force it
+            // to connect to that existing chain
+
             for (SvChain chain : mChains)
             {
+            /*
+                if(!proposedLinks.multiConnection())
+                {
+                    for(int se = SE_START; se <= SE_END; ++se)
+                    {
+                        final SvBreakend chainBreakend = chain.getOpenBreakend(isStart(se));
+
+                        if(chainBreakend == null)
+                            continue;
+
+                        if(getUnlinkedBreakendCount(chainBreakend.getOtherBreakend()) != 0)
+                            continue;
+
+                        if(chainBreakend == newPair.firstBreakend() || chainBreakend == newPair.secondBreakend())
+                        {
+                            // don't allow if the other end would like as well
+                            final SvBreakend otherChainBreakend = chain.getOpenBreakend(!isStart(se));
+
+                            if(otherChainBreakend == newPair.firstBreakend() || otherChainBreakend == newPair.secondBreakend())
+                                break;
+
+                            // this chain end is exhausted and matches the link, so force it to be used
+                            targetChain = chain;
+
+                            newSvPloidy = targetChain.ploidy();
+                            matchesChainPloidy = true;
+                            addToStart = (se == SE_START);
+                            break;
+                        }
+                    }
+                }
+
+                if(targetChain != null)
+                    break;
+                */
+
                 boolean canAddToStart = chain.canAddLinkedPair(newPair, true, true);
                 boolean canAddToEnd = chain.canAddLinkedPair(newPair, false, true);
 
@@ -213,7 +253,6 @@ public class ChainLinkAllocator
                     if (isDoubleMinuteDup() && mSvConnectionsMap.size() == 1 && mSvConnectionsMap.get(mDoubleMinuteSVs.get(0)) != null)
                     {
                         // allow the chain to be closed if this is the last pair other than excess DM DUP replicated SVs
-
                     }
                     else
                     {
