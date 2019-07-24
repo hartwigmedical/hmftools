@@ -1,22 +1,8 @@
 package com.hartwig.hmftools.linx.stats;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.stats.SampleCategoryData.SAMPLE_CAT_1_INDEX;
-import static com.hartwig.hmftools.linx.stats.SampleCategoryData.SAMPLE_CAT_2_INDEX;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,11 +18,13 @@ import org.jetbrains.annotations.NotNull;
 public class StatisticRoutines
 {
     private ThreeVarCoOccurence mThreeVarCoOccurence;
+    private TwoVarCoOccurence mTwoVarCoOccurence;
     private SampleCountsCoOccurence mSampleCountsCoOccurence;
 
     private static String DRIVER_GENES_FILE = "driver_genes_file";
     private static String SAMPLE_COUNTS_FILE = "sample_counts_file";
-    private static String SAMPLE_GENERIC_FILE = "sample_generic_file";
+    private static String THREE_VAR_INPUT_FILE = "three_var_input_file";
+    private static String TWO_VAR_INPUT_FILE = "two_var_input_file";
 
     private static final Logger LOGGER = LogManager.getLogger(StatisticRoutines.class);
 
@@ -63,7 +51,8 @@ public class StatisticRoutines
         final Options options = new Options();
         options.addOption(DRIVER_GENES_FILE, true, "Drive genes file");
         options.addOption(SAMPLE_COUNTS_FILE, true, "Sample counts file");
-        options.addOption(SAMPLE_GENERIC_FILE, true, "Sample data with 3 generic categories file");
+        options.addOption(THREE_VAR_INPUT_FILE, true, "Sample data with grouping and 2 variable");
+        options.addOption(TWO_VAR_INPUT_FILE, true, "Sample data with 2 variables");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         return options;
     }
@@ -79,6 +68,7 @@ public class StatisticRoutines
     {
         mThreeVarCoOccurence = null;
         mSampleCountsCoOccurence = null;
+        mTwoVarCoOccurence = null;
     }
 
     public boolean loadConfig(final CommandLine cmd, final String outputDir)
@@ -88,13 +78,21 @@ public class StatisticRoutines
         if(cmd.hasOption(DRIVER_GENES_FILE) && cmd.hasOption(SAMPLE_COUNTS_FILE))
         {
             mSampleCountsCoOccurence = new SampleCountsCoOccurence();
-            valid = mSampleCountsCoOccurence.loadData(
+
+            valid = mSampleCountsCoOccurence.initialise(
                     cmd.getOptionValue(SAMPLE_COUNTS_FILE), cmd.getOptionValue(DRIVER_GENES_FILE), outputDir);
         }
-        else if(cmd.hasOption(SAMPLE_GENERIC_FILE))
+
+        if(cmd.hasOption(THREE_VAR_INPUT_FILE))
         {
             mThreeVarCoOccurence = new ThreeVarCoOccurence();
-            valid = mThreeVarCoOccurence.loadData(cmd.getOptionValue(SAMPLE_GENERIC_FILE), outputDir);
+            valid = mThreeVarCoOccurence.initialise(cmd.getOptionValue(THREE_VAR_INPUT_FILE), outputDir);
+        }
+
+        if(cmd.hasOption(TWO_VAR_INPUT_FILE))
+        {
+            mTwoVarCoOccurence = new TwoVarCoOccurence();
+            valid = mTwoVarCoOccurence.initialise(cmd.getOptionValue(TWO_VAR_INPUT_FILE), outputDir);
         }
 
         return valid;
@@ -103,9 +101,13 @@ public class StatisticRoutines
     public void runStatistics()
     {
         if(mSampleCountsCoOccurence != null)
-            mSampleCountsCoOccurence.runTwoVariableStatistics();
-        else if(mThreeVarCoOccurence != null)
-            mThreeVarCoOccurence.runGenericThreeVariableStatisitics();
+            mSampleCountsCoOccurence.run();
+
+        if(mThreeVarCoOccurence != null)
+            mThreeVarCoOccurence.run();
+
+        if(mTwoVarCoOccurence != null)
+            mTwoVarCoOccurence.run();
     }
 
 }

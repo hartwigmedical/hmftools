@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public class SampleStatsData
+public class SampleGeneData
 {
     final String SampleId;
 
@@ -13,7 +13,7 @@ public class SampleStatsData
     final List<String> CategoryKnown;
     final List<String> CategoryUnclear;
 
-    public SampleStatsData(final String sampleId)
+    public SampleGeneData(final String sampleId)
     {
         SampleId = sampleId;
         GeneKnown = Lists.newArrayList();

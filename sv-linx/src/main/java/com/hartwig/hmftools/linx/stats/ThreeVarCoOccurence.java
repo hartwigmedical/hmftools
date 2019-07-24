@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.stats;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.stats.SampleCategoryData.SAMPLE_CAT_1_INDEX;
 import static com.hartwig.hmftools.linx.stats.SampleCategoryData.SAMPLE_CAT_2_INDEX;
@@ -16,6 +17,11 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+// 3 variable generic co-occurence using Fisher's exact test
+// first variable is a grouping variable (eg CancerType) and the other 2 variables are tested for co-occurence
+// expected input: SampleId,Grouping,Category1,Category2
+// eg SampleId,Gene,CancerType,LohType - would group by Gene and then test CancerType vs LohType correlation
 
 public class ThreeVarCoOccurence
 {
@@ -57,7 +63,7 @@ public class ThreeVarCoOccurence
     private static String SPEC_GROUP_VAL = "";
     // private static String SPEC_GROUP_VAL = "SETD2";
 
-    public void runGenericThreeVariableStatisitics()
+    public void run()
     {
         if(mGroupingSampleGenericData.isEmpty())
             return;
@@ -137,14 +143,16 @@ public class ThreeVarCoOccurence
 
                     double fisherProb = mFisherET.calc(withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2, expectedVal);
 
-                    writeThreeVariableResultsData(groupingValue, cat1, cat2, sampleCount, withCat1, withCat2, fisherProb,
+                    writeResultsData(groupingValue, cat1, cat2, sampleCount, withCat1, withCat2, fisherProb,
                             expectedVal, hypothesesCount, withCat1WithCat2, noCat1WithCat2, withCat1NoCat2, noCat1NoCat2);
                 }
             }
         }
+
+        closeBufferedWriter(mWriter);
     }
 
-    public boolean initialiseGenericThreeVariableOutput(final String outputFileName)
+    private boolean initialiseOutput(final String outputFileName)
     {
         try
         {
@@ -169,7 +177,7 @@ public class ThreeVarCoOccurence
         return true;
     }
 
-    private void writeThreeVariableResultsData(final String groupingValue, final String cat1, final String cat2, int sampleCount,
+    private void writeResultsData(final String groupingValue, final String cat1, final String cat2, int sampleCount,
             int withCat1, int withCat2, double fetProbability, double expectedVal, int testCount,
             int withCat1WithCat2, int noCat1WithCat2, int withCat1NoCat2, int noCat1NoCat2)
     {
@@ -196,12 +204,12 @@ public class ThreeVarCoOccurence
         }
     }
 
-    public boolean loadData(final String filename, final String outputDir)
+    public boolean initialise(final String filename, final String outputDir)
     {
         loadSampleGenericData(filename);
 
         final String outputFile = outputDir + "SVA_STATS_3VAR.csv";
-        return initialiseGenericThreeVariableOutput(outputFile);
+        return initialiseOutput(outputFile);
     }
 
     private static int GENERIC_DATA_CSV_COUNT = 4;

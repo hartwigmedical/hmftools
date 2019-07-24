@@ -16,12 +16,19 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/* 2-way comparison, currently specific to driver genes and category data by cancer type
+
+    input files:
+        1. SampleCounts - SampleId,CancerType,Category,Enriched,Count
+        2. DriverGenes - SampleId,CancerType,Gene,DriverStatus
+*/
+
+
 public class SampleCountsCoOccurence
 {
     private List<String> mSamples;
-    private Map<String, List<SampleStatsData>> mCancerSampleData;
+    private Map<String, List<SampleGeneData>> mCancerSampleData;
 
-    // 2-way comparison, currently specific to driver genes and category data by cancer type
     private List<String> mGenes;
     private List<String> mCancerTypes;
     private List<String> mCategories;
@@ -54,7 +61,7 @@ public class SampleCountsCoOccurence
         mWriter = null;
     }
 
-    public boolean loadData(final String sampleCountsFile, final String driverDataFile, final String outputDir)
+    public boolean initialise(final String sampleCountsFile, final String driverDataFile, final String outputDir)
     {
         loadDriverGeneData(driverDataFile);
         loadSampleCountsData(sampleCountsFile);
@@ -84,24 +91,19 @@ public class SampleCountsCoOccurence
     private static String SPEC_CATEGORY = "";
     // private static String SPEC_CATEGORY = "DUP_LT_100";
 
-    /* input files:
-        1. SampleCounts - SampleId,CancerType,Category,Enriched,Count
-        2. DriverGenes - SampleId,CancerType,Gene,DriverStatus
-    */
-
-    public void runTwoVariableStatistics()
+    public void run()
     {
         if(mCancerSampleData.isEmpty())
             return;
 
-        List<SampleStatsData> allSampleDataList = Lists.newArrayList();
+        List<SampleGeneData> allSampleDataList = Lists.newArrayList();
 
         for (final String cancerType : mCancerTypes)
         {
             if (!SPEC_CANCER.isEmpty() && !cancerType.equals(SPEC_CANCER))
                 continue;
 
-            List<SampleStatsData> sampleDataList = mCancerSampleData.get(cancerType);
+            List<SampleGeneData> sampleDataList = mCancerSampleData.get(cancerType);
             allSampleDataList.addAll(sampleDataList);
 
             analyseCancerType(cancerType, sampleDataList);
@@ -116,7 +118,7 @@ public class SampleCountsCoOccurence
         LOGGER.info("analysis complete");
     }
 
-    private void analyseCancerType(final String cancerType, final List<SampleStatsData> sampleDataList)
+    private void analyseCancerType(final String cancerType, final List<SampleGeneData> sampleDataList)
     {
         /* calc method (for each cancer type):
         - each sample data has enriched categories and driver genes
@@ -139,7 +141,7 @@ public class SampleCountsCoOccurence
         Map<String, Integer> withGeneTotals = new HashMap();
         Map<String, Integer> unclearGeneTotals = new HashMap();
 
-        for(final SampleStatsData sampleData : sampleDataList)
+        for(final SampleGeneData sampleData : sampleDataList)
         {
             // calc category totals
             for(int i = 0; i <= 1; ++i)
@@ -288,6 +290,8 @@ public class SampleCountsCoOccurence
             }
         }
 
+        closeBufferedWriter(mWriter);
+
         LOGGER.info("cancerType({}) results written to file", cancerType);
     }
 
@@ -337,11 +341,11 @@ public class SampleCountsCoOccurence
             LOGGER.error("error writing to stats output file: {}", e.toString());
         }
     }
-    private SampleStatsData getOrCreateSampleData(final String cancerType, final String sampleId)
+    private SampleGeneData getOrCreateSampleData(final String cancerType, final String sampleId)
     {
-        List<SampleStatsData> sampleDataList = mCancerSampleData.get(cancerType);
+        List<SampleGeneData> sampleDataList = mCancerSampleData.get(cancerType);
 
-        SampleStatsData sampleData = null;
+        SampleGeneData sampleData = null;
         if (sampleDataList == null)
         {
             sampleDataList = Lists.newArrayList();
@@ -349,7 +353,7 @@ public class SampleCountsCoOccurence
         }
         else
         {
-            for (final SampleStatsData sd : sampleDataList)
+            for (final SampleGeneData sd : sampleDataList)
             {
                 if (sd.SampleId.equals(sampleId))
                 {
@@ -361,7 +365,7 @@ public class SampleCountsCoOccurence
 
         if (sampleData == null)
         {
-            sampleData = new SampleStatsData(sampleId);
+            sampleData = new SampleGeneData(sampleId);
             sampleDataList.add(sampleData);
         }
 
@@ -387,7 +391,7 @@ public class SampleCountsCoOccurence
             }
 
             int recordCount = 0;
-            SampleStatsData currentSampleData = null;
+            SampleGeneData currentSampleData = null;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -455,7 +459,7 @@ public class SampleCountsCoOccurence
             }
 
             int recordCount = 0;
-            SampleStatsData currentSampleData = null;
+            SampleGeneData currentSampleData = null;
 
             while ((line = fileReader.readLine()) != null)
             {
