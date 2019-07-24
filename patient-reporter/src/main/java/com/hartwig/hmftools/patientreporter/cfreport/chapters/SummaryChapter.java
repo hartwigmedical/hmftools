@@ -51,7 +51,7 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return patientReport.titleReportCorrect().toString() == null || patientReport.titleReportCorrect().toString().isEmpty()
+        return patientReport.titleReportCorrect().isPresent()
                 ? "Sequence Report Corrected"
                 : "Sequence Report";
     }
