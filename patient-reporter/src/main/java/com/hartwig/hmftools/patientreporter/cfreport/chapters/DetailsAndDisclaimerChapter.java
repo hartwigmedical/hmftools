@@ -124,6 +124,10 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 + "from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
         div.add(createContentParagraph("The results stated in these report are based on the tested tumor and blood sample."));
+        div.add(createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ are retrieved of the particular centra of "
+                + "the patient and affects which therapies of this patient are found."));
+        div.add(createContentParagraph("The conclusion of this report are based on the results of this report (all the genomic"
+                + " alteration details and tumor characteristics)  "));
         div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
                         + "of somatic variants and > 95% for detection of translocations and gene copy number changes. For samples "
                         + "with a purity above 20%, the test has a sensitivity of >90%."));

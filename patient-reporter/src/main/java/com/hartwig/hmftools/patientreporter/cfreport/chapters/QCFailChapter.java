@@ -167,6 +167,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
         divColumn2.add(relatedSamples());
+        divColumn2.add(disclaimerTumorLocation());
         divColumn2.add(sentivityResults());
         divColumn2.add((questionsText()));
         return divColumn2;
@@ -215,6 +216,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
         divColumn2.add(relatedSamples());
+        divColumn2.add(disclaimerTumorLocation());
         divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
@@ -266,6 +268,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
         divColumn2.add(relatedSamples());
+        divColumn2.add(disclaimerTumorLocation());
         divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
@@ -290,6 +293,12 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
                 + "of somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a "
                 + "purity above 20%, the test has a sensitivity of >90%.");
+    }
+
+    @NotNull
+    private Paragraph disclaimerTumorLocation() {
+        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ are retrieved of the particular centra of the "
+                + "patient and affects which therapies of this patient are found.  ");
     }
 
     @NotNull
