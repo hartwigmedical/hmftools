@@ -937,7 +937,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-31)
   - Added microsatellite status
   - Added subclonal likelihood model and figure
   - Consistent file headers
