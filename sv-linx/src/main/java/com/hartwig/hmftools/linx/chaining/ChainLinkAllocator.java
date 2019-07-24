@@ -259,7 +259,6 @@ public class ChainLinkAllocator
 
                 boolean linkedOnFirst = newPair.first() == chain.getFirstSV() || newPair.first() == chain.getLastSV();
 
-                // final SvBreakend chainBreakend = linkedOnFirst ? newPair.firstBreakend() : newPair.secondBreakend();
                 final SvBreakend newBreakend = linkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
 
                 boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy())
@@ -291,163 +290,19 @@ public class ChainLinkAllocator
         }
 
         boolean isNewChain = (targetChain == null);
-        boolean reconcileChains = !isNewChain;
+        boolean reconcileChains = false;
 
         if (!isNewChain)
         {
-            // scenarios:
-            // - ploidy matches - add the new link and recalculate the chain ploidy
-            // - foldback or complex dup with 2-1 ploidy match - replicate the chain accordingly and halve the chain ploidy
-            // - foldback or complex dup with chain greater than 2x the foldback or complex dup
-            //      - split off the excess and then replicate and halve the remainder
-            // - foldback where the foldback itself is a chain, connecting to a single other breakend which may also be chained
-            //      - here it is not the foldback chain which needs replicating or splitting but the other one
-            // - normal link with chain ploidy higher - split off the chain
-            // - normal link with chain ploidy lower - only allocate the chain ploidy for the new link
-            boolean requiresChainSplit = false;
-
-            if (!matchesChainPloidy && targetChain.ploidy() > newSvPloidy)
-            {
-                if (!proposedLinks.multiConnection())
-                    requiresChainSplit = true;
-                else
-                    requiresChainSplit = (targetChain.ploidy() > newSvPloidy * 2);
-
-                matchesChainPloidy = true;
-            }
-
-            if (requiresChainSplit)
-            {
-                SvChain newChain = new SvChain(mNextChainId++);
-                mChains.add(newChain);
-
-                // copy the existing links into a new chain and set to the ploidy difference
-                newChain.copyFrom(targetChain);
-
-                if (!proposedLinks.multiConnection())
-                {
-                    newChain.setPloidyData(targetChain.ploidy() - newSvPloidy, targetChain.ploidyUncertainty());
-                    targetChain.setPloidyData(newSvPloidy, targetChain.ploidyUncertainty());
-                }
-                else if (targetChain.ploidy() > newSvPloidy * 2)
-                {
-                    // chain will have its ploidy halved a  nyway so just split off the excess
-                    newChain.setPloidyData(targetChain.ploidy() - newSvPloidy * 2, targetChain.ploidyUncertainty());
-                    targetChain.setPloidyData(newSvPloidy * 2, targetChain.ploidyUncertainty());
-                }
-
-                LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
-                        newChain.id(), formatPloidy(newChain.ploidy()),
-                        targetChain.id(), formatPloidy(targetChain.ploidy()), formatPloidy(newSvPloidy));
-            }
-
-            if (proposedLinks.multiConnection())
-            {
-                LOGGER.debug("duplicating chain({}) for multi-connect {}", targetChain.id(), proposedLinks.getSplittingRule());
-
-                if (proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
-                    targetChain.foldbackChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
-                else
-                    targetChain.duplicateChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
-
-                double newPloidy = targetChain.ploidy() * 0.5;
-                double newUncertainty = targetChain.ploidyUncertainty() * sqrt(2);
-                targetChain.setPloidyData(newPloidy, newUncertainty);
-            }
-            else
-            {
-                final SvBreakend newSvBreakend = pairLinkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
-
-                PloidyCalcData ploidyData;
-
-                if (matchesChainPloidy || targetChain.ploidy() > newSvPloidy)
-                {
-                    if (!proposedLinks.linkPloidyMatch())
-                    {
-                        ploidyData = calcPloidyUncertainty(
-                                new PloidyCalcData(proposedLinks.ploidy(), newSvBreakend.ploidyUncertainty()),
-                                new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
-                    }
-                    else
-                    {
-                        ploidyData = calcPloidyUncertainty(
-                                new PloidyCalcData(proposedLinks.breakendPloidy(newSvBreakend), newSvBreakend.ploidyUncertainty()),
-                                new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
-                    }
-
-                    targetChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
-                }
-                else
-                {
-                    // ploidy of the link is higher so keep the chain ploidy unch and reduce what can be allocated from this link
-                    proposedLinks.setLowerPloidy(targetChain.ploidy());
-                }
-
-                targetChain.addLink(proposedLinks.Links.get(0), addToStart);
-            }
+            reconcileChains = true;
+            addLinksToExistingChain(proposedLinks, targetChain, addToStart, pairLinkedOnFirst, matchesChainPloidy, newSvPloidy);
         }
         else
         {
             if (linkClosesChain)
                 return false; // skip this link for now
 
-            // where more than one links is being added, they may not be able to be added to the same chain
-            // eg a chained foldback replicating another breakend - the chain reconciliation step will join them back up
-            SvChain newChain = null;
-            for (final SvLinkedPair pair : proposedLinks.Links)
-            {
-                if (newChain != null)
-                {
-                    if (newChain.canAddLinkedPairToStart(pair))
-                    {
-                        newChain.addLink(pair, true);
-                    }
-                    else if (newChain.canAddLinkedPairToEnd(pair))
-                    {
-                        newChain.addLink(pair, false);
-                    }
-                    else
-                    {
-                        newChain = null;
-                        reconcileChains = true;
-                    }
-                }
-
-                if (newChain == null)
-                {
-                    newChain = new SvChain(mNextChainId++);
-                    mChains.add(newChain);
-                    targetChain = newChain;
-
-                    newChain.addLink(pair, true);
-
-                    PloidyCalcData ploidyData;
-
-                    if (!proposedLinks.linkPloidyMatch() || proposedLinks.multiConnection())
-                    {
-                        ploidyData = calcPloidyUncertainty(
-                                new PloidyCalcData(proposedLinks.ploidy(), newPair.first().ploidyUncertainty()),
-                                new PloidyCalcData(proposedLinks.ploidy(), newPair.second().ploidyUncertainty()));
-                    }
-                    else
-                    {
-                        ploidyData = calcPloidyUncertainty(
-                                new PloidyCalcData(proposedLinks.breakendPloidy(newPair.firstBreakend()), newPair.first()
-                                        .ploidyUncertainty()),
-                                new PloidyCalcData(proposedLinks.breakendPloidy(newPair.secondBreakend()), newPair.second()
-                                        .ploidyUncertainty()));
-                    }
-
-                    newChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
-                }
-            }
-        }
-
-        for (SvLinkedPair pair : proposedLinks.Links)
-        {
-            LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to {} chain({}) ploidy({})",
-                    mLinkIndex, topRule, pair.toString(), formatPloidy(proposedLinks.ploidy()), isNewChain ? "new" : "existing",
-                    targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
+            reconcileChains = addLinksToNewChain(proposedLinks);
         }
 
         registerNewLink(proposedLinks);
@@ -460,6 +315,173 @@ public class ChainLinkAllocator
         }
 
         return true;
+    }
+
+    private void addLinksToExistingChain(final ProposedLinks proposedLinks, SvChain targetChain,
+            boolean addToStart, boolean pairLinkedOnFirst, boolean matchesChainPloidy, double newSvPloidy)
+    {
+        // scenarios:
+        // - ploidy matches - add the new link and recalculate the chain ploidy
+        // - foldback or complex dup with 2-1 ploidy match - replicate the chain accordingly and halve the chain ploidy
+        // - foldback or complex dup with chain greater than 2x the foldback or complex dup
+        //      - split off the excess and then replicate and halve the remainder
+        // - foldback where the foldback itself is a chain, connecting to a single other breakend which may also be chained
+        //      - here it is not the foldback chain which needs replicating or splitting but the other one
+        // - normal link with chain ploidy higher - split off the chain
+        // - normal link with chain ploidy lower - only allocate the chain ploidy for the new link
+        boolean requiresChainSplit = false;
+
+        final SvLinkedPair newPair = proposedLinks.Links.get(0);
+
+        if (!matchesChainPloidy && targetChain.ploidy() > newSvPloidy)
+        {
+            if (!proposedLinks.multiConnection())
+                requiresChainSplit = true;
+            else
+                requiresChainSplit = (targetChain.ploidy() > newSvPloidy * 2);
+
+            matchesChainPloidy = true;
+        }
+
+        if (requiresChainSplit)
+        {
+            SvChain newChain = new SvChain(mNextChainId++);
+            mChains.add(newChain);
+
+            // copy the existing links into a new chain and set to the ploidy difference
+            newChain.copyFrom(targetChain);
+
+            if (!proposedLinks.multiConnection())
+            {
+                newChain.setPloidyData(targetChain.ploidy() - newSvPloidy, targetChain.ploidyUncertainty());
+                targetChain.setPloidyData(newSvPloidy, targetChain.ploidyUncertainty());
+            }
+            else if (targetChain.ploidy() > newSvPloidy * 2)
+            {
+                // chain will have its ploidy halved a  nyway so just split off the excess
+                newChain.setPloidyData(targetChain.ploidy() - newSvPloidy * 2, targetChain.ploidyUncertainty());
+                targetChain.setPloidyData(newSvPloidy * 2, targetChain.ploidyUncertainty());
+            }
+
+            LOGGER.debug("new chain({}) ploidy({}) from chain({}) ploidy({}) from new SV ploidy({})",
+                    newChain.id(), formatPloidy(newChain.ploidy()),
+                    targetChain.id(), formatPloidy(targetChain.ploidy()), formatPloidy(newSvPloidy));
+        }
+
+        if (proposedLinks.multiConnection())
+        {
+            LOGGER.debug("duplicating chain({}) for multi-connect {}", targetChain.id(), proposedLinks.getSplittingRule());
+
+            if (proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
+                targetChain.foldbackChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
+            else
+                targetChain.duplicateChainOnLink(proposedLinks.Links.get(0), proposedLinks.Links.get(1));
+
+            double newPloidy = targetChain.ploidy() * 0.5;
+            double newUncertainty = targetChain.ploidyUncertainty() * sqrt(2);
+            targetChain.setPloidyData(newPloidy, newUncertainty);
+        }
+        else
+        {
+            final SvBreakend newSvBreakend = pairLinkedOnFirst ? newPair.secondBreakend() : newPair.firstBreakend();
+
+            PloidyCalcData ploidyData;
+
+            if (matchesChainPloidy || targetChain.ploidy() > newSvPloidy)
+            {
+                if (!proposedLinks.linkPloidyMatch())
+                {
+                    ploidyData = calcPloidyUncertainty(
+                            new PloidyCalcData(proposedLinks.ploidy(), newSvBreakend.ploidyUncertainty()),
+                            new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
+                }
+                else
+                {
+                    ploidyData = calcPloidyUncertainty(
+                            new PloidyCalcData(proposedLinks.breakendPloidy(newSvBreakend), newSvBreakend.ploidyUncertainty()),
+                            new PloidyCalcData(targetChain.ploidy(), targetChain.ploidyUncertainty()));
+                }
+
+                targetChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
+            }
+            else
+            {
+                // ploidy of the link is higher so keep the chain ploidy unch and reduce what can be allocated from this link
+                proposedLinks.setLowerPloidy(targetChain.ploidy());
+            }
+
+            targetChain.addLink(proposedLinks.Links.get(0), addToStart);
+        }
+
+        for (SvLinkedPair pair : proposedLinks.Links)
+        {
+            LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to existing chain({}) ploidy({})",
+                    mLinkIndex, proposedLinks.topRule(), pair.toString(), formatPloidy(proposedLinks.ploidy()),
+                    targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
+        }
+
+    }
+
+    private boolean addLinksToNewChain(final ProposedLinks proposedLinks)
+    {
+        boolean reconcileChains = false;
+        final SvLinkedPair newPair = proposedLinks.Links.get(0);
+
+        // where more than one links is being added, they may not be able to be added to the same chain
+        // eg a chained foldback replicating another breakend - the chain reconciliation step will join them back up
+        SvChain newChain = null;
+        for (final SvLinkedPair pair : proposedLinks.Links)
+        {
+            if (newChain != null)
+            {
+                if (newChain.canAddLinkedPairToStart(pair))
+                {
+                    newChain.addLink(pair, true);
+                }
+                else if (newChain.canAddLinkedPairToEnd(pair))
+                {
+                    newChain.addLink(pair, false);
+                }
+                else
+                {
+                    newChain = null;
+                    reconcileChains = true;
+                }
+            }
+
+            if (newChain == null)
+            {
+                newChain = new SvChain(mNextChainId++);
+                mChains.add(newChain);
+
+                newChain.addLink(pair, true);
+
+                PloidyCalcData ploidyData;
+
+                if (!proposedLinks.linkPloidyMatch() || proposedLinks.multiConnection())
+                {
+                    ploidyData = calcPloidyUncertainty(
+                            new PloidyCalcData(proposedLinks.ploidy(), newPair.first().ploidyUncertainty()),
+                            new PloidyCalcData(proposedLinks.ploidy(), newPair.second().ploidyUncertainty()));
+                }
+                else
+                {
+                    ploidyData = calcPloidyUncertainty(
+                            new PloidyCalcData(proposedLinks.breakendPloidy(newPair.firstBreakend()), newPair.first()
+                                    .ploidyUncertainty()),
+                            new PloidyCalcData(proposedLinks.breakendPloidy(newPair.secondBreakend()), newPair.second()
+                                    .ploidyUncertainty()));
+                }
+
+                newChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
+            }
+
+            LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to new chain({}) ploidy({})",
+                    mLinkIndex, proposedLinks.topRule(), pair.toString(), formatPloidy(proposedLinks.ploidy()),
+                    newChain.id(), String.format("%.1f unc=%.1f", newChain.ploidy(), newChain.ploidyUncertainty()));
+        }
+
+        return reconcileChains;
     }
 
     private void registerNewLink(final ProposedLinks proposedLink)
