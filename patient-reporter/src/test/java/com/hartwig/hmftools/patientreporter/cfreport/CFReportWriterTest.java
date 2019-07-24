@@ -115,6 +115,7 @@ public class CFReportWriterTest {
                 reason,
                 QCFailStudy.CPCT,
                 Optional.empty(),
+                Optional.empty(),
                 testReportData().signaturePath(),
                 testReportData().logoRVAPath(),
                 testReportData().logoCompanyPath());

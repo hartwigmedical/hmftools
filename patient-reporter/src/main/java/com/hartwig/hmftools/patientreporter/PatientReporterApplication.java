@@ -74,6 +74,7 @@ public class PatientReporterApplication {
 
     // Some additional optional params
     private static final String COMMENTS = "comments";
+    private static final String CORRECTED_REPORT = "corrected_report";
     private static final String LOG_DEBUG = "log_debug";
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -98,7 +99,8 @@ public class PatientReporterApplication {
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
-            QCFailReport report = reporter.run(tumorSample, refSample, reason, cmd.getOptionValue(COMMENTS));
+            QCFailReport report =
+                    reporter.run(tumorSample, refSample, reason, cmd.getOptionValue(COMMENTS), cmd.getOptionValue(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
@@ -115,7 +117,8 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(BACHELOR_CSV),
                     cmd.getOptionValue(CHORD_PREDICTION_FILE),
                     cmd.getOptionValue(CIRCOS_FILE),
-                    cmd.getOptionValue(COMMENTS));
+                    cmd.getOptionValue(COMMENTS),
+                    cmd.getOptionValue(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
@@ -281,6 +284,7 @@ public class PatientReporterApplication {
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
+        options.addOption(CORRECTED_REPORT, true, "Additional comments to be added to the report (optional) for a corrected report.");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
     }

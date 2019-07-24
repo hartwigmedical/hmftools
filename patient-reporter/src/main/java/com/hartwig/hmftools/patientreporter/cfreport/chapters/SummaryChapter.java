@@ -51,7 +51,9 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return "Summary";
+        return patientReport.titleReportCorrect().toString() == null || patientReport.titleReportCorrect().toString().isEmpty()
+                ? "Sequence Report Corrected"
+                : "Sequence Report";
     }
 
     @Override
@@ -71,6 +73,7 @@ public class SummaryChapter implements ReportChapter {
 
     @Override
     public final void render(@NotNull Document reportDocument) {
+        reportDocument.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(patientReport.sampleReport().primaryTumorLocationString(),
                 patientReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));

@@ -21,7 +21,7 @@ public class QCFailReporter {
 
     @NotNull
     public QCFailReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull QCFailReason reason,
-            @Nullable String comments) {
+            @Nullable String comments, @Nullable String correctTitle) {
         QCFailStudy study = QCFailStudy.fromSample(tumorSample);
 
         assert study != null;
@@ -39,6 +39,7 @@ public class QCFailReporter {
                 reason,
                 study,
                 Optional.ofNullable(comments),
+                Optional.ofNullable(correctTitle),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
