@@ -212,10 +212,6 @@ public class ChainRuleSelector
                 newPair = entry.getValue().get(0);
             }
 
-            // special case for DM DUPs - because they can link with themselves at the end, don't restrict their connectivity earlier on
-            if(mLinkAllocator.isDoubleMinuteDup(limitingBreakend.getSV()))
-                continue;
-
             if(mLinkAllocator.hasSkippedPairs(newPair))
                 continue;
 

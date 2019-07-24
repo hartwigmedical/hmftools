@@ -148,9 +148,7 @@ public class ChainFinder
         mReplicatedSVs = Lists.newArrayList();
         mReplicatedBreakends = Lists.newArrayList();
 
-        mLinkAllocator = new ChainLinkAllocator(
-                mSvBreakendPossibleLinks, mChains,
-                mFoldbacks, mComplexDupCandidates, mDoubleMinuteSVs);
+        mLinkAllocator = new ChainLinkAllocator(mSvBreakendPossibleLinks, mChains, mComplexDupCandidates);
 
         mRuleSelector = new ChainRuleSelector(mLinkAllocator,
                 mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,

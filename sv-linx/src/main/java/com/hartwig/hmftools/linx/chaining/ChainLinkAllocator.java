@@ -48,24 +48,18 @@ public class ChainLinkAllocator
     private final List<SvChainState> mSvCompletedConnections;
 
     // references
-    private final List<SvVarData> mFoldbacks;
     private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates;
     private final List<SvChain> mChains;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
-    private final List<SvVarData> mDoubleMinuteSVs;
 
     public ChainLinkAllocator(
             final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
             final List<SvChain> chains,
-            final List<SvVarData> foldbacks,
-            final Map<SvVarData,List<SvLinkedPair>> complexDupCandidates,
-            final List<SvVarData> doubleMinuteSVs)
+            final Map<SvVarData,List<SvLinkedPair>> complexDupCandidates)
     {
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
-        mFoldbacks = foldbacks;
         mComplexDupCandidates = complexDupCandidates;
         mChains = chains;
-        mDoubleMinuteSVs = doubleMinuteSVs;
 
         mSvConnectionsMap = Maps.newHashMap();
         mSvCompletedConnections = Lists.newArrayList();
@@ -250,24 +244,17 @@ public class ChainLinkAllocator
 
                 if (couldCloseChain)
                 {
-                    if (isDoubleMinuteDup() && mSvConnectionsMap.size() == 1 && mSvConnectionsMap.get(mDoubleMinuteSVs.get(0)) != null)
-                    {
-                        // allow the chain to be closed if this is the last pair other than excess DM DUP replicated SVs
-                    }
-                    else
-                    {
-                        LOGGER.trace("skipping linked pair({}) would close existing chain({})",
-                                newPair.toString(), chain.id());
+                    LOGGER.trace("skipping linked pair({}) would close existing chain({})",
+                            newPair.toString(), chain.id());
 
-                        if (!mSkippedPairs.contains(newPair))
-                        {
-                            mPairSkipped = true;
-                            mSkippedPairs.add(newPair);
-                        }
-
-                        linkClosesChain = true;
-                        continue;
+                    if (!mSkippedPairs.contains(newPair))
+                    {
+                        mPairSkipped = true;
+                        mSkippedPairs.add(newPair);
                     }
+
+                    linkClosesChain = true;
+                    continue;
                 }
 
                 boolean linkedOnFirst = newPair.first() == chain.getFirstSV() || newPair.first() == chain.getLastSV();
@@ -756,16 +743,6 @@ public class ChainLinkAllocator
         }
 
         return false;
-    }
-
-    protected boolean isDoubleMinuteDup()
-    {
-        return mDoubleMinuteSVs.size() == 1 && mDoubleMinuteSVs.get(0).type() == DUP;
-    }
-
-    protected boolean isDoubleMinuteDup(final SvVarData var)
-    {
-        return isDoubleMinuteDup() && mDoubleMinuteSVs.get(0) == var;
     }
 
     private void removeSkippedPairs(List<SvLinkedPair> possiblePairs)
