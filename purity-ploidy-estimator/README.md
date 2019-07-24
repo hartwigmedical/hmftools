@@ -103,6 +103,15 @@ Argument | Default | Description
 min_diploid_tumor_ratio_count | 30 | Always smooth over contiguous segments which are fewer than this number of depth windows long and which have no SV support on either side and which are bounded on both sides by copy number regions which could be smoothed together using our normal smoothing rules. This is intended to assist with smoothing residual GC noise in regions of very high or low GC content where no SV support exists.   
 min_diploid_tumor_ratio_count_centromere | 50 | Always smooth over copy number breakpoints which are fewer than this number of depth windows from the centromere or telomere and which have no further SV breakpoints nearer to the the centromere or telomere.  This is intended to help smooth over noisy mapping in repetitive regions close to the telomere and centromere. 
 
+#### Optional Fitting Arguments 
+The following arguments control the fitting behaviour. Changing these values without a thorough understanding of the system is not recommended.
+
+Argument | Default | Description 
+---|---|---
+min_purity | 0.08 | Minimum purity to fit to 
+max_purity | 1 | Maximum purity to fit to 
+purity_increment | 0.01 | Sets the increment from min to max purity  
+
 
 ### Example Usage
 
