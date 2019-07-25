@@ -286,6 +286,27 @@ public class ChainRuleSelector
                 proposedLinks.add(proposedLink);
         }
 
+        // make allowance for a single-option foldback connection, so it can populate the rest of the rules specific info
+        if(proposedLinks.size() == 1 && mHasReplication && !mFoldbackBreakendPairs.isEmpty())
+        {
+            for(final SvBreakend[] breakendPair : mFoldbackBreakendPairs)
+            {
+                SvBreakend foldbackStart = breakendPair[SE_START];
+                SvBreakend foldbackEnd = breakendPair[SE_END];
+
+                if (foldbackEnd == foldbackStart || foldbackEnd.getSV() == foldbackStart.getSV())
+                {
+                    final SvLinkedPair proposedLink = proposedLinks.get(0).Links.get(0);
+
+                    if (proposedLink.hasBreakend(foldbackStart) || proposedLink.hasBreakend(foldbackEnd))
+                    {
+                        proposedLinks = findFoldbackPairs(proposedLinks);
+                        break;
+                    }
+                }
+            }
+        }
+
         return proposedLinks;
     }
 
@@ -504,6 +525,7 @@ public class ChainRuleSelector
                 double maxNonFoldbackChainPloidy = 0;
                 double totalNonFoldbackChainPloidy = 0;
                 SvChain targetChain = null;
+                SvChain foldbackChain = null;
 
                 for (SvChain chain : mChains)
                 {
@@ -515,12 +537,10 @@ public class ChainRuleSelector
                         // restrict the foldback ploidy to the chain it is a part of
                         if ((chainStart == foldbackStart && chainEnd == foldbackEnd) || (chainStart == foldbackEnd && chainEnd == foldbackStart))
                         {
+                            foldbackChain = chain;
                             maxFoldbackChainPloidy = max(maxFoldbackChainPloidy, chain.ploidy());
                         }
                     }
-
-                    // if (!copyNumbersEqual(foldbackPloidy * 2, chain.ploidy()) && chain.ploidy() <= foldbackPloidy)
-                    //    continue;
 
                     if(chainStart == otherBreakend || chainEnd == otherBreakend)
                     {
@@ -568,7 +588,7 @@ public class ChainRuleSelector
                 // and specify the target chain - otherwise the links will go into new chains and rely on chain merging
 
                 ProposedLinks proposedLink = new ProposedLinks(
-                            Lists.newArrayList(pairStart, pairEnd), FOLDBACK_SPLIT, !isChainedFoldback ? targetChain : null);
+                            Lists.newArrayList(pairStart, pairEnd), FOLDBACK_SPLIT, targetChain, foldbackChain);
 
                 proposedLink.addFoldbackBreakends(
                         foldbackStart, foldbackEnd, foldbackPloidy,
@@ -640,7 +660,7 @@ public class ChainRuleSelector
                     continue;
                 }
 
-                ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(pair1, pair2), COMP_DUP_SPLIT, null);
+                ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(pair1, pair2), COMP_DUP_SPLIT, null, null);
 
                 proposedLink.addComDupBreakends(
                         compDupBeStart, compDupBeEnd, compDupPloidy,
@@ -680,7 +700,7 @@ public class ChainRuleSelector
                     if (chainStartPloidy == 0 || chainEndPloidy == 0)
                         continue;
 
-                    ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(pair1, pair2), COMP_DUP_SPLIT, chain);
+                    ProposedLinks proposedLink = new ProposedLinks(Lists.newArrayList(pair1, pair2), COMP_DUP_SPLIT, chain, null);
 
                     proposedLink.addComDupBreakends(
                             compDupBeStart, compDupBeEnd, compDupPloidy,

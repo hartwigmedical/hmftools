@@ -275,6 +275,75 @@ public class SvChain {
         }
     }
 
+    public void foldbackChainOnChain(final SvChain foldbackChain, final SvLinkedPair pair1, final SvLinkedPair pair2)
+    {
+        // the provided chain splits and replicates this chain
+        // keep existing links in place
+        // add the first connecting link
+        // then the foldback chain
+        // then the next connecting link
+        // then repeat this chain's links in reverse
+
+        // establish what is connecting to what
+        final SvBreakend chainStart = getOpenBreakend(true);
+        final SvBreakend chainEnd = getOpenBreakend(false);
+
+        boolean connectOnStart = pair1.hasBreakend(chainStart);
+
+        if((connectOnStart && !pair2.hasBreakend(chainStart)) || (!connectOnStart && !pair2.hasBreakend(chainEnd)))
+        {
+            LOGGER.error("chain({}) failed to add foldback pairs: {} and {}", mId, pair1, pair2);
+            return;
+        }
+
+        List<SvLinkedPair> existingLinks = Lists.newArrayList(mLinkedPairs);
+
+        final List<SvLinkedPair> fbLinks = foldbackChain.getLinkedPairs();
+
+        // doesn't matter which pair is added first
+        addLink(pair1, connectOnStart);
+
+        final SvBreakend connectingBreakend = connectOnStart ? chainStart : chainEnd;
+        boolean connectingFoldbackChainStart = foldbackChain.getOpenBreakend(true) == pair1.getOtherBreakend(connectingBreakend);
+
+        if(connectingFoldbackChainStart)
+        {
+            for (final SvLinkedPair fbPair : fbLinks)
+            {
+                addLink(fbPair, connectOnStart);
+            }
+        }
+        else
+        {
+            for(int index = fbLinks.size() - 1; index >= 0; --index)
+            {
+                final SvLinkedPair fbPair = fbLinks.get(index);
+                addLink(fbPair, connectOnStart);
+            }
+        }
+
+        // now add the second pair
+        addLink(pair2, connectOnStart);
+
+        // and then repeat this chain's links in reverse from before
+        // the beginning of the chain will now form the middle
+        if(!connectOnStart)
+        {
+            for (int index = existingLinks.size() - 1; index >= 0; --index)
+            {
+                final SvLinkedPair pair = existingLinks.get(index);
+                addLink(pair, connectOnStart);
+            }
+        }
+        else
+        {
+            for(final SvLinkedPair pair : existingLinks)
+            {
+                addLink(pair, connectOnStart);
+            }
+        }
+    }
+
     public void copyFrom(final SvChain otherChain)
     {
         for(final SvLinkedPair pair : otherChain.getLinkedPairs())

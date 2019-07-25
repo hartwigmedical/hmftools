@@ -28,6 +28,9 @@ public class ProposedLinks
     // for complex types, the chain which is being replicated by the foldback or complex dup
     private SvChain mChainTarget;
 
+    // chain operating as a foldback - only relevant for foldback-splitting links
+    private SvChain mFoldbackChain;
+
     private double mPloidy; // the min ploidy if the breakends differ, otherwise the median
     private Map<SvBreakend, Double> mBreakendPloidy;
     private Map<SvBreakend, Boolean> mBreakendPloidyMatched;
@@ -54,12 +57,13 @@ public class ProposedLinks
         mBreakendPloidy = Maps.newHashMap();
         mBreakendPloidyMatched = Maps.newHashMap();
         mChainTarget = null;
+        mFoldbackChain = null;
         mPloidyMatchType = PM_NONE;
 
         mShortestDistance = link.length();
     }
 
-    public ProposedLinks(List<SvLinkedPair> links, ChainingRule rule, final SvChain targetChain)
+    public ProposedLinks(List<SvLinkedPair> links, ChainingRule rule, final SvChain targetChain, final SvChain foldbackChain)
     {
         Links = links;
 
@@ -70,12 +74,14 @@ public class ProposedLinks
         mBreakendPloidy = Maps.newHashMap();
         mBreakendPloidyMatched = Maps.newHashMap();
         mChainTarget = targetChain;
+        mFoldbackChain = foldbackChain;
         mPloidyMatchType = PM_NONE;
 
         mShortestDistance = Links.stream().mapToLong(x -> x.length()).min().getAsLong();
     }
 
     public final SvChain targetChain() { return mChainTarget; }
+    public final SvChain foldbackChain() { return mFoldbackChain; }
 
     public final ChainingRule getSplittingRule()
     {
