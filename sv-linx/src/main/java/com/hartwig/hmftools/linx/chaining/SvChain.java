@@ -288,7 +288,7 @@ public class SvChain {
         final SvBreakend chainStart = getOpenBreakend(true);
         final SvBreakend chainEnd = getOpenBreakend(false);
 
-        boolean connectOnStart = pair1.hasBreakend(chainStart);
+        boolean connectOnStart = chainStart != null && pair1.hasBreakend(chainStart);
 
         if((connectOnStart && !pair2.hasBreakend(chainStart)) || (!connectOnStart && !pair2.hasBreakend(chainEnd)))
         {

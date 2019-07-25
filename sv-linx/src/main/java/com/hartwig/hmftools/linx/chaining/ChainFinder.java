@@ -522,7 +522,9 @@ public class ChainFinder
         }
 
         if(mChains.size() < 50)
+        {
             reconcileChains(mChains, false, mLinkAllocator.getNextChainId());
+        }
 
         checkDoubleMinuteChains();
     }
@@ -1011,6 +1013,10 @@ public class ChainFinder
         // if there is a single chain which contains all DM SVs, attempt to close the chain
         if(mDoubleMinuteSVs.isEmpty())
             return;
+
+        reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
+
+        //
 
         if(mChains.size() != 1)
             return;

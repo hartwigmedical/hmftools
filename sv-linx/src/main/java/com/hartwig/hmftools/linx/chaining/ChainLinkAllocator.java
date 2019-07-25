@@ -206,6 +206,9 @@ public class ChainLinkAllocator
                 boolean linksToFirst = false;
                 SvChain requiredChain = null;
 
+                boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy())
+                        || ploidyOverlap(proposedLinks.ploidy(), chain.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty());
+
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
                     final SvBreakend chainBreakend = chain.getOpenBreakend(isStart(se));
@@ -235,7 +238,7 @@ public class ChainLinkAllocator
                     if(!svConn.breakendExhausted(!chainBreakend.usesStart()) || svConn.getConnections(!chainBreakend.usesStart()).size() > 1)
                         continue;
 
-                    if(requiredChain == null && proposedLinks.linkPloidyMatch()
+                    if(requiredChain == null && proposedLinks.linkPloidyMatch() && ploidyMatched
                     && (chainBreakend == newPair.firstBreakend() || chainBreakend == newPair.secondBreakend()))
                     {
                         LOGGER.trace("pair({}) links breakend({}) to chain({}) as only exhausted connection", newPair, chainBreakend, chain.id());
@@ -268,9 +271,6 @@ public class ChainLinkAllocator
                 }
 
                 final SvBreakend newBreakend = linksToFirst ? newPair.secondBreakend() : newPair.firstBreakend();
-
-                boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy())
-                        || ploidyOverlap(proposedLinks.ploidy(), chain.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty());
 
                 // check whether a match was expected
                 if (!ploidyMatched)
