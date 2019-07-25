@@ -297,8 +297,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph disclaimerTumorLocation() {
-        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ are retrieved of the particular centra of the "
-                + "patient and affects which therapies of this patient are found.  ");
+        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ are received from the requesting hospital and "
+                + "have influence on the clinical evidence/study matching. No check is performed to verify the received information.");
     }
 
     @NotNull
