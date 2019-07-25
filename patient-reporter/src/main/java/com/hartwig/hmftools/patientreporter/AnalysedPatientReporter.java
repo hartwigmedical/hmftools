@@ -80,7 +80,6 @@ class AnalysedPatientReporter {
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         reportData.driverGeneView(),
-                        reportData.drupActionabilityModel().actionableGenes(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         reportData.limsModel().germlineReportingChoice(tumorSample));

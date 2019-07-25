@@ -469,7 +469,6 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createCOLO829SomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
-                .isDrupActionable(true)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
@@ -487,7 +486,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
-                .isDrupActionable(true)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
@@ -505,7 +503,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .gene("TERT")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
@@ -523,7 +520,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .gene("SF3B1")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("2:198266779")
@@ -541,7 +537,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .gene("TP63")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
@@ -564,7 +559,6 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createAllSomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("TP63")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
@@ -582,7 +576,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("KIT")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(true)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:81627197")

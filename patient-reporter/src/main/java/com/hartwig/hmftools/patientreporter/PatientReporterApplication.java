@@ -67,7 +67,6 @@ public class PatientReporterApplication {
 
     private static final String REF_SAMPLE = "ref_sample";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
-    private static final String DRUP_GENES_CSV = "drup_genes_csv";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
     private static final String FASTA_FILE_LOCATION = "fasta_file_location";
@@ -164,7 +163,6 @@ public class PatientReporterApplication {
     private static AnalysedReportData buildAnalysedReportData(@NotNull CommandLine cmd) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildQCFailReportData(cmd),
                 cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY),
-                cmd.getOptionValue(DRUP_GENES_CSV),
                 cmd.getOptionValue(FASTA_FILE_LOCATION),
                 cmd.getOptionValue(GERMLINE_GENES_CSV),
                 cmd.getOptionValue(SAMPLE_SUMMARY_TSV));
@@ -174,7 +172,7 @@ public class PatientReporterApplication {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_CSV)
                 && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd,
-                KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, DRUP_GENES_CSV) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd,
+                KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd,
                 SAMPLE_SUMMARY_TSV) && fileExists(cmd, FASTA_FILE_LOCATION);
     }
 
@@ -279,7 +277,6 @@ public class PatientReporterApplication {
         options.addOption(REF_SAMPLE, true, "The reference sample for the sample for which we are generating a report.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(FASTA_FILE_LOCATION, true, "Path towards the FASTA file containing the ref genome.");
-        options.addOption(DRUP_GENES_CSV, true, "Path towards a CSV containing genes that could potentially indicate inclusion in DRUP.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
 

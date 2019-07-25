@@ -19,8 +19,6 @@ public abstract class ReportableVariant implements AllelicDepth {
     @NotNull
     public abstract String gDNA();
 
-    public abstract boolean isDrupActionable();
-
     @NotNull
     public abstract String hgvsCodingImpact();
 
