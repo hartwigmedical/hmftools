@@ -151,7 +151,7 @@ public class ChainLinkAllocator
     }
 
     protected static int SPEC_LINK_INDEX = -1;
-    // protected static int SPEC_LINK_INDEX = 23;
+    // protected static int SPEC_LINK_INDEX = 26;
 
     public boolean addLinks(final ProposedLinks proposedLinks)
     {
@@ -298,6 +298,15 @@ public class ChainLinkAllocator
                 {
                     matchesChainPloidy = true;
                 }
+            }
+
+            // for now don't allow chains to be split, so previous a mismatch if the chain has a higher ploidy
+            if(targetChain != null && !matchesChainPloidy && targetChain.ploidy() > proposedLinks.ploidy())
+            {
+                LOGGER.debug("skipping targetChain({} ploidy={}) for proposedLink({}) on ploidy mismatch",
+                        targetChain.id(), formatPloidy(targetChain.ploidy()), proposedLinks);
+
+                targetChain = null;
             }
 
             if (targetChain != null)

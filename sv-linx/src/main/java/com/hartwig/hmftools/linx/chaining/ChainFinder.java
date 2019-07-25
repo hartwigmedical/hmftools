@@ -522,7 +522,7 @@ public class ChainFinder
         }
 
         if(mChains.size() < 50)
-            reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
+            reconcileChains(mChains, false, mLinkAllocator.getNextChainId());
 
         checkDoubleMinuteChains();
     }
