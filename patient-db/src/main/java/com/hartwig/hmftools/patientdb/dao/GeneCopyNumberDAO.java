@@ -53,8 +53,8 @@ class GeneCopyNumberDAO {
                     .minCopyNumber(record.getValue(GENECOPYNUMBER.MINCOPYNUMBER))
                     .maxCopyNumber(record.getValue(GENECOPYNUMBER.MAXCOPYNUMBER))
                     .somaticRegions(record.getValue(GENECOPYNUMBER.SOMATICREGIONS))
-                    .germlineHomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHOMREGIONS))
-                    .germlineHet2HomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHETREGIONS))
+                    .germlineHomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHOMDELETIONREGIONS))
+                    .germlineHet2HomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHETTOHOMDELETIONREGIONS))
                     .transcriptID(record.getValue(GENECOPYNUMBER.TRANSCRIPTID))
                     .transcriptVersion(record.getValue(GENECOPYNUMBER.TRANSCRIPTVERSION))
                     .chromosomeBand(record.getValue(GENECOPYNUMBER.CHROMOSOMEBAND))
@@ -86,8 +86,8 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.MINCOPYNUMBER,
                     GENECOPYNUMBER.MAXCOPYNUMBER,
                     GENECOPYNUMBER.SOMATICREGIONS,
-                    GENECOPYNUMBER.GERMLINEHOMREGIONS,
-                    GENECOPYNUMBER.GERMLINEHETREGIONS,
+                    GENECOPYNUMBER.GERMLINEHOMDELETIONREGIONS,
+                    GENECOPYNUMBER.GERMLINEHETTOHOMDELETIONREGIONS,
                     GENECOPYNUMBER.TRANSCRIPTID,
                     GENECOPYNUMBER.TRANSCRIPTVERSION,
                     GENECOPYNUMBER.CHROMOSOMEBAND,

@@ -81,12 +81,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The samples have been sequenced at ", ReportResources.HARTWIG_ADDRESS));
         div.add(createContentParagraph("The samples have been analyzed by Next Generation Sequencing "));
 
-        // TODO (DEV-812): Create CAR first before to add this to report.
-        //        String earliestArrivalDate = sampleReport.earliestArrivalDate();
-        //        div.add(createContentParagraphTwice("The results in this report have been obtained between ",
-        //                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
-        //                " and ",
-        //                ReportResources.REPORT_DATE));
+        String earliestArrivalDate = sampleReport.earliestArrivalDate();
+        div.add(createContentParagraphTwice("The results in this report have been obtained between ",
+                earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
+                " and ",
+                ReportResources.REPORT_DATE));
 
         div.add(sampleIdentificationLineOnReport);
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
@@ -124,6 +123,16 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The data on which this report is based is generated "
                 + "from tests that are performed under ISO/ICE-17025:2005 accreditation."));
         div.add(createContentParagraph("The analysis done for this report has passed all internal quality controls."));
+        div.add(createContentParagraph("The results stated in these report are based on the tested tumor and blood sample."));
+        div.add(createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ are received from the requesting hospital and "
+                + "have influence on the clinical evidence/study matching. No check is performed to verify the received information."));
+        div.add(createContentParagraph("The conclusion of this report is based solemnly on the results of the DNA sequencing of the tumor "
+                + "and the received tumor type. All other patient/tumor characteristics that can be of influence for the interpretation "
+                + "of these results, are not considered. Final interpretation of the clinical consequence of this report should therefore "
+                + "always be performed by the treating physician."));
+        div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
+                        + "of somatic variants and > 95% for detection of translocations and gene copy number changes. For samples "
+                        + "with a purity above 20%, the test has a sensitivity of >90%."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For general questions, please contact us at ", ReportResources.CONTACT_EMAIL_GENERAL));
 

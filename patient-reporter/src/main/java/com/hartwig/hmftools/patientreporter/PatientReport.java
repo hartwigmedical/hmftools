@@ -18,6 +18,9 @@ public interface PatientReport {
     Optional<String> comments();
 
     @NotNull
+    Optional<String> titleReportCorrect();
+
+    @NotNull
     String signaturePath();
 
     @NotNull

@@ -91,6 +91,7 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
+                Optional.of("AAA"),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
@@ -137,6 +138,7 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
+                Optional.of("AAA"),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
@@ -183,6 +185,7 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
+                Optional.of("AAA"),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
@@ -466,7 +469,6 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createCOLO829SomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
-                .isDrupActionable(true)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
@@ -484,7 +486,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
-                .isDrupActionable(true)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
@@ -502,7 +503,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .gene("TERT")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
@@ -520,7 +520,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .gene("SF3B1")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("2:198266779")
@@ -538,7 +537,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .gene("TP63")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
@@ -561,7 +559,6 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createAllSomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("TP63")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
@@ -579,7 +576,6 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("KIT")
-                .isDrupActionable(false)
                 .notifyClinicalGeneticist(true)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:81627197")

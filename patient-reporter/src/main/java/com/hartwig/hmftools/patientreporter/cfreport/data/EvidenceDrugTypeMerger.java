@@ -28,12 +28,15 @@ public final class EvidenceDrugTypeMerger {
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
         StringBuilder drugsStringBuilder = new StringBuilder();
-        String drugsString = Strings.EMPTY;
+        String drugsStringTotal = Strings.EMPTY;
+
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
 
         Map<DrugsKey, List<EvidenceItem>> mapEvidence = Maps.newHashMap();
         for (EvidenceItem item : items) {
+
             DrugsKey drugsKey = new DrugsKey(item.event(), item.scope(), item.level(), item.response(), item.drugsType(), item.source());
+
             if (mapEvidence.containsKey(drugsKey) && !item.drugsType().equals("Unknown") && !item.drugsType().equals(Strings.EMPTY)) {
                 List<EvidenceItem> itemsForKey = mapEvidence.get(drugsKey);
                 itemsForKey.add(item);
@@ -44,18 +47,19 @@ public final class EvidenceDrugTypeMerger {
             }
         }
 
+
         for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
             List<EvidenceItem> itemsForKey = entry.getValue();
-            StringBuilder drugsStringUnknown = new StringBuilder();
 
             for (EvidenceItem itemValue: itemsForKey) {
                 if (drugsStringBuilder.length() > 0) {
-                    drugsString = drugsStringBuilder.substring(1, drugsStringBuilder.length());
-
+                    drugsStringTotal = drugsStringBuilder.substring(1, drugsStringBuilder.length());
+                }
+                else if (!drugsStringBuilder.toString().contains(itemValue.drug())) {
+                    drugsStringTotal = itemValue.drug();
                 }
 
-                StringBuilder drugsStringTotal = drugsStringBuilder.length() == 0 ? drugsStringUnknown.append(itemValue.drug()) : drugsStringBuilder;
-                LOGGER.info(drugsStringTotal);
+
                 evidenceItems.add(ImmutableEvidenceItemMerger.builder()
                         .event(itemValue.event())
                         .source(itemValue.source())
@@ -69,7 +73,6 @@ public final class EvidenceDrugTypeMerger {
                         .build());
             }
         }
-        LOGGER.info(evidenceItems);
 
         return evidenceItems;
     }

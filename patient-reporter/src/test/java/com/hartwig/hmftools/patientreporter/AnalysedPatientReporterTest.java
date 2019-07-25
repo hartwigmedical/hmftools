@@ -39,6 +39,6 @@ public class AnalysedPatientReporterTest {
                 BACHELOR_CSV,
                 CHORD_PREDICTION_FILE,
                 CIRCOS_FILE,
-                null));
+                null, null));
     }
 }

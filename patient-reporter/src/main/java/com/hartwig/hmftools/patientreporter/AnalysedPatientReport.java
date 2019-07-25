@@ -72,6 +72,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @Override
     @NotNull
+    public abstract Optional<String> titleReportCorrect();
+
+    @Override
+    @NotNull
     public abstract String signaturePath();
 
     @Override

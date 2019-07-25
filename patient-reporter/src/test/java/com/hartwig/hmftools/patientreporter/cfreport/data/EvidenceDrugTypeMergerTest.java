@@ -109,6 +109,16 @@ public final class EvidenceDrugTypeMergerTest {
                 .build());
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
+                .drug("V")
+                .drugsType("Immuno")
+                .level(EvidenceLevel.LEVEL_A)
+                .response("Responsive")
+                .reference("V600E")
+                .source(ActionabilitySource.ONCOKB)
+                .scope(EvidenceScope.SPECIFIC)
+                .build());
+
+        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("D")
                 .drugsType("Chemo")
                 .level(EvidenceLevel.LEVEL_A)
@@ -158,7 +168,7 @@ public final class EvidenceDrugTypeMergerTest {
                 .scope(EvidenceScope.BROAD)
                 .build());
 
-        assertEquals(6, EvidenceDrugTypeMerger.merge(evidenceItems).size());
+        assertEquals(7, EvidenceDrugTypeMerger.merge(evidenceItems).size());
     }
 
     @NotNull

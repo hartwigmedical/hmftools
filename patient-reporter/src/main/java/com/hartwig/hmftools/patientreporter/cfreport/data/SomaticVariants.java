@@ -55,9 +55,6 @@ public final class SomaticVariants {
     @NotNull
     public static String geneDisplayString(@NotNull ReportableVariant variant) {
         String geneSuffix = Strings.EMPTY;
-        if (variant.isDrupActionable()) {
-            geneSuffix += "*";
-        }
 
         if (variant.notifyClinicalGeneticist()) {
             geneSuffix += "#";

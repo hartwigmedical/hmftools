@@ -27,7 +27,7 @@ public final class ReportableVariantAnalyzer {
 
     @NotNull
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView, @NotNull Set<String> drupActionableGenes,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<GermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
@@ -37,7 +37,7 @@ public final class ReportableVariantAnalyzer {
                 LOGGER.warn("No driver entry found for gene {}!", variant.gene());
             }
 
-            reportableVariants.add(fromSomaticVariant(variant).isDrupActionable(drupActionableGenes.contains(variant.gene()))
+            reportableVariants.add(fromSomaticVariant(variant)
                     .driverCategory(driverGeneView.category(variant.gene()))
                     .driverLikelihood(catalog != null ? catalog.driverLikelihood() : null)
                     .notifyClinicalGeneticist(false)
@@ -47,7 +47,7 @@ public final class ReportableVariantAnalyzer {
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         for (GermlineVariant germlineVariant : germlineVariantsToReport) {
-            reportableVariants.add(fromGermlineVariant(germlineVariant).isDrupActionable(drupActionableGenes.contains(germlineVariant.gene()))
+            reportableVariants.add(fromGermlineVariant(germlineVariant)
                     .driverCategory(driverGeneView.category(germlineVariant.gene()))
                     .driverLikelihood(null)
                     .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.gene()))

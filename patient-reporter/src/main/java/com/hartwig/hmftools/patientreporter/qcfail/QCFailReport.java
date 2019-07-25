@@ -30,6 +30,10 @@ public abstract class QCFailReport implements PatientReport {
 
     @Override
     @NotNull
+    public abstract Optional<String> titleReportCorrect();
+
+    @Override
+    @NotNull
     public abstract String signaturePath();
 
     @Override

@@ -117,7 +117,6 @@ public final class PatientReporterTestFactory {
         return ImmutableReportableVariant.builder()
                 .gene(Strings.EMPTY)
                 .gDNA(Strings.EMPTY)
-                .isDrupActionable(false)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.HOTSPOT)

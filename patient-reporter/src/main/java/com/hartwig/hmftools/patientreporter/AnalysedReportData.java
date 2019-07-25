@@ -21,9 +21,6 @@ public abstract class AnalysedReportData implements ReportData {
     public abstract DriverGeneView driverGeneView();
 
     @NotNull
-    public abstract DrupActionabilityModel drupActionabilityModel();
-
-    @NotNull
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();
 
     @NotNull

@@ -103,6 +103,15 @@ Argument | Default | Description
 min_diploid_tumor_ratio_count | 30 | Always smooth over contiguous segments which are fewer than this number of depth windows long and which have no SV support on either side and which are bounded on both sides by copy number regions which could be smoothed together using our normal smoothing rules. This is intended to assist with smoothing residual GC noise in regions of very high or low GC content where no SV support exists.   
 min_diploid_tumor_ratio_count_centromere | 50 | Always smooth over copy number breakpoints which are fewer than this number of depth windows from the centromere or telomere and which have no further SV breakpoints nearer to the the centromere or telomere.  This is intended to help smooth over noisy mapping in repetitive regions close to the telomere and centromere. 
 
+#### Optional Fitting Arguments 
+The following arguments control the fitting behaviour. Changing these values without a thorough understanding of the system is not recommended.
+
+Argument | Default | Description 
+---|---|---
+min_purity | 0.08 | Minimum purity to fit to 
+max_purity | 1 | Maximum purity to fit to 
+purity_increment | 0.01 | Sets the increment from min to max purity  
+
 
 ### Example Usage
 
@@ -525,7 +534,7 @@ PURPLE generates a number of tab separated output files as described in the foll
 
 #### Purity File 
 
-The purity file `TUMOR.purple.purity` contains a single row with a summary of the purity fit:
+The purity file `TUMOR.purple.purity.tsv` contains a single row with a summary of the purity fit:
 
 Column  | Example Value | Description
 ---|---|---
@@ -549,7 +558,7 @@ msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if soma
 
 #### Purity Range File
 
-The purity range file `TUMOR.purple.purity.range` file summarises the best fit per purity sorted by score. 
+The purity range file `TUMOR.purple.purity.range.tsv` file summarises the best fit per purity sorted by score. 
 Descriptions of the fields are the same as above.
 
 Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
@@ -560,7 +569,7 @@ Purity|NormFactor|Score|DiploidProportion|Ploidy|SomaticDeviation
 
 #### Copy Number File
 
-The copy number file `TUMOR.purple.cnv` contains the copy number profile of all (contiguous) segments of the tumor sample:
+The copy number file `TUMOR.purple.cnv.somatic.tsv` contains the copy number profile of all (contiguous) segments of the tumor sample:
 
 Column  | Example Value | Description
 ---|---|---
@@ -583,7 +592,7 @@ MajorAllelePloidy | 2.0076 | Ploidy of major allele adjusted for purity
 
 #### Gene Copy Number File
 
-The gene copy number file `TUMOR.purple.gene.cnv` summarises copy number alterations of each gene in the HMF gene panel:
+The gene copy number file `TUMOR.purple.cnv.gene.tsv` summarises copy number alterations of each gene in the HMF gene panel:
 
 Column  | Example Value | Description
 ---|---|---
@@ -594,8 +603,8 @@ Gene  | CDKN2A | Name of gene
 MinCopyNumber  | 2.0098 | Minimum copy number found in the gene exons
 MaxCopyNumber  | 2.0098 | Maximum copy number found in the gene exons
 SomaticRegions | 1 | Count of somatic copy number regions this gene spans
-GermlineHomRegions | 0 | Count of homozygous germline regions this gene spans
-GermlineHet2HomRegions | 0 | Count of regions that are heterozygous in the germline but homozygous in the tumor this gene spans
+GermlineHomDeletionRegions | 0 | Number of regions spanned by this gene that are homozygously deleted in the germline
+GermlineHetToHomDeletionRegions | 0 | Number of regions spanned by this gene that are both heterozygously deleted in the germline and homozygously deleted in the tumor
 TranscriptId | ENST00000498124 | Ensembl Transcript ID
 TranscriptVersion | 1 | Ensembl Transcript ID Version
 ChromosomeBand | p21.3 | Chromosome Band of the gene
@@ -928,10 +937,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-31)
   - Added microsatellite status
   - Added subclonal likelihood model and figure
   - Consistent file headers
+  - Consistent file names
   - Fix whole genome duplication calculation
   - Changed definition of `ref_genome` parameter to be mandatory path to reference fasta file.
   - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 

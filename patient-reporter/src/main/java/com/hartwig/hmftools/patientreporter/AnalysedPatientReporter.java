@@ -60,7 +60,7 @@ class AnalysedPatientReporter {
     public AnalysedPatientReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull String purplePurityTsv,
             @NotNull String purpleGeneCnvTsv, @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv,
             @NotNull String linxDisruptionTsv, @Nullable String bachelorCsv, @NotNull String chordPredictionFile,
-            @NotNull String circosFile, @Nullable String comments) throws IOException {
+            @NotNull String circosFile, @Nullable String comments, @Nullable String correctTitle) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(), tumorSample);
 
@@ -80,7 +80,6 @@ class AnalysedPatientReporter {
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         reportData.driverGeneView(),
-                        reportData.drupActionabilityModel().actionableGenes(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
                         reportData.limsModel().germlineReportingChoice(tumorSample));
@@ -96,7 +95,6 @@ class AnalysedPatientReporter {
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
         List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
-
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.of(sampleReport,
                 copyNumberAnalysis.hasReliablePurityFit(),
                 copyNumberAnalysis.purity(),
@@ -115,6 +113,7 @@ class AnalysedPatientReporter {
                 svAnalysis.reportableDisruptions(),
                 circosFile,
                 Optional.ofNullable(comments),
+                Optional.ofNullable(correctTitle),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
