@@ -129,6 +129,10 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                     .setAction(PdfAction.createURI(ClinicalTrials.sourceUrl(trial))));
         }
 
+        contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
+                .setPaddingTop(10)
+                .add(new Paragraph("Potential eligibility for the DRUP study does not (yet) include tumor-type specific matching.").addStyle(
+                        ReportResources.subTextStyle())));
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 
