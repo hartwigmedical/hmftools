@@ -95,7 +95,7 @@ public class VisSegmentFile
                 .add(String.valueOf(segment.Chromosome))
                 .add(String.valueOf(segment.PosStart))
                 .add(String.valueOf(segment.PosEnd))
-                .add(String.valueOf(segment.LinkPloidy))
+                .add(String.format("%.4f",segment.LinkPloidy))
                 .toString();
     }
 

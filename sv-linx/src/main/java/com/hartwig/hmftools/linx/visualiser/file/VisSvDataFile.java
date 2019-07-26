@@ -131,7 +131,7 @@ public class VisSvDataFile
                 .add(String.valueOf(svData.OrientEnd))
                 .add(String.valueOf(svData.InfoStart))
                 .add(String.valueOf(svData.InfoEnd))
-                .add(String.valueOf(svData.Ploidy))
+                .add(String.format("%.4f",svData.Ploidy))
                 .toString();
     }
 
