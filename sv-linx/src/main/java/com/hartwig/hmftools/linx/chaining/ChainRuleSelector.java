@@ -289,6 +289,8 @@ public class ChainRuleSelector
         // make allowance for a single-option foldback connection, so it can populate the rest of the rules specific info
         if(proposedLinks.size() == 1 && mHasReplication && !mFoldbackBreakendPairs.isEmpty())
         {
+            updateFoldbackBreakends();
+
             for(final SvBreakend[] breakendPair : mFoldbackBreakendPairs)
             {
                 SvBreakend foldbackStart = breakendPair[SE_START];
@@ -526,6 +528,7 @@ public class ChainRuleSelector
                 double totalNonFoldbackChainPloidy = 0;
                 SvChain targetChain = null;
                 SvChain foldbackChain = null;
+                boolean chainPloidyMatched = false;
 
                 for (SvChain chain : mChains)
                 {
@@ -544,9 +547,24 @@ public class ChainRuleSelector
 
                     if(chainStart == otherBreakend || chainEnd == otherBreakend)
                     {
+                        if(copyNumbersEqual(foldbackPloidy * 2, chain.ploidy())
+                        || ploidyOverlap(foldbackPloidy * 2, foldback.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty()))
+                        {
+                            chainPloidyMatched = true;
+                            targetChain = chain;
+                        }
+
                         totalNonFoldbackChainPloidy += chain.ploidy();
 
-                        if(targetChain == null || chain.ploidy() > maxNonFoldbackChainPloidy)
+                        /*
+                        if(chainStart == otherBreakend)
+                            totalNonFoldbackChainPloidy += chain.ploidy();
+
+                        if(chainEnd == otherBreakend)
+                            totalNonFoldbackChainPloidy += chain.ploidy();
+                        */
+
+                        if(!chainPloidyMatched && chain.ploidy() > maxNonFoldbackChainPloidy)
                         {
                             targetChain = chain;
                             maxNonFoldbackChainPloidy = chain.ploidy();
@@ -555,9 +573,10 @@ public class ChainRuleSelector
                 }
 
                 // limit the available ploidies of both links to their max chain ploidy if linked
-                double linkedPloidy = nonFoldbackPloidy;
+                double linkPloidy = chainPloidyMatched ? targetChain.ploidy() : nonFoldbackPloidy;
 
-                if(totalNonFoldbackChainPloidy > 0)
+
+                if(!chainPloidyMatched && totalNonFoldbackChainPloidy > 0)
                 {
                     double unchainedPloidy = max(otherBreakend.ploidy() - totalNonFoldbackChainPloidy, 0);
 
@@ -568,7 +587,7 @@ public class ChainRuleSelector
                     }
                     else
                     {
-                        linkedPloidy = maxNonFoldbackChainPloidy;
+                        linkPloidy = maxNonFoldbackChainPloidy;
                     }
                 }
 
@@ -592,13 +611,13 @@ public class ChainRuleSelector
 
                 proposedLink.addFoldbackBreakends(
                         foldbackStart, foldbackEnd, foldbackPloidy,
-                        otherBreakend, nonFoldbackPloidy, linkedPloidy, otherBreakend.ploidyUncertainty());
+                        otherBreakend, nonFoldbackPloidy, linkPloidy, otherBreakend.ploidyUncertainty());
 
                 newProposedLinks.add(proposedLink);
 
                 LOGGER.trace("foldback breakends({} & {}) ploidy({}) matched with breakend({}) ploidy({}) linkPloidy({})",
                         foldbackStart, foldbackEnd, formatPloidy(foldbackPloidy),
-                        otherBreakend, formatPloidy(nonFoldbackPloidy), formatPloidy(linkedPloidy));
+                        otherBreakend, formatPloidy(nonFoldbackPloidy), formatPloidy(linkPloidy));
             }
         }
 
