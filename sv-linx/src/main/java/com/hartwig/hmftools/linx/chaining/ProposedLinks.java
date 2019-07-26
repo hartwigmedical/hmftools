@@ -171,7 +171,8 @@ public class ProposedLinks
         mBreakendPloidyMatched.put(foldbackEnd, true);
 
         mBreakendPloidy.put(otherBreakend, otherPloidy);
-        mBreakendPloidyMatched.put(otherBreakend, Doubles.equal(otherPloidy, mPloidy));
+        //mBreakendPloidyMatched.put(otherBreakend, Doubles.equal(otherPloidy, mPloidy));
+        mBreakendPloidyMatched.put(otherBreakend, false);
     }
 
     public void addBreakendPloidies(
@@ -195,6 +196,11 @@ public class ProposedLinks
 
         mPloidy = min(ploidy1, ploidy2);
 
+        // leave up to allocation to decide
+        mBreakendPloidyMatched.put(breakend1, false);
+        mBreakendPloidyMatched.put(breakend2, false);
+
+        /*
         if(mPloidyMatchType == PM_NONE)
         {
             mBreakendPloidyMatched.put(breakend1, Doubles.equal(ploidy1, mPloidy));
@@ -208,6 +214,7 @@ public class ProposedLinks
             mBreakendPloidyMatched.put(breakend1, true);
             mBreakendPloidyMatched.put(breakend2, true);
         }
+        */
     }
 
     public double breakendPloidy(final SvBreakend breakend)

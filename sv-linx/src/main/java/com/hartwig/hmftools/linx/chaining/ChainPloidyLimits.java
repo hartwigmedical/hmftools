@@ -7,6 +7,8 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -305,6 +307,11 @@ public class ChainPloidyLimits
         double estUncertainty = sqrt(2 * adjUncertainty / sumUncertainty);
 
         return new PloidyCalcData(estPloidy, estUncertainty, true);
+    }
+
+    public static boolean ploidyMatch(double ploidy1, double uncertainty1, double ploidy2, double uncertainty2)
+    {
+        return copyNumbersEqual(ploidy1, ploidy2) || ploidyOverlap(ploidy1, uncertainty1, ploidy2, uncertainty2);
     }
 
     public static boolean ploidyOverlap(double ploidy1, double uncertainty1, double ploidy2, double uncertainty2)

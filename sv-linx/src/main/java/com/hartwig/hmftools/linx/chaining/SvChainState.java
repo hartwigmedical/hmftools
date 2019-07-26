@@ -27,6 +27,8 @@ public class SvChainState
 
     private double[] mBreakendCount;
 
+    private List<SvChain> mChainConnections;
+
     // unique connections made to other SVs
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
@@ -84,6 +86,7 @@ public class SvChainState
 
     public final List<SvBreakend> getConnections(boolean isStart) { return isStart ? mConnectionsStart : mConnectionsEnd; }
     public int uniqueConnections(boolean isStart) { return isStart ? mConnectionsStart.size() : mConnectionsEnd.size(); }
+    public boolean hasConnections() { return !mConnectionsStart.isEmpty() || !mConnectionsEnd.isEmpty(); }
 
     public void addConnection(final SvBreakend breakend, boolean isStart)
     {

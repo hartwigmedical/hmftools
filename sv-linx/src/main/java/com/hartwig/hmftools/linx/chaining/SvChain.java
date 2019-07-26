@@ -14,8 +14,10 @@ import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
@@ -36,6 +38,7 @@ public class SvChain {
     // link in the chain, and the 'second' SV links to its other breakend in the next link in the chain
     private List<SvVarData> mSvList;
     private List<SvLinkedPair> mLinkedPairs;
+    private SvBreakend[] mOpenBreakends; // cached for convenience
     private double mPloidy;
     private double mPloidyUncertainty;
 
@@ -53,6 +56,7 @@ public class SvChain {
         mPloidyUncertainty = 0;
         mIsClosedLoop = false;
         mLinkSum = 0;
+        mOpenBreakends = new SvBreakend[SE_PAIR];
     }
 
     public int id() { return mId; }
@@ -79,6 +83,7 @@ public class SvChain {
         if(mLinkedPairs.isEmpty())
         {
             mLinkedPairs.add(newPair);
+            updateBreakends();
             return;
         }
 
@@ -100,6 +105,8 @@ public class SvChain {
             mLinkedPairs.add(0, newPair); // insert at front
         else
             mLinkedPairs.add(newPair);
+
+        updateBreakends();
     }
 
     public void setPloidyData(double ploidy, double uncertainty)
@@ -142,9 +149,16 @@ public class SvChain {
     }
     public boolean lastLinkOpenOnStart() { return !mLinkedPairs.isEmpty() ? !mLinkedPairs.get(mLinkedPairs.size()-1).secondLinkOnStart() : false; }
 
+    private void updateBreakends()
+    {
+        mOpenBreakends[SE_START] = getFirstSV().getBreakend(firstLinkOpenOnStart());
+        mOpenBreakends[SE_END] = getLastSV().getBreakend(lastLinkOpenOnStart());
+    }
+
+    public final SvBreakend getOpenBreakend(int seIndex) { return mOpenBreakends[seIndex]; }
     public final SvBreakend getOpenBreakend(boolean isStart)
     {
-        return isStart ? getFirstSV().getBreakend(firstLinkOpenOnStart()) : getLastSV().getBreakend(lastLinkOpenOnStart());
+        return getOpenBreakend(seIndex(isStart));
     }
 
     public boolean isConsistent()

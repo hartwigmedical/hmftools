@@ -1546,29 +1546,6 @@ public class ClusterAnalyser {
                         var.getCluster().id(), var.posId(), var.type(), be.toString());
             }
         }
-
-        /*
-        // check if the replicated SV has the same linked pairing or if the variant forms both ends of the cluster's chain
-        final SvCluster cluster = var.getCluster();
-
-        for(final SvChain chain : cluster.getChains())
-        {
-            if(chain.getFirstSV().equals(var, true)
-            && chain.getLastSV().equals(var, true)
-            && chain.firstLinkOpenOnStart() == chain.lastLinkOpenOnStart())
-            {
-                final String chainInfo = String.format("%d;%d;%d",
-                        chain.getLinkCount(), chain.getAssemblyLinkCount(), chain.getLength(false));
-
-                boolean foldbackIsStart = chain.firstLinkOpenOnStart();
-
-                var.setFoldbackLink(foldbackIsStart, var.getBreakend(foldbackIsStart), 0, chainInfo);
-
-                LOGGER.info("cluster({}) foldback translocation SV({} : {}) with self on {}",
-                        cluster.id(), var.posId(), var.type(), foldbackIsStart ? "start" : "end");
-            }
-        }
-        */
     }
 
     private void reportOtherFeatures()

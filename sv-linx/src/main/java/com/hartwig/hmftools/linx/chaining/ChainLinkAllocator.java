@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_PLOIDY_LEVEL;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
@@ -21,6 +22,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -200,14 +202,17 @@ public class ChainLinkAllocator
             // if one of the breakends in this new link has its other breakend in another chain and is exhausted, then force it
             // to connect to that existing chain
 
-            for (SvChain chain : mChains)
+            List<SvChain> chains = getChainsWithOpenBreakend(newPair.firstBreakend());
+            chains.addAll(getChainsWithOpenBreakend(newPair.secondBreakend()));
+
+            for (SvChain chain : chains)
             {
                 boolean[] canAddToStart = { false, false };
                 boolean linksToFirst = false;
                 SvChain requiredChain = null;
 
-                boolean ploidyMatched = copyNumbersEqual(proposedLinks.ploidy(), chain.ploidy())
-                        || ploidyOverlap(proposedLinks.ploidy(), chain.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty());
+                boolean ploidyMatched = ploidyMatch(
+                        proposedLinks.ploidy(), chain.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty());
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -749,6 +754,14 @@ public class ChainLinkAllocator
         return !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
     }
 
+    protected double getUnlinkedBreakendCount(final SvBreakend breakend, boolean limitByChains)
+    {
+        if(limitByChains)
+            return getChainLimitedBreakendPloidy(breakend);
+        else
+            return getUnlinkedBreakendCount(breakend);
+    }
+
     protected double getChainLimitedBreakendPloidy(final SvBreakend breakend)
     {
         SvChainState svConn = mSvConnectionsMap.get(breakend.getSV());
@@ -760,28 +773,53 @@ public class ChainLinkAllocator
         if(unlinkedPloidy == 0)
             return 0;
 
+        if(!svConn.hasConnections())
+            return unlinkedPloidy;
+
         // if the breakend is the open end of a chain, then the chain's ploidy is a limit on the max which can assigned
         double maxChainPloidy = 0;
         double totalChainPloidy = 0;
 
-        for(final SvChain chain : mChains)
+        List<SvChain> chains = getChainsWithOpenBreakend(breakend);
+
+        if(chains.isEmpty())
+            return unlinkedPloidy;
+
+        // if an Sv is fully connected to a chain on one side, then only offer up the chain ploidy
+        if(chains.size() == 1 && svConn.breakendExhausted(!breakend.usesStart()))
+            return chains.get(0).ploidy();
+
+        for(final SvChain chain : chains)
         {
-            if((chain.getOpenBreakend(true) == breakend || chain.getOpenBreakend(false) == breakend))
+            if(chain.getOpenBreakend(true) == breakend)
+            {
+                totalChainPloidy += chain.ploidy();
+                maxChainPloidy = max(maxChainPloidy, chain.ploidy());
+            }
+
+            if(chain.getOpenBreakend(false) == breakend)
             {
                 totalChainPloidy += chain.ploidy();
                 maxChainPloidy = max(maxChainPloidy, chain.ploidy());
             }
         }
 
-        if(maxChainPloidy > 0)
+        if(totalChainPloidy > 0)
         {
-            double unchainedPloidy = max(svConn.Ploidy - totalChainPloidy, 0);
+            double unchainedPloidy = max(unlinkedPloidy - totalChainPloidy, 0);
             return max(maxChainPloidy, unchainedPloidy);
         }
         else
         {
             return unlinkedPloidy;
         }
+    }
+
+    protected List<SvChain> getChainsWithOpenBreakend(final SvBreakend breakend)
+    {
+        return mChains.stream()
+                .filter(x -> x.getOpenBreakend(true) == breakend || x.getOpenBreakend(false) == breakend)
+                .collect(Collectors.toList());
     }
 
     protected double getMaxUnlinkedBreakendCount(final SvBreakend breakend)

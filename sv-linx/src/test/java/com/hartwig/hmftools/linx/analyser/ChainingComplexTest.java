@@ -30,30 +30,68 @@ import org.junit.Test;
 
 public class ChainingComplexTest
 {
-
     @Test
     public void testBFBChain1()
     {
-        // vanilla BFB of the form centromere - A - B - A - C - A - R - telomere, where R is the resolving SV
+        // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 2 - 1 - 4 1 - 2 - 1 - 3 - 1 - 2 - 1 - R - telomere, where R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData varA = createTestSv("0", "1", "1", 2000,3000, -1, -1, INV,  3);
-        final SvVarData varB = createTestSv("1", "1", "1", 9000,10000, 1, 1, INV,  1);
-        final SvVarData varC = createTestSv("2", "1", "1", 5000,6000, 1, 1, INV, 1);
-        final SvVarData varR = createTestSv("3", "1", "1", 1000,8000, 1, 1, INV, 1);
+        final SvVarData var1 = createTestSv("1", "1", "1", 1000,2000, -1, -1, INV,  8);
+        final SvVarData var2 = createTestSv("2", "1", "1", 9000,10000, 1, 1, INV,  4);
+        final SvVarData var3 = createTestSv("3", "1", "1", 6000,7000, 1, 1, INV, 2);
+        final SvVarData var4 = createTestSv("4", "1", "1", 3000,4000, 1, 1, INV, 1);
+        final SvVarData var5 = createTestSv("5", "1", "2", 12000,100, 1, 1, BND, 1);
 
-        tester.AllVariants.add(varA);
-        tester.AllVariants.add(varB);
-        tester.AllVariants.add(varC);
-        tester.AllVariants.add(varR);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(varA.getFoldbackLink(true), varA.id());
-        assertEquals(varB.getFoldbackLink(true), varB.id());
-        assertEquals(varC.getFoldbackLink(true), varC.id());
+        assertEquals(var1.getFoldbackLink(true), var1.id());
+        assertEquals(var2.getFoldbackLink(true), var2.id());
+        assertEquals(var3.getFoldbackLink(true), var3.id());
+        assertEquals(var4.getFoldbackLink(true), var4.id());
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+
+        assertEquals(5, chain.getSvCount());
+        assertEquals(15, chain.getLinkCount());
+    }
+
+    @Ignore
+    @Test
+    public void testBFBChain2()
+    {
+        // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 4 - telomere, where R is the resolving SV
+        SvTestHelper tester = new SvTestHelper();
+        tester.logVerbose(true);
+
+        final SvVarData var1 = createTestSv("1", "1", "1", 2000,3000, -1, -1, INV,  3);
+        final SvVarData var2 = createTestSv("2", "1", "1", 9000,10000, 1, 1, INV,  1);
+        final SvVarData var3 = createTestSv("3", "1", "1", 5000,6000, 1, 1, INV, 1);
+        final SvVarData var4 = createTestSv("4", "1", "1", 1000,8000, 1, 1, INV, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(var1.getFoldbackLink(true), var1.id());
+        assertEquals(var2.getFoldbackLink(true), var2.id());
+        assertEquals(var3.getFoldbackLink(true), var3.id());
 
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
