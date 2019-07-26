@@ -24,15 +24,16 @@ public class Fusions
     @NotNull
     private static List<Fusion> fromLines(@NotNull final List<String> lines)
     {
-        final Map<String, Integer> map = columnMap(lines.get(0));
-
         final List<Fusion> result = Lists.newArrayList();
-        for (int i = 1; i < lines.size(); i++)
-        {
-            Fusion fusion = fromLine(map, lines.get(i));
-            if (fusion.reportable())
-            {
-                result.add(fusion);
+
+        if (!lines.isEmpty()) {
+            final Map<String, Integer> map = columnMap(lines.get(0));
+
+            for (int i = 1; i < lines.size(); i++) {
+                Fusion fusion = fromLine(map, lines.get(i));
+                if (fusion.reportable()) {
+                    result.add(fusion);
+                }
             }
         }
 
