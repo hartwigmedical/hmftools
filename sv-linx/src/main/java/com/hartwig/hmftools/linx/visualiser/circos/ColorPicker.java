@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public class ColorPicker
 {
 
-    private static final Color BLACK = new Color(1, 1, 1);
+    private static final Color BLACK = new Color(5, 5, 5);
 
     private static final Color COLOR6 = new Color(31, 120, 180);
     private static final Color COLOR7 = new Color(227, 26, 28);
