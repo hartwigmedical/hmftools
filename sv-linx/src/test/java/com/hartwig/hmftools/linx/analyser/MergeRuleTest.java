@@ -31,7 +31,6 @@ import org.junit.Test;
 
 public class MergeRuleTest
 {
-
     @Test
     public void testProximityMerge()
     {
@@ -84,11 +83,17 @@ public class MergeRuleTest
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(3, tester.getClusters().size());
-        assertTrue(tester.getClusters().get(0).getSVs().contains(var7));
-        assertTrue(tester.getClusters().get(0).getResolvedType() == ResolvedType.DUP_BE);
-        assertTrue(tester.getClusters().get(1).getSVs().contains(var9));
-        assertTrue(tester.getClusters().get(1).getResolvedType() == ResolvedType.DUP_BE);
-        assertEquals(11, tester.getClusters().get(2).getSvCount());
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var7));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var9));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var2, var3, var4, var5, var6, var8, var10,
+                var11, var12, var13)));
 
         // simple clustered SVs are split out in the final routine
         tester.clearClustersAndSVs();
