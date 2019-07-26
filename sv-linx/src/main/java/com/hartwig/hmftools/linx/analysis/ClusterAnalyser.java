@@ -11,9 +11,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_SATELLITE_SGL;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateChainedClusters;
@@ -50,9 +47,7 @@ import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHE
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
 
@@ -121,11 +116,6 @@ public class ClusterAnalyser {
             mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath, mConfig.LogChainingMaxSize);
             mDmFinder.setOutputDir(mConfig.OutputDataPath);
         }
-
-        if(mConfig.ChainingMethod == CHAIN_METHOD_OLD)
-            mChainFinder.setUseOldMethod(true, false);
-        else if(mConfig.ChainingMethod == CHAIN_METHOD_COMPARE)
-            mChainFinder.setUseOldMethod(false, true);
 
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
         mLinkFinder.setLogVerbose(mConfig.LogVerbose);
@@ -268,7 +258,7 @@ public class ClusterAnalyser {
             boolean isSimple = cluster.getSvCount() <= SMALL_CLUSTER_SIZE && cluster.isConsistent() && !cluster.hasVariedPloidy();
 
             mLinkFinder.findAssembledLinks(cluster);
-            cluster.applySvPloidyReplication(mConfig.ChainingMethod != CHAIN_METHOD_NEW, mConfig.ChainingSvLimit);
+            cluster.setPloidyReplication(mConfig.ChainingSvLimit);
 
             if(isSimple)
                 mDmFinder.analyseCluster(cluster);
@@ -309,7 +299,7 @@ public class ClusterAnalyser {
             // look for and mark clusters has DM candidates, which can subsequently affect chaining
             mDmFinder.analyseCluster(cluster, true);
 
-            cluster.applySvPloidyReplication(mConfig.ChainingMethod != CHAIN_METHOD_NEW, mConfig.ChainingSvLimit);
+            cluster.setPloidyReplication(mConfig.ChainingSvLimit);
 
             // no need to re-find assembled TIs
 
@@ -451,11 +441,6 @@ public class ClusterAnalyser {
             isSpecificCluster(cluster);
 
         int svCount = cluster.getSvCount();
-
-        if(mConfig.ChainingMethod == CHAIN_METHOD_OLD)
-        {
-            svCount += cluster.getSVs().stream().mapToInt(x -> x.getReplicatedCount()).sum();
-        }
 
         if(mConfig.ChainingSvLimit > 0 && svCount > mConfig.ChainingSvLimit)
         {

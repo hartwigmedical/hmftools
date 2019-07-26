@@ -6,10 +6,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -43,7 +40,6 @@ public class ChainingActualTest
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
         SvTestHelper tester = new SvTestHelper();
-        tester.setChaininMethod(CHAIN_METHOD_NEW);
         tester.logVerbose(true);
 
         /*

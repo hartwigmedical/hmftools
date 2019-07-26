@@ -103,15 +103,6 @@ public class ChainFinder
     private List<SvVarData> mReplicatedSVs;
     private List<SvBreakend> mReplicatedBreakends;
 
-    // temporary support for old chain finder
-    private ChainFinderOld mOldFinder;
-    private boolean mUseOld;
-    private boolean mRunOldComparison;
-
-    public static final int CHAIN_METHOD_OLD = 0;
-    public static final int CHAIN_METHOD_NEW = 1;
-    public static final int CHAIN_METHOD_COMPARE = 2;
-
     public static final double MIN_CHAINING_PLOIDY_LEVEL = 0.05;
 
     private boolean mIsValid;
@@ -165,22 +156,6 @@ public class ChainFinder
         mDiagnostics = new ChainDiagnostics(
                 mLinkAllocator.getSvConnectionsMap(), mLinkAllocator.getSvCompletedConnections(), mChains, mUniqueChains,
                 mSvBreakendPossibleLinks, mDoubleMinuteSVs, mLinkAllocator.getUniquePairs());
-
-        mOldFinder = new ChainFinderOld();
-        mUseOld = false;
-        mRunOldComparison = false;
-    }
-
-    public void setUseOldMethod(boolean toggle, boolean runComparison)
-    {
-        LOGGER.info("using {} chain-finder", toggle ? "old" : "new");
-        mUseOld = toggle;
-
-        if(!mUseOld && runComparison)
-        {
-            LOGGER.info("running chaining comparison");
-            mRunOldComparison = true;
-        }
     }
 
     public void clear()
@@ -233,9 +208,6 @@ public class ChainFinder
         mIsClusterSubset = false;
         mLinkAllocator.initialise(mClusterId);
         mRuleSelector.initialise(mClusterId, mHasReplication);
-
-        if(mUseOld || mRunOldComparison)
-            mOldFinder.initialise(cluster);
     }
 
     public void initialise(SvCluster cluster, final List<SvVarData> svList)
@@ -313,21 +285,13 @@ public class ChainFinder
 
     public final List<SvChain> getUniqueChains()
     {
-        return mUseOld ? mOldFinder.getUniqueChains() : mUniqueChains;
+        return mUniqueChains;
     }
     public double getValidAllelePloidySegmentPerc() { return mClusterPloidyLimits.getValidAllelePloidySegmentPerc(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 
     public void formChains(boolean assembledLinksOnly)
     {
-        if(mUseOld || mRunOldComparison)
-        {
-            mOldFinder.formChains(assembledLinksOnly);
-
-            if(mUseOld)
-                return;
-        }
-
         if(mSvList.size() < 2)
             return;
 
@@ -347,9 +311,6 @@ public class ChainFinder
         removeIdenticalChains();
 
         mDiagnostics.chainingComplete();
-
-        if(mRunOldComparison && isValid())
-            mOldFinder.compareChains(mSampleId, mUniqueChains, mDiagnostics.unlinkedSvCount());
 
         disableLogVerbose();
 
@@ -410,12 +371,6 @@ public class ChainFinder
 
     public void addChains(SvCluster cluster)
     {
-        if(mUseOld)
-        {
-            mOldFinder.addChains(cluster);
-            return;
-        }
-
         // add these chains to the cluster, but skip any which are identical to existing ones,
         // which can happen for clusters with replicated SVs
         mUniqueChains.stream().forEach(chain -> checkAddNewChain(chain, cluster));
@@ -1090,9 +1045,6 @@ public class ChainFinder
     {
         mLogVerbose = toggle;
         setRunValidation(toggle);
-
-        if(mUseOld)
-            mOldFinder.setLogVerbose(toggle);
     }
 
     private void enableLogVerbose()

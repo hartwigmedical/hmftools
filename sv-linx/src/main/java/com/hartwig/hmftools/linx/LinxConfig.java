@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
 
 import java.io.BufferedReader;
@@ -36,7 +34,6 @@ public class LinxConfig
     final public int ChainingSvLimit; // for analysis and chaining
 
     public boolean LogVerbose;
-    public int ChainingMethod;
     public String RequiredAnnotations;
     public int LogChainingMaxSize;
 
@@ -55,7 +52,6 @@ public class LinxConfig
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
-    private static final String CHAINING_METHOD = "chaining_method";
 
     // reference files
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
@@ -136,8 +132,6 @@ public class LinxConfig
 
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
 
-        ChainingMethod = cmd.hasOption(CHAINING_METHOD) ? Integer.parseInt(cmd.getOptionValue(CHAINING_METHOD)) : CHAIN_METHOD_NEW;
-
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
 
@@ -171,11 +165,9 @@ public class LinxConfig
         RequiredAnnotations = "";
         mSampleIds = Lists.newArrayList();
         MaxSamples = 0;
-        LogChainingMaxSize = 0;
         LogVerbose = false;
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
-        ChainingMethod = CHAIN_METHOD_NEW;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -198,7 +190,6 @@ public class LinxConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
-        options.addOption(CHAINING_METHOD, true, "Optional: chaining method (see chaining notes, default = 0");
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
         options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
     }

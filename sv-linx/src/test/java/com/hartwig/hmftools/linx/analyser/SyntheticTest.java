@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;

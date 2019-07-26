@@ -1004,7 +1004,7 @@ public class SvCluster
     public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
 
 
-    public void applySvPloidyReplication(boolean replicateSVs, int chainingSvLimit)
+    public void setPloidyReplication(int chainingSvLimit)
     {
         if(!hasVariedPloidy() && !requiresReplication())
             return;
@@ -1059,18 +1059,11 @@ public class SvCluster
             if(svMultiple <= 1)
                 continue;
 
-            LOGGER.debug("cluster({}) replicating SV({}) {} times, copyNumChg({} vs min={})",
+            LOGGER.debug("cluster({}) SV({}) ploidy multiple({}, ploidy({} vs min={})",
                     mId, var.posId(), svMultiple, svPloidy, clusterMinPloidy);
 
             if(!requiresReplication())
                 setRequiresReplication();
-
-            //if(replicateSVs)
-            //{
-                // replicated SVs are only created and added in the old chain-finder but for now record the count
-                // since it used in the chaining SV limit
-                var.setReplicatedCount(svMultiple);
-            // }
         }
     }
 

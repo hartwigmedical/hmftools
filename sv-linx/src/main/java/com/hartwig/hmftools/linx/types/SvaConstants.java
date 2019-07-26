@@ -19,6 +19,6 @@ public class SvaConstants
     public static int MAX_SV_REPLICATION_MULTIPLE = 32;
     public static int MAX_CLUSTER_COUNT_REPLICATION = 500;
 
-    // exclude clusters with too many SVs (factoring in replication) from chaining
+    // exclude clusters with too many SVs from chaining
     public static int DEFAULT_CHAINING_SV_LIMIT = 2000;
 }
