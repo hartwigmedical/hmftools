@@ -56,8 +56,6 @@ public class SvVarData
     private SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
     private List<List<String>> mTIAssemblies;
     private String[] mAssemblyMatchType;
-    private boolean mIsReplicatedSv;
-    private SvVarData mReplicatedSv;
     private int mReplicatedCount;
 
     private List<List<GeneAnnotation>> mGenes;
@@ -114,10 +112,6 @@ public class SvVarData
         mNearestSvDistance = -1;
         mNearestSvRelation = "";
 
-        mIsReplicatedSv = false;
-        mReplicatedSv = null;
-        mReplicatedCount = 0;
-
         mClusterReason = "";
         mCluster = null;
 
@@ -151,57 +145,6 @@ public class SvVarData
         mCnDataPostStart = null;
         mCnDataPrevEnd = null;
         mCnDataPostEnd = null;
-    }
-
-    public SvVarData(final SvVarData other, boolean isReplicated)
-    {
-        mSVData = other.getSvData();
-
-        init();
-
-        if(isReplicated)
-        {
-            mIdStr = other.getSvData().id() + "r";
-            mIsReplicatedSv = true;
-            mReplicatedSv = other;
-            mClusterReason = other.getClusterReason();
-            mCluster = other.getCluster();
-        }
-        else
-        {
-            mIdStr = other.id();
-        }
-
-        mArm[SE_START] = other.arm(true);
-        mArm[SE_END] = other.arm(false);
-
-        mBreakend[SE_START] = new SvBreakend(this, true);
-        mBreakend[SE_START].setChrPosIndex(other.getBreakend(true).getChrPosIndex());
-
-        if(!isNullBreakend())
-        {
-            mBreakend[SE_END] = new SvBreakend(this, false);
-            mBreakend[SE_END].setChrPosIndex(other.getBreakend(false).getChrPosIndex());
-        }
-
-        mFragileSite[SE_START] = other.isFragileSite(true);
-        mFragileSite[SE_END] = other.isFragileSite(false);
-        mLineElement[SE_START] = other.getLineElement(true);
-        mLineElement[SE_END] = other.getLineElement(false);
-        mNearestSvDistance = other.getNearestSvDistance();
-        mNearestSvRelation = other.getNearestSvRelation();
-
-        mAssemblyData[SE_START] = other.getAssemblyData(true);
-        mAssemblyData[SE_END] = other.getAssemblyData(false);
-        setAssemblyData(true);
-
-        mAssemblyMatchType[SE_START] = other.getAssemblyMatchType(true);
-        mAssemblyMatchType[SE_END] = other.getAssemblyMatchType(false);
-
-        if(other.hasCalculatedPloidy())
-        {
-            setPloidyRecalcData(other.ploidyMin(), other.ploidyMax());
-        }
     }
 
     public final String id() { return mIdStr; }
@@ -290,28 +233,7 @@ public class SvVarData
 
     public final String getClusterReason() { return mClusterReason; }
 
-    public boolean isReplicatedSv() { return mIsReplicatedSv; }
-    public final SvVarData getReplicatedSv() { return mReplicatedSv; }
-    public final SvVarData getOrigSV() { return mIsReplicatedSv ? mReplicatedSv : this; }
     public int getReplicatedCount() { return mReplicatedCount; }
-    public void setReplicatedCount(int count) { mReplicatedCount = count; }
-    public final String origId() { return getOrigSV().id(); }
-    public boolean equals(final SvVarData other, boolean allowReplicated)
-    {
-        if(this == other)
-            return true;
-
-        if(allowReplicated)
-        {
-            if(this == other.getReplicatedSv() || mReplicatedSv == other)
-                return true;
-
-            if(mReplicatedSv != null && mReplicatedSv == other.getReplicatedSv())
-                return true;
-        }
-
-        return false;
-    }
 
     public double ploidy() { return mPloidy; }
 

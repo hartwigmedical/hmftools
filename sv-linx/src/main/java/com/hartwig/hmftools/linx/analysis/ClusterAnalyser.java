@@ -1407,9 +1407,9 @@ public class ClusterAnalyser {
                 int bndLinks = 0;
                 for (final SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    if (pair.first().equals(varEnd, true) && pair.second().type() == BND)
+                    if (pair.first() == varEnd && pair.second().type() == BND)
                         ++bndLinks;
-                    else if (pair.second().equals(varEnd, true) && pair.first().type() == BND)
+                    else if (pair.second() == varEnd && pair.first().type() == BND)
                         ++bndLinks;
 
                     if (bndLinks == 2)

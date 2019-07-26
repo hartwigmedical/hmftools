@@ -49,22 +49,6 @@ public class LinkingTest
 
         lp3.sameVariants(lp2);
         lp3.hasLinkClash(lp2);
-
-        // test comparisons of various sorts
-        final SvVarData var6 = new SvVarData(var1, true);
-        final SvVarData var7 = new SvVarData(var2, true);
-        SvLinkedPair lp4 = new SvLinkedPair(var6, var7, LINK_TYPE_TI, false, true);
-
-        assertTrue(lp1.matches(lp4));
-
-        // switch back for an exact match
-        lp1.switchSVs();
-        assertTrue(lp1.matches(lp4));
-
-        SvLinkedPair lp5 = new SvLinkedPair(var6, var7, LINK_TYPE_TI, true, false);
-
-        assertTrue(lp1.oppositeMatch(lp5));
-        assertTrue(lp4.oppositeMatch(lp5));
     }
 
 }

@@ -252,11 +252,6 @@ public class SvCluster
 
     public void addChain(SvChain chain, boolean resetId)
     {
-        addChain(chain, resetId, false);
-    }
-
-    public void addChain(SvChain chain, boolean resetId,boolean addReplicatedSVs)
-    {
         if(resetId)
             chain.setId(mChains.size());
 
@@ -264,23 +259,7 @@ public class SvCluster
 
         for(SvVarData var : chain.getSvList())
         {
-            if(addReplicatedSVs)
-            {
-                if(var.isReplicatedSv())
-                {
-                    addVariant(var);
-                    mUnchainedSVs.remove(var); // since was just added which is crap
-                    mUnchainedSVs.remove(var.getOrigSV());
-                }
-                else
-                {
-                    mUnchainedSVs.remove(var);
-                }
-            }
-            else
-            {
-                mUnchainedSVs.remove(var);
-            }
+            mUnchainedSVs.remove(var);
         }
     }
 
@@ -551,13 +530,13 @@ public class SvCluster
 
     public void registerInversion(final SvVarData var)
     {
-        if(!mInversions.contains(var) && !var.isReplicatedSv())
+        if(!mInversions.contains(var))
             mInversions.add(var);
     }
 
     public void registerLongDelDup(final SvVarData var)
     {
-        if(!mLongDelDups.contains(var) && !var.isReplicatedSv())
+        if(!mLongDelDups.contains(var))
             mLongDelDups.add(var);
     }
 
@@ -772,9 +751,6 @@ public class SvCluster
         {
             for (final SvLinkedPair pair : chain.getLinkedPairs())
             {
-                if(pair.first().isReplicatedSv() && pair.second().isReplicatedSv())
-                    continue;
-
                 boolean isRepeat = false;
 
                 // only log each chain link once, and log how many times the link has been used
@@ -811,7 +787,7 @@ public class SvCluster
 
     public final List<SvChain> findChains(final SvVarData var)
     {
-        return mChains.stream().filter(x -> x.hasSV(var, true)).collect(Collectors.toList());
+        return mChains.stream().filter(x -> x.hasSV(var)).collect(Collectors.toList());
     }
 
     public final SvChain findSameChainForSVs(SvVarData var1, SvVarData var2)
@@ -843,7 +819,7 @@ public class SvCluster
         {
             final SvVarData unchainedSv = mUnchainedSVs.get(i);
 
-            if(unchainedSv.equals(var, true))
+            if(unchainedSv == var)
                 return mChains.size() + i + 1;
         }
 

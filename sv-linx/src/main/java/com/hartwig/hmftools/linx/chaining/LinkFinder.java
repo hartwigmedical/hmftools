@@ -278,7 +278,7 @@ public class LinkFinder
                 {
                     SvVarData var2 = svList.get(j);
 
-                    if(var1.equals(var2, true))
+                    if(var1 == var2)
                         continue;
 
                     if(var2.type() == INS || (var2.isNullBreakend() && !allowSingleBEs))

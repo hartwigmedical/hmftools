@@ -538,7 +538,7 @@ public class SvSampleAnalyser {
                         if (link != null)
                         {
                             mSvFileWriter.write(String.format(",%s,%d",
-                                    link.first().equals(var, true) ? link.second().origId() : link.first().origId(), link.length()));
+                                    link.first() == var ? link.second().id() : link.first().id(), link.length()));
                         }
                         else
                         {
@@ -861,8 +861,8 @@ public class SvSampleAnalyser {
                                     .chainId(chain.id())
                                     .chainCount(chainSvCount)
                                     .chainIndex(chainIndexStr)
-                                    .lowerSvId(beStart.getOrigSV().dbId())
-                                    .upperSvId(beEnd.getOrigSV().dbId())
+                                    .lowerSvId(beStart.getSV().dbId())
+                                    .upperSvId(beEnd.getSV().dbId())
                                     .lowerBreakendIsStart(beStart.usesStart())
                                     .upperBreakendIsStart(beEnd.usesStart())
                                     .chromosome(beStart.chromosome())

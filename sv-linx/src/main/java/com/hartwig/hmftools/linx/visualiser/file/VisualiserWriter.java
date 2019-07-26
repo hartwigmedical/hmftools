@@ -205,7 +205,7 @@ public class VisualiserWriter
             for (final SvChain chain : cluster.getChains())
             {
                 // log the start of the chain
-                boolean startsOnEnd = chain.getFirstSV().equals(chain.getLastSV(), true); // closed loop chains eg DMs
+                boolean startsOnEnd = chain.getFirstSV() == chain.getLastSV(); // closed loop chains eg DMs
                 double chainPloidy = chain.ploidy();
 
                 if(!chain.isClosedLoop())
@@ -274,9 +274,6 @@ public class VisualiserWriter
             // finally write out all unchained SVs
             for (final SvVarData var : cluster.getUnlinkedSVs())
             {
-                if (var.isReplicatedSv())
-                    continue;
-
                 int chainId = cluster.getChainId(var);
 
                 for (int be = SE_START; be <= SE_END; ++be)

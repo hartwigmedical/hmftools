@@ -547,9 +547,6 @@ public class FusionDisruptionAnalyser
             if (lowerSV.isNullBreakend())
                 continue;
 
-            if(lowerSV.isReplicatedSv())
-                lowerSV = lowerSV.getOrigSV();
-
             List<GeneAnnotation> genesListLower = Lists.newArrayList(lowerSV.getGenesList(lowerBreakend.usesStart()));
             applyGeneRestrictions(genesListLower);
 
@@ -581,9 +578,6 @@ public class FusionDisruptionAnalyser
 
                     upperSV = upperBreakend.getSV();
                 }
-
-                if(upperSV.isReplicatedSv())
-                    upperSV = upperSV.getOrigSV();
 
                 // isSpecificSV(upperSV);
 

@@ -538,8 +538,8 @@ public class DriverGeneAnnotator
                     continue;
 
                 final SvVarData varEnd = tiPair.getOtherSV(varStart);
-                final SvBreakend beStart = tiPair.getBreakend(true).getOrigBreakend();
-                final SvBreakend beEnd = tiPair.getBreakend(false).getOrigBreakend();
+                final SvBreakend beStart = tiPair.getBreakend(true);
+                final SvBreakend beEnd = tiPair.getBreakend(false);
 
                 LOGGER.debug(String.format("sample(%s) cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
                         mSampleId, varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), dgData.GeneData.GeneName,

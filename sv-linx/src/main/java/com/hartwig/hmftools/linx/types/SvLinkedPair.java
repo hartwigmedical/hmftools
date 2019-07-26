@@ -101,9 +101,6 @@ public class SvLinkedPair {
     public final SvVarData first() { return mFirst; }
     public final SvVarData second() { return mSecond; }
 
-    public void replaceFirst(final SvVarData var) { mFirst = var; }
-    public void replaceSecond(final SvVarData var) { mSecond = var; }
-
     public boolean firstLinkOnStart() { return mFirstLinkOnStart; }
     public boolean secondLinkOnStart() { return mSecondLinkOnStart; }
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
@@ -179,20 +176,10 @@ public class SvLinkedPair {
     public void setExonMatchData(final String data) { mExonMatchData = data; }
     public final String getExonMatchData() { return mExonMatchData; }
 
-    public boolean hasBreakend(final SvVarData var, boolean useStart, boolean allowReplicated)
-    {
-        return (var.equals(mFirst, allowReplicated) && mFirstLinkOnStart == useStart
-                || var.equals(mSecond, allowReplicated) && mSecondLinkOnStart == useStart);
-    }
-
     public boolean hasBreakend(final SvVarData var, boolean useStart)
     {
-        return hasBreakend(var, useStart, false);
-    }
-
-    public boolean hasBreakend(final SvBreakend breakend, boolean allowReplicated)
-    {
-        return hasBreakend(breakend.getSV(), breakend.usesStart(), allowReplicated);
+        return (var == mFirst && mFirstLinkOnStart == useStart)
+                || (var == mSecond && mSecondLinkOnStart == useStart);
     }
 
     public boolean hasBreakend(final SvBreakend breakend)
@@ -248,14 +235,14 @@ public class SvLinkedPair {
             return true;
 
         // first and second can be in either order
-        if(mFirst.equals(other.first(), true) && mFirstLinkOnStart == other.firstLinkOnStart()
-        && mSecond.equals(other.second(), true) && mSecondLinkOnStart == other.secondLinkOnStart())
+        if(mFirst == other.first() && mFirstLinkOnStart == other.firstLinkOnStart()
+        && mSecond == other.second() && mSecondLinkOnStart == other.secondLinkOnStart())
         {
             return true;
         }
 
-        if(mFirst.equals(other.second(), true) && mFirstLinkOnStart == other.secondLinkOnStart()
-        && mSecond.equals(other.first(), true) && mSecondLinkOnStart == other.firstLinkOnStart())
+        if(mFirst == other.second() && mFirstLinkOnStart == other.secondLinkOnStart()
+        && mSecond == other.first() && mSecondLinkOnStart == other.firstLinkOnStart())
         {
             return true;
         }
@@ -268,14 +255,14 @@ public class SvLinkedPair {
         if(this == other)
             return true;
 
-        if(mFirst.equals(other.first(), true) && mFirstLinkOnStart != other.firstLinkOnStart()
-        && mSecond.equals(other.second(), true) && mSecondLinkOnStart != other.secondLinkOnStart())
+        if(mFirst == other.first() && mFirstLinkOnStart != other.firstLinkOnStart()
+        && mSecond ==other.second() && mSecondLinkOnStart != other.secondLinkOnStart())
         {
             return true;
         }
 
-        if(mFirst.equals(other.second(), true) && mFirstLinkOnStart != other.secondLinkOnStart()
-        && mSecond.equals(other.first(), true) && mSecondLinkOnStart != other.firstLinkOnStart())
+        if(mFirst == other.second() && mFirstLinkOnStart != other.secondLinkOnStart()
+        && mSecond == other.first() && mSecondLinkOnStart != other.firstLinkOnStart())
         {
             return true;
         }
@@ -286,19 +273,16 @@ public class SvLinkedPair {
     public boolean sameVariants(final SvLinkedPair other)
     {
         // first and second can be in either order
-        if(mFirst.equals(other.first(), true) && mSecond.equals(other.second(), true))
+        if(mFirst == other.first() && mSecond == other.second())
             return true;
 
-        if(mFirst.equals(other.second(), true) && mSecond.equals(other.first(), true))
+        if(mFirst == other.second() && mSecond == other.first())
             return true;
 
         return false;
     }
 
-    public final SvVarData getOtherSV(final SvVarData var)
-    {
-        return mFirst.equals(var, true) ? mSecond : mFirst;
-    }
+    public final SvVarData getOtherSV(final SvVarData var) { return mFirst == var ? mSecond : mFirst; }
 
     public final SvBreakend getOtherBreakend(final SvBreakend breakend)
     {
@@ -306,10 +290,7 @@ public class SvLinkedPair {
         return breakend == lower ? getBreakend(false) : lower;
     }
 
-    public boolean hasVariant(final SvVarData var)
-    {
-        return mFirst.equals(var, true) || mSecond.equals(var, true);
-    }
+    public boolean hasVariant(final SvVarData var) { return mFirst == var || mSecond == var; }
 
     public boolean isDupLink() { return mFirst == mSecond && mFirst.type() == DUP; }
 

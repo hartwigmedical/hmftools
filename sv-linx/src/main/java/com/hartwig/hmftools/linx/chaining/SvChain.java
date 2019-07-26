@@ -194,9 +194,9 @@ public class SvChain {
         final SvVarData chainSv = toStart ? getFirstSV() : getLastSV();
         boolean chainOpenSide = toStart ? firstLinkOpenOnStart() : lastLinkOpenOnStart();
 
-        if(pair.first().equals(chainSv, allowReplicated) && pair.firstUnlinkedOnStart() != chainOpenSide)
+        if(pair.first() == chainSv && pair.firstUnlinkedOnStart() != chainOpenSide)
             return true;
-        else if(pair.second().equals(chainSv, allowReplicated) && pair.secondUnlinkedOnStart() != chainOpenSide)
+        else if(pair.second() == chainSv && pair.secondUnlinkedOnStart() != chainOpenSide)
             return true;
         else
             return false;
@@ -629,24 +629,7 @@ public class SvChain {
         return length;
     }
 
-    public int getSvCount(boolean includeReplicated)
-    {
-        if(includeReplicated)
-            return mSvList.size();
-        else
-            return (int)mSvList.stream().filter(x -> !x.isReplicatedSv()).count();
-    }
-
-    public boolean hasSV(final SvVarData var, boolean allowReplicated)
-    {
-        for(final SvVarData chainSv : mSvList)
-        {
-            if (chainSv.equals(var, allowReplicated))
-                return true;
-        }
-
-        return false;
-    }
+    public boolean hasSV(final SvVarData var) { return mSvList.contains(var); }
 
     public int getSvIndex(final SvVarData var)
     {
@@ -669,11 +652,11 @@ public class SvChain {
 
             String linkInfo = "";
 
-            if(pair.first().equals(var,true))
+            if(pair.first() == var)
             {
                 linkInfo = String.format("%d%s", index, pair.firstLinkOnStart() ? "s" : "e");
             }
-            else if(pair.second().equals(var,true))
+            else if(pair.second() == var)
             {
                 linkInfo = String.format("%d%s", index, pair.secondLinkOnStart() ? "s" : "e");
             }
@@ -722,23 +705,23 @@ public class SvChain {
         {
             final SvLinkedPair pair = mLinkedPairs.get(i);
 
-            if(pair.first().equals(var1, true) && pair.firstLinkOnStart() == v1Start)
+            if(pair.first() == var1 && pair.firstLinkOnStart() == v1Start)
             {
                 be1Index = i;
                 be1FacesUp = true;
             }
-            else if(pair.second().equals(var1, true) && pair.secondLinkOnStart() == v1Start)
+            else if(pair.second() == var1 && pair.secondLinkOnStart() == v1Start)
             {
                 be1Index = i;
                 be1FacesUp = false;
             }
 
-            if(pair.first().equals(var2, true) && pair.firstLinkOnStart() == v2Start)
+            if(pair.first() == var2 && pair.firstLinkOnStart() == v2Start)
             {
                 be2Index = i;
                 be2FacesUp = true;
             }
-            else if(pair.second().equals(var2, true) && pair.secondLinkOnStart() == v2Start)
+            else if(pair.second() == var2 && pair.secondLinkOnStart() == v2Start)
             {
                 be2Index = i;
                 be2FacesUp = false;
@@ -829,7 +812,7 @@ public class SvChain {
                 final SvLinkedPair pair = mLinkedPairs.get(i);
                 final SvLinkedPair otherPair = otherLinks.get(i);
 
-                if(!pair.first().equals(otherPair.first(), true) || !pair.second().equals(otherPair.second(), true))
+                if(pair.first() != otherPair.first() || pair.second() != otherPair.second())
                 {
                     exactMatch = false;
                     break;
@@ -860,8 +843,7 @@ public class SvChain {
 
                 final SvLinkedPair otherPair = shorterLinks.get(j);
 
-                boolean linksMatch = pair.first().equals(otherPair.first(), true)
-                    && pair.second().equals(otherPair.second(), true);
+                boolean linksMatch = pair.first() == otherPair.first() && pair.second() == otherPair.second();
 
                 if(linksMatch)
                 {
@@ -884,7 +866,7 @@ public class SvChain {
     private static String breakendSeqStr(final SvBreakend breakend)
     {
         return String.format("%s_%s_%s",
-                breakend.usesStart() ? "s" : "e", breakend.getOrigSV().id(), breakend.usesStart() ? "e" : "s");
+                breakend.usesStart() ? "s" : "e", breakend.getSV().id(), breakend.usesStart() ? "e" : "s");
     }
 
     public static String getSequenceStr(final SvChain chain)

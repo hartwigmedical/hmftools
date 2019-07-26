@@ -163,7 +163,7 @@ public class SvArmCluster
 
             final SvLinkedPair tiPair = var1.getLinkedPair(be1.usesStart());
 
-            if(tiPair != null && tiPair.hasBreakend(be2, true))
+            if(tiPair != null && tiPair.hasBreakend(be2))
             {
                 mType = ARM_CL_TI_ONLY;
                 mTICount = 1;
@@ -208,7 +208,7 @@ public class SvArmCluster
                 if (tiPair != null && be1.position() + tiPair.length() <= mEndPos)
                 {
                     tiBreakends.add(be1);
-                    tiBreakends.add(tiPair.getOtherBreakend(be1).getOrigBreakend());
+                    tiBreakends.add(tiPair.getOtherBreakend(be1));
                     ++tiCount;
                 }
             }

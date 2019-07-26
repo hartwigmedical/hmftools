@@ -361,7 +361,7 @@ public class DoubleMinuteFinder
             return chain;
         }
 
-        mChainFinder.initialise(cluster, dmSVList);
+        mChainFinder.initialise(cluster, dmSVList, false);
         mChainFinder.formChains(false);
 
         if(mChainFinder.getUniqueChains().size() != 1)

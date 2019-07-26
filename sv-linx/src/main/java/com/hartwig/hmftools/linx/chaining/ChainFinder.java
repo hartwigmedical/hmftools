@@ -210,7 +210,7 @@ public class ChainFinder
         mRuleSelector.initialise(mClusterId, mHasReplication);
     }
 
-    public void initialise(SvCluster cluster, final List<SvVarData> svList)
+    public void initialise(SvCluster cluster, final List<SvVarData> svList, boolean requiresReplication)
     {
         // chain a specific subset of a cluster's SVs - current used to test double-minute completeness
         clear();
@@ -239,14 +239,10 @@ public class ChainFinder
             }
         }
 
+        mHasReplication = requiresReplication;
+
         for(SvVarData var : svList)
         {
-            if(!mHasReplication && var.isReplicatedSv())
-            {
-                mHasReplication = true;
-                continue;
-            }
-
             mSvList.add(var);
 
             if(var.isFoldback() && mFoldbacks.contains(var))
@@ -394,7 +390,7 @@ public class ChainFinder
     {
         if(!mHasReplication)
         {
-            cluster.addChain(newChain, false, true);
+            cluster.addChain(newChain, false);
             return;
         }
 
@@ -402,7 +398,7 @@ public class ChainFinder
         if(!mUniqueChains.contains(newChain))
             return;
 
-        cluster.addChain(newChain, false, true);
+        cluster.addChain(newChain, false);
     }
 
     private void buildChains(boolean assembledLinksOnly)
@@ -978,7 +974,7 @@ public class ChainFinder
 
         SvChain chain = mChains.get(0);
 
-        int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x, true)).count();
+        int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x)).count();
 
         if(chainedDmSVs != mDoubleMinuteSVs.size())
             return;

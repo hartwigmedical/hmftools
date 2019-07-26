@@ -416,12 +416,12 @@ public class SvClassification
             SvLinkedPair newLink = null;
 
             if(chainLowerBe.orientation() == -1 && upperTiBe.orientation() == 1 && chainLowerBe.position() < upperTiBe.position()
-            && !chainLowerBe.getSV().equals(upperTiBe.getSV(), true))
+            && chainLowerBe.getSV() != upperTiBe.getSV())
             {
                 newLink = SvLinkedPair.from(chainLowerBe, upperTiBe);
             }
             else if(chainUpperBe.orientation() == 1 && lowerTiBe.orientation() == -1 && chainUpperBe.position() > lowerTiBe.position()
-            && !chainUpperBe.getSV().equals(lowerTiBe.getSV(), true))
+            && chainUpperBe.getSV() != lowerTiBe.getSV())
             {
                 newLink = SvLinkedPair.from(lowerTiBe, chainUpperBe);
             }
