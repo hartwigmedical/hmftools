@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_SATELLITE_SGL;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_COMPARE;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_NEW;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.CHAIN_METHOD_OLD;
@@ -429,6 +430,9 @@ public class ClusterAnalyser {
                 foundMerges = true;
 
             if(mergeNetCopyNumberResolvingClusters(complexClusters))
+                foundMerges = true;
+
+            if(mergeSingleSatelliteRepeats(complexClusters))
                 foundMerges = true;
 
             ++iterations;
@@ -1193,6 +1197,89 @@ public class ClusterAnalyser {
         mergedClusters.forEach(x -> mClusters.remove(x));
         return true;
     }
+
+    private boolean mergeSingleSatelliteRepeats(List<SvCluster> clusters)
+    {
+        // merge any cluster with less than or 1 non SGL and non INF breakend with any other cluster which contains a SGL on the same
+        // chromosome with matching repeat class or type marked as satellite
+
+        // To protect against false positives and joining complex clusters which both touch repeats, but otherwise don’t appear to overlap,
+        // we avoid clustering 2 clusters which already have multiple non SGL breakends
+        List<SvCluster> clustersWithSatelliteRepeats = clusters.stream()
+                .filter(x -> x.getSVs().stream().anyMatch(y -> y.sglToSatelliteRepeats()))
+                .collect(Collectors.toList());
+
+        if(clustersWithSatelliteRepeats.isEmpty())
+            return false;
+
+        List<SvCluster> clustersWithOneOrNoSgls = clustersWithSatelliteRepeats.stream()
+                .filter(x -> x.getTypeCount(SGL) <= 1)
+                .collect(Collectors.toList());
+
+        List<SvCluster> mergedClusters = Lists.newArrayList();
+
+        for(SvCluster srCluster : clustersWithSatelliteRepeats)
+        {
+            if(mergedClusters.contains(srCluster))
+                continue;
+
+            List<String> satelliteChromosomes1 = srCluster.getSVs().stream()
+                    .filter(x -> x.sglToSatelliteRepeats())
+                    .map(x -> x.chromosome(true))
+                    .collect(Collectors.toList());
+
+            int index = 0;
+            while(index < clustersWithOneOrNoSgls.size())
+            {
+                SvCluster sglCluster = clustersWithOneOrNoSgls.get(index);
+
+                if(sglCluster == srCluster)
+                {
+                    ++index;
+                    continue;
+                }
+
+
+                boolean merged = false;
+
+                for(SvVarData var : sglCluster.getSVs())
+                {
+                    if(var.sglToSatelliteRepeats() && satelliteChromosomes1.contains(var.chromosome(true)))
+                    {
+                        final String chromosome = var.chromosome(true);
+                        LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",
+                                srCluster.id(), chromosome, sglCluster.id(), var.id());
+
+                        // find the other linking SGL
+                        final SvVarData otherSV = srCluster.getSVs().stream()
+                                .filter(x -> x.sglToSatelliteRepeats() && x.chromosome(true).equals(chromosome))
+                                .findFirst().get();
+
+                        addClusterReasons(otherSV, var, CLUSTER_REASON_SATELLITE_SGL);
+                        srCluster.addClusterReason(CLUSTER_REASON_SATELLITE_SGL);
+
+                        srCluster.mergeOtherCluster(sglCluster);
+                        mergedClusters.add(sglCluster);
+                        merged = true;
+                        break;
+                    }
+                }
+
+                if(merged)
+                    clustersWithOneOrNoSgls.remove(index);
+                else
+                    ++index;
+            }
+        }
+
+        if(mergedClusters.isEmpty())
+            return false;
+
+        mergedClusters.forEach(x -> clusters.remove(x));
+        mergedClusters.forEach(x -> mClusters.remove(x));
+        return true;
+    }
+
 
     public void markFoldbacks()
     {

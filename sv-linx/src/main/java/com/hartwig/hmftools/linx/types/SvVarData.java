@@ -680,6 +680,19 @@ public class SvVarData
         return false;
     }
 
+    public boolean sglToSatelliteRepeats()
+    {
+        if(!isNullBreakend() || isNoneSegment())
+            return false;
+
+        if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr"))
+            return true;
+
+        final String repeatType = mSVData.insertSequenceRepeatType();
+
+        return repeatType.equals("(CATTC)n") || repeatType.equals("(GAATG)n") || repeatType.equals("HSATII") || repeatType.equals("SAR");
+    }
+
     public void setCopyNumberData(boolean isStart, final SvCNData prevData, final SvCNData postData)
     {
         if(isStart)

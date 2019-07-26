@@ -36,7 +36,7 @@ public class MergeRuleTest
     {
         SvTestHelper tester = new SvTestHelper();
 
-        // basic proximity clustering
+        // basic proximity clustering with 2 duplicate breakend SGLs excluded
         SvVarData var1 = createDel(tester.nextVarId(), "1", 1000, 1100);
         tester.AllVariants.add(var1);
 
@@ -81,13 +81,11 @@ public class MergeRuleTest
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
-        // tester.mergeOnProximity();
 
-        assertEquals(tester.getClusters().size(), 4);
+        assertEquals(3, tester.getClusters().size());
         assertTrue(tester.getClusters().get(0).getSVs().contains(var7));
-        assertTrue(tester.getClusters().get(1).getSVs().contains(var8));
-        assertTrue(tester.getClusters().get(2).getSVs().contains(var9)); // DUP BE
-        assertEquals(10, tester.getClusters().get(3).getSvCount());
+        assertTrue(tester.getClusters().get(1).getSVs().contains(var9));
+        assertEquals(10, tester.getClusters().get(2).getSvCount());
 
         // simple clustered SVs are split out in the final routine
         tester.clearClustersAndSVs();

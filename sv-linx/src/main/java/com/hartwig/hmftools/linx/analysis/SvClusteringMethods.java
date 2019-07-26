@@ -61,7 +61,7 @@ public class SvClusteringMethods {
     private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
     private List<LohEvent> mLohEventList;
     private List<HomLossEvent> mHomLossList;
-    private List<SvVarData> mExcludedSVs; // eg duplicate breakends
+    private Map<SvVarData,ResolvedType> mExcludedSVs; // SV and exclusion reason eg duplicate breakends
 
     private Map<String, double[]> mChromosomeCopyNumberMap; // p-arm telomere, centromere and q-arm telemore CN data
 
@@ -84,6 +84,7 @@ public class SvClusteringMethods {
     public static String CLUSTER_REASON_NET_ARM_END_PLOIDY = "ArmEndPloidy";
     public static String CLUSTER_REASON_BE_PLOIDY_DROP = "BEPloidy";
     public static String CLUSTER_REASON_LONG_DEL_DUP_OR_INV = "DelDupInv";
+    public static String CLUSTER_REASON_SATELLITE_SGL = "SatelliteSgl";
 
     public SvClusteringMethods(int proximityLength)
     {
@@ -95,7 +96,7 @@ public class SvClusteringMethods {
 
         mChrBreakendMap = new HashMap();
         mChromosomeCopyNumberMap = new HashMap();
-        mExcludedSVs = Lists.newArrayList();
+        mExcludedSVs = Maps.newHashMap();
         mLohEventList = null;
         mHomLossList = null;
     }
@@ -117,27 +118,13 @@ public class SvClusteringMethods {
 
     public void clusterExcludedVariants(List<SvCluster> clusters)
     {
-        for(SvVarData var : mExcludedSVs)
+        for(Map.Entry<SvVarData,ResolvedType> excludedSv : mExcludedSVs.entrySet())
         {
+            SvVarData var = excludedSv.getKey();
+            ResolvedType exclusionReason = excludedSv.getValue();
+
             SvCluster newCluster = new SvCluster(getNextClusterId());
             newCluster.addVariant(var);
-
-            ResolvedType exclusionReason = NONE;
-            if(var.type() != SGL)
-            {
-                if(var.isEquivBreakend())
-                    exclusionReason = DUP_BE;
-                else
-                    exclusionReason = LOW_VAF;
-            }
-            else
-            {
-                exclusionReason = getSingleBreakendUnclusteredType(var);
-
-                if (exclusionReason == NONE)
-                    exclusionReason = DUP_BE;
-            }
-
             newCluster.setResolved(true, exclusionReason);
             clusters.add(newCluster);
         }
@@ -320,15 +307,9 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
     }
 
-    private ResolvedType getSingleBreakendUnclusteredType(final SvVarData var)
+    private boolean isSingleDuplicateBreakend(final SvVarData var)
     {
-        if(var.type() != SGL|| var.isNoneSegment())
-            return NONE;
-
-        if(var.isEquivBreakend())
-            return DUP_BE;
-
-        return NONE;
+        return var.type() == SGL && !var.isNoneSegment() && var.isEquivBreakend();
     }
 
     public void clearLOHBreakendData(final String sampleId)
@@ -1172,7 +1153,7 @@ public class SvClusteringMethods {
         filterExcludedBreakends();
     }
 
-    private static final double LOW_VAF_THRESHOLD = 0.2;
+    private static final double LOW_VAF_THRESHOLD = 0.05;
     private static final int SHORT_INV_DISTANCE = 100;
     private static final int ISOLATED_BND_DISTANCE = 5000;
 
@@ -1186,6 +1167,9 @@ public class SvClusteringMethods {
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
+            if(se == SE_END && var.isNullBreakend())
+                continue;
+
             final SvBreakend breakend = var.getBreakend(isStart(se));
             final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
 
@@ -1245,22 +1229,22 @@ public class SvClusteringMethods {
                     continue;
 
                 // first check for SGLs already marked for removal
-                if(var.type() == SGL && getSingleBreakendUnclusteredType(breakendList.get(i).getSV()) != NONE)
+                if(var.type() == SGL && isSingleDuplicateBreakend(breakendList.get(i).getSV()))
                 {
-                    if(!mExcludedSVs.contains(var))
-                    {
-                        mExcludedSVs.add(var);
-                        removalList.add(breakend);
-                    }
+                    mExcludedSVs.put(var, DUP_BE);
+                    removalList.add(breakend);
                     continue;
                 }
 
-                if(var.type() == BND && isIsolatedLowVafBnd(var))
+                if((var.type() == BND || (var.type() == SGL && !var.isNoneSegment())) && isIsolatedLowVafBnd(var))
                 {
-                    LOGGER.debug("SV({}) filtered low VAF isolated BND", var.id());
+                    LOGGER.debug("SV({}) filtered low VAF isolated BND or SGL", var.id());
                     removalList.add(breakend);
-                    removeRemoteBreakend(breakend.getOtherBreakend(), breakendRemovalMap);
-                    mExcludedSVs.add(var);
+
+                    if(var.type() == BND)
+                        removeRemoteBreakend(breakend.getOtherBreakend(), breakendRemovalMap);
+
+                    mExcludedSVs.put(var, LOW_VAF);
                     continue;
                 }
 
@@ -1269,12 +1253,12 @@ public class SvClusteringMethods {
 
                 SvBreakend nextBreakend = breakendList.get(i + 1);
 
-                if(var.type() == INV && isLowVafInversion(breakend, nextBreakend))
+                if(var.type() == INV && nextBreakend.getSV() == var && isLowVafInversion(breakend, nextBreakend))
                 {
                     LOGGER.debug("SV({}) filtered low VAF / CN change INV", var.id());
                     removalList.add(breakend);
                     removalList.add(nextBreakend);
-                    mExcludedSVs.add(var);
+                    mExcludedSVs.put(var, LOW_VAF);
                     continue;
                 }
 
@@ -1294,13 +1278,13 @@ public class SvClusteringMethods {
                     {
                         if(var.type() == SGL)
                         {
-                            mExcludedSVs.add(var);
+                            mExcludedSVs.put(var, DUP_BE);
                             removalList.add(breakend);
                         }
 
                         if(nextVar.type() == SGL)
                         {
-                            mExcludedSVs.add(nextVar);
+                            mExcludedSVs.put(nextVar, DUP_BE);
                             removalList.add(nextBreakend);
 
                         }
@@ -1321,7 +1305,7 @@ public class SvClusteringMethods {
                         if((var.getTIAssemblies(true).isEmpty() && !nextVar.getTIAssemblies(true).isEmpty())
                         || (var.getTIAssemblies(false).isEmpty() && !nextVar.getTIAssemblies(false).isEmpty()))
                         {
-                            mExcludedSVs.add(var);
+                            mExcludedSVs.put(var, DUP_BE);
                             removalList.add(breakend);
 
                             if(breakend.chromosome().equals(otherBe.chromosome()))
@@ -1335,7 +1319,7 @@ public class SvClusteringMethods {
                         }
                         else
                         {
-                            mExcludedSVs.add(nextVar);
+                            mExcludedSVs.put(nextVar, DUP_BE);
                             removalList.add(nextBreakend);
 
                             if(nextBreakend.chromosome().equals(nextOtherBe.chromosome()))
