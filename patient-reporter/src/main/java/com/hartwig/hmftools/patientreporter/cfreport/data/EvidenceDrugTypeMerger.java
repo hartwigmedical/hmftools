@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -27,7 +28,9 @@ public final class EvidenceDrugTypeMerger {
 
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
+        StringBuilder drugsStringBuilderMultipleKeys = new StringBuilder();
         StringBuilder drugsStringBuilder = new StringBuilder();
+
         String drugsStringTotal = Strings.EMPTY;
 
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
@@ -47,7 +50,8 @@ public final class EvidenceDrugTypeMerger {
             }
         }
 
-
+        Set<DrugsKey> keys = mapEvidence.keySet();
+        List<DrugsKey> drugsKeys = Lists.newArrayList();
         for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
             List<EvidenceItem> itemsForKey = entry.getValue();
 
@@ -55,25 +59,31 @@ public final class EvidenceDrugTypeMerger {
                 if (drugsStringBuilder.length() > 0) {
                     drugsStringTotal = drugsStringBuilder.substring(1, drugsStringBuilder.length());
                 }
-                else if (!drugsStringBuilder.toString().contains(itemValue.drug())) {
-                    drugsStringTotal = itemValue.drug();
+                if (!drugsStringBuilder.toString().contains(itemValue.drug())) {
+                    drugsStringBuilderMultipleKeys.append(itemValue.drug());
+                    drugsStringTotal = drugsStringBuilderMultipleKeys.toString();
+
                 }
+                if (keys.contains(entry.getKey()) && !drugsKeys.contains(entry.getKey())) {
+                    drugsKeys.add(entry.getKey());
+                    LOGGER.info(entry.getKey());
+                    LOGGER.info(drugsStringTotal);
 
-
-                evidenceItems.add(ImmutableEvidenceItemMerger.builder()
-                        .event(itemValue.event())
-                        .source(itemValue.source())
-                        .reference(itemValue.reference())
-                        .drug(itemValue.drugsType() + " (" + drugsStringTotal + ")")
-                        .level(itemValue.level())
-                        .response(itemValue.response())
-                        .isOnLabel(itemValue.isOnLabel())
-                        .cancerType(itemValue.cancerType())
-                        .scope(itemValue.scope())
-                        .build());
+                    evidenceItems.add(ImmutableEvidenceItemMerger.builder()
+                            .event(itemValue.event())
+                            .source(itemValue.source())
+                            .reference(itemValue.reference())
+                            .drug(itemValue.drugsType() + " (" + drugsStringTotal + ")")
+                            .level(itemValue.level())
+                            .response(itemValue.response())
+                            .isOnLabel(itemValue.isOnLabel())
+                            .cancerType(itemValue.cancerType())
+                            .scope(itemValue.scope())
+                            .build());
+                }
             }
-        }
 
+        }
         return evidenceItems;
     }
 
