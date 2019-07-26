@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -84,8 +85,10 @@ public class MergeRuleTest
 
         assertEquals(3, tester.getClusters().size());
         assertTrue(tester.getClusters().get(0).getSVs().contains(var7));
+        assertTrue(tester.getClusters().get(0).getResolvedType() == ResolvedType.DUP_BE);
         assertTrue(tester.getClusters().get(1).getSVs().contains(var9));
-        assertEquals(10, tester.getClusters().get(2).getSvCount());
+        assertTrue(tester.getClusters().get(1).getResolvedType() == ResolvedType.DUP_BE);
+        assertEquals(11, tester.getClusters().get(2).getSvCount());
 
         // simple clustered SVs are split out in the final routine
         tester.clearClustersAndSVs();

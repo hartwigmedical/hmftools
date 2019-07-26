@@ -1281,8 +1281,7 @@ public class SvClusteringMethods {
                             mExcludedSVs.put(var, DUP_BE);
                             removalList.add(breakend);
                         }
-
-                        if(nextVar.type() == SGL)
+                        else if(nextVar.type() == SGL)
                         {
                             mExcludedSVs.put(nextVar, DUP_BE);
                             removalList.add(nextBreakend);
