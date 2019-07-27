@@ -158,13 +158,13 @@ public class VisualiserWriter
                 final SvBreakend beStart = var.getBreakend(true);
                 final SvBreakend beEnd = var.getBreakend(false);
 
-                svDataList.add(new VisSvDataFile(mSampleId, var.getCluster().id(), chainId, var.dbId(),
+                svDataList.add(new VisSvDataFile(mSampleId, var.getCluster().id(), chainId, var.id(),
                         var.type(), var.getCluster().getResolvedType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(),beEnd != null ? beEnd.position() : 0,
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
-                        beStart.getSV().getFoldbackLink(beStart.usesStart()).isEmpty() ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
-                        beEnd!= null ? (beEnd.getSV().getFoldbackLink(beEnd.usesStart()).isEmpty() ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
+                        beStart.getSV().getFoldbackBreakend(beStart.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
+                        beEnd!= null ? (beEnd.getSV().getFoldbackBreakend(beEnd.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
                         var.ploidy()));
             }
         }
@@ -271,7 +271,7 @@ public class VisualiserWriter
                 }
             }
 
-            // finally write out all unchained SVs
+            // finally write out all unchained SVs with telomere and centromere links shown
             for (final SvVarData var : cluster.getUnlinkedSVs())
             {
                 int chainId = cluster.getChainId(var);
@@ -284,7 +284,7 @@ public class VisualiserWriter
                         continue;
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chainId, breakend.chromosome(),
-                            getPositionValue(breakend, true), getPositionValue(breakend, false), 1));
+                            getPositionValue(breakend, true), getPositionValue(breakend, false), var.ploidy()));
                 }
             }
         }

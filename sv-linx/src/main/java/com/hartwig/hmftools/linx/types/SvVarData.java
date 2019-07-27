@@ -30,8 +30,6 @@ import org.apache.logging.log4j.Logger;
 
 public class SvVarData
 {
-    private final String mIdStr; // sourced from DB so could be converted to int
-
     // full set of DB fields
     private final StructuralVariantData mSVData;
     private String[] mArm;
@@ -93,8 +91,6 @@ public class SvVarData
 
     public SvVarData(final StructuralVariantData svData)
     {
-        mIdStr = String.valueOf(svData.id());
-
         mSVData = svData;
 
         init();
@@ -147,12 +143,8 @@ public class SvVarData
         mCnDataPostEnd = null;
     }
 
-    public final String id() { return mIdStr; }
-
-    public final int dbId()
-    {
-        return mSVData.id();
-    }
+    public final int id() { return mSVData.id(); }
+    public final String idStr() { return String.valueOf(mSVData.id()); }
 
     public String toString() { return posId() + " " + typeStr(); }
 
@@ -215,19 +207,19 @@ public class SvVarData
         return abs(position(false) - position(true));
     }
 
-    public void addClusterReason(final String reason, final String otherId)
+    public void addClusterReason(final String reason, final int otherId)
     {
         if(mClusterReason.contains(reason))
             return;
 
         mClusterReason = appendStr(mClusterReason, reason, ';');
 
-        if(!otherId.isEmpty())
+        if(otherId > -1)
             mClusterReason += "_" + otherId;
 
-        if(otherId.equals(mIdStr))
+        if(otherId == id())
         {
-            LOGGER.warn("SV({}) reason({}) setting to own ID", mIdStr, reason);
+            LOGGER.warn("SV({}) reason({}) setting to own ID", id(), reason);
         }
     }
 
@@ -349,12 +341,12 @@ public class SvVarData
         mDbLink[seIndex(isStart)] = link;
     }
 
-    public final String getFoldbackLink(boolean useStart)
+    public final int getFoldbackLink(boolean useStart)
     {
         if(mFoldbackBreakends[seIndex(useStart)] != null)
             return mFoldbackBreakends[seIndex(useStart)].getSV().id();
         else
-            return "";
+            return -1;
     }
 
     public final SvBreakend getFoldbackBreakend(boolean isStart) { return mFoldbackBreakends[seIndex(isStart)]; }
@@ -648,7 +640,7 @@ public class SvVarData
 
     public static boolean isSpecificSV(final SvVarData var)
     {
-        if(var.id().equals(SPECIFIC_SV_ID))
+        if(var.idStr().equals(SPECIFIC_SV_ID))
             return true;
 
         return false;

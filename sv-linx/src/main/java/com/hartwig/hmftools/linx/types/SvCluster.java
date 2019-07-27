@@ -823,7 +823,7 @@ public class SvCluster
                 return mChains.size() + i + 1;
         }
 
-        return var.dbId();
+        return var.id();
     }
 
     public final List<SvArmCluster> getArmClusters() { return mArmClusters; }

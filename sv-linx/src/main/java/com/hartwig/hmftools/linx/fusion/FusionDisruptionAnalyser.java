@@ -226,7 +226,7 @@ public class FusionDisruptionAnalyser
                 boolean isStart = isStart(be);
 
                 List<GeneAnnotation> genesList = geneCollection.findGeneAnnotationsBySv(
-                        var.dbId(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
+                        var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
 
                 if (genesList.isEmpty())
                     continue;

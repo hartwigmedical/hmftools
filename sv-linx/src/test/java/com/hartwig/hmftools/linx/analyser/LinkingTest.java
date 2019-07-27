@@ -19,8 +19,8 @@ public class LinkingTest
     public void testLinkedPairs()
     {
         // test linked pair switching
-        final SvVarData var1 = createDup("1", "1", 100, 200);
-        final SvVarData var2 = createDup("2", "1", 300, 400);
+        final SvVarData var1 = createDup(1, "1", 100, 200);
+        final SvVarData var2 = createDup(2, "1", 300, 400);
         SvLinkedPair lp1 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, false, true);
 
         assertEquals(lp1.first(), var1);
@@ -37,13 +37,13 @@ public class LinkingTest
         assertEquals(lp1.secondLinkOnStart(), false);
 
         // test short TIs converted to DBs
-        final SvVarData var3 = createDel("3", "1", 100, 200);
-        final SvVarData var4 = createDel("4", "1", 210, 400);
+        final SvVarData var3 = createDel(3, "1", 100, 200);
+        final SvVarData var4 = createDel(4, "1", 210, 400);
         SvLinkedPair lp2 = new SvLinkedPair(var3, var4, LINK_TYPE_TI, false, true);
         assertEquals(lp2.linkType(), LINK_TYPE_DB);
         assertEquals(lp2.length(), -11);
 
-        final SvVarData var5 = createDel("4", "1", 250, 400);
+        final SvVarData var5 = createDel(4, "1", 250, 400);
 
         SvLinkedPair lp3 = new SvLinkedPair(var3, var5, LINK_TYPE_TI, false, true);
 

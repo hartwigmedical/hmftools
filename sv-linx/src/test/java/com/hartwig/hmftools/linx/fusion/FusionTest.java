@@ -212,16 +212,16 @@ public class FusionTest
         // test 1: create a chain of DELs with a single-SV fusion which link between exon 2-3 of upstream to 2-3 of downstream
 
         // pre-gene
-        SvVarData var1 = createDel("0", chromosome, 300,400);
+        SvVarData var1 = createDel(0, chromosome, 300,400);
 
         // pre-gene (just to keep the cluster big enough to not resolve into simple SVs
-        SvVarData var2 = createDel("1", chromosome, 500,600);
+        SvVarData var2 = createDel(1, chromosome, 500,600);
 
         // fusing del
-        SvVarData var3 = createDel("2", chromosome, 1550,11200);
+        SvVarData var3 = createDel(2, chromosome, 1550,11200);
 
         // intronic del which then runs out remainder of transcript
-        SvVarData var4 = createDel("3", chromosome, 15000,16000);
+        SvVarData var4 = createDel(3, chromosome, 15000,16000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -243,23 +243,23 @@ public class FusionTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
-        assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
+        assertEquals(var3.id(), fusion.upstreamTrans().parent().id());
+        assertEquals(var3.id(), fusion.downstreamTrans().parent().id());
         assertTrue(validateFusionAnnotations(fusion, true, true));
 
         // test 2: this time a chain from the first to the last variant with the middle 2 going out to non-disruptive locations
         tester.clearClustersAndSVs();
 
         // upstream trans
-        var1 = createDel("0", chromosome, 1550,50000);
+        var1 = createDel(0, chromosome, 1550,50000);
 
-        var2 = createDel("1", chromosome, 50100,51000);
+        var2 = createDel(1, chromosome, 50100,51000);
 
         // fusing del
-        var3 = createDel("2", chromosome, 55000,56000);
+        var3 = createDel(2, chromosome, 55000,56000);
 
         // intronic del which then runs out remainder of transcript
-        var4 = createDup("3", chromosome, 10900, 56500);
+        var4 = createDup(3, chromosome, 10900, 56500);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -281,24 +281,24 @@ public class FusionTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(var1.dbId(), fusion.upstreamTrans().parent().id());
-        assertEquals(var4.dbId(), fusion.downstreamTrans().parent().id());
+        assertEquals(var1.id(), fusion.upstreamTrans().parent().id());
+        assertEquals(var4.id(), fusion.downstreamTrans().parent().id());
         assertTrue(validateFusionAnnotations(fusion, true, true));
 
         // test 4: invalid fusion, with a TI beyond the fusion ending in an exon upstream and skipping an exon downstream
         tester.clearClustersAndSVs();
 
         // del starting in an exon
-        var1 = createDel("0", chromosome, 1150,1250);
+        var1 = createDel(0, chromosome, 1150,1250);
 
         // intronic dup
-        var2 = createDup("1", chromosome, 1350,1575);
+        var2 = createDup(1, chromosome, 1350,1575);
 
         // fusion the 2 genes
-        var3 = createDel("2", chromosome, 1750,11525);
+        var3 = createDel(2, chromosome, 1750,11525);
 
         // del skips an exon
-        var4 = createDel("3", chromosome, 11575, 111800);
+        var4 = createDel(3, chromosome, 11575, 111800);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -320,8 +320,8 @@ public class FusionTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(var3.dbId(), fusion.upstreamTrans().parent().id());
-        assertEquals(var3.dbId(), fusion.downstreamTrans().parent().id());
+        assertEquals(var3.id(), fusion.upstreamTrans().parent().id());
+        assertEquals(var3.id(), fusion.downstreamTrans().parent().id());
 
         assertTrue(validateFusionAnnotations(fusion, false, true));
     }

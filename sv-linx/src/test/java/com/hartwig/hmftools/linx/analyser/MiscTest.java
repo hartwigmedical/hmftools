@@ -31,22 +31,22 @@ public class MiscTest
     @Test
     public void testConsistency()
     {
-        final SvVarData del = createDel("1", "1", 100, 200);
+        final SvVarData del = createDel(1, "1", 100, 200);
         assertEquals(calcConsistency(del), 0);
 
-        final SvVarData ins = createIns("1", "1", 100, 200);
+        final SvVarData ins = createIns(1, "1", 100, 200);
         assertEquals(calcConsistency(ins), 0);
 
-        final SvVarData dup = createDup("1", "1", 100, 200);
+        final SvVarData dup = createDup(1, "1", 100, 200);
         assertEquals(calcConsistency(dup), 0);
 
-        final SvVarData inv = createInv("1", "1", 100, 200, 1);
+        final SvVarData inv = createInv(1, "1", 100, 200, 1);
         assertEquals(calcConsistency(inv), 2);
 
-        final SvVarData bnd = createBnd("1", "1", 100, 1, "2", 100, -1);
+        final SvVarData bnd = createBnd(1, "1", 100, 1, "2", 100, -1);
         assertEquals(calcConsistency(bnd), 0);
 
-        final SvVarData sgl = createSgl("1", "1", 100, 1, false);
+        final SvVarData sgl = createSgl(1, "1", 100, 1, false);
         assertEquals(calcConsistency(sgl), 1);
     }
 

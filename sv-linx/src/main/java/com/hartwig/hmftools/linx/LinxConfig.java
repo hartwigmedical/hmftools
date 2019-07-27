@@ -71,7 +71,7 @@ public class LinxConfig
     private static final String MAX_SAMPLES = "max_samples";
 
     public static int SPECIFIC_CLUSTER_ID = -1;
-    public static String SPECIFIC_SV_ID = "";
+    public static int SPECIFIC_SV_ID = -1;
 
     private static final Logger LOGGER = LogManager.getLogger(LinxConfig.class);
 
@@ -138,7 +138,7 @@ public class LinxConfig
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
 
         SPECIFIC_CLUSTER_ID = Integer.parseInt(cmd.getOptionValue(LOG_CLUSTER_ID, "-1"));
-        SPECIFIC_SV_ID = cmd.getOptionValue(LOG_SV_ID, "");
+        SPECIFIC_SV_ID = Integer.parseInt(cmd.getOptionValue(LOG_SV_ID, "-1"));
     }
 
     public static final String formOutputPath(final String dir)

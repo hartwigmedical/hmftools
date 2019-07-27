@@ -877,7 +877,7 @@ public class ClusterAnalyser {
                     if (be1 == SE_END && var1.type() != BND)
                         continue;
 
-                    if (var1.getFoldbackLink(v1Start).isEmpty())
+                    if (var1.getFoldbackBreakend(v1Start) == null)
                         continue;
 
                     for (final SvVarData var2 : cluster2Foldbacks)
@@ -889,7 +889,7 @@ public class ClusterAnalyser {
                             if (be2 == SE_END && var2.type() != BND)
                                 continue;
 
-                            if (var2.getFoldbackLink(v2Start).isEmpty())
+                            if (var2.getFoldbackBreakend(v2Start) == null)
                                 continue;
 
                             if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
@@ -1103,9 +1103,9 @@ public class ClusterAnalyser {
                         {
                             final SvBreakend nextBreakend = breakendList.get(i + 2);
 
-                            if (!lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart()).isEmpty()
-                                    && lowerBreakend.getSV().getFoldbackLink(lowerBreakend.usesStart())
-                                    .equals(nextBreakend.getSV().getFoldbackLink(nextBreakend.usesStart())))
+                            if (lowerBreakend.getSV().getFoldbackBreakend(lowerBreakend.usesStart()) != null
+                            && lowerBreakend.getSV().getFoldbackBreakend(lowerBreakend.usesStart())
+                                    == nextBreakend.getSV().getFoldbackBreakend(nextBreakend.usesStart()))
                             {
                                 isFoldback = true;
                                 upperBreakend = nextBreakend;

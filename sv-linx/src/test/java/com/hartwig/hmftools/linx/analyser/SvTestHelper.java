@@ -82,7 +82,7 @@ public class SvTestHelper
         FusionAnalyser.setHasValidConfigData(true);
     }
 
-    public final String nextVarId() { return String.format("%d", mNextVarId++); }
+    public final int nextVarId() { return mNextVarId++; }
     public void logVerbose(boolean toggle)
     {
         Config.LogVerbose = toggle;
@@ -127,7 +127,7 @@ public class SvTestHelper
 
     public final List<SvCluster> getClusters() { return Analyser.getClusters(); }
 
-    public static SvVarData createSv(final String varId, final String chrStart, final String chrEnd,
+    public static SvVarData createSv(final int varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)
     {
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
@@ -135,31 +135,31 @@ public class SvTestHelper
     }
 
     // for convenience
-    public static SvVarData createDel(final String varId, final String chromosome, long posStart, long posEnd)
+    public static SvVarData createDel(final int varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, DEL,
                 2, 2, 1, 1, 1, "");
     }
 
-    public static SvVarData createIns(final String varId, final String chromosome, long posStart, long posEnd)
+    public static SvVarData createIns(final int varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, 1, -1, INS,
                 2, 2, 1, 1, 1, "");
     }
 
-    public static SvVarData createDup(final String varId, final String chromosome, long posStart, long posEnd)
+    public static SvVarData createDup(final int varId, final String chromosome, long posStart, long posEnd)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, -1, 1, DUP,
                 3, 3, 1, 1, 1, "");
     }
 
-    public static SvVarData createInv(final String varId, final String chromosome, long posStart, long posEnd, int orientation)
+    public static SvVarData createInv(final int varId, final String chromosome, long posStart, long posEnd, int orientation)
     {
         return createTestSv(varId, chromosome, chromosome, posStart, posEnd, orientation, orientation, INV,
                 orientation == 1 ? 4 : 3, orientation == 1 ? 3 : 4, 1, 1, 1, "");
     }
 
-    public static SvVarData createSgl(final String varId, final String chromosome, long position, int orientation, boolean isNoneSegment)
+    public static SvVarData createSgl(final int varId, final String chromosome, long position, int orientation, boolean isNoneSegment)
     {
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, SGL,
                 3, 0, 1, 0, 1, "");
@@ -167,7 +167,7 @@ public class SvTestHelper
         return var;
     }
 
-    public static SvVarData createBnd(final String varId, final String chrStart, long posStart, int orientStart, final String chrEnd, long posEnd, int orientEnd)
+    public static SvVarData createBnd(final int varId, final String chrStart, long posStart, int orientStart, final String chrEnd, long posEnd, int orientEnd)
     {
         SvVarData var = createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, BND,
                 3, 3, 1, 1, 1, "");
@@ -175,7 +175,7 @@ public class SvTestHelper
         return var;
     }
 
-    public static SvVarData createTestSv(final String varId, final String chrStart, final String chrEnd,
+    public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, double ploidy)
     {
         // let the copy number test data routine take care of setting CN and CN change data
@@ -183,21 +183,21 @@ public class SvTestHelper
                 0, 0, ploidy, ploidy, ploidy, "");
     }
 
-    public static SvVarData createTestSv(final String varId, final String chrStart, final String chrEnd,
+    public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq)
     {
         return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type, cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, "PASS");
     }
 
-    public static SvVarData createTestSv(final String varId, final String chrStart, final String chrEnd,
+    public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq,
             final String filter)
     {
         StructuralVariantData svData =
                 ImmutableStructuralVariantData.builder()
-                        .id(Integer.parseInt(varId))
+                        .id(varId)
                         .startChromosome(chrStart)
                         .endChromosome(chrEnd)
                         .startPosition(posStart)
@@ -476,12 +476,12 @@ public class SvTestHelper
                     }
                 }
 
-                SvCNData[] cnDataPair = svIdCnDataMap.get(var.dbId());
+                SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
 
                 if(cnDataPair == null)
                 {
                     cnDataPair = new SvCNData[2];
-                    svIdCnDataMap.put(var.dbId(), cnDataPair);
+                    svIdCnDataMap.put(var.id(), cnDataPair);
                 }
 
                 cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;

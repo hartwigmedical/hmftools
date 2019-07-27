@@ -207,7 +207,7 @@ public class SvSampleAnalyser {
         {
             if(svPloidyCalcDataMap != null)
             {
-                final PloidyCalcData ploidyData = svPloidyCalcDataMap.get(var.dbId());
+                final PloidyCalcData ploidyData = svPloidyCalcDataMap.get(var.id());
                 if (ploidyData != null)
                 {
                     double estPloidy = ploidyData.PloidyEstimate;
@@ -216,7 +216,7 @@ public class SvSampleAnalyser {
                 }
             }
 
-            final SvCNData[] cnDataPair = svIdCnDataMap.get(var.dbId());
+            final SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
 
             if(cnDataPair == null)
                 continue;
@@ -502,7 +502,7 @@ public class SvSampleAnalyser {
                 if(mSvFileWriter != null)
                 {
                     mSvFileWriter.write(String.format("%s,%d,%s,%d,%d",
-                            mSampleId, var.dbId(), var.typeStr(), cluster.id(), cluster.getSvCount()));
+                            mSampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
 
                     mSvFileWriter.write(String.format(",%s,%d,%d,%s,%s,%d,%d,%s",
                             var.chromosome(true), var.position(true), var.orientation(true), var.arm(true),
@@ -572,7 +572,7 @@ public class SvSampleAnalyser {
                     mSvFileWriter.write(String.format(",%d,%s,%d,%d",
                             var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
 
-                    mSvFileWriter.write(String.format(",%s,%d,%s,%s,%d,%s",
+                    mSvFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s",
                             var.getFoldbackLink(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
                             var.getFoldbackLink(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
@@ -615,7 +615,7 @@ public class SvSampleAnalyser {
                 if(linxSvData != null)
                 {
                     linxSvData.add(ImmutableLinxSvData.builder()
-                            .svId(var.dbId())
+                            .svId(var.id())
                             .clusterId(cluster.id())
                             .clusterReason(var.getClusterReason())
                             .fragileSiteStart(var.isFragileSite(true))
@@ -843,7 +843,7 @@ public class SvSampleAnalyser {
                             SvArmCluster acEnd = cluster.findArmCluster(beEnd);
 
                             mLinksFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s,%s,%s,%s,%s",
-                                    beStart.getSV().dbId(), beEnd.getSV().dbId(),
+                                    beStart.getSV().id(), beEnd.getSV().id(),
                                     beStart.getChrArm(), beStart.position(), beEnd.position(),
                                     acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
                                     beStart.getSV().getGeneInBreakend(beStart.usesStart(), false),
@@ -861,8 +861,8 @@ public class SvSampleAnalyser {
                                     .chainId(chain.id())
                                     .chainCount(chainSvCount)
                                     .chainIndex(chainIndexStr)
-                                    .lowerSvId(beStart.getSV().dbId())
-                                    .upperSvId(beEnd.getSV().dbId())
+                                    .lowerSvId(beStart.getSV().id())
+                                    .upperSvId(beEnd.getSV().id())
                                     .lowerBreakendIsStart(beStart.usesStart())
                                     .upperBreakendIsStart(beEnd.usesStart())
                                     .chromosome(beStart.chromosome())
@@ -895,7 +895,7 @@ public class SvSampleAnalyser {
 
             if(viralInsertData != null)
             {
-                viralInserts.add(new LinxViralInsertFile(mSampleId, var.dbId(), viralInsertData[VH_ID], viralInsertData[VH_NAME]));
+                viralInserts.add(new LinxViralInsertFile(mSampleId, var.id(), viralInsertData[VH_ID], viralInsertData[VH_NAME]));
             }
         }
 

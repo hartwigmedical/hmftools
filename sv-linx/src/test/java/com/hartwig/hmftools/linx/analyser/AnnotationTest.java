@@ -32,20 +32,20 @@ public class AnnotationTest
         // tester.logVerbose(true);
 
         // create a set of SVs which exhibit the various types of local topology
-        final SvVarData var1 = createInv("1", "1", 101000, 107000, 1);
+        final SvVarData var1 = createInv(1, "1", 101000, 107000, 1);
 
         // remote TI from BND, with other ends forming a DB and an isolated BE
-        final SvVarData var2 = createBnd("2", "1", 149000, 1, "2", 1000, -1);
-        final SvVarData var3 = createBnd("3", "1", 250000, 1, "2", 1100, 1);
+        final SvVarData var2 = createBnd(2, "1", 149000, 1, "2", 1000, -1);
+        final SvVarData var3 = createBnd(3, "1", 250000, 1, "2", 1100, 1);
 
         // DUP forms a DB with the next foldback and a DB with the previous BND
-        final SvVarData var4 = createDup("4", "1", 150000, 200500);
-        final SvVarData var5 = createInv("5", "1", 201000, 204000, -1);
+        final SvVarData var4 = createDup(4, "1", 150000, 200500);
+        final SvVarData var5 = createInv(5, "1", 201000, 204000, -1);
 
         // complex foldback
-        final SvVarData var6 = createInv("6", "1", 301000, 304000, 1);
-        final SvVarData var7 = createDel("7", "1", 305000, 306000);
-        final SvVarData var8 = createInv("8", "1", 310000, 315000, -1);
+        final SvVarData var6 = createInv(6, "1", 301000, 304000, 1);
+        final SvVarData var7 = createDel(7, "1", 305000, 306000);
+        final SvVarData var8 = createInv(8, "1", 310000, 315000, -1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -89,14 +89,14 @@ public class AnnotationTest
         tester.ClusteringMethods.getChrCopyNumberMap().put("1", chrCopyNumbers);
         tester.ClusteringMethods.getChrCopyNumberMap().put("2", chrCopyNumbers);
 
-        final SvVarData var1 = createInv("0", "1", 101000, 104000, -1);
+        final SvVarData var1 = createInv(0, "1", 101000, 104000, -1);
 
         // straddling BNDs
-        final SvVarData var2 = createBnd("1", "1", 1000, 1, "2", 1000, -1);
-        final SvVarData var3 = createBnd("2", "1", 200000, 1, "2", 1100, 1);
+        final SvVarData var2 = createBnd(1, "1", 1000, 1, "2", 1000, -1);
+        final SvVarData var3 = createBnd(2, "1", 200000, 1, "2", 1100, 1);
 
         // single other cluster - will be merged in because it faces the foldback
-        final SvVarData var4 = createSgl("3", "1", 150000, 1, false);
+        final SvVarData var4 = createSgl(3, "1", 150000, 1, false);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

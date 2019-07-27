@@ -78,7 +78,7 @@ public class SvChain {
 
         SvLinkedPair newPair = SvLinkedPair.copy(pair);
 
-        mLinkSum += pair.first().dbId() + pair.second().dbId();
+        mLinkSum += pair.first().id() + pair.second().id();
 
         if(mLinkedPairs.isEmpty())
         {
@@ -238,7 +238,7 @@ public class SvChain {
         mLinkedPairs.add(link);
         mIsClosedLoop = true;
 
-        mLinkSum += chainEnd.getSV().dbId() + chainStart.getSV().dbId();
+        mLinkSum += chainEnd.getSV().id() + chainStart.getSV().id();
     }
 
     public void foldbackChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)

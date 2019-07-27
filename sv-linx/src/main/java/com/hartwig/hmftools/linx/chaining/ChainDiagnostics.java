@@ -180,7 +180,7 @@ public class ChainDiagnostics
                 else if(mInitialComplexDup.contains(otherVar))
                     ++compDupCons;
 
-                otherSVs = appendStr(otherSVs, otherVar.id(), ';');
+                otherSVs = appendStr(otherSVs, otherVar.idStr(), ';');
             }
 
             if(connectionCount - foldbackCons - compDupCons > 1)

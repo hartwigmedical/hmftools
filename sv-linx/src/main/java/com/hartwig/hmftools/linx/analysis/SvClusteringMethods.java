@@ -354,13 +354,13 @@ public class SvClusteringMethods {
 
                 for (final SvBreakend breakend : breakendList)
                 {
-                    if (breakend.orientation() == 1 && breakend.getSV().dbId() == lohEvent.StartSV)
+                    if (breakend.orientation() == 1 && breakend.getSV().id() == lohEvent.StartSV)
                     {
                         lohEvent.setBreakend(breakend, true);
                         breakend.getCluster().addLohEvent(lohEvent);
                     }
 
-                    if (breakend.orientation() == -1 && breakend.getSV().dbId() == lohEvent.EndSV)
+                    if (breakend.orientation() == -1 && breakend.getSV().id() == lohEvent.EndSV)
                     {
                         lohEvent.setBreakend(breakend, false);
                         breakend.getCluster().addLohEvent(lohEvent);
@@ -392,13 +392,13 @@ public class SvClusteringMethods {
 
                 for (final SvBreakend breakend : breakendList)
                 {
-                    if (breakend.orientation() == 1 && breakend.getSV().dbId() == homLossEvent.StartSV)
+                    if (breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
                     {
                         homLossEvent.setBreakend(breakend, true);
                         // breakend.getCluster().addHomLossEvent(homLossEvent);
                     }
 
-                    if (breakend.orientation() == -1 && breakend.getSV().dbId() == homLossEvent.EndSV)
+                    if (breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
                     {
                         homLossEvent.setBreakend(breakend, false);
                         // breakend.getCluster().addHomLossEvent(homLossEvent);

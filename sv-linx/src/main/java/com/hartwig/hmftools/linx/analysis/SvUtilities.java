@@ -148,33 +148,6 @@ public class SvUtilities {
         return dest.isEmpty() ? source : dest + delim + source;
     }
 
-    public static boolean areVariantsLinkedByDistance(final SvVarData v1, final SvVarData v2, int permittedDistance)
-    {
-        if(v1.id().equals(v2.id()))
-            return false;
-
-        for(int be1 = SE_START; be1 <= SE_END; ++be1)
-        {
-            if(be1 == SE_END && v1.isNullBreakend())
-                continue;
-
-            boolean v1Start = isStart(be1);
-
-            for(int be2 = SE_START; be2 <= SE_END; ++be2)
-            {
-                if(be2 == SE_END && v2.isNullBreakend())
-                    continue;
-
-                boolean v2Start = isStart(be2);
-
-                if (areVariantsLinkedByDistance(v1, v1Start, v2, v2Start, permittedDistance))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
     public static boolean areVariantsLinkedByDistance(final SvVarData v1, final boolean v1UseStart, final SvVarData v2, final boolean v2UseStart, int permittedDistance)
     {
         // search all remaining SVs for proximity

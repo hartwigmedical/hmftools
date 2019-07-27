@@ -702,7 +702,7 @@ public class ClusterAnnotations
                 foldbackOrientations = appendStr(foldbackOrientations, direction, ';');
                 double ploidy = direction == DIRECTION_CENTROMERE ? abs(var.ploidyMin()) : -abs(var.ploidyMin());
                 foldbackPloidies = appendStr(foldbackPloidies, String.format("%.2f", ploidy), ';');
-                foldbackIds = appendStr(foldbackIds, breakend.getSV().id(), ';');
+                foldbackIds = appendStr(foldbackIds, breakend.getSV().idStr(), ';');
                 foldbackChained = appendStr(foldbackChained, Boolean.toString(var.isChainedFoldback()), ';');
             }
 

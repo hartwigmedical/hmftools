@@ -32,8 +32,8 @@ public class ChainingSimpleTest
     public void testChainRoutines()
     {
         // create a chain out of simple DELs and test the various chaining features
-        final SvVarData var1 = createDel("1", "1", 1100, 1200);
-        final SvVarData var2 = createDel("2", "1", 1300, 1400);
+        final SvVarData var1 = createDel(1, "1", 1100, 1200);
+        final SvVarData var2 = createDel(2, "1", 1300, 1400);
         SvLinkedPair lp1 = new SvLinkedPair(var1, var2, LINK_TYPE_TI, false, true);
         lp1.setIsAssembled();
 
@@ -45,7 +45,7 @@ public class ChainingSimpleTest
         assertTrue(chain.firstLinkOpenOnStart());
         assertTrue(!chain.lastLinkOpenOnStart());
 
-        final SvVarData var3 = createDel("3", "1", 1500, 1600);
+        final SvVarData var3 = createDel(3, "1", 1500, 1600);
         SvLinkedPair lp2 = new SvLinkedPair(var3, var2, LINK_TYPE_TI, true, false);
         lp2.setIsAssembled();
 
@@ -58,7 +58,7 @@ public class ChainingSimpleTest
         assertEquals(chain.getLastSV(), var3);
         assertEquals(chain.getSvList().get(1), var2);
 
-        final SvVarData var4 = createDel("4", "1", 900, 1000);
+        final SvVarData var4 = createDel(4, "1", 900, 1000);
         SvLinkedPair lp3 = new SvLinkedPair(var1, var4, LINK_TYPE_TI, true, false);
 
         assertTrue(chain.canAddLinkedPairToStart(lp3));
@@ -71,7 +71,7 @@ public class ChainingSimpleTest
         assertEquals(chain.getLastSV(), var3);
 
         // test a potentially closing link
-        final SvVarData var5 = createDup("5", "1", 800, 1700);
+        final SvVarData var5 = createDup(5, "1", 800, 1700);
         SvLinkedPair lp4 = new SvLinkedPair(var5, var4, LINK_TYPE_TI, true, true);
 
         assertTrue(chain.canAddLinkedPairToStart(lp4));
@@ -123,13 +123,13 @@ public class ChainingSimpleTest
     @Test
     public void testChainReconciliation()
     {
-        SvVarData var1 = createDel("1", "1", 100, 150);
-        SvVarData var2 = createDel("2", "1", 200, 250);
-        SvVarData var3 = createDel("3", "1", 300, 350);
-        SvVarData var4 = createDel("4", "1", 400, 450);
-        SvVarData var5 = createDel("5", "1", 500, 550);
-        SvVarData var6 = createDel("6", "1", 600, 650);
-        SvVarData var7 = createDel("7", "1", 700, 750);
+        SvVarData var1 = createDel(1, "1", 100, 150);
+        SvVarData var2 = createDel(2, "1", 200, 250);
+        SvVarData var3 = createDel(3, "1", 300, 350);
+        SvVarData var4 = createDel(4, "1", 400, 450);
+        SvVarData var5 = createDel(5, "1", 500, 550);
+        SvVarData var6 = createDel(6, "1", 600, 650);
+        SvVarData var7 = createDel(7, "1", 700, 750);
 
         SvChain chain1 = new SvChain(1);
         chain1.addLink(SvLinkedPair.from(var1.getBreakend(false), var2.getBreakend(true)), true);
@@ -190,9 +190,9 @@ public class ChainingSimpleTest
     @Test
     public void testChainSplittingByFoldback()
     {
-        final SvVarData var1 = createDel("1", "1", 300, 400);
-        final SvVarData var2 = createDel("2", "1", 500, 600);
-        final SvVarData var3 = createDel("3", "1", 700, 800);
+        final SvVarData var1 = createDel(1, "1", 300, 400);
+        final SvVarData var2 = createDel(2, "1", 500, 600);
+        final SvVarData var3 = createDel(3, "1", 700, 800);
 
         SvChain chain = new SvChain(0);
 
@@ -202,7 +202,7 @@ public class ChainingSimpleTest
         assertTrue(checkIsValid(chain));
 
         // now add a foldback which will split and replicate the chain
-        SvVarData var4 = createInv("4", "1", 900, 1000, 1);
+        SvVarData var4 = createInv(4, "1", 900, 1000, 1);
 
         chain.foldbackChainOnLink(
                 SvLinkedPair.from(var4.getBreakend(true), var3.getBreakend(false)),
@@ -222,7 +222,7 @@ public class ChainingSimpleTest
         assertTrue(checkIsValid(chain));
 
         // now add a foldback which will split and replicate the chain
-        var4 = createInv("4", "1", 100, 200, -1);
+        var4 = createInv(4, "1", 100, 200, -1);
 
         chain.foldbackChainOnLink(
                 SvLinkedPair.from(var1.getBreakend(true), var4.getBreakend(true)),
@@ -237,9 +237,9 @@ public class ChainingSimpleTest
     @Test
     public void testChainSplittingByFoldbackChain()
     {
-        final SvVarData var1 = createDel("1", "1", 300, 400);
-        final SvVarData var2 = createDel("2", "1", 500, 600);
-        final SvVarData var3 = createDel("3", "1", 700, 800);
+        final SvVarData var1 = createDel(1, "1", 300, 400);
+        final SvVarData var2 = createDel(2, "1", 500, 600);
+        final SvVarData var3 = createDel(3, "1", 700, 800);
 
         SvChain chain = new SvChain(0);
 
@@ -251,9 +251,9 @@ public class ChainingSimpleTest
         // now add a foldback chain which will split and replicate the chain
         SvChain fbChain = new SvChain(1);
 
-        SvVarData var4 = createBnd("4", "1", 900, 1, "2", 100, -1);
-        SvVarData var5 = createDel("5", "2", 500, 600);
-        SvVarData var6 = createBnd("6", "1", 1000, -1, "2", 1000, 1);
+        SvVarData var4 = createBnd(4, "1", 900, 1, "2", 100, -1);
+        SvVarData var5 = createDel(5, "2", 500, 600);
+        SvVarData var6 = createBnd(6, "1", 1000, -1, "2", 1000, 1);
 
         fbChain.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), true);
         fbChain.addLink(SvLinkedPair.from(var5.getBreakend(false), var6.getBreakend(false)), false);
@@ -279,9 +279,9 @@ public class ChainingSimpleTest
         // now add a foldback which will split and replicate the chain
         fbChain = new SvChain(1);
 
-        var4 = createBnd("4", "1", 100, 1, "2", 100, -1);
-        var5 = createDel("5", "2", 500, 600);
-        var6 = createBnd("6", "1", 200, -1, "2", 1000, 1);
+        var4 = createBnd(4, "1", 100, 1, "2", 100, -1);
+        var5 = createDel(5, "2", 500, 600);
+        var6 = createBnd(6, "1", 200, -1, "2", 1000, 1);
 
         fbChain.addLink(SvLinkedPair.from(var4.getBreakend(false), var5.getBreakend(true)), true);
         fbChain.addLink(SvLinkedPair.from(var5.getBreakend(false), var6.getBreakend(false)), false);
@@ -301,9 +301,9 @@ public class ChainingSimpleTest
     @Test
     public void testChainSplittingByComplexDup()
     {
-        final SvVarData var1 = createDel("1", "1", 300, 400);
-        final SvVarData var2 = createDel("2", "1", 500, 600);
-        final SvVarData var3 = createDel("3", "1", 700, 800);
+        final SvVarData var1 = createDel(1, "1", 300, 400);
+        final SvVarData var2 = createDel(2, "1", 500, 600);
+        final SvVarData var3 = createDel(3, "1", 700, 800);
 
         SvChain chain = new SvChain(0);
 
@@ -313,7 +313,7 @@ public class ChainingSimpleTest
         assertTrue(checkIsValid(chain));
 
         // now add a complex dup which will split and replicate the chain
-        SvVarData var4 = createDup("4", "1", 200, 900);
+        SvVarData var4 = createDup(4, "1", 200, 900);
 
         chain.duplicateChainOnLink(
                 SvLinkedPair.from(var4.getBreakend(true), var1.getBreakend(true)),
@@ -330,10 +330,10 @@ public class ChainingSimpleTest
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData var1 = createDel("0", "1", 100,200);
-        final SvVarData var2 = createDel("1", "1", 300,400);
-        final SvVarData var3 = createDel("2", "1", 500,600);
-        final SvVarData var4 = createDel("3", "1", 700,800);
+        final SvVarData var1 = createDel(0, "1", 100,200);
+        final SvVarData var2 = createDel(1, "1", 300,400);
+        final SvVarData var3 = createDel(2, "1", 500,600);
+        final SvVarData var4 = createDel(3, "1", 700,800);
 
         var1.setAssemblyData(false, "asmb12");
         var2.setAssemblyData(true, "asmb12");
@@ -369,10 +369,10 @@ public class ChainingSimpleTest
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData var1 = createInv("0", "1", 100,200, -1);
-        final SvVarData var2 = createDel("1", "1", 300,400);
-        final SvVarData var3 = createDel("2", "1", 500,600);
-        final SvVarData var4 = createInv("3", "1", 700,800, 1);
+        final SvVarData var1 = createInv(1, "1", 100,200, -1);
+        final SvVarData var2 = createDel(2, "1", 300,400);
+        final SvVarData var3 = createDel(3, "1", 500,600);
+        final SvVarData var4 = createInv(4, "1", 700,800, 1);
 
         // add them out of order which will require partial chain reconciliation
         tester.AllVariants.add(var1);
@@ -399,10 +399,10 @@ public class ChainingSimpleTest
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData var0 = createDel("0", "1", 100,200);
-        final SvVarData var1 = createDel("1", "1", 300,400);
-        final SvVarData var2 = createDel("2", "1", 500,600);
-        final SvVarData var3 = createDel("3", "1", 700,800);
+        final SvVarData var0 = createDel(0, "1", 100,200);
+        final SvVarData var1 = createDel(1, "1", 300,400);
+        final SvVarData var2 = createDel(2, "1", 500,600);
+        final SvVarData var3 = createDel(3, "1", 700,800);
 
         var1.setAssemblyData(false, "asmb23");
         var2.setAssemblyData(true, "asmb23");

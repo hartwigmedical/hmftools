@@ -441,7 +441,7 @@ public class DoubleMinuteFinder
             if(!var.isNullBreakend() && !chromosomes.contains(var.chromosome(false)))
                 chromosomes.add(var.chromosome(false));
 
-            svIds = appendStr(svIds, var.id(), ';');
+            svIds = appendStr(svIds, var.idStr(), ';');
         }
 
         final String dmTypesStr = getSvTypesStr(typeCounts);

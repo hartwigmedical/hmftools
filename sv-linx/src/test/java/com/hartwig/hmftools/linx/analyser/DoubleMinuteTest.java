@@ -35,7 +35,7 @@ public class DoubleMinuteTest
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
         // first a simple DUP
-        final SvVarData dup1 = createTestSv("0","1","1",500,600,-1,1, DUP,10);
+        final SvVarData dup1 = createTestSv(0,"1","1",500,600,-1,1, DUP,10);
         dup1.setPloidyRecalcData(8, 12);
 
         tester.AllVariants.add(dup1);
@@ -65,8 +65,8 @@ public class DoubleMinuteTest
         tester.logVerbose(true);
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
-        final SvVarData var1 = createTestSv("1","1","1",1000,6000,-1,-1, INV,8);
-        final SvVarData var2 = createTestSv("2","1","1",3000,8000,1,1, INV,8);
+        final SvVarData var1 = createTestSv(1,"1","1",1000,6000,-1,-1, INV,8);
+        final SvVarData var2 = createTestSv(2,"1","1",3000,8000,1,1, INV,8);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -100,17 +100,17 @@ public class DoubleMinuteTest
 
         // 1 s10100 -> 6 e10600-10500s -> 4 s11500-10100e -> 3 s10200-12000e -> 5 s12100-12200e -> 2 e12500-11200s -> 1 e11000
 
-        final SvVarData var1 = createTestSv("1","1","1",10100,11000,-1,-1, INV,8);
-        final SvVarData var2 = createTestSv("2","1","1",11200,12500,1,1, INV,8);
-        final SvVarData var3 = createTestSv("3","1","2",12000,10200,-1,1, BND,8);
-        final SvVarData var4 = createTestSv("4","1","2",11500,10100,1,-1, BND,8);
-        final SvVarData var5 = createTestSv("5","1","1",12100,12200,1,-1, DEL,2);
-        final SvVarData var6 = createTestSv("6","1","1",10500,10600,-1,1, DUP,2);
+        final SvVarData var1 = createTestSv(1,"1","1",10100,11000,-1,-1, INV,8);
+        final SvVarData var2 = createTestSv(2,"1","1",11200,12500,1,1, INV,8);
+        final SvVarData var3 = createTestSv(3,"1","2",12000,10200,-1,1, BND,8);
+        final SvVarData var4 = createTestSv(4,"1","2",11500,10100,1,-1, BND,8);
+        final SvVarData var5 = createTestSv(5,"1","1",12100,12200,1,-1, DEL,2);
+        final SvVarData var6 = createTestSv(6,"1","1",10500,10600,-1,1, DUP,2);
 
         // unrelated SVs at either end of the cluster
-        final SvVarData other1 = createTestSv("7","1","1",100,200,1,-1, DEL,1);
-        final SvVarData other2 = createTestSv("8","1","1",20000,20100,1,-1, DEL,1);
-        final SvVarData other3 = createTestSv("9","2","2",20100,20100,1,-1, DEL,1);
+        final SvVarData other1 = createTestSv(7,"1","1",100,200,1,-1, DEL,1);
+        final SvVarData other2 = createTestSv(8,"1","1",20000,20100,1,-1, DEL,1);
+        final SvVarData other3 = createTestSv(9,"2","2",20100,20100,1,-1, DEL,1);
 
         tester.AllVariants.add(other1);
 
@@ -152,12 +152,12 @@ public class DoubleMinuteTest
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
         // a cluster with a set of 3 foldbacks which control the ploidies
-        SvVarData var1 = createTestSv("1","1","1",400,500,-1,-1, INV,1);
-        SvVarData var2 = createTestSv("2","1","1",5000,5200,1,1, INV,2);
-        SvVarData var3 = createTestSv("3","1","1",1000,1200,-1,-1, INV,2);
-        SvVarData var4 = createTestSv("4","1","1",2000,2200,1,1, INV,3);
-        SvVarData var5 = createTestSv("5","1","1",2100,2200,1,-1, DEL,8);
-        SvVarData var6 = createTestSv("6","1","1",100,6000,-1,1, DUP,8);
+        SvVarData var1 = createTestSv(1,"1","1",400,500,-1,-1, INV,1);
+        SvVarData var2 = createTestSv(2,"1","1",5000,5200,1,1, INV,2);
+        SvVarData var3 = createTestSv(3,"1","1",1000,1200,-1,-1, INV,2);
+        SvVarData var4 = createTestSv(4,"1","1",2000,2200,1,1, INV,3);
+        SvVarData var5 = createTestSv(5,"1","1",2100,2200,1,-1, DEL,8);
+        SvVarData var6 = createTestSv(6,"1","1",100,6000,-1,1, DUP,8);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -178,10 +178,10 @@ public class DoubleMinuteTest
         tester.clearClustersAndSVs();
 
         // cannot be 2 close INFs
-        var1 = createTestSv("1","1","0",1000,-1,1,-1, SGL,
+        var1 = createTestSv(1,"1","0",1000,-1,1,-1, SGL,
                 10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
 
-        var2 = createTestSv("2","1","0",2000,-1,-1,-1, SGL,
+        var2 = createTestSv(2,"1","0",2000,-1,-1,-1, SGL,
                 10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
 
         tester.AllVariants.add(var1);
@@ -198,9 +198,9 @@ public class DoubleMinuteTest
         tester.clearClustersAndSVs();
 
         // cannot be a single DEL
-        var1 = createTestSv("1","1","1",1000,2000,-1,-1, INV,2);
-        var2 = createTestSv("2","1","1",4000,5000,1,-1, DEL,20);
-        var3 = createTestSv("3","1","1",5000,6000,1,1, INV,2);
+        var1 = createTestSv(1,"1","1",1000,2000,-1,-1, INV,2);
+        var2 = createTestSv(2,"1","1",4000,5000,1,-1, DEL,20);
+        var3 = createTestSv(3,"1","1",5000,6000,1,1, INV,2);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

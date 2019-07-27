@@ -68,14 +68,14 @@ public class ChainingActualTest
             chain(0) 9: pair(79 3:26664498:end & 78 3:25331584 SGL-on-known) Inferred ONLY length(1332914) index(8)
          */
 
-        final SvVarData var1 = createTestSv("77", "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.83, "");
-        final SvVarData var2 = createTestSv("78", "3", "0", 25331584, -1, -1, 1, SGL, 12.2, 0, 2.06, 0, 1.88, "");
-        final SvVarData var3 = createTestSv("79", "3", "3", 26663922, 26664498, 1, 1, INV, 11.9, 8.0, 3.94, 3.94, 5.22, "");
-        final SvVarData var4 = createTestSv("88", "3", "6", 26431918, 26194040, -1, -1, BND, 11.9, 7.3, 3.85, 3.65, 3.22, "");
-        final SvVarData var5 = createTestSv("89", "6", "6", 26194117, 26194406, 1, 1, INV, 7.3, 5.3, 2.06, 1.43, 1.43, "");
-        final SvVarData var6 = createTestSv("113", "3", "10", 25401059, 60477224, 1, -1, BND, 9.9, 4.1, 1.92, 2.02, 1.77, "");
-        final SvVarData var7 = createTestSv("119", "3", "12", 25400602, 72666892, 1, -1, BND, 12.2, 5.2, 2.22, 2.18, 2.16, "");
-        final SvVarData var8 = createTestSv("120", "10", "12", 60477422, 72667075, 1, 1, BND, 4.1, 5.2, 2.01, 2.16, 2.22, "");
+        final SvVarData var1 = createTestSv(77, "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.83, "");
+        final SvVarData var2 = createTestSv(78, "3", "0", 25331584, -1, -1, 1, SGL, 12.2, 0, 2.06, 0, 1.88, "");
+        final SvVarData var3 = createTestSv(79, "3", "3", 26663922, 26664498, 1, 1, INV, 11.9, 8.0, 3.94, 3.94, 5.22, "");
+        final SvVarData var4 = createTestSv(88, "3", "6", 26431918, 26194040, -1, -1, BND, 11.9, 7.3, 3.85, 3.65, 3.22, "");
+        final SvVarData var5 = createTestSv(89, "6", "6", 26194117, 26194406, 1, 1, INV, 7.3, 5.3, 2.06, 1.43, 1.43, "");
+        final SvVarData var6 = createTestSv(113, "3", "10", 25401059, 60477224, 1, -1, BND, 9.9, 4.1, 1.92, 2.02, 1.77, "");
+        final SvVarData var7 = createTestSv(119, "3", "12", 25400602, 72666892, 1, -1, BND, 12.2, 5.2, 2.22, 2.18, 2.16, "");
+        final SvVarData var8 = createTestSv(120, "10", "12", 60477422, 72667075, 1, 1, BND, 4.1, 5.2, 2.01, 2.16, 2.22, "");
 
         // mark assembled links
         var4.setAssemblyData(false, "asmb1a;asmb1b");
@@ -299,13 +299,13 @@ public class ChainingActualTest
         // merge 5 clusters with varying levels of copy number change (ie replication) from 4 foldbacks
         String chromosome = "7";
 
-        final SvVarData var1 = createTestSv("78", chromosome, chromosome, 54877000, 55100000, -1, -1, INV, 2);
-        final SvVarData var2 = createTestSv("79", chromosome, chromosome, 55145000, 55207000, 1, 1, INV, 2);
-        final SvVarData var3 = createTestSv("80", chromosome, chromosome, 55200000, 55223000, 1, -1, DEL, 2);
-        final SvVarData var5 = createTestSv("81", chromosome, chromosome, 55204000, 55293000, -1, 1, DUP, 2);
-        final SvVarData var4 = createTestSv("82", chromosome, chromosome, 55092000, 55588000, 1, -1, DEL, 2);
-        final SvVarData var6 = createTestSv("83", chromosome, chromosome, 54832000, 55636000, 1, -1, DEL, 2);
-        SvVarData dmDup = createTestSv("84", chromosome, chromosome, 54800000, 55700000, -1, 1, DUP, 10);
+        final SvVarData var1 = createTestSv(78, chromosome, chromosome, 54877000, 55100000, -1, -1, INV, 2);
+        final SvVarData var2 = createTestSv(79, chromosome, chromosome, 55145000, 55207000, 1, 1, INV, 2);
+        final SvVarData var3 = createTestSv(80, chromosome, chromosome, 55200000, 55223000, 1, -1, DEL, 2);
+        final SvVarData var5 = createTestSv(81, chromosome, chromosome, 55204000, 55293000, -1, 1, DUP, 2);
+        final SvVarData var4 = createTestSv(82, chromosome, chromosome, 55092000, 55588000, 1, -1, DEL, 2);
+        final SvVarData var6 = createTestSv(83, chromosome, chromosome, 54832000, 55636000, 1, -1, DEL, 2);
+        SvVarData dmDup = createTestSv(84, chromosome, chromosome, 54800000, 55700000, -1, 1, DUP, 10);
 
         tester.AllVariants.add(dmDup);
         tester.AllVariants.add(var1);
@@ -341,12 +341,12 @@ public class ChainingActualTest
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
-        final SvVarData var1 = createTestSv("7821420","18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
-        final SvVarData var2 = createTestSv("7821421","X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");
-        final SvVarData var3 = createTestSv("7821422","X","X",48082005,66755692,1,1,INV,1.01,1,1.01,1,0.86, "");
-        final SvVarData var4 = createTestSv("7821423","18","X",23577410,66767221,1,-1,BND,1.95,0.97,1.02,0.97,1.01, "");
-        final SvVarData var5 = createTestSv("7821424","X","X",47973211,67907761,1,1, INV,1,0.97,1,0.97,0.99, "");
-        final SvVarData var6 = createTestSv("7821425","X","X",48007069,67910047,-1,-1,INV,1.96,1,1.04,1,0.99, "");
+        final SvVarData var1 = createTestSv(7821420,"18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
+        final SvVarData var2 = createTestSv(7821421,"X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");
+        final SvVarData var3 = createTestSv(7821422,"X","X",48082005,66755692,1,1,INV,1.01,1,1.01,1,0.86, "");
+        final SvVarData var4 = createTestSv(7821423,"18","X",23577410,66767221,1,-1,BND,1.95,0.97,1.02,0.97,1.01, "");
+        final SvVarData var5 = createTestSv(7821424,"X","X",47973211,67907761,1,1, INV,1,0.97,1,0.97,0.99, "");
+        final SvVarData var6 = createTestSv(7821425,"X","X",48007069,67910047,-1,-1,INV,1.96,1,1.04,1,0.99, "");
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -359,7 +359,7 @@ public class ChainingActualTest
 
         lohData.add(new LohEvent( "18", 23601785, 23577410,
                 "BND", "BND", 1, 1, 1, 0, 1, 1,
-                var1.dbId(), var4.dbId()));
+                var1.id(), var4.id()));
 
         tester.ClusteringMethods.setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
         tester.preClusteringInit();

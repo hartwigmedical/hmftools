@@ -464,7 +464,7 @@ public class DriverGeneAnnotator
             {
                 // past the gene but AMP may be explained by an unchained foldback
                 if(foldbackBreakend == null && breakend.orientation() == 1
-                && !breakend.getSV().getFoldbackLink(breakend.usesStart()).isEmpty())
+                && breakend.getSV().getFoldbackBreakend(breakend.usesStart()) != null)
                 {
                     foldbackBreakend = breakend;
                     break;
@@ -482,7 +482,7 @@ public class DriverGeneAnnotator
             if(reportedClusters.contains(varStart.getCluster().id()))
                 continue;
 
-            if(breakend.orientation() == -1 && !varStart.getFoldbackLink(breakend.usesStart()).isEmpty())
+            if(breakend.orientation() == -1 && varStart.getFoldbackBreakend(breakend.usesStart()) != null)
                 foldbackBreakend = breakend;
 
             if(varStart.getCluster().hasAnnotation(CLUSTER_ANNOT_DM))
@@ -647,8 +647,8 @@ public class DriverGeneAnnotator
 
                 long posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
                 long posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
-                String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().id() : "-1";
-                String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().id() : "-1";
+                String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
+                String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 
                 writer.write(String.format(",%d,%d,%s,%s,%s",
                         posStart, posEnd, svIdStart, svIdEnd, driverEvent.getSvInfo()));

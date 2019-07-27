@@ -75,8 +75,8 @@ public class FoldbackTest
 
         tester.Analyser.markFoldbacks();
 
-        assertEquals(var2.getFoldbackLink(true), "");
-        assertEquals(var2.getFoldbackLink(false), "");
+        assertEquals(var2.getFoldbackBreakend(true), null);
+        assertEquals(var2.getFoldbackBreakend(false), null);
 
         // finally an INV with DBs at both ends, making it invalid
         tester.clearClustersAndSVs();
@@ -107,8 +107,8 @@ public class FoldbackTest
 
         tester.Analyser.markFoldbacks();
 
-        assertEquals(var3.getFoldbackLink(true), "");
-        assertEquals(var3.getFoldbackLink(false), "");
+        assertEquals(var3.getFoldbackBreakend(true), null);
+        assertEquals(var3.getFoldbackBreakend(false), null);
     }
 
 }
