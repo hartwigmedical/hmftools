@@ -168,7 +168,7 @@ public final class EvidenceDrugTypeMergerTest {
                 .scope(EvidenceScope.BROAD)
                 .build());
 
-        assertEquals(7, EvidenceDrugTypeMerger.merge(evidenceItems).size());
+        assertEquals(4, EvidenceDrugTypeMerger.merge(evidenceItems).size());
     }
 
     @NotNull
