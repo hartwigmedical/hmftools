@@ -341,7 +341,7 @@ public class SvVarData
         mDbLink[seIndex(isStart)] = link;
     }
 
-    public final int getFoldbackLink(boolean useStart)
+    public final int getFoldbackId(boolean useStart)
     {
         if(mFoldbackBreakends[seIndex(useStart)] != null)
             return mFoldbackBreakends[seIndex(useStart)].getSV().id();

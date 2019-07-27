@@ -155,7 +155,7 @@ public class SvArmCluster
                 }
             }
 
-            if(var1.getFoldbackLink(be1.usesStart()) == var2.id())
+            if(var1.getFoldbackId(be1.usesStart()) == var2.id())
             {
                 mType = ARM_CL_FOLDBACK;
                 return;

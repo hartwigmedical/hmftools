@@ -573,8 +573,8 @@ public class SvSampleAnalyser {
                             var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
 
                     mSvFileWriter.write(String.format(",%d,%d,%s,%d,%d,%s",
-                            var.getFoldbackLink(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
-                            var.getFoldbackLink(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
+                            var.getFoldbackId(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
+                            var.getFoldbackId(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
                     for (int be = SE_START; be <= SE_END; ++be)
                     {

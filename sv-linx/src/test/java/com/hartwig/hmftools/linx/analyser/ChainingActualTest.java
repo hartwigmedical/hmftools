@@ -28,7 +28,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 // tests modelled on examples from actual samples
@@ -147,11 +146,11 @@ public class ChainingActualTest
         assertEquals(ASSEMBLY_MATCH_MATCHED, var8.getAssemblyMatchType(true));
 
         // check foldbacks
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var3.getFoldbackLink(true), var3.id());
-        assertEquals(var4.getFoldbackLink(true), var4.id());
-        assertEquals(var6.getFoldbackLink(true), var7.id());
-        assertEquals(var7.getFoldbackLink(true), var6.id());
+        assertEquals(var1.getFoldbackId(true), var1.id());
+        assertEquals(var3.getFoldbackId(true), var3.id());
+        assertEquals(var4.getFoldbackId(true), var4.id());
+        assertEquals(var6.getFoldbackId(true), var7.id());
+        assertEquals(var7.getFoldbackId(true), var6.id());
 
         // check local topology
         final int[] armClusterData = getArmClusterData(cluster);

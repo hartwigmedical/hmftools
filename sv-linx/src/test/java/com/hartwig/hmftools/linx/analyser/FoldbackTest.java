@@ -33,8 +33,8 @@ public class FoldbackTest
         tester.preClusteringInit();
         tester.Analyser.markFoldbacks();
 
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var1.getFoldbackLink(false), var1.id());
+        assertEquals(var1.getFoldbackId(true), var1.id());
+        assertEquals(var1.getFoldbackId(false), var1.id());
         assertEquals(var1.getFoldbackLength(true), 100);
 
         // now test with a deletion bridge obscuring the backmost breakend
@@ -50,8 +50,8 @@ public class FoldbackTest
         tester.preClusteringInit();
         tester.Analyser.markFoldbacks();
 
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var1.getFoldbackLink(false), var1.id());
+        assertEquals(var1.getFoldbackId(true), var1.id());
+        assertEquals(var1.getFoldbackId(false), var1.id());
         assertEquals(var1.getFoldbackLength(true), 100);
 
         // now invalidate the foldback by putting a deletion bridge at the start

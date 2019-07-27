@@ -4,9 +4,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
 
 import static org.junit.Assert.assertEquals;
@@ -43,10 +40,10 @@ public class ChainingComplexTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var2.getFoldbackLink(true), var2.id());
-        assertEquals(var3.getFoldbackLink(true), var3.id());
-        assertEquals(var4.getFoldbackLink(true), var4.id());
+        assertEquals(var1.getFoldbackId(true), var1.id());
+        assertEquals(var2.getFoldbackId(true), var2.id());
+        assertEquals(var3.getFoldbackId(true), var3.id());
+        assertEquals(var4.getFoldbackId(true), var4.id());
 
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
@@ -80,9 +77,9 @@ public class ChainingComplexTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var2.getFoldbackLink(true), var2.id());
-        assertEquals(var3.getFoldbackLink(true), var3.id());
+        assertEquals(var1.getFoldbackId(true), var1.id());
+        assertEquals(var2.getFoldbackId(true), var2.id());
+        assertEquals(var3.getFoldbackId(true), var3.id());
 
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
@@ -132,9 +129,9 @@ public class ChainingComplexTest
         assertTrue(varC.isFoldback());
         assertTrue(varA1.isChainedFoldback());
         assertTrue(varA2.isChainedFoldback());
-        assertEquals(varA2.id(), varA1.getFoldbackLink(true));
-        assertEquals(varA1.id(), varA2.getFoldbackLink(true));
-        assertEquals(varB.id(), varB.getFoldbackLink(true));
+        assertEquals(varA2.id(), varA1.getFoldbackId(true));
+        assertEquals(varA1.id(), varA2.getFoldbackId(true));
+        assertEquals(varB.id(), varB.getFoldbackId(true));
 
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
@@ -429,9 +426,9 @@ public class ChainingComplexTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(var1.getFoldbackLink(true), var1.id());
-        assertEquals(var2.getFoldbackLink(true), var2.id());
-        assertEquals(var3.getFoldbackLink(true), var3.id());
+        assertEquals(var1.getFoldbackId(true), var1.id());
+        assertEquals(var2.getFoldbackId(true), var2.id());
+        assertEquals(var3.getFoldbackId(true), var3.id());
 
         assertEquals(1, tester.Analyser.getClusters().size());
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
