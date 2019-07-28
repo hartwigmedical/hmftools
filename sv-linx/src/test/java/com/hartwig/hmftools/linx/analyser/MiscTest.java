@@ -82,7 +82,7 @@ public class MiscTest
 
         tester.preClusteringInit();
 
-        List<SvBreakend> breakendList = tester.ClusteringMethods.getChrBreakendMap().get("1");
+        List<SvBreakend> breakendList = tester.Analyser.getState().getChrBreakendMap().get("1");
 
         assertEquals(3, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
         assertEquals(4, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));
@@ -94,7 +94,7 @@ public class MiscTest
 
         tester.preClusteringInit();
 
-        breakendList = tester.ClusteringMethods.getChrBreakendMap().get("1");
+        breakendList = tester.Analyser.getState().getChrBreakendMap().get("1");
 
         assertEquals(3, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
         assertEquals(-1, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));
@@ -105,7 +105,7 @@ public class MiscTest
 
         tester.preClusteringInit();
 
-        breakendList = tester.ClusteringMethods.getChrBreakendMap().get("1");
+        breakendList = tester.Analyser.getState().getChrBreakendMap().get("1");
 
         assertEquals(-1, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
         assertEquals(0, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));

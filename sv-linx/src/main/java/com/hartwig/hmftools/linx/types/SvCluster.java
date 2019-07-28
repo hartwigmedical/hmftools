@@ -10,8 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.hasLowCNChangeSupport;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
@@ -24,6 +23,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_CLUSTER_ID;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
+import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PERCENT;
 

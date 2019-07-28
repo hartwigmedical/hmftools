@@ -530,45 +530,10 @@ public class DoubleMinuteFinder
         return genesStr;
     }
 
-        /*
-                List<Integer> ploidyBuckets = Lists.newArrayList();
-            int maxPermittedBuckets = calcMaxBuckets(svCount, clusterMaxPloidy);
-
-            for (final SvVarData var : cluster.getSVs())
-            {
-                int ploidyBucketMin = (int)round(var.ploidyMin());
-                int ploidyBucketMax = (int)round(var.ploidyMax());
-
-                boolean matched = false;
-                for(Integer ploidyBucket : ploidyBuckets)
-                {
-                    if(ploidyBucketMin <= ploidyBucket && ploidyBucketMax >= ploidyBucket)
-                    {
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if (!matched)
-                {
-                    int avgPloidyBucket = (int)round((ploidyBucketMin + ploidyBucketMax) * 0.5);
-                    ploidyBuckets.add(avgPloidyBucket);
-                }
-            }
-
-     */
-
     public void close()
     {
         closeBufferedWriter(mFileWriter);
     }
 
-    private static final double PLOIDY_STEPWISE_FACTOR = 0.8;
-
-    private static int calcMaxBuckets(int svCount, double maxPloidy)
-    {
-        double expectedBuckets = log(svCount) * log(maxPloidy) * PLOIDY_STEPWISE_FACTOR;
-        return min(svCount,(int)round(expectedBuckets));
-    }
 
 }

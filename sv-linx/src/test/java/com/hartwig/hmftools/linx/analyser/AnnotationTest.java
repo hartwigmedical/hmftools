@@ -86,8 +86,8 @@ public class AnnotationTest
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         double[] chrCopyNumbers = {2.0, 2.0, 2.0};
-        tester.ClusteringMethods.getChrCopyNumberMap().put("1", chrCopyNumbers);
-        tester.ClusteringMethods.getChrCopyNumberMap().put("2", chrCopyNumbers);
+        tester.CnDataLoader.getChrCopyNumberMap().put("1", chrCopyNumbers);
+        tester.CnDataLoader.getChrCopyNumberMap().put("2", chrCopyNumbers);
 
         final SvVarData var1 = createInv(0, "1", 101000, 104000, -1);
 

@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createIns;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_HOM_LOSS;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_HOM_LOSS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOH_CHAIN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOOSE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 
 import static org.junit.Assert.assertEquals;

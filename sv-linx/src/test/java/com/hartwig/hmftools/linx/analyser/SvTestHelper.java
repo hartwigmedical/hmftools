@@ -8,13 +8,13 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.analysis.SvSampleAnalyser.setSvCopyNumberData;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.List;
 import java.util.Map;
@@ -25,8 +25,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.linx.chaining.LinkFinder;
-import com.hartwig.hmftools.linx.analysis.SvClusteringMethods;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -44,7 +42,6 @@ public class SvTestHelper
     public String SampleId;
     public List<SvVarData> AllVariants;
     public LinxConfig Config;
-    public SvClusteringMethods ClusteringMethods;
     public ClusterAnalyser Analyser;
     public CnDataLoader CnDataLoader;
     public FusionDisruptionAnalyser FusionAnalyser;
@@ -55,12 +52,9 @@ public class SvTestHelper
     {
         Config = new LinxConfig(DEFAULT_PROXIMITY_DISTANCE);
 
-        ClusteringMethods = new SvClusteringMethods(Config.ProximityDistance);
-        Analyser = new ClusterAnalyser(Config, ClusteringMethods);
+        Analyser = new ClusterAnalyser(Config);
         CnDataLoader = new CnDataLoader( "", null);
         Analyser.setCnDataLoader(CnDataLoader);
-        ClusteringMethods.setSampleCnEventData(CnDataLoader.getLohData(), CnDataLoader.getHomLossData());
-        ClusteringMethods.setChrCopyNumberMap(CnDataLoader.getChrCopyNumberMap());
 
         Analyser.setRunValidationChecks(true);
 
@@ -97,13 +91,15 @@ public class SvTestHelper
 
     public void preClusteringInit(boolean includePloidyCalcs)
     {
-        ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
+        Analyser.preClusteringPreparation();
+
+        //ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
 
         addCopyNumberData(includePloidyCalcs);
 
-        ClusteringMethods.annotateNearestSvData();
-        LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
-        ClusteringMethods.setSimpleVariantLengths(SampleId);
+        // annotateNearestSvData(ClusteringMethods.getChrBreakendMap());
+        // LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
+        // setSimpleVariantLengths(ClusteringMethods.getState());
     }
 
     public void addClusterAndSVs(final SvCluster cluster)
@@ -121,7 +117,7 @@ public class SvTestHelper
         }
 
         AllVariants.clear();
-        ClusteringMethods.clearLOHBreakendData(SampleId);
+        Analyser.getState().reset();
         Analyser.getClusters().clear();
     }
 
@@ -318,7 +314,7 @@ public class SvTestHelper
 
         // NOTE: positions adjusted for orientation are not done correctly
         Map<String, List<SvCNData>> chrCnDataMap = CnDataLoader.getChrCnDataMap();
-        final Map<String, List<SvBreakend>> chrBreakendMap = ClusteringMethods.getChrBreakendMap();
+        final Map<String, List<SvBreakend>> chrBreakendMap = Analyser.getState().getChrBreakendMap();
         Map<Integer,SvCNData[]> svIdCnDataMap = CnDataLoader.getSvIdCnDataMap();
 
         chrCnDataMap.clear();

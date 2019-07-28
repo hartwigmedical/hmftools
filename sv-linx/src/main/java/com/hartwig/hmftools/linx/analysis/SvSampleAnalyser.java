@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.setSimpleVariantLengths;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -96,7 +99,6 @@ public class SvSampleAnalyser {
     private LineElementAnnotator mLineElementAnnotator;
     private ReplicationOriginAnnotator mReplicationOriginAnnotator;
     private ViralInsertAnnotator mViralInsertAnnotator;
-    private SvClusteringMethods mClusteringMethods;
     private CnDataLoader mCnDataLoader;
 
     private boolean mIsValid;
@@ -112,8 +114,7 @@ public class SvSampleAnalyser {
         mConfig = config;
         mSampleId = "";
 
-        mClusteringMethods = new SvClusteringMethods(mConfig.ProximityDistance);
-        mAnalyser = new ClusterAnalyser(config, mClusteringMethods);
+        mAnalyser = new ClusterAnalyser(config);
         mVisWriter = new VisualiserWriter(config.OutputDataPath, config.WriteVisualisationData, config.hasMultipleSamples());
 
         mAnalyser.setUseAllelePloidies(true);
@@ -149,15 +150,13 @@ public class SvSampleAnalyser {
     public final List<SvVarData> getVariants() { return mAllVariants; }
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public boolean inValidState() { return mIsValid; }
-    public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mClusteringMethods.getChrBreakendMap(); }
+    public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
     public final VisualiserWriter getVisWriter() { return mVisWriter; }
 
     public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
         mCnDataLoader = cnAnalyser;
         mAnalyser.setCnDataLoader(cnAnalyser);
-        mClusteringMethods.setSampleCnEventData(mCnDataLoader.getLohData(), mCnDataLoader.getHomLossData());
-        mClusteringMethods.setChrCopyNumberMap(mCnDataLoader.getChrCopyNumberMap());
     }
 
     public void setGeneCollection(SvGeneTranscriptCollection geneCollection) { mAnalyser.setGeneCollection(geneCollection); }
@@ -166,9 +165,6 @@ public class SvSampleAnalyser {
     {
         if(mSampleId.isEmpty())
             return;
-
-        // no longer required since list items are purged by their owner
-        // mClusteringMethods.clearLOHBreakendData(mSampleId);
 
         mSampleId = "";
         mAllVariants.clear();
@@ -254,17 +250,32 @@ public class SvSampleAnalyser {
         LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
 
         mPcPrep.start();
+
         annotateAndFilterVariants();
-        mClusteringMethods.populateChromosomeBreakendMap(mAllVariants);
-        mClusteringMethods.annotateNearestSvData();
+
+        mAnalyser.setSampleData(mSampleId, mAllVariants);
+
+        mAnalyser.preClusteringPreparation();
+
+        /*
+        ClusteringState clusterState = mAnalyser.getState();
+        clusterState.reset();
+
+        populateChromosomeBreakendMap(mAllVariants, clusterState);
+
+        annotateNearestSvData(mClusteringMethods.getChrBreakendMap());
+
         LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
-        mClusteringMethods.setSimpleVariantLengths(mSampleId);
-        mReplicationOriginAnnotator.setReplicationOrigins(mClusteringMethods.getChrBreakendMap());
+
+        setSimpleVariantLengths(clusterState);
+        */
+
+        mReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
+
         mPcPrep.stop();
 
         mPcClusterAnalyse.start();
 
-        mAnalyser.setSampleData(mSampleId, mAllVariants);
 
         mIsValid = mAnalyser.clusterAndAnalyse();
 

@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.hasLowCNChangeSupport;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -28,7 +27,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
-import static com.hartwig.hmftools.linx.types.SvaConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.HashMap;

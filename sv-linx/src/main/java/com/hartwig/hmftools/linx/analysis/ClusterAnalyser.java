@@ -7,10 +7,10 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_SATELLITE_SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.setSimpleVariantLengths;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.FOLDBACK_MATCHES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateChainedClusters;
@@ -18,17 +18,16 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemp
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.calcNetCopyNumberChangeAcrossCluster;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.findIncompleteFoldbackCandidates;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_BE_PLOIDY_DROP;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_COMMON_ARMS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOH_CHAIN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOOSE_OVERLAP;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_NET_ARM_END_PLOIDY;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_SATELLITE_SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_BE_PLOIDY_DROP;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_COMMON_ARMS;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_LOOSE_OVERLAP;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.CLUSTER_REASON_NET_ARM_END_PLOIDY;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.addClusterReasons;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.checkClusterDuplicates;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.addClusterReasons;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -38,17 +37,12 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
-import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE;
 
 import java.util.List;
@@ -64,10 +58,8 @@ import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
 
@@ -77,13 +69,18 @@ import org.apache.logging.log4j.Logger;
 public class ClusterAnalyser {
 
     private final LinxConfig mConfig;
-    private SvClusteringMethods mClusteringMethods;
+    private final ClusteringState mState;
+
+    private SvFilters mFilters;
+    private SimpleClustering mClusteringMethods;
+
     private CnDataLoader mCnDataLoader;
     private SvGeneTranscriptCollection mGeneTransCache;
     private DoubleMinuteFinder mDmFinder;
 
-    String mSampleId;
-    List<SvCluster> mClusters;
+    private String mSampleId;
+    private final List<SvCluster> mClusters;
+    private List<SvVarData> mAllVariants;
     private ChainFinder mChainFinder;
     private LinkFinder mLinkFinder;
 
@@ -98,14 +95,19 @@ public class ClusterAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(ClusterAnalyser.class);
 
-    public ClusterAnalyser(final LinxConfig config, SvClusteringMethods clusteringMethods)
+    public ClusterAnalyser(final LinxConfig config)
     {
         mConfig = config;
-        mClusteringMethods = clusteringMethods;
+        mState = new ClusteringState();
+
+        mFilters = new SvFilters(mState);
+        mClusteringMethods = new SimpleClustering(mState);
+
         mCnDataLoader = null;
         mGeneTransCache = null;
         mClusters = Lists.newArrayList();
         mSampleId = "";
+        mAllVariants = Lists.newArrayList();
         mLinkFinder = new LinkFinder();
         mChainFinder = new ChainFinder();
         mDmFinder = new DoubleMinuteFinder();
@@ -127,9 +129,14 @@ public class ClusterAnalyser {
         mPcAnnotation = new PerformanceCounter("Annotation");
     }
 
+    public final ClusteringState getState() { return mState; }
+
     public void setCnDataLoader(CnDataLoader cnAnalyser)
     {
         mCnDataLoader = cnAnalyser;
+        mState.setSampleCnEventData(mCnDataLoader.getLohData(), mCnDataLoader.getHomLossData());
+        // mClusteringMethods.setChrCopyNumberMap(mCnDataLoader.getChrCopyNumberMap());
+
         mDmFinder.setCopyNumberAnalyser(cnAnalyser);
     }
 
@@ -154,11 +161,26 @@ public class ClusterAnalyser {
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
         mSampleId = sampleId;
+        mAllVariants = allVariants;
         mClusters.clear();
         mChainFinder.setSampleId(sampleId);
     }
 
     public final List<SvCluster> getClusters() { return mClusters; }
+
+    public void preClusteringPreparation()
+    {
+        mState.reset();
+
+        populateChromosomeBreakendMap(mAllVariants, mState);
+        mFilters.filterBreakends();
+
+        annotateNearestSvData(mState.getChrBreakendMap());
+
+        LinkFinder.findDeletionBridges(mState.getChrBreakendMap());
+
+        setSimpleVariantLengths(mState);
+    }
 
     public boolean clusterAndAnalyse()
     {
@@ -166,12 +188,12 @@ public class ClusterAnalyser {
         mDmFinder.clear();
 
         mPcClustering.start();
-        mClusteringMethods.clusterExcludedVariants(mClusters);
-        mClusteringMethods.clusterByProximity(mClusters);
+        mFilters.clusterExcludedVariants(mClusters);
+        mClusteringMethods.clusterByProximity(mClusters, mConfig.ProximityDistance);
         mPcClustering.pause();
 
-        // mark line clusters since these are exluded from most subsequent logic
-        mClusters.forEach(x -> markLineCluster(x, mClusteringMethods.getProximityDistance()));
+        // mark line clusters since these are excluded from most subsequent logic
+        mClusters.forEach(x -> markLineCluster(x, mConfig.ProximityDistance));
 
         if(mRunValidationChecks)
         {
@@ -194,7 +216,7 @@ public class ClusterAnalyser {
         mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(SvCluster::logDetails);
 
         // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
-        markFoldbacks();
+        FoldbackFinder.markFoldbacks(mState.getChrBreakendMap());
 
         // subclonal clusters won't be merged any further
         mClusters.forEach(x -> x.markSubclonal());
@@ -323,7 +345,7 @@ public class ClusterAnalyser {
 
             for(SvVarData var : cluster.getSVs())
             {
-                SvCluster newCluster = new SvCluster(mClusteringMethods.getNextClusterId());
+                SvCluster newCluster = new SvCluster(mState.getNextClusterId());
                 newCluster.addVariant(var);
 
                 mDmFinder.analyseCluster(newCluster);
@@ -337,7 +359,7 @@ public class ClusterAnalyser {
     private void setClusterResolvedState(SvCluster cluster, boolean isFinal)
     {
         SvClassification.setClusterResolvedState(cluster, isFinal,
-                mClusteringMethods.getDelCutoffLength(), mClusteringMethods.getDupCutoffLength(), mConfig.ProximityDistance);
+                mState.getDelCutoffLength(), mState.getDupCutoffLength(), mConfig.ProximityDistance);
     }
 
 
@@ -349,7 +371,7 @@ public class ClusterAnalyser {
         // merge if one cluster has footprints which overlap unresolved complex SVs
         // merge clusters which resolve another's LOH DUP
 
-        long longDelDupCutoffLength = max(mClusteringMethods.getDelCutoffLength(), mClusteringMethods.getDupCutoffLength());
+        long longDelDupCutoffLength = max(mState.getDelCutoffLength(), mState.getDupCutoffLength());
 
         // first collect the clusters for which these complex rules apply
         List<SvCluster> complexClusters = mClusters.stream()
@@ -487,7 +509,7 @@ public class ClusterAnalyser {
                 long lowerArmBoundary = breakendList.get(0).position();
                 long upperArmBoundary = breakendList.get(breakendList.size() - 1).position();
 
-                List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+                List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(entry.getKey());
 
                 for (SvBreakend breakend : breakendList)
                 {
@@ -622,7 +644,7 @@ public class ClusterAnalyser {
                         continue;
 
                     // walk towards the LOH from the other end of this DUP to see if it can find a resolving event within the cluster
-                    List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(lohBreakend.chromosome());
+                    List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(lohBreakend.chromosome());
 
                     SvBreakend otherBreakend = lohBreakend.getOtherBreakend();
                     int index = otherBreakend.getChrPosIndex();
@@ -733,7 +755,7 @@ public class ClusterAnalyser {
                 if(cnDataList == null || cnDataList.isEmpty())
                     continue;
 
-                List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+                List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(entry.getKey());
 
                 for(int armIndex = 0; armIndex <= 1; ++armIndex)
                 {
@@ -909,7 +931,7 @@ public class ClusterAnalyser {
             }
         }
 
-        final Map<String, List<SvBreakend>> chrBreakendMap = mClusteringMethods.getChrBreakendMap();
+        final Map<String, List<SvBreakend>> chrBreakendMap = mState.getChrBreakendMap();
 
         // additionally check whether any of the foldbacks face an opposing SV in the other cluster,
         // and they must be the next SV and within 5M bases away
@@ -1084,7 +1106,7 @@ public class ClusterAnalyser {
             {
                 List<SvBreakend> breakendList = entry.getValue();
 
-                List<SvBreakend> fullBreakendList = mClusteringMethods.getChrBreakendMap().get(entry.getKey());
+                List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(entry.getKey());
 
                 for (int i = 0; i < breakendList.size() - 1; ++i)
                 {
@@ -1266,276 +1288,9 @@ public class ClusterAnalyser {
     }
 
 
-    public void markFoldbacks()
-    {
-        // find all valid consective breakends formed either from a single SV or a chained set
-        for(final Map.Entry<String, List<SvBreakend>> entry : mClusteringMethods.getChrBreakendMap().entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            for(int i = 0; i < breakendList.size() - 1; ++i)
-            {
-                SvBreakend breakend = breakendList.get(i);
-
-                if(breakend.isAssembledLink())
-                    continue;
-
-                // isSpecificSV(breakend.getSV());
-
-                SvBreakend nextBreakend = breakendList.get(i + 1);
-
-                SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
-                SvBreakend beBack = null;
-
-                int j = i + 1;
-                while(j < breakendList.size())
-                {
-                    nextBreakend = breakendList.get(j);
-
-                    // first skip over any breakends in a DB with the initial breakend
-                    if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
-                    && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
-                    {
-                        ++j;
-                        continue;
-                    }
-
-                    // check check for any assembled links in between the potential foldback breakends
-                    if(j + 1 < breakendList.size() && nextBreakend.isAssembledLink()
-                    && nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart()) != null)
-                    {
-                        SvLinkedPair asmbLink = nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart());
-                        SvBreakend nextNextBreakend = breakendList.get(j + 1);
-                        if(asmbLink.getOtherBreakend(nextBreakend) == nextNextBreakend)
-                        {
-                            // skip over both these assembled links
-                            j += 2;
-                            continue;
-                        }
-                    }
-
-                    // check again for an overlapping DB at the outer (potential) foldback breakend
-                    if(breakend.orientation() == 1 && nextBreakend.orientation() == -1 && j < breakendList.size() - 1)
-                    {
-                        SvBreakend nextNextBreakend = breakendList.get(j + 1);
-
-                        if(nextNextBreakend.orientation() == breakend.orientation()
-                        && nextNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend))
-                        {
-                            nextBreakend = nextNextBreakend;
-                        }
-                    }
-
-                    // now check for opposite orientation for the potential foldback
-                    if(nextBreakend.orientation() == breakend.orientation() && !nextBreakend.isAssembledLink())
-                    {
-                        beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
-                        beBack = breakend.orientation() == 1 ? nextBreakend : breakend;
-                    }
-
-                    break;
-                }
-
-                boolean foldbackFound = false;
-
-                if(beFront != null && beBack != null)
-                {
-                    // the foldback is invalid if it has a deletion bridge with overhang on the front-facing breakend
-                    final SvLinkedPair dbLink = beFront.getSV().getDBLink(beFront.usesStart());
-
-                    if(dbLink == null || dbLink.length() > 0)
-                    {
-                        foldbackFound = checkFoldbackBreakends(beFront, beBack);
-                    }
-                }
-
-                if(!foldbackFound)
-                {
-                    checkReplicatedBreakendFoldback(breakend);
-                }
-            }
-        }
-    }
-
-    private boolean checkFoldbackBreakends(SvBreakend beStart, SvBreakend beEnd)
-    {
-        // SVs are marked as being in a foldback if they are consecutive breakends,
-        // have the same orientation, and are either an INV or part of a chain
-
-        // beStart is the one with the lower position
-
-        SvVarData varEnd = beEnd.getSV();
-        SvVarData varStart = beStart.getSV();
-
-        if(varEnd.type() == INS || varStart.type() == INS)
-            return false;
-
-        // isSpecificSV(varStart);
-
-        final SvCluster cluster = varEnd.getCluster();
-
-        boolean singleSV = varEnd.equals(varStart);
-
-        if(singleSV)
-        {
-            if(varStart.type() != INV)
-                return false;
-        }
-        else
-        {
-            // must be same cluster
-            if(varStart.getCluster() != cluster)
-                return false;
-        }
-
-        // skip unclustered DELs & DUPs, reciprocal INV or reciprocal BNDs
-        if(cluster.isResolved())
-            return false;
-
-        boolean beEndUsesStart = beEnd.usesStart();
-        boolean beStartUsesStart = beStart.usesStart();
-
-        String chainInfo = "0;0;0";
-
-        if(singleSV)
-        {
-            // constraint is that the ends of this INV don't link to BND taking the path off this chromosome
-            final SvChain chain = cluster.findChain(varEnd);
-
-            if(chain != null)
-            {
-                int bndLinks = 0;
-                for (final SvLinkedPair pair : chain.getLinkedPairs())
-                {
-                    if (pair.first() == varEnd && pair.second().type() == BND)
-                        ++bndLinks;
-                    else if (pair.second() == varEnd && pair.first().type() == BND)
-                        ++bndLinks;
-
-                    if (bndLinks == 2)
-                        return false;
-                }
-            }
-        }
-        else
-        {
-            if(varEnd.getReplicatedCount() != varStart.getReplicatedCount())
-                return false;
-
-            final SvChain chain1 = cluster.findChain(varEnd);
-            final SvChain chain2 = cluster.findChain(varStart);
-
-            if(chain1 == null || chain2 == null || chain1 != chain2)
-                return false;
-
-            // check if a path can be walked between these 2 breakends along the chain
-            // without going back through this foldback point
-            int[] chainData = chain1.breakendsAreChained(varEnd, !beEndUsesStart, varStart, !beStartUsesStart);
-
-            if(chainData[CHAIN_LINK_COUNT] == 0 ) // || chainData[CHAIN_LINK_COUNT] != chainData[CHAIN_ASSEMBLY_LINK_COUNT]
-                return false;
-
-            int chainLength = chainData[CHAIN_LENGTH];
-
-            if(chainLength > MAX_FOLDBACK_CHAIN_LENGTH)
-            {
-                /*
-                LOGGER.info("sample({}) chained foldback breakends({} and {}) have long length({} links={} asmb={})",
-                        mSampleId, beEnd.toString(), beStart.toString(),
-                        chainLength, chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT]);
-                */
-                return false;
-            }
-
-            chainInfo = String.format("%d;%d;%d",
-                    chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainLength);
-        }
-
-        int length = (int)abs(beEnd.position() - beStart.position());
-
-        // if either variant already has foldback info set, favour
-        // a) simple inversions then
-        // b) shortest length
-
-        boolean skipFoldback = false;
-        if(varEnd.getFoldbackBreakend(beEndUsesStart) != null && !singleSV && varEnd.getFoldbackLength(beEndUsesStart) < length)
-        {
-            skipFoldback = true;
-        }
-        else if(varStart.getFoldbackBreakend(beStartUsesStart) != null && !singleSV && varStart.getFoldbackLength(beStartUsesStart) < length)
-        {
-            skipFoldback = true;
-        }
-
-        if(skipFoldback)
-            return false;
-
-        if(varEnd.getFoldbackBreakend(beEndUsesStart) != null)
-        {
-            final SvBreakend otherBreakend = varEnd.getFoldbackBreakend(beEndUsesStart);
-            otherBreakend.getSV().setFoldbackLink(otherBreakend.usesStart(), null, -1, "");
-        }
-
-        if(varStart.getFoldbackBreakend(beStartUsesStart) != null)
-        {
-            final SvBreakend otherBreakend = varStart.getFoldbackBreakend(beStartUsesStart);
-            otherBreakend.getSV().setFoldbackLink(otherBreakend.usesStart(), null, -1, "");
-        }
-
-        varEnd.setFoldbackLink(beEndUsesStart, beStart, length, chainInfo);
-        varStart.setFoldbackLink(beStartUsesStart, beEnd, length, chainInfo);
-
-        if(varEnd.equals(varStart))
-        {
-            LOGGER.debug("cluster({}) foldback inversion SV({}) length({})", cluster.id(), varEnd.posId(), length);
-        }
-        else
-        {
-            LOGGER.debug("cluster({}) foldback be1({}) be2({}) length({})", cluster.id(), beEnd.toString(), beStart.toString(), length);
-        }
-
-        return true;
-    }
-
-    private void checkReplicatedBreakendFoldback(SvBreakend be)
-    {
-        // a special case where one ends of an SV connects to both ends of a single other variant
-        // during a replication event and in doing so forms a foldback
-        final SvVarData var = be.getSV();
-
-        // if(var.getReplicatedCount() < 2)
-        //     return;
-
-        if(!var.getAssemblyMatchType(true).equals(ASSEMBLY_MATCH_MATCHED)
-        && !var.getAssemblyMatchType(false).equals(ASSEMBLY_MATCH_MATCHED))
-        {
-            return;
-        }
-
-        // replication for chaining isn't done at this earlier stage any more so a simple check is made
-        SvLinkedPair remoteTiLink = var.getLinkedPair(!be.usesStart());
-
-        if(remoteTiLink != null)
-        {
-            SvBreakend remoteBreakend = var.getBreakend(!be.usesStart());
-            SvBreakend otherBreakend = remoteTiLink.getOtherBreakend(remoteBreakend);
-            SvVarData otherVar = otherBreakend.getSV();
-
-            if (haveLinkedAssemblies(var, otherVar, remoteBreakend.usesStart(), !otherBreakend.usesStart()))
-            {
-                final String chainInfo = String.format("%d;%d;%d", 1, 1, remoteTiLink.length());
-
-                var.setFoldbackLink(be.usesStart(), be, 0, chainInfo);
-
-                LOGGER.debug("cluster({}) foldback SV({} : {}) with own breakend({})",
-                        var.getCluster().id(), var.posId(), var.type(), be.toString());
-            }
-        }
-    }
-
     private void reportOtherFeatures()
     {
-        annotateTemplatedInsertions(mClusters, mClusteringMethods.getChrBreakendMap());
+        annotateTemplatedInsertions(mClusters, mState.getChrBreakendMap());
         // checkSkippedLOHEvents();
 
         // annotateFoldbacks(mClusters); // unused for now
@@ -1543,11 +1298,11 @@ public class ClusterAnalyser {
 
     private void reportClusterFeatures(final SvCluster cluster)
     {
-        annotateChainedClusters(cluster, mClusteringMethods.getProximityDistance());
+        annotateChainedClusters(cluster, mConfig.ProximityDistance);
 
         if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
         {
-            findIncompleteFoldbackCandidates(mSampleId, cluster, mClusteringMethods.getChrBreakendMap(), mCnDataLoader);
+            findIncompleteFoldbackCandidates(mSampleId, cluster, mState.getChrBreakendMap(), mCnDataLoader);
         }
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))

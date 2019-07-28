@@ -601,12 +601,7 @@ public class SvChain {
     public int getLength(boolean closeEnds)
     {
         // defined as the sum of the TI lengths
-        int length = 0;
-
-        for(final SvLinkedPair pair : mLinkedPairs)
-        {
-            length += abs(pair.length());
-        }
+        int length = mLinkedPairs.stream().mapToInt(x -> abs(x.length())).sum();
 
         if(closeEnds)
         {

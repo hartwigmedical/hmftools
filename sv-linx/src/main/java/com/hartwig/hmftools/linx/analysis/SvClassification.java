@@ -11,7 +11,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.markSinglePairResolvedType;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -24,8 +25,12 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUP_DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
+import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
@@ -752,5 +757,54 @@ public class SvClassification
         cluster.setResolved(false, resolvedType);
         cluster.setSyntheticData(0, longestTILength);
     }
+
+    public static ResolvedType markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
+    {
+        if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
+            return NONE;
+
+        final SvBreakend breakend1 = sgl1.getBreakend(true);
+        final SvBreakend breakend2 = sgl2.getBreakend(true);
+
+        // to form a simple del or dup, they need to have different orientations
+        if(breakend1.orientation() == breakend2.orientation())
+            return NONE;
+
+        // check copy number consistency
+        double cn1 = sgl2.copyNumberChange(true);
+        double cn2 = sgl1.copyNumberChange(true);
+
+        if(!copyNumbersEqual(cn1, cn2))
+            return NONE;
+
+        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
+                || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
+
+        long length = abs(breakend1.position() - breakend2.position());
+
+        ResolvedType resolvedType = NONE;
+
+        if(breakendsFace)
+        {
+            // a DUP if breakends are further than the anchor distance away, else an INS
+            int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
+            if(length >= minTiLength)
+                resolvedType = SGL_PAIR_DUP;
+            else
+                resolvedType = SGL_PAIR_INS;
+        }
+        else
+        {
+            // a DEL if the breakends are further than the min DEL length, else an INS
+            if(length >= MIN_DEL_LENGTH)
+                resolvedType = SGL_PAIR_DEL;
+            else
+                resolvedType = SGL_PAIR_INS;
+        }
+
+        // mark these differently from those formed from normal SVs
+        return resolvedType;
+    }
+
 
 }

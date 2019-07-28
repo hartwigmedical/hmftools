@@ -360,7 +360,7 @@ public class ChainingActualTest
                 "BND", "BND", 1, 1, 1, 0, 1, 1,
                 var1.id(), var4.id()));
 
-        tester.ClusteringMethods.setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
+        tester.Analyser.getState().setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();

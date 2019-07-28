@@ -5,42 +5,31 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_HOM_LOSS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOH;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LONG_DEL_DUP_OR_INV;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_PROXIMITY;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_SOLO_SINGLE;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.markSinglePairResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
-import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
-import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -52,88 +41,23 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SvClusteringMethods {
+public class SimpleClustering
+{
+    private ClusteringState mState;
 
-    private static final Logger LOGGER = LogManager.getLogger(SvClusteringMethods.class);
+    private static final Logger LOGGER = LogManager.getLogger(SimpleClustering.class);
 
-    private int mNextClusterId;
-
-    private Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
-    private List<LohEvent> mLohEventList;
-    private List<HomLossEvent> mHomLossList;
-    private Map<SvVarData,ResolvedType> mExcludedSVs; // SV and exclusion reason eg duplicate breakends
-
-    private Map<String, double[]> mChromosomeCopyNumberMap; // p-arm telomere, centromere and q-arm telemore CN data
-
-    private long mDelCutoffLength;
-    private long mDupCutoffLength;
-    private int mProximityDistance;
-
-    public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
-    public static int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
-    public static int DEFAULT_PROXIMITY_DISTANCE = 5000;
-
-    public static String CLUSTER_REASON_PROXIMITY = "Prox";
-    public static String CLUSTER_REASON_LOH = "LOH";
-    public static String CLUSTER_REASON_HOM_LOSS = "HomLoss";
-    public static String CLUSTER_REASON_COMMON_ARMS = "ComArm";
-    public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
-    public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
-    public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
-    public static String CLUSTER_REASON_LOH_CHAIN = "LOHChain";
-    public static String CLUSTER_REASON_NET_ARM_END_PLOIDY = "ArmEndPloidy";
-    public static String CLUSTER_REASON_BE_PLOIDY_DROP = "BEPloidy";
-    public static String CLUSTER_REASON_LONG_DEL_DUP_OR_INV = "DelDupInv";
-    public static String CLUSTER_REASON_SATELLITE_SGL = "SatelliteSgl";
-
-    public SvClusteringMethods(int proximityLength)
+    public SimpleClustering(ClusteringState state)
     {
-        mNextClusterId = 0;
-
-        mDelCutoffLength = 0;
-        mDupCutoffLength = 0;
-        mProximityDistance = proximityLength;
-
-        mChrBreakendMap = new HashMap();
-        mChromosomeCopyNumberMap = new HashMap();
-        mExcludedSVs = Maps.newHashMap();
-        mLohEventList = null;
-        mHomLossList = null;
+        mState = state;
     }
 
-    public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
-    public int getNextClusterId() { return mNextClusterId++; }
+    private int getNextClusterId() { return mState.getNextClusterId(); }
 
-    public void setSampleCnEventData(final List<LohEvent> lohEvents, List<HomLossEvent> homLossEvents)
-    {
-        mLohEventList = lohEvents;
-        mHomLossList = homLossEvents;
-    }
-
-    public void setChrCopyNumberMap(final Map<String, double[]> data) { mChromosomeCopyNumberMap = data; }
-    public final Map<String, double[]> getChrCopyNumberMap() { return mChromosomeCopyNumberMap; }
-    public long getDupCutoffLength() { return mDelCutoffLength; }
-    public long getDelCutoffLength() { return mDupCutoffLength; }
-    public int getProximityDistance() { return mProximityDistance; }
-
-    public void clusterExcludedVariants(List<SvCluster> clusters)
-    {
-        for(Map.Entry<SvVarData,ResolvedType> excludedSv : mExcludedSVs.entrySet())
-        {
-            SvVarData var = excludedSv.getKey();
-            ResolvedType exclusionReason = excludedSv.getValue();
-
-            SvCluster newCluster = new SvCluster(getNextClusterId());
-            newCluster.addVariant(var);
-            newCluster.setResolved(true, exclusionReason);
-            clusters.add(newCluster);
-        }
-    }
-
-    public void clusterByProximity(List<SvCluster> clusters)
+    public void clusterByProximity(List<SvCluster> clusters, int proximityDistance)
     {
         // walk through each chromosome and breakend list
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
@@ -174,7 +98,7 @@ public class SvClusteringMethods {
                 {
                     // already clustered
                 }
-                else if (abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
+                else if (abs(nextBreakend.position() - breakend.position()) > proximityDistance)
                 {
                     // too far between the breakends
                     if (cluster == null)
@@ -307,24 +231,6 @@ public class SvClusteringMethods {
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
     }
 
-    private boolean isSingleDuplicateBreakend(final SvVarData var)
-    {
-        return var.type() == SGL && !var.isNoneSegment() && var.isEquivBreakend();
-    }
-
-    public void clearLOHBreakendData(final String sampleId)
-    {
-        if(mLohEventList != null)
-        {
-            mLohEventList.forEach(x -> x.clearBreakends());
-        }
-
-        if(mHomLossList != null)
-        {
-            mHomLossList.forEach(x -> x.clearBreakends());
-        }
-    }
-
     private void associateBreakendCnEvents(final String sampleId, List<SvCluster> clusters)
     {
         // search for breakends that match LOH and Hom-loss events
@@ -335,9 +241,9 @@ public class SvClusteringMethods {
 
         int missedEvents = 0;
 
-        if(mLohEventList != null && !mLohEventList.isEmpty())
+        if(mState.getLohEventList() != null && !mState.getLohEventList().isEmpty())
         {
-            for (final LohEvent lohEvent : mLohEventList)
+            for (final LohEvent lohEvent : mState.getLohEventList())
             {
                 if (!lohEvent.isSvEvent())
                     continue;
@@ -345,7 +251,7 @@ public class SvClusteringMethods {
                 // use the breakend table to find matching SVs
                 if (breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
                 {
-                    breakendList = mChrBreakendMap.get(lohEvent.Chromosome);
+                    breakendList = mState.getChrBreakendMap().get(lohEvent.Chromosome);
                     currentChromosome = lohEvent.Chromosome;
                 }
 
@@ -378,14 +284,14 @@ public class SvClusteringMethods {
             }
         }
 
-        if(mHomLossList != null && !mHomLossList.isEmpty())
+        if(mState.getHomLossList() != null && !mState.getHomLossList().isEmpty())
         {
-            for (HomLossEvent homLossEvent : mHomLossList)
+            for (HomLossEvent homLossEvent : mState.getHomLossList())
             {
                 if (homLossEvent.StartSV == CN_DATA_NO_SV && homLossEvent.EndSV == CN_DATA_NO_SV)
                     continue;
 
-                breakendList = mChrBreakendMap.get(homLossEvent.Chromosome);
+                breakendList = mState.getChrBreakendMap().get(homLossEvent.Chromosome);
 
                 if (breakendList == null)
                     continue;
@@ -424,11 +330,11 @@ public class SvClusteringMethods {
 
     private void mergeOnLOHEvents(List<SvCluster> clusters)
     {
-        if (mLohEventList.isEmpty() && mHomLossList.isEmpty())
+        if (mState.getLohEventList().isEmpty() && mState.getHomLossList().isEmpty())
             return;
 
         // first link up breakends joined by an LOH with no multi-SV hom-loss events within
-        for (final LohEvent lohEvent : mLohEventList)
+        for (final LohEvent lohEvent : mState.getLohEventList())
         {
             if (!lohEvent.matchedBothSVs() || lohEvent.hasIncompleteHomLossEvents())
                 continue; // cannot be used for clustering
@@ -459,7 +365,7 @@ public class SvClusteringMethods {
 
         // search for LOH events which are clustered but which contain hom-loss events which aren't clustered
         // (other than simple DELs) which already will have been handled
-        for (final LohEvent lohEvent : mLohEventList)
+        for (final LohEvent lohEvent : mState.getLohEventList())
         {
             if (!lohEvent.hasIncompleteHomLossEvents())
                 continue;
@@ -651,8 +557,8 @@ public class SvClusteringMethods {
         // find and record any long DEL or DUP for merging, including long synthetic ones
         if(cluster.isSyntheticType() && cluster.getResolvedType().isSimple() && !cluster.isResolved())
         {
-            if ((cluster.getResolvedType() == ResolvedType.DEL && cluster.getSyntheticLength() >= mDelCutoffLength)
-            || (cluster.getResolvedType() == ResolvedType.DUP && cluster.getSyntheticLength() >= mDupCutoffLength))
+            if ((cluster.getResolvedType() == ResolvedType.DEL && cluster.getSyntheticLength() >= mState.getDelCutoffLength())
+            || (cluster.getResolvedType() == ResolvedType.DUP && cluster.getSyntheticLength() >= mState.getDupCutoffLength()))
             {
                 for (final SvVarData var : cluster.getSVs())
                 {
@@ -804,9 +710,9 @@ public class SvClusteringMethods {
     public boolean exceedsDupDelCutoffLength(StructuralVariantType type, long length)
     {
         if(type == DEL)
-            return length > mDelCutoffLength;
+            return length > mState.getDelCutoffLength();
         else if(type == DUP)
-            return length > mDupCutoffLength;
+            return length > mState.getDelCutoffLength();
         else
             return false;
     }
@@ -822,7 +728,7 @@ public class SvClusteringMethods {
 
         boolean foundMerges = false;
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
             int breakendCount = breakendList.size();
@@ -980,443 +886,11 @@ public class SvClusteringMethods {
         }
     }
 
-    public static ResolvedType markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
-    {
-        if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
-            return NONE;
-
-        final SvBreakend breakend1 = sgl1.getBreakend(true);
-        final SvBreakend breakend2 = sgl2.getBreakend(true);
-
-        // to form a simple del or dup, they need to have different orientations
-        if(breakend1.orientation() == breakend2.orientation())
-            return NONE;
-
-        // check copy number consistency
-        double cn1 = sgl2.copyNumberChange(true);
-        double cn2 = sgl1.copyNumberChange(true);
-
-        if(!copyNumbersEqual(cn1, cn2))
-            return NONE;
-
-        boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
-                || (breakend2.position() < breakend1.position() && breakend2.orientation() == -1);
-
-        long length = abs(breakend1.position() - breakend2.position());
-
-        ResolvedType resolvedType = NONE;
-
-        if(breakendsFace)
-        {
-            // a DUP if breakends are further than the anchor distance away, else an INS
-            int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
-            if(length >= minTiLength)
-                resolvedType = SGL_PAIR_DUP;
-            else
-                resolvedType = SGL_PAIR_INS;
-        }
-        else
-        {
-            // a DEL if the breakends are further than the min DEL length, else an INS
-            if(length >= MIN_DEL_LENGTH)
-                resolvedType = SGL_PAIR_DEL;
-            else
-                resolvedType = SGL_PAIR_INS;
-        }
-
-        // mark these differently from those formed from normal SVs
-        return resolvedType;
-    }
-
-    private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
-    private static int MAX_ARM_COUNT = 41; // excluding the 5 short arms
-
-    public void setSimpleVariantLengths(final String sampleId)
-    {
-        mDelCutoffLength = 0;
-        mDupCutoffLength = 0;
-
-        List<Long> delLengthsList = Lists.newArrayList();
-        List<Long> dupLengthsList = Lists.newArrayList();
-
-        int simpleArmCount = 0;
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
-
-            // first check for complex events on the arm since these will be skipped
-            boolean pArmHasInversions = false;
-            boolean qArmHasInversions = false;
-
-            for(final SvBreakend breakend : breakendList)
-            {
-                final SvVarData var = breakend.getSV();
-
-                if(var.type() != INV)
-                    continue;
-
-                if(!pArmHasInversions && (var.arm(true) == CHROMOSOME_ARM_P || var.arm(false) == CHROMOSOME_ARM_P))
-                    pArmHasInversions = true;
-
-                if(!qArmHasInversions && (var.arm(true) == CHROMOSOME_ARM_Q || var.arm(false) == CHROMOSOME_ARM_Q))
-                    qArmHasInversions = true;
-
-                if(pArmHasInversions && qArmHasInversions)
-                    break;
-            }
-
-            // skip chromosome altogether
-            if(pArmHasInversions && qArmHasInversions)
-                continue;
-
-            if(!pArmHasInversions)
-                ++simpleArmCount;
-
-            if(!qArmHasInversions)
-                ++simpleArmCount;
-
-            for(final SvBreakend breakend : breakendList)
-            {
-                if(!breakend.usesStart() || !(breakend.getSV().type() == DEL || breakend.getSV().type() == DUP))
-                    continue;
-
-                final SvVarData var = breakend.getSV();
-
-                if(pArmHasInversions)
-                {
-                    if (var.arm(true) == CHROMOSOME_ARM_P || var.arm(false) == CHROMOSOME_ARM_P)
-                        continue;
-                }
-
-                if(qArmHasInversions)
-                {
-                    if (var.arm(true) == CHROMOSOME_ARM_Q || var.arm(false) == CHROMOSOME_ARM_Q)
-                        continue;
-                }
-
-                if(var.type() == DEL)
-                    delLengthsList.add(var.length());
-                else if(var.type() == DUP)
-                    dupLengthsList.add(var.length());
-            }
-
-            // LOGGER.debug("sample({}) chr({}) svCount({} delDups({})", sampleId, chromosome, breakendList.size(), armCount);
-        }
-
-        int trimCount = (int)round(simpleArmCount / (double)MAX_ARM_COUNT * DEL_DUP_LENGTH_TRIM_COUNT);
-
-        if(delLengthsList.size() > trimCount)
-        {
-            Collections.sort(delLengthsList);
-            int lengthIndex = delLengthsList.size() - trimCount - 1; // 10 items, index 0 - 9, exclude 5 - 9, select 9
-            mDelCutoffLength = delLengthsList.get(lengthIndex);
-        }
-
-        if(dupLengthsList.size() > trimCount)
-        {
-            Collections.sort(dupLengthsList);
-            int lengthIndex = dupLengthsList.size() - trimCount - 1;
-            mDupCutoffLength = dupLengthsList.get(lengthIndex);
-        }
-
-        mDelCutoffLength = min(max(mDelCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
-        mDupCutoffLength = min(max(mDupCutoffLength, MIN_SIMPLE_DUP_DEL_CUTOFF), MAX_SIMPLE_DUP_DEL_CUTOFF);
-
-        LOGGER.debug("sample({}) simple dels count({}) cutoff-length({}), dups count({}) cutoff-length({}) simpleArms({}) trimCount({})",
-                sampleId, delLengthsList.size(), mDelCutoffLength, dupLengthsList.size(), mDupCutoffLength, simpleArmCount, trimCount);
-    }
-
-    public void populateChromosomeBreakendMap(final List<SvVarData> allVariants)
-    {
-        mNextClusterId = 0;
-
-        mChrBreakendMap.clear();
-        mExcludedSVs.clear();
-
-        // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
-        for (final SvVarData var : allVariants)
-        {
-            addSvToChrBreakendMap(var, mChrBreakendMap);
-        }
-
-        // set indices
-        for(List<SvBreakend> breakendList : mChrBreakendMap.values())
-        {
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                breakendList.get(i).setChrPosIndex(i);
-            }
-        }
-
-        filterExcludedBreakends();
-    }
-
-    private static final double LOW_VAF_THRESHOLD = 0.05;
-    private static final int SHORT_INV_DISTANCE = 100;
-    private static final int ISOLATED_BND_DISTANCE = 5000;
-
-    public static final int PERMITED_SGL_DUP_BE_DISTANCE = 1;
-    public static final int PERMITED_DUP_BE_DISTANCE = 35;
-
-    private boolean isIsolatedLowVafBnd(final SvVarData var)
-    {
-        if(!hasLowCNChangeSupport(var))
-            return false;
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(se == SE_END && var.isNullBreakend())
-                continue;
-
-            final SvBreakend breakend = var.getBreakend(isStart(se));
-            final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
-
-            int i = breakend.getChrPosIndex();
-
-            boolean isolatedDown = (i == 0) ? true
-                    : breakend.position() - breakendList.get(i - 1).position() >= ISOLATED_BND_DISTANCE;
-
-            boolean isolatedUp = (i >= breakendList.size() - 1) ? true
-                    : breakendList.get(i + 1).position() - breakend.position() >= ISOLATED_BND_DISTANCE;
-
-            if(!isolatedDown || !isolatedUp)
-                return false;
-
-        }
-
-        return true;
-    }
-
-    private boolean isLowVafInversion(final SvBreakend breakend, final SvBreakend nextBreakend)
-    {
-        final SvVarData var = breakend.getSV();
-
-        if(nextBreakend.getSV() != var || nextBreakend.position() - breakend.position() > SHORT_INV_DISTANCE)
-            return false;
-
-        return hasLowCNChangeSupport(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
-    }
-
-    private void filterExcludedBreakends()
-    {
-        // filter out duplicate breakends and low-CN change support INVs and BNDs
-        // breakends aren't actually removed until all chromosomes have been processed so that the indices can be preserved for various tests
-        Map<String,List<SvBreakend>> breakendRemovalMap = Maps.newHashMap();
-
-        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            final String chromosome = entry.getKey();
-            List<SvBreakend> breakendList = entry.getValue();
-
-            int breakendCount = breakendList.size();
-
-            List<SvBreakend> removalList = breakendRemovalMap.get(chromosome);
-
-            if(removalList == null)
-            {
-                removalList = Lists.newArrayList();
-                breakendRemovalMap.put(chromosome, removalList);
-            }
-
-            for(int i = 0; i < breakendCount; ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
-
-                if(var.isNoneSegment())
-                    continue;
-
-                // first check for SGLs already marked for removal
-                if(var.type() == SGL && isSingleDuplicateBreakend(breakendList.get(i).getSV()))
-                {
-                    mExcludedSVs.put(var, DUP_BE);
-                    removalList.add(breakend);
-                    continue;
-                }
-
-                if((var.type() == BND || (var.type() == SGL && !var.isNoneSegment())) && isIsolatedLowVafBnd(var))
-                {
-                    LOGGER.debug("SV({}) filtered low VAF isolated BND or SGL", var.id());
-                    removalList.add(breakend);
-
-                    if(var.type() == BND)
-                        removeRemoteBreakend(breakend.getOtherBreakend(), breakendRemovalMap);
-
-                    mExcludedSVs.put(var, LOW_VAF);
-                    continue;
-                }
-
-                if(i >= breakendCount - 1)
-                    break;
-
-                SvBreakend nextBreakend = breakendList.get(i + 1);
-
-                if(var.type() == INV && nextBreakend.getSV() == var && isLowVafInversion(breakend, nextBreakend))
-                {
-                    LOGGER.debug("SV({}) filtered low VAF / CN change INV", var.id());
-                    removalList.add(breakend);
-                    removalList.add(nextBreakend);
-                    mExcludedSVs.put(var, LOW_VAF);
-                    continue;
-                }
-
-                if(nextBreakend.getSV() == var)
-                    continue;
-
-                SvVarData nextVar = nextBreakend.getSV();
-
-                long distance = nextBreakend.position() - breakend.position();
-
-                if(distance > PERMITED_DUP_BE_DISTANCE || breakend.orientation() != nextBreakend.orientation())
-                    continue;
-
-                if(var.type() == SGL || nextVar.type() == SGL)
-                {
-                    if(distance <= PERMITED_SGL_DUP_BE_DISTANCE)
-                    {
-                        if(var.type() == SGL)
-                        {
-                            mExcludedSVs.put(var, DUP_BE);
-                            removalList.add(breakend);
-                        }
-                        else if(nextVar.type() == SGL)
-                        {
-                            mExcludedSVs.put(nextVar, DUP_BE);
-                            removalList.add(nextBreakend);
-
-                        }
-                    }
-                }
-                else if(var.type() == nextVar.type() && var.isEquivBreakend())
-                {
-                    // 2 non-SGL SVs may be duplicates, so check their other ends
-                    SvBreakend otherBe = breakend.getOtherBreakend();
-                    SvBreakend nextOtherBe = nextBreakend.getOtherBreakend();
-
-                    if(otherBe.chromosome().equals(nextOtherBe.chromosome())
-                    && abs(otherBe.position() - nextOtherBe.position()) <= PERMITED_DUP_BE_DISTANCE)
-                    {
-                        // remove both of the duplicates breakends now
-
-                        // select the one with assembly if only has as them
-                        if((var.getTIAssemblies(true).isEmpty() && !nextVar.getTIAssemblies(true).isEmpty())
-                        || (var.getTIAssemblies(false).isEmpty() && !nextVar.getTIAssemblies(false).isEmpty()))
-                        {
-                            mExcludedSVs.put(var, DUP_BE);
-                            removalList.add(breakend);
-
-                            if(breakend.chromosome().equals(otherBe.chromosome()))
-                            {
-                                removalList.add(otherBe);
-                            }
-                            else
-                            {
-                                removeRemoteBreakend(otherBe, breakendRemovalMap);
-                            }
-                        }
-                        else
-                        {
-                            mExcludedSVs.put(nextVar, DUP_BE);
-                            removalList.add(nextBreakend);
-
-                            if(nextBreakend.chromosome().equals(nextOtherBe.chromosome()))
-                            {
-                                removalList.add(nextOtherBe);
-                            }
-                            else
-                            {
-                                removeRemoteBreakend(nextOtherBe, breakendRemovalMap);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // now remove filtered breakends
-        for(Map.Entry<String,List<SvBreakend>> entry : breakendRemovalMap.entrySet())
-        {
-            final List<SvBreakend> removalList = entry.getValue();
-
-            if(removalList.isEmpty())
-                continue;
-
-            final List<SvBreakend> breakendList = mChrBreakendMap.get(entry.getKey());
-            removalList.stream().forEach(x -> breakendList.remove(x));
-
-            // and reset indices after excluding breakends
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                breakend.setChrPosIndex(i);
-            }
-        }
-    }
-
-    private void removeRemoteBreakend(final SvBreakend breakend, Map<String,List<SvBreakend>> breakendRemovalMap)
-    {
-        List<SvBreakend> otherList = breakendRemovalMap.get(breakend.chromosome());
-        if(otherList == null)
-        {
-            otherList = Lists.newArrayList();
-            breakendRemovalMap.put(breakend.chromosome(), otherList);
-
-        }
-
-        otherList.add(breakend);
-    }
-
-    public void annotateNearestSvData()
-    {
-        // mark each SV's nearest other SV and its relationship - neighbouring or overlapping
-        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
-        {
-            List<SvBreakend> breakendList = entry.getValue();
-
-            int breakendCount = breakendList.size();
-
-            for(int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                SvVarData var = breakend.getSV();
-
-                final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
-                final SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
-
-                long closestDistance = -1;
-                if(prevBreakend != null && prevBreakend.getSV() != var)
-                {
-                    long distance = breakend.position() - prevBreakend.position();
-                    closestDistance = distance;
-                }
-
-                if(nextBreakend != null && nextBreakend.getSV() != var)
-                {
-                    long distance = nextBreakend.position() - breakend.position();
-                    if(closestDistance < 0 || distance < closestDistance)
-                        closestDistance = distance;
-                }
-
-                if(closestDistance >= 0 && (var.getNearestSvDistance() == -1 || closestDistance < var.getNearestSvDistance()))
-                    var.setNearestSvDistance(closestDistance);
-
-                String relationType = "";
-                if((prevBreakend != null && prevBreakend.getSV() == var) || (nextBreakend != null && nextBreakend.getSV() == var))
-                    relationType = RELATION_TYPE_NEIGHBOUR;
-                else
-                    relationType = RELATION_TYPE_OVERLAP;
-
-                var.setNearestSvRelation(relationType);
-            }
-        }
-    }
 
     public boolean validateClustering(final List<SvCluster> clusters)
     {
         // validation that every SV was put into a cluster
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 

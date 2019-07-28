@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.linx.analysis.FoldbackFinder;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -31,7 +32,7 @@ public class FoldbackTest
 
         tester.addClusterAndSVs(cluster1);
         tester.preClusteringInit();
-        tester.Analyser.markFoldbacks();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(var1.getFoldbackId(true), var1.id());
         assertEquals(var1.getFoldbackId(false), var1.id());
@@ -48,7 +49,7 @@ public class FoldbackTest
 
         tester.addClusterAndSVs(cluster2);
         tester.preClusteringInit();
-        tester.Analyser.markFoldbacks();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(var1.getFoldbackId(true), var1.id());
         assertEquals(var1.getFoldbackId(false), var1.id());
@@ -73,7 +74,7 @@ public class FoldbackTest
         assertTrue(dbPair.hasBreakend(var2, false));
         assertTrue(dbPair.hasBreakend(del, true));
 
-        tester.Analyser.markFoldbacks();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(var2.getFoldbackBreakend(true), null);
         assertEquals(var2.getFoldbackBreakend(false), null);
@@ -105,7 +106,7 @@ public class FoldbackTest
         assertTrue(dbPair.hasBreakend(var3, false));
         assertTrue(dbPair.hasBreakend(sgl2, true));
 
-        tester.Analyser.markFoldbacks();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(var3.getFoldbackBreakend(true), null);
         assertEquals(var3.getFoldbackBreakend(false), null);

@@ -335,7 +335,6 @@ public class SvVarData
     }
 
     public final SvLinkedPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }
-
     public void setDBLink(final SvLinkedPair link, boolean isStart)
     {
         mDbLink[seIndex(isStart)] = link;

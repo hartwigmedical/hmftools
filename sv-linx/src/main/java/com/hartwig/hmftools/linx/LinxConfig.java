@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.linx.analysis.SvClusteringMethods.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
+import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.io.BufferedReader;
 import java.io.File;
