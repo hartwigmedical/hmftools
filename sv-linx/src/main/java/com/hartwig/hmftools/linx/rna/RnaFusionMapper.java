@@ -159,7 +159,7 @@ public class RnaFusionMapper
             {
                 final SvVarData var = breakend.getSV();
 
-                if(var.isNoneSegment())
+                if(var.isInferredSgl())
                     continue;
 
                 isSpecificSV(var);

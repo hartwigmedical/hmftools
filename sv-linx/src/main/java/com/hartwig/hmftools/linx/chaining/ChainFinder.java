@@ -7,6 +7,7 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.SPEC_LINK_INDEX;
@@ -874,7 +875,7 @@ public class ChainFinder
         // check if the lower ploidy SV connects to both ends of another SV to replicate it
         SvVarData var = lowerPloidyBreakend.getSV();
 
-        if(var.isNullBreakend() || var.type() == DEL)
+        if(var.isNullBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().type() == SGL)
             return;
 
         if(mComplexDupCandidates.keySet().contains(var))

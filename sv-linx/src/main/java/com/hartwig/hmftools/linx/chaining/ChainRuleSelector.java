@@ -687,6 +687,12 @@ public class ChainRuleSelector
                 final SvBreakend otherBreakend1 = otherSv1.getBreakend(true);
                 final SvBreakend otherBreakend2 = otherSv1.getBreakend(false);
 
+                if(otherBreakend1 == null || otherBreakend2 == null)
+                {
+                    LOGGER.error("comp dup other breakends null");
+                    continue;
+                }
+
                 double firstPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend1);
                 double secondPloidy = mLinkAllocator.getUnlinkedBreakendCount(otherBreakend2);
 

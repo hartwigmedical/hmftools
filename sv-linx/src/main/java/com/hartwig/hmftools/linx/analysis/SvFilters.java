@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -46,7 +49,13 @@ public class SvFilters
     private static final int PERMITED_SGL_DUP_BE_DISTANCE = 1;
     private static final int PERMITED_DUP_BE_DISTANCE = 35;
 
-    public void filterBreakends()
+    public void applyFilters()
+    {
+        filterBreakends();
+        filterInferreds();
+    }
+
+    private void filterBreakends()
     {
         mExcludedSVs.clear();
 
@@ -74,7 +83,7 @@ public class SvFilters
                 final SvBreakend breakend = breakendList.get(i);
                 final SvVarData var = breakend.getSV();
 
-                if(var.isNoneSegment())
+                if(var.isInferredSgl())
                     continue;
 
                 // first check for SGLs already marked for removal
@@ -85,7 +94,7 @@ public class SvFilters
                     continue;
                 }
 
-                if((var.type() == BND || (var.type() == SGL && !var.isNoneSegment())) && isIsolatedLowVafBnd(var))
+                if((var.type() == BND || (var.type() == SGL && !var.isInferredSgl())) && isIsolatedLowVafBnd(var))
                 {
                     LOGGER.debug("SV({}) filtered low VAF isolated BND or SGL", var.id());
                     removalList.add(breakend);
@@ -204,6 +213,112 @@ public class SvFilters
         }
     }
 
+    private void filterInferreds()
+    {
+        for (Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
+        {
+            final List<SvBreakend> breakendList = entry.getValue();
+            int initBreakendCount = breakendList.size();
+
+            int index = 0;
+
+            // state for a string of INFs in succession
+            int startIndex = 0;
+            int infCount = 0;
+            double startCopyNumber = 0;
+            double maxCnChange = 0;
+            int maxIndex = 0;
+
+            while(index < breakendList.size())
+            {
+                final SvBreakend breakend = breakendList.get(index);
+                final SvVarData var = breakend.getSV();
+
+                if (var.isInferredSgl())
+                {
+                    if (infCount == 0)
+                    {
+                        startIndex = index;
+                        startCopyNumber = getBreakendHighsideCopyNumber(breakend, true);
+                        maxCnChange = 0;
+                    }
+
+                    ++infCount;
+
+                    if(breakend.copyNumberChange() > maxCnChange)
+                    {
+                        maxCnChange = breakend.copyNumberChange();
+                        maxIndex = index;
+                    }
+                }
+                else if(infCount > 1)
+                {
+                    // can these be collapsed?
+                    double endCopyNumber = getBreakendHighsideCopyNumber(breakend, false);
+
+                    LOGGER.debug(String.format("chr(%s) infIndex(%d -> %d) infCount(%d) copyNumber(%.1f -> %.1f net=%.1f) maxCnChg(%.1f index=%d)",
+                            entry.getKey(), startIndex, index - 1, infCount,
+                            startCopyNumber, endCopyNumber, startCopyNumber - endCopyNumber, maxCnChange, maxIndex));
+
+                    /*
+                    // remove these inferred SVs, leaving one to represent the group
+                    SvBreakend maxInferred = breakendList.get(maxIndex);
+                    SvVarData infSv = maxInferred.getSV();
+                    // infSv.setCopyNumberData();
+
+                    int i = startIndex;
+                    int itemsToRemove = infCount - 1;
+                    while(itemsToRemove > 0)
+                    {
+                        if(breakendList.get(i) == maxInferred)
+                        {
+                            ++i;
+                        }
+                        else
+                        {
+                            breakendList.remove(i);
+                            --itemsToRemove;
+                        }
+                    }
+
+                    int itemsRemoved = infCount - 1;
+                    index -= itemsRemoved;
+                    */
+
+                    infCount = 0;
+                }
+
+                ++index;
+            }
+
+            if(breakendList.size() < initBreakendCount)
+            {
+                for (int i = 0; i < breakendList.size(); ++i)
+                {
+                    final SvBreakend breakend = breakendList.get(i);
+                    breakend.setChrPosIndex(i);
+                }
+            }
+        }
+    }
+
+    private double getBreakendHighsideCopyNumber(final SvBreakend breakend, boolean isSectionStart)
+    {
+        final SvCNData cnData = breakend.getSV().getCopyNumberData(breakend.usesStart(), isSectionStart);
+
+        if(cnData == null)
+        {
+            if(breakend.getSV().type() != INS)
+            {
+                LOGGER.warn("breakend({}) missing CN data on previous({})", breakend, isSectionStart);
+            }
+
+            return breakend.getCopyNumber(false);
+        }
+
+        return cnData.CopyNumber;
+    }
+
     public void clusterExcludedVariants(List<SvCluster> clusters)
     {
         for(Map.Entry<SvVarData,ResolvedType> excludedSv : mExcludedSVs.entrySet())
@@ -241,7 +356,6 @@ public class SvFilters
 
             if(!isolatedDown || !isolatedUp)
                 return false;
-
         }
 
         return true;
@@ -259,7 +373,7 @@ public class SvFilters
 
     private boolean isSingleDuplicateBreakend(final SvVarData var)
     {
-        return var.type() == SGL && !var.isNoneSegment() && var.isEquivBreakend();
+        return var.type() == SGL && !var.isInferredSgl() && var.isEquivBreakend();
     }
 
     private void removeRemoteBreakend(final SvBreakend breakend, Map<String,List<SvBreakend>> breakendRemovalMap)

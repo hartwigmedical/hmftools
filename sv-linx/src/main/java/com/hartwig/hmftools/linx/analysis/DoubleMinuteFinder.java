@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -129,7 +128,7 @@ public class DoubleMinuteFinder
         {
             maxSvPloidy = max(maxSvPloidy, var.ploidy());
 
-            if(var.isNoneSegment())
+            if(var.isInferredSgl())
                 maxInfPloidy = max(maxInfPloidy, var.ploidy());
         }
 
@@ -247,7 +246,7 @@ public class DoubleMinuteFinder
         if(highPloidySVs.size() == 1 && highPloidySVs.get(0).type() != DUP)
             return;
 
-        if(highPloidySVs.size() == 2 && highPloidySVs.get(0).isNoneSegment() && highPloidySVs.get(1).isNoneSegment())
+        if(highPloidySVs.size() == 2 && highPloidySVs.get(0).isInferredSgl() && highPloidySVs.get(1).isInferredSgl())
         {
             long distance = abs(highPloidySVs.get(0).position(true) - highPloidySVs.get(1).position(true));
 

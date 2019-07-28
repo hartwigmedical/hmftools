@@ -301,13 +301,11 @@ public class SimpleClustering
                     if (breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
                     {
                         homLossEvent.setBreakend(breakend, true);
-                        // breakend.getCluster().addHomLossEvent(homLossEvent);
                     }
 
                     if (breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
                     {
                         homLossEvent.setBreakend(breakend, false);
-                        // breakend.getCluster().addHomLossEvent(homLossEvent);
                     }
 
                     if (homLossEvent.matchedBothSVs())

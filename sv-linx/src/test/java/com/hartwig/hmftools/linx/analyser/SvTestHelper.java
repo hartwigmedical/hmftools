@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvSampleAnalyser.setSvCopyNumberData;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -91,15 +92,12 @@ public class SvTestHelper
 
     public void preClusteringInit(boolean includePloidyCalcs)
     {
-        Analyser.preClusteringPreparation();
-
-        //ClusteringMethods.populateChromosomeBreakendMap(AllVariants);
-
+        // have to manually trigger breakend map creation since the CN data creation uses it
+        Analyser.getState().reset();
+        populateChromosomeBreakendMap(AllVariants, Analyser.getState());
         addCopyNumberData(includePloidyCalcs);
 
-        // annotateNearestSvData(ClusteringMethods.getChrBreakendMap());
-        // LinkFinder.findDeletionBridges(ClusteringMethods.getChrBreakendMap());
-        // setSimpleVariantLengths(ClusteringMethods.getState());
+        Analyser.preClusteringPreparation();
     }
 
     public void addClusterAndSVs(final SvCluster cluster)

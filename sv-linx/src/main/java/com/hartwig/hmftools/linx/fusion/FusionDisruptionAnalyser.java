@@ -3,8 +3,6 @@ package com.hartwig.hmftools.linx.fusion;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.context;
-import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.fusionPloidy;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.DRUP_TSG_GENES_FILE;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.markNonDisruptiveTranscripts;
@@ -18,7 +16,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +34,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -243,7 +234,7 @@ public class FusionDisruptionAnalyser
             markNonDisruptiveTranscripts(var.getGenesList(true), var.getGenesList(false));
 
             // inferred SGLs are always non-disruptive
-            if(var.isNoneSegment())
+            if(var.isInferredSgl())
             {
                 var.getGenesList(true).stream().forEach(x -> x.transcripts().stream().forEach(y -> y.setIsDisruptive(false)));
             }

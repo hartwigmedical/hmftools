@@ -257,25 +257,11 @@ public class SvSampleAnalyser {
 
         mAnalyser.preClusteringPreparation();
 
-        /*
-        ClusteringState clusterState = mAnalyser.getState();
-        clusterState.reset();
-
-        populateChromosomeBreakendMap(mAllVariants, clusterState);
-
-        annotateNearestSvData(mClusteringMethods.getChrBreakendMap());
-
-        LinkFinder.findDeletionBridges(mClusteringMethods.getChrBreakendMap());
-
-        setSimpleVariantLengths(clusterState);
-        */
-
         mReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
 
         mPcPrep.stop();
 
         mPcClusterAnalyse.start();
-
 
         mIsValid = mAnalyser.clusterAndAnalyse();
 

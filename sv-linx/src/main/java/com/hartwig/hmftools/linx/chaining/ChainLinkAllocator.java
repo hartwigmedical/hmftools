@@ -379,7 +379,8 @@ public class ChainLinkAllocator
             }
         }
 
-        LOGGER.debug("duplicating chain({}) for multi-connect {}", targetChain.id(), proposedLinks.getSplittingRule());
+        LOGGER.debug("duplicating chain({} links={} sv={}) for multi-connect {}",
+                targetChain.id(), targetChain.getLinkCount(), targetChain.getSvCount(), proposedLinks.getSplittingRule());
 
         if (proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
         {

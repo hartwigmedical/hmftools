@@ -410,7 +410,7 @@ public class CnDataLoader
                         if (cnData.matchesSegment(SegmentSupport.DEL, true) && cnData.matchesSegment(SegmentSupport.DEL, false)
                                 && isSingleVariant(cnData))
                         {
-                            LOGGER.debug("total CN loss matches single SV({} : {} -> {})", chromosome, cnData.StartPos, cnData.EndPos);
+                            LOGGER.trace("total CN loss matches single SV({} : {} -> {})", chromosome, cnData.StartPos, cnData.EndPos);
                         }
                         else
                         {
@@ -553,12 +553,12 @@ public class CnDataLoader
             {
                 if (startSvData.id() == endSvData.id())
                 {
-                    LOGGER.debug("cnID({} -> {}) matches singleSV({} - {})",
+                    LOGGER.trace("cnID({} -> {}) matches singleSV({} - {})",
                             startData.asString(), endData.asString(), startSvData.id(), startSvData.type());
                 }
                 else
                 {
-                    LOGGER.debug("cnID({} -> {}) matches pairSV({} -> {})",
+                    LOGGER.trace("cnID({} -> {}) matches pairSV({} -> {})",
                             startData.asString(), endData.asString(), startSvData.id(), endSvData.id());
                 }
             }

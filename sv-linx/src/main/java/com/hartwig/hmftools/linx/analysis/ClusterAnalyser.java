@@ -173,7 +173,7 @@ public class ClusterAnalyser {
         mState.reset();
 
         populateChromosomeBreakendMap(mAllVariants, mState);
-        mFilters.filterBreakends();
+        mFilters.applyFilters();
 
         annotateNearestSvData(mState.getChrBreakendMap());
 

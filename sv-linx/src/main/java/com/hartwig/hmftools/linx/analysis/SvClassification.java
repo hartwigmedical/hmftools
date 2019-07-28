@@ -199,7 +199,7 @@ public class SvClassification
                     cluster.setResolved(false, UNBAL_TRANS);
                 else if(type == INV)
                     cluster.setResolved(false, ResolvedType.INV);
-                else if(type == SGL && cluster.getSV(0).isNoneSegment())
+                else if(type == SGL && cluster.getSV(0).isInferredSgl())
                     cluster.setResolved(false, INF);
                 else if(type == SGL)
                     cluster.setResolved(false, ResolvedType.SGL);
@@ -724,8 +724,8 @@ public class SvClassification
         // first look for chains ending in SGLs or INFs
         ResolvedType resolvedType = NONE;
 
-        if((chain.getLastSV().type() == SGL && chain.getLastSV().isNoneSegment())
-        || (chain.getFirstSV().type() == SGL && chain.getFirstSV().isNoneSegment()))
+        if((chain.getLastSV().type() == SGL && chain.getLastSV().isInferredSgl())
+        || (chain.getFirstSV().type() == SGL && chain.getFirstSV().isInferredSgl()))
         {
             resolvedType = INF;
         }

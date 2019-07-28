@@ -149,7 +149,7 @@ public class SvVarData
     public String toString() { return posId() + " " + typeStr(); }
 
     public final StructuralVariantData getSvData() { return mSVData; }
-    public boolean isNoneSegment() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
+    public boolean isInferredSgl() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
 
     // for convenience
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
@@ -415,7 +415,7 @@ public class SvVarData
 
     public final String typeStr()
     {
-        if(isNoneSegment())
+        if(isInferredSgl())
             return INF_SV_TYPE;
         else
             return type().toString();
@@ -578,7 +578,7 @@ public class SvVarData
 
     public boolean sglToCentromereOrTelomere()
     {
-        if(!isNullBreakend() || isNoneSegment())
+        if(!isNullBreakend() || isInferredSgl())
             return false;
 
         if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr") || mSVData.insertSequenceRepeatClass().equals("Satellite/telo"))
@@ -595,7 +595,7 @@ public class SvVarData
 
     public boolean sglToSatelliteRepeats()
     {
-        if(!isNullBreakend() || isNoneSegment())
+        if(!isNullBreakend() || isInferredSgl())
             return false;
 
         if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr"))

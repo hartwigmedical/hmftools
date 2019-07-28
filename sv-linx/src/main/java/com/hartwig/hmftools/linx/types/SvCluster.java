@@ -189,7 +189,7 @@ public class SvCluster
 
         // isSpecificSV(var.id())
 
-        if(var.isNoneSegment())
+        if(var.isInferredSgl())
             ++mInferredSvCount;
         else
             ++mTypeCounts[typeAsInt(var.type())];
