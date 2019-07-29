@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
@@ -138,6 +139,8 @@ public class SvClassification
         if(cluster.getResolvedType() != NONE)
             return;
 
+        //  isSpecificCluster(cluster);
+
         if(cluster.hasLinkingLineElements())
         {
             // skip further classification for now
@@ -184,7 +187,7 @@ public class SvClassification
             return;
         }
 
-        markSyntheticTypes(cluster, longDelThreshold, longDupThreshold, proximityThreshold);
+        markSyntheticTypes(cluster, isFinal, longDelThreshold, longDupThreshold, proximityThreshold);
 
         if(cluster.getResolvedType() != NONE)
             return;
@@ -236,11 +239,11 @@ public class SvClassification
         return true;
     }
 
-    public static void markSyntheticTypes(SvCluster cluster, long longDelThreshold, long longDupThreshold, int proximityThreshold)
+    public static void markSyntheticTypes(SvCluster cluster, boolean isFinal, long longDelThreshold, long longDupThreshold, int proximityThreshold)
     {
         if(cluster.getTypeCount(SGL) == 0)
         {
-            markSyntheticReciprocalInversion(cluster, proximityThreshold);
+            markSyntheticReciprocalInversion(cluster, isFinal, proximityThreshold);
 
             if (cluster.getResolvedType() != NONE)
                 return;
@@ -329,6 +332,18 @@ public class SvClassification
             }
             else if(faceAway)
             {
+                if(chain.getSvCount() == 2 && cluster.getTypeCount(INV) == 2)
+                {
+                    // cannot form 2 DBs
+                    final SvBreakend pairStart = longestPair.getBreakend(true);
+                    final SvBreakend pairEnd = longestPair.getBreakend(false);
+                    final SvLinkedPair startDB = pairStart.getSV().getDBLink(pairStart.usesStart());
+                    final SvLinkedPair endDB = pairEnd.getSV().getDBLink(pairEnd.usesStart());
+
+                    if(startDB != null && endDB != null)
+                        return;
+                }
+
                 resolvedType = RECIP_DUP_DEL;
             }
         }
@@ -502,7 +517,7 @@ public class SvClassification
         cluster.setSyntheticData(syntheticLength, longestTILength);
     }
 
-    public static void markSyntheticReciprocalInversion(SvCluster cluster, int proximityThreshold)
+    public static void markSyntheticReciprocalInversion(SvCluster cluster, boolean isFinal, int proximityThreshold)
     {
         if(!cluster.isFullyChained(false) || cluster.getChains().size() != 1)
             return;
@@ -535,30 +550,33 @@ public class SvClassification
         if(tiPair == null)
             return;
 
-        SvBreakend startBe1 = tiPair.getBreakend(true);
-        SvBreakend endBe1 = tiPair.getBreakend(false);
+        SvBreakend tiStart = tiPair.getBreakend(true);
+        SvBreakend tiEnd = tiPair.getBreakend(false);
 
-        SvBreakend startBe2 = chain.getOpenBreakend(true);
-        SvBreakend endBe2 = chain.getOpenBreakend(false);
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
 
         // check for same arm and opposite orientations
-        if(!startBe1.getChrArm().equals(startBe2.getChrArm()))
+        if(!tiStart.getChrArm().equals(chainStart.getChrArm()))
             return;
 
-        if(!startBe2.getChrArm().equals(endBe2.getChrArm()) || startBe2.orientation() == endBe2.orientation())
+        if(!chainStart.getChrArm().equals(chainEnd.getChrArm()) || chainStart.orientation() == chainEnd.orientation())
             return;
 
         // check for linked, short DBs at both ends
-        SvLinkedPair startDB = startBe1.getSV().getDBLink(startBe1.usesStart());
-        SvLinkedPair endDB = endBe1.getSV().getDBLink(endBe1.usesStart());
+        SvLinkedPair startDB = tiStart.getSV().getDBLink(tiStart.usesStart());
+        SvLinkedPair endDB = tiEnd.getSV().getDBLink(tiEnd.usesStart());
 
-        if(startDB == null || startDB.length() > proximityThreshold || endDB == null || endDB.length() > proximityThreshold)
+        if(startDB == null || endDB == null)
+            return;
+
+        if(!isFinal && (startDB.length() > proximityThreshold || endDB.length() > proximityThreshold))
             return;
 
         long syntheticLength = 0;
-        if ((startDB.hasBreakend(startBe2) && endDB.hasBreakend(endBe2)) || (startDB.hasBreakend(endBe2) && endDB.hasBreakend(startBe2)))
+        if ((startDB.hasBreakend(chainStart) && endDB.hasBreakend(chainEnd)) || (startDB.hasBreakend(chainEnd) && endDB.hasBreakend(chainStart)))
         {
-            syntheticLength = abs(startBe2.position() - endBe2.position());
+            syntheticLength = abs(chainStart.position() - chainEnd.position());
         }
         else
         {
