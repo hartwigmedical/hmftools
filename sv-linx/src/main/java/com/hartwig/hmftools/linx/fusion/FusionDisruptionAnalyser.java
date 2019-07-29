@@ -625,6 +625,8 @@ public class FusionDisruptionAnalyser
 
                 chainFusions.addAll(fusions);
 
+                int validTraversalFusionCount = 0; // between these 2 SVs
+
                 for (GeneFusion fusion : fusions)
                 {
                     // if the fusion from the upstream gene is on the positive strand, then it will have a fusion direction of +1
@@ -659,9 +661,18 @@ public class FusionDisruptionAnalyser
                             fusionDirection = pair.secondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
                         }
 
-                        if(validTraversal && pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
+                        // any invalid traversal causes this fusion to be entirely skipped from further analysis
+                        if(pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
+                        {
                             validTraversal = false;
+                            break;
+                        }
                     }
+
+                    if(!validTraversal)
+                        continue;
+
+                    ++validTraversalFusionCount;
 
                     FusionTermination[] terminationInfo = {null, null};
 
@@ -723,6 +734,15 @@ public class FusionDisruptionAnalyser
                             validFusions.add(fusion);
                         }
                     }
+                }
+
+                if(validTraversalFusionCount == 0 && lpIndex2 > lpIndex1)
+                {
+                    // if there are no valid traversals between 2 indices, then nor will any sections of the chain starting
+                    LOGGER.debug("cluster({}) chain({}) no valid traversals between({} -> {})",
+                            cluster.id(), chain.id(), lpIndex1, lpIndex2);
+
+                    // break;
                 }
             }
         }

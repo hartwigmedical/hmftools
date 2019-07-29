@@ -283,6 +283,7 @@ public class SvCluster
     public void dissolveLinksAndChains()
     {
         mUnchainedSVs.clear();
+        mUnchainedSVs.addAll(mSVs);
         mChains.clear();
     }
 

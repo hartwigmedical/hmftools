@@ -402,7 +402,7 @@ public class ChainLinkAllocator
         }
 
         double newPloidy = targetChain.ploidy() * 0.5;
-        double newUncertainty = targetChain.ploidyUncertainty() * sqrt(2);
+        double newUncertainty = targetChain.ploidyUncertainty() / sqrt(2);
         targetChain.setPloidyData(newPloidy, newUncertainty);
 
         for (SvLinkedPair pair : proposedLinks.Links)
