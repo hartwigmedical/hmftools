@@ -72,8 +72,8 @@ public class LimsTest {
         assertFalse(lims.confirmedToHaveNoSamplingDate(SAMPLE));
 
         assertEquals(patientId, lims.patientId(SAMPLE));
-        assertEquals(refBarcode, lims.refBarcode(SAMPLE));
-        assertEquals(tumorBarcode, lims.tumorBarcode(SAMPLE));
+        assertEquals("N/A", lims.refBarcode(SAMPLE));
+        assertEquals("N/A", lims.tumorBarcode(SAMPLE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
         assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
 

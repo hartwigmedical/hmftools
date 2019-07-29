@@ -154,6 +154,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn1.add(obtainedResults());
         divColumn1.add(tumorSampleDataText());
         divColumn1.add(bloodSampleDataText());
+        divColumn1.add(relatedSamples());
+        divColumn1.add((shallowSeqText()));
         return divColumn1;
     }
 
@@ -161,12 +163,10 @@ public class QCFailChapter implements ReportChapter {
     private Div createWideContentBodyColumn2() {
         Div divColumn2 = new Div();
 
-        divColumn2.add((shallowSeqText()));
         divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
-        divColumn2.add(relatedSamples());
         divColumn2.add(disclaimerTumorLocation());
         divColumn2.add(sentivityResults());
         divColumn2.add((questionsText()));
@@ -200,22 +200,21 @@ public class QCFailChapter implements ReportChapter {
         divColumn1.add(obtainedResults());
         divColumn1.add(tumorSampleDataText());
         divColumn1.add(bloodSampleDataText());
+        divColumn1.add(relatedSamples());
+        divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
+                failReport.sampleReport().pathologyTumorPercentage()));
+        divColumn1.add((shallowSeqText()));
         return divColumn1;
     }
 
     @NotNull
     private Div createCoreContentBodyColumn2() {
         Div divColumn2 = new Div();
-
-        divColumn2.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
-                failReport.sampleReport().pathologyTumorPercentage()));
-        divColumn2.add((shallowSeqText()));
         divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
-        divColumn2.add(relatedSamples());
         divColumn2.add(disclaimerTumorLocation());
         divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
@@ -255,19 +254,18 @@ public class QCFailChapter implements ReportChapter {
         divColumn1.add(bloodSampleDataText());
         divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
                 failReport.sampleReport().pathologyTumorPercentage()));
+        divColumn1.add(relatedSamples());
+        divColumn1.add(shallowSeqText());
         return divColumn1;
     }
 
     @NotNull
     private Div createCPCTDRUPContentBodyColumn2() {
         Div divColumn2 = new Div();
-
-        divColumn2.add(shallowSeqText());
         divColumn2.add(evaluatedAddress());
         divColumn2.add(recipientText());
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
-        divColumn2.add(relatedSamples());
         divColumn2.add(disclaimerTumorLocation());
         divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
