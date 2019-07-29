@@ -27,14 +27,12 @@ public class SvChainState
 
     private double[] mBreakendCount;
 
-    private List<SvChain> mChainConnections;
-
     // unique connections made to other SVs
     private final List<SvBreakend> mConnectionsStart;
     private final List<SvBreakend> mConnectionsEnd;
 
-    private static final double EXHAUSTED_PLOIDY_PERC = 0.1;
-    private static final double EXHAUSTED_PLOIDY_ABS = 0.2;
+    public static final double EXHAUSTED_PLOIDY_PERC = 0.1;
+    public static final double EXHAUSTED_PLOIDY_ABS = 0.2;
 
     public SvChainState(final SvVarData var, boolean singlePloidy)
     {

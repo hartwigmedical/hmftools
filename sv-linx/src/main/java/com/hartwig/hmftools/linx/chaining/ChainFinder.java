@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.SPEC_LINK_INDEX;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -729,7 +728,7 @@ public class ChainFinder
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
-            final double[][] allelePloidies = mClusterPloidyLimits.getChrAllelePloidies().get(chromosome);
+            final List<SegmentPloidy> allelePloidies = mClusterPloidyLimits.getChrAllelePloidies().get(chromosome);
 
             for (int i = 0; i < breakendList.size() -1; ++i)
             {
@@ -847,7 +846,8 @@ public class ChainFinder
                     if(lowerValidAP && mClusterPloidyLimits.hasValidAllelePloidyData(
                             getClusterChrBreakendIndex(upperBreakend), allelePloidies))
                     {
-                        double clusterAP = allelePloidies[getClusterChrBreakendIndex(upperBreakend)][CLUSTER_AP];
+                        int breakendIndex = getClusterChrBreakendIndex(upperBreakend);
+                        double clusterAP = allelePloidies.get(breakendIndex).clusterPloidy();
 
                         if(clusterAP < CLUSTER_ALLELE_PLOIDY_MIN)
                         {

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -22,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ChainPloidyLimits
 {
-    private Map<String, double[][]> mChrAllelePloidies;
+    private Map<String, List<SegmentPloidy>> mChrAllelePloidies;
     private double mValidAllelePloidySegmentPerc;
 
     // referenced state
@@ -31,14 +32,6 @@ public class ChainPloidyLimits
 
     // ploidy level below which a chain segment cannot cross
     public static final double CLUSTER_ALLELE_PLOIDY_MIN = 0.15;
-
-    public static final int MAJOR_AP = 0;
-    public static final int MINOR_AP = 1;
-    public static final int A_FIXED_AP = 2;
-    public static final int B_NON_DIS_AP = 3;
-    public static final int CLUSTER_AP = 4;
-    public static final int AP_DATA_VALID = 5;
-    public static final int AP_IS_VALID = 1;
 
     private static final Logger LOGGER = LogManager.getLogger(ChainPloidyLimits.class);
 
@@ -49,7 +42,7 @@ public class ChainPloidyLimits
         mChrBreakendMap = null;
     }
 
-    public final Map<String, double[][]> getChrAllelePloidies() { return mChrAllelePloidies; }
+    public final Map<String, List<SegmentPloidy>> getChrAllelePloidies() { return mChrAllelePloidies; }
     public double getValidAllelePloidySegmentPerc() { return mValidAllelePloidySegmentPerc; }
 
     public void initialise(int clusterId, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -73,7 +66,7 @@ public class ChainPloidyLimits
             int breakendCount = breakendList.size();
 
             // a multi-dim array of breakend index for this arm to A allele ploidy, B non-disrupted ploidy, and cluster ploidy
-            double[][] allelePloidies = new double[breakendCount][AP_DATA_VALID +1];
+            List<SegmentPloidy> allelePloidies = Lists.newArrayListWithCapacity(breakendCount);
 
             mChrAllelePloidies.put(chromosome, allelePloidies);
 
@@ -85,8 +78,8 @@ public class ChainPloidyLimits
             {
                 SvBreakend breakend = breakendList.get(i);
 
-                allelePloidies[i][MAJOR_AP] = breakend.majorAllelePloidy(false);
-                allelePloidies[i][MINOR_AP] = breakend.minorAllelePloidy(false);
+                allelePloidies.add(
+                        new SegmentPloidy(breakend.majorAllelePloidy(false), breakend.minorAllelePloidy(false)));
 
                 if(!inSegment)
                 {
@@ -101,6 +94,7 @@ public class ChainPloidyLimits
                     {
                         // a gap in the cluster so need to evaluate this contiguous section
                         inSegment = false;
+
                         boolean validCalcs = calculateNoneClusterSegmentPloidies(
                                 allelePloidies, segStartIndex, i, segStartBreakend, breakend);
                         ++totalSegCount;
@@ -119,7 +113,7 @@ public class ChainPloidyLimits
     }
 
     private boolean calculateNoneClusterSegmentPloidies(
-            double[][] allelePloidies, int startIndex, int endIndex, SvBreakend startBreakend, SvBreakend endBreakend)
+            List<SegmentPloidy> allelePloidies, int startIndex, int endIndex, SvBreakend startBreakend, SvBreakend endBreakend)
     {
         double startMajorAP = startBreakend.majorAllelePloidy(true);
         double startMinorAP = startBreakend.minorAllelePloidy(true);
@@ -134,8 +128,8 @@ public class ChainPloidyLimits
         int segCount = endIndex - startIndex + 1;
         for (int i = startIndex; i <= endIndex; ++i)
         {
-            int majorAP = (int)round(allelePloidies[i][MAJOR_AP]);
-            int minorAP = (int)round(allelePloidies[i][MINOR_AP]);
+            int majorAP = (int)round(allelePloidies.get(i).MajorAP);
+            int minorAP = (int)round(allelePloidies.get(i).MinorAP);
             Integer repeatCount = ploidyFrequency.get(majorAP);
             if(repeatCount == null)
                 ploidyFrequency.put(majorAP, 1);
@@ -187,8 +181,8 @@ public class ChainPloidyLimits
 
         for (int i = startIndex; i <= endIndex; ++i)
         {
-            int majorAP = (int) round(allelePloidies[i][MAJOR_AP]);
-            int minorAP = (int) round(allelePloidies[i][MINOR_AP]);
+            int majorAP = (int) round(allelePloidies.get(i).MajorAP);
+            int minorAP = (int) round(allelePloidies.get(i).MinorAP);
 
             if(majorAP == aPloidy)
             {
@@ -209,38 +203,39 @@ public class ChainPloidyLimits
         // set these values int each segment
         for (int i = startIndex; i <= endIndex; ++i)
         {
-            allelePloidies[i][A_FIXED_AP] = aPloidy;
-            allelePloidies[i][B_NON_DIS_AP] = bPloidyMin;
-            allelePloidies[i][AP_DATA_VALID] = AP_IS_VALID;
+            allelePloidies.get(i).AFixedAP = aPloidy;
+            allelePloidies.get(i).BUndisruptedAP = bPloidyMin;
+            allelePloidies.get(i).setValid(true);
         }
 
         return true;
     }
 
-    private boolean calculateClusterSegmentPloidies(double[][] allelePloidies)
+    private boolean calculateClusterSegmentPloidies(List<SegmentPloidy> allelePloidies)
     {
         // first establish the non-disrupted B ploidy across all segments
-        double bNonClusterPloidyMin = allelePloidies[0][B_NON_DIS_AP];
-        for(int i = 1; i < allelePloidies.length; ++i)
+        double bNonClusterPloidyMin = allelePloidies.get(0).BUndisruptedAP;
+        for(int i = 1; i < allelePloidies.size(); ++i)
         {
-            bNonClusterPloidyMin = min(bNonClusterPloidyMin, allelePloidies[i][B_NON_DIS_AP]);
+            bNonClusterPloidyMin = min(bNonClusterPloidyMin, allelePloidies.get(i).BUndisruptedAP);
         }
 
         // finally set a cluster ploidy using knowledge of the other 2 ploidies
         int validSegments = 0;
-        int segmentCount = allelePloidies.length;
+        int segmentCount = allelePloidies.size();
+
         for(int i = 0; i < segmentCount; ++i)
         {
-            if(allelePloidies[i][AP_DATA_VALID] != AP_IS_VALID)
+            if(!allelePloidies.get(i).isValid())
                 continue;
 
             ++validSegments;
 
-            double majorAP = allelePloidies[i][MAJOR_AP];
-            double minorAP = allelePloidies[i][MINOR_AP];
-            double aPloidy = allelePloidies[i][A_FIXED_AP];
+            double majorAP = allelePloidies.get(i).MajorAP;
+            double minorAP = allelePloidies.get(i).MinorAP;
+            double aPloidy = allelePloidies.get(i).AFixedAP;
 
-            allelePloidies[i][B_NON_DIS_AP] = bNonClusterPloidyMin;
+            allelePloidies.get(i).BUndisruptedAP = bNonClusterPloidyMin;
 
             double clusterPloidy = 0;
             if(majorAP > aPloidy + 0.5)
@@ -252,8 +247,8 @@ public class ChainPloidyLimits
                 clusterPloidy = minorAP - bNonClusterPloidyMin;
             }
 
-            allelePloidies[i][CLUSTER_AP] = max(clusterPloidy, 0.0);
-            allelePloidies[i][AP_DATA_VALID] = AP_IS_VALID;
+            allelePloidies.get(i).setClusterPloidy(max(clusterPloidy, 0.0));
+            allelePloidies.get(i).setValid(true);
         }
 
         mValidAllelePloidySegmentPerc = validSegments / (double)segmentCount;
@@ -269,17 +264,15 @@ public class ChainPloidyLimits
         return remainder <= PLOIDY_INTEGER_PROXIMITY || remainder >= (1 - PLOIDY_INTEGER_PROXIMITY);
     }
 
-    public static boolean hasValidAllelePloidyData(int breakendIndex, final double[][] allelePloidies)
+    public static boolean hasValidAllelePloidyData(int breakendIndex, final List<SegmentPloidy> allelePloidies)
     {
         if(allelePloidies == null)
             return false;
 
-        if(allelePloidies.length < breakendIndex)
+        if(allelePloidies.size() < breakendIndex)
             return false;
 
-        final double[] beAllelePloidies = allelePloidies[breakendIndex];
-
-        return beAllelePloidies[AP_DATA_VALID] == AP_IS_VALID;
+        return allelePloidies.get(breakendIndex).isValid();
     }
 
     public static PloidyCalcData calcPloidyUncertainty(final PloidyCalcData data1, final PloidyCalcData data2)
