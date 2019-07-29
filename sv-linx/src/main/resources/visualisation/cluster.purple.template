@@ -39,12 +39,34 @@ chromosomes_display_default = yes
 <plots>
 
 	# -----------------------------------------------------------
+	# Background
+	<plot>
+		r0   = 0.95r
+		r1   = 0.85r
+
+		<backgrounds>
+			<background>
+				color = vvlpurple_a5
+			</background>
+		</backgrounds>
+
+		<axes>
+			<axis>
+				color     = vlpurple
+				thickness = 1
+				spacing   = SUBSTITUTE_SV_SPACINGr
+			</axis>
+		</axes>
+
+	</plot>
+
+	# -----------------------------------------------------------
 	# CopyNumber Gain (Green)
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = 0.71r
-		r1   = 0.95r
+		r0   = 0.6125r
+		r1   = 0.8125r
 		min  = 0
 		max  = SUBSTITUTE_CNA_GAIN_MAX
 		glyph = circle
@@ -74,8 +96,8 @@ chromosomes_display_default = yes
 	<plot>
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.cna.circos
-		r0   = 0.47r
-		r1   = 0.71r
+		r0   = 0.4125r
+		r1   = 0.6125r
 		min  = -2
 		max  = 0
 		color = red
@@ -104,9 +126,8 @@ chromosomes_display_default = yes
 	# Minor Allele Gain (Green)
 	<plot>
 		type = histogram
-		file = SUBSTITUTE_SAMPLE.map.circos
-		r0   = 0.415r
-		r1   = 0.295r
+		r0   = 0.375r
+		r1   = 0.275r
 		min  = 0
 		max  = SUBSTITUTE_MAP_GAIN_MAX
 		glyph = circle
@@ -144,7 +165,7 @@ chromosomes_display_default = yes
 		type = histogram
 		file = SUBSTITUTE_SAMPLE.map.circos
 		r0   = 0.175r
-		r1   = 0.295r
+		r1   = 0.275r
 		min  = -1
 		max  = 0
 		glyph = circle
@@ -193,6 +214,7 @@ chromosomes_display_default = yes
                 condition = true
                 r1 = 0.95r
                 color=rgb(106,61,154,0.7)
+                thickness = 4
             </rule>
         </rules>
 
@@ -212,6 +234,7 @@ chromosomes_display_default = yes
             <rule>
                 condition = true
                 color=rgb(106,61,154,0.7)
+                thickness = 4
             </rule>
         </rules>
 
