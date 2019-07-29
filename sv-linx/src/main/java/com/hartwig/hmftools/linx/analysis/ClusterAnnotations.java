@@ -341,7 +341,6 @@ public class ClusterAnnotations
             return;
 
         boolean isComplex = cluster.requiresReplication() || !cluster.getFoldbacks().isEmpty();
-        boolean isIncomplete = !cluster.isFullyChained(false) || cluster.getTypeCount(SGL) > 0;
 
         // skip simple chained clusters
         if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)
@@ -463,14 +462,11 @@ public class ClusterAnnotations
                 chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
                 unlinkedSvCount, armGroupCount, inconsistentArmCount);
 
-        if(isComplete)
+        if(isComplete && !isComplex)
         {
             // chromothripsis is currently defined as fully chained simple cluster
             // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
-            if(!isComplex)
-            {
-                cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
-            }
+            cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
         }
     }
 

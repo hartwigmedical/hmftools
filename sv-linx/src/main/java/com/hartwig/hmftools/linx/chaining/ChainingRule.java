@@ -6,6 +6,7 @@ import static java.lang.Math.pow;
 public enum ChainingRule
 {
     ASSEMBLY,
+    AP_SUPPORT,
     ONLY,
     FOLDBACK_SPLIT,
     COMP_DUP_SPLIT,
@@ -21,6 +22,7 @@ public enum ChainingRule
     {
         switch(rule)
         {
+            case AP_SUPPORT: return 9;
             case ONLY: return 8;
             case FOLDBACK_SPLIT: return 7;
             case COMP_DUP_SPLIT: return 7;

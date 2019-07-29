@@ -44,6 +44,20 @@ public class SegmentPloidy
     }
 
     public double unlinkedPloidy() { return max(mClusterAP - mLinkPloidy, 0); }
+
     public double exhaustedPloidy() { return max(mClusterAP - mLinkPloidy, 0); }
 
+    public void addLinkPloidy(double linkPloidy)
+    {
+        if(unlinkedPloidy() > linkPloidy)
+            mLinkPloidy += linkPloidy;
+        else
+            mLinkPloidy = mClusterAP;
+    }
+
+    public String toString()
+    {
+        return String.format("%s: A=%.1f B=%.1f C=%.1f Maj=%.1f Min=%.1f Link=%.l1f",
+                mIsValid ? "valid" : "invalid", AFixedAP, BUndisruptedAP, mClusterAP, MajorAP, MinorAP, mLinkPloidy);
+    }
 }

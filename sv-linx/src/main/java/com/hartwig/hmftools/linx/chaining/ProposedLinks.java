@@ -246,10 +246,8 @@ public class ProposedLinks
 
     public int priority() { return mPriority; }
 
-    public ChainingRule topRule()
-    {
-        return mRules.get(0);
-    }
+    public ChainingRule topRule() { return mRules.get(0); }
+    public boolean hasRule(ChainingRule rule) { return mRules.contains(rule); }
 
     public long shortestLinkDistance() { return mShortestDistance; }
 

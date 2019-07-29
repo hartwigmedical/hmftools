@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
@@ -46,15 +47,18 @@ public class ChainLinkAllocator
     private final List<SvChainState> mSvCompletedConnections;
 
     // references
+    private final ChainPloidyLimits mPloidyLimits;
     private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates;
     private final List<SvChain> mChains;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
 
     public ChainLinkAllocator(
+            final ChainPloidyLimits ploidyLimits,
             final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
             final List<SvChain> chains,
             final Map<SvVarData,List<SvLinkedPair>> complexDupCandidates)
     {
+        mPloidyLimits = ploidyLimits;
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
         mComplexDupCandidates = complexDupCandidates;
         mChains = chains;
@@ -197,11 +201,49 @@ public class ChainLinkAllocator
 
             // if one of the breakends in this new link has its other breakend in another chain and is exhausted, then force it
             // to connect to that existing chain
+            // if both breakends meet this condition and the chain ploidies cannot be matched, then skip this link
 
-            List<SvChain> chains = getChainsWithOpenBreakend(newPair.firstBreakend());
-            chains.addAll(getChainsWithOpenBreakend(newPair.secondBreakend()));
+            SvChain[] requiredChains = new SvChain[SE_PAIR];
 
-            for (SvChain chain : chains)
+            List<SvChain> allChains = Lists.newArrayList();
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                SvBreakend pairBreakend = newPair.getBreakend(isStart(se));
+
+                List<SvChain> chains = getChainsWithOpenBreakend(pairBreakend);
+
+                if(chains.isEmpty())
+                    continue;
+
+                allChains.addAll(chains);
+
+                final SvChainState svConn = mSvConnectionsMap.get(pairBreakend.getSV());
+
+                if(svConn == null)
+                {
+                    LOGGER.error("SV({}) missing chain state info", pairBreakend.getSV().id());
+                    mIsValid = false;
+                    return false;
+                }
+
+                if(svConn.breakendExhausted(!pairBreakend.usesStart()) && chains.size() == 1)
+                {
+                    requiredChains[se] = chains.get(0);
+                }
+            }
+
+            if(requiredChains[SE_START] != null && requiredChains[SE_END] != null
+            && !ploidyMatch(requiredChains[SE_START].ploidy(), requiredChains[SE_START].ploidyUncertainty(),
+                    requiredChains[SE_END].ploidy(), requiredChains[SE_END].ploidyUncertainty()))
+            {
+                LOGGER.trace("skipping linked pair({}) with 2 required chains({} & {}) with diff ploidies",
+                        newPair.toString(), requiredChains[SE_START].id(), requiredChains[SE_END].id());
+                addSkippedPair(newPair);
+                return false;
+            }
+
+            for (SvChain chain : allChains)
             {
                 boolean[] canAddToStart = { false, false };
                 boolean linksToFirst = false;
@@ -226,21 +268,8 @@ public class ChainLinkAllocator
 
                     canAddToStart[se] = true;
 
-                    // now look for a chain which must be taken due to being the other breakend's sole, exhaustive connection
-                    final SvChainState svConn = mSvConnectionsMap.get(chainBreakend.getSV());
-
-                    if(svConn == null)
-                    {
-                        LOGGER.error("SV({}) missing chain state info", chainBreakend.getSV().id());
-                        mIsValid = false;
-                        return false;
-                    }
-
-                    if(!svConn.breakendExhausted(!chainBreakend.usesStart()) || svConn.getConnections(!chainBreakend.usesStart()).size() > 1)
-                        continue;
-
-                    if(requiredChain == null && proposedLinks.linkPloidyMatch() && ploidyMatched
-                    && (chainBreakend == newPair.firstBreakend() || chainBreakend == newPair.secondBreakend()))
+                    if(requiredChain == null && (chain == requiredChains[SE_START] || chain == requiredChains[SE_END])
+                    && proposedLinks.linkPloidyMatch() && ploidyMatched)
                     {
                         LOGGER.trace("pair({}) links breakend({}) to chain({}) as only exhausted connection", newPair, chainBreakend, chain.id());
 
@@ -546,6 +575,8 @@ public class ChainLinkAllocator
 
         for (final SvLinkedPair newPair : proposedLink.Links)
         {
+            mPloidyLimits.assignLinkPloidy(newPair, proposedLink.ploidy());
+
             for (int se = SE_START; se <= SE_END; ++se)
             {
                 final SvBreakend breakend = newPair.getBreakend(isStart(se));

@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -273,6 +274,76 @@ public class ChainPloidyLimits
             return false;
 
         return allelePloidies.get(breakendIndex).isValid();
+    }
+
+    public boolean linkHasPloidySupport(final SvLinkedPair pair, double ploidy)
+    {
+        final SvBreakend lowerBreakend = pair.getBreakend(true);
+        final SvBreakend upperBreakend = pair.getBreakend(false);
+
+        final List<SegmentPloidy> segments = mChrAllelePloidies.get(pair.chromosome());
+
+        if(segments == null || segments.isEmpty())
+            return false;
+
+        int startIndex = lowerBreakend.getClusterChrPosIndex();
+
+        for(int i = startIndex + 1; i < upperBreakend.getClusterChrPosIndex(); ++i)
+        {
+            final SegmentPloidy segment = segments.get(i);
+
+            if(!segment.isValid())
+                continue;
+
+            double segmentPloidy = segment.unlinkedPloidy();
+
+            if(segmentPloidy < ploidy && !copyNumbersEqual(segmentPloidy, ploidy))
+                return false;
+        }
+
+        return true;
+    }
+
+    public void assignLinkPloidy(final SvLinkedPair pair, double ploidy)
+    {
+        final SvBreakend lowerBreakend = pair.getBreakend(true);
+        final SvBreakend upperBreakend = pair.getBreakend(false);
+
+        final List<SegmentPloidy> segments = mChrAllelePloidies.get(pair.chromosome());
+
+        if(segments == null || segments.isEmpty())
+            return;
+
+        for(int i = lowerBreakend.getClusterChrPosIndex(); i < upperBreakend.getClusterChrPosIndex(); ++i)
+        {
+            SegmentPloidy segment = segments.get(i);
+
+            if(!segment.isValid())
+                continue;
+
+            segment.addLinkPloidy(ploidy);
+        }
+    }
+
+    public double getMinClusterLinkPloidy(final SvLinkedPair pair)
+    {
+        final SvBreakend lowerBreakend = pair.getBreakend(true);
+        final SvBreakend upperBreakend = pair.getBreakend(false);
+
+        final List<SegmentPloidy> segments = mChrAllelePloidies.get(pair.chromosome());
+
+        if(segments == null || segments.isEmpty())
+            return 0;
+
+        int startIndex = lowerBreakend.getClusterChrPosIndex();
+        double minPloidy = segments.get(startIndex).unlinkedPloidy();
+
+        for(int i = startIndex + 1; i < upperBreakend.getClusterChrPosIndex(); ++i)
+        {
+            minPloidy = min(minPloidy, segments.get(i).unlinkedPloidy());
+        }
+
+        return minPloidy;
     }
 
     public static PloidyCalcData calcPloidyUncertainty(final PloidyCalcData data1, final PloidyCalcData data2)

@@ -21,7 +21,7 @@ public class ChainingComplexTest
     @Test
     public void testBFBChain1()
     {
-        // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 2 - 1 - 4 1 - 2 - 1 - 3 - 1 - 2 - 1 - R - telomere, where R is the resolving SV
+        // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 2 - 1 - 4 - 1 - 2 - 1 - 3 - 1 - 2 - 1 - R - telomere, where R is the resolving SV
         SvTestHelper tester = new SvTestHelper();
         tester.logVerbose(true);
 
