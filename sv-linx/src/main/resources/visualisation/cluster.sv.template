@@ -187,6 +187,7 @@ chromosomes_display_default = yes
         <rules>
             <rule>
                 condition = true
+                r0 = 0.47r
                 r1 = 0.95r
                 color=rgb(106,61,154,0.7)
                 thickness = 6
@@ -201,7 +202,7 @@ chromosomes_display_default = yes
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
         color         = red
-        radius        = 0.175r
+        radius        = 0.47r
         thickness     = 2
 
 
@@ -210,6 +211,7 @@ chromosomes_display_default = yes
                 condition = true
                 color=rgb(106,61,154,0.7)
                 thickness = 6
+
             </rule>
         </rules>
 
