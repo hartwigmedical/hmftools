@@ -60,9 +60,10 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             String tumorBarcode = sampleData.tumorBarcode();
-            if (tumorBarcode.isEmpty()) {
+            if (tumorBarcode.isEmpty() || !tumorBarcode.startsWith("FR")) {
                 return NOT_AVAILABLE_STRING;
-            } else {
+            }
+            else {
                 return tumorBarcode;
             }
         }
@@ -74,7 +75,7 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             String refBarcode = sampleData.refBarcode();
-            if (refBarcode == null || refBarcode.isEmpty()) {
+            if (refBarcode == null || refBarcode.isEmpty() || !refBarcode.startsWith("FR")) {
                 return NOT_AVAILABLE_STRING;
             } else {
                 return refBarcode;
