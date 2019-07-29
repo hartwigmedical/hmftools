@@ -942,7 +942,7 @@ public class ChainRuleSelector
             // check whether this SV has any possible links with SVs of the same (remaining) rep count
             for(int be = SE_START; be <= SE_END; ++be)
             {
-                if(var.isNullBreakend() && be == SE_END)
+                if(var.isSglBreakend() && be == SE_END)
                     continue;
 
                 boolean isStart = isStart(be);
@@ -1144,7 +1144,7 @@ public class ChainRuleSelector
             // check whether this SV has any possible links with SVs of the same (remaining) rep count
             for(int be = SE_START; be <= SE_END; ++be)
             {
-                if(var.isNullBreakend() && be == SE_END)
+                if(var.isSglBreakend() && be == SE_END)
                     continue;
 
                 boolean isStart = isStart(be);
@@ -1211,7 +1211,7 @@ public class ChainRuleSelector
                 // check whether this SV has any possible links with SVs of the same (remaining) rep count
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    if (var.isNullBreakend() && be == SE_END)
+                    if (var.isSglBreakend() && be == SE_END)
                         continue;
 
                     boolean isStart = isStart(be);

@@ -4,20 +4,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_PLOIDY_LEVEL;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.List;
@@ -738,7 +734,7 @@ public class ChainLinkAllocator
 
     private void checkSvComplete(final SvChainState svConn)
     {
-        if (svConn.breakendExhausted(true) && (svConn.SV.isNullBreakend() || svConn.breakendExhausted(false)))
+        if (svConn.breakendExhausted(true) && (svConn.SV.isSglBreakend() || svConn.breakendExhausted(false)))
         {
             LOGGER.trace("SV({}) both breakends exhausted", svConn.toString());
             mSvConnectionsMap.remove(svConn.SV);

@@ -72,7 +72,7 @@ public class LinkFinder
 
                 final SvVarData lowerSV = lowerBreakend.getSV();
 
-                if(lowerSV.type() == INS || lowerSV.isNullBreakend())
+                if(lowerSV.type() == INS || lowerSV.isSglBreakend())
                     continue;
 
                 for (int j = i+1; j < breakendList.size(); ++j)
@@ -87,7 +87,7 @@ public class LinkFinder
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
                         continue;
 
-                    if(upperSV.type() == INS || upperSV.isNullBreakend())
+                    if(upperSV.type() == INS || upperSV.isSglBreakend())
                         continue;
 
                     boolean v1Start = lowerBreakend.usesStart();
@@ -260,14 +260,14 @@ public class LinkFinder
         {
             SvVarData var1 = svList.get(i);
 
-            if(var1.type() == INS || (var1.isNullBreakend() && !allowSingleBEs))
+            if(var1.type() == INS || (var1.isSglBreakend() && !allowSingleBEs))
                 continue;
 
             for(int be1 = SE_START; be1 <= SE_END; ++be1)
             {
                 boolean v1Start = isStart(be1);
 
-                if(var1.isNullBreakend() && !v1Start)
+                if(var1.isSglBreakend() && !v1Start)
                     continue;
 
                 // if an assembly linked pair has already been created for this breakend, look no further
@@ -281,14 +281,14 @@ public class LinkFinder
                     if(var1 == var2)
                         continue;
 
-                    if(var2.type() == INS || (var2.isNullBreakend() && !allowSingleBEs))
+                    if(var2.type() == INS || (var2.isSglBreakend() && !allowSingleBEs))
                         continue;
 
                     for(int be2 = SE_START; be2 <= SE_END; ++be2)
                     {
                         boolean v2Start = isStart(be2);
 
-                        if(var1.isNullBreakend() && !v1Start)
+                        if(var1.isSglBreakend() && !v1Start)
                             continue;
 
                         if(var2.isAssemblyMatched(v2Start))

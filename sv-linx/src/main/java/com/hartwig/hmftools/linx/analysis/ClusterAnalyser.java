@@ -174,6 +174,7 @@ public class ClusterAnalyser {
 
         populateChromosomeBreakendMap(mAllVariants, mState);
         mFilters.applyFilters();
+        mFilters.reportInferredSegments(mSampleId);
 
         annotateNearestSvData(mState.getChrBreakendMap());
 

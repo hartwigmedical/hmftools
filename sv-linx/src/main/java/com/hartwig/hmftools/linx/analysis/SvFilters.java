@@ -52,7 +52,7 @@ public class SvFilters
     public void applyFilters()
     {
         filterBreakends();
-        filterInferreds();
+        // filterInferreds();
     }
 
     private void filterBreakends()
@@ -213,7 +213,7 @@ public class SvFilters
         }
     }
 
-    private void filterInferreds()
+    public void reportInferredSegments(final String sampleId)
     {
         for (Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
@@ -225,42 +225,76 @@ public class SvFilters
             // state for a string of INFs in succession
             int startIndex = 0;
             int infCount = 0;
-            double startCopyNumber = 0;
-            double maxCnChange = 0;
-            int maxIndex = 0;
+            long largestInfDistance = 0;
 
-            while(index < breakendList.size())
+            while(index <= breakendList.size())
             {
-                final SvBreakend breakend = breakendList.get(index);
-                final SvVarData var = breakend.getSV();
+                boolean isInferred = false;
 
-                if (var.isInferredSgl())
+                if(index < breakendList.size())
                 {
-                    if (infCount == 0)
-                    {
-                        startIndex = index;
-                        startCopyNumber = getBreakendHighsideCopyNumber(breakend, true);
-                        maxCnChange = 0;
-                    }
+                    final SvBreakend breakend = breakendList.get(index);
+                    final SvVarData var = breakend.getSV();
 
-                    ++infCount;
-
-                    if(breakend.copyNumberChange() > maxCnChange)
+                    if (var.isInferredSgl())
                     {
-                        maxCnChange = breakend.copyNumberChange();
-                        maxIndex = index;
+                        isInferred = true;
+
+                        if (infCount == 0)
+                        {
+                            startIndex = index;
+                        }
+                        else
+                        {
+                            final SvBreakend prevBreakend = breakendList.get(index - 1);
+                            largestInfDistance = max(largestInfDistance, breakend.position() - prevBreakend.position());
+                        }
+
+                        ++infCount;
                     }
                 }
-                else if(infCount > 1)
-                {
-                    // can these be collapsed?
-                    double endCopyNumber = getBreakendHighsideCopyNumber(breakend, false);
 
-                    LOGGER.debug(String.format("chr(%s) infIndex(%d -> %d) infCount(%d) copyNumber(%.1f -> %.1f net=%.1f) maxCnChg(%.1f index=%d)",
-                            entry.getKey(), startIndex, index - 1, infCount,
-                            startCopyNumber, endCopyNumber, startCopyNumber - endCopyNumber, maxCnChange, maxIndex));
+                if(!isInferred && infCount > 1)
+                {
+                    final SvBreakend startSvBreakend = startIndex > 0 ? breakendList.get(startIndex - 1) : null;
+                    final SvBreakend endSvBreakend = index < breakendList.size() ? breakendList.get(index) : null;
+                    final SvBreakend startInf = breakendList.get(startIndex);
+                    final SvBreakend endInf = breakendList.get(index - 1);
+
+                    double startCopyNumber, endCopyNumber;
+
+                    if(startSvBreakend != null)
+                    {
+                        startCopyNumber = startSvBreakend.copyNumber() - startSvBreakend.copyNumberChange()
+                                + startSvBreakend.ploidy() * startSvBreakend.orientation();
+                    }
+                    else
+                    {
+                        startCopyNumber = startInf.copyNumber();
+                    }
+
+                    if(endSvBreakend != null)
+                    {
+                        endCopyNumber = endSvBreakend.copyNumber() - endSvBreakend.copyNumberChange()
+                                + endSvBreakend.ploidy() * endSvBreakend.orientation();
+                    }
+                    else
+                    {
+                        endCopyNumber = endInf.copyNumber();
+                    }
+
+                    // Time,SampleId,Chromosome,InfCount,InfMaxDistance,StartIsSv,StartCopyNumber,EndIsSv,EndCopyNumber
+
+                    LOGGER.info(String.format("INF_SEGMENT: %s,%s,%d,%d,%s,%.2f,%s,%.2f",
+                            sampleId, entry.getKey(), infCount, largestInfDistance,
+                            startSvBreakend != null, startCopyNumber,
+                            endSvBreakend != null, endCopyNumber));
 
                     /*
+                    LOGGER.debug(String.format("chr(%s) infIndex(%d -> %d) infCount(%d) copyNumber(%.1f -> %.1f net=%.1f)",
+                            entry.getKey(), startIndex, index - 1, infCount,
+                            startCN, startCNChg, startPloidy, endCN, endCNChg, endPloidy));
+
                     // remove these inferred SVs, leaving one to represent the group
                     SvBreakend maxInferred = breakendList.get(maxIndex);
                     SvVarData infSv = maxInferred.getSV();
@@ -291,6 +325,7 @@ public class SvFilters
                 ++index;
             }
 
+            /*
             if(breakendList.size() < initBreakendCount)
             {
                 for (int i = 0; i < breakendList.size(); ++i)
@@ -299,6 +334,7 @@ public class SvFilters
                     breakend.setChrPosIndex(i);
                 }
             }
+            */
         }
     }
 
@@ -340,7 +376,7 @@ public class SvFilters
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            if(se == SE_END && var.isNullBreakend())
+            if(se == SE_END && var.isSglBreakend())
                 continue;
 
             final SvBreakend breakend = var.getBreakend(isStart(se));

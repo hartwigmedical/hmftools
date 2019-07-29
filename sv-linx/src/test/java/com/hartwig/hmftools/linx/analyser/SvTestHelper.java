@@ -251,7 +251,7 @@ public class SvTestHelper
         String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
         String endArm;
-        if(!var.isNullBreakend())
+        if(!var.isSglBreakend())
             endArm = getChromosomalArm(var.chromosome(false), var.position(false));
         else
             endArm = CHROMOSOME_ARM_P;

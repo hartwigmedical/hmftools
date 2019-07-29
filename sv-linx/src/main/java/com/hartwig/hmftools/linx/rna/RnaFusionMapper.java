@@ -226,7 +226,7 @@ public class RnaFusionMapper
                 final SvBreakend upBreakend = viableUpBreakends.get(i);
                 final Transcript upTrans = viableUpTranscripts.get(i);
 
-                if(upBreakend.getSV().isNullBreakend())
+                if(upBreakend.getSV().isSglBreakend())
                     continue;
 
                 for (int j = 0; j < viableDownBreakends.size(); ++j)
@@ -234,7 +234,7 @@ public class RnaFusionMapper
                     final SvBreakend downBreakend = viableDownBreakends.get(j);
                     final Transcript downTrans = viableDownTranscripts.get(j);
 
-                    if(downBreakend.getSV().isNullBreakend())
+                    if(downBreakend.getSV().isSglBreakend())
                         continue;
 
                     GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, false, false, null);

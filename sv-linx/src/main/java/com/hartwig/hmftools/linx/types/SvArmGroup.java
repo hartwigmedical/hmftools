@@ -74,7 +74,7 @@ public class SvArmGroup {
 
         for(int be = SE_START; be <= SE_END; ++be)
         {
-            if(var.isNullBreakend() && be == SE_END)
+            if(var.isSglBreakend() && be == SE_END)
                 continue;
 
             SvBreakend breakend = var.getBreakend(isStart(be));

@@ -79,9 +79,6 @@ public class SvChainState
     public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
     public double unlinked(int se) { return max(Ploidy - mBreakendCount[se],0); }
 
-    public double minUnlinked() { return max(MinPloidy - curentCount(), 0); }
-    public double maxUnlinked() { return max(MaxPloidy - curentCount(), 0); }
-    public double minUnlinked(int se) { return max(MinPloidy - mBreakendCount[se], 0); }
     public double maxUnlinked(boolean isStart) { return max(MaxPloidy - mBreakendCount[seIndex(isStart)],0); }
 
     public final List<SvBreakend> getConnections(boolean isStart) { return isStart ? mConnectionsStart : mConnectionsEnd; }

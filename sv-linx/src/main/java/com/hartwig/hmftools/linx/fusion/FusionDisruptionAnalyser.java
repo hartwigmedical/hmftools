@@ -193,7 +193,7 @@ public class FusionDisruptionAnalyser
                 // isSpecificSV(var);
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    if (be == SE_END && var.isNullBreakend())
+                    if (be == SE_END && var.isSglBreakend())
                         continue;
 
                     boolean isStart = isStart(be);
@@ -211,7 +211,7 @@ public class FusionDisruptionAnalyser
 
             for (int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SE_END && var.isNullBreakend())
+                if (be == SE_END && var.isSglBreakend())
                     continue;
 
                 boolean isStart = isStart(be);
@@ -244,7 +244,7 @@ public class FusionDisruptionAnalyser
             {
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    if (be == SE_END && var.isNullBreakend())
+                    if (be == SE_END && var.isSglBreakend())
                         continue;
 
                     boolean isStart = isStart(be);
@@ -364,7 +364,7 @@ public class FusionDisruptionAnalyser
         // always report SVs by themselves
         for (final SvVarData var : svList)
         {
-            if (var.isNullBreakend())
+            if (var.isSglBreakend())
                 continue;
 
             // skip SVs which have been chained or in larger
@@ -535,7 +535,7 @@ public class FusionDisruptionAnalyser
 
             // isSpecificSV(lowerSV);
 
-            if (lowerSV.isNullBreakend())
+            if (lowerSV.isSglBreakend())
                 continue;
 
             List<GeneAnnotation> genesListLower = Lists.newArrayList(lowerSV.getGenesList(lowerBreakend.usesStart()));
@@ -1137,7 +1137,7 @@ public class FusionDisruptionAnalyser
         {
             for (int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SE_END && var.isNullBreakend())
+                if (be == SE_END && var.isSglBreakend())
                     continue;
 
                 final List<GeneAnnotation> tsgGenesList = var.getGenesList(isStart(be)).stream()

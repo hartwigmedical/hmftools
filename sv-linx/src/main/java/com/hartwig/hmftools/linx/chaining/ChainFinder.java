@@ -3,27 +3,21 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.SPEC_LINK_INDEX;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_AP;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.ProposedLinks.CONN_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
@@ -35,7 +29,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -875,7 +868,7 @@ public class ChainFinder
         // check if the lower ploidy SV connects to both ends of another SV to replicate it
         SvVarData var = lowerPloidyBreakend.getSV();
 
-        if(var.isNullBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().type() == SGL)
+        if(var.isSglBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().type() == SGL)
             return;
 
         if(mComplexDupCandidates.keySet().contains(var))
@@ -983,7 +976,7 @@ public class ChainFinder
         SvBreakend chainStart = chain.getOpenBreakend(true);
         SvBreakend chainEnd = chain.getOpenBreakend(false);
 
-        if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend())
+        if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
         {
             if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
             {

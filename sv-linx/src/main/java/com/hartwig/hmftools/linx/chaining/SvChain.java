@@ -163,7 +163,7 @@ public class SvChain {
 
     public boolean isConsistent()
     {
-        if(getFirstSV().isNullBreakend() || getLastSV().isNullBreakend())
+        if(getFirstSV().isSglBreakend() || getLastSV().isSglBreakend())
             return false;
 
         // treat the start and end breakends like those of a single SV
@@ -302,7 +302,13 @@ public class SvChain {
         final SvBreakend chainStart = getOpenBreakend(true);
         final SvBreakend chainEnd = getOpenBreakend(false);
 
-        boolean connectOnStart = chainStart != null && pair1.hasBreakend(chainStart);
+        final SvBreakend fbBreakendStart = foldbackChain.getOpenBreakend(true);
+        final SvBreakend fbBreakendEnd = foldbackChain.getOpenBreakend(false);
+
+        final SvBreakend otherBreakend = pair1.hasBreakend(fbBreakendStart) ?
+                pair1.getOtherBreakend(fbBreakendStart) : pair1.getOtherBreakend(fbBreakendEnd);
+
+        boolean connectOnStart = chainStart == otherBreakend;
 
         if((connectOnStart && !pair2.hasBreakend(chainStart)) || (!connectOnStart && !pair2.hasBreakend(chainEnd)))
         {
@@ -874,7 +880,7 @@ public class SvChain {
 
             if(i == 0)
             {
-                if(!pair.first().isNullBreakend())
+                if(!pair.first().isSglBreakend())
                 {
                     SvBreakend startBreakend = chain.getOpenBreakend(true);
 
@@ -900,7 +906,7 @@ public class SvChain {
 
             if(i == chain.getLinkedPairs().size() - 1)
             {
-                if(!pair.second().isNullBreakend())
+                if(!pair.second().isSglBreakend())
                 {
                     SvBreakend endBreakend = chain.getOpenBreakend(false);
                     sequenceStr += makeChrArmStr(endBreakend.chromosome(), endBreakend.arm()) + "_" + endBreakend.direction();

@@ -202,7 +202,7 @@ public class SvCluster
         // keep track of all SVs in their respective chromosomal arms
         for (int be = SE_START; be <= SE_END; ++be)
         {
-            if (be == SE_END && var.isNullBreakend())
+            if (be == SE_END && var.isSglBreakend())
                 continue;
 
             if (be == SE_END && var.isLocal())
@@ -926,7 +926,7 @@ public class SvCluster
         {
             for(int be = SE_START; be <= SE_END; ++be)
             {
-                if (be == SE_END && var.isNullBreakend())
+                if (be == SE_END && var.isSglBreakend())
                     continue;
 
                 boolean useStart = isStart(be);

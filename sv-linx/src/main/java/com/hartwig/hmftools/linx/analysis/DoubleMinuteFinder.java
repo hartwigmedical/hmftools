@@ -216,7 +216,7 @@ public class DoubleMinuteFinder
 
             for (int se = SE_START; se <= SE_END; ++se)
             {
-                if(se == SE_END && var.isNullBreakend())
+                if(se == SE_END && var.isSglBreakend())
                     continue;
 
                 final SvBreakend breakend = var.getBreakend(isStart(se));
@@ -260,7 +260,7 @@ public class DoubleMinuteFinder
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(se == SE_END && var.isLocal() || var.isNullBreakend())
+                if(se == SE_END && var.isLocal() || var.isSglBreakend())
                     continue;
 
                 if(hasTelomereOrCentromereAmplication(var.chromosome(isStart(se)), var.arm(isStart(se))))
@@ -372,7 +372,7 @@ public class DoubleMinuteFinder
         SvBreakend chainStart = chain.getOpenBreakend(true);
         SvBreakend chainEnd = chain.getOpenBreakend(false);
 
-        if(chainStart != null && !chainStart.getSV().isNullBreakend() && chainEnd != null && !chainEnd.getSV().isNullBreakend())
+        if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
         {
             if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
             {
@@ -437,7 +437,7 @@ public class DoubleMinuteFinder
             if(!chromosomes.contains(var.chromosome(true)))
                 chromosomes.add(var.chromosome(true));
 
-            if(!var.isNullBreakend() && !chromosomes.contains(var.chromosome(false)))
+            if(!var.isSglBreakend() && !chromosomes.contains(var.chromosome(false)))
                 chromosomes.add(var.chromosome(false));
 
             svIds = appendStr(svIds, var.idStr(), ';');

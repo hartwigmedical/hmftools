@@ -149,7 +149,6 @@ public class SvVarData
     public String toString() { return posId() + " " + typeStr(); }
 
     public final StructuralVariantData getSvData() { return mSVData; }
-    public boolean isInferredSgl() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
 
     // for convenience
     public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
@@ -160,11 +159,12 @@ public class SvVarData
 
     public SvBreakend getBreakend(boolean isStart) { return mBreakend[seIndex(isStart)]; }
 
-    public boolean isNullBreakend() { return type() == SGL; }
+    public boolean isSglBreakend() { return type() == SGL; }
+    public boolean isInferredSgl() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
 
     public final String posId()
     {
-        if(isNullBreakend())
+        if(isSglBreakend())
         {
             return String.format("id(%s) pos(%s:%d:%d)",
                     id(), chromosome(true), orientation(true), position(true));
@@ -192,7 +192,7 @@ public class SvVarData
 
         mBreakend[SE_START] = new SvBreakend(this, true);
 
-        if(!isNullBreakend())
+        if(!isSglBreakend())
             mBreakend[SE_END] = new SvBreakend(this, false);
     }
 
@@ -201,7 +201,7 @@ public class SvVarData
 
     public final long length()
     {
-        if(type() == BND || isNullBreakend())
+        if(type() == BND || isSglBreakend())
             return 0;
 
         return abs(position(false) - position(true));
@@ -578,7 +578,7 @@ public class SvVarData
 
     public boolean sglToCentromereOrTelomere()
     {
-        if(!isNullBreakend() || isInferredSgl())
+        if(!isSglBreakend() || isInferredSgl())
             return false;
 
         if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr") || mSVData.insertSequenceRepeatClass().equals("Satellite/telo"))
@@ -595,7 +595,7 @@ public class SvVarData
 
     public boolean sglToSatelliteRepeats()
     {
-        if(!isNullBreakend() || isInferredSgl())
+        if(!isSglBreakend() || isInferredSgl())
             return false;
 
         if(mSVData.insertSequenceRepeatClass().equals("Satellite/centr"))

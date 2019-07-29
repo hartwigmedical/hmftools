@@ -258,7 +258,7 @@ public class ChainDiagnostics
                 mFileWriter.newLine();
             }
 
-            int sglCount = (int) svConnections.stream().filter(x -> x.SV.isNullBreakend()).count();
+            int sglCount = (int) svConnections.stream().filter(x -> x.SV.isSglBreakend()).count();
 
             double ploidyTotal = svConnections.stream().mapToDouble(x -> x.Ploidy).sum();
 

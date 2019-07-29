@@ -66,7 +66,7 @@ public class SvUtilities {
     {
         for(int be = SE_START; be <= SE_END; ++be)
         {
-            if(be == SE_END && var.isNullBreakend())
+            if(be == SE_END && var.isSglBreakend())
                 continue;
 
             SvBreakend breakend = var.getBreakend(isStart(be));
@@ -234,19 +234,19 @@ public class SvUtilities {
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
         }
 
-        if(v1.chromosome(true).equals(v2.chromosome(false)) && !v2.isNullBreakend())
+        if(v1.chromosome(true).equals(v2.chromosome(false)) && !v2.isSglBreakend())
         {
             int length = Math.abs((int)v1.position(true) - (int)v2.position(false));
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
         }
 
-        if(v1.chromosome(false).equals( v2.chromosome(true)) && !v1.isNullBreakend())
+        if(v1.chromosome(false).equals( v2.chromosome(true)) && !v1.isSglBreakend())
         {
             int length = Math.abs((int)v1.position(false) - (int)v2.position(true));
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
         }
 
-        if(v1.chromosome(false).equals(v2.chromosome(false)) && !v1.isNullBreakend() && !v2.isNullBreakend())
+        if(v1.chromosome(false).equals(v2.chromosome(false)) && !v1.isSglBreakend() && !v2.isSglBreakend())
         {
             int length = Math.abs((int)v1.position(false) - (int)v2.position(false));
             minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
@@ -294,7 +294,7 @@ public class SvUtilities {
 
     public static int calcConsistency(final SvVarData var, boolean useStart)
     {
-        if(!useStart && var.isNullBreakend())
+        if(!useStart && var.isSglBreakend())
             return 0;
 
         return (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;

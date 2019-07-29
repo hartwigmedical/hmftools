@@ -225,7 +225,7 @@ public class SimpleClustering
         if(var.type() == INS)
             return false;
 
-        if(var.isNullBreakend())
+        if(var.isSglBreakend())
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT;
         else
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
