@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -325,6 +328,70 @@ public class FusionTest
         assertEquals(var3.id(), fusion.downstreamTrans().parent().id());
 
         assertTrue(validateFusionAnnotations(fusion, false, true));
+
+
+        // test 5: test a chained fusion which has invalid traversal since it goes through another gene's splice acceptor
+        transDataList = Lists.newArrayList();
+
+        String geneName3 = "GENE3";
+        String geneId3 = "ENSG0003";
+        String remoteChromosome = "4";
+
+        geneList.add(createEnsemblGeneData(geneId3, geneName3, remoteChromosome, 1, 1000, 3000));
+        addGeneData(geneTransCache, remoteChromosome, geneList);
+
+        int transId3 = 3;
+        long[] exonStarts = new long[]{1000, 2000, 3000};
+        int[] exonPhases = new int[]{0, 0, 0,};
+        TranscriptData transData3 = createTransExons(geneId3, transId3, strand, exonStarts, exonPhases, 100);
+        transDataList.add(transData3);
+
+        addTransExonData(geneTransCache, geneId3, transDataList);
+
+        // test 4: invalid fusion, with a TI beyond the fusion ending in an exon upstream and skipping an exon downstream
+        tester.clearClustersAndSVs();
+
+        // inv coming in before the gene
+        var1 = createBnd(1, "1", 51000, 1, "2", 1000, -1);
+
+        // runs into start of gene
+        var2 = createInv(2, chromosome, 500, 50000, -1);
+
+        // fuses the genes with a DEL but which goes through a few remote TIs in between including one which goes through gene 3
+        var3 = createBnd(3, chromosome, 1750, 1, "2", 10000, -1);
+        var4 = createBnd(4, chromosome, 61000, 1, "2", 11000, 1);
+        SvVarData var5 = createBnd(5, chromosome, 60000, -1, remoteChromosome, 1200, -1);
+        SvVarData var6 = createBnd(6, remoteChromosome, 2500, 1, "5", 1000, -1);
+        SvVarData var7 = createBnd(7, chromosome, 11525, -1, "5", 2000, 1);
+        // var3 = createDel(2, chromosome, 1750,11525);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+        assertEquals(1, cluster.getChains().size());
+        assertEquals(7, cluster.getChains().get(0).getSvCount());
+
+        tester.FusionAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false, true);
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+
+        fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertEquals(var3.id(), fusion.upstreamTrans().parent().id());
+        assertEquals(var7.id(), fusion.downstreamTrans().parent().id());
+
+        assertFalse(validateFusionAnnotations(fusion, false, false));
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)

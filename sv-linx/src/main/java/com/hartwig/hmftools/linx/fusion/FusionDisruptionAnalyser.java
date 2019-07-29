@@ -738,11 +738,12 @@ public class FusionDisruptionAnalyser
 
                 if(validTraversalFusionCount == 0 && lpIndex2 > lpIndex1)
                 {
-                    // if there are no valid traversals between 2 indices, then nor will any sections of the chain starting
-                    LOGGER.debug("cluster({}) chain({}) no valid traversals between({} -> {})",
+                    // if there are no valid traversals between 2 indices, then any chain sections starting at the lower index
+                    // will likewise be invalidated since can skip past this
+                    LOGGER.trace("cluster({}) chain({}) no valid traversals between({} -> {})",
                             cluster.id(), chain.id(), lpIndex1, lpIndex2);
 
-                    // break;
+                    break;
                 }
             }
         }
@@ -793,11 +794,6 @@ public class FusionDisruptionAnalyser
     {
         // check all breakends which fall within the bounds of this transcript, including any which are exonic
         List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
-
-        // TranscriptData transData = mGeneTransCollection.getTranscriptData(transcript.parent().StableId, transcript.StableId);
-
-        // if(transData == null || transData.exons().isEmpty())
-        //    return null;
 
         int totalBreakends = 0;
         int facingBreakends = 0;
@@ -869,11 +865,6 @@ public class FusionDisruptionAnalyser
         SvLinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
         boolean traverseUp = startPair.firstBreakend() == breakend; // whether to search up or down the chain
 
-        // TranscriptData transData = mGeneTransCollection.getTranscriptData(transcript.parent().StableId, transcript.StableId);
-
-        // if(transData == null || transData.exons().isEmpty())
-        //    return null;
-
         int totalBreakends = 0;
         int facingBreakends = 0;
         int disruptedExons = 0;
@@ -940,6 +931,9 @@ public class FusionDisruptionAnalyser
 
         List<EnsemblGeneData> geneDataList = mGeneTransCollection.getChrGeneDataMap().get(pair.chromosome());
 
+        if(geneDataList == null)
+            return false;
+
         for(EnsemblGeneData geneData : geneDataList)
         {
             if(lowerPos > geneData.GeneEnd)
@@ -975,11 +969,9 @@ public class FusionDisruptionAnalyser
                                     continue;
                             }
 
-                            /*
-                            LOGGER.debug("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
-                                    pair.toString(), fusionDirection, geneData.GeneName, exonData.TransName,
+                            LOGGER.trace("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
+                                    pair.toString(), fusionDirection, geneData.GeneName, transData.TransName,
                                     exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
-                            */
 
                             return true;
                         }
