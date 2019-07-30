@@ -62,10 +62,16 @@ output_dir | Path to the output directory. This directory will be created if it 
 amber | Path to AMBER output. This should correspond to the output_dir used in AMBER.
 cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
 gc_profile | Path to GC profile.
-ref_genome | Path to reference genome fasta file. 
+ref_genome | Path to reference genome fasta file.
 
 The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 A HG38 equivalent is also available.
+
+The ref genome must be indexed and have associated sequence dictionary. These can be created with samtools as followed:
+```
+samtools faidx ref_genome.fasta
+samtools dict ref_genome.fasta -o ref_genome.dict
+```
 
 ### Optional Arguments
 
