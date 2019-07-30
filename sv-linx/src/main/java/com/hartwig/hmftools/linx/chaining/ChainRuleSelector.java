@@ -20,6 +20,9 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_MAX;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.PLOIDY_OVERLAP;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ONLY;
+import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.addByPloidy;
+import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.containsBreakendPair;
+import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.removeBreakendPair;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
@@ -48,7 +51,7 @@ public class ChainRuleSelector
     private boolean mHasReplication;
     private List<ChainingRule> mRulesToApply;
 
-    private List<SvBreakend[]> mFoldbackBreakendPairs; // a pair of breakends forming a breakend, either chained or single
+    private List<FoldbackBreakendPair> mFoldbackBreakendPairs; // a pair of breakends forming a breakend, either chained or single
     private boolean mFoldbacksInitialised;
 
     // references from chain-finder
@@ -312,10 +315,10 @@ public class ChainRuleSelector
         // make allowance for a single-option foldback connection, so it can populate the rest of the rules specific info
         if(proposedLinks.size() == 1 && !mFoldbackBreakendPairs.isEmpty())
         {
-            for(final SvBreakend[] breakendPair : mFoldbackBreakendPairs)
+            for(final FoldbackBreakendPair fbPair : mFoldbackBreakendPairs)
             {
-                SvBreakend foldbackStart = breakendPair[SE_START];
-                SvBreakend foldbackEnd = breakendPair[SE_END];
+                SvBreakend foldbackStart = fbPair.BreakendStart;
+                SvBreakend foldbackEnd = fbPair.BreakendEnd;
 
                 if (foldbackEnd == foldbackStart || foldbackEnd.getSV() == foldbackStart.getSV())
                 {
@@ -335,11 +338,12 @@ public class ChainRuleSelector
 
     private void updateFoldbackBreakends()
     {
-        List<SvBreakend> processedBreakends = Lists.newArrayList(); // to avoid double-counting
-        List<SvBreakend[]> existingChainedPairs = Lists.newArrayList();
+        List<FoldbackBreakendPair> existingChainedPairs = Lists.newArrayList();
 
         if(!mFoldbacksInitialised)
         {
+            List<SvBreakend> processedBreakends = Lists.newArrayList(); // to avoid double-counting
+
             mFoldbacksInitialised = true;
             mFoldbackBreakendPairs.clear();
 
@@ -375,12 +379,14 @@ public class ChainRuleSelector
                         continue;
                 }
 
-                if (mLinkAllocator.getUnlinkedBreakendCount(foldbackStart) == 0
-                || mLinkAllocator.getUnlinkedBreakendCount(foldbackEnd) == 0)
+                double ploidy = min(mLinkAllocator.getUnlinkedBreakendCount(foldbackStart), mLinkAllocator.getUnlinkedBreakendCount(foldbackEnd));
+
+                if (ploidy == 0)
                     continue;
 
-                final SvBreakend[] breakendPair = { foldbackStart, foldbackEnd };
-                mFoldbackBreakendPairs.add(breakendPair);
+                FoldbackBreakendPair fbPair = new FoldbackBreakendPair(foldbackStart, foldbackEnd, ploidy);
+
+                addByPloidy(mFoldbackBreakendPairs, fbPair);
 
                 processedBreakends.add(foldbackStart);
                 processedBreakends.add(foldbackEnd);
@@ -391,26 +397,22 @@ public class ChainRuleSelector
             int index = 0;
             while(index < mFoldbackBreakendPairs.size())
             {
-                final SvBreakend[] breakendPair = mFoldbackBreakendPairs.get(index);
+                final FoldbackBreakendPair fbPair = mFoldbackBreakendPairs.get(index);
 
-                SvBreakend foldbackStart = breakendPair[SE_START];
-                SvBreakend foldbackEnd = breakendPair[SE_END];
 
-                if(mLinkAllocator.getUnlinkedBreakendCount(foldbackStart) == 0 || mLinkAllocator.getUnlinkedBreakendCount(foldbackEnd) == 0)
+                if(mLinkAllocator.getUnlinkedBreakendCount(fbPair.BreakendStart) == 0
+                || mLinkAllocator.getUnlinkedBreakendCount(fbPair.BreakendEnd) == 0)
                 {
-                    LOGGER.debug("foldback breakends({} & {}) removed from consideration", foldbackStart, foldbackEnd);
+                    LOGGER.debug("foldback pair({}) removed from consideration", fbPair);
                     mFoldbackBreakendPairs.remove(index);
                     continue;
                 }
 
                 // will be checked against current chains next up
-                if(foldbackStart == foldbackEnd || foldbackStart.getSV() != foldbackEnd.getSV())
+                if(fbPair.isChained())
                 {
-                    existingChainedPairs.add(breakendPair);
+                    existingChainedPairs.add(fbPair);
                 }
-
-                processedBreakends.add(foldbackStart);
-                processedBreakends.add(foldbackEnd);
 
                 ++index;
             }
@@ -425,8 +427,10 @@ public class ChainRuleSelector
             if(chainStart == null || chainEnd == null)
                 continue;
 
-            if(mLinkAllocator.getUnlinkedBreakendCount(chainStart) == 0 || mLinkAllocator.getUnlinkedBreakendCount(chainEnd) == 0)
-                continue;
+            // unncessarry since a chain has a non-zero ploidy
+
+            // if(mLinkAllocator.getUnlinkedBreakendCount(chainStart) == 0 || mLinkAllocator.getUnlinkedBreakendCount(chainEnd) == 0)
+            //     continue;
 
             // are breakends consecutive and facing the same direction?
             if(!chainStart.chromosome().equals(chainEnd.chromosome()) || chainStart.orientation() != chainEnd.orientation())
@@ -435,41 +439,19 @@ public class ChainRuleSelector
             if(chainStart != chainEnd && abs(chainStart.getClusterChrPosIndex() - chainEnd.getClusterChrPosIndex()) != 1)
                 continue;
 
-            final SvBreakend[] breakendPair = { chainStart, chainEnd };
+            FoldbackBreakendPair fbPair = new FoldbackBreakendPair(chainStart, chainEnd, chain.ploidy());
 
-            removeBreakendPair(existingChainedPairs, breakendPair);
+            removeBreakendPair(existingChainedPairs, fbPair);
 
-            // if(processedBreakends.contains(chainStart) || processedBreakends.contains(chainEnd))
-            //    continue;
-
-            if(!containsBreakendPair(mFoldbackBreakendPairs, breakendPair))
+            if(!containsBreakendPair(mFoldbackBreakendPairs, fbPair))
             {
-                LOGGER.debug("chain({}) adding chained foldback breakends({} & {})", chain.id(), chainStart, chainEnd);
-                mFoldbackBreakendPairs.add(breakendPair);
+                LOGGER.debug("chain({}) adding chained foldback breakends({})", chain.id(), fbPair);
+                addByPloidy(mFoldbackBreakendPairs, fbPair);
             }
         }
 
         // remove any chained foldbacks no longer supported by the current set of chains
         existingChainedPairs.stream().forEach(x -> removeBreakendPair(mFoldbackBreakendPairs, x));
-    }
-
-    private boolean containsBreakendPair(final List<SvBreakend[]> pairs, final SvBreakend[] pair)
-    {
-        return pairs.stream().anyMatch(x -> (x[0] == pair[0] && x[1] == pair[1]) || (x[0] == pair[1] && x[1] == pair[0]));
-    }
-
-    private void removeBreakendPair(final List<SvBreakend[]> pairs, final SvBreakend[] pair)
-    {
-        for(int i = 0; i < pairs.size(); ++i)
-        {
-            SvBreakend[] otherPair = pairs.get(i);
-
-            if ((otherPair[0] == pair[0] && otherPair[1] == pair[1]) || (otherPair[0] == pair[1] && otherPair[1] == pair[0]))
-            {
-                pairs.remove(i);
-                return;
-            }
-        }
     }
 
     private List<ProposedLinks> findFoldbackChainSplits(final List<ProposedLinks> proposedLinks)
@@ -483,10 +465,10 @@ public class ChainRuleSelector
 
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
-        for(final SvBreakend[] breakendPair : mFoldbackBreakendPairs)
+        for(final FoldbackBreakendPair fbPair : mFoldbackBreakendPairs)
         {
-            SvBreakend foldbackStart = breakendPair[SE_START];
-            SvBreakend foldbackEnd = breakendPair[SE_END];
+            SvBreakend foldbackStart = fbPair.BreakendStart;
+            SvBreakend foldbackEnd = fbPair.BreakendEnd;
 
             SvVarData foldback = foldbackStart.getSV();
 
@@ -855,8 +837,8 @@ public class ChainRuleSelector
             {
                 final SvLinkedPair pair = proposedLink.Links.get(0);
 
-                if(mFoldbackBreakendPairs.stream().anyMatch(x -> x[0] == pair.firstBreakend() || x[1] == pair.firstBreakend())
-                && mFoldbackBreakendPairs.stream().anyMatch(x -> x[0] == pair.secondBreakend() || x[1] == pair.secondBreakend()))
+                if(mFoldbackBreakendPairs.stream().anyMatch(x -> x.BreakendStart == pair.firstBreakend() || x.BreakendEnd == pair.firstBreakend())
+                && mFoldbackBreakendPairs.stream().anyMatch(x -> x.BreakendStart == pair.secondBreakend() || x.BreakendEnd == pair.secondBreakend()))
                 {
                     proposedLink.addRule(FOLDBACK);
                 }
@@ -868,11 +850,11 @@ public class ChainRuleSelector
 
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
-        for(final SvBreakend[] breakendPair : mFoldbackBreakendPairs)
+        for(final FoldbackBreakendPair fbPair : mFoldbackBreakendPairs)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                SvBreakend breakend = breakendPair[se];
+                SvBreakend breakend = se == SE_START ? fbPair.BreakendStart : fbPair.BreakendEnd;
 
                 double foldbackPloidy = mLinkAllocator.getUnlinkedBreakendCount(breakend, true);
 
@@ -889,8 +871,8 @@ public class ChainRuleSelector
                     SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
 
                     if(!mFoldbackBreakendPairs.stream()
-                            .filter(x -> x != breakendPair)
-                            .anyMatch(x -> x[0] == otherBreakend || x[1] == otherBreakend))
+                            .filter(x -> x != fbPair)
+                            .anyMatch(x -> x.BreakendStart == otherBreakend || x.BreakendEnd == otherBreakend))
                     {
                         continue;
                     }
