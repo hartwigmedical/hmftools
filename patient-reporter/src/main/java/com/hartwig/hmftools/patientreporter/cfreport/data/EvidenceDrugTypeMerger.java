@@ -49,11 +49,11 @@ public final class EvidenceDrugTypeMerger {
             StringBuilder drugsStringBuilderMultipleKeys = new StringBuilder();
 
             for (EvidenceItem drugsMergingItems : mapEvidence.get(keys.get(totalKeys))) {
-                drugsStringBuilderMultipleKeys.append(drugsMergingItems.drug()).append(",");
+                drugsStringBuilderMultipleKeys.append(drugsMergingItems.drug()).append(", ");
             }
 
             if (drugsStringBuilderMultipleKeys.length() > 0) {
-                drugsStringTotal = drugsStringBuilderMultipleKeys.substring(0, drugsStringBuilderMultipleKeys.length() - 1);
+                drugsStringTotal = drugsStringBuilderMultipleKeys.substring(0, drugsStringBuilderMultipleKeys.length() - 2);
             }
 
             for (EvidenceItem item : entry.getValue()) {
