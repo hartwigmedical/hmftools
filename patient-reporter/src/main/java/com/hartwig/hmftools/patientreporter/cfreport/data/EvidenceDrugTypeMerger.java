@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,9 +28,6 @@ public final class EvidenceDrugTypeMerger {
 
     @NotNull
     public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
-        StringBuilder drugsStringBuilderMultipleKeys = new StringBuilder();
-        StringBuilder drugsStringBuilder = new StringBuilder();
-
         String drugsStringTotal = Strings.EMPTY;
 
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
@@ -44,45 +41,42 @@ public final class EvidenceDrugTypeMerger {
                 List<EvidenceItem> itemsForKey = mapEvidence.get(drugsKey);
                 itemsForKey.add(item);
                 mapEvidence.put(drugsKey, itemsForKey);
-                drugsStringBuilder.append(",").append(item.drug());
             } else {
                 mapEvidence.put(drugsKey, Lists.newArrayList(item));
             }
         }
 
-        Set<DrugsKey> keys = mapEvidence.keySet();
+        List<DrugsKey> keys = new ArrayList<>(mapEvidence.keySet());
+        int totalKeys = 0;
         List<DrugsKey> drugsKeys = Lists.newArrayList();
         for (Map.Entry<DrugsKey, List<EvidenceItem>> entry : mapEvidence.entrySet()) {
-            List<EvidenceItem> itemsForKey = entry.getValue();
+            StringBuilder drugsStringBuilderMultipleKeys = new StringBuilder();
 
-            for (EvidenceItem itemValue: itemsForKey) {
-                if (drugsStringBuilder.length() > 0) {
-                    drugsStringTotal = drugsStringBuilder.substring(1, drugsStringBuilder.length());
-                }
-                if (!drugsStringBuilder.toString().contains(itemValue.drug())) {
-                    drugsStringBuilderMultipleKeys.append(itemValue.drug());
-                    drugsStringTotal = drugsStringBuilderMultipleKeys.toString();
+            for (EvidenceItem drugsMergingItems : mapEvidence.get(keys.get(totalKeys))) {
+                drugsStringBuilderMultipleKeys.append(drugsMergingItems.drug()).append(",");
+            }
 
-                }
+            if (drugsStringBuilderMultipleKeys.length() > 0) {
+                drugsStringTotal = drugsStringBuilderMultipleKeys.substring(0, drugsStringBuilderMultipleKeys.length() - 1);
+            }
+
+            for (EvidenceItem item : entry.getValue()) {
                 if (keys.contains(entry.getKey()) && !drugsKeys.contains(entry.getKey())) {
                     drugsKeys.add(entry.getKey());
-                    LOGGER.info(entry.getKey());
-                    LOGGER.info(drugsStringTotal);
-
                     evidenceItems.add(ImmutableEvidenceItemMerger.builder()
-                            .event(itemValue.event())
-                            .source(itemValue.source())
-                            .reference(itemValue.reference())
-                            .drug(itemValue.drugsType() + " (" + drugsStringTotal + ")")
-                            .level(itemValue.level())
-                            .response(itemValue.response())
-                            .isOnLabel(itemValue.isOnLabel())
-                            .cancerType(itemValue.cancerType())
-                            .scope(itemValue.scope())
+                            .event(item.event())
+                            .source(item.source())
+                            .reference(item.reference())
+                            .drug(item.drugsType() + " (" + drugsStringTotal + ")")
+                            .level(item.level())
+                            .response(item.response())
+                            .isOnLabel(item.isOnLabel())
+                            .cancerType(item.cancerType())
+                            .scope(item.scope())
                             .build());
                 }
             }
-
+            totalKeys++;
         }
         return evidenceItems;
     }
