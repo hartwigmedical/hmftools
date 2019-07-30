@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUnc
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
+import static com.hartwig.hmftools.linx.chaining.LinkSkipType.CLOSING;
+import static com.hartwig.hmftools.linx.chaining.LinkSkipType.PLOIDY_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
@@ -37,20 +39,24 @@ public class ChainLinkAllocator
 
     private int mClusterId;
 
-    private final List<SvLinkedPair> mSkippedPairs;
+    private final Map<SvLinkedPair,LinkSkipType> mSkippedPairs;
     private int mLinkIndex; // incrementing value for each link added to any chain
     private boolean mIsValid;
     private boolean mPairSkipped; // keep track of any excluded pair or SV without exiting the chaining routine
-    private final List<SvLinkedPair> mUniquePairs; // cache of unique pairs added through c
+    private boolean mChainsSplit;
+    private final List<SvLinkedPair> mUniquePairs; // cache of unique pairs added through chaining
     private int mNextChainId;
+
+    // chaining state for each SV
     private final Map<SvVarData, SvChainState> mSvConnectionsMap;
-    private final List<SvChainState> mSvCompletedConnections;
+    private final List<SvChainState> mSvCompletedConnections; // fully exhausted SVs are moved into this collection
 
     // references
     private final ChainPloidyLimits mPloidyLimits;
     private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates;
     private final List<SvChain> mChains;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
+
 
     public ChainLinkAllocator(
             final ChainPloidyLimits ploidyLimits,
@@ -66,7 +72,7 @@ public class ChainLinkAllocator
         mSvConnectionsMap = Maps.newHashMap();
         mSvCompletedConnections = Lists.newArrayList();
         mUniquePairs = Lists.newArrayList();
-        mSkippedPairs = Lists.newArrayList();
+        mSkippedPairs = Maps.newHashMap();
         mIsValid = true;
         mNextChainId = 0;
     }
@@ -74,7 +80,7 @@ public class ChainLinkAllocator
     public final Map<SvVarData, SvChainState> getSvConnectionsMap() { return mSvConnectionsMap; }
     public final List<SvChainState> getSvCompletedConnections() { return mSvCompletedConnections; }
 
-    public boolean hasSkippedPairs(final SvLinkedPair pair) { return mSkippedPairs.contains(pair); }
+    public boolean hasSkippedPairs(final SvLinkedPair pair) { return mSkippedPairs.containsKey(pair); }
     public final List<SvLinkedPair> getUniquePairs() { return mUniquePairs; }
 
     public int getNextChainId() { return mNextChainId; }
@@ -83,7 +89,12 @@ public class ChainLinkAllocator
     public boolean isValid() { return mIsValid; }
 
     public boolean pairSkipped() { return mPairSkipped; }
-    public void clearPairSkipped() { mPairSkipped = false; }
+
+    public void clearSkippedState()
+    {
+        mPairSkipped = false;
+        mChainsSplit = false;
+    }
 
     public void initialise(int clusterId)
     {
@@ -92,6 +103,7 @@ public class ChainLinkAllocator
         mIsValid = true;
         mLinkIndex = 0;
         mPairSkipped = false;
+        mChainsSplit = false;
         mNextChainId = 0;
 
         mUniquePairs.clear();
@@ -148,7 +160,19 @@ public class ChainLinkAllocator
 
         if (linkAdded)
         {
-            mSkippedPairs.clear(); // any skipped links can now be re-evaluated
+            if(mChainsSplit)
+            {
+                mSkippedPairs.clear(); // any skipped links can now be re-evaluated
+            }
+            else
+            {
+                List<SvLinkedPair> pairsToRemove = mSkippedPairs.entrySet().stream()
+                        .filter(x -> x.getValue() != PLOIDY_MISMATCH)
+                        .map(x -> x.getKey())
+                        .collect(Collectors.toList());
+
+                pairsToRemove.stream().forEach(x -> mSkippedPairs.remove(x));
+            }
         }
     }
 
@@ -239,7 +263,7 @@ public class ChainLinkAllocator
             {
                 LOGGER.trace("skipping linked pair({}) with 2 required chains({} & {}) with diff ploidies",
                         newPair.toString(), requiredChains[SE_START].id(), requiredChains[SE_END].id());
-                addSkippedPair(newPair);
+                addSkippedPair(newPair, PLOIDY_MISMATCH);
                 return false;
             }
 
@@ -286,7 +310,7 @@ public class ChainLinkAllocator
                 if (couldCloseChain)
                 {
                     LOGGER.trace("skipping linked pair({}) would close existing chain({})", newPair.toString(), chain.id());
-                    addSkippedPair(newPair);
+                    addSkippedPair(newPair, CLOSING);
                     return false;
                 }
 
@@ -429,6 +453,7 @@ public class ChainLinkAllocator
         double newPloidy = targetChain.ploidy() * 0.5;
         double newUncertainty = targetChain.ploidyUncertainty() / sqrt(2);
         targetChain.setPloidyData(newPloidy, newUncertainty);
+        mChainsSplit = true;
 
         for (SvLinkedPair pair : proposedLinks.Links)
         {
@@ -887,31 +912,31 @@ public class ChainLinkAllocator
         return false;
     }
 
-    private void addSkippedPair(final SvLinkedPair pair)
+    private void addSkippedPair(final SvLinkedPair pair, LinkSkipType type)
     {
-        if (!mSkippedPairs.contains(pair))
+        if(!mSkippedPairs.containsKey(pair))
         {
             mPairSkipped = true;
-            mSkippedPairs.add(pair);
+            mSkippedPairs.put(pair, type);
         }
     }
 
-    private void removeSkippedPairs(List<SvLinkedPair> possiblePairs)
+    public void removeSkippedPairs(final List<ProposedLinks> proposedLinks)
     {
-        // some pairs are temporarily unavailable for use (eg those which would close a chain)
-        // to to avoid continually trying to add them, keep them out of consideration until a new links is added
-        if(mSkippedPairs.isEmpty())
+        if(proposedLinks.isEmpty() || mSkippedPairs.isEmpty())
             return;
 
         int index = 0;
-        while(index < possiblePairs.size())
+        while(index < proposedLinks.size())
         {
-            SvLinkedPair pair = possiblePairs.get(index);
-
-            if(mSkippedPairs.contains(pair))
-                possiblePairs.remove(index);
+            if(proposedLinks.get(index).Links.stream().anyMatch(x -> hasSkippedPairs(x)))
+            {
+                proposedLinks.remove(index);
+            }
             else
+            {
                 ++index;
+            }
         }
     }
 

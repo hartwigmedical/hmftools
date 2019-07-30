@@ -166,6 +166,8 @@ public class ChainRuleSelector
                     break;
             }
 
+            mLinkAllocator.removeSkippedPairs(proposedLinks);
+
             if(i > 0 && rule != NEAREST)
                 cullByPriority(proposedLinks);
 

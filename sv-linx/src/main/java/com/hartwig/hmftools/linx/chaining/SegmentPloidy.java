@@ -57,7 +57,7 @@ public class SegmentPloidy
 
     public String toString()
     {
-        return String.format("%s: A=%.1f B=%.1f C=%.1f Maj=%.1f Min=%.1f Link=%.l1f",
+        return String.format("%s: A=%.1f B=%.1f C=%.1f Maj=%.1f Min=%.1f Link=%.1f",
                 mIsValid ? "valid" : "invalid", AFixedAP, BUndisruptedAP, mClusterAP, MajorAP, MinorAP, mLinkPloidy);
     }
 }

@@ -417,7 +417,7 @@ public class ChainFinder
 
         while (true)
         {
-            mLinkAllocator.clearPairSkipped();
+            mLinkAllocator.clearSkippedState();
             int lastAddedIndex = mLinkAllocator.getLinkIndex();
 
             if(lastAddedIndex == SPEC_LINK_INDEX)

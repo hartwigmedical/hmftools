@@ -360,6 +360,8 @@ public class ClusterAnnotations
         int unlinkedSvCount = cluster.getUnlinkedSVs().size();
         int inconsistentChains = 0;
         int repeatedChainEndArms = 0;
+        int shortTiCount = 0;
+        int longTiCount = 0;
 
         // isSpecificCluster(cluster);
 
@@ -392,14 +394,6 @@ public class ClusterAnnotations
                     ++repeatedChainEndArms;
             }
 
-            Map<String, int[]> armDataMap = new HashMap();
-
-            if(!startChrArm.isEmpty())
-                armDataMap.put(startChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
-
-            if(!endChrArm.isEmpty())
-                armDataMap.put(endChrArm, new int[CHAIN_TI_ASMB_COUNT+1]);
-
             for(final SvLinkedPair pair : chain.getLinkedPairs())
             {
                 final SvVarData first = pair.first();
@@ -409,22 +403,13 @@ public class ClusterAnnotations
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
-                int[] armData = armDataMap.get(chrArm);
-
-                if(armData == null)
-                {
-                    armData = new int[CHAIN_TI_ASMB_COUNT+1];
-                    armDataMap.put(chrArm, armData);
-                }
-
-                ++armData[CHAIN_TI_COUNT];
-
                 if(pair.length() <= SHORT_TI_LENGTH)
                 {
-                    ++armData[CHAIN_TI_SHORT_COUNT];
-
-                    if(pair.isAssembled())
-                        ++armData[CHAIN_TI_ASMB_COUNT];
+                    ++shortTiCount;
+                }
+                else
+                {
+                    ++longTiCount;
                 }
             }
         }
@@ -457,15 +442,16 @@ public class ClusterAnnotations
 
         boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
 
-        LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({} incons={}))",
+        LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({} incons={})) tiCount(short={} long={})",
                 cluster.id(), isComplete ? "COMPLETE" : "incomplete",
                 chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
-                unlinkedSvCount, armGroupCount, inconsistentArmCount);
+                unlinkedSvCount, armGroupCount, inconsistentArmCount, shortTiCount,longTiCount);
 
-        if(isComplete && !isComplex)
+        if(isComplete && !isComplex && longTiCount > 0)
         {
             // chromothripsis is currently defined as fully chained simple cluster
             // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
+
             cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
         }
     }
