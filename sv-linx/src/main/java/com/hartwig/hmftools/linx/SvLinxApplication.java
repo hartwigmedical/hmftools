@@ -131,7 +131,7 @@ public class SvLinxApplication
 
             if(checkDrivers)
             {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig.OutputDataPath);
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig);
                 driverGeneAnnotator.loadConfig(cmd);
                 driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }

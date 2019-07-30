@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
@@ -198,6 +199,10 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeSvLinks(@NotNull final String sample, @NotNull List<LinxLink> links) {
         structuralVariantClusterDAO.writeLinks(sample, links);
+    }
+
+    public void writeSvDrivers(@NotNull final String sample, @NotNull List<LinxDriver> drivers) {
+        structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
     public void writeSvViralInserts(@NotNull final String sample, @NotNull List<LinxViralInsertFile> inserts) {

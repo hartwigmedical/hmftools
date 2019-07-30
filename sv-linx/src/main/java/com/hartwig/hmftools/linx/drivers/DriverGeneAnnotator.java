@@ -50,6 +50,10 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -67,8 +71,9 @@ import org.apache.logging.log4j.Logger;
 
 public class DriverGeneAnnotator
 {
-    final DatabaseAccess mDbAccess;
-    SvGeneTranscriptCollection mGeneTransCache;
+    private final DatabaseAccess mDbAccess;
+    private SvGeneTranscriptCollection mGeneTransCache;
+    private final LinxConfig mConfig;
 
     private List<DriverCatalog> mDriverCatalog;
     private List<GeneCopyNumber> mGeneCopyNumberData;
@@ -76,6 +81,8 @@ public class DriverGeneAnnotator
     private String mOutputDir;
     private double mSamplePloidy;
     private List<DriverGeneData> mDriverGeneDataList;
+
+    private List<LinxDriver> mDriverOutputList;
 
     private PerformanceCounter mPerfCounter;
 
@@ -91,18 +98,20 @@ public class DriverGeneAnnotator
 
     private static final Logger LOGGER = LogManager.getLogger(DriverGeneAnnotator.class);
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection, final String outputDir)
+    public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection, final LinxConfig config)
     {
         mDbAccess = dbAccess;
         mGeneTransCache = geneTranscriptCollection;
+        mConfig = config;
 
         mDriverCatalog = Lists.newArrayList();
         mGeneCopyNumberData = Lists.newArrayList();
         mDriverGeneDataList = Lists.newArrayList();
+        mDriverOutputList = Lists.newArrayList();
         mSampleGeneCopyNumberMap = new HashMap();
         mChrCopyNumberMap = null;
         mFileWriter = null;
-        mOutputDir = outputDir;
+        mOutputDir = mConfig.OutputDataPath;
         mSamplePloidy = 0;
 
         mGeneTransCache.createGeneNameIdMap();
@@ -250,6 +259,8 @@ public class DriverGeneAnnotator
 
             writeDriverData(dgData);
         }
+
+        cacheSampleDriverData();
 
         mChrBreakendMap = null;
 
@@ -597,8 +608,55 @@ public class DriverGeneAnnotator
         return null;
     }
 
+    private void cacheSampleDriverData()
+    {
+        if(mConfig.hasMultipleSamples())
+            return;
+
+        if(mDriverOutputList.isEmpty())
+            return;
+
+        if(mConfig.UploadToDB)
+        {
+            mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
+        }
+
+        try
+        {
+            final String driversFile = LinxDriverFile.generateFilename(mOutputDir, mSampleId);
+            LinxDriverFile.write(driversFile, mDriverOutputList);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write drivers file: {}", e.toString());
+        }
+    }
+
     private void writeDriverData(final DriverGeneData dgData)
     {
+        // convert to a sample driver record
+        int clusterId = -1;
+        String eventTypes = "";
+        for(final DriverGeneEvent driverEvent : dgData.getEvents())
+        {
+            if(driverEvent.getCluster() != null)
+                clusterId = driverEvent.getCluster().id();
+
+            if(eventTypes.isEmpty())
+                eventTypes = driverEvent.Type.toString();
+            else if(!eventTypes.contains(driverEvent.Type.toString()))
+                eventTypes += ";" + driverEvent.Type.toString();
+        }
+
+        mDriverOutputList.add(ImmutableLinxDriver.builder()
+                .clusterId(clusterId)
+                .gene(dgData.GeneData.GeneName)
+                .eventType(eventTypes)
+                .build());
+
+        if(!mConfig.hasMultipleSamples())
+            return;
+
         try
         {
             if(mFileWriter == null)

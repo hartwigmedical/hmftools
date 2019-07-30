@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVANNOTATION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVCLUSTER;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVDRIVER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVLINK;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
@@ -219,11 +221,42 @@ class StructuralVariantClusterDAO
         inserter.values(sample, timestamp, insert.SvId, insert.VirusId, insert.VirusName);
     }
 
+    public void writeDrivers(final String sample, final List<LinxDriver> drivers)
+    {
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        context.delete(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).execute();
+
+        for (List<LinxDriver> batch : Iterables.partition(drivers, DB_BATCH_INSERT_SIZE))
+        {
+            InsertValuesStep5 inserter = context.insertInto(SVDRIVER,
+                    SVDRIVER.SAMPLEID,
+                    SVDRIVER.MODIFIED,
+                    SVDRIVER.CLUSTERID,
+                    SVDRIVER.GENE,
+                    SVDRIVER.EVENTTYPE);
+
+            batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
+            inserter.execute();
+        }
+    }
+
+    private static void addRecord(Timestamp timestamp, InsertValuesStep5 inserter, final String sample, final LinxDriver driver)
+    {
+        //noinspection unchecked
+        inserter.values(sample,
+                timestamp,
+                driver.clusterId() == -1 ? null : driver.clusterId(),
+                driver.gene(),
+                DatabaseUtil.checkStringLength(driver.eventType(), SVDRIVER.EVENTTYPE));
+    }
+
     public void deleteClusterDataForSample(@NotNull String sample)
     {
         context.delete(SVCLUSTER).where(SVCLUSTER.SAMPLEID.eq(sample)).execute();
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
         context.delete(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).execute();
+        context.delete(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).execute();
         context.delete(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).execute();
     }
 }
