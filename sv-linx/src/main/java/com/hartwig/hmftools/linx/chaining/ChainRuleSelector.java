@@ -118,6 +118,10 @@ public class ChainRuleSelector
 
     public List<ProposedLinks> findProposedLinks()
     {
+        // find the next set of possible links to make according to the priority scheme
+        // which is expressed in the set of chaining rules (ie the enumerated type)
+
+        // some special cases
         List<ProposedLinks> proposedLinks = Lists.newArrayList();
 
         if(mHasReplication)
@@ -168,10 +172,19 @@ public class ChainRuleSelector
 
             mLinkAllocator.removeSkippedPairs(proposedLinks);
 
+            // the top-priority rule acts like an annotation - whether the link violates the cluster ploidy across
+            // one or more breakend segments - so even if a higher rule has only 1 proposed link, if it violates this condition
+            // then keep searching for one which doesn't
+            boolean linksHavePloidySupport = checkClusterPloidySupport(proposedLinks);
+
+            // the last rule 'nearest' can throw up multiple possible links but since they're not conflicting and ordered
+            // from shortest to longest, there's no need to cull any more
             if(i > 0 && rule != NEAREST)
                 cullByPriority(proposedLinks);
 
-            if(proposedLinks.size() == 1)
+            // if the proposed links have been reduced to a single-top priority rule, which also meets the ploidy-support restriction
+            // then take it
+            if(proposedLinks.size() == 1 && linksHavePloidySupport)
                 return proposedLinks;
         }
 
@@ -833,6 +846,9 @@ public class ChainRuleSelector
         if(mFoldbackBreakendPairs.isEmpty())
             return proposedLinks;
 
+        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
+
+        // if there are already proposed links then add to their rule set where applicable
         if(!proposedLinks.isEmpty())
         {
             for(ProposedLinks proposedLink : proposedLinks)
@@ -846,7 +862,8 @@ public class ChainRuleSelector
                 }
             }
 
-            return proposedLinks;
+            if(hasPloidySupportLinks) // can exit since no new proposed links from this rule will top what has already been found
+                return proposedLinks;
         }
 
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
@@ -905,8 +922,16 @@ public class ChainRuleSelector
             }
         }
 
+        checkClusterPloidySupport(newProposedLinks);
+
+        // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
+        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+            return newProposedLinks;
+        else
+            return proposedLinks;
+
         // now check for a match between any previously identified proposed links and this set
-        return restrictProposedLinks(proposedLinks, newProposedLinks, FOLDBACK);
+        // return restrictProposedLinks(proposedLinks, newProposedLinks, FOLDBACK);
     }
 
     private List<ProposedLinks> findPloidyMatchPairs(List<ProposedLinks> proposedLinks)
@@ -914,11 +939,15 @@ public class ChainRuleSelector
         // find pairs of matching ploidy breakends, taking the shortest where multiple exist
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
 
+        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
+
         if(!proposedLinks.isEmpty())
         {
             proposedLinks.stream().filter(x -> x.ploidyMatchType() == PM_MATCHED).forEach(x -> x.addRule(PLOIDY_MATCH));
             proposedLinks.stream().filter(x -> x.ploidyMatchType() == PM_OVERLAP).forEach(x -> x.addRule(PLOIDY_OVERLAP));
-            return proposedLinks;
+
+            if(hasPloidySupportLinks)
+                return proposedLinks;
         }
 
         // double currentMaxPloidy = 0;
@@ -1009,7 +1038,13 @@ public class ChainRuleSelector
             }
         }
 
-        return newProposedLinks;
+        checkClusterPloidySupport(newProposedLinks);
+
+        // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
+        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+            return newProposedLinks;
+        else
+            return proposedLinks;
     }
 
     private List<ProposedLinks> findAdjacentMatchingPairs(List<ProposedLinks> proposedLinks)
@@ -1067,18 +1102,17 @@ public class ChainRuleSelector
         if(mAdjacentPairs.isEmpty())
             return proposedLinks;
 
+        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
+
         if(!proposedLinks.isEmpty())
         {
-            for(ProposedLinks proposedLink : proposedLinks)
-            {
-                // check for any links which are in the adjacent set
-                if(proposedLink.Links.stream().anyMatch(x -> mAdjacentPairs.contains(x)))
-                {
-                    proposedLink.addRule(ADJACENT);
-                }
-            }
+            // check for any links which are in the adjacent set
+            proposedLinks.stream()
+                    .filter(x -> x.Links.stream().anyMatch(y -> mAdjacentPairs.contains(y)))
+                    .forEach(x -> x.addRule(ADJACENT));
 
-            return proposedLinks;
+            if(hasPloidySupportLinks)
+                return proposedLinks;
         }
 
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
@@ -1107,12 +1141,22 @@ public class ChainRuleSelector
             newProposedLinks.add(proposedLink);
         }
 
-        return restrictProposedLinks(proposedLinks, newProposedLinks, ADJACENT);
+        checkClusterPloidySupport(newProposedLinks);
+
+        // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
+        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+            return newProposedLinks;
+        else
+            return proposedLinks;
+
+        // return restrictProposedLinks(proposedLinks, newProposedLinks, ADJACENT);
     }
 
     private List<ProposedLinks> findHighestPloidy(List<ProposedLinks> proposedLinks)
     {
         List<ProposedLinks> newProposedLinks = Lists.newArrayList();
+
+        boolean hasPloidySupportLinks = anyLinksHavePloidySupport(proposedLinks);
 
         if(!proposedLinks.isEmpty())
         {
@@ -1120,7 +1164,9 @@ public class ChainRuleSelector
             double maxPloidy = proposedLinks.stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
 
             proposedLinks.stream().filter(x -> copyNumbersEqual(maxPloidy, x.ploidy())).forEach(x -> x.addRule(PLOIDY_MAX));
-            return proposedLinks;
+
+            if(hasPloidySupportLinks)
+                return proposedLinks;
         }
 
         double currentMaxPloidy = 0;
@@ -1185,7 +1231,13 @@ public class ChainRuleSelector
             }
         }
 
-        return newProposedLinks;
+        checkClusterPloidySupport(newProposedLinks);
+
+        // if a new link has ploidy support it will top anything found already (see earlier exit condition for proposed links)
+        if(proposedLinks.isEmpty() || anyLinksHavePloidySupport(newProposedLinks))
+            return newProposedLinks;
+        else
+            return proposedLinks;
     }
 
     private List<ProposedLinks> findNearest(List<ProposedLinks> proposedLinks)
@@ -1293,15 +1345,30 @@ public class ChainRuleSelector
         return shortestLinks;
     }
 
-    private void setClusterPloidySupport(ProposedLinks proposedLinks)
+    private boolean anyLinksHavePloidySupport(final List<ProposedLinks> proposedLinks)
     {
-        if(proposedLinks.hasRule(AP_SUPPORT))
-            return;
+        return proposedLinks.stream().anyMatch(x -> x.hasRule(AP_SUPPORT));
+    }
 
-        if(proposedLinks.Links.stream().anyMatch(x -> !mPloidyLimits.linkHasPloidySupport(x, proposedLinks.ploidy())))
-            return;
+    private boolean checkClusterPloidySupport(final List<ProposedLinks> proposedLinks)
+    {
+        boolean anyLinksHasClusterPloidySupport = false;
+        for(ProposedLinks proposedLink : proposedLinks)
+        {
+            if(proposedLink.hasRule(AP_SUPPORT))
+            {
+                anyLinksHasClusterPloidySupport = true;
+                continue;
+            }
 
-        proposedLinks.addRule(AP_SUPPORT);
+            if(proposedLink.Links.stream().anyMatch(x -> !mPloidyLimits.linkHasPloidySupport(x, proposedLink.ploidy())))
+                continue;
+
+            proposedLink.addRule(AP_SUPPORT);
+            anyLinksHasClusterPloidySupport = true;
+        }
+
+        return anyLinksHasClusterPloidySupport;
     }
 
     private static List<ProposedLinks> restrictProposedLinks(
@@ -1344,8 +1411,6 @@ public class ChainRuleSelector
     {
         if(proposedLinks.size() <= 1)
             return;
-
-        proposedLinks.stream().forEach(x -> setClusterPloidySupport(x));
 
         // find the highest priority and remove any entries less than this
         int maxPriority = proposedLinks.stream().mapToInt(x -> x.priority()).max().getAsInt();

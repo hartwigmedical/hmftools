@@ -215,11 +215,17 @@ public class ChainPloidyLimits
     private boolean calculateClusterSegmentPloidies(List<SegmentPloidy> allelePloidies)
     {
         // first establish the non-disrupted B ploidy across all segments
+        /*
         double bNonClusterPloidyMin = allelePloidies.get(0).BUndisruptedAP;
         for(int i = 1; i < allelePloidies.size(); ++i)
         {
             bNonClusterPloidyMin = min(bNonClusterPloidyMin, allelePloidies.get(i).BUndisruptedAP);
         }
+        */
+
+        double bNonClusterPloidyMin = allelePloidies.stream()
+                .filter(x -> x.isValid())
+                .mapToDouble(x -> x.BUndisruptedAP).min().orElse(0);
 
         // finally set a cluster ploidy using knowledge of the other 2 ploidies
         int validSegments = 0;
