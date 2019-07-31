@@ -23,7 +23,17 @@ DROP TABLE IF EXISTS environmentalContext;
 DROP TABLE IF EXISTS approvedCountry;
 DROP TABLE IF EXISTS taxonomy;
 DROP TABLE IF EXISTS sage;
-DROP TABLE IF EXISTS brca;
+DROP TABLE IF EXISTS brcaPart1;
+DROP TABLE IF EXISTS brcaPart2;
+DROP TABLE IF EXISTS cgi;
+DROP TABLE IF EXISTS cgicDNA;
+DROP TABLE IF EXISTS cgiIndividualMutation;
+DROP TABLE IF EXISTS cgigDNA;
+DROP TABLE IF EXISTS cgiTranscript;
+DROP TABLE IF EXISTS cgiStrand;
+DROP TABLE IF EXISTS cgiInfo;
+DROP TABLE IF EXISTS cgiRegion;
+
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -253,8 +263,86 @@ CREATE TABLE sage
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-/*
-CREATE TABLE brca
+CREATE TABLE cgi
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    targeting varchar(255) NOT NULL,
+    source varchar(255) NOT NULL,
+    primaryTumorType varchar(255) NOT NULL,
+    drugsFullName varchar(255) NOT NULL,
+    curator varchar(255) NOT NULL,
+    drugFamily varchar(255) NOT NULL,
+    alteration varchar(1000) NOT NULL,
+    drug varchar(255) NOT NULL,
+    biomarker varchar(1000) NOT NULL,
+    drugStatus varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    assayType varchar(255) NOT NULL,
+    alterationType varchar(255) NOT NULL,
+    evidenceLevel varchar(255) NOT NULL,
+    association varchar(255) NOT NULL,
+    metastaticTumorType varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE cgicDNA
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    cDNA varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgiIndividualMutation
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    individualMutation varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgigDNA
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    gDNA varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgiTranscript
+( id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    transcript varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgiStrand
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    strand varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgiInfo
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    info varchar(500) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgiRegion
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    region varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE brcaPart1
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
     Variant_frequency_LOVD varchar(255) NOT NULL,
@@ -324,6 +412,13 @@ CREATE TABLE brca
     BX_ID_ClinVar varchar(255) NOT NULL,
     IARC_class_exLOVD varchar(255) NOT NULL,
     BX_ID_BIC varchar(12500) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE brcaPart2
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
     Sift_Prediction varchar(255) NOT NULL,
     Allele_number_NFE_ExAC varchar(255) NOT NULL,
     Allele_origin_ENIGMA varchar(255) NOT NULL,
@@ -395,4 +490,4 @@ CREATE TABLE brca
     Allele_number_AMR_ExAC varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
-);*/
+    );
