@@ -33,6 +33,11 @@ DROP TABLE IF EXISTS cgiTranscript;
 DROP TABLE IF EXISTS cgiStrand;
 DROP TABLE IF EXISTS cgiInfo;
 DROP TABLE IF EXISTS cgiRegion;
+DROP TABLE IF EXISTS jax;
+DROP TABLE IF EXISTS jaxMolecularProfile;
+DROP TABLE IF EXISTS jaxTherapy;
+DROP TABLE IF EXISTS jaxIndications;
+DROP TABLE IF EXISTS jaxReferences;
 
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -261,6 +266,57 @@ CREATE TABLE sage
     gene varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE jax
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    responseType varchar(255) NOT NULL,
+    approvalStatus varchar(255) NOT NULL,
+    evidenceType varchar(255) NOT NULL,
+    efficacyEvidence varchar(1000) NOT NULL,
+    idJaxSource varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE jaxMolecularProfile
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxId int NOT NULL,
+    profileName varchar(255) NOT NULL,
+    idMolecularProfile varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxId) REFERENCES jax(id)
+);
+
+CREATE TABLE jaxTherapy
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxId int NOT NULL,
+    therapyName varchar(255) NOT NULL,
+    idTherapy varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxId) REFERENCES jax(id)
+);
+
+CREATE TABLE jaxIndications
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxId int NOT NULL,
+    source varchar(255) NOT NULL,
+    idIndications varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxId) REFERENCES jax(id)
+);
+
+CREATE TABLE jaxReferences
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxId int NOT NULL,
+    url varchar(255),
+    idReferences varchar(255),
+    pubMedId varchar(255),
+    title varchar(500),
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxId) REFERENCES jax(id)
 );
 
 CREATE TABLE cgi

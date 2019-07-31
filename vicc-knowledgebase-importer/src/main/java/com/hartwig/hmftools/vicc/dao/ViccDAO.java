@@ -22,6 +22,11 @@ import static com.hartwig.hmftools.vicc.database.Tables.FEATURENAME;
 import static com.hartwig.hmftools.vicc.database.Tables.GENE;
 import static com.hartwig.hmftools.vicc.database.Tables.GENEIDENTIFIER;
 import static com.hartwig.hmftools.vicc.database.Tables.HIERARCHY;
+import static com.hartwig.hmftools.vicc.database.Tables.JAX;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXINDICATIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXMOLECULARPROFILE;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXREFERENCES;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXTHERAPY;
 import static com.hartwig.hmftools.vicc.database.Tables.LINK;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPETYPE;
@@ -50,6 +55,8 @@ import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
+import com.hartwig.hmftools.vicc.datamodel.Jax;
+import com.hartwig.hmftools.vicc.datamodel.JaxReferences;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -57,6 +64,7 @@ import com.hartwig.hmftools.vicc.datamodel.Sage;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -484,6 +492,44 @@ public class ViccDAO {
         }
     }
 
+    private void importJAXinSQL(int viccEntryId, @NotNull KbSpecificObject object) {
+        Jax jax = (Jax) object;
+
+        int id = context.insertInto(JAX,
+                JAX.RESPONSETYPE,
+                JAX.APPROVALSTATUS,
+                JAX.EVIDENCETYPE,
+                JAX.EFFICACYEVIDENCE,
+                JAX.IDJAXSOURCE,
+                JAX.VICCENTRYID)
+                .values(jax.responseType(), jax.approvalStatus(), jax.evidenceType(), jax.efficacyEvidence(), jax.id(), viccEntryId)
+                .returning(JAX.ID)
+                .fetchOne()
+                .getValue(JAX.ID);
+
+        context.insertInto(JAXMOLECULARPROFILE,
+                JAXMOLECULARPROFILE.PROFILENAME,
+                JAXMOLECULARPROFILE.IDMOLECULARPROFILE,
+                JAXMOLECULARPROFILE.JAXID).values(jax.molecularProfile().profileName(), jax.molecularProfile().id(), id).execute();
+
+        context.insertInto(JAXTHERAPY, JAXTHERAPY.THERAPYNAME, JAXTHERAPY.IDTHERAPY, JAXTHERAPY.JAXID)
+                .values(jax.therapy().therapyName(), jax.therapy().id(), id)
+                .execute();
+
+        context.insertInto(JAXINDICATIONS, JAXINDICATIONS.SOURCE, JAXINDICATIONS.IDINDICATIONS, JAXINDICATIONS.NAME, JAXINDICATIONS.JAXID)
+                .values(jax.indications().source(), jax.indications().id(), jax.indications().name(), id)
+                .execute();
+
+        for (JaxReferences references : jax.references()) {
+            context.insertInto(JAXREFERENCES,
+                    JAXREFERENCES.URL,
+                    JAXREFERENCES.IDREFERENCES,
+                    JAXREFERENCES.PUBMEDID,
+                    JAXREFERENCES.TITLE,
+                    JAXREFERENCES.JAXID).values(references.url(), references.id(), references.pubMedId(), references.title(), id).execute();
+        }
+    }
+
     private void writeKbSpecificObject(int viccEntryId, @NotNull KbSpecificObject object) {
         if (object instanceof Sage) {
             importSageinSQL(viccEntryId, object);
@@ -493,6 +539,9 @@ public class ViccDAO {
         }
         if (object instanceof Cgi) {
             importCGIinSQL(viccEntryId, object);
+        }
+        if (object instanceof Jax) {
+            importJAXinSQL(viccEntryId, object);
         }
     }
 
@@ -805,5 +854,10 @@ public class ViccDAO {
         context.deleteFrom(CGISTRAND).execute();
         context.deleteFrom(CGIINFO).execute();
         context.deleteFrom(CGIREGION).execute();
+        context.deleteFrom(JAX).execute();
+        context.deleteFrom(JAXMOLECULARPROFILE).execute();
+        context.deleteFrom(JAXTHERAPY).execute();
+        context.deleteFrom(JAXINDICATIONS).execute();
+        context.deleteFrom(JAXREFERENCES).execute();
     }
 }
