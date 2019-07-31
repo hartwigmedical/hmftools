@@ -129,6 +129,7 @@ java -jar purple.jar \
    -amber /path/to/COLO829/amber \
    -cobalt /path/to/COLO829/cobalt \
    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+   -ref_genome /path/to/Homo_sapiens_assembly38.fasta \
    -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/to/COLO829/COLO829.sv.vcf.gz \
    -sv_recovery_vcf /path/to/COLO829/COLO829.sv.all.vcf.gz \
@@ -943,6 +944,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-32)
+  - Fixed bug in sublconal modelling when somatic peak is close to max 
 - [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-31)
   - Added microsatellite status
   - Added subclonal likelihood model and figure

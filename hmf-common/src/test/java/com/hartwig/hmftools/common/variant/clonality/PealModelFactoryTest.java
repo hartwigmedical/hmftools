@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -19,6 +21,13 @@ public class PealModelFactoryTest {
         assertEquals(0.02, victim.offset(0.07), 0.01);
         assertEquals(-0.02, victim.offset(0.08), 0.01);
     }
+
+    @Test
+    public void testMaxBucket() {
+        final PeakModelFactory victim = new PeakModelFactory(10, 0.05);
+        victim.modelPeakHistogram(8.18, Lists.newArrayList(WeightedPloidyHistogramTest.create(8.18, 18, 55)));
+    }
+
 
     @Ignore
     public void testPeakModelling() throws IOException {

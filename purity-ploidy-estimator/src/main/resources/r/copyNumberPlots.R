@@ -150,13 +150,17 @@ copynumber_pdf <- function(copyNumberRegions) {
 }
 
 copyNumbers = read.table(file = paste0(purpleDir, "/", sample, ".purple.cnv.somatic.tsv"), sep = "\t", header = T, comment.char = "!") %>%
-  mutate(chromosome = gsub("chr", "", chromosome))
+  mutate(chromosome = gsub("chr", "", chromosome)) %>%
+  filter(!chromosome %in% c('X','Y'), bafCount > 0) 
 
-copyNumberPDF = copynumber_pdf(copyNumbers)
-ggsave(filename = paste0(plotDir, "/", sample, ".copynumber.png"), copyNumberPDF, units = "in", height = 4, width = 4.8, scale = 1)
+if (nrow(copyNumbers) > 0) {
+  copyNumberPDF = copynumber_pdf(copyNumbers)
+  ggsave(filename = paste0(plotDir, "/", sample, ".copynumber.png"), copyNumberPDF, units = "in", height = 4, width = 4.8, scale = 1)
+  
+  minorAllelePloidyPDF = minor_allele_ploidy_pdf(copyNumbers)
+  ggsave(filename = paste0(plotDir, "/", sample, ".map.png"), minorAllelePloidyPDF, units = "in", height = 4, width = 4.8, scale = 1)  
+}
 
-minorAllelePloidyPDF = minor_allele_ploidy_pdf(copyNumbers)
-ggsave(filename = paste0(plotDir, "/", sample, ".map.png"), minorAllelePloidyPDF, units = "in", height = 4, width = 4.8, scale = 1)
 
 rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range.tsv"), sep = "\t", header = T, comment.char = "!") %>%
     select(purity, ploidy, score)

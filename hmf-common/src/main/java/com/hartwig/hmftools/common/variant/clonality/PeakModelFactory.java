@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.numeric.Doubles;
@@ -161,12 +162,13 @@ public class PeakModelFactory {
                 .collect(Collectors.toList());
     }
 
-    private double[] modelPeakHistogram(double peak, @NotNull final List<WeightedPloidy> peakPloidies) {
+    @VisibleForTesting
+    double[] modelPeakHistogram(double peak, @NotNull final List<WeightedPloidy> peakPloidies) {
 
         double offset = offset(peak);
 
-        int maxBucket = bucket(maxPloidy) + 1;
-        double[] result = new double[maxBucket];
+        int maxBucket = bucket(maxPloidy);
+        double[] result = new double[maxBucket + 1];
         double[] weight = scalingFactor(peak, peakPloidies);
 
         int startBucket = bucket(peak - offset);
