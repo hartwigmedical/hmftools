@@ -27,6 +27,11 @@ import static com.hartwig.hmftools.vicc.database.Tables.JAXINDICATIONS;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXMOLECULARPROFILE;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXREFERENCES;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXTHERAPY;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALS;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSINDICATIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSMOLECULARPROFILE;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSTHERAPIES;
+import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSVARIANTREQUIREMENTDETAILS;
 import static com.hartwig.hmftools.vicc.database.Tables.LINK;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.PHENOTYPETYPE;
@@ -57,6 +62,11 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.Jax;
 import com.hartwig.hmftools.vicc.datamodel.JaxReferences;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrials;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsIndications;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsMolecularProfile;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
+import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -530,6 +540,68 @@ public class ViccDAO {
         }
     }
 
+    private void importJaxTrialsinSQL(int viccEntryId, @NotNull KbSpecificObject object) {
+        JaxTrials jaxTrials = (JaxTrials) object;
+
+        int id = context.insertInto(JAXTRIALS,
+                JAXTRIALS.TITLE,
+                JAXTRIALS.GENDER,
+                JAXTRIALS.NCTID,
+                JAXTRIALS.SPONSORS,
+                JAXTRIALS.RECRUITMENT,
+                JAXTRIALS.VARIANTREQUIREMENTS,
+                JAXTRIALS.UPDATEDATE,
+                JAXTRIALS.PHASE,
+                JAXTRIALS.VICCENTRYID)
+                .values(jaxTrials.title(),
+                        jaxTrials.gender(),
+                        jaxTrials.nctId(),
+                        jaxTrials.sponsors(),
+                        jaxTrials.recruitment(),
+                        jaxTrials.variantRequirements(),
+                        jaxTrials.updateDate(),
+                        jaxTrials.updateDate(),
+                        viccEntryId)
+                .returning(JAXTRIALS.ID)
+                .fetchOne()
+                .getValue(JAXTRIALS.ID);
+
+        for (JaxTrialsIndications indications : jaxTrials.indications()) {
+            context.insertInto(JAXTRIALSINDICATIONS,
+                    JAXTRIALSINDICATIONS.SOURCE,
+                    JAXTRIALSINDICATIONS.IDINDICATIONS,
+                    JAXTRIALSINDICATIONS.NAME,
+                    JAXTRIALSINDICATIONS.JAXTRIALSID).values(indications.source(), indications.id(), indications.name(), id).execute();
+        }
+
+        for (JaxTrialsVariantRequirementDetails variantRequirementDetails : jaxTrials.variantRequirementDetails()) {
+            int id1 = context.insertInto(JAXTRIALSVARIANTREQUIREMENTDETAILS,
+                    JAXTRIALSVARIANTREQUIREMENTDETAILS.REQUIREMENTTYPE,
+                    JAXTRIALSVARIANTREQUIREMENTDETAILS.JAXTRIALSID)
+                    .values(variantRequirementDetails.requirementType(), id)
+                    .returning(JAXTRIALSVARIANTREQUIREMENTDETAILS.ID)
+                    .fetchOne()
+                    .getValue(JAXTRIALSVARIANTREQUIREMENTDETAILS.ID);
+
+            for (JaxTrialsMolecularProfile molecularProfile : variantRequirementDetails.molecularProfiles()) {
+                context.insertInto(JAXTRIALSMOLECULARPROFILE,
+                        JAXTRIALSMOLECULARPROFILE.PROFILENAME,
+                        JAXTRIALSMOLECULARPROFILE.IDMOLECULARPROFILE,
+                        JAXTRIALSMOLECULARPROFILE.JAXTRIALSVARIANTREQUIREMENTDETAILSID)
+                        .values(molecularProfile.profileName(), molecularProfile.id(), id1)
+                        .execute();
+            }
+        }
+
+        for (JaxTrialsTherapies therapies : jaxTrials.therapies()) {
+            context.insertInto(JAXTRIALSTHERAPIES,
+                    JAXTRIALSTHERAPIES.IDTHERAPIES,
+                    JAXTRIALSTHERAPIES.THERAPYNAME,
+                    JAXTRIALSTHERAPIES.JAXTRIALSID).values(therapies.id(), therapies.therapyName(), id).execute();
+        }
+
+    }
+
     private void writeKbSpecificObject(int viccEntryId, @NotNull KbSpecificObject object) {
         if (object instanceof Sage) {
             importSageinSQL(viccEntryId, object);
@@ -542,6 +614,9 @@ public class ViccDAO {
         }
         if (object instanceof Jax) {
             importJAXinSQL(viccEntryId, object);
+        }
+        if (object instanceof JaxTrials) {
+            importJaxTrialsinSQL(viccEntryId, object);
         }
     }
 
@@ -859,5 +934,11 @@ public class ViccDAO {
         context.deleteFrom(JAXTHERAPY).execute();
         context.deleteFrom(JAXINDICATIONS).execute();
         context.deleteFrom(JAXREFERENCES).execute();
+        context.deleteFrom(JAXTRIALS).execute();
+        context.deleteFrom(JAXTRIALSINDICATIONS).execute();
+        context.deleteFrom(JAXTRIALSVARIANTREQUIREMENTDETAILS).execute();
+        context.deleteFrom(JAXTRIALSMOLECULARPROFILE).execute();
+        context.deleteFrom(JAXTRIALSTHERAPIES).execute();
+
     }
 }

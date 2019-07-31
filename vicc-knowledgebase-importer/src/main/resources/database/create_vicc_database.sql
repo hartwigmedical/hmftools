@@ -38,7 +38,11 @@ DROP TABLE IF EXISTS jaxMolecularProfile;
 DROP TABLE IF EXISTS jaxTherapy;
 DROP TABLE IF EXISTS jaxIndications;
 DROP TABLE IF EXISTS jaxReferences;
-
+DROP TABLE IF EXISTS jaxTrials;
+DROP TABLE IF EXISTS jaxTrialsIndications;
+DROP TABLE IF EXISTS jaxTrialsVariantRequirementDetails;
+DROP TABLE IF EXISTS jaxTrialsMolecularProfile;
+DROP TABLE IF EXISTS jaxTrialsTherapies;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -266,6 +270,57 @@ CREATE TABLE sage
     gene varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE jaxTrials
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    title varchar(500) NOT NULL,
+    gender varchar(255),
+    nctId varchar(255) NOT NULL,
+    sponsors varchar(255) NOT NULL,
+    recruitment varchar(255) NOT NULL,
+    variantRequirements varchar(255) NOT NULL,
+    updateDate varchar(255) NOT NULL,
+    phase varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE jaxTrialsIndications
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxTrialsId int NOT NULL,
+    source varchar(255) NOT NULL,
+    idIndications varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxTrialsId) REFERENCES jaxTrials(id)
+);
+
+CREATE TABLE jaxTrialsVariantRequirementDetails
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxTrialsId int NOT NULL,
+    requirementType varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxTrialsId) REFERENCES jaxTrials(id)
+);
+
+CREATE TABLE jaxTrialsMolecularProfile
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxTrialsVariantRequirementDetailsId int NOT NULL,
+    profileName varchar(255) NOT NULL,
+    idMolecularProfile varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxTrialsVariantRequirementDetailsId) REFERENCES jaxTrialsVariantRequirementDetails(id)
+);
+
+CREATE TABLE jaxTrialsTherapies
+(   id int NOT NULL AUTO_INCREMENT,
+    jaxTrialsId int NOT NULL,
+    idTherapies varchar(255) NOT NULL,
+    therapyName varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (jaxTrialsId) REFERENCES jaxTrials(id)
 );
 
 CREATE TABLE jax
