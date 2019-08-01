@@ -106,6 +106,8 @@ public class SvLinkedPair {
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
     public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
 
+    public final SvBreakend getBreakend(int se) { return getBreakend(SvVarData.isStart(se)); }
+
     public final SvBreakend getBreakend(boolean isStart)
     {
         // finds the earlier breakend of the 2, ie with the lower position

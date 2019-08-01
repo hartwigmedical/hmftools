@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+
 import java.util.List;
 
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -8,23 +10,25 @@ public class FoldbackBreakendPair
 {
     public final SvBreakend BreakendStart;
     public final SvBreakend BreakendEnd;
-    public final double Ploidy;
+    public double Ploidy;
+    public final SvChain Chain;
 
-    public FoldbackBreakendPair(final SvBreakend breakend1, final SvBreakend breakend2, double ploidy)
+    public FoldbackBreakendPair(final SvBreakend breakend1, final SvBreakend breakend2, double ploidy, final SvChain chain)
     {
         BreakendStart = breakend1;
         BreakendEnd = breakend2;
         Ploidy = ploidy;
+        Chain = chain;
     }
 
     public boolean isChained()
     {
-        return BreakendStart.getSV() != BreakendEnd.getSV() || BreakendStart == BreakendEnd;
+        return Chain != null;
     }
 
     public String toString()
     {
-        return String.format("%s & %s ploidy(%.1f)", BreakendStart, BreakendEnd, Ploidy);
+        return String.format("%s & %s ploidy(%s)", BreakendStart, BreakendEnd, formatPloidy(Ploidy));
     }
 
     public boolean matches(final FoldbackBreakendPair other)

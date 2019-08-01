@@ -180,9 +180,6 @@ public class FoldbackFinder
         }
         else
         {
-            if(varEnd.getReplicatedCount() != varStart.getReplicatedCount())
-                return false;
-
             final SvChain chain1 = cluster.findChain(varEnd);
             final SvChain chain2 = cluster.findChain(varStart);
 

@@ -56,7 +56,6 @@ public class ChainingComplexTest
         assertEquals(15, chain.getLinkCount());
     }
 
-    @Ignore
     @Test
     public void testBFBChain2()
     {
@@ -280,7 +279,7 @@ public class ChainingComplexTest
     public void testBFBChainToComplexChain()
     {
         // chained foldback connects to higher ploidy chained section
-        //  T - 3 - 4 - 1 - 2 - 3 - 4 -
+        //  T - 3 - 4 - 1 - 2 - 3 - 4 - 5 - C
         SvTestHelper tester = new SvTestHelper();
 
         tester.logVerbose(true);

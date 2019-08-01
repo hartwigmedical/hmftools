@@ -31,16 +31,14 @@ public class ProposedLinks
     // chain operating as a foldback - only relevant for foldback-splitting links
     private SvChain mFoldbackChain;
 
-    private double mPloidy; // the min ploidy if the breakends differ, otherwise the median
+    private double mPloidy; // the min ploidy if the breakends differ, otherwise the average
     private Map<SvBreakend, Double> mBreakendPloidy;
-    private Map<SvBreakend, Boolean> mBreakendPloidyMatched;
+
+    // indication of whether a breakend is exhausted by making these links
+    private Map<SvBreakend, Boolean> mExhaustBreakend;
 
     private String mPloidyMatchType;
     private long mShortestDistance;
-
-    public static String CONN_TYPE_NONE = "None";
-    public static String CONN_TYPE_FOLDBACK = "Foldback";
-    public static String CONN_TYPE_COMPLEX_DUP = "ComplexDup";
 
     public static String PM_MATCHED = "Matched";
     public static String PM_NONE = "None";
@@ -55,7 +53,7 @@ public class ProposedLinks
 
         mPloidy = 0;
         mBreakendPloidy = Maps.newHashMap();
-        mBreakendPloidyMatched = Maps.newHashMap();
+        mExhaustBreakend = Maps.newHashMap();
         mChainTarget = null;
         mFoldbackChain = null;
         mPloidyMatchType = PM_NONE;
@@ -72,7 +70,7 @@ public class ProposedLinks
 
         mPloidy = 0;
         mBreakendPloidy = Maps.newHashMap();
-        mBreakendPloidyMatched = Maps.newHashMap();
+        mExhaustBreakend = Maps.newHashMap();
         mChainTarget = targetChain;
         mFoldbackChain = foldbackChain;
         mPloidyMatchType = PM_NONE;
@@ -107,7 +105,7 @@ public class ProposedLinks
         {
             final SvBreakend breakend = entry.getKey();
             double bePloidy = entry.getValue();
-            mBreakendPloidyMatched.put(breakend, Doubles.equal(bePloidy, mPloidy));
+            mExhaustBreakend.put(breakend, Doubles.equal(bePloidy, mPloidy));
         }
     }
 
@@ -135,15 +133,46 @@ public class ProposedLinks
 
         mBreakendPloidy.put(compDupStart, compDupPloidy);
         mBreakendPloidy.put(compDupEnd, compDupPloidy);
-        mBreakendPloidyMatched.put(compDupStart, true);
-        mBreakendPloidyMatched.put(compDupEnd, true);
+        mExhaustBreakend.put(compDupStart, true);
+        mExhaustBreakend.put(compDupEnd, true);
 
         mBreakendPloidy.put(otherStart, otherPloidyStart);
         mBreakendPloidy.put(otherEnd, otherPloidyEnd);
-        mBreakendPloidyMatched.put(otherStart, false);
-        mBreakendPloidyMatched.put(otherEnd, false);
+        mExhaustBreakend.put(otherStart, false);
+        mExhaustBreakend.put(otherEnd, false);
     }
 
+    public void addFoldbackBreakends(
+            final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackPloidy,
+            final SvBreakend otherBreakend, double otherPloidy, double otherUncertainty)
+    {
+        if(foldbackPloidy == 0 || otherPloidy == 0)
+            return;
+
+        if (copyNumbersEqual(foldbackPloidy * 2, otherPloidy))
+        {
+            mPloidyMatchType = PM_MATCHED;
+        }
+        else if (ploidyOverlap(foldbackPloidy * 2, foldbackStart.ploidyUncertainty(), otherPloidy, otherUncertainty))
+        {
+            mPloidyMatchType = PM_OVERLAP;
+        }
+
+        if(mPloidyMatchType == PM_NONE)
+            mPloidy = foldbackPloidy;
+        else
+            mPloidy = (foldbackPloidy + otherPloidy/2) * 0.5;
+
+        mBreakendPloidy.put(foldbackStart, foldbackPloidy);
+        mBreakendPloidy.put(foldbackEnd, foldbackPloidy);
+        mExhaustBreakend.put(foldbackStart, true);
+        mExhaustBreakend.put(foldbackEnd, true);
+
+        mBreakendPloidy.put(otherBreakend, otherPloidy);
+        // mExhaustBreakend.put(otherBreakend, mPloidyMatchType != PM_NONE);
+    }
+
+    // to be deprecated
     public void addFoldbackBreakends(
             final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackPloidy,
             final SvBreakend otherBreakend, double otherPloidy, double otherRelativePloidy, double otherUncertainty)
@@ -167,12 +196,11 @@ public class ProposedLinks
 
         mBreakendPloidy.put(foldbackStart, foldbackPloidy);
         mBreakendPloidy.put(foldbackEnd, foldbackPloidy);
-        mBreakendPloidyMatched.put(foldbackStart, true);
-        mBreakendPloidyMatched.put(foldbackEnd, true);
+        mExhaustBreakend.put(foldbackStart, true);
+        mExhaustBreakend.put(foldbackEnd, true);
 
         mBreakendPloidy.put(otherBreakend, otherPloidy);
-        //mBreakendPloidyMatched.put(otherBreakend, Doubles.equal(otherPloidy, mPloidy));
-        mBreakendPloidyMatched.put(otherBreakend, false);
+        mExhaustBreakend.put(otherBreakend, false);
     }
 
     public void addBreakendPloidies(
@@ -194,27 +222,25 @@ public class ProposedLinks
             mPloidyMatchType = PM_OVERLAP;
         }
 
-        mPloidy = min(ploidy1, ploidy2);
-
-        // leave up to allocation to decide
-        mBreakendPloidyMatched.put(breakend1, false);
-        mBreakendPloidyMatched.put(breakend2, false);
-
-        /*
         if(mPloidyMatchType == PM_NONE)
         {
-            mBreakendPloidyMatched.put(breakend1, Doubles.equal(ploidy1, mPloidy));
-            mBreakendPloidyMatched.put(breakend2, Doubles.equal(ploidy2, mPloidy));
+            if(ploidy1 > ploidy2)
+            {
+                mPloidy = ploidy2;
+                // mExhaustBreakend.put(breakend1, false);
+            }
+            else
+            {
+                mPloidy = ploidy1;
+                // mExhaustBreakend.put(breakend1, true);
+            }
         }
         else
         {
-            // no longer taking the average since no only is this usually above the ploidy of one of the breakends, but can
-            // be above the max ploidy too
-            // mPloidy = (ploidy1 + ploidy2) * 0.5;
-            mBreakendPloidyMatched.put(breakend1, true);
-            mBreakendPloidyMatched.put(breakend2, true);
+            mPloidy = (ploidy1 + ploidy2) * 0.5;
+            // mExhaustBreakend.put(breakend1, true);
+            // mExhaustBreakend.put(breakend2, true);
         }
-        */
     }
 
     public double breakendPloidy(final SvBreakend breakend)
@@ -222,14 +248,15 @@ public class ProposedLinks
         return mBreakendPloidy.get(breakend);
     }
 
-    public boolean breakendPloidyMatched(final SvBreakend breakend)
+    public boolean exhaustBreakend(final SvBreakend breakend)
     {
-        return mBreakendPloidyMatched.get(breakend);
+        Boolean exhausted = mExhaustBreakend.get(breakend);
+        return exhausted != null && exhausted;
     }
 
-    public void overrideBreakendPloidyMatched(final SvBreakend breakend)
+    public void overrideBreakendPloidyMatched(final SvBreakend breakend, boolean matched)
     {
-        mBreakendPloidyMatched.put(breakend, false);
+        mExhaustBreakend.put(breakend, matched);
     }
 
     public final String ploidyMatchType() { return mPloidyMatchType; }
@@ -263,7 +290,7 @@ public class ProposedLinks
         if(Links.isEmpty() || Links.size() > 2)
             return false;
 
-        if(mBreakendPloidyMatched.isEmpty() || mBreakendPloidy.isEmpty())
+        if(mBreakendPloidy.isEmpty())
             return false;
 
         if(Links.size() == 1 && mBreakendPloidy.size() != 2)
@@ -271,7 +298,7 @@ public class ProposedLinks
 
         if(Links.size() == 2 && mBreakendPloidy.size() < 3)
         {
-            if(Links.get(0) != Links.get(1))
+            if(!Links.get(0).matches(Links.get(1)))
                 return false;
         }
 

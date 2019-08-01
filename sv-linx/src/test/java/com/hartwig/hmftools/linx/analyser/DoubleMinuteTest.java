@@ -89,6 +89,7 @@ public class DoubleMinuteTest
         assertTrue(chain.isClosedLoop());
     }
 
+    @Ignore
     @Test
     public void testChainedDMWithMinors()
     {

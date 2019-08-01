@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.SPEC_LINK_INDEX;
+import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowPloidyThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
@@ -251,14 +251,7 @@ public class ChainFinder
                     if(!svList.contains(otherVar))
                         continue;
 
-                    int maxRepCount = mHasReplication ? min(max(var.getReplicatedCount(),1), max(otherVar.getReplicatedCount(),1)) : 1;
-
-                    long currentLinkCount = mAssembledLinks.stream().filter(x -> x.matches(link)).count();
-
-                    if(currentLinkCount < maxRepCount)
-                    {
-                        mAssembledLinks.add(link);
-                    }
+                    mAssembledLinks.add(link);
                 }
             }
         }
@@ -394,6 +387,9 @@ public class ChainFinder
         cluster.addChain(newChain, false);
     }
 
+    protected static int SPEC_LINK_INDEX = -1;
+    // protected static int SPEC_LINK_INDEX = 181  ;
+
     private void buildChains(boolean assembledLinksOnly)
     {
         mLinkAllocator.populateSvPloidyMap(mSvList, mHasReplication);
@@ -450,11 +446,15 @@ public class ChainFinder
             {
                 ++iterationsWithoutNewLinks;
 
-                if (iterationsWithoutNewLinks > 5)
+                if (iterationsWithoutNewLinks == 5)
                 {
-                    LOGGER.error("cluster({}) 5 iterations without adding a new link", mClusterId);
-                    mIsValid = false;
-                    break;
+                    LOGGER.warn("cluster({}) 5 iterations without adding a new link", mClusterId);
+
+                    if (iterationsWithoutNewLinks >= 10)
+                    {
+                        mIsValid = false;
+                        break;
+                    }
                 }
             }
             else
@@ -590,13 +590,13 @@ public class ChainFinder
                 ProposedLinks proposedLink = new ProposedLinks(pair, ASSEMBLY);
                 proposedLink.addBreakendPloidies(firstBreakend, firstPloidy, secondBreakend, secondPloidy);
 
-                if(!firstHasSingleConn && proposedLink.breakendPloidyMatched(firstBreakend))
+                if(!firstHasSingleConn && proposedLink.exhaustBreakend(firstBreakend))
                 {
-                    proposedLink.overrideBreakendPloidyMatched(firstBreakend);
+                    proposedLink.overrideBreakendPloidyMatched(firstBreakend, false);
                 }
-                else if(!secondHasSingleConn && proposedLink.breakendPloidyMatched(secondBreakend))
+                else if(!secondHasSingleConn && proposedLink.exhaustBreakend(secondBreakend))
                 {
-                    proposedLink.overrideBreakendPloidyMatched(secondBreakend);
+                    proposedLink.overrideBreakendPloidyMatched(secondBreakend, false);
                 }
 
                 LOGGER.debug("assembly multi-sgl-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
@@ -676,14 +676,14 @@ public class ChainFinder
                 continue;
             }
 
-            if(firstRemainingLinks > 1 && proposedLink.breakendPloidyMatched(firstBreakend))
+            if(firstRemainingLinks > 1 && proposedLink.exhaustBreakend(firstBreakend))
             {
-                proposedLink.overrideBreakendPloidyMatched(firstBreakend);
+                proposedLink.overrideBreakendPloidyMatched(firstBreakend, false);
             }
 
-            if(secondRemainingLinks > 1 && proposedLink.breakendPloidyMatched(secondBreakend))
+            if(secondRemainingLinks > 1 && proposedLink.exhaustBreakend(secondBreakend))
             {
-                proposedLink.overrideBreakendPloidyMatched(secondBreakend);
+                proposedLink.overrideBreakendPloidyMatched(secondBreakend, false);
             }
 
             LOGGER.debug("assembly multi-conn pair({}) ploidy({}): first(ploidy={} links={}) second(ploidy={} links={})",
@@ -734,6 +734,9 @@ public class ChainFinder
             {
                 final SvBreakend lowerBreakend = breakendList.get(i);
 
+                if(belowPloidyThreshold(lowerBreakend.getSV()))
+                    continue;
+
                 if(lowerBreakend.orientation() != -1)
                     continue;
 
@@ -754,6 +757,9 @@ public class ChainFinder
                 for (int j = i+1; j < breakendList.size(); ++j)
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
+
+                    if(belowPloidyThreshold(upperBreakend.getSV()))
+                        continue;
 
                     if(skippedNonAssembledIndex == -1)
                     {

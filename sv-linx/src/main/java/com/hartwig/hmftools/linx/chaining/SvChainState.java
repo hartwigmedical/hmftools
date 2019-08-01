@@ -60,6 +60,7 @@ public class SvChainState
     }
 
     public void add(boolean isStart, double linkPloidy) { mBreakendCount[seIndex(isStart)] += linkPloidy; }
+    public void set(boolean isStart, double linkPloidy) { mBreakendCount[seIndex(isStart)] = linkPloidy; }
 
     public double curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
     public double breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }

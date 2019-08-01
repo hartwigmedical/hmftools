@@ -54,7 +54,6 @@ public class SvVarData
     private SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
     private List<List<String>> mTIAssemblies;
     private String[] mAssemblyMatchType;
-    private int mReplicatedCount;
 
     private List<List<GeneAnnotation>> mGenes;
 
@@ -224,8 +223,6 @@ public class SvVarData
     }
 
     public final String getClusterReason() { return mClusterReason; }
-
-    public int getReplicatedCount() { return mReplicatedCount; }
 
     public double ploidy() { return mPloidy; }
 
