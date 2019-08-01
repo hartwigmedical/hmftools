@@ -642,8 +642,6 @@ public class ChainLinkAllocator
                 // 2. Other breakend is exhausted:
                 //  - if this breakend is now fully contained within chains, it also must be exhausted
 
-                // boolean breakendExhausted = false;
-
                 if(proposedLink.exhaustBreakend(breakend))
                 {
                     svConn.set(beIsStart, svConn.Ploidy);
@@ -686,11 +684,6 @@ public class ChainLinkAllocator
                     LOGGER.trace("{} breakend exhausted: {}", beIsStart? "start" : "end", svConn.toString());
                     exhaustedBreakends.add(breakend);
                 }
-
-                // final SvBreakend otherSvBreakend = var.getBreakend(!beIsStart);
-
-                // if (otherSvBreakend != null)
-                //    removeOppositeLinks(otherSvBreakend, otherPairBreakend);
             }
 
             // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
@@ -787,60 +780,6 @@ public class ChainLinkAllocator
         }
     }
 
-    private void removePossibleLinks_old(SvBreakend breakend)
-    {
-        List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
-
-        if (possibleLinks == null || possibleLinks.isEmpty())
-            return;
-
-        int index = 0;
-        while (index < possibleLinks.size())
-        {
-            SvLinkedPair possibleLink = possibleLinks.get(index);
-
-            if (possibleLink.hasBreakend(breakend))
-            {
-                // remove this from consideration
-                possibleLinks.remove(index);
-
-                SvBreakend otherBreakend = possibleLink.getBreakend(true) == breakend ?
-                        possibleLink.getBreakend(false) : possibleLink.getBreakend(true);
-
-                // and remove the pair which was cached in the other breakend's possibles list
-                List<SvLinkedPair> otherPossibles = mSvBreakendPossibleLinks.get(otherBreakend);
-
-                if (otherPossibles != null)
-                {
-                    for (SvLinkedPair otherPair : otherPossibles)
-                    {
-                        if (otherPair == possibleLink)
-                        {
-                            otherPossibles.remove(otherPair);
-
-                            if (otherPossibles.isEmpty())
-                            {
-                                mSvBreakendPossibleLinks.remove(otherBreakend);
-                            }
-
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ++index;
-            }
-        }
-
-        if (possibleLinks.isEmpty())
-        {
-            //LOGGER.debug("breakend({}) has no more possible links", origBreakend);
-            mSvBreakendPossibleLinks.remove(breakend);
-        }
-    }
-
     private void removeOppositeLinks(final SvLinkedPair pair)
     {
         // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
@@ -877,48 +816,6 @@ public class ChainLinkAllocator
 
                     break;
                 }
-            }
-        }
-    }
-
-    private void removeOppositeLinks(final SvBreakend otherSvBreakend, final SvBreakend pairOtherBreakend)
-    {
-        // otherSvBreakend - the opposite breakend of the breakend just linked
-        // pairOtherBreakend - the other breakend in the link
-
-        // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
-
-        // such a link can happen for a complex dup around a single SV, so skip if any of these exist
-        if (mComplexDupCandidates.containsKey(otherSvBreakend.getSV()) || mComplexDupCandidates.containsKey(pairOtherBreakend.getSV()))
-            return;
-
-        List<SvLinkedPair> otherBeLinks = mSvBreakendPossibleLinks.get(otherSvBreakend);
-
-        if (otherBeLinks == null)
-            return;
-
-        if (otherBeLinks.isEmpty())
-        {
-            // should have been cleaned up already
-            mSvBreakendPossibleLinks.remove(otherSvBreakend);
-            return;
-        }
-
-        final SvBreakend pairOtherOppBreakend = pairOtherBreakend.getOtherBreakend();
-
-        if (pairOtherOppBreakend == null)
-            return;
-
-        for (SvLinkedPair pair : otherBeLinks)
-        {
-            if (pair.hasBreakend(otherSvBreakend) && pair.hasBreakend(pairOtherOppBreakend))
-            {
-                otherBeLinks.remove(pair);
-
-                if (otherBeLinks.isEmpty())
-                    mSvBreakendPossibleLinks.remove(otherSvBreakend);
-
-                return;
             }
         }
     }

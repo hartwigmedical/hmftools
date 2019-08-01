@@ -169,38 +169,6 @@ public class ProposedLinks
         mExhaustBreakend.put(foldbackEnd, true);
 
         mBreakendPloidy.put(otherBreakend, otherPloidy);
-        // mExhaustBreakend.put(otherBreakend, mPloidyMatchType != PM_NONE);
-    }
-
-    // to be deprecated
-    public void addFoldbackBreakends(
-            final SvBreakend foldbackStart, final SvBreakend foldbackEnd, double foldbackPloidy,
-            final SvBreakend otherBreakend, double otherPloidy, double otherRelativePloidy, double otherUncertainty)
-    {
-        if(foldbackPloidy == 0 || otherPloidy == 0)
-            return;
-
-        if (copyNumbersEqual(foldbackPloidy * 2, otherRelativePloidy))
-        {
-            mPloidyMatchType = PM_MATCHED;
-        }
-        else if (ploidyOverlap(foldbackPloidy * 2, foldbackStart.ploidyUncertainty(), otherRelativePloidy, otherUncertainty))
-        {
-            mPloidyMatchType = PM_OVERLAP;
-        }
-
-        if(mPloidyMatchType == PM_NONE)
-            mPloidy = min(foldbackPloidy, otherRelativePloidy/2);
-        else
-            mPloidy = (foldbackPloidy + otherRelativePloidy/2) * 0.5;
-
-        mBreakendPloidy.put(foldbackStart, foldbackPloidy);
-        mBreakendPloidy.put(foldbackEnd, foldbackPloidy);
-        mExhaustBreakend.put(foldbackStart, true);
-        mExhaustBreakend.put(foldbackEnd, true);
-
-        mBreakendPloidy.put(otherBreakend, otherPloidy);
-        mExhaustBreakend.put(otherBreakend, false);
     }
 
     public void addBreakendPloidies(
@@ -227,19 +195,15 @@ public class ProposedLinks
             if(ploidy1 > ploidy2)
             {
                 mPloidy = ploidy2;
-                // mExhaustBreakend.put(breakend1, false);
             }
             else
             {
                 mPloidy = ploidy1;
-                // mExhaustBreakend.put(breakend1, true);
             }
         }
         else
         {
             mPloidy = (ploidy1 + ploidy2) * 0.5;
-            // mExhaustBreakend.put(breakend1, true);
-            // mExhaustBreakend.put(breakend2, true);
         }
     }
 
