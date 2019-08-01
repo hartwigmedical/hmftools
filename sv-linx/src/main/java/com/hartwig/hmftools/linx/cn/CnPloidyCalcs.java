@@ -165,14 +165,11 @@ public class CnPloidyCalcs
 
             // Ploidy Uncertainty = Ploidy * (ReadCountUpperCI-ReadCountLowerCI)* 0.5 / ObservedReadCount + 0.5 * min(CNChangeUncertaintyStart,CNChangeUncertaintyEnd)
 
-            // (B20-B18)/B18*B17+MIN(B14:C14)*proportionCNChangeUsedInPloidy
-            double ploidyUncertainty = ploidy * (poissonRCHigh - tumorReadCount) / tumorReadCount;
+            double ploidyUncertainty = rcAdjustedPloidy * (poissonRCHigh - poissonRCLow) / tumorReadCount * 0.5;
 
-            double cnUncertaintyFactor = !uncertainties.isEmpty() ? uncertainties.stream().mapToDouble(x -> x).min().getAsDouble() : 0;
+            double cnUncertaintyFactor = !uncertainties.isEmpty() ? uncertainties.stream().mapToDouble(x -> x).sum() / uncertainties.size() : 0;
 
             ploidyUncertainty += cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC;
-
-            // double ploidyUncertainty = rcAdjustedPloidy + cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_PLOIDY_UNC;
 
             if (ploidyUncertainty > 0)
             {
