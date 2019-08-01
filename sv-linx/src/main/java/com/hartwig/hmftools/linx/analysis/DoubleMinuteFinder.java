@@ -51,7 +51,6 @@ import org.apache.logging.log4j.Logger;
 
 public class DoubleMinuteFinder
 {
-
     private CnDataLoader mCnAnalyser;
     private SvGeneTranscriptCollection mGeneTransCache;
     private ChainFinder mChainFinder;

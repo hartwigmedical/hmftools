@@ -305,8 +305,6 @@ public class SvTestHelper
 
     public void addCopyNumberData(boolean includePloidyCalcs)
     {
-        Analyser.setUseAllelePloidies(true);
-
         // use SV breakend data to re-create the copy number segments
         // assume CN is 2 at the telomere and by default Actual BAF = 0.5
 

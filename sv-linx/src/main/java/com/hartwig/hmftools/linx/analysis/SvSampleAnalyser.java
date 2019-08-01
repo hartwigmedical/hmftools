@@ -113,8 +113,6 @@ public class SvSampleAnalyser {
         mAnalyser = new ClusterAnalyser(config);
         mVisWriter = new VisualiserWriter(config.OutputDataPath, config.WriteVisualisationData, config.hasMultipleSamples());
 
-        mAnalyser.setUseAllelePloidies(true);
-
         mAllVariants = Lists.newArrayList();
         mCnDataLoader = null;
 
