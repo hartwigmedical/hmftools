@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.cn;
 
 import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvCluster;
 
 public class HomLossEvent
 {
@@ -59,6 +60,7 @@ public class HomLossEvent
     {
         return matchedBothSVs() && mBreakendStart.getCluster() == mBreakendEnd.getCluster();
     }
+    public final SvCluster getCluster() { return matchedBothSVs() ? mBreakendStart.getCluster() : null; }
 
     public String toString()
     {

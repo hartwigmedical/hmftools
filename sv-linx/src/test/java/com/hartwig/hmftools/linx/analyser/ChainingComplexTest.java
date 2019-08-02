@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -22,7 +22,7 @@ public class ChainingComplexTest
     public void testBFBChain1()
     {
         // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 2 - 1 - 4 - 1 - 2 - 1 - 3 - 1 - 2 - 1 - R - telomere, where R is the resolving SV
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1, "1", "1", 1000,2000, -1, -1, INV,  8);
@@ -60,7 +60,7 @@ public class ChainingComplexTest
     public void testBFBChain2()
     {
         // vanilla BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 4 - telomere, where R is the resolving SV
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, -1, -1, INV,  3);
@@ -95,7 +95,7 @@ public class ChainingComplexTest
     {
         // BFB of the form centromere - A01 - B2 - A01 - C3 - A01 - B2 - A01 - R4 - telomere, where R is the resolving SV
         // but assembled fragments are inserted into each of the foldbacks, requiring linking to make use of matching ploidy
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // tester.setChaininMethod(CHAIN_METHOD_COMPARE);
         tester.logVerbose(true);
@@ -148,7 +148,7 @@ public class ChainingComplexTest
     {
         // simple chain with replicated section: telomere - DEL - remote TI - DUP - DEL - remote TI - centromere
         // SVs: telomere - 1 -
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, 1, -1, DEL, 2);
@@ -185,7 +185,7 @@ public class ChainingComplexTest
     public void testComplexMultiAssemblyChain()
     {
         // chain with more than breakend connecting via assembly to other breakends
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1, "1", "1", 2000,1000, 1, -1, DEL, 5);
@@ -231,7 +231,7 @@ public class ChainingComplexTest
     public void testBFBChainWith2ChainedFoldbacks()
     {
         // BFB of the form telomere - 3 - 4 - 3 - 1 - 2 - 1 - 3 - 4 - 3 - R5-6 - centromere, where R is the resolving SV
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
 
@@ -280,7 +280,7 @@ public class ChainingComplexTest
     {
         // chained foldback connects to higher ploidy chained section
         //  T - 3 - 4 - 1 - 2 - 3 - 4 - 5 - C
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
 
@@ -325,7 +325,7 @@ public class ChainingComplexTest
     public void testComplexDupSimple()
     {
         // simple chain with replicated SV: telomere - 4 - 5 - 1 - 2-DUP - 1 - 3 - centromere
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1, "1", "1", 4000,5000, 1, -1, DEL, 2);
@@ -362,7 +362,7 @@ public class ChainingComplexTest
     {
         // simple chain with replicated section: centromere - A - B - C - D - DUP - B - C - D - E - telomere,
         // where D is a complex DUP around the section B - C - D
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(false);
 
         final SvVarData varA = createTestSv(1, "1", "1", 1000,5000, 1, 1, INV, 1);
@@ -402,7 +402,7 @@ public class ChainingComplexTest
     {
         // BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 4-DUP - 2 - 1 - 3 - 1 - 2 - 5R - telomere,
         // where D is a complex DUP around the section B - A - C - A and R is the resolving SV
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         // tester.setChaininMethod(CHAIN_METHOD_OLD);

@@ -241,9 +241,6 @@ public class SvVarData
         mCopyNumberChange[seIndex(isStart)] = copyNumberChange;
     }
 
-    public static double SUSPECT_CN_CHANGE = 0.2;
-    private static double CN_ROUND_SIZE = 0.5;
-
     public double getRoundedPloidy(boolean enforceClonal)
     {
         double roundedPloidy = round(ploidy());

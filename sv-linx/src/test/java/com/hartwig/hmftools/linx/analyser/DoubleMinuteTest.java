@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
@@ -29,7 +29,7 @@ public class DoubleMinuteTest
     @Test
     public void testSimpleDupDM()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // tester.logVerbose(true);
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
@@ -60,7 +60,7 @@ public class DoubleMinuteTest
     public void testChainedDM()
     {
         // form a DM from 2 INVs
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
@@ -94,7 +94,7 @@ public class DoubleMinuteTest
     public void testChainedDMWithMinors()
     {
         // form a DM from 3 chained SVs, with some other SVs in the cluster having a lower ploidy
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
@@ -147,7 +147,7 @@ public class DoubleMinuteTest
     public void testInvalidDM()
     {
         // first a cluster which grows in ploidy evenly
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createSgl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -21,7 +21,7 @@ public class FoldbackTest
     @Test
     public void testInvFoldbacks()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // create foldbacks from a simple inversion
 

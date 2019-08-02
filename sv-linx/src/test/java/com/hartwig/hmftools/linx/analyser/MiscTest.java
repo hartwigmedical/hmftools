@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createIns;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createIns;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createSgl;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -64,7 +64,7 @@ public class MiscTest
     @Test
     public void testBreakendLists()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // 4 breakends, 2 on each arm
         long centromerePos = SvUtilities.getChromosomalArmLength("1", CHROMOSOME_ARM_P);

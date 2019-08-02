@@ -1,24 +1,29 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createIns;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_HOM_LOSS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_LOOSE_OVERLAP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createIns;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 
 import static org.junit.Assert.assertEquals;
 
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
@@ -27,6 +32,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class MergeRuleTest
@@ -34,7 +40,7 @@ public class MergeRuleTest
     @Test
     public void testProximityMerge()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // basic proximity clustering with 2 duplicate breakend SGLs excluded
         SvVarData var1 = createDel(tester.nextVarId(), "1", 1000, 1100);
@@ -116,7 +122,7 @@ public class MergeRuleTest
     @Test
     public void testFoldbackMerge()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // 2 clusters with foldbacks on the same arm are merged
         SvVarData inv1 = createInv(tester.nextVarId(), "1", 100, 200, -1);
@@ -130,64 +136,14 @@ public class MergeRuleTest
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(1, tester.getClusters().size());
-        assertTrue(inv1.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
-        assertTrue(inv2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
-
-        // non-overlapping DELs can merge, whereas overlapping DELs are split out
-        tester.clearClustersAndSVs();
-
-        // test again with a foldback and an opposing SV as the next breakend
-        tester.AllVariants.add(inv2);
-
-        // the DEL is resolved and will be ignored
-        SvVarData del = createDel(tester.nextVarId(), "1", 10000, 10100);
-        tester.AllVariants.add(del);
-
-        SvVarData sgl = createSgl(tester.nextVarId(), "1", 1000, -1, false);
-        tester.AllVariants.add(sgl);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(tester.getClusters().size(), 2);
-        assertTrue(tester.getClusters().get(0).getSVs().contains(inv2));
-        assertTrue(tester.getClusters().get(0).getSVs().contains(sgl));
-        assertTrue(tester.getClusters().get(1).getSVs().contains(del));
-
-        assertTrue(inv1.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
-        assertTrue(inv2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
-
-        tester.clearClustersAndSVs();
-
-        // test with a single foldback facing the centromere
-        SvVarData inv3 = createInv(tester.nextVarId(), "2", 10000, 10100, -1);
-        tester.AllVariants.add(inv3);
-
-        SvVarData sgl2 = createSgl(tester.nextVarId(), "2", 20000, 1, false);
-        tester.AllVariants.add(sgl2);
-
-        // next is too far away
-        SvVarData sgl3 = createSgl(tester.nextVarId(), "2", 10000000, 1, false);
-        tester.AllVariants.add(sgl3);
-
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(tester.getClusters().size(), 2);
-        assertTrue(tester.getClusters().get(0).getSVs().contains(inv3));
-        assertTrue(tester.getClusters().get(0).getSVs().contains(sgl2));
-        assertTrue(tester.getClusters().get(1).getSVs().contains(sgl3));
-
-        assertTrue(inv3.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
-        assertTrue(sgl2.getClusterReason().contains(CLUSTER_REASON_FOLDBACKS));
+        assertTrue(inv1.getClusterReason().contains(CR_FOLDBACKS));
+        assertTrue(inv2.getClusterReason().contains(CR_FOLDBACKS));
     }
 
     @Test
     public void testLohHomLossEventMerge()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // scenario 1: LOH containing all clustered HOM-loss events should also be clustered
         SvVarData var1 = createBnd(1, "1", 1000, 1, "2", 100, 1);
@@ -228,7 +184,7 @@ public class MergeRuleTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
 
         // scenario 2: multiple hom-loss events clustered because LOH is clustered
         tester.clearClustersAndSVs();
@@ -265,15 +221,23 @@ public class MergeRuleTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(3, tester.Analyser.getClusters().size());
+        // the 2 hom-loss deletes are clustered with each other due to the major allele ploidy rule
+        assertEquals(2, tester.Analyser.getClusters().size());
 
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4, var5));
+        assertTrue(cluster != null);
+        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        assertTrue(cluster.getClusteringReasons().contains(CR_MAJOR_AP_PLOIDY));
+
+        /*
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var4, var5));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
+        */
 
 
         // scenario 3: hom-loss event overlaps a LOH
@@ -306,7 +270,7 @@ public class MergeRuleTest
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
+        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
 
         // again but with more SVs involved
         tester.clearClustersAndSVs();
@@ -343,34 +307,23 @@ public class MergeRuleTest
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var3, var4));
         assertTrue(cluster != null);
-        assertTrue(cluster.getClusteringReasons().contains(CLUSTER_REASON_HOM_LOSS));
-
-
-
+        assertTrue(cluster.getClusteringReasons().contains(CR_HOM_LOSS));
     }
 
     @Test
     public void testLohResolvingClusterMerge()
     {
         // merge clusters based on their SVs being required to stop a SV chaining through an LOH event
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         SvVarData var1 = createDel(1, "1", 10000, 60000);
-
         SvVarData var2 = createDup(2, "1", 20000, 50000);
-
         SvVarData var3 = createBnd(3, "1", 30000, 1, "2", 10000, 1);
-
         SvVarData var4 = createBnd(4, "1", 40000, -1, "2", 20000, 1);
-
         SvVarData var5 = createDel(5, "1", 70000, 120000);
-
         SvVarData var6 = createDup(6, "1", 80000, 110000);
-
         SvVarData var7 = createBnd(7, "1", 90000, 1, "2", 80000, 1);
-
         SvVarData var8 = createBnd(8, "1", 100000, -1, "2", 90000, -1);
-
         SvVarData var9 = createDup(9, "2", 30000, 60000);
 
         // does run unto the DUP in the LOH but isn't clustered since is simple
@@ -412,16 +365,16 @@ public class MergeRuleTest
         assertEquals(2, tester.Analyser.getClusters().size());
         assertTrue(var10.getCluster().getSvCount() == 1);
 
-        assertTrue(var2.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
+        assertTrue(var2.getClusterReason().contains(CR_LOH_CHAIN));
         assertTrue(var2.getClusterReason().contains(String.valueOf(var4.id())));
-        assertTrue(var4.getClusterReason().contains(CLUSTER_REASON_LOH_CHAIN));
+        assertTrue(var4.getClusterReason().contains(CR_LOH_CHAIN));
         assertTrue(var4.getClusterReason().contains(String.valueOf(var2.id())));
     }
 
     @Test
     public void testConsistentBreakendOverlapMerge()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         List<SvVarData> allVariants = Lists.newArrayList();
 
@@ -464,21 +417,125 @@ public class MergeRuleTest
 
         assertEquals(4, tester.getClusters().size());
 
-        SvCluster mainCluster = null;
-        for(final SvCluster cluster : tester.getClusters())
-        {
-            if(cluster.getSvCount() == 5)
-            {
-                mainCluster = cluster;
-                break;
-            }
-        }
+        SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(consec1, consec2, consec3, overlap1, overlap2));
 
         if(mainCluster == null)
             assertTrue(false);
 
-        assertTrue(overlap1.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
-        assertTrue(overlap2.getClusterReason().contains(CLUSTER_REASON_LOOSE_OVERLAP));
+        assertTrue(overlap1.getClusterReason().contains(CR_STRADDLING_CONSECUTIVE_BREAKENDS));
+        assertTrue(overlap2.getClusterReason().contains(CR_STRADDLING_CONSECUTIVE_BREAKENDS));
+    }
+
+    @Test
+    public void testFoldbacksStraddlingBreakendMerge()
+    {
+        LinxTester tester = new LinxTester();
+
+        // a cluster with 2 foldbacks and an unclustered breakend in between
+
+        // foldbacks clustered due to the foldback rule
+        SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 2000, -1);
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 100000, 101000, -1);
+
+        // simple del not clustered
+        SvVarData var3 = createDel(tester.nextVarId(), "1", 20000, 21000);
+
+        SvVarData var4 = createBnd(tester.nextVarId(), "1", 40000, -1, "3", 100, -1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(var1.isFoldback());
+        assertTrue(var2.isFoldback());
+
+        assertEquals(2, tester.getClusters().size());
+
+        SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var4));
+
+        assertTrue(mainCluster != null);
+
+        assertTrue(var4.getClusterReason().contains(CR_STRADDLING_FOLDBACK_BREAKENDS));
+        assertTrue(mainCluster.getClusteringReasons().contains(CR_STRADDLING_FOLDBACK_BREAKENDS));
+
+        // don't merge if both foldbacks face away
+        tester.clearClustersAndSVs();
+
+        var1 = createInv(tester.nextVarId(), "1", 1000, 2000, 1);
+
+        // var2 as before
+
+        var3 = createBnd(tester.nextVarId(), "1", 40000, -1, "3", 100, -1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(var1.isFoldback());
+        assertTrue(var2.isFoldback());
+
+        assertEquals(2, tester.getClusters().size());
+    }
+
+    @Ignore
+    @Test
+    public void testDistancePloidyLinkMatchMerge()
+    {
+        LinxTester tester = new LinxTester();
+
+        tester.setNonClusterAllelePloidies(1, 4);
+
+        // 2 distance clusters which can form a distant ploidy-matching merge
+
+        // foldbacks clustered due to the foldback rule
+        SvVarData var0 = createTestSv(tester.nextVarId(), "1", "0", 500, -1, -1, -1, SGL, 2);
+        SvVarData var1 = createTestSv(tester.nextVarId(), "1", "2", 1000, 100, 1, -1, BND, 4);
+        SvVarData var2 = createTestSv(tester.nextVarId(), "1", "2", 2000, 200, -1, 1, BND, 4);
+
+        // simple del not clustered
+        SvVarData var3 = createDel(tester.nextVarId(), "1", 20000, 21000);
+
+        // pair of BNDs not cluster since non-matching ploidy
+        SvVarData var4 = createTestSv(tester.nextVarId(), "1", "3", 50000, 100, 1, -1, BND, 2);
+        SvVarData var5 = createTestSv(tester.nextVarId(), "1", "3", 51000, 200, -1, 1, BND, 2);
+
+        SvVarData var6 = createTestSv(tester.nextVarId(), "1", "1", 100000, 110000, 1, 1, INV, 4);
+
+        tester.AllVariants.add(var0);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(var1.isFoldback());
+        assertTrue(var2.isFoldback());
+
+        assertEquals(3, tester.getClusters().size());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var3, var4)));
+
+        SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(var0, var1, var2, var6));
+
+        assertTrue(mainCluster != null);
+
+        assertTrue(var6.getClusterReason().contains(CR_TI_PLOIDY_MATCH));
+        assertTrue(mainCluster.getClusteringReasons().contains(CR_TI_PLOIDY_MATCH));
+
     }
 
 }

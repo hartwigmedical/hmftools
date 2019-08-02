@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
@@ -39,7 +39,7 @@ public class ChainingActualTest
     {
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         /*
@@ -170,93 +170,115 @@ public class ChainingActualTest
         assertEquals(10, chain.getLinkCount());
         assertEquals(8, chain.getSvCount());
 
-        /* strip out and store log 06:32:56.[0-9][0-9][0-9] \[main\] \[TRACE\]
+        /* strip out and store log [0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9] \[main\] \[[A-Z].*\]
 
-        cluster(1) foldback inversion SV(id(77) pos(3:-1:24565108 -> 3:-1:24566180)) length(1072)
-        cluster(0) foldback be1(113: start 3:1:25401059) be2(119: start 3:1:25400602) length(457)
-        cluster(3) foldback SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040) : BND) with own breakend(88: start 3:-1:26431918)
-        cluster(4) foldback inversion SV(id(79) pos(3:1:26663922 -> 3:1:26664498)) length(576)
-        cluster(0) SV(id(113) pos(3:1:25401059 -> 10:-1:60477224)) and cluster(1) SV(id(77) pos(3:-1:24565108 -> 3:-1:24566180)) have foldbacks on same arm
-        cluster(0) foldback breakend(119: start 3:1:25400602) faces cluster(2) breakend(78: start 3:-1:25331584)
-        cluster(0) SV(id(113) pos(3:1:25401059 -> 10:-1:60477224)) and cluster(3) SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040)) have foldbacks on same arm
-        cluster(0) SV(id(113) pos(3:1:25401059 -> 10:-1:60477224)) and cluster(4) SV(id(79) pos(3:1:26663922 -> 3:1:26664498)) have foldbacks on same arm
-        cluster(0) replicating SV(id(77) pos(3:-1:24565108 -> 3:-1:24566180)) 2 times, copyNumChg(4 vs min=2.0)
-        cluster(0) replicating SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040)) 2 times, copyNumChg(4 vs min=2.0)
-        cluster(0) replicating SV(id(79) pos(3:1:26663922 -> 3:1:26664498)) 2 times, copyNumChg(4 vs min=2.0)
-        cluster(0) starting chaining with assemblyLinks(4) svCount(8)
-        index(0) method(ASSEMBLY) adding linked pair(119 12:72666892:end & 120 12:72667075:end ploidy=2.1) to new chain(0) ploidy(2.1 unc=0.5)
-        index(1) method(ASSEMBLY) adding linked pair(113 10:60477224:end & 120 10:60477422:start ploidy=1.9) to existing chain(0) ploidy(2.1 unc=0.4)
-        assembly multi-sgl-conn pair(88 6:26194040:end & 89 6:26194117:start) ploidy(1.5): first(ploidy=3.5 links=2) second(ploidy=1.5 links=1)
-        index(2) method(ASSEMBLY) adding linked pair(88 6:26194040:end & 89 6:26194117:start ploidy=1.5) to new chain(1) ploidy(1.5 unc=0.6)
-        assembly multi-sgl-conn pair(88 6:26194040:end & 89 6:26194406:end) ploidy(1.5): first(ploidy=2.0 links=2) second(ploidy=1.5 links=1)
-        index(3) method(ASSEMBLY) adding linked pair(88 6:26194040:end & 89 6:26194406:end ploidy=1.5) to existing chain(1) ploidy(1.5 unc=0.5)
-        created 2 partial chains from 4 assembly links
-        cluster(0) chromosomes(4) AP totalSegments(4 valid=4)
-        chain(1) adding chained foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918)
-        foldback breakends(113: start 3:1:25401059 & 119: start 3:1:25400602) ploidy(2.1) matched with breakend(77: end 3:-1:24566180) ploidy(4.0) linkPloidy(4.0)
-        foldback breakends(113: start 3:1:25401059 & 119: start 3:1:25400602) ploidy(2.1) matched with breakend(77: start 3:-1:24565108) ploidy(4.0) linkPloidy(4.0)
-        foldback breakends(77: start 3:-1:24565108 & 77: end 3:-1:24566180) ploidy(4.0) matched with breakend(79: start 3:1:26663922) ploidy(4.2) linkPloidy(4.2)
-        foldback breakends(77: start 3:-1:24565108 & 77: end 3:-1:24566180) ploidy(4.0) matched with breakend(79: end 3:1:26664498) ploidy(4.2) linkPloidy(4.2)
-        foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) ploidy(1.5) matched with breakend(79: start 3:1:26663922) ploidy(4.2) linkPloidy(4.2)
-        foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) ploidy(1.5) matched with breakend(79: end 3:1:26664498) ploidy(4.2) linkPloidy(4.2)
-        pair(77 3:24566180:end & 119 3:25400602:start) of foldbacks with ploidy(2.2 & 4.0)
-        pair(77 3:24565108:start & 119 3:25400602:start) of foldbacks with ploidy(2.2 & 4.0)
-        pair(77 3:24565108:start & 119 3:25400602:start) of foldbacks with ploidy(4.0 & 2.2)
-        pair(77 3:24566180:end & 119 3:25400602:start) of foldbacks with ploidy(4.0 & 2.2)
-        pair(77 3:24566180:end & 79 3:26663922:start) of foldbacks with ploidy(4.0 & 4.2)
-        pair(77 3:24566180:end & 79 3:26664498:end) of foldbacks with ploidy(4.0 & 4.2)
-        pair(77 3:24566180:end & 79 3:26663922:start) of foldbacks with ploidy(4.2 & 4.0)
-        pair(77 3:24566180:end & 79 3:26664498:end) of foldbacks with ploidy(4.2 & 4.0)
-        index(4) method(FOLDBACK_SPLIT) adding linked pair(77 3:24566180:end & 113 3:25401059:start ploidy=2.0) to new chain(3) ploidy(2.0 unc=0.4)
-        index(4) method(FOLDBACK_SPLIT) adding linked pair(77 3:24566180:end & 119 3:25400602:start ploidy=2.0) to new chain(3) ploidy(2.0 unc=0.4)
-        SV(id(113) ploidy(1.2-1.9-2.6) counts(s=2.0 e=1.9)) both breakends exhausted
-        SV(id(119) ploidy(1.3-2.2-3.1) counts(s=2.2 e=2.2)) both breakends exhausted
-        merging chain(0 links=2) end to chain(2 links=1) end
-        merging chain(0 links=3) start to chain(3 links=1) end
-        foldback breakends(113: start 3:1:25401059 & 119: start 3:1:25400602) removed from consideration
-        foldback breakends(77: start 3:-1:24565108 & 77: end 3:-1:24566180) removed from consideration
-        chain(0) adding chained foldback breakends(77: start 3:-1:24565108 & 77: start 3:-1:24565108)
-        foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) ploidy(1.5) matched with breakend(79: start 3:1:26663922) ploidy(4.2) linkPloidy(4.2)
-        foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) ploidy(1.5) matched with breakend(79: end 3:1:26664498) ploidy(4.2) linkPloidy(4.2)
-        foldback breakends(77: start 3:-1:24565108 & 77: start 3:-1:24565108) ploidy(2.1) matched with breakend(79: start 3:1:26663922) ploidy(4.2) linkPloidy(4.2)
-        foldback breakends(77: start 3:-1:24565108 & 77: start 3:-1:24565108) ploidy(2.1) matched with breakend(79: end 3:1:26664498) ploidy(4.2) linkPloidy(4.2)
-        adding shortest proposed link: pair(77 3:24565108:start & 79 3:26663922:start) rule(FOLDBACK_SPLIT) ploidy(2.1) match(Matched) length(2098814) priority(164) index(0)
-        index(5) method(FOLDBACK_SPLIT) adding linked pair(77 3:24565108:start & 79 3:26663922:start ploidy=2.1) to new chain(5) ploidy(2.1 unc=0.4)
-        index(5) method(FOLDBACK_SPLIT) adding linked pair(77 3:24565108:start & 79 3:26663922:start ploidy=2.1) to new chain(5) ploidy(2.1 unc=0.4)
-        SV(id(77) ploidy(3.5-4.0-4.5) counts(s=4.0 e=4.1)) both breakends exhausted
-        merging chain(0 links=4) start to chain(4 links=1) start
-        merging chain(0 links=5) end to chain(5 links=1) start
-        foldback breakends(79: start 3:1:26663922 & 79: end 3:1:26664498) removed from consideration
-        foldback breakends(77: start 3:-1:24565108 & 77: start 3:-1:24565108) removed from consideration
-        chain(0) adding chained foldback breakends(79: end 3:1:26664498 & 79: end 3:1:26664498)
-        foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) ploidy(1.5) matched with breakend(79: end 3:1:26664498) ploidy(4.2) linkPloidy(4.2)
-        index(6) method(FOLDBACK_SPLIT) adding linked pair(88 3:26431918:start & 79 3:26664498:end ploidy=1.8) to new chain(7) ploidy(1.8 unc=0.6)
-        index(6) method(FOLDBACK_SPLIT) adding linked pair(88 3:26431918:start & 79 3:26664498:end ploidy=1.8) to new chain(7) ploidy(1.8 unc=0.6)
-        merging chain(0 links=6) start to chain(6 links=1) end
-        merging chain(0 links=7) start to chain(1 links=2) start
-        merging chain(0 links=9) start to chain(7 links=1) start
-        index(7) method(ONLY) adding linked pair(78 3:25331584 SGL-on-known & 79 3:26664498:end ploidy=0.6) to new chain(8) ploidy(1.1 unc=0.8)
-        SV(id(79) ploidy(3.4-4.2-5.0) counts(s=4.2 e=4.2)) both breakends exhausted
-        foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) removed from consideration
-        foldback breakends(79: end 3:1:26664498 & 79: end 3:1:26664498) removed from consideration
-        merging chain(0 links=10) end to chain(8 links=1) end
-        cluster(0) chaining finished: chains(1 unique=1 links=9) SVs(8) unlinked SVs(0 ploidy=2.4) breakends(1 ploidy=2.4)
+         cluster(0) adding assembly linked TI pair(119 12:72666892:end & 120 12:72667075:end) length(183)
+         cluster(0) adding assembly linked TI pair(113 10:60477224:end & 120 10:60477422:start) length(198)
+         index(0) method(ASSEMBLY) adding linked pair(119 12:72666892:end & 120 12:72667075:end ploidy=1.0) to new chain(0) ploidy(1.0 unc=0.5)
+         end breakend exhausted: id(119) ploidy(1.0-1.0-1.0) counts(s=0.0 e=1.0)
+         end breakend exhausted: id(120) ploidy(1.0-1.0-1.0) counts(s=0.0 e=1.0)
+         pair(113 10:60477224:end & 120 10:60477422:start) links second breakend to chain(0) as only exhausted connection
+         index(1) method(ASSEMBLY) adding linked pair(113 10:60477224:end & 120 10:60477422:start ploidy=1.0) to existing chain(0) ploidy(1.0 unc=0.4)
+         end breakend exhausted: id(113) ploidy(1.0-1.0-1.0) counts(s=0.0 e=1.0)
+         start breakend exhausted: id(120) ploidy(1.0-1.0-1.0) counts(s=1.0 e=1.0)
+         SV(id(120) ploidy(1.0-1.0-1.0) counts(s=1.0 e=1.0)) both breakends exhausted
+         cluster(0) chaining finished: chains(1 links=2) SVs(3) unlinked SVs(0) breakends(2)
+         cluster(0) added chain(0) ploidy(1.0) with 2 linked pairs:
+         chain(0): 3_P_T - s_119_e - e_120_s - e_113_s - 3_P_T
+         chain(0) 0: pair(119 12:72666892:end & 120 12:72667075:end) ASSEMBLY length(183) index(0)
+         chain(0) 1: pair(120 10:60477422:start & 113 10:60477224:end) ASSEMBLY length(198) index(1)
+         cluster(3) adding assembly linked TI pair(88 6:26194040:end & 89 6:26194117:start) length(77)
+         cluster(3) adding assembly linked TI pair(88 6:26194040:end & 89 6:26194406:end) length(366)
+         cluster(3) SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040)) ploidy multiple(2, ploidy(4 vs min=2.0)
+         assembly multi-sgl-conn pair(88 6:26194040:end & 89 6:26194117:start) ploidy(1.5): first(ploidy=3.5 links=2) second(ploidy=1.5 links=1)
+         index(0) method(ASSEMBLY) adding linked pair(88 6:26194040:end & 89 6:26194117:start ploidy=1.5) to new chain(0) ploidy(1.5 unc=0.6)
+         assembly multi-sgl-conn pair(88 6:26194040:end & 89 6:26194406:end) ploidy(1.8): first(ploidy=2.0 links=2) second(ploidy=1.5 links=1)
+         pair(88 6:26194040:end & 89 6:26194406:end) links second breakend to chain(0) as only exhausted connection
+         index(1) method(ASSEMBLY) adding linked pair(88 6:26194040:end & 89 6:26194406:end ploidy=1.8) to existing chain(0) ploidy(1.7 unc=0.5)
+         created 1 partial chains from 2 assembly links
+         cluster(3) chaining finished: chains(1 unique=1 links=2) SVs(2) unlinked SVs(0 ploidy=3.5) breakends(1 ploidy=3.7)
+         cluster(3) added chain(0) ploidy(1.7) with 2 linked pairs:
+         chain(0): 3_P_C - s_88_e - s_89_e - e_88_s - 3_P_C
+         chain(0) 0: pair(88 6:26194040:end & 89 6:26194117:start) ASSEMBLY length(77) index(0)
+         chain(0) 1: pair(89 6:26194406:end & 88 6:26194040:end) ASSEMBLY length(366) index(1)
+         cluster(0) complex SVs(3) desc(BND=3 res=NONE) arms(3) consis(2) chains(1 perc=1.00) replic(false)
+         cluster(3) complex SVs(2) desc(BND=1_INV=1 res=NONE) arms(2) consis(0) chains(1 perc=1.00) replic(true) inv=1
+         cluster(1) foldback inversion SV(id(77) pos(3:-1:24565108 -> 3:-1:24566180)) length(1072)
+         cluster(0) foldback be1(113: start 3:1:25401059) be2(119: start 3:1:25400602) length(457)
+         cluster(3) foldback SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040) : BND) with own breakend(88: start 3:-1:26431918) chain(0)
+         cluster(4) foldback inversion SV(id(79) pos(3:1:26663922 -> 3:1:26664498)) length(576)
+         cluster(0) SV(id(113) pos(3:1:25401059 -> 10:-1:60477224)) and cluster(1) SV(id(77) pos(3:-1:24565108 -> 3:-1:24566180)) have foldbacks on same arm
+         cluster(0) SV(id(113) pos(3:1:25401059 -> 10:-1:60477224)) and cluster(3) SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040)) have foldbacks on same arm
+         cluster(0) SV(id(113) pos(3:1:25401059 -> 10:-1:60477224)) and cluster(4) SV(id(79) pos(3:1:26663922 -> 3:1:26664498)) have foldbacks on same arm
+         cluster(2) boundary breakend(78: start 3:-1:25331584) ploidy TI match with cluster(0) breakend(119: start 3:1:25400602)
+         cluster(2 svs=1) merges in other cluster(0 svs=7) and adopts new ID
+         cluster(0) SV(id(77) pos(3:-1:24565108 -> 3:-1:24566180)) ploidy multiple(2, ploidy(4 vs min=2.0)
+         cluster(0) SV(id(88) pos(3:-1:26431918 -> 6:-1:26194040)) ploidy multiple(2, ploidy(4 vs min=2.0)
+         cluster(0) SV(id(79) pos(3:1:26663922 -> 3:1:26664498)) ploidy multiple(2, ploidy(4 vs min=2.0)
+         cluster(0) starting chaining with assemblyLinks(4) svCount(8)
+         index(0) method(ASSEMBLY) adding linked pair(119 12:72666892:end & 120 12:72667075:end ploidy=2.1) to new chain(0) ploidy(2.1 unc=0.5)
+         pair(113 10:60477224:end & 120 10:60477422:start) links second breakend to chain(0) as only exhausted connection
+         index(1) method(ASSEMBLY) adding linked pair(113 10:60477224:end & 120 10:60477422:start ploidy=2.0) to existing chain(0) ploidy(2.1 unc=0.4)
+         assembly multi-sgl-conn pair(88 6:26194040:end & 89 6:26194117:start) ploidy(1.5): first(ploidy=3.5 links=2) second(ploidy=1.5 links=1)
+         index(2) method(ASSEMBLY) adding linked pair(88 6:26194040:end & 89 6:26194117:start ploidy=1.5) to new chain(1) ploidy(1.5 unc=0.6)
+         assembly multi-sgl-conn pair(88 6:26194040:end & 89 6:26194406:end) ploidy(1.8): first(ploidy=2.0 links=2) second(ploidy=1.5 links=1)
+         pair(88 6:26194040:end & 89 6:26194406:end) links second breakend to chain(1) as only exhausted connection
+         index(3) method(ASSEMBLY) adding linked pair(88 6:26194040:end & 89 6:26194406:end ploidy=1.8) to existing chain(1) ploidy(1.7 unc=0.5)
+         created 2 partial chains from 4 assembly links
+         cluster(0) chromosomes(4) AP totalSegments(4 valid=4)
+         chain(0) adding chained foldback breakends(119: start 3:1:25400602 & 113: start 3:1:25401059 ploidy(2.1))
+         chain(1) adding chained foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918 ploidy(1.7))
+         type-D: foldback breakend(79: start 3:1:26663922) ploidy(4.2) split by other foldback pair(88: start 3:-1:26431918 & 88: start 3:-1:26431918 ploidy(1.7))
+         type-B: foldback(79: end 3:1:26664498) ploidy(4.2) matched with breakend(77: end 3:-1:24566180) ploidy(4.0)
+         index(4) method(FOLDBACK) adding linked pair(79 3:26664498:end & 77 3:24566180:end ploidy=4.1) to new chain(2) ploidy(4.1 unc=0.4)
+         end breakend exhausted: id(77) ploidy(3.5-4.0-4.5) counts(s=0.0 e=4.1)
+         end breakend exhausted: id(79) ploidy(3.4-4.2-5.0) counts(s=0.0 e=4.1)
+         foldback pair(79: start 3:1:26663922 & 79: end 3:1:26664498 ploidy(4.2)) removed from consideration
+         foldback pair(77: start 3:-1:24565108 & 77: end 3:-1:24566180 ploidy(4.0)) removed from consideration
+         type-B: foldback(113: start 3:1:25401059) ploidy(2.1) matched with breakend(78: start 3:-1:25331584) ploidy(2.0)
+         type-A: foldback breakends(119: start 3:1:25400602 & 113: start 3:1:25401059) ploidy(2.1) exact split of breakend(77: start 3:-1:24565108) ploidy(4.1)
+         type-A: foldback breakends(88: start 3:-1:26431918 & 88: start 3:-1:26431918) ploidy(1.7) exact split of breakend(79: start 3:1:26663922) ploidy(4.1)
+         duplicating chain(2 links=1 sv=2) for multi-connect FOLDBACK_SPLIT
+         index(5) method(FOLDBACK_SPLIT) adding linked pair(88 3:26431918:start & 79 3:26663922:start ploidy=1.9) to existing chain(2) ploidy(2.0 unc=0.3)
+         index(5) method(FOLDBACK_SPLIT) adding linked pair(88 3:26431918:start & 79 3:26663922:start ploidy=1.9) to existing chain(2) ploidy(2.0 unc=0.3)
+         start breakend exhausted: id(88) ploidy(2.6-3.5-4.4) counts(s=3.5 e=3.3)
+         start breakend exhausted: id(79) ploidy(3.4-4.2-5.0) counts(s=4.2 e=4.1)
+         SV(id(88) ploidy(2.6-3.5-4.4) counts(s=3.5 e=3.3)) both breakends exhausted
+         SV(id(79) ploidy(3.4-4.2-5.0) counts(s=4.2 e=4.1)) both breakends exhausted
+         foldback pair(88: start 3:-1:26431918 & 88: start 3:-1:26431918 ploidy(1.7)) removed from consideration
+         chain(2) adding chained foldback breakends(77: start 3:-1:24565108 & 77: start 3:-1:24565108 ploidy(2.0))
+         type-B: foldback(113: start 3:1:25401059) ploidy(2.1) matched with breakend(78: start 3:-1:25331584) ploidy(2.0)
+         pair(113 3:25401059:start & 78 3:25331584 SGL-on-known) links first breakend to chain(0) as only exhausted connection
+         index(6) method(FOLDBACK) adding linked pair(113 3:25401059:start & 78 3:25331584 SGL-on-known ploidy=2.0) to existing chain(0) ploidy(2.0 unc=0.4)
+         start breakend exhausted: id(78) ploidy(1.0-2.0-2.9) counts(s=2.0 e=0.0)
+         start breakend exhausted: id(113) ploidy(1.2-1.9-2.6) counts(s=1.9 e=2.1)
+         SV(id(113) ploidy(1.2-1.9-2.6) counts(s=1.9 e=2.1)) both breakends exhausted
+         foldback pair(119: start 3:1:25400602 & 113: start 3:1:25401059 ploidy(2.1)) removed from consideration
+         type-B: foldback(77: start 3:-1:24565108) ploidy(2.0) matched with breakend(119: start 3:1:25400602) ploidy(2.0)
+         pair(77 3:24565108:start & 119 3:25400602:start) links first breakend to chain(2) as only exhausted connection
+         index(7) method(FOLDBACK) adding linked pair(77 3:24565108:start & 119 3:25400602:start ploidy=2.0) to existing chain(2) ploidy(2.0 unc=0.3)
+         merging chain(0 links=3) start to chain(2 links=7) start
+         start breakend exhausted: id(77) ploidy(3.5-4.0-4.5) counts(s=4.0 e=4.1)
+         start breakend exhausted: id(119) ploidy(1.3-2.2-3.1) counts(s=2.2 e=2.1)
+         SV(id(77) ploidy(3.5-4.0-4.5) counts(s=4.0 e=4.1)) both breakends exhausted
+         SV(id(119) ploidy(1.3-2.2-3.1) counts(s=2.2 e=2.1)) both breakends exhausted
+         foldback pair(77: start 3:-1:24565108 & 77: start 3:-1:24565108 ploidy(2.0)) removed from consideration
+         cluster(0) chaining finished: chains(1 unique=1 links=8) SVs(8) unlinked SVs(0 ploidy=2.0) breakends(1 ploidy=2.0)
 
-        cluster(0) added chain(0) ploidy(2.1) with 11 linked pairs:
-        chain(0): 3_P_T - s_79_e - s_88_e - e_89_s - e_88_s - e_79_s - s_77_e - s_119_e - e_120_s - e_113_s - e_77_s - s_79_e - s_78_e - sgl_unclear
-        chain(0) 0: pair(79 3:26664498:end & 88 3:26431918:start) FOLDBACK_SPLIT length(232580) index(6)
-        chain(0) 1: pair(88 6:26194040:end & 89 6:26194406:end) ASSEMBLY length(366) index(3)
-        chain(0) 2: pair(89 6:26194117:start & 88 6:26194040:end) ASSEMBLY length(77) index(2)
-        chain(0) 3: pair(88 3:26431918:start & 79 3:26664498:end) FOLDBACK_SPLIT length(232580) index(6)
-        chain(0) 4: pair(79 3:26663922:start & 77 3:24565108:start) FOLDBACK_SPLIT length(2098814) index(5)
-        chain(0) 5: pair(77 3:24566180:end & 119 3:25400602:start) FOLDBACK_SPLIT length(834422) index(4)
-        chain(0) 6: pair(119 12:72666892:end & 120 12:72667075:end) ASSEMBLY length(183) index(0)
-        chain(0) 7: pair(120 10:60477422:start & 113 10:60477224:end) ASSEMBLY length(198) index(1)
-        chain(0) 8: pair(113 3:25401059:start & 77 3:24566180:end) FOLDBACK_SPLIT length(834879) index(4)
-        chain(0) 9: pair(77 3:24565108:start & 79 3:26663922:start) FOLDBACK_SPLIT length(2098814) index(5)
-        chain(0) 10: pair(79 3:26664498:end & 78 3:25331584 SGL-on-known) ONLY length(1332914) index(7)
-        cluster(0) complex SVs(8) desc(BND=4_INV=3_SGL=1 res=COMPLEX) arms(4) consis(1) chains(1 perc=1.00) replic(true) foldbacks=5 inv=3
-        */
+         cluster(0) added chain(0) ploidy(2.0) with 10 linked pairs:
+         chain(0): 3_P_C - s_77_e - e_79_s - s_88_e - s_89_e - e_88_s - s_79_e - e_77_s - s_119_e - e_120_s - e_113_s - s_78_e - sgl_unclear
+         chain(0) 0: pair(77 3:24566180:end & 79 3:26664498:end) FOLDBACK length(2098318) index(4)
+         chain(0) 1: pair(79 3:26663922:start & 88 3:26431918:start) FOLDBACK_SPLIT length(232004) index(5)
+         chain(0) 2: pair(88 6:26194040:end & 89 6:26194117:start) ASSEMBLY length(77) index(2)
+         chain(0) 3: pair(89 6:26194406:end & 88 6:26194040:end) ASSEMBLY length(366) index(3)
+         chain(0) 4: pair(88 3:26431918:start & 79 3:26663922:start) FOLDBACK_SPLIT length(232004) index(5)
+         chain(0) 5: pair(79 3:26664498:end & 77 3:24566180:end) FOLDBACK length(2098318) index(4)
+         chain(0) 6: pair(77 3:24565108:start & 119 3:25400602:start) FOLDBACK length(835494) index(7)
+         chain(0) 7: pair(119 12:72666892:end & 120 12:72667075:end) ASSEMBLY length(183) index(0)
+         chain(0) 8: pair(120 10:60477422:start & 113 10:60477224:end) ASSEMBLY length(198) index(1)
+         chain(0) 9: pair(113 3:25401059:start & 78 3:25331584 SGL-on-known) FOLDBACK length(69475) index(6)
+         cluster(0) complex SVs(8) desc(BND=4_INV=3_SGL=1 res=COMPLEX) arms(4) consis(1) chains(1 perc=1.00) replic(true) foldbacks=5 inv=3
+         cluster(0) incomplete chains(1 incons=1) chainEnds(arms=0 repeats=0) unlinkedSVs(0 armCount(4 incons=0)) tiCount(short=0 long=0)        */
     }
 
     @Ignore
@@ -265,7 +287,7 @@ public class ChainingActualTest
     {
         // based on CPCT2100151T chromosome 7 and EGFR AMP
 
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
@@ -338,7 +360,7 @@ public class ChainingActualTest
     public void testActualSimpleChaining1()
     {
         // based on a sample where the shortest TI of 76 bases is actually ignored so as to make 2 chains
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(7821420,"18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");

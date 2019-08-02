@@ -4,33 +4,43 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvCluster;
 
 public class ClusteringState
 {
     private int mNextClusterId;
 
-    private final Map<String, List<SvBreakend>> mChrBreakendMap; // every breakend on a chromosome, ordered by ascending position
+    // every breakend on a chromosome, ordered by ascending position
+    private final Map<String, List<SvBreakend>> mChrBreakendMap;
+
     private List<LohEvent> mLohEventList;
     private List<HomLossEvent> mHomLossList;
 
     private long mDelCutoffLength;
     private long mDupCutoffLength;
 
-    public static String CLUSTER_REASON_PROXIMITY = "Prox";
-    public static String CLUSTER_REASON_LOH = "LOH";
-    public static String CLUSTER_REASON_HOM_LOSS = "HomLoss";
-    public static String CLUSTER_REASON_COMMON_ARMS = "ComArm";
-    public static String CLUSTER_REASON_FOLDBACKS = "Foldback";
+    public static String CR_PROXIMITY = "Prox";
+    public static String CR_LOH = "LOH";
+    public static String CR_HOM_LOSS = "HomLoss";
+    public static String CR_COMMON_ARMS = "ComArm";
+    public static String CR_FOLDBACKS = "Foldback";
+    public static String CR_STRADDLING_CONSECUTIVE_BREAKENDS = "StradBEs";
+    public static String CR_STRADDLING_FOLDBACK_BREAKENDS = "StradFBs";
+    public static String CR_LOH_CHAIN = "LOHChain";
+    public static String CR_LONG_DEL_DUP_OR_INV = "DelDupInv";
+    public static String CR_SATELLITE_SGL = "SatelliteSgl";
+    public static String CR_MAJOR_AP_PLOIDY = "MajorAP";
+    public static String CR_TI_PLOIDY_MATCH = "TiPloidyMatch";
+
+    // to be deprecated
     public static String CLUSTER_REASON_SOLO_SINGLE = "Single";
-    public static String CLUSTER_REASON_LOOSE_OVERLAP = "LooseOverlap";
-    public static String CLUSTER_REASON_LOH_CHAIN = "LOHChain";
     public static String CLUSTER_REASON_NET_ARM_END_PLOIDY = "ArmEndPloidy";
     public static String CLUSTER_REASON_BE_PLOIDY_DROP = "BEPloidy";
-    public static String CLUSTER_REASON_LONG_DEL_DUP_OR_INV = "DelDupInv";
-    public static String CLUSTER_REASON_SATELLITE_SGL = "SatelliteSgl";
+
 
     public ClusteringState()
     {

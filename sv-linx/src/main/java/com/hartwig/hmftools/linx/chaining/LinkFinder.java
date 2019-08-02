@@ -137,6 +137,12 @@ public class LinkFinder
         return false;
     }
 
+    public static boolean haveOverlappingDeletionBridge(final SvBreakend breakend1, final SvBreakend breakend2)
+    {
+        final SvLinkedPair dbLink = breakend1.getDBLink();
+        return (dbLink != null && dbLink == breakend2.getDBLink() && dbLink.length() < 1);
+    }
+
     public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
     {
         // templated insertions are allowed to traverse the centromere

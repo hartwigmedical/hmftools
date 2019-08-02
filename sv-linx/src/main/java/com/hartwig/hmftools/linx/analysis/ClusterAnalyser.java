@@ -330,8 +330,6 @@ public class ClusterAnalyser {
                 mState.getDelCutoffLength(), mState.getDupCutoffLength(), mConfig.ProximityDistance);
     }
 
-
-
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
         if(!assembledLinksOnly)
@@ -358,13 +356,9 @@ public class ClusterAnalyser {
         mChainFinder.clear(); // release any refs to clusters and SVs
     }
 
-
     private void reportOtherFeatures()
     {
         annotateTemplatedInsertions(mClusters, mState.getChrBreakendMap());
-        // checkSkippedLOHEvents();
-
-        // annotateFoldbacks(mClusters); // unused for now
     }
 
     private void reportClusterFeatures(final SvCluster cluster)

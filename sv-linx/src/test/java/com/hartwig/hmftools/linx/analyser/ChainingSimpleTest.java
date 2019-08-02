@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
@@ -327,7 +327,7 @@ public class ChainingSimpleTest
     @Test
     public void testFullyAssembledChain()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createDel(0, "1", 100,200);
@@ -366,7 +366,7 @@ public class ChainingSimpleTest
     public void testChainNotClosed()
     {
         // 2 SVs which could link on both ends
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var1 = createInv(1, "1", 100,200, -1);
@@ -396,7 +396,7 @@ public class ChainingSimpleTest
     @Test
     public void testPartiallyAssembledChain()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         final SvVarData var0 = createDel(0, "1", 100,200);

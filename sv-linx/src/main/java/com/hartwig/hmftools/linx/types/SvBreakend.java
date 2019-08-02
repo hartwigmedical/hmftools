@@ -112,4 +112,10 @@ public class SvBreakend {
     }
     public final SvLinkedPair getDBLink() { return mSV.getDBLink(mUsesStart); }
 
+    public boolean isFoldback()
+    {
+        return mSV.getFoldbackBreakend(mUsesStart) != null;
+    }
+    public final SvBreakend getFoldbackBreakend() { return mSV.getFoldbackBreakend(mUsesStart); }
+
 }

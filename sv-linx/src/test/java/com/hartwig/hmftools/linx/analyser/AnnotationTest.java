@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createTestSv;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -28,7 +25,7 @@ public class AnnotationTest
     @Test
     public void testLocalTopology()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         // tester.logVerbose(true);
 
         // create a set of SVs which exhibit the various types of local topology
@@ -76,57 +73,6 @@ public class AnnotationTest
         assertEquals(1, armClusterData[ARM_CL_FOLDBACK]);
         assertEquals(1, armClusterData[ARM_CL_FOLDBACK_DSB]);
         assertEquals(1, armClusterData[ARM_CL_COMPLEX_FOLDBACK]);
-    }
-
-    @Test
-    public void testUnderClusteredFoldbackAnnotations()
-    {
-        SvTestHelper tester = new SvTestHelper();
-        // tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
-
-        double[] chrCopyNumbers = {2.0, 2.0, 2.0};
-        tester.CnDataLoader.getChrCopyNumberMap().put("1", chrCopyNumbers);
-        tester.CnDataLoader.getChrCopyNumberMap().put("2", chrCopyNumbers);
-
-        final SvVarData var1 = createInv(0, "1", 101000, 104000, -1);
-
-        // straddling BNDs
-        final SvVarData var2 = createBnd(1, "1", 1000, 1, "2", 1000, -1);
-        final SvVarData var3 = createBnd(2, "1", 200000, 1, "2", 1100, 1);
-
-        // single other cluster - will be merged in because it faces the foldback
-        final SvVarData var4 = createSgl(3, "1", 150000, 1, false);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertTrue(var1.isFoldback());
-        assertEquals(2, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(1);
-        assertTrue(cluster.getSVs().contains(var4));
-
-        tester.clearClustersAndSVs();
-
-        final SvVarData var5 = createInv(tester.nextVarId(), "1", 1000, 2000, -1);
-        final SvVarData var6 = createInv(tester.nextVarId(), "1", 3000, 5000, -1);
-        final SvVarData var7 = createInv(tester.nextVarId(), "1", 4000, 6000, 1);
-        final SvVarData var8 = createInv(tester.nextVarId(), "1", 7000, 8000, 1);
-
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
-        tester.AllVariants.add(var7);
-        tester.AllVariants.add(var8);
-
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
     }
 
 }

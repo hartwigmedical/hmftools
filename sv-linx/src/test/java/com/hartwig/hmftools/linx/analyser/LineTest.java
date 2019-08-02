@@ -3,10 +3,8 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createSv;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
@@ -27,7 +25,7 @@ public class LineTest
     @Test
     public void testKnownLineMarking()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // scenario 1:
         // 2 BNDs within 5KB and 1 have poly A/T and not forming a DB
@@ -57,7 +55,7 @@ public class LineTest
     @Test
     public void testSuspectLineMarking()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         LineElementAnnotator leAnnotator = new LineElementAnnotator();
         int proximity = 5000;

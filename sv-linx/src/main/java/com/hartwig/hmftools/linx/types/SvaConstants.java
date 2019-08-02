@@ -10,7 +10,7 @@ public class SvaConstants
 
     public static final int SHORT_TI_LENGTH = 1000;
 
-    public static final int MAX_FOLDBACK_NEXT_CLUSTER_DISTANCE = 5000000;
+    public static final long MAX_MERGE_DISTANCE = 5000000;
 
     public static final int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
 

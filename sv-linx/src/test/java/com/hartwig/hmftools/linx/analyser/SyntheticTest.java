@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createSgl;
-import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createSgl;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -28,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SyntheticTest
@@ -36,7 +34,7 @@ public class SyntheticTest
     @Test
     public void testSyntheticDelDupFromInvPairs()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         // create 2 INVs with varying positions to check what synthetic DEL or DUP they create
@@ -159,7 +157,7 @@ public class SyntheticTest
     @Test
     public void testSyntheticDelDupFromBndPairs()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // create 2 BNDs with varying positions to check what synthetic DEL or DUP they create
 
@@ -195,7 +193,7 @@ public class SyntheticTest
     @Test
     public void testSyntheticDelDupFromDelsAndDups()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // 2 DUPs next to each other
         SvVarData var1 = createDup(tester.nextVarId(), "1", 100, 200);
@@ -322,7 +320,7 @@ public class SyntheticTest
     @Test
     public void testSyntheticChainedDelsAndDups()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), "2", 1200, 1, "3", 2000, 1);
@@ -464,7 +462,7 @@ public class SyntheticTest
     public void testSyntheticReciprocalInversions()
     {
         // test reciprocal inversion defined as a TI greater than 50% of the synthetic length and internal to a DEL
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         SvVarData var1 = createInv(tester.nextVarId(), "1", 100, 1000, 1);
         SvVarData var2 = createInv(tester.nextVarId(), "1", 90, 990, -1);
@@ -522,7 +520,7 @@ public class SyntheticTest
     @Test
     public void testSyntheticReciprocalTranslocations()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
@@ -600,7 +598,7 @@ public class SyntheticTest
     @Test
     public void testSyntheticIncompletes()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
 
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), "2", 1200, 1, "3", 2000, 1);
@@ -655,7 +653,7 @@ public class SyntheticTest
         assertEquals(500, cluster.getSyntheticTILength());
     }
 
-    private void addAndCluster(SvTestHelper tester, SvVarData var1, SvVarData var2)
+    private void addAndCluster(LinxTester tester, SvVarData var1, SvVarData var2)
     {
         tester.clearClustersAndSVs();
         tester.AllVariants.add(var1);

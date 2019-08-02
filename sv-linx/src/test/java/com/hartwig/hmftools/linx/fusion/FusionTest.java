@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createInv;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDup;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.analyser.SvTestHelper;
+import com.hartwig.hmftools.linx.analyser.LinxTester;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -38,7 +38,7 @@ public class FusionTest
     public void testReportableFusionComparison()
     {
         // test the selection and prioritisation logic from a collection of valid fusions
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
@@ -138,7 +138,7 @@ public class FusionTest
     @Test
     public void testChainedFusions()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();

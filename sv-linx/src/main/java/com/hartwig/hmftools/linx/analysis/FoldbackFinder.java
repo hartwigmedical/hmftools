@@ -55,7 +55,7 @@ public class FoldbackFinder
 
                     // first skip over any breakends in a DB with the initial breakend
                     if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
-                            && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
+                    && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
                     {
                         ++j;
                         continue;
@@ -63,7 +63,7 @@ public class FoldbackFinder
 
                     // check check for any assembled links in between the potential foldback breakends
                     if(j + 1 < breakendList.size() && nextBreakend.isAssembledLink()
-                            && nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart()) != null)
+                    && nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart()) != null)
                     {
                         SvLinkedPair asmbLink = nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart());
                         SvBreakend nextNextBreakend = breakendList.get(j + 1);

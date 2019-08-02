@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestHelper.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
 import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.calcAdjustedPloidyValues;
 
 import static org.junit.Assert.assertEquals;
@@ -52,7 +52,7 @@ public class CopyNumberTest
     @Test
     public void testClusterMinMaxCopyNumber()
     {
-        SvTestHelper tester = new SvTestHelper();
+        LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
         SvVarData var1 = createDel(tester.nextVarId(), "1", 100, 200);
