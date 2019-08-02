@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import java.util.Collections;
+import static com.hartwig.hmftools.common.purple.copynumber.ExtractChildren.fillGaps;
+
 import java.util.EnumSet;
 import java.util.List;
 
@@ -10,20 +11,19 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.region.ModifiableFittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class ExtendGermline {
+class ExtractGermline {
 
     private static final double AMPLIFICATION_TOLERANCE = 1;
     private static final double MIN_AMPLIFICATION_COPYNUMBER = 5;
 
     private final Gender gender;
 
-    ExtendGermline(final Gender gender) {
+    ExtractGermline(final Gender gender) {
         this.gender = gender;
     }
 
@@ -58,7 +58,7 @@ class ExtendGermline {
             if (children.isEmpty()) {
                 result.add(parent);
             } else {
-                result.addAll(selleysNoMoreGaps(parent, children));
+                result.addAll(fillGaps(parent, children));
             }
         }
         return result;
@@ -130,29 +130,7 @@ class ExtendGermline {
         }
     }
 
-    @NotNull
-    private static List<CombinedRegion> selleysNoMoreGaps(@NotNull final CombinedRegion parent, final List<CombinedRegion> children) {
-        if (children.isEmpty()) {
-            return Collections.singletonList(parent);
-        }
 
-        final List<CombinedRegion> result = Lists.newArrayList();
-        long nextStart = parent.start();
-        for (CombinedRegion child : children) {
-            if (child.start() > nextStart) {
-                result.add(reduce(parent, nextStart, child.start() - 1));
-            }
-
-            result.add(child);
-            nextStart = child.end() + 1;
-        }
-
-        if (nextStart <= parent.end()) {
-            result.add(reduce(parent, nextStart, parent.end()));
-        }
-
-        return result;
-    }
 
     @NotNull
     private static List<CombinedRegion> extendRight(@NotNull final List<CombinedRegion> children) {
@@ -184,36 +162,5 @@ class ExtendGermline {
                 region.observedNormalRatio()));
     }
 
-    @NotNull
-    private static CombinedRegion reduce(@NotNull final CombinedRegion parent, long start, long end) {
-        assert (start >= parent.start());
-        assert (end <= parent.end());
 
-        int bafCount = 0;
-        int depthWindowCount = 0;
-        for (FittedRegion fittedRegion : parent.regions()) {
-            if (fittedRegion.start() >= start && fittedRegion.end() <= end) {
-                bafCount += fittedRegion.bafCount();
-                depthWindowCount += fittedRegion.depthWindowCount();
-            }
-        }
-
-        final ModifiableFittedRegion smallerRegion = ModifiableFittedRegion.create()
-                .from(parent.region())
-                .setStart(start)
-                .setEnd(end)
-                .setBafCount(bafCount)
-                .setDepthWindowCount(depthWindowCount);
-
-        CombinedRegion result = new CombinedRegionImpl(smallerRegion);
-        result.setCopyNumberMethod(parent.copyNumberMethod());
-
-        for (FittedRegion fittedRegion : parent.regions()) {
-            if (fittedRegion.start() >= start && fittedRegion.end() <= end) {
-                result.extend(fittedRegion);
-            }
-        }
-
-        return result;
-    }
 }

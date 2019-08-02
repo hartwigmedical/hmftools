@@ -47,7 +47,7 @@ public class PurpleCopyNumberFactory {
         somaticCopyNumbers.clear();
         germlineDeletions.clear();
 
-        final ExtendGermline extendGermline = new ExtendGermline(gender);
+        final ExtractGermline extendGermline = new ExtractGermline(gender);
         final ExtendDiploid extendDiploid =
                 new ExtendDiploid(new AlleleTolerance(purityAdjuster), minTumorRatioCount, minTumorRatioCountAtCentromere);
         final PopulateUnknown populateUnknownFactory = new PopulateUnknown(gender);
@@ -70,8 +70,10 @@ public class PurpleCopyNumberFactory {
             final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
             final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
 
-            final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
+            final List<CombinedRegion> germlineAmplifications = extendGermline.extendGermlineAmplifications(bafExtended);
             final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
+
+            final List<CombinedRegion> somatics = ExtractHomozygousDeletes.extractHomozygousDeletes(germlineAmplifications);
 
             this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
             this.germlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN)).collect(toList()));
