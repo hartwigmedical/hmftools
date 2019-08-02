@@ -27,7 +27,7 @@ public class ViccJsonToSQLImporter {
 
         final String baseDir =
                 System.getProperty("user.home") + File.separator + "hmf" + File.separator + "projects" + File.separator + "vicc";
-        final String inputFile = baseDir + File.separator + "pmkb.json";
+        final String inputFile = baseDir + File.separator + "oncokb.json";
 
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
