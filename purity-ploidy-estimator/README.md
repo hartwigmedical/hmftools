@@ -62,10 +62,16 @@ output_dir | Path to the output directory. This directory will be created if it 
 amber | Path to AMBER output. This should correspond to the output_dir used in AMBER.
 cobalt | Path to COBALT output. This should correspond to the output_dir used in COBALT.
 gc_profile | Path to GC profile.
-ref_genome | Path to reference genome fasta file. 
+ref_genome | Path to reference genome fasta file.
 
 The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 A HG38 equivalent is also available.
+
+The ref genome must be indexed and have associated sequence dictionary. These can be created with samtools as follows:
+```
+samtools faidx ref_genome.fasta
+samtools dict ref_genome.fasta -o ref_genome.dict
+```
 
 ### Optional Arguments
 
@@ -123,6 +129,7 @@ java -jar purple.jar \
    -amber /path/to/COLO829/amber \
    -cobalt /path/to/COLO829/cobalt \
    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+   -ref_genome /path/to/Homo_sapiens_assembly38.fasta \
    -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/to/COLO829/COLO829.sv.vcf.gz \
    -sv_recovery_vcf /path/to/COLO829/COLO829.sv.all.vcf.gz \
@@ -937,6 +944,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-32)
+  - Fixed bug in sublconal modelling when somatic peak is close to max 
 - [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-31)
   - Added microsatellite status
   - Added subclonal likelihood model and figure

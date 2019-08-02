@@ -42,6 +42,4 @@ public abstract class JaxTrials implements KbSpecificObject {
 
     @NotNull
     public abstract List<JaxTrialsTherapies> therapies();
-
-
 }

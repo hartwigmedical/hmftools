@@ -30,6 +30,7 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 @Value.Immutable
@@ -68,6 +69,11 @@ public interface RefGenomeData {
         final String refGenomePath = cmd.getOptionValue(REF_GENOME);
         final Map<Chromosome, GenomePosition> lengthPositions;
         try (final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomePath))) {
+            SAMSequenceDictionary sequenceDictionary = indexedFastaSequenceFile.getSequenceDictionary();
+            if (sequenceDictionary == null) {
+                throw new ParseException("Supplied ref genome must have associated sequence dictionary");
+            }
+
             lengthPositions = fromLengths(ChromosomeLengthFactory.create(indexedFastaSequenceFile.getSequenceDictionary()));
         }
 

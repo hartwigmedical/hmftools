@@ -42,6 +42,7 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     String gene();
 
+    //TODO: Rename to genesAffected
     int genesEffected();
 
     @NotNull
