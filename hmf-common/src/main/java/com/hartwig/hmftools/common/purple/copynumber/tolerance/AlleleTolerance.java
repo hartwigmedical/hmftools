@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -74,8 +75,10 @@ public class AlleleTolerance implements CopyNumberTolerance {
         return Doubles.lessOrEqual(relativeCopyNumberChange(firstCopyNumber, secondCopyNumber), MIN_RELATIVE_COPY_NUMBER_TOLERANCE);
     }
 
-    private static double relativeCopyNumberChange(double firstCopyNumber, double secondCopyNumber) {
-        final double absCopyNumberDifference = Math.abs(firstCopyNumber - secondCopyNumber);
+    @VisibleForTesting
+    static double relativeCopyNumberChange(double firstCopyNumber, double secondCopyNumber) {
+        final double absCopyNumberDifference =
+                Math.abs(Math.max(firstCopyNumber, secondCopyNumber) - Math.min(firstCopyNumber, secondCopyNumber));
         if (Doubles.isZero(absCopyNumberDifference)) {
             return 0;
         }
@@ -84,7 +87,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
             return 1;
         }
 
-        return absCopyNumberDifference / Math.min(firstCopyNumber, secondCopyNumber);
+        return absCopyNumberDifference / Math.abs(Math.min(firstCopyNumber, secondCopyNumber));
     }
 
 }

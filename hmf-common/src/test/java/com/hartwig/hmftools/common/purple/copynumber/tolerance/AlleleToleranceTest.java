@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -50,6 +51,11 @@ public class AlleleToleranceTest {
         left = createCopyNumberRegion(1000, 2, 2);
         right = createCopyNumberRegion(1000, 1.1, 1.1);
         assertFalse(victim.inTolerance(left, right));
+    }
+
+    @Test
+    public void testRelativeChangeToNegativeCopyNumber() {
+        assertEquals(6, AlleleTolerance.relativeCopyNumberChange(2.5, -0.5), 0.01);
     }
 
     private FittedRegion createBafRegion(int bafCount, double tumorBaf, double observervedBaf) {
