@@ -39,8 +39,8 @@ public class ExtendDiploidTest {
     @Test
     public void testCentromereIsDubious() {
         final FittedRegion valid = createValidSomatic(1, 10000, 1, 1, SegmentSupport.TELOMERE);
-        final FittedRegion dubiousCentromere = createRegion(10001, 20000, 2, 8, 0, SegmentSupport.CENTROMERE);
-        final FittedRegion dubious1 = createRegion(20001, 30000, 3, 9, 0, SegmentSupport.NONE);
+        final FittedRegion dubiousCentromere = createRegion(10001, 20000, 4, 8, 0, SegmentSupport.CENTROMERE);
+        final FittedRegion dubious1 = createRegion(20001, 30000, 4, 9, 0, SegmentSupport.NONE);
         final FittedRegion dubious2 = createRegion(30001, 40000, 4, 10, 0, SegmentSupport.NONE);
 
         final List<CombinedRegion> result = PURE_VICTIM.extendDiploid(Lists.newArrayList(valid, dubiousCentromere, dubious1, dubious2));

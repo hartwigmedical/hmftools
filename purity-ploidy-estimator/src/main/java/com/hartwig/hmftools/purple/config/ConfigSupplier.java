@@ -26,7 +26,7 @@ public class ConfigSupplier {
     private static final String COBALT = "cobalt";
 
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
-    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
+    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 10;
 
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 50;
