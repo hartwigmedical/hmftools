@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -758,6 +759,8 @@ public class SimpleClustering
                 ++clusterIndex;
                 continue;
             }
+
+            // isSpecificCluster(cluster);
 
             boolean mergedOtherClusters = false;
 

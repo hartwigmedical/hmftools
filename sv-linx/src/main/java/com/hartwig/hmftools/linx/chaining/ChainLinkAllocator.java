@@ -302,13 +302,22 @@ public class ChainLinkAllocator
                 newSvPloidy = targetChain.ploidy();
                 matchesChainPloidy = true;
 
-                LOGGER.trace("pair({}) links {} breakend to chain({}) as only exhausted connection",
+                LOGGER.trace("pair({}) links {} breakend to chain({}) as only possible connection",
                         newPair, pairLinkedOnFirst ? "first" : "second", targetChain.id());
 
+                // mark this breakend as to-be-exhausted unless its on both ends of the chain
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
                     if (requiredChains[se] != null)
-                        proposedLinks.overrideBreakendPloidyMatched(newPair.getBreakend(isStart(se)), true);
+                    {
+                        final SvChain requiredChain = requiredChains[se];
+                        final SvBreakend breakend = newPair.getBreakend(isStart(se));
+
+                        if(!(requiredChain.getOpenBreakend(true) == breakend && requiredChain.getOpenBreakend(false) == breakend))
+                        {
+                            proposedLinks.overrideBreakendPloidyMatched(breakend, true);
+                        }
+                    }
                 }
             }
             else

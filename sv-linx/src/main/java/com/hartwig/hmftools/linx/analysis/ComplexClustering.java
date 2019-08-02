@@ -27,9 +27,11 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
 
@@ -403,6 +405,8 @@ public class ComplexClustering
                 continue;
             }
 
+            //isSpecificCluster(cluster);
+
             boolean mergedOtherClusters = false;
 
             for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
@@ -458,9 +462,6 @@ public class ComplexClustering
                     for (int j = lowerBreakend.getChrPosIndex() + 1; j <= upperBreakend.getChrPosIndex() - 1; ++j)
                     {
                         final SvBreakend otherBreakend = fullBreakendList.get(j);
-
-                        if(otherBreakend.getSV().isSimpleType())
-                            continue;
 
                         // if not straddled by a foldback pair, then the breakend must be facing the consecutive straddling breakends
                         if(!isFoldbackPair && otherBreakend.orientation() == lowerBreakend.orientation())
@@ -570,7 +571,7 @@ public class ComplexClustering
                         if(abs(nextBreakend.position() - boundaryBreakend.position()) > MAX_MERGE_DISTANCE)
                             break;
 
-                        if(skipClusterType(nextBreakend.getCluster()))
+                        if(nextBreakend.getCluster() == cluster || skipClusterType(nextBreakend.getCluster()))
                             continue;
 
                         if(!canMergeClusters(cluster, nextBreakend.getCluster()))

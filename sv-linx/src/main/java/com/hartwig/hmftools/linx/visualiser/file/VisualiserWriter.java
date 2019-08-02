@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
@@ -197,8 +198,16 @@ public class VisualiserWriter
 
         for(final SvCluster cluster : clusters)
         {
-            if (cluster.getSvCount() == 1 || isFilteredResolvedType(cluster.getResolvedType()))
-                continue;
+            if (cluster.getSvCount() == 1)
+            {
+                if(isFilteredResolvedType(cluster.getResolvedType()))
+                    continue;
+
+                if(isSimpleSingleSV(cluster))
+                    continue;
+
+                // BNDs, INVs and SGLs will have lines showing their orientation
+            }
 
             // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
             List<SvLinkedPair> uniquePairs = Lists.newArrayList();
