@@ -634,14 +634,6 @@ public class SimpleClustering
                     continue;
                 }
 
-                // check for conflicting LOH / hom-loss events
-                if(!canMergeClusters(cluster1, cluster2))
-                {
-                    LOGGER.debug("cluster({}) and cluster({}) have conflicting LOH & hom-loss events", cluster1.id(), cluster2.id());
-                    ++index2;
-                    continue;
-                }
-
                 List<SvVarData> cluster2Svs = Lists.newArrayList();
                 cluster2Svs.addAll(cluster2.getLongDelDups());
                 cluster2Svs.addAll(cluster2.getInversions());
@@ -657,6 +649,15 @@ public class SimpleClustering
 
                         if(var1.position(false) < var2.position(true) || var1.position(true) > var2.position(false))
                             continue;
+
+                        // check for conflicting LOH / hom-loss events
+                        if(variantsViolateLohHomLoss(var1, var2))
+                        {
+                            LOGGER.debug("cluster({}) SV({}) and cluster({}) var({}) have conflicting LOH & hom-loss events",
+                                    cluster1.id(), var1.id(), cluster2.id(), var2.id());
+                            ++index2;
+                            continue;
+                        }
 
                         LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
                                 cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
@@ -689,20 +690,40 @@ public class SimpleClustering
         return clusters.size() < initClusterCount;
     }
 
-    protected static boolean canMergeClusters(final SvCluster cluster, final SvCluster otherCluster)
+    protected static boolean variantsViolateLohHomLoss(final SvVarData var1, final SvVarData var2)
     {
-        // if the 2 clusters have overlapping LOH and hom-loss events, they cannot be merged
-        if(cluster.getLohEvents().stream().anyMatch(x -> x.getHomLossEvents().stream().anyMatch(y -> y.getCluster() == otherCluster)))
+        for(int se1 = SE_START; se1 <= SE_END; ++se1)
         {
-            return false;
+            if(se1 == SE_END && var1.isSglBreakend())
+                continue;
+
+            for(int se2 = SE_START; se2 <= SE_END; ++se2)
+            {
+                if(se2 == SE_END && var2.isSglBreakend())
+                    continue;
+
+                if(breakendsViolateLohHomLoss(var1.getBreakend(se1), var2.getBreakend(se2)))
+                    return true;
+            }
         }
 
-        if(otherCluster.getLohEvents().stream().anyMatch(x -> x.getHomLossEvents().stream().anyMatch(y -> y.getCluster() == cluster)))
-        {
-            return false;
-        }
+        return false;
+    }
 
-        return true;
+    protected static boolean breakendsViolateLohHomLoss(final SvBreakend breakend, final SvBreakend otherBreakend)
+    {
+        // cannot merge to clusters if the reason for merging is 2 of their breakends forming an LOH and the other inside its bounds
+        if(!breakend.chromosome().equals(otherBreakend))
+            return false;
+
+        List<LohEvent> lohEvents = breakend.getCluster().getLohEvents().stream()
+                .filter(x -> x.getBreakend(true) == breakend || x.getBreakend(false) == breakend)
+                .collect(Collectors.toList());
+
+        if(lohEvents.isEmpty())
+            return false;
+
+        return lohEvents.stream().anyMatch(x -> otherBreakend.position() > x.PosStart && otherBreakend.position() < x.PosEnd);
     }
 
     protected boolean exceedsDupDelCutoffLength(StructuralVariantType type, long length)
@@ -814,9 +835,6 @@ public class SimpleClustering
                                 continue;
 
                             if(skipClusterType(nextBreakend.getCluster()))
-                                continue;
-
-                            if(!canMergeClusters(cluster, nextBreakend.getCluster()))
                                 continue;
 
                             if(nextBreakend.isAssembledLink())
@@ -1067,7 +1085,10 @@ public class SimpleClustering
 
     private boolean mergeLOHResolvingClusters(List<SvCluster> clusters)
     {
-        // merge clusters if one resolves another's LOH event with a DUP on one side
+        // No breakend in a cluster can chain across an LOH which has been caused by a breakend in the same cluster.
+        // Hence if the other breakend of a DUP type variant bounding an LOH can only chain to only one available (not assembled, not LINE)
+        // breakend prior to the LOH, then we cluster the DUP and the other breakend.
+
         List<SvCluster> clustersWithLohEvents = clusters.stream()
                 .filter(x -> !x.getLohEvents().isEmpty())
                 .filter(x -> !x.hasLinkingLineElements())
@@ -1143,6 +1164,9 @@ public class SimpleClustering
                         }
 
                         if(nextBreakend.orientation() == otherBreakend.orientation())
+                            continue;
+
+                        if(nextBreakend.isAssembledLink())
                             continue;
 
                         SvCluster otherCluster = nextBreakend.getCluster();

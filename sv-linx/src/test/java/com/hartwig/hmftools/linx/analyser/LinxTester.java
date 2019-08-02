@@ -30,6 +30,8 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 public class LinxTester
@@ -46,6 +48,8 @@ public class LinxTester
     // assume an A-allele which is unaffected by the SVs, and a B-allele which is
     private double mOtherAllelePloidy;
     private double mUndisruptedAllelePloidy; // the ploidy of the undisrupted B-allele
+
+    private static final Logger LOGGER = LogManager.getLogger(LinxTester.class);
 
     public LinxTester()
     {
@@ -96,7 +100,8 @@ public class LinxTester
         // have to manually trigger breakend map creation since the CN data creation uses it
         Analyser.getState().reset();
         populateChromosomeBreakendMap(AllVariants, Analyser.getState());
-        addCopyNumberData(includePloidyCalcs);
+
+        populateCopyNumberData(includePloidyCalcs);
 
         Analyser.preClusteringPreparation();
     }
@@ -158,6 +163,20 @@ public class LinxTester
         mUndisruptedAllelePloidy = undisruptedAllele;
     }
 
+    public void populateCopyNumberData(boolean includePloidyCalcs)
+    {
+        createCopyNumberData();
+
+        if(includePloidyCalcs)
+            CnDataLoader.calculateAdjustedPloidy(SampleId);
+
+        setSvCopyNumberData(
+                AllVariants,
+                CnDataLoader.getSvPloidyCalcMap(),
+                CnDataLoader.getSvIdCnDataMap(),
+                CnDataLoader.getChrCnDataMap());
+    }
+
     private double calcActualBaf(double copyNumber)
     {
         if(copyNumber == 0)
@@ -171,10 +190,9 @@ public class LinxTester
             return mOtherAllelePloidy / copyNumber;
     }
 
-    private void createCopyNumberData(boolean includePloidyCalcs)
+    private void createCopyNumberData()
     {
         // use SV breakend data to re-create the copy number segments
-        // by default the copy number is 2 at the telomere and Actual BAF = 0.5
 
         Map<String, List<SvCNData>> chrCnDataMap = CnDataLoader.getChrCnDataMap();
         final Map<String, List<SvBreakend>> chrBreakendMap = Analyser.getState().getChrBreakendMap();
@@ -192,10 +210,9 @@ public class LinxTester
             chrCnDataMap.put(chromosome, cnDataList);
 
             // work out the net copy number from all SVs going out to P-arm telomere for the correct starting copy number
-            double netSvPloidy = breakendList.stream().mapToDouble(x -> x.ploidy() * x.orientation()).sum();
+            double netSvPloidy = max(breakendList.stream().mapToDouble(x -> x.ploidy() * x.orientation()).sum(), 0);
 
             double currentCopyNumber = mOtherAllelePloidy + mUndisruptedAllelePloidy + netSvPloidy;
-            double nonDisruptedAP = mOtherAllelePloidy + mUndisruptedAllelePloidy;
 
             long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
             long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(chromosome);
@@ -207,14 +224,27 @@ public class LinxTester
                 final SvVarData var = breakend.getSV();
                 double ploidy = var.ploidy();
 
+                double ploidyChange = -ploidy * breakend.orientation();
+
                 SvCNData cnData = null;
 
                 if (i == 0)
                 {
-                    // assume cluster runs out to telomere in addition to the undisrupted B allele
-                    if(breakend.orientation() == 1)
+                    // =IF(A15="DUP",g15,-G15)+MAX(G12,0)
+                    if(breakend.getSV().type() == DUP && breakendList.get(i + 1).getSV() == breakend.getSV())
                     {
-                        currentCopyNumber = nonDisruptedAP + ploidy;
+                        // starts with a DUP so don't treat the first breakend as a copy-number drop
+                        currentCopyNumber += +ploidyChange;
+                    }
+                    else
+                    {
+                        currentCopyNumber += max(-ploidyChange, 0);
+                    }
+
+                    if(currentCopyNumber < 0)
+                    {
+                        LOGGER.error("invalid copy number({}) at telomere", currentCopyNumber);
+                        return;
                     }
 
                     double actualBaf = calcActualBaf(currentCopyNumber);
@@ -238,12 +268,6 @@ public class LinxTester
                     }
                     else
                     {
-                        // no except made for DUPs anymore
-                        // if(breakend.orientation() == 1 || breakend.getSV().type() == DUP)
-
-                        currentCopyNumber = nonDisruptedAP;
-                        actualBaf = calcActualBaf(currentCopyNumber);
-
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, breakend.position() - 1,
                                 currentCopyNumber, TELOMERE.toString(), var.type().toString(),
                                 1, actualBaf, 100);
@@ -253,15 +277,13 @@ public class LinxTester
                     }
                 }
 
-                if(breakend.orientation() == 1)
+                // orientation determines copy number drop or gain
+                currentCopyNumber += ploidyChange;
+
+                if(currentCopyNumber < 0)
                 {
-                    // copy number drop
-                    currentCopyNumber -= ploidy;
-                }
-                else
-                {
-                    // no chromatid running to telomere on this end
-                    currentCopyNumber += ploidy;
+                    LOGGER.error("invalid copy number({}) at breakend({})", currentCopyNumber, breakend);
+                    return;
                 }
 
                 double actualBaf = calcActualBaf(currentCopyNumber);
@@ -348,210 +370,6 @@ public class LinxTester
                 breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, ploidy);
             }
         }
-
-        if(includePloidyCalcs)
-            CnDataLoader.calculateAdjustedPloidy(SampleId);
-
-        setSvCopyNumberData(
-                AllVariants,
-                CnDataLoader.getSvPloidyCalcMap(),
-                CnDataLoader.getSvIdCnDataMap(),
-                CnDataLoader.getChrCnDataMap());
-
-    }
-
-    // to be depreated once method above is fixed
-    private void addCopyNumberData(boolean includePloidyCalcs)
-    {
-        // use SV breakend data to re-create the copy number segments
-        // by default the copy number is 2 at the telomere and Actual BAF = 0.5
-
-        Map<String, List<SvCNData>> chrCnDataMap = CnDataLoader.getChrCnDataMap();
-        final Map<String, List<SvBreakend>> chrBreakendMap = Analyser.getState().getChrBreakendMap();
-        Map<Integer,SvCNData[]> svIdCnDataMap = CnDataLoader.getSvIdCnDataMap();
-
-        chrCnDataMap.clear();
-        svIdCnDataMap.clear();
-
-        double currentCopyNumber = 2;
-        double nonDisruptedAP = mOtherAllelePloidy;
-
-        int cnId = 0;
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
-        {
-            final String chromosome = entry.getKey();
-            List<SvBreakend> breakendList = entry.getValue();
-            List<SvCNData> cnDataList = Lists.newArrayList();
-            chrCnDataMap.put(chromosome, cnDataList);
-
-            // work out the net copy number from all SVs going out to P-arm telomere for the correct starting copy number
-            double netSvPloidy = breakendList.stream().mapToDouble(x -> x.ploidy() * x.orientation()).sum();
-
-            long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
-            long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(chromosome);
-
-            for (int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                final StructuralVariantData svData = breakend.getSV().getSvData();
-                final SvVarData var = breakend.getSV();
-                double ploidy = var.ploidy();
-
-                SvCNData cnData = null;
-
-                if (i == 0)
-                {
-                    // assume cluster runs out to telomere in addition to the undisrupted B allele
-                    if(breakend.orientation() == 1)
-                    {
-                        currentCopyNumber = nonDisruptedAP + ploidy;
-                    }
-
-                    double actualBaf = calcActualBaf(currentCopyNumber);
-
-                    // add telomere segment at start, and centromere as soon as the breakend crosses the centromere
-                    if(breakend.arm() == CHROMOSOME_ARM_Q)
-                    {
-                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, centromerePosition,
-                                currentCopyNumber, TELOMERE.toString(), CENTROMERE.toString(),
-                                1, actualBaf, 100);
-
-                        extraCnData.setIndex(cnDataList.size());
-                        cnDataList.add(extraCnData);
-
-                        extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, breakend.position() - 1,
-                                currentCopyNumber, CENTROMERE.toString(), var.type().toString(),
-                                1, actualBaf, 100);
-
-                        extraCnData.setIndex(cnDataList.size());
-                        cnDataList.add(extraCnData);
-                    }
-                    else
-                    {
-                        if(breakend.orientation() == 1 || breakend.getSV().type() == DUP)
-                        {
-                            // copy number and actual BAF as expected
-                        }
-                        else
-                        {
-                            currentCopyNumber = nonDisruptedAP;
-                            actualBaf = 1;
-                        }
-
-                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, breakend.position() - 1,
-                                currentCopyNumber, TELOMERE.toString(), var.type().toString(),
-                                1, actualBaf, 100);
-
-                        extraCnData.setIndex(cnDataList.size());
-                        cnDataList.add(extraCnData);
-                    }
-                }
-
-                if(breakend.orientation() == 1)
-                {
-                    // copy number drop
-                    currentCopyNumber -= ploidy;
-                }
-                else
-                {
-                    // no chromatid running to telomere on this end
-                    currentCopyNumber += ploidy;
-                }
-
-                double actualBaf = calcActualBaf(currentCopyNumber);
-
-                if (i < breakendList.size() - 1)
-                {
-                    final SvBreakend nextBreakend = breakendList.get(i + 1);
-                    final StructuralVariantData nextSvData = nextBreakend.getSV().getSvData();
-
-                    if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
-                    {
-                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition-1,
-                                currentCopyNumber, var.type().toString(), CENTROMERE.toString(),
-                                1, actualBaf, 100);
-
-                        cnData.setIndex(cnDataList.size());
-                        cnData.setStructuralVariantData(svData, breakend.usesStart());
-                        cnDataList.add(cnData);
-
-                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, nextBreakend.position() - 1,
-                                currentCopyNumber, CENTROMERE.toString(), nextBreakend.getSV().type().toString(),
-                                1, actualBaf, 100);
-
-                        extraCnData.setIndex(cnDataList.size());
-                        cnDataList.add(extraCnData);
-                    }
-                    else
-                    {
-                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), nextBreakend.position() - 1,
-                                currentCopyNumber, var.type().toString(), nextBreakend.getSV().type().toString(),
-                                1, actualBaf, 100);
-
-                        cnData.setIndex(cnDataList.size());
-                        cnData.setStructuralVariantData(svData, breakend.usesStart());
-                        cnDataList.add(cnData);
-                    }
-                }
-                else
-                {
-                    // last breakend runs out to the telomere
-                    if(breakend.arm() == CHROMOSOME_ARM_P)
-                    {
-                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition - 1,
-                                currentCopyNumber,
-                                var.type().toString(), CENTROMERE.toString(),
-                                1, actualBaf, 100);
-
-                        cnData.setIndex(cnDataList.size());
-                        cnData.setStructuralVariantData(svData, breakend.usesStart());
-                        cnDataList.add(cnData);
-
-                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, chromosomeLength,
-                                breakend.getCopyNumber(false),
-                                CENTROMERE.toString(), TELOMERE.toString(),
-                                1, 0.5, 100);
-
-                        extraCnData.setIndex(cnDataList.size());
-                        cnDataList.add(extraCnData);
-                    }
-                    else
-                    {
-                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), chromosomeLength,
-                                currentCopyNumber, var.type().toString(), TELOMERE.toString(),
-                                1, actualBaf, 100);
-
-                        cnData.setIndex(cnDataList.size());
-                        cnData.setStructuralVariantData(svData, breakend.usesStart());
-                        cnDataList.add(cnData);
-                    }
-                }
-
-                SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
-
-                if(cnDataPair == null)
-                {
-                    cnDataPair = new SvCNData[2];
-                    svIdCnDataMap.put(var.id(), cnDataPair);
-                }
-
-                cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;
-
-                // set copy number data back into the SV
-                double beCopyNumber = breakend.orientation() == 1 ? currentCopyNumber + ploidy : currentCopyNumber;
-                breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, ploidy);
-            }
-        }
-
-        if(includePloidyCalcs)
-            CnDataLoader.calculateAdjustedPloidy(SampleId);
-
-        setSvCopyNumberData(
-                AllVariants,
-                CnDataLoader.getSvPloidyCalcMap(),
-                CnDataLoader.getSvIdCnDataMap(),
-                CnDataLoader.getChrCnDataMap());
-
     }
 
 }

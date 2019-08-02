@@ -492,7 +492,7 @@ public class MergeRuleTest
     {
         LinxTester tester = new LinxTester();
 
-        tester.setNonClusterAllelePloidies(1, 4);
+        // tester.setNonClusterAllelePloidies(1, 4);
 
         // 2 distance clusters which can form a distant ploidy-matching merge
 

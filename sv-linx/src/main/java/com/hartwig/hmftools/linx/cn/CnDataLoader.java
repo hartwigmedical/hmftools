@@ -356,9 +356,7 @@ public class CnDataLoader
                     {
                         lohRegained = false;
 
-                        LOGGER.debug(String.format("skipping LOH end segment(%s) with no SV match: type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
-                                cnData.asString(), cnData.SegStart,
-                                cnData.ActualBaf, cnData.ObservedBaf, cnData.BafCount, cnData.CopyNumber));
+                        LOGGER.debug("skipping LOH end segment({}) with no SV match", cnData);
                     }
 
                     if (lohRegained || reset)
@@ -372,8 +370,8 @@ public class CnDataLoader
                             if (nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
                             && lohStartCnData != null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)
                             {
-                                LOGGER.debug("chr({}) skipping short isolated TI(id={} {} pos={} length={})",
-                                        chromosome, cnData.id(), cnData.SegStart, cnData.StartPos, cnData.EndPos - cnData.StartPos);
+                                LOGGER.debug("chr({}) skipping short isolated TI seg({}) length({})",
+                                        chromosome, cnData, cnData.EndPos - cnData.StartPos);
                                 continue;
                             }
                         }
@@ -553,13 +551,13 @@ public class CnDataLoader
             {
                 if (startSvData.id() == endSvData.id())
                 {
-                    LOGGER.trace("cnID({} -> {}) matches singleSV({} - {})",
-                            startData.asString(), endData.asString(), startSvData.id(), startSvData.type());
+                    LOGGER.trace("segs start({}) and end({}) matches singleSV({} - {})",
+                            startData, endData, startSvData.id(), startSvData.type());
                 }
                 else
                 {
-                    LOGGER.trace("cnID({} -> {}) matches pairSV({} -> {})",
-                            startData.asString(), endData.asString(), startSvData.id(), endSvData.id());
+                    LOGGER.trace("segs start({}) and end({}) matches pairSV({} -> {})",
+                            startData, endData, startSvData.id(), endSvData.id());
                 }
             }
             else
@@ -570,24 +568,19 @@ public class CnDataLoader
                     {
                         boolean incorrectOrientation = (startData.getStructuralVariantData() != null);
 
-                        LOGGER.debug(String.format("LOH start segment(%s) no SV match: orient(%s) type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
-                                startData.asString(), incorrectOrientation ? "wrong" : "ok", startData.SegStart,
-                                startData.ActualBaf, startData.ObservedBaf, startData.BafCount, startData.CopyNumber));
+                        LOGGER.debug("LOH start seg({}) no SV match: orient({})", startData, incorrectOrientation ? "wrong" : "ok");
                     }
 
                     if (!incomplete && endSvData == null && endData.matchesSV(true))
                     {
                         boolean incorrectOrientation = (endData.getStructuralVariantData() != null);
 
-                        LOGGER.debug(String.format("LOH end segment(%s) no SV match: orient(%s), type(%s) baf(actual=%.4f observed=%.4f count=%d) copyNumber(%.4f)",
-                                endData.asString(), incorrectOrientation ? "wrong" : "ok", endData.SegStart,
-                                endData.ActualBaf, endData.ObservedBaf, endData.BafCount, endData.CopyNumber));
+                        LOGGER.debug("LOH end segment({}) no SV match: orient({})", endData, incorrectOrientation ? "wrong" : "ok");
                     }
                 }
 
-                LOGGER.debug("cnID({} & {}) not fully matched pairSV({} -> {})",
-                        startData.asString(), startData.SegStart, endData.asString(), endData.SegStart,
-                        startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
+                LOGGER.debug("segs start({}) and end({}) not fully matched pairSV({} -> {})",
+                        startData, endData, startSvData != null ? startSvData.id() : "", endSvData != null ? endSvData.id() : "");
             }
         }
 

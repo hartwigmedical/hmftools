@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_C
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.addClusterReasons;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.canMergeClusters;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.skipClusterType;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -111,7 +111,7 @@ public class ComplexClustering
                 {
                     SvCluster cluster2 = complexClusters.get(index2);
 
-                    if(cluster2.isResolved() || !canMergeClusters(cluster1, cluster2))
+                    if(cluster2.isResolved())
                     {
                         ++index2;
                         continue;
@@ -352,6 +352,9 @@ public class ComplexClustering
                 if(!haveSameChrArms(var1, var2))
                     continue;
 
+                if(variantsViolateLohHomLoss(var1, var2))
+                    continue;
+
                 for(final SvArmGroup armGroup1 : inconsistentArms1)
                 {
                     if (!armGroup1.getSVs().contains(var1))
@@ -472,9 +475,6 @@ public class ComplexClustering
                         if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
                             continue;
 
-                        if(!canMergeClusters(cluster, otherCluster))
-                            continue;
-
                         LOGGER.debug("cluster({}) {} breakends({} & {}) overlap cluster({}) breakend({})",
                                 cluster.id(), isFoldbackPair ? "foldback" : "consecutive",
                                 lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
@@ -572,9 +572,6 @@ public class ComplexClustering
                             break;
 
                         if(nextBreakend.getCluster() == cluster || skipClusterType(nextBreakend.getCluster()))
-                            continue;
-
-                        if(!canMergeClusters(cluster, nextBreakend.getCluster()))
                             continue;
 
                         if(nextBreakend.orientation() == boundaryBreakend.orientation())

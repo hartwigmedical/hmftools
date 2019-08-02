@@ -160,7 +160,7 @@ public class DriverGeneAnnotator
         mDriverGeneDataList.clear();
         mDriverCatalog.addAll(mDbAccess.readDriverCatalog(sampleId));
 
-        LOGGER.debug("sample({}) retrieved {} driver gene records", sampleId, mDriverCatalog.size());
+        LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
     }
 
     private void loadGeneCopyNumberData(final String sampleId)
@@ -249,7 +249,7 @@ public class DriverGeneAnnotator
 
                 if (breakendList == null || breakendList.isEmpty())
                 {
-                    LOGGER.warn("sample({}) missing breakend list for chromosome({})", mSampleId, dgData.GeneData.Chromosome);
+                    LOGGER.warn("missing breakend list for chromosome({})", dgData.GeneData.Chromosome);
                     writeDriverData(dgData);
                     continue;
                 }
@@ -496,19 +496,6 @@ public class DriverGeneAnnotator
             if(breakend.orientation() == -1 && varStart.getFoldbackBreakend(breakend.usesStart()) != null)
                 foldbackBreakend = breakend;
 
-            if(varStart.getCluster().hasAnnotation(CLUSTER_ANNOT_DM))
-            {
-                LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) double minute SV(%s %s)",
-                        mSampleId, varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type()));
-
-                DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.addSvBreakendPair(breakend, breakend.getOtherBreakend(), SV_DRIVER_TYPE_DM);
-                dgData.addEvent(event);
-
-                reportedClusters.add(varStart.getCluster().id());
-                continue;
-            }
-
             if(varStart.type() == DUP)
             {
                 if(varStart.position(true) > transStart || varStart.position(false) < transEnd)
@@ -520,12 +507,23 @@ public class DriverGeneAnnotator
                 if(upperBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 1)
                     continue;
 
-                LOGGER.debug(String.format("sample(%s) cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
-                        mSampleId, varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type(),
-                        varStart.copyNumber(true), varStart.copyNumberChange(true)));
+                String matchType = SV_DRIVER_TYPE_DUP;
+
+                if(varStart.getCluster().hasAnnotation(CLUSTER_ANNOT_DM))
+                {
+                    LOGGER.debug(String.format("cluster(%s) gene(%s) double minute SV(%s %s)",
+                            varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type()));
+                    matchType = SV_DRIVER_TYPE_DM;
+                }
+                else
+                {
+                    LOGGER.debug(String.format("cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
+                            varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type(),
+                            varStart.copyNumber(true), varStart.copyNumberChange(true)));
+                }
 
                 DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.addSvBreakendPair(breakend, upperBreakend, SV_DRIVER_TYPE_DUP);
+                event.addSvBreakendPair(breakend, upperBreakend, matchType);
                 dgData.addEvent(event);
 
                 reportedClusters.add(varStart.getCluster().id());
@@ -552,8 +550,8 @@ public class DriverGeneAnnotator
                 final SvBreakend beStart = tiPair.getBreakend(true);
                 final SvBreakend beEnd = tiPair.getBreakend(false);
 
-                LOGGER.debug(String.format("sample(%s) cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
-                        mSampleId, varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), dgData.GeneData.GeneName,
+                LOGGER.debug(String.format("cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
+                        varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), dgData.GeneData.GeneName,
                         varStart.posId(), varStart.copyNumber(beStart.usesStart()), varStart.copyNumberChange(beStart.usesStart()),
                         varEnd.posId(), varEnd.copyNumber(beEnd.usesStart()), varEnd.copyNumberChange(beEnd.usesStart())));
 
@@ -654,6 +652,9 @@ public class DriverGeneAnnotator
                 .eventType(eventTypes)
                 .build());
 
+        mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
+                "", 0, dgData.GeneData.Chromosome, "DRIVER");
+
         if(!mConfig.hasMultipleSamples())
             return;
 
@@ -717,10 +718,6 @@ public class DriverGeneAnnotator
 
                 writer.newLine();
             }
-
-            mVisWriter.addGeneExonData(refClusterId, geneData.GeneId, geneData.GeneName,
-                    "", 0, geneData.Chromosome, "DRIVER");
-
         }
         catch (final IOException e)
         {

@@ -156,6 +156,7 @@ public class SvVarData
     public final double copyNumber(boolean isStart){ return mCopyNumber[seIndex(isStart)]; }
     public final StructuralVariantType type() { return mSVData.type(); }
 
+    public SvBreakend getBreakend(int seIndex) { return mBreakend[seIndex]; }
     public SvBreakend getBreakend(boolean isStart) { return mBreakend[seIndex(isStart)]; }
 
     public boolean isSglBreakend() { return type() == SGL; }

@@ -34,21 +34,26 @@ public class DoubleMinuteTest
         // tester.logVerbose(true);
         tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
-        // first a simple DUP
-        final SvVarData dup1 = createTestSv(0,"1","1",500,600,-1,1, DUP,10);
-        dup1.setPloidyRecalcData(8, 12);
+        // need to put another SV before it to set the background copy number for this chromatid
+        final SvVarData var1 = createTestSv(1,"1","1",500,600,1,-1, DEL,1);
 
-        tester.AllVariants.add(dup1);
+        // first a simple DUP
+        final SvVarData dup = createTestSv(2,"1","1",50000,55000,-1,1, DUP,10);
+        dup.setPloidyRecalcData(8, 12);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(dup);
 
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(1, tester.Analyser.getClusters().size());
+        assertEquals(2, tester.Analyser.getClusters().size());
 
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(dup));
+        assertTrue(cluster != null);
         assertEquals(1, cluster.getSvCount());
-        assertTrue(cluster.getSVs().contains(dup1));
+        assertTrue(cluster.getSVs().contains(dup));
         assertTrue(cluster.hasAnnotation(CLUSTER_ANNOT_DM));
 
         assertTrue(cluster.getChains().size() == 1);

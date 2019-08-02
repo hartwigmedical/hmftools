@@ -1,12 +1,21 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.cn.CnPloidyCalcs.calcAdjustedPloidyValues;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.util.List;
+
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -82,7 +91,86 @@ public class CopyNumberTest
         assertFalse(cluster1.hasVariedPloidy());
         assertEquals(1.0, cluster1.getMinPloidy(), 0.001);
         assertEquals(1.0, cluster1.getMaxPloidy(), 0.001);
+    }
 
+    private void buildCopyNumberData(LinxTester tester)
+    {
+        tester.Analyser.getState().reset();
+        populateChromosomeBreakendMap(tester.AllVariants, tester.Analyser.getState());
+        tester.populateCopyNumberData(false);
+    }
+
+    @Test
+    public void testCopyNumberReconstruction()
+    {
+        // test copy number data re-creation from SVs
+        LinxTester tester = new LinxTester();
+        tester.logVerbose(true);
+
+        final String chromosome = "1";
+
+        // simple DEL, nothing else
+        SvVarData var1 = createTestSv(1, chromosome, chromosome, 1000,2000, 1, -1, DEL,  1);
+
+        tester.AllVariants.add(var1);
+        buildCopyNumberData(tester);
+
+        List<SvCNData> cnDataList = tester.CnDataLoader.getChrCnDataMap().get(chromosome);
+        assertEquals(4, cnDataList.size());
+
+        double delta = 0.01;
+
+        assertEquals(2, cnDataList.get(0).CopyNumber, delta);
+        assertEquals(0.5, cnDataList.get(0).ActualBaf, delta);
+
+        assertEquals(1, cnDataList.get(1).CopyNumber, delta);
+        assertEquals(1, cnDataList.get(1).ActualBaf, delta);
+
+        assertEquals(2, cnDataList.get(2).CopyNumber, delta);
+
+        // simple DUP with ploidy 2
+        tester.clearClustersAndSVs();
+        var1 = createTestSv(1, chromosome, chromosome, 1000,2000, -1, 1, DUP,  2);
+
+        tester.AllVariants.add(var1);
+        buildCopyNumberData(tester);
+
+        cnDataList = tester.CnDataLoader.getChrCnDataMap().get(chromosome);
+        assertEquals(4, cnDataList.size());
+
+        assertEquals(3, cnDataList.get(0).CopyNumber, delta);
+        assertEquals(0.67, cnDataList.get(0).ActualBaf, delta);
+
+        assertEquals(5, cnDataList.get(1).CopyNumber, delta);
+        assertEquals(0.8, cnDataList.get(1).ActualBaf, delta);
+
+        assertEquals(3, cnDataList.get(2).CopyNumber, delta);
+
+        // foldbacks facing away from P-arm telomere
+        tester.clearClustersAndSVs();
+        var1 = createTestSv(1, chromosome, chromosome, 1000,2000, -1, -1, INV,  2);
+        SvVarData var2 = createTestSv(2, chromosome, chromosome, 5000,6000, 1, 1, INV,  1);
+        SvVarData var3 = createTestSv(3, chromosome, "2", 8000,100, 1, 1, BND,  1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        buildCopyNumberData(tester);
+
+        cnDataList = tester.CnDataLoader.getChrCnDataMap().get(chromosome);
+        assertEquals(7, cnDataList.size());
+
+        assertEquals(1, cnDataList.get(0).CopyNumber, delta);
+        assertEquals(1.00, cnDataList.get(0).ActualBaf, delta);
+
+        assertEquals(3, cnDataList.get(1).CopyNumber, delta);
+        assertEquals(0.67, cnDataList.get(1).ActualBaf, delta);
+
+        assertEquals(5, cnDataList.get(2).CopyNumber, delta);
+        assertEquals(0.8, cnDataList.get(2).ActualBaf, delta);
+
+        assertEquals(4, cnDataList.get(3).CopyNumber, delta);
+        assertEquals(0.75, cnDataList.get(3).ActualBaf, delta);
 
     }
 

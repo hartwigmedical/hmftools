@@ -98,6 +98,10 @@ public class SvCNData {
         return isStart ? isSvSegment(SegmentSupport.valueOf(SegStart)) : isSvSegment(SegmentSupport.valueOf(SegEnd));
     }
 
-    public final String asString() { return String.format("id=%s pos=%s:%d", mId, Chromosome, StartPos); }
+    public final String toString()
+    {
+        return String.format("chr(%s) pos(%d - %d) segs(%s - %s) cn(%.2f) baf(%.2f)",
+                Chromosome, StartPos, EndPos, SegStart, SegEnd, CopyNumber, ActualBaf);
+    }
 
 }
