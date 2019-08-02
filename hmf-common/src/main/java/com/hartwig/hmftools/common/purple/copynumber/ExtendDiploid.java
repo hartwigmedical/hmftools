@@ -174,7 +174,11 @@ class ExtendDiploid {
                 }
             }
 
-            if (isDubious(minTumorCount, neighbour)) {
+            boolean isDubious = isDubious(minTumorCount, neighbour);
+            boolean inTolerance = inTolerance(target.region(), neighbour);
+
+            if (isDubious && !inTolerance) {
+
                 dubiousCount += neighbour.depthWindowCount();
                 if (dubiousCount >= minTumorCount) {
                     return false;
@@ -182,7 +186,7 @@ class ExtendDiploid {
             }
 
             if (isValid(minTumorCount, neighbour)) {
-                return inTolerance(target.region(), neighbour);
+                return inTolerance;
             }
 
             // Coming from right to left, INCLUDE neighbour from decision on break.
