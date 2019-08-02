@@ -248,7 +248,7 @@ public class SvClassification
             if (cluster.getResolvedType() != NONE)
                 return;
 
-            markSyntheticReciprocalTranslocation(cluster, proximityThreshold);
+            markSyntheticReciprocalTranslocation(cluster, isFinal, proximityThreshold);
 
             if (cluster.getResolvedType() != NONE)
                 return;
@@ -596,7 +596,7 @@ public class SvClassification
         cluster.setSyntheticData(syntheticLength, tiPair.length());
     }
 
-    public static void markSyntheticReciprocalTranslocation(SvCluster cluster, int proximityThreshold)
+    public static void markSyntheticReciprocalTranslocation(SvCluster cluster, boolean isFinal, int proximityThreshold)
     {
         // can be formed from 1 BNDs, 1 chain and a BND, or 2 chains
 
@@ -684,7 +684,10 @@ public class SvClassification
         SvLinkedPair startDB = startBe1.getSV().getDBLink(startBe1.usesStart());
         SvLinkedPair endDB = endBe1.getSV().getDBLink(endBe1.usesStart());
 
-        if(startDB == null || startDB.length() > proximityThreshold || endDB == null || endDB.length() > proximityThreshold)
+        if(startDB == null || endDB == null)
+            return;
+
+        if(!isFinal && (startDB.length() > proximityThreshold || endDB.length() > proximityThreshold))
             return;
 
         if(startBe1.getChrArm().equals(startBe2.getChrArm()) && startBe1.orientation() != startBe2.orientation()

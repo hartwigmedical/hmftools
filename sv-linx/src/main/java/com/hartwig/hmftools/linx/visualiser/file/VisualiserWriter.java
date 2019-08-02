@@ -151,8 +151,6 @@ public class VisualiserWriter
             int chainCount = chains.isEmpty() ? 1 : chains.size();
             int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
 
-            // int repeatCount = (int)var.getRoundedPloidy(true);
-
             for(int i = 0; i < chainCount; ++i)
             {
                 int chainId = chains.isEmpty() ? unchainedChainId : chains.get(i).id();
