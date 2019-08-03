@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
+import static Utils.SvTestRoutines.createDel;
+import static Utils.SvTestRoutines.createDup;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 

@@ -171,7 +171,7 @@ public class StructuralVariantFile
     }
 
     @NotNull
-    private static StructuralVariantData fromString(@NotNull final String svData)
+    public static StructuralVariantData fromString(@NotNull final String svData)
     {
         String[] values = svData.split(DELIMITER);
 
@@ -180,22 +180,22 @@ public class StructuralVariantFile
         final ImmutableStructuralVariantData.Builder builder = ImmutableStructuralVariantData.builder()
                 .id(Integer.valueOf(values[index++]))
                 .startChromosome(values[index++])
-                .endChromosome(values[index++])
+                .endChromosome(getStrValue(values[index++]))
                 .startPosition(Long.valueOf(values[index++]))
-                .endPosition(Long.valueOf(values[index++]))
+                .endPosition(getLongValue(values[index++]))
                 .startOrientation(Byte.valueOf(values[index++]))
-                .endOrientation(Byte.valueOf(values[index++]))
+                .endOrientation(getByteValue(values[index++]))
                 .startHomologySequence(values[index++])
-                .endHomologySequence(values[index++])
+                .endHomologySequence(getStrValue(values[index++]))
                 .startAF(Double.valueOf(values[index++]))
-                .endAF(Double.valueOf(values[index++]))
+                .endAF(getDoubleValue(values[index++]))
                 .ploidy(Double.valueOf(values[index++]))
                 .adjustedStartAF(Double.valueOf(values[index++]))
-                .adjustedEndAF(Double.valueOf(values[index++]))
+                .adjustedEndAF(getDoubleValue(values[index++]))
                 .adjustedStartCopyNumber(Double.valueOf(values[index++]))
-                .adjustedEndCopyNumber(Double.valueOf(values[index++]))
+                .adjustedEndCopyNumber(getDoubleValue(values[index++]))
                 .adjustedStartCopyNumberChange(Double.valueOf(values[index++]))
-                .adjustedEndCopyNumberChange(Double.valueOf(values[index++]))
+                .adjustedEndCopyNumberChange(getDoubleValue(values[index++]))
                 .insertSequence(values[index++])
                 .type(StructuralVariantType.fromAttribute(values[index++]))
                 .filter(values[index++])
@@ -206,16 +206,16 @@ public class StructuralVariantFile
                 .startTumorReferenceFragmentCount(Integer.valueOf(values[index++]))
                 .startNormalVariantFragmentCount(Integer.valueOf(values[index++]))
                 .startNormalReferenceFragmentCount(Integer.valueOf(values[index++]))
-                .endTumorVariantFragmentCount(Integer.valueOf(values[index++]))
-                .endTumorReferenceFragmentCount(Integer.valueOf(values[index++]))
-                .endNormalVariantFragmentCount(Integer.valueOf(values[index++]))
-                .endNormalReferenceFragmentCount(Integer.valueOf(values[index++]))
+                .endTumorVariantFragmentCount(getIntValue(values[index++]))
+                .endTumorReferenceFragmentCount(getIntValue(values[index++]))
+                .endNormalVariantFragmentCount(getIntValue(values[index++]))
+                .endNormalReferenceFragmentCount(getIntValue(values[index++]))
                 .startIntervalOffsetStart(Integer.valueOf(values[index++]))
                 .startIntervalOffsetEnd(Integer.valueOf(values[index++]))
-                .endIntervalOffsetStart(Integer.valueOf(values[index++]))
-                .endIntervalOffsetEnd(Integer.valueOf(values[index++]))
+                .endIntervalOffsetStart(getIntValue(values[index++]))
+                .endIntervalOffsetEnd(getIntValue(values[index++]))
                 .inexactHomologyOffsetStart(Integer.valueOf(values[index++]))
-                .inexactHomologyOffsetEnd(Integer.valueOf(values[index++]))
+                .inexactHomologyOffsetEnd(getIntValue(values[index++]))
                 .startLinkedBy(values[index++])
                 .endLinkedBy(values[index++])
                 .vcfId(values[index++])
@@ -227,11 +227,17 @@ public class StructuralVariantFile
                 .insertSequenceAlignments(values[index++])
                 .insertSequenceRepeatClass(values[index++])
                 .insertSequenceRepeatType(values[index++])
-                .insertSequenceRepeatOrientation(Byte.valueOf(values[index++]))
-                .insertSequenceRepeatCoverage(Double.valueOf(values[index++]))
+                .insertSequenceRepeatOrientation(getByteValue(values[index++]))
+                .insertSequenceRepeatCoverage(getDoubleValue(values[index++]))
                 .startAnchoringSupportDistance(Integer.valueOf(values[index++]))
-                .endAnchoringSupportDistance(Integer.valueOf(values[index++]));
+                .endAnchoringSupportDistance(getIntValue(values[index++]));
 
         return builder.build();
     }
+
+    private static String getStrValue(final String value) { return value.equals("NULL") ? "" : value; }
+    private static double getDoubleValue(final String value) { return value.equals("NULL") ? 0 : Double.valueOf(value); }
+    private static int getIntValue(final String value) { return value.equals("NULL") ? 0 : Integer.valueOf(value); }
+    private static long getLongValue(final String value) { return value.equals("NULL") ? 0 : Long.valueOf(value); }
+    private static byte getByteValue(final String value) { return value.equals("NULL") ? 0 : Byte.valueOf(value); }
 }

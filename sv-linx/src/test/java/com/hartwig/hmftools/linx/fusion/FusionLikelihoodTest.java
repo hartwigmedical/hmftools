@@ -16,12 +16,11 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsIn
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
+
+import static Utils.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.calcCombinedPhase;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.simpleToCombinedPhase;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
+import static Utils.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

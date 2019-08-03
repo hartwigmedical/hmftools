@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createSgl;
+import static Utils.SvTestRoutines.createBnd;
+import static Utils.SvTestRoutines.createDel;
+import static Utils.SvTestRoutines.createDup;
+import static Utils.SvTestRoutines.createInv;
+import static Utils.SvTestRoutines.createSgl;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -28,6 +28,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
+
+import Utils.LinxTester;
 
 public class SyntheticTest
 {

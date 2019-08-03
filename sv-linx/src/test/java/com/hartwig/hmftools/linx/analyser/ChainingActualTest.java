@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
+import static Utils.SvTestRoutines.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -30,6 +31,9 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import Utils.LinxTester;
+import Utils.SampleDataLoader;
 
 // tests modelled on examples from actual samples
 public class ChainingActualTest
@@ -42,61 +46,20 @@ public class ChainingActualTest
         LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
-        /*
-            Id	Type	Ploidy	ChrStart	PosStart	OS	AS	CNStart	CNChgS	ChrEnd	PosEnd	    OE	AE	CNEnd	CNChgEnd
-            77	INV	    3.96	3	        24565108	-1	P	6.07	4.07	3	    24566180	-1	P	10.14	4.07
-            78	SGL	    2.62	3	        25331584	-1	P	12.17	2.03	0	    -1	        0	P	0	    0
-            79	INV	    5.26	3	        26663922	1	P	11.92	3.94	3	    26664498	1	P	7.98	3.94
-            88	BND	    3.27	3	        26431918	-1	P	11.92	3.83	6	    26194040	-1	P	7.31	3.41
-            89	INV	    1.5	    6	        26194117	1	P	7.31	2.04	6	    26194406	1	P	5.27	1.43
-            113	BND	    1.77	3	        25401059	1	P	9.94	1.86	10	    60477224	-1	Q	4.06	2.06
-            119	BND	    2.19	3	        25400602	1	P	12.17	2.22	12	    72666892	-1	Q	5.22	2.19
-            120	BND	    2.26	10	        60477422	1	Q	4.06	2.04	12	    72667075	1	Q	5.22	2.22
+        final List<StructuralVariantData> svData = SampleDataLoader.fromResource("COLO829T");
 
-            SOLUTION:
+        final List<SvVarData> svList = SampleDataLoader.createSVs(svData);
 
-            chain(0): 3_P_C - s_77_e - s_119_e - e_120_s - e_113_s - e_77_s - e_79_s - s_88_e - s_89_e - e_88_s - s_79_e - s_78_e - sgl_unclear
-            chain(0) 0: pair(77 3:24566180:end & 119 3:25400602:start) Inferred FOLDBACK length(834422) index(4)
-            chain(0) 1: pair(119 12:72666892:end & 120 12:72667075:end) Assembly ASMB length(183) index(0)
-            chain(0) 2: pair(120 10:60477422:start & 113 10:60477224:end) Assembly ASMB length(198) index(1)
-            chain(0) 3: pair(113 3:25401059:start & 77r 3:24566180:end) Inferred FOLDBACK length(834879) index(5)
-            chain(0) 4: pair(77r 3:24565108:start & 79r 3:26664498:end) Inferred ONLY length(2099390) index(9)
-            chain(0) 5: pair(79r 3:26663922:start & 88 3:26431918:start) Inferred FOLDBACK length(232004) index(7)
-            chain(0) 6: pair(88 6:26194040:end & 89 6:26194117:start) Assembly ASMB length(77) index(2)
-            chain(0) 7: pair(89 6:26194406:end & 88r 6:26194040:end) Assembly ASMB length(366) index(3)
-            chain(0) 8: pair(88r 3:26431918:start & 79 3:26663922:start) Inferred FOLDBACK length(232004) index(6)
-            chain(0) 9: pair(79 3:26664498:end & 78 3:25331584 SGL-on-known) Inferred ONLY length(1332914) index(8)
-         */
+        final SvVarData var1 = svList.get(0);
+        final SvVarData var2 = svList.get(1);
+        final SvVarData var3 = svList.get(2);
+        final SvVarData var4 = svList.get(3);
+        final SvVarData var5 = svList.get(4);
+        final SvVarData var6 = svList.get(5);
+        final SvVarData var7 = svList.get(6);
+        final SvVarData var8 = svList.get(7);
 
-        final SvVarData var1 = createTestSv(77, "3", "3", 24565108, 24566180, -1, -1, INV, 6.1, 10.1, 4.07, 4.07, 3.83, "");
-        final SvVarData var2 = createTestSv(78, "3", "0", 25331584, -1, -1, 1, SGL, 12.2, 0, 2.06, 0, 1.88, "");
-        final SvVarData var3 = createTestSv(79, "3", "3", 26663922, 26664498, 1, 1, INV, 11.9, 8.0, 3.94, 3.94, 5.22, "");
-        final SvVarData var4 = createTestSv(88, "3", "6", 26431918, 26194040, -1, -1, BND, 11.9, 7.3, 3.85, 3.65, 3.22, "");
-        final SvVarData var5 = createTestSv(89, "6", "6", 26194117, 26194406, 1, 1, INV, 7.3, 5.3, 2.06, 1.43, 1.43, "");
-        final SvVarData var6 = createTestSv(113, "3", "10", 25401059, 60477224, 1, -1, BND, 9.9, 4.1, 1.92, 2.02, 1.77, "");
-        final SvVarData var7 = createTestSv(119, "3", "12", 25400602, 72666892, 1, -1, BND, 12.2, 5.2, 2.22, 2.18, 2.16, "");
-        final SvVarData var8 = createTestSv(120, "10", "12", 60477422, 72667075, 1, 1, BND, 4.1, 5.2, 2.01, 2.16, 2.22, "");
-
-        // mark assembled links
-        var4.setAssemblyData(false, "asmb1a;asmb1b");
-        var5.setAssemblyData(true, "asmb1a");
-        var5.setAssemblyData(false, "asmb1b");
-
-        var7.setAssemblyData(false, "asmb2");
-        var8.setAssemblyData(false, "asmb2");
-
-        var6.setAssemblyData(false, "asmb3");
-        var8.setAssemblyData(true, "asmb3");
-
-        // cluster
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
-        tester.AllVariants.add(var7);
-        tester.AllVariants.add(var8);
+        tester.AllVariants.addAll(svList);
 
         /*
         Id	Ploidy	PloidyMin	PloidyMax

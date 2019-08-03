@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createBnd;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createDup;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createInv;
+import static Utils.SvTestRoutines.createBnd;
+import static Utils.SvTestRoutines.createDel;
+import static Utils.SvTestRoutines.createDup;
+import static Utils.SvTestRoutines.createInv;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -19,6 +19,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
+
+import Utils.LinxTester;
 
 public class AnnotationTest
 {

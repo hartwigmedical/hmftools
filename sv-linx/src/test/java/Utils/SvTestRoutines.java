@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analyser;
+package Utils;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -143,6 +143,13 @@ public class SvTestRoutines
 
         SvVarData var = new SvVarData(svData);
 
+        initialiseSV(var);
+
+        return var;
+    }
+
+    public static void initialiseSV(SvVarData var)
+    {
         String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
         String endArm;
@@ -155,8 +162,6 @@ public class SvTestRoutines
 
         // by default
         var.setPloidyRecalcData(var.getSvData().ploidy(), var.getSvData().ploidy());
-
-        return var;
     }
 
 }

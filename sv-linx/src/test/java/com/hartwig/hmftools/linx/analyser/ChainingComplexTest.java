@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analyser.SvTestRoutines.createTestSv;
+import static Utils.SvTestRoutines.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,6 +15,8 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import Utils.LinxTester;
 
 public class ChainingComplexTest
 {
