@@ -374,9 +374,6 @@ public class ChainingComplexTest
         final SvVarData varE = createTestSv(5, "1", "1", 2000,10000, -1, -1, INV, 1);
         final SvVarData varDup = createTestSv(6, "1", "1", 2500,4500, -1, 1, DUP, 1);
 
-        // CN profile:
-        // T - 2 - 1 - 2 - 3 - 1 - 3 - 2 - 1 - 3 - 1 - 3 - 1 - 2  - C
-
         tester.AllVariants.add(varA);
         tester.AllVariants.add(varB);
         tester.AllVariants.add(varC);
@@ -407,16 +404,11 @@ public class ChainingComplexTest
         LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
-        // tester.setChaininMethod(CHAIN_METHOD_OLD);
-
         final SvVarData var1 = createTestSv(1, "1", "1", 2000,3000, -1, -1, INV, 5);
         final SvVarData var2 = createTestSv(2, "1", "1", 9000,10000, 1, 1, INV, 3);
         final SvVarData var3 = createTestSv(3, "1", "1", 5000,6000, 1, 1, INV, 2);
         final SvVarData var4 = createTestSv(4, "1", "1", 7000,8000, -1, 1, DUP, 1);
         final SvVarData var5 = createTestSv(5, "1", "1", 1000,4000, 1, -1, DEL, 1);
-
-        // CN profile:
-        // T - 2 - 1 - 6 - 11 - 12 - 10 - 8 - 9 - 8 - 5 - 2 - C
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

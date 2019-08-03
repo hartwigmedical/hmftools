@@ -111,35 +111,29 @@ public class ProposedLinks
 
     public void addComDupBreakends(
             final SvBreakend compDupStart, final SvBreakend compDupEnd, double compDupPloidy,
-            final SvBreakend otherStart, double otherPloidyStart,
-            final SvBreakend otherEnd, double otherPloidyEnd, double otherRelativePloidy, double otherUncertainty)
+            final SvBreakend otherStart, final SvBreakend otherEnd, double otherPloidy)
     {
-        if(compDupPloidy == 0 || otherPloidyStart == 0 || otherPloidyEnd== 0)
+        if(compDupPloidy == 0 || otherPloidy == 0)
             return;
 
-        if (copyNumbersEqual(compDupPloidy * 2, otherRelativePloidy))
+        if (copyNumbersEqual(compDupPloidy * 2, otherPloidy))
         {
             mPloidyMatchType = PM_MATCHED;
         }
-        else if (ploidyOverlap(compDupPloidy * 2, compDupStart.ploidyUncertainty(), otherRelativePloidy, otherUncertainty))
+        else
         {
             mPloidyMatchType = PM_OVERLAP;
         }
 
-        if(mPloidyMatchType == PM_NONE)
-            mPloidy = min(compDupPloidy, otherRelativePloidy/2);
-        else
-            mPloidy = (compDupPloidy + otherRelativePloidy/2) * 0.5;
+        mPloidy = compDupPloidy;
 
         mBreakendPloidy.put(compDupStart, compDupPloidy);
         mBreakendPloidy.put(compDupEnd, compDupPloidy);
         mExhaustBreakend.put(compDupStart, true);
         mExhaustBreakend.put(compDupEnd, true);
 
-        mBreakendPloidy.put(otherStart, otherPloidyStart);
-        mBreakendPloidy.put(otherEnd, otherPloidyEnd);
-        mExhaustBreakend.put(otherStart, false);
-        mExhaustBreakend.put(otherEnd, false);
+        mBreakendPloidy.put(otherStart, otherPloidy);
+        mBreakendPloidy.put(otherEnd, otherPloidy);
     }
 
     public void addFoldbackBreakends(

@@ -53,7 +53,6 @@ public class ChainLinkAllocator
 
     // references
     private final ChainPloidyLimits mPloidyLimits;
-    private final Map<SvVarData,List<SvLinkedPair>> mComplexDupCandidates;
     private final List<SvChain> mChains;
     private final Map<SvBreakend, List<SvLinkedPair>> mSvBreakendPossibleLinks;
 
@@ -61,12 +60,10 @@ public class ChainLinkAllocator
     public ChainLinkAllocator(
             final ChainPloidyLimits ploidyLimits,
             final Map<SvBreakend, List<SvLinkedPair>> svBreakendPossibleLinks,
-            final List<SvChain> chains,
-            final Map<SvVarData,List<SvLinkedPair>> complexDupCandidates)
+            final List<SvChain> chains)
     {
         mPloidyLimits = ploidyLimits;
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
-        mComplexDupCandidates = complexDupCandidates;
         mChains = chains;
 
         mSvConnectionsMap = Maps.newHashMap();
@@ -671,23 +668,6 @@ public class ChainLinkAllocator
                 boolean breakendExhausted = canUseMaxPloidy ? svConn.breakendExhaustedVsMax(beIsStart)
                         : svConn.breakendExhausted(beIsStart);
 
-                /*
-                boolean breakendExhausted = proposedLink.exhaustBreakend(breakend);
-
-                if (breakendExhausted)
-                {
-                    // this proposed link fully allocates the breakend
-                    svConn.set(beIsStart, svConn.Ploidy);
-                }
-                else
-                {
-                    svConn.add(beIsStart, proposedLink.ploidy());
-
-                    breakendExhausted = canUseMaxPloidy ? svConn.breakendExhaustedVsMax(beIsStart)
-                            : svConn.breakendExhausted(beIsStart);
-                }
-                */
-
                 if (breakendExhausted)
                 {
                     LOGGER.trace("{} breakend exhausted: {}", beIsStart? "start" : "end", svConn.toString());
@@ -717,12 +697,6 @@ public class ChainLinkAllocator
                 if (otherBreakendExhausted)
                 {
                     checkSvComplete(svConn);
-
-                    // could be moved to rule selector
-                    if (mComplexDupCandidates.get(var) != null)
-                    {
-                        mComplexDupCandidates.remove(var);
-                    }
                 }
             }
 
@@ -792,10 +766,6 @@ public class ChainLinkAllocator
     private void removeOppositeLinks(final SvLinkedPair pair)
     {
         // check for an opposite pairing between these 2 SVs - need to look into other breakends' lists
-
-        // such a link can happen for a complex dup around a single SV, so skip if any of these exist
-        if (mComplexDupCandidates.containsKey(pair.first()) || mComplexDupCandidates.containsKey(pair.second()))
-            return;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {

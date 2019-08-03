@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowPloidyThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -132,7 +133,7 @@ public class ChainFinder
         mReplicatedSVs = Lists.newArrayList();
         mReplicatedBreakends = Lists.newArrayList();
 
-        mLinkAllocator = new ChainLinkAllocator(mClusterPloidyLimits, mSvBreakendPossibleLinks, mChains, mComplexDupCandidates);
+        mLinkAllocator = new ChainLinkAllocator(mClusterPloidyLimits, mSvBreakendPossibleLinks, mChains);
 
         mRuleSelector = new ChainRuleSelector(mLinkAllocator, mClusterPloidyLimits,
                 mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
@@ -872,7 +873,10 @@ public class ChainFinder
     private void checkIsComplexDupSV(SvBreakend lowerPloidyBreakend, SvBreakend higherPloidyBreakend)
     {
         // check if the lower ploidy SV connects to both ends of another SV to replicate it
-        SvVarData var = lowerPloidyBreakend.getSV();
+        final SvVarData var = lowerPloidyBreakend.getSV();
+
+        if(var.ploidy() < 1) // maintain a minimum to avoid ploidy comparison issues for lower values
+            return;
 
         if(var.isSglBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().type() == SGL)
             return;
@@ -883,14 +887,13 @@ public class ChainFinder
         if(mLinkAllocator.getSvConnectionsMap().get(var) == null)
             return;
 
-        if(var.ploidyMin() * 2 > higherPloidyBreakend.getSV().ploidyMax())
+        final SvVarData otherSV = higherPloidyBreakend.getSV();
+
+        if(var.ploidy() > otherSV.ploidy() || var.ploidyMin() * 2 > otherSV.ploidyMax())
             return;
 
-        // skip very different ploidy-ratio breakends
-        if(var.ploidyMax() * 4 < higherPloidyBreakend.getSV().ploidyMin())
+        if(!ploidyMatch(var.ploidy() * 2, var.ploidyUncertainty(), otherSV.ploidy(), otherSV.ploidyUncertainty()))
             return;
-
-        boolean lessThanMax = var.ploidyMax() < higherPloidyBreakend.getSV().ploidyMin();
 
         // check whether the other breakend satisfies the same ploidy comparison criteria
         SvBreakend otherBreakend = var.getBreakend(!lowerPloidyBreakend.usesStart());
@@ -913,40 +916,32 @@ public class ChainFinder
                 break;
 
             if (breakend.isAssembledLink())
-            {
-                index += traverseUp ? 1 : -1;
                 continue;
-            }
 
             if (breakend.orientation() == otherBreakend.orientation())
                 break;
 
-            SvVarData otherSV = breakend.getSV();
+            SvVarData otherSV2 = breakend.getSV();
 
-            if(var.ploidyMin() * 2 <= otherSV.ploidyMax())
+            if(!ploidyMatch(var.ploidy() * 2, var.ploidyUncertainty(), otherSV2.ploidy(), otherSV2.ploidyUncertainty()))
+                return;
+
+            List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerPloidyBreakend, higherPloidyBreakend),
+                    SvLinkedPair.from(otherBreakend, breakend));
+
+            if(otherSV == otherSV2)
             {
-                if(lessThanMax || var.ploidyMax() < otherSV.ploidyMin())
-                {
-                    List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerPloidyBreakend, higherPloidyBreakend),
-                            SvLinkedPair.from(otherBreakend, breakend));
-
-                    if(otherSV == higherPloidyBreakend.getSV())
-                    {
-                        logInfo(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f)",
-                                var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(), higherPloidyBreakend.getSV().id(),
-                                higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
-                    }
-                    else
-                    {
-                        logInfo(String.format("identified complex dup(%s %s) ploidy(%.1f -> %.1f) vs SV(%s) ploidy(%.1f -> %.1f) & SV(%s) ploidy(%.1f -> %.1f)",
-                                var.posId(), var.type(), var.ploidyMin(), var.ploidyMax(),
-                                otherSV.id(), otherSV.ploidyMin(), otherSV.ploidyMax(), higherPloidyBreakend.getSV().id(),
-                                higherPloidyBreakend.getSV().ploidyMin(), higherPloidyBreakend.getSV().ploidyMax()));
-                    }
-
-                    mComplexDupCandidates.put(var, links);
-                }
+                logInfo(String.format("identified complex dup(%s %s) ploidy(%s) vs SV(%s) ploidy(%s)",
+                        var.posId(), var.type(), formatPloidy(var.ploidy()), otherSV.id(), formatPloidy(otherSV.ploidy())));
             }
+            else
+            {
+                logInfo(String.format("identified complex dup(%s %s) ploidy(%s) vs SVs(%s & %s) ploidy(%s & %s)",
+                        var.posId(), var.type(), formatPloidy(var.ploidy()), otherSV.id(), otherSV2.id(),
+                        formatPloidy(otherSV.ploidy()), formatPloidy(otherSV2.ploidy())));
+            }
+
+            mComplexDupCandidates.put(var, links);
 
             break;
         }
