@@ -91,16 +91,15 @@ public class RecoverStructuralVariants implements Closeable {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
 
-        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, x, "UNBALANCED_SV"));
+        recoverFromUnbalancedVariants(changeFactory, doubleEndedPloidies).forEach(x -> addToMap(result, x));
         recoverFromUnexplainedSegments().forEach(x -> addToMap(result, x, "UNSUPPORTED_BREAKEND"));
 
         return result.values();
     }
 
     @NotNull
-    private List<RecoveredVariant> recoverFromUnbalancedVariants(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory,
-            @NotNull final List<StructuralVariantLegPloidy> svPloidies) throws IOException {
-        final List<RecoveredVariant> result = Lists.newArrayList();
+    private List<VariantContext> recoverFromUnbalancedVariants(@NotNull final StructuralVariantLegCopyNumberChangeFactory changeFactory, @NotNull final List<StructuralVariantLegPloidy> svPloidies) throws IOException {
+        final List<VariantContext> result = Lists.newArrayList();
 
         for (StructuralVariantLegPloidy leg : svPloidies) {
             double copyNumber = leg.adjustedCopyNumber();
@@ -117,10 +116,12 @@ public class RecoverStructuralVariants implements Closeable {
 
                     if (current.segmentStartSupport() != SegmentSupport.MULTIPLE && isSupportedByDepthWindowCounts(prev, current)) {
                         int expectedOrientation = -1 * leg.orientation();
-                        final Optional<RecoveredVariant> recoveredVariant =
+                        final Optional<RecoveredVariant> optionalRecoveredVariant =
                                 recoverSingleVariant(expectedOrientation, unexplainedCopyNumberChange, index, chromosomeCopyNumbers);
-                        recoveredVariant.ifPresent(result::add);
-
+                        if (optionalRecoveredVariant.isPresent()) {
+                            final RecoveredVariant recoveredVariant = optionalRecoveredVariant.get();
+                            result.addAll(recover(recoveredVariant, "UNBALANCED_SV"));
+                        }
                     }
                 }
             }
@@ -264,10 +265,6 @@ public class RecoverStructuralVariants implements Closeable {
             return false;
         }
 
-        //        if (!isInRangeOfCopyNumberSegment(end, allCopyNumbers.get(HumanChromosome.fromString(end.chromosome())))) {
-        //            return false;
-        //        }
-
         long endPosition = end.position();
         StructuralVariantType type = variant.type();
         if (type == StructuralVariantType.DEL || type == StructuralVariantType.DUP || type == StructuralVariantType.INS) {
@@ -378,6 +375,10 @@ public class RecoverStructuralVariants implements Closeable {
     private static void addToMap(@NotNull final Map<String, VariantContext> map, @NotNull final RecoveredVariant variant,
             @NotNull final String method) {
         recover(variant, method).forEach(x -> map.put(x.getID(), x));
+    }
+
+    private static void addToMap(@NotNull final Map<String, VariantContext> map, @NotNull final VariantContext context) {
+        map.put(context.getID(), context);
     }
 
     @NotNull
