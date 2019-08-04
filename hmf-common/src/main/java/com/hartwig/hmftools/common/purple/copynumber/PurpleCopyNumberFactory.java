@@ -70,10 +70,8 @@ public class PurpleCopyNumberFactory {
             final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
             final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
 
-            final List<CombinedRegion> germlineAmplifications = extendGermline.extendGermlineAmplifications(bafExtended);
+            final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
             final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
-
-            final List<CombinedRegion> somatics = ExtractHomozygousDeletes.extractHomozygousDeletes(germlineAmplifications);
 
             this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
             this.germlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN)).collect(toList()));
