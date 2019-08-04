@@ -405,7 +405,7 @@ Relative copy number tolerance is 0.12 + 0.8 / sqrt(min depth window count).
 Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.). Again, for tumors with purity < 20% the absolute tolerances are increased.
 4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
 5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
-  -  The total dubious region is sufficiently small (<30k bases or <50k bases if approaching centromere); and
+  -  The total dubious region is sufficiently small (< 10 depth window count or < 50 depth window count if approaching centromere); and
   - The dubious region does not end because of a structural variant; and
   - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
 
