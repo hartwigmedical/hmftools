@@ -1393,7 +1393,7 @@ public final class ViccJsonReader {
                 .drug(objectClinical.getAsJsonPrimitive("drug").getAsString())
                 .gene(objectClinical.getAsJsonPrimitive("gene").getAsString())
                 .levelLabel(objectClinical.getAsJsonPrimitive("level_label").getAsString())
-                .oncoKbDrugAbstracts(createDrugsAbstracts(objectClinical.getAsJsonArray("oncoKbDrugAbstracts")))
+                .oncoKbDrugAbstracts(createDrugsAbstracts(objectClinical.getAsJsonArray("drugAbstracts")))
                 .build();
     }
 

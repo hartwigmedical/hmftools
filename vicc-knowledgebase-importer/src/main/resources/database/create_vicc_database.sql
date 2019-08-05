@@ -48,6 +48,18 @@ DROP TABLE IF EXISTS pmkbTissue;
 DROP TABLE IF EXISTS pmkbTumor;
 DROP TABLE IF EXISTS pmkbVariant;
 DROP TABLE IF EXISTS pmkbGene;
+DROP TABLE IF EXISTS oncokb;
+DROP TABLE IF EXISTS oncokbBiological;
+DROP TABLE IF EXISTS oncokbVariantBiological;
+DROP TABLE IF EXISTS oncokbConsequencesBiological;
+DROP TABLE IF EXISTS oncokbGeneBiological;
+DROP TABLE IF EXISTS oncokbGeneAliasesBiological;
+DROP TABLE IF EXISTS oncokbClinical;
+DROP TABLE IF EXISTS oncokbDrugAbstractsClinical;
+DROP TABLE IF EXISTS oncokbVariantClinical;
+DROP TABLE IF EXISTS oncokbConsequencesClinical;
+DROP TABLE IF EXISTS oncokbGeneClinical;
+DROP TABLE IF EXISTS oncokbGeneAliasesClinical;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -275,6 +287,142 @@ CREATE TABLE sage
     gene varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE oncokb
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE oncokbBiological
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    mutationEffectPmids varchar(255) NOT NULL,
+    Isoform varchar(255) NOT NULL,
+    entrezGeneID varchar(255) NOT NULL,
+    oncogenic varchar(255) NOT NULL,
+    mutationEffect varchar(255) NOT NULL,
+    RefSeq varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    mutationEffectAbstracts varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE oncokbVariantBiological
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbBiologicalId int NOT NULL,
+    variantResidues varchar(255),
+    proteinStart varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    proteinEnd varchar(255) NOT NULL,
+    refResidues varchar(255),
+    alteration varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbBiologicalId) REFERENCES oncokbBiological(id)
+);
+
+CREATE TABLE oncokbConsequencesBiological
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbVariantBiologicalId int NOT NULL,
+    term varchar(255) NOT NULL,
+    description varchar(255) NOT NULL,
+    isGenerallyTruncating varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbVariantBiologicalId) REFERENCES oncokbVariantBiological(id)
+);
+
+CREATE TABLE oncokbGeneBiological
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbBiologicalId int NOT NULL,
+    oncogene varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    hugoSymbol varchar(255) NOT NULL,
+    curatedRefSeq varchar(255),
+    entrezGeneId varchar(255) NOT NULL,
+    tsg varchar(255) NOT NULL,
+    curatedIsoform varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbBiologicalId) REFERENCES oncokbBiological(id)
+);
+
+CREATE TABLE oncokbGeneAliasesBiological
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbGeneBiologicalId int NOT NULL,
+    geneAliases varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbGeneBiologicalId) REFERENCES oncokbGeneBiological(id)
+);
+
+CREATE TABLE oncokbClinical
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    RefSeq varchar(255) NOT NULL,
+    level varchar(255) NOT NULL,
+    entrezGeneID varchar(255) NOT NULL,
+    drugPmids varchar(255) NOT NULL,
+    cancerType varchar(255) NOT NULL,
+    drug varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    levelLabel varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE oncokbDrugAbstractsClinical
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbClinicalId int NOT NULL,
+    text varchar(255) NOT NULL,
+    link varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbClinicalId) REFERENCES oncokbClinical(id)
+);
+
+CREATE TABLE oncokbVariantClinical
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbClinicalId int NOT NULL,
+    variantResidues varchar(255),
+    proteinStart varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    proteinEnd varchar(255) NOT NULL,
+    refResidues varchar(255),
+    alteration varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbClinicalId) REFERENCES oncokbClinical(id)
+);
+
+CREATE TABLE oncokbConsequencesClinical
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbVariantClinicalId int NOT NULL,
+    term varchar(255) NOT NULL,
+    description varchar(255) NOT NULL,
+    isGenerallyTruncating varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbVariantClinicalId) REFERENCES oncokbVariantClinical(id)
+);
+
+CREATE TABLE oncokbGeneClinical
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbClinicalId int NOT NULL,
+    oncogene varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    hugoSymbol varchar(255) NOT NULL,
+    curatedRefSeq varchar(255),
+    entrezGeneId varchar(255) NOT NULL,
+    tsg varchar(255) NOT NULL,
+    curatedIsoform varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbClinicalId) REFERENCES oncokbClinical(id)
+);
+
+CREATE TABLE oncokbGeneAliasesClinical
+(   id int NOT NULL AUTO_INCREMENT,
+    oncokbGeneClinicalId int NOT NULL,
+    geneAliases varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (oncokbGeneClinicalId) REFERENCES oncokbGeneClinical(id)
 );
 
 CREATE TABLE pmkb

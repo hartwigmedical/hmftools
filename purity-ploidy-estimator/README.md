@@ -399,10 +399,13 @@ The following criteria apply when deciding to merge segments:
 
 1. Never merge across a segment breakpoint with structural variant support.
 2. Do not merge segments if the minimum BAF count in the segments being compared > 0 and the change in observed BAF > 0.03 and the minor allele tolerance is exceeded. The absolute minor allele tolerance is 0.3 + 0.5 * max(copy number of compared segments) / sqrt (min count of BAF points ).  For tumors with purity < 20% the absolute tolerances are increased inversely proportional to the purity to allow for greater noise in tumor copy number and BAF measurements.
-3. Merge segments where the absolute or relative difference in either the copy number or ref normalised copy number is within tolerances. Absolute copy number tolerance is  0.3 + 2 / sqrt(min depth window count). Relative copy number tolerance is 10%. Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.).  Again for tumors with purity < 20% the absolute tolerances are increased.
+3. Merge segments where the absolute or relative difference in either the copy number or ref normalised copy number is within tolerances. 
+Absolute copy number tolerance is 0.3 + 2 / sqrt(min depth window count).
+Relative copy number tolerance is 0.12 + 0.8 / sqrt(min depth window count).
+Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.). Again, for tumors with purity < 20% the absolute tolerances are increased.
 4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
 5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
-  -  The total dubious region is sufficiently small (<30k bases or <50k bases if approaching centromere); and
+  -  The total dubious region is sufficiently small (< 10 depth window count or < 50 depth window count if approaching centromere); and
   - The dubious region does not end because of a structural variant; and
   - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
 
@@ -944,8 +947,12 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Changed default value of `min_diploid_tumor_ratio_count` from 30 to 10
+  - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 
+  - Fixed bug in subclonal plot
 - [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-32)
-  - Fixed bug in sublconal modelling when somatic peak is close to max 
+  - Fixed bug in subclonal modelling when somatic peak is close to max 
 - [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-31)
   - Added microsatellite status
   - Added subclonal likelihood model and figure

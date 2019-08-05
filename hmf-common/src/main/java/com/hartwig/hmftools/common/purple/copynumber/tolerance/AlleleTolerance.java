@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -8,11 +9,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class AlleleTolerance implements CopyNumberTolerance {
 
-    private static final double MAX_DEVIATION = 0.9;
     private static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
     private static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
     private static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
-    private static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.1;
+    private static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -31,7 +31,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
 
             double maxCopyNumber = Math.max(first.tumorCopyNumber(), second.tumorCopyNumber());
             double maxMinorAllelePloidyDeviation =
-                    purityAdjustment * minorAlleleMaxDeviation(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
+                    purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
             double minorAllelePloidyDeviation = Math.abs(first.minorAllelePloidy() - second.minorAllelePloidy());
             if (Doubles.greaterThan(minorAllelePloidyDeviation, maxMinorAllelePloidyDeviation) && Doubles.greaterThan(observedBafDeviation,
                     MIN_OBSERVED_BAF_CHANGE)) {
@@ -40,13 +40,17 @@ public class AlleleTolerance implements CopyNumberTolerance {
         }
 
         int minWindowDepthCount = Math.min(first.depthWindowCount(), second.depthWindowCount());
-        double maxDeviation = purityAdjustment * copyNumberMaxDeviation(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 2, minWindowDepthCount);
+        double absTolerance = purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 2, minWindowDepthCount);
+        double relTolerance = purityAdjustment * tolerance(MIN_RELATIVE_COPY_NUMBER_TOLERANCE, 0.8, minWindowDepthCount);
 
-        boolean copyNumberInTolerance = inAbsoluteTolerance(maxDeviation, first.tumorCopyNumber(), second.tumorCopyNumber())
-                || inRelativeTolerance(first.tumorCopyNumber(), second.tumorCopyNumber());
+        boolean copyNumberInTolerance =
+                inAbsoluteTolerance(absTolerance, first.tumorCopyNumber(), second.tumorCopyNumber()) || inRelativeTolerance(relTolerance,
+                        first.tumorCopyNumber(),
+                        second.tumorCopyNumber());
 
         boolean refNormalisedCopyNumberInTolerance =
-                inAbsoluteTolerance(maxDeviation, first.refNormalisedCopyNumber(), second.refNormalisedCopyNumber()) || inRelativeTolerance(
+                inAbsoluteTolerance(absTolerance, first.refNormalisedCopyNumber(), second.refNormalisedCopyNumber()) || inRelativeTolerance(
+                        relTolerance,
                         first.refNormalisedCopyNumber(),
                         second.refNormalisedCopyNumber());
 
@@ -57,12 +61,8 @@ public class AlleleTolerance implements CopyNumberTolerance {
         return Math.max(1, MAX_DEVIATION_ADJUSTMENT / purityAdjuster.purity());
     }
 
-    private static double minorAlleleMaxDeviation(double minTolerance, double additional, int samples) {
+    private static double tolerance(double minTolerance, double additional, int samples) {
         return minTolerance + additional / Math.sqrt(samples);
-    }
-
-    private static double copyNumberMaxDeviation(double minTolerance, double additional, int samples) {
-        return Math.min(MAX_DEVIATION, minorAlleleMaxDeviation(minTolerance, additional, samples));
     }
 
     private static boolean inAbsoluteTolerance(double tolerance, double firstCopyNumber, double secondCopyNumber) {
@@ -70,12 +70,15 @@ public class AlleleTolerance implements CopyNumberTolerance {
         return Doubles.lessOrEqual(absCopyNumberDifference, tolerance);
     }
 
-    private static boolean inRelativeTolerance(double firstCopyNumber, double secondCopyNumber) {
-        return Doubles.lessOrEqual(relativeCopyNumberChange(firstCopyNumber, secondCopyNumber), MIN_RELATIVE_COPY_NUMBER_TOLERANCE);
+    private static boolean inRelativeTolerance(double tolerance, double firstCopyNumber, double secondCopyNumber) {
+        final double relCopyNumberDifference = relativeCopyNumberChange(firstCopyNumber, secondCopyNumber);
+        return Doubles.lessOrEqual(relCopyNumberDifference, tolerance);
     }
 
-    private static double relativeCopyNumberChange(double firstCopyNumber, double secondCopyNumber) {
-        final double absCopyNumberDifference = Math.abs(firstCopyNumber - secondCopyNumber);
+    @VisibleForTesting
+    static double relativeCopyNumberChange(double firstCopyNumber, double secondCopyNumber) {
+        final double absCopyNumberDifference =
+                Math.abs(Math.max(firstCopyNumber, secondCopyNumber) - Math.min(firstCopyNumber, secondCopyNumber));
         if (Doubles.isZero(absCopyNumberDifference)) {
             return 0;
         }
@@ -84,7 +87,7 @@ public class AlleleTolerance implements CopyNumberTolerance {
             return 1;
         }
 
-        return absCopyNumberDifference / Math.min(firstCopyNumber, secondCopyNumber);
+        return absCopyNumberDifference / Math.abs(Math.min(firstCopyNumber, secondCopyNumber));
     }
 
 }

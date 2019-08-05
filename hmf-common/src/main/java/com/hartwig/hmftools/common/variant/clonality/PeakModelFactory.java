@@ -72,7 +72,7 @@ public class PeakModelFactory {
             }
 
             // Add results
-            boolean isValidPeak = Doubles.greaterOrEqual(peakAverageWeight, MIN_AVERAGE_WEIGHT);
+            boolean isValidPeak = Doubles.greaterOrEqual(peakAverageWeight, MIN_AVERAGE_WEIGHT) && Doubles.greaterThan(peak, 0);
             boolean isSubclonal = Doubles.lessThan(peak, CLONAL_PLOIDY);
             hasValidSubclonalPeaks |= (isSubclonal && isValidPeak);
             for (int bucket = 0; bucket < peakHistogram.length; bucket++) {
