@@ -741,6 +741,9 @@ public class SimpleClustering
 
                 if(breakendsViolateLohHomLoss(var1.getBreakend(se1), var2.getBreakend(se2)))
                     return true;
+
+                if(breakendsViolateLohHomLoss(var2.getBreakend(se2), var1.getBreakend(se1)))
+                    return true;
             }
         }
 
@@ -750,7 +753,7 @@ public class SimpleClustering
     protected static boolean breakendsViolateLohHomLoss(final SvBreakend breakend, final SvBreakend otherBreakend)
     {
         // cannot merge to clusters if the reason for merging is 2 of their breakends forming an LOH and the other inside its bounds
-        if(!breakend.chromosome().equals(otherBreakend))
+        if(!breakend.chromosome().equals(otherBreakend.chromosome()))
             return false;
 
         List<LohEvent> lohEvents = breakend.getCluster().getLohEvents().stream()
