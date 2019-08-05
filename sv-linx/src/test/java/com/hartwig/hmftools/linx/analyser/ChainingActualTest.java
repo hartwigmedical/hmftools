@@ -270,6 +270,41 @@ public class ChainingActualTest
     }
 
     @Test
+    public void testActualFoldbackChaining1()
+    {
+        /*
+         cluster(26) chaining finished: chains(1 unique=1 links=5) SVs(5) unlinked SVs(0 ploidy=2.0) breakends(2 ploidy=2.0)
+         cluster(26) added chain(0) ploidy(1.0) with 5 linked pairs:
+         chain(0): 18_P_T - s_128_e - e_129_s - e_127_s - s_129_e - s_125_e - s_130_e - 18_Q_C
+         chain(0) 0: pair(128 18:20011830:end & 129 18:20306336:end) FOLDBACK length(294506) index(1)
+         chain(0) 1: pair(129 18:20304431:start & 127 18:19821103:end) FOLDBACK_SPLIT length(483328) index(0)
+         chain(0) 2: pair(127 18:19810967:start & 129 18:20304431:start) FOLDBACK_SPLIT length(493464) index(0)
+         chain(0) 3: pair(129 18:20306336:end & 125 18:19019042:start) ONLY length(1287294) index(3)
+         chain(0) 4: pair(125 18:19019748:end & 130 18:22311615:start) FOLDBACK length(3291867) index(2)
+
+         */
+
+        LinxTester tester = new LinxTester();
+        tester.logVerbose(true);
+
+        final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("FB_SAMPLE1");
+        tester.AllVariants.addAll(svList);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        // now check final chain-finding across all sub-clusters
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+
+        final SvChain chain = cluster.getChains().get(0);
+        assertEquals(5, chain.getSvCount());
+        assertEquals(5, chain.getLinkCount());
+    }
+
+    @Test
     public void testActualSimpleChaining1()
     {
         // based on a sample where the shortest TI of 76 bases is actually ignored so as to make 2 chains
