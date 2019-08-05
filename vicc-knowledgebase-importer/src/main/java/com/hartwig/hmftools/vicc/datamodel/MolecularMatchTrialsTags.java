@@ -31,4 +31,19 @@ public abstract class MolecularMatchTrialsTags {
 
     @Nullable
     public abstract String alias();
+
+    @Nullable
+    public abstract String manualSuppress();
+
+    @Nullable
+    public abstract String generatedBy();
+
+    @Nullable
+    public abstract String generatedByTerm();
+
+    @Nullable
+    public abstract String id();
+
+    @Nullable
+    public abstract String manualPriority();
 }

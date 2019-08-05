@@ -12,6 +12,30 @@ public abstract class MolecularMatchTrialsLocations {
     public abstract String status();
 
     @Nullable
+    public abstract String last_name();
+
+    @Nullable
+    public abstract String email();
+
+    @Nullable
+    public abstract String phone();
+
+    @Nullable
+    public abstract String phone_backup();
+
+    @Nullable
+    public abstract String email_backup();
+
+    @Nullable
+    public abstract String last_name_backup();
+
+    @Nullable
+    public abstract String phone_ext_backup();
+
+    @Nullable
+    public abstract String phone_ext();
+
+    @Nullable
     public abstract String city();
 
     @Nullable
@@ -25,6 +49,9 @@ public abstract class MolecularMatchTrialsLocations {
 
     @Nullable
     public abstract String country();
+
+    @Nullable
+    public abstract String number();
 
     @Nullable
     public abstract String id();
