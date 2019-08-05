@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.ONLY;
 import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.addByPloidy;
 import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.containsBreakendPair;
 import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.removeBreakendPair;
+import static com.hartwig.hmftools.linx.chaining.FoldbackBreakendPair.updateBreakendPair;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_MATCHED;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_NONE;
 import static com.hartwig.hmftools.linx.chaining.ProposedLinks.PM_OVERLAP;
@@ -421,12 +422,19 @@ public class ChainRuleSelector
 
             FoldbackBreakendPair fbPair = new FoldbackBreakendPair(chainStart, chainEnd, chain.ploidy(), chain);
 
+            boolean alreadyExists = containsBreakendPair(mFoldbackBreakendPairs, fbPair);
+
             removeBreakendPair(existingChainedPairs, fbPair);
 
-            if(!containsBreakendPair(mFoldbackBreakendPairs, fbPair))
+            if(!alreadyExists)
             {
                 LOGGER.debug("chain({}) adding chained foldback breakends({})", chain.id(), fbPair);
                 addByPloidy(mFoldbackBreakendPairs, fbPair);
+            }
+            else
+            {
+                // update in case chain or ploidy has changed
+                updateBreakendPair(mFoldbackBreakendPairs, fbPair);
             }
         }
 

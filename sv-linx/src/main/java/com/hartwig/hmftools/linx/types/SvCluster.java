@@ -164,7 +164,7 @@ public class SvCluster
     {
         if(mSVs.contains(var))
         {
-            LOGGER.error("cluster({}) attempting to add SV again", mId, var.id());
+            LOGGER.error("cluster({}) attempting to add SV({}) again", mId, var.id());
             return;
         }
 

@@ -73,6 +73,7 @@ public class Links
                 .svId(file.SvId)
                 .type(file.Type)
                 .resolvedType(file.ResolvedType)
+                .isSynthetic(file.IsSynthetic)
                 .startChromosome(file.ChrStart)
                 .startPosition(file.PosStart)
                 .startOrientation(file.OrientStart)

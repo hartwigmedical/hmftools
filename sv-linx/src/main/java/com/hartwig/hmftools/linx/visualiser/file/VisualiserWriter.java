@@ -145,11 +145,13 @@ public class VisualiserWriter
 
         for(final SvVarData var : variants)
         {
-            final List<SvChain> chains = var.getCluster().findChains(var);
+            final SvCluster cluster = var.getCluster();
+
+            final List<SvChain> chains = cluster.findChains(var);
 
             // repeat an SV for every time it appears in a chain
             int chainCount = chains.isEmpty() ? 1 : chains.size();
-            int unchainedChainId = chains.isEmpty() ? var.getCluster().getChainId(var) : -1;
+            int unchainedChainId = chains.isEmpty() ? cluster.getChainId(var) : -1;
 
             for(int i = 0; i < chainCount; ++i)
             {
@@ -158,8 +160,8 @@ public class VisualiserWriter
                 final SvBreakend beStart = var.getBreakend(true);
                 final SvBreakend beEnd = var.getBreakend(false);
 
-                svDataList.add(new VisSvDataFile(mSampleId, var.getCluster().id(), chainId, var.id(),
-                        var.type(), var.getCluster().getResolvedType(),
+                svDataList.add(new VisSvDataFile(mSampleId, cluster.id(), chainId, var.id(),
+                        var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(),beEnd != null ? beEnd.position() : 0,
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,

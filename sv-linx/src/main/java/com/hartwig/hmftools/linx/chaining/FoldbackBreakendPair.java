@@ -56,6 +56,18 @@ public class FoldbackBreakendPair
         return pairs.stream().anyMatch(x -> x.matches(pair));
     }
 
+    public static void updateBreakendPair(final List<FoldbackBreakendPair> pairs, final FoldbackBreakendPair pair)
+    {
+        for(int i = 0; i < pairs.size(); ++i)
+        {
+            if(pairs.get(i).matches(pair))
+            {
+                pairs.set(i, pair);
+                return;
+            }
+        }
+    }
+
     public static void removeBreakendPair(final List<FoldbackBreakendPair> pairs, final FoldbackBreakendPair pair)
     {
         for(int i = 0; i < pairs.size(); ++i)

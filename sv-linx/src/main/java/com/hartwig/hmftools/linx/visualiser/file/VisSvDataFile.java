@@ -23,6 +23,7 @@ public class VisSvDataFile
     public final int SvId;
     public final StructuralVariantType Type;
     public final com.hartwig.hmftools.linx.types.ResolvedType ResolvedType;
+    public final boolean IsSynthetic;
     public final String ChrStart;
     public final String InfoStart;
     public final String ChrEnd;
@@ -37,13 +38,15 @@ public class VisSvDataFile
     public static final String INFO_TYPE_FOLDBACK = "FOLDBACK";
 
     public VisSvDataFile(final String sampleId, int clusterId, int chainId, int svId,
-            StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, final String chrStart, final String chrEnd, long posStart, long posEnd,
+            StructuralVariantType type, final com.hartwig.hmftools.linx.types.ResolvedType resolvedType, boolean isSynthetic,
+            final String chrStart, final String chrEnd, long posStart, long posEnd,
             byte orientStart, byte orientEnd, final String infoStart, final String infoEnd, double ploidy)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
         ChainId = chainId;
         ResolvedType = resolvedType;
+        IsSynthetic = isSynthetic;
         SvId = svId;
         Type = type;
         ChrStart = chrStart;
@@ -101,6 +104,7 @@ public class VisSvDataFile
                 .add("SvId")
                 .add("Type")
                 .add("ResolvedType")
+                .add("IsSynthetic")
                 .add("ChrStart")
                 .add("ChrEnd")
                 .add("PosStart")
@@ -123,6 +127,7 @@ public class VisSvDataFile
                 .add(String.valueOf(svData.SvId))
                 .add(String.valueOf(svData.Type))
                 .add(String.valueOf(svData.ResolvedType))
+                .add(String.valueOf(svData.IsSynthetic))
                 .add(String.valueOf(svData.ChrStart))
                 .add(String.valueOf(svData.ChrEnd))
                 .add(String.valueOf(svData.PosStart))
@@ -149,6 +154,7 @@ public class VisSvDataFile
                 Integer.valueOf(values[index++]),
                 StructuralVariantType.valueOf(values[index++]),
                 com.hartwig.hmftools.linx.types.ResolvedType.valueOf(values[index++]),
+                Boolean.valueOf(values[index++]),
                 values[index++],
                 values[index++],
                 Long.valueOf(values[index++]),

@@ -196,9 +196,9 @@ public class SimpleClustering
         // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
     }
 
-    public static final boolean LOG_CLUSTERING_DATA = false;
-    public static String LOG_SAMPLE_ID = "";
-    public static int LOG_CLUSTER_INDEX = 0;
+    public static final boolean LOG_CLUSTERING_DATA = true;
+        public static String LOG_SAMPLE_ID = "";
+        public static int LOG_CLUSTER_INDEX = 0;
 
     protected static void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
     {
@@ -692,7 +692,6 @@ public class SimpleClustering
                         {
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) var({}) have conflicting LOH & hom-loss events",
                                     cluster1.id(), var1.id(), cluster2.id(), var2.id());
-                            ++index2;
                             continue;
                         }
 

@@ -24,6 +24,8 @@ public abstract class Link
 
     public abstract ResolvedType resolvedType();
 
+    public abstract boolean isSynthetic();
+
     public abstract String startChromosome();
 
     public abstract long startPosition();
@@ -49,7 +51,7 @@ public abstract class Link
 
     public boolean isSimpleSV()
     {
-        return resolvedType().isSimple();
+        return resolvedType().isSimple() && !isSynthetic();
     }
 
     public boolean isLineElement()
