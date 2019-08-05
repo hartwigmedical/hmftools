@@ -218,7 +218,7 @@ public class DoubleMinuteFinder
                 if(se == SE_END && var.isSglBreakend())
                     continue;
 
-                final SvBreakend breakend = var.getBreakend(isStart(se));
+                final SvBreakend breakend = var.getBreakend(se);
 
                 double adjacentMap = getAdjacentMajorAllelePloidy(breakend);
 

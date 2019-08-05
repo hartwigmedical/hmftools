@@ -286,7 +286,7 @@ public class VisualiserWriter
 
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
-                    final SvBreakend breakend = var.getBreakend(isStart(be));
+                    final SvBreakend breakend = var.getBreakend(be);
 
                     if (breakend == null)
                         continue;

@@ -77,7 +77,7 @@ public class SvArmGroup {
             if(var.isSglBreakend() && be == SE_END)
                 continue;
 
-            SvBreakend breakend = var.getBreakend(isStart(be));
+            SvBreakend breakend = var.getBreakend(be);
 
             if(!breakend.chromosome().equals(mChromosome) || !breakend.arm().equals(mArm))
                 continue;

@@ -237,7 +237,7 @@ public class SvFilters
             if(se == SE_END && var.isSglBreakend())
                 continue;
 
-            final SvBreakend breakend = var.getBreakend(isStart(se));
+            final SvBreakend breakend = var.getBreakend(se);
             final List<SvBreakend> breakendList = mState.getChrBreakendMap().get(breakend.chromosome());
 
             int i = breakend.getChrPosIndex();

@@ -559,7 +559,7 @@ public class SvVarData
     public boolean hasCalculatedPloidy() { return mHasCalcPloidy; }
     public double ploidyMax() { return mHasCalcPloidy ? mPloidyMax : mPloidy; }
     public double ploidyMin() { return mHasCalcPloidy ? mPloidyMin : mPloidy; }
-    public double ploidyUncertainty() { return mHasCalcPloidy ? mPloidy - mPloidyMin : 0; }
+    public double ploidyUncertainty() { return mHasCalcPloidy ? (mPloidy - mPloidyMin) * 0.5 : 0; }
 
     public double calcVaf(boolean isStart)
     {

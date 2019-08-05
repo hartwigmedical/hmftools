@@ -231,7 +231,7 @@ public class ChainLinkAllocator
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                SvBreakend pairBreakend = newPair.getBreakend(isStart(se));
+                SvBreakend pairBreakend = newPair.getBreakend(se);
 
                 final BreakendPloidy breakendPloidyData = getBreakendPloidyData(pairBreakend);
 
@@ -308,7 +308,7 @@ public class ChainLinkAllocator
                     if (requiredChains[se] != null)
                     {
                         final SvChain requiredChain = requiredChains[se];
-                        final SvBreakend breakend = newPair.getBreakend(isStart(se));
+                        final SvBreakend breakend = newPair.getBreakend(se);
 
                         if(!(requiredChain.getOpenBreakend(true) == breakend && requiredChain.getOpenBreakend(false) == breakend))
                         {
@@ -491,9 +491,9 @@ public class ChainLinkAllocator
 
         for (SvLinkedPair pair : proposedLinks.Links)
         {
-            LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to existing chain({}) ploidy({})",
-                    mLinkIndex, proposedLinks.topRule(), pair.toString(), formatPloidy(proposedLinks.ploidy()),
-                    targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
+            LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
+                    mLinkIndex, proposedLinks.topRule(), pair.toString(), formatPloidy(proposedLinks.ploidy()), targetChain.id(),
+                    formatPloidy(targetChain.ploidy()), formatPloidy(targetChain.ploidyUncertainty()), proposedLinks.ploidyMatchType());
         }
     }
 
@@ -531,9 +531,9 @@ public class ChainLinkAllocator
 
         targetChain.addLink(proposedLinks.Links.get(0), addToStart);
 
-        LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to existing chain({}) ploidy({})",
-                mLinkIndex, proposedLinks.topRule(), newPair.toString(), formatPloidy(proposedLinks.ploidy()),
-                targetChain.id(), String.format("%.1f unc=%.1f", targetChain.ploidy(), targetChain.ploidyUncertainty()));
+        LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} un=c{}) match({})",
+                mLinkIndex, proposedLinks.topRule(), newPair.toString(), formatPloidy(proposedLinks.ploidy()), targetChain.id(),
+                formatPloidy(targetChain.ploidy()), formatPloidy(targetChain.ploidyUncertainty()), proposedLinks.ploidyMatchType());
     }
 
     private boolean addLinksToNewChain(final ProposedLinks proposedLinks)
@@ -591,9 +591,9 @@ public class ChainLinkAllocator
                 newChain.setPloidyData(ploidyData.PloidyEstimate, ploidyData.PloidyUncertainty);
             }
 
-            LOGGER.debug("index({}) method({}) adding linked pair({} ploidy={}) to new chain({}) ploidy({})",
-                    mLinkIndex, proposedLinks.topRule(), pair.toString(), formatPloidy(proposedLinks.ploidy()),
-                    newChain.id(), String.format("%.1f unc=%.1f", newChain.ploidy(), newChain.ploidyUncertainty()));
+            LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to new chain({}) ploidy({} unc={}) match({})",
+                    mLinkIndex, proposedLinks.topRule(), pair.toString(), formatPloidy(proposedLinks.ploidy()), newChain.id(),
+                    formatPloidy(newChain.ploidy()), formatPloidy(newChain.ploidyUncertainty()), proposedLinks.ploidyMatchType());
         }
 
         return reconcileChains;
@@ -612,7 +612,7 @@ public class ChainLinkAllocator
 
             for (int se = SE_START; se <= SE_END; ++se)
             {
-                final SvBreakend breakend = newPair.getBreakend(isStart(se));
+                final SvBreakend breakend = newPair.getBreakend(se);
 
                 if (exhaustedBreakends.contains(breakend))
                     continue;
@@ -638,8 +638,6 @@ public class ChainLinkAllocator
                     mIsValid = false;
                     return;
                 }
-
-                svConn.addConnection(otherPairBreakend, beIsStart);
 
                 // scenarios:
                 // 1. First connection:
@@ -673,6 +671,8 @@ public class ChainLinkAllocator
                     LOGGER.trace("{} breakend exhausted: {}", beIsStart? "start" : "end", svConn.toString());
                     exhaustedBreakends.add(breakend);
                 }
+
+                svConn.addConnection(otherPairBreakend, beIsStart);
             }
 
             // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)

@@ -116,14 +116,7 @@ public class ProposedLinks
         if(compDupPloidy == 0 || otherPloidy == 0)
             return;
 
-        if (copyNumbersEqual(compDupPloidy * 2, otherPloidy))
-        {
-            mPloidyMatchType = PM_MATCHED;
-        }
-        else
-        {
-            mPloidyMatchType = PM_OVERLAP;
-        }
+        // no match for this type of connection
 
         mPloidy = compDupPloidy;
 

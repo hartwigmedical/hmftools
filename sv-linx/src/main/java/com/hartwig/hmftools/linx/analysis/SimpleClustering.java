@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingle
 import static com.hartwig.hmftools.linx.analysis.SvClassification.markSinglePairResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
@@ -185,7 +187,39 @@ public class SimpleClustering
     {
         var1.addClusterReason(clusterReason, var2.id());
         var2.addClusterReason(clusterReason, var1.id());
+
+        if(LOG_CLUSTERING_DATA)
+        {
+            logClusteringDetails(var1, var2, clusterReason);
+        }
+
         // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
+    }
+
+    public static final boolean LOG_CLUSTERING_DATA = false;
+    public static String LOG_SAMPLE_ID = "";
+    public static int LOG_CLUSTER_INDEX = 0;
+
+    protected static void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
+    {
+        long breakendDistance = getProximity(var1, var2);
+
+        boolean clonalDiscrepancy = hasLowCNChangeSupport(var1) != hasLowCNChangeSupport(var2)
+                && !ploidyMatch(var1.ploidy(), var1.ploidyUncertainty(), var2.ploidy(), var2.ploidyUncertainty());
+
+        // [0-9][0-9]:[0-9][0-9]:[0-9][0-9] - \[INFO \] - CLUSTERING:
+        // SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2,Reason,MinDistance,ClonalDiscrepancy
+        String clusteringHistory = String.format("%s,%d", LOG_SAMPLE_ID, LOG_CLUSTER_INDEX);
+
+        clusteringHistory += String.format(",%d,%d,%d,%d,%d,%d",
+                var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
+                var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount());
+
+        clusteringHistory += String.format(",%s,%d,%s", reason, breakendDistance, clonalDiscrepancy);
+
+        LOGGER.info("CLUSTERING: {}", clusteringHistory);
+
+        ++LOG_CLUSTER_INDEX;
     }
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)
@@ -540,6 +574,9 @@ public class SimpleClustering
 
                 lohEvent.setIsValid(true);
 
+                if(cluster == otherCluster)
+                    continue;
+
                 LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on unclustered LOH and hom-loss breakends",
                         cluster.id(), cluster.getSvCount(), otherCluster.id(), otherCluster.getSvCount());
 
@@ -837,9 +874,6 @@ public class SimpleClustering
                             if(skipClusterType(nextBreakend.getCluster()))
                                 continue;
 
-                            if(nextBreakend.isAssembledLink())
-                                continue;
-
                             if(nextBreakend.getCluster() == cluster)
                             {
                                 breakendPloidy -= nextBreakend.ploidy();
@@ -849,6 +883,9 @@ public class SimpleClustering
 
                                 continue;
                             }
+
+                            if(nextBreakend.isAssembledLink())
+                                continue;
 
                             opposingBreakends.add(nextBreakend);
 
@@ -879,9 +916,8 @@ public class SimpleClustering
                                 mergedClusters.add(otherCluster);
 
                                 mergedOtherClusters = true;
+                                break;
                             }
-
-                            break;
                         }
 
                         if(mergedOtherClusters)

@@ -717,9 +717,6 @@ public class ChainRuleSelector
                 continue;
             }
 
-            BreakendPloidy compDupPloidyData = mLinkAllocator.getBreakendPloidyData(compDup.getBreakend(true));
-
-
             double compDupPloidy = svConn.Ploidy;
 
             if(compDupPloidy == 0)
@@ -1017,11 +1014,7 @@ public class ChainRuleSelector
             if(ploidyFirst == 0 || ploidySecond == 0)
                 continue;
 
-            // take the average ploidy or calculate a weighted ploidy already?
-            // if these links have already been partially used, then incorrect to calculate a weighted ploidy
-
             ProposedLinks proposedLink = new ProposedLinks(nextPair, ADJACENT);
-            proposedLink.addRule(PLOIDY_MATCH);
             proposedLink.addBreakendPloidies(nextPair.firstBreakend(), ploidyFirst, nextPair.secondBreakend(), ploidySecond);
             newProposedLinks.add(proposedLink);
         }

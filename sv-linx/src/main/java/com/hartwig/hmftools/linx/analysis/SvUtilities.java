@@ -69,7 +69,7 @@ public class SvUtilities {
             if(be == SE_END && var.isSglBreakend())
                 continue;
 
-            SvBreakend breakend = var.getBreakend(isStart(be));
+            SvBreakend breakend = var.getBreakend(be);
 
             long position = breakend.position();
 
@@ -148,51 +148,12 @@ public class SvUtilities {
         return dest.isEmpty() ? source : dest + delim + source;
     }
 
-    public static boolean areVariantsLinkedByDistance(final SvVarData v1, final boolean v1UseStart, final SvVarData v2, final boolean v2UseStart, int permittedDistance)
-    {
-        // search all remaining SVs for proximity
-        if(v1 == v2)
-            return false;
-
-        if(v1.position(v1UseStart) < 0 || v2.position(v2UseStart) < 0) // for single breakends
-            return false;
-
-        if(!v1.chromosome(v1UseStart).equals(v2.chromosome(v2UseStart)))
-            return false;
-
-        if (!isWithinRange(v1.position(v1UseStart), v2.position(v2UseStart), permittedDistance))
-            return false;
-
-        return true;
-    }
-
     public static boolean isWithinRange(long pos1, long pos2, int permittedDistance)
     {
         if(pos1 < 0 || pos2 < 0)
             return false;
 
         return abs(pos1 - pos2) <= permittedDistance;
-    }
-
-    public static boolean isWithin(final SvVarData outer, final SvVarData inner)
-    {
-        // tests if the inner variant is wholly contained within the outer variant
-        if(!outer.isLocal() || !inner.isLocal())
-            return false;
-
-        if(!outer.chromosome(true).equals(inner.chromosome(true)))
-            return false;
-
-        if(inner.position(false) < 0 || outer.position(false) < 0)
-            return false;
-
-        if(inner.position(true) < outer.position(true))
-            return false;
-
-        if(inner.position(false) > outer.position(false))
-            return false;
-
-        return true;
     }
 
     public static boolean isWithin(final SvVarData variant, final String chromosome, final long position)
@@ -224,47 +185,34 @@ public class SvUtilities {
         return false;
     }
 
-    public static int getShortestProximity(final SvVarData v1, final SvVarData v2)
+    public static long getProximity(final SvVarData var1, final SvVarData var2)
     {
-        int minLength = -1;
+        long minDistance = -1;
 
-        if(v1.chromosome(true).equals(v2.chromosome(true)))
+        for(int se1 = SE_START; se1 <= SE_END; ++se1)
         {
-            int length = Math.abs((int)v1.position(true) - (int)v2.position(true));
-            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
+            SvBreakend be1 = var1.getBreakend(se1);
+
+            if(be1 == null)
+                continue;
+
+            for(int se2 = SE_START; se2 <= SE_END; ++se2)
+            {
+                SvBreakend be2 = var2.getBreakend(se2);
+
+                if(be2 == null)
+                    continue;
+
+                if(be1.chromosome().equals(be2.chromosome()))
+                {
+                    long distance = abs(be1.position() - be2.position());
+                    if(minDistance == -1 || distance < minDistance)
+                        minDistance = distance;
+                }
+            }
         }
 
-        if(v1.chromosome(true).equals(v2.chromosome(false)) && !v2.isSglBreakend())
-        {
-            int length = Math.abs((int)v1.position(true) - (int)v2.position(false));
-            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
-        }
-
-        if(v1.chromosome(false).equals( v2.chromosome(true)) && !v1.isSglBreakend())
-        {
-            int length = Math.abs((int)v1.position(false) - (int)v2.position(true));
-            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
-        }
-
-        if(v1.chromosome(false).equals(v2.chromosome(false)) && !v1.isSglBreakend() && !v2.isSglBreakend())
-        {
-            int length = Math.abs((int)v1.position(false) - (int)v2.position(false));
-            minLength = (minLength >= 0) ? Math.min(minLength, length) : length;
-        }
-
-        return minLength;
-    }
-
-    public static int getProximity(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
-    {
-        // warning: no check for chromosome or arm
-//        if(!v1.chromosome(v1Start).equals(v2.chromosome(v2Start)))
-//            return -1;
-
-        if(v1.position(v1Start) < 0 || v2.position(v2Start) < 0)
-            return 0;
-
-        return Math.abs((int)v1.position(v1Start) - (int)v2.position(v2Start));
+        return minDistance;
     }
 
     public static int calcConsistency(final List<SvVarData> svList)
@@ -284,9 +232,7 @@ public class SvUtilities {
         int consistencyCount = 0;
         for(int be = SE_START; be <= SE_END; ++be)
         {
-            boolean useStart = isStart(be);
-
-            consistencyCount += calcConsistency(var, useStart);
+            consistencyCount += calcConsistency(var, isStart(be));
         }
 
         return consistencyCount;
@@ -347,26 +293,6 @@ public class SvUtilities {
     public static final String getArmFromChrArm(final String chrArm)
     {
         return chrArm.split("_")[1];
-    }
-
-    public static int MAX_FACTORIAL_VALUE = 40;
-
-    public static long factorial(long i)
-    {
-        if(i <= 1 || i > MAX_FACTORIAL_VALUE)
-            return 1;
-
-        return i * factorial(i - 1);
-    }
-
-    public static long combination(long n, long k)
-    {
-        long nFact = factorial(n);
-        long kFact = factorial(k);
-        long nKFact = factorial(n- k);
-        long calc = nFact / nKFact;
-        calc /= kFact;
-        return calc;
     }
 
 

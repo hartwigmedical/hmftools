@@ -326,7 +326,7 @@ public class ChainingComplexTest
     @Test
     public void testComplexDupSimple()
     {
-        // simple chain with replicated SV: telomere - 4 - 5 - 1 - 2-DUP - 1 - 3 - centromere
+        // simple chain with replicated SV: telomere - 4 - 5 - 1 - 2 - DUP - 1 - 3 - centromere
         LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
