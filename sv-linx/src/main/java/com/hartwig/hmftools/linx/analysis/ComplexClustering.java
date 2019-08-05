@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
@@ -408,8 +409,6 @@ public class ComplexClustering
                 continue;
             }
 
-            //isSpecificCluster(cluster);
-
             boolean mergedOtherClusters = false;
 
             for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
@@ -460,41 +459,60 @@ public class ComplexClustering
                                 continue;
                             }
                         }
+
+                        if(!ploidyMatch(lowerBreakend.ploidy(), lowerBreakend.ploidyUncertainty(), upperBreakend.ploidy(), upperBreakend.ploidyUncertainty()))
+                            continue;
                     }
 
-                    for (int j = lowerBreakend.getChrPosIndex() + 1; j <= upperBreakend.getChrPosIndex() - 1; ++j)
+                    // now look for a lone breakend which falls between these 2 consecutive breakends
+                    // if there is a DB in between the FB or consecutive breakends then there will be a gap of 2 breakends in between
+                    // ie index 0 (lower), 1 (other), 2 (DB) and 3 (upper)
+                    int chrIndexLower = lowerBreakend.getChrPosIndex();
+                    int chrIndexUpper = upperBreakend.getChrPosIndex();
+                    SvBreakend otherBreakend = null;
+
+                    int unclusteredStraddledBreakends = 0;
+
+                    for (int j = chrIndexLower + 1; j <= chrIndexUpper - 1; ++j)
                     {
-                        final SvBreakend otherBreakend = fullBreakendList.get(j);
+                        final SvBreakend breakend = fullBreakendList.get(j);
+                        final SvCluster otherCluster = breakend.getCluster();
 
-                        // if not straddled by a foldback pair, then the breakend must be facing the consecutive straddling breakends
-                        if(!isFoldbackPair && otherBreakend.orientation() == lowerBreakend.orientation())
+                        if(otherCluster.isResolved() || otherCluster == cluster)
                             continue;
 
-                        final SvCluster otherCluster = otherBreakend.getCluster();
-
-                        if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
-                            continue;
-
-                        LOGGER.debug("cluster({}) {} breakends({} & {}) overlap cluster({}) breakend({})",
-                                cluster.id(), isFoldbackPair ? "foldback" : "consecutive",
-                                lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
-
-                        final String reason = isFoldbackPair ? CR_STRADDLING_FOLDBACK_BREAKENDS : CR_STRADDLING_CONSECUTIVE_BREAKENDS;
-                        addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), reason);
-
-                        otherCluster.addClusterReason(reason);
-                        cluster.addClusterReason(reason);
-
-                        cluster.mergeOtherCluster(otherCluster);
-
-                        mergedClusters.add(otherCluster);
-
-                        mergedOtherClusters = true;
-                        break;
+                        ++unclusteredStraddledBreakends;
+                        otherBreakend = breakend;
                     }
 
-                    if(mergedOtherClusters)
-                        break;
+                    if(unclusteredStraddledBreakends != 1)
+                        continue;
+
+                    final SvCluster otherCluster = otherBreakend.getCluster();
+
+                    if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
+                        continue;
+
+                    // if not straddled by a foldback pair, then the breakend must be facing the consecutive straddling breakends
+                    if(!isFoldbackPair && otherBreakend.orientation() == lowerBreakend.orientation())
+                        continue;
+
+                    LOGGER.debug("cluster({}) {} breakends({} & {}) overlap cluster({}) breakend({})",
+                            cluster.id(), isFoldbackPair ? "foldback" : "consecutive",
+                            lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
+
+                    final String reason = isFoldbackPair ? CR_STRADDLING_FOLDBACK_BREAKENDS : CR_STRADDLING_CONSECUTIVE_BREAKENDS;
+                    addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), reason);
+
+                    otherCluster.addClusterReason(reason);
+                    cluster.addClusterReason(reason);
+
+                    cluster.mergeOtherCluster(otherCluster);
+
+                    mergedClusters.add(otherCluster);
+
+                    mergedOtherClusters = true;
+                    break;
                 }
 
                 if(mergedOtherClusters)
