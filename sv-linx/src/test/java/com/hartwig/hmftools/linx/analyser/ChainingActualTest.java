@@ -223,7 +223,7 @@ public class ChainingActualTest
     @Test
     public void testActualDoubleMinuteChaining()
     {
-        // based on CPCT02100151T chromosome 7 and EGFR AMP
+        // based on an EGFR AMP
 
         LinxTester tester = new LinxTester();
         tester.logVerbose(true);
@@ -246,7 +246,7 @@ public class ChainingActualTest
 
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("DM_SAMPLE1");
 
-        final SvVarData dmDup = svList.get(6);
+        // final SvVarData dmDup = svList.get(6);
 
         tester.AllVariants.addAll(svList);
 
@@ -276,19 +276,11 @@ public class ChainingActualTest
         LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 
-        final SvVarData var1 = createTestSv(7821420,"18","X",23601785,48007145,-1,1,BND,1.92,1.96,0.98,0.95,1.03, "");
-        final SvVarData var2 = createTestSv(7821421,"X","X",48004021,48123140,-1,-1,INV,0.92,0.99,0.92,0.99,0.96, "");
-        final SvVarData var3 = createTestSv(7821422,"X","X",48082005,66755692,1,1,INV,1.01,1,1.01,1,0.86, "");
-        final SvVarData var4 = createTestSv(7821423,"18","X",23577410,66767221,1,-1,BND,1.95,0.97,1.02,0.97,1.01, "");
-        final SvVarData var5 = createTestSv(7821424,"X","X",47973211,67907761,1,1, INV,1,0.97,1,0.97,0.99, "");
-        final SvVarData var6 = createTestSv(7821425,"X","X",48007069,67910047,-1,-1,INV,1.96,1,1.04,1,0.99, "");
+        final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("CT_SAMPLE1");
+        tester.AllVariants.addAll(svList);
 
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.AllVariants.add(var5);
-        tester.AllVariants.add(var6);
+        final SvVarData var1 = svList.get(0);
+        final SvVarData var4 = svList.get(3);
 
         List<LohEvent> lohData = tester.CnDataLoader.getLohData();
 

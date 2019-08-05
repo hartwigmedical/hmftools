@@ -139,7 +139,7 @@ public class SvClassification
         if(cluster.getResolvedType() != NONE)
             return;
 
-        //  isSpecificCluster(cluster);
+        isSpecificCluster(cluster);
 
         if(cluster.hasLinkingLineElements())
         {
@@ -556,11 +556,9 @@ public class SvClassification
         SvBreakend chainStart = chain.getOpenBreakend(true);
         SvBreakend chainEnd = chain.getOpenBreakend(false);
 
-        // check for same arm and opposite orientations
-        if(!tiStart.getChrArm().equals(chainStart.getChrArm()))
-            return;
+        // check for opposite orientations
 
-        if(!chainStart.getChrArm().equals(chainEnd.getChrArm()) || chainStart.orientation() == chainEnd.orientation())
+        if(chainStart.orientation() == chainEnd.orientation())
             return;
 
         // check for linked, short DBs at both ends

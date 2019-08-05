@@ -826,11 +826,6 @@ public class SimpleClustering
 
             for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
-                if(entry.getKey().equals("18"))
-                {
-                    LOGGER.debug("chr({})", entry.getKey());
-                }
-
                 List<SvBreakend> breakendList = entry.getValue();
 
                 List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(entry.getKey());

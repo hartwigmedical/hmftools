@@ -962,29 +962,29 @@ public class ChainFinder
 
         reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
 
-        if(mChains.size() != 1)
-            return;
+        // search for a chain which can be closed if it contains all the DM SVs
 
-        SvChain chain = mChains.get(0);
-
-        int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x)).count();
-
-        if(chainedDmSVs != mDoubleMinuteSVs.size())
-            return;
-
-        SvBreakend chainStart = chain.getOpenBreakend(true);
-        SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-        if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
+        for(SvChain chain : mChains)
         {
-            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
-            {
-                SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
+            int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x)).count();
 
-                if (chain.linkWouldCloseChain(pair))
+            if(chainedDmSVs != mDoubleMinuteSVs.size())
+                continue;
+
+            SvBreakend chainStart = chain.getOpenBreakend(true);
+            SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+            if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
+            {
+                if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
                 {
-                    chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
-                    LOGGER.debug("cluster({}) closed DM chain", mClusterId);
+                    SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
+
+                    if (chain.linkWouldCloseChain(pair))
+                    {
+                        chain.closeChain(LR_METHOD_DM_CLOSE, mLinkAllocator.getLinkIndex());
+                        LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
+                    }
                 }
             }
         }

@@ -282,9 +282,18 @@ public class DoubleMinuteFinder
         if(dmChain != null)
         {
             if(highPloidySVs.size() == 1)
+            {
                 fullyChained = true; // the single DUP case
+            }
             else
+            {
                 fullyChained = dmChain.getSvCount() == highPloidySVs.size() && dmChain.isClosedLoop();
+
+                if(fullyChained)
+                {
+                    dmChain.logLinks();
+                }
+            }
         }
 
         mClusterChains.put(cluster.id(), dmChain);
