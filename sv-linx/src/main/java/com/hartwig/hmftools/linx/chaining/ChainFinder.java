@@ -105,7 +105,7 @@ public class ChainFinder
     private boolean mRunValidation;
     private boolean mUseAllelePloidies;
 
-    private static final String LR_METHOD_DM_CLOSE = "DM_CLOSE";
+    public static final String LR_METHOD_DM_CLOSE = "DM_CLOSE";
 
     // self-analysis only
     private final ChainDiagnostics mDiagnostics;
@@ -133,7 +133,7 @@ public class ChainFinder
         mReplicatedSVs = Lists.newArrayList();
         mReplicatedBreakends = Lists.newArrayList();
 
-        mLinkAllocator = new ChainLinkAllocator(mClusterPloidyLimits, mSvBreakendPossibleLinks, mChains);
+        mLinkAllocator = new ChainLinkAllocator(mClusterPloidyLimits, mSvBreakendPossibleLinks, mChains, mDoubleMinuteSVs);
 
         mRuleSelector = new ChainRuleSelector(mLinkAllocator, mClusterPloidyLimits,
                 mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
@@ -961,8 +961,6 @@ public class ChainFinder
             return;
 
         reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
-
-        //
 
         if(mChains.size() != 1)
             return;

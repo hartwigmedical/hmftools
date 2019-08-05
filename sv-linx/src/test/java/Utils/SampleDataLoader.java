@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -17,17 +18,46 @@ import org.jetbrains.annotations.NotNull;
 
 public class SampleDataLoader
 {
-    public static List<StructuralVariantData> fromResource(@NotNull final String resource)
+    // data input expects all StructuralVariant data fields, followed by additonal svAnnotation fields
+
+    private static final int COL_PLOIDY_MIN = 53;
+    private static final int COL_PLOIDY_MAX = 54;
+    private static final int COL_EXPECTED = COL_PLOIDY_MAX + 1;
+
+    public static List<SvVarData> loadSampleTestData(@NotNull final String resource)
     {
         final InputStream inputStream = StructuralVariantFile.class.getResourceAsStream("/sample_data/" + resource);
-        return new BufferedReader(new InputStreamReader(inputStream)).lines()
-                .filter(x -> !x.startsWith("svId")).map(StructuralVariantFile::fromString).collect(toList());
+
+        final List<String> inputData = new BufferedReader(new InputStreamReader(inputStream)).lines()
+                .filter(x -> !x.startsWith("svId"))
+                .collect(toList());
+
+        final List<StructuralVariantData> svData = inputData.stream().map(StructuralVariantFile::fromString).collect(toList());
+
+        return createSVs(svData, inputData);
+
     }
 
-    public static List<SvVarData> createSVs(final List<StructuralVariantData> svDataList)
+
+    private static List<SvVarData> createSVs(final List<StructuralVariantData> svDataList, final List<String> inputData)
     {
-        List<SvVarData> svList = svDataList.stream().map(x -> new SvVarData(x)).collect(toList());
-        svList.forEach(x -> initialiseSV(x));
+        List<SvVarData> svList = Lists.newArrayList();
+
+        for(int i = 0; i < svDataList.size(); ++i)
+        {
+            final StructuralVariantData svData = svDataList.get(i);
+            SvVarData var = new SvVarData(svData);
+            svList.add(var);
+            initialiseSV(var);
+
+            final String[] items = inputData.get(i).split(StructuralVariantFile.DELIMITER);
+
+            if(items.length < COL_EXPECTED)
+                return svList;
+
+            var.setPloidyRecalcData(Double.valueOf(items[COL_PLOIDY_MIN]), Double.valueOf(items[COL_PLOIDY_MAX]));
+        }
+
         return svList;
     }
 

@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public class StructuralVariantFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final String DELIMITER = "\t";
+    public static final String DELIMITER = "\t";
     private static final String FILE_EXTENSION = ".sv_data.tsv";
 
     @NotNull

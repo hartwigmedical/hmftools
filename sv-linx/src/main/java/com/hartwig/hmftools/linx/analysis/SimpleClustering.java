@@ -196,7 +196,7 @@ public class SimpleClustering
         // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
     }
 
-    public static final boolean LOG_CLUSTERING_DATA = true;
+    public static final boolean LOG_CLUSTERING_DATA = false;
         public static String LOG_SAMPLE_ID = "";
         public static int LOG_CLUSTER_INDEX = 0;
 
@@ -690,7 +690,7 @@ public class SimpleClustering
                         // check for conflicting LOH / hom-loss events
                         if(variantsViolateLohHomLoss(var1, var2))
                         {
-                            LOGGER.debug("cluster({}) SV({}) and cluster({}) var({}) have conflicting LOH & hom-loss events",
+                            LOGGER.trace("cluster({}) SV({}) and cluster({}) var({}) have conflicting LOH & hom-loss events",
                                     cluster1.id(), var1.id(), cluster2.id(), var2.id());
                             continue;
                         }
@@ -826,6 +826,11 @@ public class SimpleClustering
 
             for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
+                if(entry.getKey().equals("18"))
+                {
+                    LOGGER.debug("chr({})", entry.getKey());
+                }
+
                 List<SvBreakend> breakendList = entry.getValue();
 
                 List<SvBreakend> fullBreakendList = mState.getChrBreakendMap().get(entry.getKey());

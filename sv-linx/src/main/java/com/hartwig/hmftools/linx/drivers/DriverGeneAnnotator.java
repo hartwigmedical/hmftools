@@ -24,6 +24,9 @@ import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_T
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -56,6 +59,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -538,6 +542,12 @@ public class DriverGeneAnnotator
                 continue;
             }
 
+            // skip simple clusters that don't cause amplification
+            ResolvedType clusterType = varStart.getCluster().getResolvedType();
+
+            if(clusterType == DEL || clusterType == RECIP_INV || clusterType == RECIP_TRANS)
+                continue;
+
             // look for the first TI which overlaps the gene region
             List<SvLinkedPair> tiPairs = varStart.getLinkedPairs(breakend.usesStart());
 
@@ -633,27 +643,19 @@ public class DriverGeneAnnotator
     private void writeDriverData(final DriverGeneData dgData)
     {
         // convert to a sample driver record
-        int clusterId = -1;
-        String eventTypes = "";
         for(final DriverGeneEvent driverEvent : dgData.getEvents())
         {
-            if(driverEvent.getCluster() != null)
-                clusterId = driverEvent.getCluster().id();
+            int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
 
-            if(eventTypes.isEmpty())
-                eventTypes = driverEvent.Type.toString();
-            else if(!eventTypes.contains(driverEvent.Type.toString()))
-                eventTypes += ";" + driverEvent.Type.toString();
+            mDriverOutputList.add(ImmutableLinxDriver.builder()
+                    .clusterId(clusterId)
+                    .gene(dgData.GeneData.GeneName)
+                    .eventType(driverEvent.Type.toString())
+                    .build());
+
+            mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
+                    "", 0, dgData.GeneData.Chromosome, "DRIVER");
         }
-
-        mDriverOutputList.add(ImmutableLinxDriver.builder()
-                .clusterId(clusterId)
-                .gene(dgData.GeneData.GeneName)
-                .eventType(eventTypes)
-                .build());
-
-        mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
-                "", 0, dgData.GeneData.Chromosome, "DRIVER");
 
         if(!mConfig.hasMultipleSamples())
             return;
@@ -680,7 +682,6 @@ public class DriverGeneAnnotator
             final DriverCatalog driverGene = dgData.DriverData;
             final EnsemblGeneData geneData = dgData.GeneData;
             double[] cnData = mChrCopyNumberMap.get(geneData.Chromosome);
-            int refClusterId = -1;
 
             for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
@@ -694,7 +695,6 @@ public class DriverGeneAnnotator
 
                 if(cluster != null)
                 {
-                    refClusterId = cluster.id();
                     writer.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
                 }
                 else

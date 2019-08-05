@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWrite
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
+import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_CENTROMERE;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -366,23 +367,6 @@ public class DoubleMinuteFinder
             return null;
 
         SvChain chain = mChainFinder.getUniqueChains().get(0);
-
-        // check whether the chain could form a loop
-        SvBreakend chainStart = chain.getOpenBreakend(true);
-        SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-        if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
-        {
-            if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
-            {
-                SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
-
-                if (chain.linkWouldCloseChain(pair))
-                {
-                    chain.addLink(pair, true);
-                }
-            }
-        }
 
         mChainFinder.clear();
         return chain;
