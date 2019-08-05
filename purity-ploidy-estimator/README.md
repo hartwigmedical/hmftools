@@ -948,6 +948,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Fixed HG38 regression bug
   - Changed default value of `min_diploid_tumor_ratio_count` from 30 to 10
   - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 
   - Fixed bug in subclonal plot

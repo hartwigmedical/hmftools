@@ -86,13 +86,11 @@ public final class CobaltRatioFile {
     @NotNull
     private static ListMultimap<Chromosome, CobaltRatio> fromLines(@NotNull final List<String> lines) {
         final ListMultimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
-        for (String line : lines) {
-            if (!line.startsWith("Ch") && !line.startsWith("ch") ) {
-                final CobaltRatio ratio = fromLine(line);
-                result.put(HumanChromosome.fromString(ratio.chromosome()), ratio);
-            }
+        for (int i = 1; i < lines.size(); i++) {
+            String line = lines.get(i);
+            final CobaltRatio ratio = fromLine(line);
+            result.put(HumanChromosome.fromString(ratio.chromosome()), ratio);
         }
-
         return result;
     }
 
