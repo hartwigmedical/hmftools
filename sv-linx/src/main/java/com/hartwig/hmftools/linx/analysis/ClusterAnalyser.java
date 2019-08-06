@@ -59,9 +59,6 @@ public class ClusterAnalyser {
 
     private boolean mRunValidationChecks;
 
-    // TEMP:
-    public final static boolean NEW_CLUSTERING = true;
-
     PerformanceCounter mPcClustering;
     PerformanceCounter mPcChaining;
     PerformanceCounter mPcAnnotation;

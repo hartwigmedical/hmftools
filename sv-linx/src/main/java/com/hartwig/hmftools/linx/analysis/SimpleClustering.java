@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.NEW_CLUSTERING;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
@@ -242,12 +241,9 @@ public class SimpleClustering
 
         mergeOnLOHEvents(clusters);
 
-        if(NEW_CLUSTERING)
-        {
-            mergeOnMajorAllelePloidyBounds(clusters);
+        mergeOnMajorAllelePloidyBounds(clusters);
 
-            mergeLOHResolvingClusters(clusters);
-        }
+        mergeLOHResolvingClusters(clusters);
 
         // the merge must be run a few times since as clusters grow, more single SVs and other clusters
         // will then fall within the bounds of the new larger clusters
@@ -258,11 +254,9 @@ public class SimpleClustering
             if(mergeOnOverlappingInvDupDels(clusters))
                 foundMerges = true;
 
-            if(!NEW_CLUSTERING)
-            {
-                if (mergeOnUnresolvedSingles(clusters))
-                    foundMerges = true;
-            }
+            // to be re-introduced once inferred work is complete
+            // if (mergeOnUnresolvedSingles(clusters))
+            //     foundMerges = true;
 
             ++iterations;
         }
