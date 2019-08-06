@@ -16,5 +16,4 @@ public abstract class MolecularMatchTrialsLocation {
     @NotNull
     public abstract List<String> coordinates();
 
-
 }
