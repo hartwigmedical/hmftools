@@ -16,5 +16,5 @@ public interface VariantContextCollection extends Iterable<VariantContext> {
     int remove(@NotNull final Predicate<VariantContext> removePredicate);
 
     @NotNull
-    List<StructuralVariant> passingVariants();
+    List<StructuralVariant> segmentationVariants();
 }

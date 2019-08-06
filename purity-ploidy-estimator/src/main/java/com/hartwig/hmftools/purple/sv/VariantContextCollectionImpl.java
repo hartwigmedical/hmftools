@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextComparator;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class VariantContextCollectionImpl implements VariantContextCollection {
@@ -60,10 +59,10 @@ public class VariantContextCollectionImpl implements VariantContextCollection {
 
     @NotNull
     @Override
-    public List<StructuralVariant> passingVariants() {
+    public List<StructuralVariant> segmentationVariants() {
         if (modified) {
             modified = false;
-            final StructuralVariantFactory factory = new StructuralVariantFactory(new PassingVariantFilter());
+            final StructuralVariantFactory factory = new StructuralVariantFactory(new SegmentationVariantsFilter());
             variantContexts.forEach(factory::addVariantContext);
 
             variants.clear();

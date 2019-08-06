@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.variant.structural;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -76,9 +75,8 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
                 startBuilder.adjustedCopyNumber((startCopyNumber.adjustedCopyNumber()));
                 startBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(startCopyNumber)));
 
-                // Lacking anything else, inferred singles can use copy number change as ploidy
-                if (Optional.ofNullable(variant.filter()).filter(x -> x.equals(StructuralVariantFactory.INFERRED)).isPresent()
-                        && variant.type() == StructuralVariantType.SGL) {
+                // Lacking anything else, inferred variants can use copy number change as ploidy
+                if (variant.type() == StructuralVariantType.INF) {
                     builder.ploidy((changeFactory.copyNumberChange(startCopyNumber)));
                 }
 

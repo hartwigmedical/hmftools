@@ -294,7 +294,7 @@ public class StructuralVariantFactory {
 
         return setCommon(ImmutableStructuralVariantImpl.builder(), context).start(startLeg)
                 .insertSequence(insertedSequence)
-                .type(StructuralVariantType.SGL)
+                .type(context.hasAttribute(INFERRED) ? StructuralVariantType.INF : StructuralVariantType.SGL)
                 .filter(filters(context, null))
                 .startContext(context)
                 .build();
