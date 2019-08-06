@@ -74,8 +74,8 @@ public class ClusterAnalyser {
         mClusters = Lists.newArrayList();
 
         mFilters = new SvFilters(mState);
-        mSimpleClustering = new SimpleClustering(mState);
-        mComplexClustering = new ComplexClustering(mState, mClusters);
+        mSimpleClustering = new SimpleClustering(mState, mConfig);
+        mComplexClustering = new ComplexClustering(mState, mClusters, mSimpleClustering);
 
         mCnDataLoader = null;
         mSampleId = "";
@@ -128,6 +128,7 @@ public class ClusterAnalyser {
         mSampleId = sampleId;
         mAllVariants = allVariants;
         mClusters.clear();
+        mSimpleClustering.initialise(sampleId);
         mChainFinder.setSampleId(sampleId);
     }
 
@@ -154,7 +155,7 @@ public class ClusterAnalyser {
 
         mPcClustering.start();
         mFilters.clusterExcludedVariants(mClusters);
-        mSimpleClustering.clusterByProximity(mClusters, mConfig.ProximityDistance);
+        mSimpleClustering.clusterByProximity(mClusters);
         mPcClustering.pause();
 
         // mark line clusters since these are excluded from most subsequent logic

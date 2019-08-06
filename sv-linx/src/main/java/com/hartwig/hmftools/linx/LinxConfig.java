@@ -34,6 +34,7 @@ public class LinxConfig
     final public int ChainingSvLimit; // for analysis and chaining
 
     public boolean LogVerbose;
+    public boolean LogClusteringHistory;
     public String RequiredAnnotations;
     public int LogChainingMaxSize;
 
@@ -66,6 +67,7 @@ public class LinxConfig
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
     private static final String LOG_CLUSTER_ID = "log_cluster_id"; // for logging and breakends
     private static final String LOG_SV_ID = "log_sv_id";
+    private static final String LOG_CLUSTER_HISTORY = "log_cluster_history";
 
     // for testing only
     private static final String MAX_SAMPLES = "max_samples";
@@ -133,6 +135,7 @@ public class LinxConfig
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
+        LogClusteringHistory = cmd.hasOption(LOG_CLUSTER_HISTORY);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
@@ -192,6 +195,7 @@ public class LinxConfig
         options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
         options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
+        options.addOption(LOG_CLUSTER_HISTORY, false, "Optional: log all cluster merge data");
     }
 
     private List<String> loadSampleListFile(final String filename)

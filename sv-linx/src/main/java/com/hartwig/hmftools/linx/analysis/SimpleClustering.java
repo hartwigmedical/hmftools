@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -55,18 +56,30 @@ import org.apache.logging.log4j.Logger;
 public class SimpleClustering
 {
     private ClusteringState mState;
+    private final LinxConfig mConfig;
+    private String mSampleId;
+    private int mClusteringIndex;
 
     private static final Logger LOGGER = LogManager.getLogger(SimpleClustering.class);
 
-    public SimpleClustering(ClusteringState state)
+    public SimpleClustering(ClusteringState state, final LinxConfig config)
     {
         mState = state;
+        mConfig = config;
     }
 
     private int getNextClusterId() { return mState.getNextClusterId(); }
 
-    public void clusterByProximity(List<SvCluster> clusters, int proximityDistance)
+    public void initialise(final String sampleId)
     {
+        mSampleId = sampleId;
+        mClusteringIndex = 0;
+    }
+
+    public void clusterByProximity(List<SvCluster> clusters)
+    {
+        int proximityDistance = mConfig.ProximityDistance;
+
         // walk through each chromosome and breakend list
         for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
@@ -183,12 +196,12 @@ public class SimpleClustering
         }
     }
 
-    public static void addClusterReasons(final SvVarData var1, final SvVarData var2, final String clusterReason)
+    public void addClusterReasons(final SvVarData var1, final SvVarData var2, final String clusterReason)
     {
         var1.addClusterReason(clusterReason, var2.id());
         var2.addClusterReason(clusterReason, var1.id());
 
-        if(LOG_CLUSTERING_DATA)
+        if(mConfig.LogClusteringHistory)
         {
             logClusteringDetails(var1, var2, clusterReason);
         }
@@ -196,11 +209,7 @@ public class SimpleClustering
         // checkClusteringClonalDiscrepancy(var1, var2, clusterReason);
     }
 
-    public static final boolean LOG_CLUSTERING_DATA = false;
-        public static String LOG_SAMPLE_ID = "";
-        public static int LOG_CLUSTER_INDEX = 0;
-
-    protected static void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
+    protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
     {
         long breakendDistance = getProximity(var1, var2);
 
@@ -209,7 +218,7 @@ public class SimpleClustering
 
         // [0-9][0-9]:[0-9][0-9]:[0-9][0-9] - \[INFO \] - CLUSTERING:
         // SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2,Reason,MinDistance,ClonalDiscrepancy
-        String clusteringHistory = String.format("%s,%d", LOG_SAMPLE_ID, LOG_CLUSTER_INDEX);
+        String clusteringHistory = String.format("%s,%d", mSampleId, mClusteringIndex);
 
         clusteringHistory += String.format(",%d,%d,%d,%d,%d,%d",
                 var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
@@ -219,7 +228,7 @@ public class SimpleClustering
 
         LOGGER.info("CLUSTERING: {}", clusteringHistory);
 
-        ++LOG_CLUSTER_INDEX;
+        ++mClusteringIndex;
     }
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)

@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_SATELLITE_SG
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_PLOIDY_MATCH;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.addClusterReasons;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.skipClusterType;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -45,15 +44,17 @@ public class ComplexClustering
     // references only
     private final List<SvCluster> mClusters;
     private final ClusteringState mState;
+    private final SimpleClustering mSimpleClustering;
     private CnDataLoader mCopyNumberData;
     private String mSampleId;
 
     private static final Logger LOGGER = LogManager.getLogger(ComplexClustering.class);
 
-    public ComplexClustering(final ClusteringState state, final List<SvCluster> clusters)
+    public ComplexClustering(final ClusteringState state, final List<SvCluster> clusters, final SimpleClustering simpleClustering)
     {
         mClusters = clusters;
         mState = state;
+        mSimpleClustering = simpleClustering;
         mSampleId = "";
     }
 
@@ -190,7 +191,7 @@ public class ComplexClustering
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
-                            addClusterReasons(var1, var2, CR_FOLDBACKS);
+                            mSimpleClustering.addClusterReasons(var1, var2, CR_FOLDBACKS);
 
                             cluster1.addClusterReason(CR_FOLDBACKS);
                             cluster2.addClusterReason(CR_FOLDBACKS);
@@ -289,7 +290,7 @@ public class ComplexClustering
 
                         // final String commonArms = var1.id() + "_" + var2.id();
 
-                        addClusterReasons(var1, var2, CR_COMMON_ARMS);
+                        mSimpleClustering.addClusterReasons(var1, var2, CR_COMMON_ARMS);
 
                         cluster1.addClusterReason(CR_COMMON_ARMS);
                         cluster2.addClusterReason(CR_COMMON_ARMS);
@@ -425,7 +426,7 @@ public class ComplexClustering
                             lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
                     final String reason = isFoldbackPair ? CR_STRADDLING_FOLDBACK_BREAKENDS : CR_STRADDLING_CONSECUTIVE_BREAKENDS;
-                    addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), reason);
+                    mSimpleClustering.addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), reason);
 
                     otherCluster.addClusterReason(reason);
                     cluster.addClusterReason(reason);
@@ -528,7 +529,7 @@ public class ComplexClustering
                             LOGGER.debug("cluster({}) boundary breakend({}) ploidy TI match with cluster({}) breakend({})",
                                     cluster.id(), boundaryBreakend, otherCluster.id(), nextBreakend);
 
-                            addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), CR_TI_PLOIDY_MATCH);
+                            mSimpleClustering.addClusterReasons(boundaryBreakend.getSV(), nextBreakend.getSV(), CR_TI_PLOIDY_MATCH);
 
                             otherCluster.addClusterReason(CR_TI_PLOIDY_MATCH);
                             cluster.addClusterReason(CR_TI_PLOIDY_MATCH);
@@ -625,7 +626,7 @@ public class ComplexClustering
                                 .filter(x -> x.sglToSatelliteRepeats() && x.chromosome(true).equals(chromosome))
                                 .findFirst().get();
 
-                        addClusterReasons(otherSV, var, CR_SATELLITE_SGL);
+                        mSimpleClustering.addClusterReasons(otherSV, var, CR_SATELLITE_SGL);
                         srCluster.addClusterReason(CR_SATELLITE_SGL);
 
                         srCluster.mergeOtherCluster(sglCluster);

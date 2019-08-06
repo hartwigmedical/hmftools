@@ -175,10 +175,6 @@ public class SvSampleAnalyser {
         mAllVariants = Lists.newArrayList(variants);
         mVisWriter.setSampleId(sampleId);
 
-        // TEMP
-        SimpleClustering.LOG_SAMPLE_ID = sampleId;
-        SimpleClustering.LOG_CLUSTER_INDEX = 0;
-
         // look-up and cache relevant CN data into each SV
         setSvCopyNumberData(
                 mAllVariants,
