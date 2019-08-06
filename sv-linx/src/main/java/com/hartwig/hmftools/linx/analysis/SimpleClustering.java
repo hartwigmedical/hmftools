@@ -46,6 +46,7 @@ import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
@@ -689,6 +690,9 @@ public class SimpleClustering
                             continue;
                         }
 
+                        if(!breakendsInCloseLink(var1, var2))
+                            continue;
+
                         LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
                                 cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
 
@@ -767,6 +771,38 @@ public class SimpleClustering
             return length > mState.getDelCutoffLength();
         else
             return false;
+    }
+
+    protected static boolean breakendsInCloseLink(final SvVarData var1, final SvVarData var2)
+    {
+        // test whether the breakends form a DB or TI within the long distance threshold
+        for(int se1 = SE_START; se1 <= SE_END; ++se1)
+        {
+            if(se1 == SE_END && var1.isSglBreakend())
+                continue;
+
+            final SvBreakend breakend1 = var1.getBreakend(se1);
+
+            for(int se2 = SE_START; se2 <= SE_END; ++se2)
+            {
+                if(se2 == SE_END && var2.isSglBreakend())
+                    continue;
+
+                final SvBreakend breakend2 = var2.getBreakend(se2);
+
+                if(!breakend1.getChrArm().equals(breakend2.getChrArm()))
+                    continue;
+
+                if(abs(breakend1.position() - breakend2.position()) > MAX_MERGE_DISTANCE)
+                    continue;
+
+                // either a TI or DB
+                if(breakend1.orientation() != breakend2.orientation())
+                    return true;
+           }
+        }
+
+        return false;
     }
 
     protected static boolean skipClusterType(final SvCluster cluster)

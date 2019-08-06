@@ -13,6 +13,7 @@ import static Utils.SvTestRoutines.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP_OR_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
@@ -118,6 +119,65 @@ public class MergeRuleTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
+        assertEquals(3, tester.getClusters().size());
+    }
+
+    @Test
+    public void testLongDelDupInvMerge()
+    {
+        LinxTester tester = new LinxTester();
+
+        // INV, DUP and DEL overlapping or enclosed are merged if within long merge distance and can form a TI
+        SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 200000, -1);
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 20000, 220000, -1);
+
+        // not merged since face the same way
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+        assertEquals(2, tester.getClusters().size());
+
+        tester.clearClustersAndSVs();
+
+        // now an INV which faces the others will cause them both to be clustered in
+        SvVarData var3 = createInv(tester.nextVarId(), "1", 40000, 240000, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+        assertEquals(1, tester.getClusters().size());
+
+        SvCluster cluster = tester.getClusters().get(0);
+
+        assertTrue(var1.getClusterReason().contains(CR_LONG_DEL_DUP_OR_INV));
+        assertTrue(cluster.getClusteringReasons().contains(CR_LONG_DEL_DUP_OR_INV));
+
+        // test again with some very distance but overlapping SVs ignored, and others in a DB included
+        tester.clearClustersAndSVs();
+
+        // now an INV which faces the others will cause them both to be clustered in
+        var1 = createDel(tester.nextVarId(), "1", 10000, 30000000);
+
+        // INV faces same way as DEL on start so not clustered and other breakends are too far apart
+        var2 = createInv(tester.nextVarId(), "1", 500000, 10000000, 1);
+
+        // DUP faces but is too far away
+        var3 = createDup(tester.nextVarId(), "1", 20000000, 40000000);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
         assertEquals(3, tester.getClusters().size());
     }
 
@@ -488,29 +548,29 @@ public class MergeRuleTest
         assertEquals(2, tester.getClusters().size());
     }
 
-    @Ignore
     @Test
     public void testDistancePloidyLinkMatchMerge()
     {
         LinxTester tester = new LinxTester();
 
-        // tester.setNonClusterAllelePloidies(1, 4);
+        // set a high major allele ploidy on the other chromatid to stop the MAP merge rule kicking in
+        tester.setNonClusterAllelePloidies(4, 1);
 
         // 2 distance clusters which can form a distant ploidy-matching merge
 
         // foldbacks clustered due to the foldback rule
         SvVarData var0 = createTestSv(tester.nextVarId(), "1", "0", 500, -1, -1, -1, SGL, 2);
-        SvVarData var1 = createTestSv(tester.nextVarId(), "1", "2", 1000, 100, 1, -1, BND, 4);
-        SvVarData var2 = createTestSv(tester.nextVarId(), "1", "2", 2000, 200, -1, 1, BND, 4);
+        SvVarData var1 = createTestSv(tester.nextVarId(), "1", "2", 1000, 100, 1, -1, BND, 2);
+        SvVarData var2 = createTestSv(tester.nextVarId(), "1", "2", 2000, 2000, -1, 1, BND, 2);
 
         // simple del not clustered
         SvVarData var3 = createDel(tester.nextVarId(), "1", 20000, 21000);
 
-        // pair of BNDs not cluster since non-matching ploidy
-        SvVarData var4 = createTestSv(tester.nextVarId(), "1", "3", 50000, 100, 1, -1, BND, 2);
-        SvVarData var5 = createTestSv(tester.nextVarId(), "1", "3", 51000, 200, -1, 1, BND, 2);
+        // pair of BNDs resolved to a simple type
+        SvVarData var4 = createTestSv(tester.nextVarId(), "1", "3", 50000, 100, 1, -1, BND, 1);
+        SvVarData var5 = createTestSv(tester.nextVarId(), "1", "3", 51000, 200, -1, 1, BND, 1);
 
-        SvVarData var6 = createTestSv(tester.nextVarId(), "1", "1", 100000, 110000, 1, 1, INV, 4);
+        SvVarData var6 = createTestSv(tester.nextVarId(), "1", "1", 100000, 110000, 1, 1, INV, 2);
 
         tester.AllVariants.add(var0);
         tester.AllVariants.add(var1);
@@ -524,12 +584,9 @@ public class MergeRuleTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        assertTrue(var1.isFoldback());
-        assertTrue(var2.isFoldback());
-
         assertEquals(3, tester.getClusters().size());
 
-        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var3, var4)));
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var4, var5)));
 
         SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(var0, var1, var2, var6));
 

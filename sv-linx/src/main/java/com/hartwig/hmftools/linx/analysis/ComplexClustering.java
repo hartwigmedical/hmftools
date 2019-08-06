@@ -302,6 +302,8 @@ public class ComplexClustering
         return false;
     }
 
+    private static final int MAX_COMPLEX_CLUSTER_MERGE_SIZE = 3;
+
     private boolean mergeBreakendStraddledClusters(List<SvCluster> clusters)
     {
         // Breakends straddled by consecutive same orientation breakends
@@ -411,6 +413,9 @@ public class ComplexClustering
                     if (otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
                         continue;
 
+                    if(cluster.getSvCount() > MAX_COMPLEX_CLUSTER_MERGE_SIZE && otherCluster.getSvCount() > MAX_COMPLEX_CLUSTER_MERGE_SIZE)
+                        continue;
+
                     // if not straddled by a foldback pair, then the breakend must be facing the consecutive straddling breakends
                     if(!isFoldbackPair && otherBreakend.orientation() == lowerBreakend.orientation())
                         continue;
@@ -507,7 +512,12 @@ public class ComplexClustering
                         if(abs(nextBreakend.position() - boundaryBreakend.position()) > MAX_MERGE_DISTANCE)
                             break;
 
-                        if(nextBreakend.getCluster() == cluster || skipClusterType(nextBreakend.getCluster()))
+                        final SvCluster otherCluster = nextBreakend.getCluster();
+
+                        if(otherCluster == cluster || skipClusterType(otherCluster))
+                            continue;
+
+                        if(cluster.getSvCount() > MAX_COMPLEX_CLUSTER_MERGE_SIZE && otherCluster.getSvCount() > MAX_COMPLEX_CLUSTER_MERGE_SIZE)
                             continue;
 
                         if(nextBreakend.orientation() == boundaryBreakend.orientation())
@@ -515,8 +525,6 @@ public class ComplexClustering
 
                         if(copyNumbersEqual(boundaryBreakend.ploidy(), nextBreakend.ploidy()))
                         {
-                            SvCluster otherCluster = nextBreakend.getCluster();
-
                             LOGGER.debug("cluster({}) boundary breakend({}) ploidy TI match with cluster({}) breakend({})",
                                     cluster.id(), boundaryBreakend, otherCluster.id(), nextBreakend);
 
