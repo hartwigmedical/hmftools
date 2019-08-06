@@ -605,7 +605,7 @@ public class SvCluster
     {
         if(mSVs.size() == 1)
         {
-            mMinPloidy = mMaxPloidy = mSVs.get(0).getImpliedPloidy();
+            mMinPloidy = mMaxPloidy = mSVs.get(0).ploidy();
             return;
         }
 

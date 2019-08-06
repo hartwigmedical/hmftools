@@ -465,9 +465,6 @@ public class DriverGeneAnnotator
         long transStart = dgData.TransData.TransStart;
         long transEnd = dgData.TransData.TransEnd;
 
-        double maxCopyNumber = 0;
-        SvVarData maxSvStart = null;
-        SvVarData maxSvEnd = null;
         SvBreakend foldbackBreakend = null;
         List<Integer> reportedClusters = Lists.newArrayList();
 
@@ -500,7 +497,7 @@ public class DriverGeneAnnotator
             if(breakend.orientation() == -1 && varStart.getFoldbackBreakend(breakend.usesStart()) != null)
                 foldbackBreakend = breakend;
 
-            if(varStart.type() == DUP)
+            if(varStart.type() == DUP && varStart.getCluster().getSvCount() == 1)
             {
                 if(varStart.position(true) > transStart || varStart.position(false) < transEnd)
                     continue;
@@ -508,21 +505,18 @@ public class DriverGeneAnnotator
                 // require the DUP to not be interupted by any other SV within this cluster within this gene region
                 SvBreakend upperBreakend = varStart.getBreakend(false);
 
-                if(upperBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 1)
-                    continue;
-
                 String matchType = SV_DRIVER_TYPE_DUP;
 
                 if(varStart.getCluster().hasAnnotation(CLUSTER_ANNOT_DM))
                 {
-                    LOGGER.debug(String.format("cluster(%s) gene(%s) double minute SV(%s %s)",
-                            varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type()));
+                    LOGGER.debug("gene({}) cluster({}) double minute SV({} {})",
+                            dgData.GeneData.GeneName, varStart.getCluster().id(),  varStart.posId(), varStart.type());
                     matchType = SV_DRIVER_TYPE_DM;
                 }
                 else
                 {
-                    LOGGER.debug(String.format("cluster(%s) gene(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
-                            varStart.getCluster().id(), dgData.GeneData.GeneName, varStart.posId(), varStart.type(),
+                    LOGGER.debug(String.format("gene(%s) cluster(%s) single SV(%s %s) cn(%.2f) cnChg(%.2f)",
+                            dgData.GeneData.GeneName, varStart.getCluster().id(), varStart.posId(), varStart.type(),
                             varStart.copyNumber(true), varStart.copyNumberChange(true)));
                 }
 
@@ -531,14 +525,6 @@ public class DriverGeneAnnotator
                 dgData.addEvent(event);
 
                 reportedClusters.add(varStart.getCluster().id());
-
-                if(varStart.copyNumberChange(true) > maxCopyNumber)
-                {
-                    maxCopyNumber = varStart.copyNumberChange(true);
-                    maxSvStart = varStart;
-                    maxSvEnd = varStart;
-                }
-
                 continue;
             }
 
@@ -560,8 +546,8 @@ public class DriverGeneAnnotator
                 final SvBreakend beStart = tiPair.getBreakend(true);
                 final SvBreakend beEnd = tiPair.getBreakend(false);
 
-                LOGGER.debug(String.format("cluster(%d fb=%s) gene(%s) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
-                        varStart.getCluster().id(), varStart.getCluster().getFoldbacks().size(), dgData.GeneData.GeneName,
+                LOGGER.debug(String.format("gene(%s) cluster(%d) SVs start(%s cn=%.2f cnChg=%.2f) end(%s cn=%.2f cnChg=%.2f) in linked pair",
+                        dgData.GeneData.GeneName, varStart.getCluster().id(),
                         varStart.posId(), varStart.copyNumber(beStart.usesStart()), varStart.copyNumberChange(beStart.usesStart()),
                         varEnd.posId(), varEnd.copyNumber(beEnd.usesStart()), varEnd.copyNumberChange(beEnd.usesStart())));
 
@@ -571,18 +557,11 @@ public class DriverGeneAnnotator
 
                 reportedClusters.add(varStart.getCluster().id());
 
-                if (varStart.copyNumberChange(true) > maxCopyNumber)
-                {
-                    maxCopyNumber = varStart.copyNumberChange(true);
-                    maxSvStart = varStart;
-                    maxSvEnd = varEnd;
-                }
-
                 break;
             }
         }
 
-        if(maxSvStart != null || maxSvEnd != null)
+        if(!reportedClusters.isEmpty())
             return;
 
         if(foldbackBreakend != null)

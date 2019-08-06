@@ -123,6 +123,14 @@ public class ChainLinkAllocator
     public void populateSvPloidyMap(final List<SvVarData> svList, boolean clusterHasReplication)
     {
         // make a cache of all unchained breakends in those of replicated SVs
+
+        Double uniformClusterPloidy = null;
+
+        if(!clusterHasReplication)
+        {
+            uniformClusterPloidy = svList.stream().mapToDouble(x-> x.ploidy()).average().getAsDouble();
+        }
+
         for(final SvVarData var : svList)
         {
             if(belowPloidyThreshold(var))
@@ -133,7 +141,7 @@ public class ChainLinkAllocator
                 continue;
             }
 
-            mSvConnectionsMap.put(var, new SvChainState(var, !clusterHasReplication));
+            mSvConnectionsMap.put(var, new SvChainState(var, uniformClusterPloidy));
         }
     }
 

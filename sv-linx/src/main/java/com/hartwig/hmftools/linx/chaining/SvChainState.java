@@ -34,15 +34,15 @@ public class SvChainState
     public static final double EXHAUSTED_PLOIDY_PERC = 0.1;
     public static final double EXHAUSTED_PLOIDY_ABS = 0.2;
 
-    public SvChainState(final SvVarData var, boolean singlePloidy)
+    public SvChainState(final SvVarData var, Double singlePloidy)
     {
         SV = var;
 
-        if(singlePloidy)
+        if(singlePloidy != null)
         {
-            Ploidy = 1;
-            MaxPloidy = 1;
-            MinPloidy = 1;
+            Ploidy = singlePloidy;
+            MaxPloidy = singlePloidy;
+            MinPloidy = singlePloidy;
         }
         else
         {

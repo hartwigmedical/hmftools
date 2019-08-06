@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static Utils.SvTestRoutines.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
@@ -296,6 +297,9 @@ public class ChainingActualTest
         // now check final chain-finding across all sub-clusters
         assertEquals(tester.Analyser.getClusters().size(), 1);
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(4, cluster.getFoldbacks().size());
+        assertTrue(cluster.getClusteringReasons().contains(CR_FOLDBACKS));
 
         assertEquals(1, cluster.getChains().size());
 

@@ -310,7 +310,7 @@ public class DoubleMinuteFinder
             cluster.addChain(dmChain, false);
         }
 
-        LOGGER.debug(String.format("cluster(%s) maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
+        LOGGER.debug(String.format("cluster(%s) identified DM: maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
                 cluster.id(), maxSvPloidy, highPloidySVs.size(), fullyChained));
 
         // reportPotentialGroup(sampleId, cluster, highPloidySVs, fullyChained, dmChain);
