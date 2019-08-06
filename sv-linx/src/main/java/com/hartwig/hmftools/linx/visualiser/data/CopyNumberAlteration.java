@@ -25,4 +25,6 @@ public abstract class CopyNumberAlteration implements GenomeRegion
     {
         return Math.max(0, (1 - baf()) * copyNumber());
     }
+
+    public abstract boolean truncated();
 }

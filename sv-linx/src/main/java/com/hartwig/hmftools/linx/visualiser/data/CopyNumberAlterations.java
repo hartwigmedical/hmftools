@@ -45,10 +45,10 @@ public class CopyNumberAlterations
                             .from(alteration)
                             .start(Math.max(minTrackPosition, startPosition))
                             .end(Math.min(maxTrackPosition, endPosition))
+                            .truncated(minTrackPosition > startPosition || maxTrackPosition < endPosition)
                             .build());
                 }
             }
-
         }
 
         return result;
@@ -75,6 +75,7 @@ public class CopyNumberAlterations
                 .end(visCopyNumberFile.End)
                 .copyNumber(visCopyNumberFile.CopyNumber)
                 .baf(visCopyNumberFile.BAF)
+                .truncated(false)
                 .build();
     }
 

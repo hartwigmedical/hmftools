@@ -35,7 +35,6 @@ public class CircosDataWriter
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
 
-
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
@@ -275,14 +274,16 @@ public class CircosDataWriter
         {
             final CopyNumberAlteration adjusted = segments.get(i);
             final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
-
-            final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
-                    .add(String.valueOf(adjusted.start()))
-                    .add(String.valueOf(adjusted.end()))
-                    .add(shorthand(unadjusted.end() - unadjusted.start()))
-                    .add("labelSize=" + labelSize + "p")
-                    .toString();
-            result.add(distance);
+            if (!adjusted.truncated())
+            {
+                final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
+                        .add(String.valueOf(adjusted.start()))
+                        .add(String.valueOf(adjusted.end()))
+                        .add(shorthand(unadjusted.end() - unadjusted.start()))
+                        .add("labelSize=" + labelSize + "p")
+                        .toString();
+                result.add(distance);
+            }
         }
         return result;
     }
@@ -513,7 +514,6 @@ public class CircosDataWriter
     @NotNull
     private List<String> createHistogramTrack(@NotNull final List<Segment> segments)
     {
-
         final List<String> result = Lists.newArrayList();
         for (final Segment segment : segments)
         {

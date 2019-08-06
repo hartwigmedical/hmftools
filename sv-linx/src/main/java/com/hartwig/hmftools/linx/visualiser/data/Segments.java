@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.linx.visualiser.circos.Span.maxPositionPerChromosome;
 import static com.hartwig.hmftools.linx.visualiser.circos.Span.minPositionPerChromosome;
 
@@ -26,15 +24,14 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Segments {
+public class Segments
+{
 
-    private static final String HEADER = "SampleId";
-    private static final String COMMENT = "#";
-    private static final String DELIMITER = ",";
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
     @NotNull
-    public static Segment entireChromosome(@NotNull final String sampleId, @NotNull final String chromosome) {
+    public static Segment entireChromosome(@NotNull final String sampleId, @NotNull final String chromosome)
+    {
         return ImmutableSegment.builder()
                 .sampleId(sampleId)
                 .clusterId(-1)
@@ -50,7 +47,8 @@ public class Segments {
     }
 
     @NotNull
-    private static Segment centromere(@NotNull final String sampleId, @NotNull final String chromosome) {
+    private static Segment centromere(@NotNull final String sampleId, @NotNull final String chromosome)
+    {
         long position = REF_GENOME.centromeres().get(HumanChromosome.fromString(chromosome));
         return ImmutableSegment.builder()
                 .sampleId(sampleId)
@@ -67,25 +65,29 @@ public class Segments {
     }
 
     @NotNull
-    public static List<Segment> readTracks(@NotNull final String fileName) throws IOException {
+    public static List<Segment> readTracks(@NotNull final String fileName) throws IOException
+    {
         return VisSegmentFile.read(fileName).stream().map(Segments::fromFile).collect(Collectors.toList());
     }
 
     @NotNull
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions) {
-        final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
+            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions)
+    {
         final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
+        final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
 
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
 
         final List<Segment> result = Lists.newArrayList();
-        for (Segment segment : segments) {
+        for (Segment segment : segments)
+        {
             final long centromere = centromeres.get(HumanChromosome.fromString(segment.chromosome()));
             final long length = lengths.get(HumanChromosome.fromString(segment.chromosome()));
 
-            if (segment.startTerminal() != SegmentTerminal.NONE) {
+            if (segment.startTerminal() != SegmentTerminal.NONE)
+            {
                 final long minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
                 final long startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
                         ? centromere
@@ -94,7 +96,8 @@ public class Segments {
                 segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
             }
 
-            if (segment.endTerminal() != SegmentTerminal.NONE) {
+            if (segment.endTerminal() != SegmentTerminal.NONE)
+            {
                 final long maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
                 final long endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
                         ? centromere
@@ -110,8 +113,10 @@ public class Segments {
     }
 
     @NotNull
-    public static List<Segment> addCentromeres(@NotNull final List<Segment> segments) {
-        if (segments.isEmpty()) {
+    public static List<Segment> addCentromeres(@NotNull final List<Segment> segments)
+    {
+        if (segments.isEmpty())
+        {
             return segments;
         }
         final List<Segment> result = Lists.newArrayList(segments);
@@ -122,17 +127,21 @@ public class Segments {
 
         final Set<String> requiredCentomeres = Sets.newHashSet();
         final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
-        for (final GenomeRegion genomeRegion : segmentSpan) {
+        for (final GenomeRegion genomeRegion : segmentSpan)
+        {
             long centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
-            if (genomeRegion.start() < centromere && genomeRegion.end() > centromere) {
+            if (genomeRegion.start() < centromere && genomeRegion.end() > centromere)
+            {
                 requiredCentomeres.add(genomeRegion.chromosome());
             }
         }
 
         requiredCentomeres.removeAll(existingCentromeres);
-        if (!requiredCentomeres.isEmpty()) {
+        if (!requiredCentomeres.isEmpty())
+        {
             final String sampleId = segments.get(0).sampleId();
-            for (final String requiredCentromere : requiredCentomeres) {
+            for (final String requiredCentromere : requiredCentomeres)
+            {
                 result.add(centromere(sampleId, requiredCentromere));
             }
         }
@@ -141,14 +150,19 @@ public class Segments {
     }
 
     @NotNull
-    private static Segment fromFile(@NotNull final VisSegmentFile file) {
-        return  ImmutableSegment.builder()
+    private static Segment fromFile(@NotNull final VisSegmentFile file)
+    {
+        return ImmutableSegment.builder()
                 .sampleId(file.SampleId)
                 .clusterId(file.ClusterId)
                 .chainId(file.ChainId)
                 .chromosome(file.Chromosome)
-                .start(SegmentTerminal.fromString(file.PosStart) == SegmentTerminal.NONE ? Long.valueOf(file.PosStart) : Long.valueOf(file.PosEnd))
-                .end(SegmentTerminal.fromString(file.PosEnd) == SegmentTerminal.NONE ? Long.valueOf(file.PosEnd) : Long.valueOf(file.PosStart))
+                .start(SegmentTerminal.fromString(file.PosStart) == SegmentTerminal.NONE
+                        ? Long.valueOf(file.PosStart)
+                        : Long.valueOf(file.PosEnd))
+                .end(SegmentTerminal.fromString(file.PosEnd) == SegmentTerminal.NONE
+                        ? Long.valueOf(file.PosEnd)
+                        : Long.valueOf(file.PosStart))
                 .track(0)
                 .startTerminal(SegmentTerminal.fromString(file.PosStart))
                 .endTerminal(SegmentTerminal.fromString(file.PosEnd))
@@ -158,16 +172,21 @@ public class Segments {
 
     @VisibleForTesting
     @NotNull
-    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments) {
+    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments)
+    {
         final Map<String, Integer> trackMap = Maps.newHashMap();
         final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
-        for (final Segment segment : segments) {
+        for (final Segment segment : segments)
+        {
             final String chromosome = segment.chromosome();
-            if (!trackMap.containsKey(chromosome)) {
+            if (!trackMap.containsKey(chromosome))
+            {
                 trackMap.put(chromosome, currentTrack);
-            } else {
+            }
+            else
+            {
                 currentTrack = Math.max(currentTrack, trackMap.get(chromosome) + 1);
                 trackMap.put(chromosome, currentTrack);
             }
@@ -181,7 +200,8 @@ public class Segments {
     }
 
     @NotNull
-    private static List<Segment> incrementOnChromosome3(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+    private static List<Segment> incrementOnChromosome3(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    {
 
         final Set<Integer> clustersWithoutSegments =
                 links.stream().filter(Link::connectorsOnly).map(Link::clusterId).collect(Collectors.toSet());
@@ -190,14 +210,21 @@ public class Segments {
         final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
-        for (final Segment segment : segments) {
-            if (segment.clusterId() == -1) {
+        for (final Segment segment : segments)
+        {
+            if (segment.clusterId() == -1)
+            {
                 result.add(ImmutableSegment.builder().from(segment).track(0).build());
-            } else if (!clustersWithoutSegments.contains(segment.clusterId())) {
+            }
+            else if (!clustersWithoutSegments.contains(segment.clusterId()))
+            {
                 final String chromosome = segment.chromosome();
-                if (!trackMap.containsKey(chromosome)) {
+                if (!trackMap.containsKey(chromosome))
+                {
                     trackMap.put(chromosome, currentTrack);
-                } else {
+                }
+                else
+                {
                     currentTrack = Math.max(currentTrack, trackMap.get(chromosome) + 1);
                     trackMap.put(chromosome, currentTrack);
                 }
@@ -211,7 +238,8 @@ public class Segments {
     }
 
     @NotNull
-    private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links) {
+    private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    {
 
         final Set<Integer> clustersWithoutSegments =
                 links.stream().filter(Link::connectorsOnly).map(Link::clusterId).collect(Collectors.toSet());
@@ -220,14 +248,21 @@ public class Segments {
         final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
-        for (final Segment segment : segments) {
-            if (segment.clusterId() == -1) {
+        for (final Segment segment : segments)
+        {
+            if (segment.clusterId() == -1)
+            {
                 result.add(ImmutableSegment.builder().from(segment).track(0).build());
-            } else if (!clustersWithoutSegments.contains(segment.clusterId())) {
+            }
+            else if (!clustersWithoutSegments.contains(segment.clusterId()))
+            {
                 final String chromosome = segment.chromosome();
-                if (!trackMap.containsKey(chromosome)) {
+                if (!trackMap.containsKey(chromosome))
+                {
                     currentTrack = 1;
-                } else {
+                }
+                else
+                {
                     currentTrack = trackMap.get(chromosome) + 1;
                 }
                 trackMap.put(chromosome, currentTrack);
@@ -242,11 +277,13 @@ public class Segments {
 
     @VisibleForTesting
     @NotNull
-    static List<Segment> alwaysIncrement(@NotNull final List<Segment> segments) {
+    static List<Segment> alwaysIncrement(@NotNull final List<Segment> segments)
+    {
         final List<Segment> result = Lists.newArrayList();
 
         int currentTrack = 1;
-        for (final Segment segment : segments) {
+        for (final Segment segment : segments)
+        {
             result.add(ImmutableSegment.builder().from(segment).track(currentTrack++).build());
         }
 
