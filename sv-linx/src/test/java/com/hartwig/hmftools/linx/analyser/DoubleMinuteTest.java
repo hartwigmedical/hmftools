@@ -89,7 +89,7 @@ public class DoubleMinuteTest
         assertTrue(cluster.getDoubleMinuteSVs().contains(var1));
         assertTrue(cluster.getDoubleMinuteSVs().contains(var2));
 
-        assertTrue(cluster.getChains().size() == 1);
+        assertTrue(cluster.getChains().size() == 2);
         SvChain chain = cluster.getChains().get(0);
         assertEquals(2, chain.getLinkCount());
         assertEquals(2, chain.getSvCount());

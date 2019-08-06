@@ -27,13 +27,16 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
+import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -43,6 +46,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -331,11 +335,172 @@ public class ClusterAnnotations
         return nextSvData;
     }
 
-    private static int CHAIN_TI_COUNT = 0;
-    private static int CHAIN_TI_SHORT_COUNT = 1;
-    private static int CHAIN_TI_ASMB_COUNT = 2;
+    public static void reportUnderclustering(final String sampleId, final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        List<SvCluster> complexClusters = clusters.stream()
+                .filter(x -> x.getSvCount() > 3)
+                .filter(x -> !x.isResolved())
+                .collect(Collectors.toList());
 
-    public static void annotateChainedClusters(final SvCluster cluster, long proximityCutoff)
+        List<SvCluster[]> reportedClusters = Lists.newArrayList();
+
+        for(SvCluster cluster : complexClusters)
+        {
+            // calculate a total genomic span for this cluster by extending out 5M from each breakend in the cluster
+            long genomicSpan = 0;
+
+            Map<SvCluster, Integer> otherClusterMatches = Maps.newHashMap();
+
+            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            {
+                final List<SvBreakend> breakendList = entry.getValue();
+                final List<SvBreakend> fullBreakendList = chrBreakendMap.get(entry.getKey());
+
+                genomicSpan += MAX_MERGE_DISTANCE * 2; // account for outer breakends in the cluster
+
+                for (int i = 0; i < breakendList.size() - 1; ++i)
+                {
+                    final SvBreakend breakend = breakendList.get(i);
+                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+
+                    if(nextBreakend.position() > MAX_MERGE_DISTANCE)
+                        genomicSpan += MAX_MERGE_DISTANCE;
+                    else
+                        genomicSpan += nextBreakend.position() - breakend.position();
+
+                    // look for gaps in this cluster's breakend list
+                    if (nextBreakend.getChrPosIndex() == breakend.getChrPosIndex() + 1)
+                        continue;
+
+                    List<SvCluster> encounteredClusters = Lists.newArrayList();
+
+                    for(int j = breakend.getChrPosIndex() + 1; j < nextBreakend.getChrPosIndex(); ++j)
+                    {
+                        final SvBreakend otherBreakend = fullBreakendList.get(j);
+                        final SvCluster otherCluster = otherBreakend.getCluster();
+
+                        if(!complexClusters.contains(otherCluster) || encounteredClusters.contains(otherCluster))
+                            continue;
+
+                        long distance = min(
+                                abs(breakend.position() - otherBreakend.position()),
+                                abs(nextBreakend.position() - otherBreakend.position()));
+
+                        if(distance > MAX_MERGE_DISTANCE)
+                            continue;
+
+                        encounteredClusters.add(otherBreakend.getCluster());
+                    }
+
+                    for(SvCluster otherCluster : encounteredClusters)
+                    {
+                        Integer matchCount = otherClusterMatches.get(otherCluster);
+                        if(matchCount == null)
+                            otherClusterMatches.put(otherCluster, 1);
+                        else
+                            otherClusterMatches.put(otherCluster, matchCount + 1);
+                    }
+                }
+
+                // also walk from the ends in each direction
+                for(int i = 0; i <= 1; ++i)
+                {
+                    boolean traverseUp = (i == 0);
+
+                    final SvBreakend refBreakend = !traverseUp ? breakendList.get(0) : breakendList.get(breakendList.size() - 1);
+                    int index = refBreakend.getChrPosIndex();
+
+                    List<SvCluster> encounteredClusters = Lists.newArrayList();
+
+                    while(true)
+                    {
+                        index += traverseUp ? 1 : -1;
+
+                        if(index < 0 || index >= fullBreakendList.size())
+                            break;
+
+                        final SvBreakend otherBreakend = fullBreakendList.get(index);
+                        final SvCluster otherCluster = otherBreakend.getCluster();
+
+                        if(!complexClusters.contains(otherCluster) || encounteredClusters.contains(otherCluster))
+                            continue;
+
+                        if(abs(otherBreakend.position() - refBreakend.position()) > MAX_MERGE_DISTANCE)
+                            break;
+
+                        encounteredClusters.add(otherBreakend.getCluster());
+                    }
+
+                    for(SvCluster otherCluster : encounteredClusters)
+                    {
+                        Integer matchCount = otherClusterMatches.get(otherCluster);
+                        if(matchCount == null)
+                            otherClusterMatches.put(otherCluster, 1);
+                        else
+                            otherClusterMatches.put(otherCluster, matchCount + 1);
+                    }
+                }
+            }
+
+            for (final Map.Entry<SvCluster, Integer> entry : otherClusterMatches.entrySet())
+            {
+                if(entry.getValue() <= 1)
+                    continue;
+
+                final SvCluster otherCluster = entry.getKey();
+
+                if(reportedClusters.stream().anyMatch(x -> x[0] == otherCluster && x[1] == cluster))
+                    continue;
+
+                reportedClusters.add(new SvCluster[]{cluster, otherCluster});
+
+                // ignore hom-loss and LOH-related clusters
+                boolean lossRelated = cluster.getLohEvents().stream()
+                        .anyMatch(x -> x.getHomLossEvents().stream()
+                        .filter(y -> y.matchedBothSVs() && y.getBreakend(true).getCluster() == otherCluster).count() > 0);
+
+                if(!lossRelated)
+                {
+                    lossRelated = otherCluster.getLohEvents().stream()
+                            .anyMatch(x -> x.getHomLossEvents().stream()
+                                    .filter(y -> y.matchedBothSVs() && y.getBreakend(true).getCluster() == cluster).count() > 0);
+                }
+
+                int matchCount = entry.getValue();
+
+                double hitProbability = genomicSpan / 3e9;
+                int otherClusterBreakendCount = otherCluster.getSvCount() * 2 - otherCluster.getTypeCount(SGL);
+                double expectedHits = hitProbability * otherClusterBreakendCount;
+
+                if(expectedHits >= matchCount)
+                    continue;
+
+                PoissonDistribution poissonDist = new PoissonDistribution(expectedHits);
+                double poissonProb = 1 - poissonDist.cumulativeProbability(matchCount - 1);
+
+                if(poissonProb < 0.001)
+                {
+                    String overlappingChrStr = "";
+
+                    for(final SvArmGroup group : cluster.getArmGroups())
+                    {
+                        if(otherCluster.getArmGroups().stream().anyMatch(x -> x.id().equals(group.id())))
+                        {
+                            overlappingChrStr = appendStr(overlappingChrStr, group.id(), ';');
+                        }
+                    }
+
+                    LOGGER.info("sampleId({}) cluster({} count={}) proxCount({}) with cluster({} count={}) prob({}) chromosomes({}) lossRelated({})",
+                            sampleId, cluster.id(), cluster.getSvCount(), matchCount, otherCluster.id(), otherCluster.getSvCount(),
+                            String.format("%.6f exp=%.2f span=%.1fM", poissonProb, expectedHits, genomicSpan/1e6),
+                            overlappingChrStr, lossRelated);
+                }
+            }
+        }
+    }
+
+
+    public static void annotateChainedClusters(final SvCluster cluster)
     {
         if(cluster.isResolved() || cluster.getChains().isEmpty())
             return;

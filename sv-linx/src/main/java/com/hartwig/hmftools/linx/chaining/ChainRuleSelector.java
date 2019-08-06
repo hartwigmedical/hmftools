@@ -176,8 +176,8 @@ public class ChainRuleSelector
 
             // the last rule 'nearest' can throw up multiple possible links but since they're not conflicting and ordered
             // from shortest to longest, there's no need to cull any more
-            if(i > 0 && rule != NEAREST)
-                cullByPriority(proposedLinks);
+            //if(i > 0 && rule != NEAREST)
+            cullByPriority(proposedLinks);
 
             // if the proposed links have been reduced to a single-top priority rule, which also meets the ploidy-support restriction
             // then take it

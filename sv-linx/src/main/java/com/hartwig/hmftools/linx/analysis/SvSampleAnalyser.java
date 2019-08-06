@@ -426,20 +426,15 @@ public class SvSampleAnalyser {
             mSvFileWriter.write(",ChrStart,PosStart,OrientStart,ArmStart,ChrEnd,PosEnd,OrientEnd,ArmEnd");
 
             // position and copy number
-            mSvFileWriter.write(",AFStart,CNStart,CNChgStart,AFEnd,CNEnd,CNChgEnd,Ploidy,PloidyMin,PloidyMax");
+            mSvFileWriter.write(",CNStart,CNChgStart,CNEnd,CNChgEnd,Ploidy,PloidyMin,PloidyMax");
 
             // cluster info
-            mSvFileWriter.write(",ClusterReason,ClusterDesc,IsResolved,ResolvedType,Consistency,ArmCount");
-
-            // SV info
-            mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
-            mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments,Recovered");
+            mSvFileWriter.write(",ClusterReason,ClusterDesc,ResolvedType");
 
             mSvFileWriter.write(",FSStart,FSEnd,LEStart,LEEnd");
 
             // linked pair info
-            mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd");
-            mSvFileWriter.write(",AsmbStart,AsmbEnd,AsmbMatchStart,AsmbMatchEnd");
+            mSvFileWriter.write(",LnkSvStart,LnkLenStart,LnkSvEnd,LnkLenEnd,AsmbStart,AsmbEnd");
 
             // chain info
             mSvFileWriter.write(",ChainId,ChainCount,ChainIndex");
@@ -454,13 +449,18 @@ public class SvSampleAnalyser {
             mSvFileWriter.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
 
             // gene & replication info
-            mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd");
+            mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,VirusName");
 
-            // repeat class info
-            mSvFileWriter.write(",RepeatClass,RepeatType,VirusName");
+            if(mConfig.WriteSvData)
+            {
+                // extra copy number info
+                mSvFileWriter.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost,AFStart,AFEnd");
 
-            // extra copy number info
-            mSvFileWriter.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost");
+                // SV table info
+                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
+                mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
+                mSvFileWriter.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
+            }
 
             mSvFileWriter.newLine();
         }
@@ -499,23 +499,13 @@ public class SvSampleAnalyser {
                             var.chromosome(true), var.position(true), var.orientation(true), var.arm(true),
                             var.chromosome(false), var.position(false), var.orientation(false), var.arm(false)));
 
-                    mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                            dbData.adjustedStartAF(), dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
-                            dbData.adjustedEndAF(), dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
+                    mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                            dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
+                            dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
                             dbData.ploidy(), var.ploidyMin(), var.ploidyMax()));
 
-                    mSvFileWriter.write(String.format(",%s,%s,%s,%s,%d,%d",
-                            var.getClusterReason(), cluster.getDesc(), cluster.isResolved(), cluster.getResolvedType(),
-                            cluster.getConsistencyCount(), cluster.getArmCount()));
-
-                    final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
-
-                    mSvFileWriter.write(String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s,%s",
-                            dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.startHomologySequence() : "",
-                            dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
-                            dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
-                            dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments,
-                            dbData.recovered()));
+                    mSvFileWriter.write(String.format(",%s,%s,%s",
+                            var.getClusterReason(), cluster.getDesc(), cluster.getResolvedType()));
 
                     mSvFileWriter.write(String.format(",%s,%s,%s,%s",
                             var.isFragileSite(true), var.isFragileSite(false),
@@ -538,9 +528,8 @@ public class SvSampleAnalyser {
                     }
 
                     // assembly info
-                    mSvFileWriter.write(String.format(",%s,%s,%s,%s",
-                            var.getAssemblyData(true), var.getAssemblyData(false),
-                            var.getAssemblyMatchType(true), var.getAssemblyMatchType(false)));
+                    mSvFileWriter.write(String.format(",%s,%s",
+                            var.getAssemblyData(true), var.getAssemblyData(false)));
 
                     // chain info
                     final SvChain chain = cluster.findChain(var);
@@ -577,28 +566,42 @@ public class SvSampleAnalyser {
                             mSvFileWriter.write(",-1,,0");
                     }
 
-                    mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f",
-                            var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
-                            var.getReplicationOrigin(true), var.getReplicationOrigin(false)));
-
                     String virusName = "";
 
                     if(mViralInsertAnnotator != null)
                     {
                         final String[] viralInsertData = mViralInsertAnnotator.matchesViralInsert(var);
 
-                        if(viralInsertData != null)
+                        if (viralInsertData != null)
                             virusName = viralInsertData[VH_NAME];
                     }
 
-                    mSvFileWriter.write(String.format(",%s,%s,%s",
-                            dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(), virusName));
+                    mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f,%s",
+                            var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
+                            var.getReplicationOrigin(true), var.getReplicationOrigin(false), virusName));
 
-                    mSvFileWriter.write(String.format(",%.2f,%,2f,%,2f,%,2f",
-                            var.getBreakend(true).minorAllelePloidy(true),
-                            var.getBreakend(true).minorAllelePloidy(false),
-                            !var.isSglBreakend() ? var.getBreakend(false).minorAllelePloidy(true) : 0,
-                            !var.isSglBreakend() ? var.getBreakend(false).minorAllelePloidy(false) : 0));
+                    if(mConfig.WriteSvData)
+                    {
+                        mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+                                var.getBreakend(true).minorAllelePloidy(true),
+                                var.getBreakend(true).minorAllelePloidy(false),
+                                !var.isSglBreakend() ? var.getBreakend(false).minorAllelePloidy(true) : 0,
+                                !var.isSglBreakend() ? var.getBreakend(false).minorAllelePloidy(false) : 0,
+                                dbData.adjustedStartAF(), dbData.adjustedEndAF()));
+
+                        final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
+
+                        mSvFileWriter.write(String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s",
+                                dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.startHomologySequence() : "",
+                                dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
+                                dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
+                                dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
+
+                        mSvFileWriter.write(String.format(",%s,%s,%s,%d,%d",
+                                dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
+                                dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
+                    }
+
 
                     mSvFileWriter.newLine();
                 }

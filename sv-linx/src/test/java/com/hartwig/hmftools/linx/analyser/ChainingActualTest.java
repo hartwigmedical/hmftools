@@ -332,7 +332,7 @@ public class ChainingActualTest
         assertEquals(1, cluster.getDoubleMinuteSVs().size());
 
         // check chains
-        assertEquals(1, cluster.getChains().size());
+        assertEquals(2, cluster.getChains().size());
         final SvChain chain = cluster.getChains().get(0);
         assertEquals(8, chain.getLinkCount());
         assertEquals(7, chain.getSvCount());

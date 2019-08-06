@@ -37,6 +37,7 @@ public class LinxConfig
     public boolean LogClusteringHistory;
     public String RequiredAnnotations;
     public int LogChainingMaxSize;
+    public boolean WriteSvData; // all SV table fields to cohort file
 
     private List<String> mSampleIds;
 
@@ -68,6 +69,7 @@ public class LinxConfig
     private static final String LOG_CLUSTER_ID = "log_cluster_id"; // for logging and breakends
     private static final String LOG_SV_ID = "log_sv_id";
     private static final String LOG_CLUSTER_HISTORY = "log_cluster_history";
+    private static final String WRITE_SV_DATA = "write_sv_data";
 
     // for testing only
     private static final String MAX_SAMPLES = "max_samples";
@@ -137,6 +139,7 @@ public class LinxConfig
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         LogClusteringHistory = cmd.hasOption(LOG_CLUSTER_HISTORY);
         WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
+        WriteSvData = cmd.hasOption(WRITE_SV_DATA);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
 
@@ -171,6 +174,7 @@ public class LinxConfig
         LogVerbose = false;
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
+        WriteSvData = false;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -196,6 +200,7 @@ public class LinxConfig
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
         options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
         options.addOption(LOG_CLUSTER_HISTORY, false, "Optional: log all cluster merge data");
+        options.addOption(WRITE_SV_DATA, false, "Optional: include all SV table fields in cohort output");
     }
 
     private List<String> loadSampleListFile(final String filename)
