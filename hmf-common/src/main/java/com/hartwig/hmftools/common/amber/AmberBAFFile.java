@@ -24,10 +24,7 @@ public enum AmberBAFFile {
     private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
 
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "chr";
     private static final String AMBER_EXTENSION = ".amber.baf.tsv";
-
-    private static final String HEADER_PREFIX_OLD = "Chr";
     private static final String AMBER_EXTENSION_OLD = ".amber.baf";
 
     public static String generateAmberFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
@@ -89,16 +86,13 @@ public enum AmberBAFFile {
     }
 
     @NotNull
-    private static Multimap<Chromosome, AmberBAF> fromLines(@NotNull List<String> lines) {
+    private static Multimap<Chromosome, AmberBAF> fromLines(@NotNull final List<String> lines) {
         Multimap<Chromosome, AmberBAF> result = ArrayListMultimap.create();
-        int i = 0;
-        for (String line : lines) {
-            i++;
+        for (int i = 1; i < lines.size(); i++) {
+            final String line = lines.get(i);
             try {
-                if (!line.startsWith(HEADER_PREFIX) && !line.startsWith(HEADER_PREFIX_OLD)) {
-                    final AmberBAF region = fromString(line);
-                    result.put(HumanChromosome.fromString(region.chromosome()), region);
-                }
+                final AmberBAF region = fromString(line);
+                result.put(HumanChromosome.fromString(region.chromosome()), region);
             } catch (RuntimeException e) {
                 LOGGER.info("Unable to parse line {}: {}", i, line);
                 throw e;

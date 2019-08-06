@@ -24,7 +24,7 @@ public class VariantContextCollectionDummy implements VariantContextCollection {
 
     @NotNull
     @Override
-    public List<StructuralVariant> passingVariants() {
+    public List<StructuralVariant> segmentationVariants() {
         return Collections.emptyList();
     }
 

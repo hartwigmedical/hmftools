@@ -217,13 +217,12 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(filteredSegments));
         positionsToCover.addAll(Span.allPositions(filteredExons));
 
-        // Need to extend terminal segments past any current segments, links and exons
-        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links, positionsToCover);
-        positionsToCover.addAll(Span.allPositions(segments));
-
         // Limit copy numbers to within segments, links and exons (plus a little extra)
-        final List<CopyNumberAlteration> alterations =
-                CopyNumberAlterations.copyNumbers(100, config.copyNumberAlterations(), Span.span(positionsToCover));
+        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(1000, config.copyNumberAlterations(), Span.span(positionsToCover));
+        positionsToCover.addAll(Span.allPositions(alterations));
+
+        // Need to extend terminal segments past any current segments, links and exons and copy numbers
+        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links, positionsToCover);
 
         final ColorPicker color = colorPickerFactory.create(links);
 

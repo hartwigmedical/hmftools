@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.CIPOS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.SVTYPE;
@@ -89,7 +90,8 @@ class PurpleStructuralVariantSupplier {
         refGenomePath = Strings.EMPTY;
     }
 
-    PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF, @NotNull final String refGenomePath) {
+    PurpleStructuralVariantSupplier(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF,
+            @NotNull final String refGenomePath) {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         this.outputVCF = outputVCF;
         this.refGenomePath = refGenomePath;
@@ -121,8 +123,6 @@ class PurpleStructuralVariantSupplier {
         }
     }
 
-
-
     @NotNull
     private VariantContext infer(@NotNull final PurpleCopyNumber copyNumber, @NotNull final PurpleCopyNumber prev) {
 
@@ -141,12 +141,12 @@ class PurpleStructuralVariantSupplier {
         long lowerRange = Math.min(-500, copyNumber.minStart() - copyNumber.start());
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
-        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(
-                StructuralVariantFactory.INFERRED)
+        return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(INFERRED)
                 .attribute(StructuralVariantFactory.IMPRECISE, true)
                 .id("purple_" + counter++)
                 .attribute(CIPOS, Lists.newArrayList(lowerRange, upperRange))
                 .attribute(SVTYPE, "BND")
+                .attribute(INFERRED, true)
                 .noGenotypes()
                 .make();
     }
@@ -154,7 +154,7 @@ class PurpleStructuralVariantSupplier {
     public void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
         if (header.isPresent()) {
 
-            try(final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomePath));
+            try (final IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomePath));
                     final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                             .setReferenceDictionary(header.get().getSequenceDictionary())
                             .setIndexCreator(new TabixIndexCreator(header.get().getSequenceDictionary(), new TabixFormat()))
@@ -162,8 +162,8 @@ class PurpleStructuralVariantSupplier {
                             .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
-
-                final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(indexedFastaSequenceFile, writer::add);
+                final StructuralRefContextEnrichment refEnricher =
+                        new StructuralRefContextEnrichment(indexedFastaSequenceFile, writer::add);
                 writer.writeHeader(refEnricher.enrichHeader(header.get()));
 
                 enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
@@ -245,7 +245,7 @@ class PurpleStructuralVariantSupplier {
 
     @NotNull
     public List<StructuralVariant> variants() {
-        return variants.passingVariants();
+        return variants.segmentationVariants();
     }
 
     @NotNull
@@ -259,7 +259,8 @@ class PurpleStructuralVariantSupplier {
                 0,
                 VCFHeaderLineType.Flag,
                 RECOVERED_DESC));
-        outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(StructuralVariantFactory.INFERRED, INFERRED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.INFERRED, 0, VCFHeaderLineType.Flag, INFERRED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(INFERRED, INFERRED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(StructuralVariantFactory.IMPRECISE,
                 0,
                 VCFHeaderLineType.Flag,

@@ -8,6 +8,7 @@ public enum SegmentSupport {
     DEL(true),
     SGL(true),
     INS(true),
+    INF(true),
     DUP(true),
     MULTIPLE(true),
     CENTROMERE(false),

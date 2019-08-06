@@ -405,7 +405,7 @@ Relative copy number tolerance is 0.12 + 0.8 / sqrt(min depth window count).
 Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.). Again, for tumors with purity < 20% the absolute tolerances are increased.
 4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
 5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
-  -  The total dubious region is sufficiently small (< 10 depth window count or < 50 depth window count if approaching centromere); and
+  - The total dubious region is sufficiently small (< 30 depth window count or < 50 depth window count if approaching centromere); and
   - The dubious region does not end because of a structural variant; and
   - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
 
@@ -469,9 +469,12 @@ PURPLE attempts to recover entries from a set of lower confidence structural var
 
 There are two situations where PURPLE will attempt to recover structural variants. 
 The first is when a copy number segment is unsupported by an existing structural variant. 
-The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural variant break that has a ploidy not supported by the copy number change. 
-A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5. 
+The second is to search for an structural variant which could offset the copy number impact of an existing “unbalanced” structural 
+variant break that has a ploidy not supported by the copy number change. 
+A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is 
+greater than 20% of the copy number at the breakpoint and > 0.5. 
 An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.
+If only one leg of a structural variant is unbalanced but suitable candidate was found, a single ended breakpoint will be inferred at that position. 
 
 Eligible recovery candidates must:
 
@@ -948,7 +951,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
-  - Changed default value of `min_diploid_tumor_ratio_count` from 30 to 10
+  - Fixed HG38 regression bug
+  - Added new logic to structural variant recovery to create inferred variant if unable to find suitable candidate in file.  
   - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 
   - Fixed bug in subclonal plot
 - [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-32)

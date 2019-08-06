@@ -1,82 +1,124 @@
 package com.hartwig.hmftools.common.variant.recovery;
 
+import static com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants.UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.common.purple.PurityAdjuster;
+import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
 import org.junit.Test;
 
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderVersion;
+import htsjdk.variant.variantcontext.VariantContext;
+import mockit.Injectable;
 
 public class RecoverStructuralVariantsTest {
 
-    private static final String SAMPLE = "sample";
+    @Injectable
+    private RecoveredVariantFactory recoveredVariantFactory;
+    private PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
 
-    private VCFCodec codec;
-
-    @Before
-    public void setup() {
-        codec = createTestCodec();
+    @Test
+    public void testRecoverUnbalancedSingle() throws IOException {
+        List<VariantContext> result = singleTest(UNBALANCED_MIN_DEPTH_WINDOW_COUNT, 3);
+        assertFalse(result.isEmpty());
+        assertEquals(10000, result.get(0).getStart());
     }
 
     @Test
-    public void testMate() {
-        assertEquals("17:59493156", RecoverStructuralVariants.mateLocation("C[17:59493156["));
-        assertEquals("17:59493156", RecoverStructuralVariants.mateLocation("]17:59493156]C"));
+    public void testSingleIsAlreadyBalanced() throws IOException {
+        List<VariantContext> result = singleTest(UNBALANCED_MIN_DEPTH_WINDOW_COUNT, 0.8);
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    public void testClosestRegion() {
-        final GenomeRegion start = GenomeRegions.create("1", 1, 10000);
-        final GenomeRegion middle1 = GenomeRegions.create("1", 10001, 20000);
-        final GenomeRegion middle2 = GenomeRegions.create("1", 20001, 30000);
-        final GenomeRegion end = GenomeRegions.create("1", 30001, 40000);
-        final List<GenomeRegion> regions = Lists.newArrayList(start, middle1, middle2, end);
-
-        assertEquals(start, RecoverStructuralVariants.closest(1, regions));
-        assertEquals(start, RecoverStructuralVariants.closest(5001, regions));
-        assertEquals(middle1, RecoverStructuralVariants.closest(5002, regions));
-        assertEquals(middle1, RecoverStructuralVariants.closest(15001, regions));
-        assertEquals(middle2, RecoverStructuralVariants.closest(15002, regions));
-        assertEquals(middle2, RecoverStructuralVariants.closest(25001, regions));
-        assertEquals(end, RecoverStructuralVariants.closest(25002, regions));
-        assertEquals(end, RecoverStructuralVariants.closest(40000, regions));
+    public void testSingleHasInsufficientDepth() throws IOException {
+        List<VariantContext> result = singleTest(UNBALANCED_MIN_DEPTH_WINDOW_COUNT - 1, 3);
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    public void testFilterFilter() {
-        final String eligible =
-                "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	BPI.Filter.SRSupportZero;qual	SVTYPE=BND	GT\t./.";
-        final String passing =
-                "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	.	SVTYPE=BND	GT\t./.";
-        final String ponFiltered =
-                "16	33040203	gridss81_16816o	G	GGTAAGAATCCGC[16:33040204[	343.95	PON	SVTYPE=BND	GT\t./.";
-        final String afFiltered =
-                "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	af	SVTYPE=BND	GT\t./.";
+    public void testDelEndIsUnbalanced() throws IOException {
+        final List<VariantContext> result = delTest(3, 0.8, 0.8);
+        assertFalse(result.isEmpty());
+        assertEquals(20000, result.get(0).getStart());
+    }
 
-        assertTrue(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(eligible)));
-        assertFalse(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(passing)));
-        assertTrue(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(ponFiltered)));
-        assertFalse(RecoverStructuralVariants.isAppropriatelyFiltered(codec.decode(afFiltered)));
+    @Test
+    public void testDelStartIsUnbalanced() throws IOException {
+        final List<VariantContext> result = delTest(0.8, 0.8, 3);
+        assertFalse(result.isEmpty());
+        assertEquals(10000, result.get(0).getStart());
+    }
+
+    @Test
+    public void testDelBothEndsUnbalanced() throws IOException {
+        final List<VariantContext> result = delTest(3, 3, 3);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testDelAlreadyBalanced() throws IOException {
+        final List<VariantContext> result = delTest(3, 0.8, 3);
+        assertTrue(result.isEmpty());
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
-        VCFCodec codec = new VCFCodec();
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
-        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
-        return codec;
+    private List<VariantContext> delTest(double startCopyNumber, double middleCopyNumber, double endCopyNumber) throws IOException {
+        StructuralVariant del = createDel();
+        assertEquals(10001, del.start().cnaPosition());
+        assertEquals(20000, del.end().cnaPosition());
+
+        PurpleCopyNumber first = create(1, 10000, startCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+        PurpleCopyNumber second = create(10001, 19999, middleCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+        PurpleCopyNumber third = create(20000, 39999, endCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+
+        RecoverStructuralVariants victim =
+                new RecoverStructuralVariants(purityAdjuster, recoveredVariantFactory, Lists.newArrayList(first, second, third));
+
+        return victim.recoverFromUnbalancedVariants(Lists.newArrayList(del));
+    }
+
+    @NotNull
+    private List<VariantContext> singleTest(int depthWindowCount, double endCopyNumber) throws IOException {
+        long position = 10000;
+
+        PurpleCopyNumber start = create(1, position, 3, depthWindowCount);
+        PurpleCopyNumber end = create(position + 1, 2 * position, endCopyNumber, depthWindowCount);
+        RecoverStructuralVariants victim =
+                new RecoverStructuralVariants(purityAdjuster, recoveredVariantFactory, Lists.newArrayList(start, end));
+
+        StructuralVariant single = createSingle(position);
+        assertEquals(position + 1, single.start().cnaPosition());
+
+        return victim.recoverFromUnbalancedVariants(Lists.newArrayList(single));
+    }
+
+    @NotNull
+    private static StructuralVariant createSingle(final long startPosition) {
+        return PurpleDatamodelTest.createStructuralVariantSingleBreakend("1", startPosition, 0.9).build();
+    }
+
+    @NotNull
+    private static StructuralVariant createDel() {
+        return PurpleDatamodelTest.createStructuralVariant("1", (long) 10000, "1", (long) 20000, StructuralVariantType.DEL, 0.9, 0.9)
+                .build();
+    }
+
+    @NotNull
+    private static PurpleCopyNumber create(final long start, final long end, final double copyNumber, int depthWindowCount) {
+        return PurpleDatamodelTest.createCopyNumber("1", start, end, copyNumber).depthWindowCount(depthWindowCount).build();
     }
 
 }
