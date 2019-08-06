@@ -2,6 +2,7 @@ package com.hartwig.hmftools.vicc;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -177,6 +178,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
@@ -227,13 +229,20 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
 
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(35, 36, 37, 39, 40, 41);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(35);
 
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES = Lists.newArrayList(1);
-
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES = Lists.newArrayList(13, 14);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES = Lists.newArrayList(1, 2, 3, 4, 5);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES =
+            Lists.newArrayList(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES =
+            Lists.newArrayList(0, 1, 2, 3, 4, 5, 7, 8, 9, 10);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES = Lists.newArrayList(7, 8, 9, 10, 11, 12, 13);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES = Lists.newArrayList(0, 1, 2,3);
 
     private static final List<Integer> EXPECTED_CIVIC_ELEMENT_SIZES = Lists.newArrayList(1);
-
 
     private ViccJsonReader() {
     }
@@ -242,12 +251,13 @@ public final class ViccJsonReader {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(jsonPath));
         reader.setLenient(true);
-
+        int number = 1;
         List<ViccEntry> entries = Lists.newArrayList();
         LOGGER.info("Reading VICC knowledgebase from " + jsonPath);
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-
+            // LOGGER.info(number);
+            number++;
             if (!EXPECTED_VICC_ENTRY_SIZES.contains(viccEntryObject.size())) {
                 LOGGER.warn("Found " + viccEntryObject.size() + " elements in a vicc entry rather than the expected "
                         + EXPECTED_VICC_ENTRY_SIZES);
@@ -368,6 +378,15 @@ public final class ViccJsonReader {
             }
 
             JsonObject objectMolecularMatchTrials = viccEntryObject.getAsJsonObject("molecularmatch_trials");
+            if (viccEntryObject.has("molecularmatch_trials")) {
+                Set<String> keysMolecularMatch = objectMolecularMatchTrials.keySet();
+                if (!EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES.contains(keysMolecularMatch.size())) {
+                    LOGGER.warn("Found " + keysMolecularMatch.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES);
+                    LOGGER.warn(keysMolecularMatch);
+                }
+            }
+
             JsonObject objectCivic = viccEntryObject.getAsJsonObject("civic");
 
             if (viccEntryObject.has("cgi")) {
@@ -409,11 +428,15 @@ public final class ViccJsonReader {
                 .variantGroups(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_groups")))
                 .entrezName(objectCivic.getAsJsonPrimitive("entrez_name").getAsString())
                 .variantTypes(createVariantTypes(objectCivic.getAsJsonArray("variant_types")))
-                .civicActionabilityScore(objectCivic.get("civic_actionability_score").isJsonNull() ? null : objectCivic.getAsJsonPrimitive("civic_actionability_score").getAsString())
+                .civicActionabilityScore(objectCivic.get("civic_actionability_score").isJsonNull()
+                        ? null
+                        : objectCivic.getAsJsonPrimitive("civic_actionability_score").getAsString())
                 .clinvarEntries(jsonArrayToStringList(objectCivic.getAsJsonArray("clinvar_entries")))
                 .lifecycleActions(createLifeCycleActions(objectCivic.getAsJsonObject("lifecycle_actions")))
                 .variantAliases(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_aliases")))
-                .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull() ? null : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
+                .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull()
+                        ? null
+                        : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
                 .geneId(objectCivic.getAsJsonPrimitive("gene_id").getAsString())
                 .name(objectCivic.getAsJsonPrimitive("name").getAsString())
                 .evidenceItem(createEvidenceitems(objectCivic.getAsJsonArray("evidence_items")))
@@ -430,13 +453,21 @@ public final class ViccJsonReader {
     @NotNull
     private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
         return ImmutableCivicCoordinates.builder()
-                .chromosome2(objectCoordinates.get("chromosome2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("chromosome2").getAsString())
-                .referenceBases(objectCoordinates.get("reference_bases").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("reference_bases").getAsString())
+                .chromosome2(objectCoordinates.get("chromosome2").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("chromosome2").getAsString())
+                .referenceBases(objectCoordinates.get("reference_bases").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("reference_bases").getAsString())
                 .start2(objectCoordinates.get("start2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("start2").getAsString())
-                .variantBases(objectCoordinates.get("variant_bases").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("variant_bases").getAsString())
+                .variantBases(objectCoordinates.get("variant_bases").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("variant_bases").getAsString())
                 .stop(objectCoordinates.getAsJsonPrimitive("stop").getAsString())
                 .stop2(objectCoordinates.get("stop2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("stop2").getAsString())
-                .representativeTranscript2(objectCoordinates.get("representative_transcript2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("representative_transcript2").getAsString())
+                .representativeTranscript2(objectCoordinates.get("representative_transcript2").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("representative_transcript2").getAsString())
                 .start(objectCoordinates.getAsJsonPrimitive("start").getAsString())
                 .representativeTranscript(objectCoordinates.getAsJsonPrimitive("representative_transcript").getAsString())
                 .ensemblVersion(objectCoordinates.getAsJsonPrimitive("ensembl_version").getAsString())
@@ -448,11 +479,15 @@ public final class ViccJsonReader {
     @NotNull
     private static List<CivicEvidenceItems> createEvidenceitems(@NotNull JsonArray evidenceItemsArray) {
         List<CivicEvidenceItems> evidenceItemsList = Lists.newArrayList();
-        for (JsonElement evideneItem: evidenceItemsArray) {
+        for (JsonElement evideneItem : evidenceItemsArray) {
             evidenceItemsList.add(ImmutableCivicEvidenceItems.builder()
                     .status(evideneItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
-                    .rating(evideneItem.getAsJsonObject().get("rating").isJsonNull() ? null : evideneItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
-                    .drugInteractionType(evideneItem.getAsJsonObject().get("drug_interaction_type").isJsonNull() ? null : evideneItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
+                    .rating(evideneItem.getAsJsonObject().get("rating").isJsonNull()
+                            ? null
+                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
+                    .drugInteractionType(evideneItem.getAsJsonObject().get("drug_interaction_type").isJsonNull()
+                            ? null
+                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
                     .description(evideneItem.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .openChangeCount(evideneItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
                     .evidenceType(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
@@ -467,7 +502,7 @@ public final class ViccJsonReader {
                     .type(evideneItem.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .id(evideneItem.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .name(evideneItem.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-            .build());
+                    .build());
         }
         return evidenceItemsList;
     }
@@ -476,7 +511,9 @@ public final class ViccJsonReader {
     private static CivicSource createSource(@NotNull JsonObject objectSource) {
         return ImmutableCivicSource.builder()
                 .status(objectSource.getAsJsonPrimitive("status").getAsString())
-                .openAccess(objectSource.get("open_access").isJsonNull() ? null : objectSource.getAsJsonPrimitive("open_access").getAsString())
+                .openAccess(objectSource.get("open_access").isJsonNull()
+                        ? null
+                        : objectSource.getAsJsonPrimitive("open_access").getAsString())
                 .name(objectSource.getAsJsonPrimitive("name").getAsString())
                 .journal(objectSource.getAsJsonPrimitive("journal").getAsString())
                 .citation(objectSource.getAsJsonPrimitive("citation").getAsString())
@@ -495,7 +532,7 @@ public final class ViccJsonReader {
     private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
         return ImmutableCivicPublicationDate.builder()
                 .year(objectPublicationDate.getAsJsonPrimitive("year").getAsString())
-                .day(!objectPublicationDate.has("day")? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
+                .day(!objectPublicationDate.has("day") ? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
                 .month(!objectPublicationDate.has("month") ? null : objectPublicationDate.getAsJsonPrimitive("month").getAsString())
                 .build();
     }
@@ -514,15 +551,18 @@ public final class ViccJsonReader {
     @NotNull
     private static List<CivicDrugs> createDrugs(@NotNull JsonArray arrayDrugs) {
         List<CivicDrugs> drugsList = Lists.newArrayList();
-        for (JsonElement drug: arrayDrugs) {
+        for (JsonElement drug : arrayDrugs) {
             drugsList.add(ImmutableCivicDrugs.builder()
-                    .pubchemId(drug.getAsJsonObject().get("pubchem_id").isJsonNull() ? null : drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
+                    .pubchemId(drug.getAsJsonObject().get("pubchem_id").isJsonNull()
+                            ? null
+                            : drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
                     .id(drug.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .name(drug.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-            .build());
+                    .build());
         }
         return drugsList;
     }
+
     @NotNull
     private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
         return ImmutableCivicLifecycleActions.builder()
@@ -560,7 +600,9 @@ public final class ViccJsonReader {
     private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
         return ImmutableCivicUser.builder()
                 .username(objectUser.getAsJsonPrimitive("username").getAsString())
-                .areaOfExpertise(objectUser.get("area_of_expertise").isJsonNull() ? null : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
+                .areaOfExpertise(objectUser.get("area_of_expertise").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
                 .organization(createOrganization(objectUser.getAsJsonObject("organization")))
                 .twitterHandle(objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
                 .name(objectUser.getAsJsonPrimitive("name").getAsString())
@@ -568,7 +610,9 @@ public final class ViccJsonReader {
                 .url(objectUser.getAsJsonPrimitive("url").getAsString())
                 .createdAt(objectUser.getAsJsonPrimitive("created_at").getAsString())
                 .avatars(createAvatars(objectUser.getAsJsonObject("avatars")))
-                .acceptedLicense(objectUser.get("accepted_license").isJsonNull() ? null : objectUser.getAsJsonPrimitive("accepted_license").getAsString())
+                .acceptedLicense(objectUser.get("accepted_license").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("accepted_license").getAsString())
                 .affiliation(objectUser.getAsJsonPrimitive("affiliation").getAsString())
                 .avatarUrl(objectUser.getAsJsonPrimitive("avatar_url").getAsString())
                 .role(objectUser.getAsJsonPrimitive("role").getAsString())
@@ -579,7 +623,9 @@ public final class ViccJsonReader {
                 .lastSeenAt(objectUser.getAsJsonPrimitive("last_seen_at").getAsString())
                 .featuredExpert(objectUser.getAsJsonPrimitive("featured_expert").getAsString())
                 .id(objectUser.getAsJsonPrimitive("id").getAsString())
-                .signupComplete(objectUser.get("signup_complete").isJsonNull() ? null : objectUser.getAsJsonPrimitive("signup_complete").getAsString())
+                .signupComplete(objectUser.get("signup_complete").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("signup_complete").getAsString())
                 .build();
     }
 
@@ -618,7 +664,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<CivicVariantTypes> createVariantTypes(@NotNull JsonArray arrayvariantTypes) {
         List<CivicVariantTypes> civicVariantTypesList = Lists.newArrayList();
-        for (JsonElement variantTypes: arrayvariantTypes) {
+        for (JsonElement variantTypes : arrayvariantTypes) {
             civicVariantTypesList.add(ImmutableCivicVariantTypes.builder()
                     .displayName(variantTypes.getAsJsonObject().getAsJsonPrimitive("display_name").getAsString())
                     .description(variantTypes.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
@@ -626,7 +672,7 @@ public final class ViccJsonReader {
                     .soId(variantTypes.getAsJsonObject().getAsJsonPrimitive("so_id").getAsString())
                     .id(variantTypes.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .name(variantTypes.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-            .build());
+                    .build());
         }
         return civicVariantTypesList;
     }
@@ -635,12 +681,19 @@ public final class ViccJsonReader {
     private static MolecularMatchTrials createMolecularMatchTrials(@NotNull JsonObject objectMolecularMatchTrials) {
         return ImmutableMolecularMatchTrials.builder()
                 .status(objectMolecularMatchTrials.getAsJsonPrimitive("status").getAsString())
+                .startDate(!objectMolecularMatchTrials.has("startDate")
+                        ? null
+                        : objectMolecularMatchTrials.get("startDate").isJsonNull()
+                                ? null
+                                : objectMolecularMatchTrials.getAsJsonPrimitive("startDate").getAsString())
                 .title(objectMolecularMatchTrials.getAsJsonPrimitive("title").getAsString())
                 .molecularAlterations(jsonArrayToStringList(objectMolecularMatchTrials.getAsJsonArray("molecularAlterations")))
                 .score(objectMolecularMatchTrials.getAsJsonPrimitive("_score").getAsString())
                 .intervation(createMolecularMatchTrialsIntervations(objectMolecularMatchTrials.getAsJsonArray("interventions")))
                 .locations(createMolecularMatchTrialsLocations(objectMolecularMatchTrials.getAsJsonArray("locations")))
-                .briefTitle(objectMolecularMatchTrials.get("briefTitle").isJsonNull() ? null :  objectMolecularMatchTrials.getAsJsonPrimitive("briefTitle").getAsString())
+                .briefTitle(objectMolecularMatchTrials.get("briefTitle").isJsonNull()
+                        ? null
+                        : objectMolecularMatchTrials.getAsJsonPrimitive("briefTitle").getAsString())
                 .overallContact(objectMolecularMatchTrials.get("overallContact").isJsonNull()
                         ? null
                         : createMolecularMatchTrialsOverallContact(objectMolecularMatchTrials.getAsJsonObject("overallContact")))
@@ -656,8 +709,39 @@ public final class ViccJsonReader {
     private static List<MolecularMatchTrialsLocations> createMolecularMatchTrialsLocations(@NotNull JsonArray arrayLocations) {
         List<MolecularMatchTrialsLocations> locationsList = Lists.newArrayList();
         for (JsonElement location : arrayLocations) {
+            Set<String> keysLocation = location.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES.contains(keysLocation.size())) {
+                LOGGER.warn("Found " + keysLocation.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES);
+                LOGGER.warn(keysLocation);
+            }
+
             locationsList.add(ImmutableMolecularMatchTrialsLocations.builder()
                     .status(location.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
+                    .last_name(!location.getAsJsonObject().has("last_name")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("last_name").getAsString())
+                    .email(!location.getAsJsonObject().has("email")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("email").getAsString())
+                    .phone(!location.getAsJsonObject().has("phone")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("phone").getAsString())
+                    .phone_backup(!location.getAsJsonObject().has("phone_backup")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("phone_backup").getAsString())
+                    .email_backup(!location.getAsJsonObject().has("email_backup")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("email_backup").getAsString())
+                    .last_name_backup(!location.getAsJsonObject().has("last_name_backup")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("last_name_backup").getAsString())
+                    .phone_ext_backup(!location.getAsJsonObject().has("phone_ext_backup")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("phone_ext_backup").getAsString())
+                    .phone_ext(!location.getAsJsonObject().has("phone_ext")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("phone_ext").getAsString())
                     .city(!location.getAsJsonObject().has("city")
                             ? null
                             : location.getAsJsonObject().getAsJsonPrimitive("city").getAsString())
@@ -671,6 +755,9 @@ public final class ViccJsonReader {
                     .country(!location.getAsJsonObject().has("country")
                             ? null
                             : location.getAsJsonObject().getAsJsonPrimitive("country").getAsString())
+                    .number(!location.getAsJsonObject().has("number")
+                            ? null
+                            : location.getAsJsonObject().getAsJsonPrimitive("number").getAsString())
                     .id(!location.getAsJsonObject().has("id") ? null : location.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .lastUpdated(!location.getAsJsonObject().has("lastUpdated")
                             ? null
@@ -708,7 +795,98 @@ public final class ViccJsonReader {
     }
 
     @NotNull
+    private static List<MolecularMatchTrialsIntervation> createMolecularMatchTrialsIntervations(@NotNull JsonArray intervationsArray) {
+        List<MolecularMatchTrialsIntervation> molecularMatchTrialsIntervationList = Lists.newArrayList();
+        for (JsonElement intervation : intervationsArray) {
+            Set<String> keysClinical = intervation.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES.contains(keysClinical.size())) {
+                LOGGER.warn("Found " + keysClinical.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES);
+                LOGGER.warn(keysClinical);
+            }
+
+            molecularMatchTrialsIntervationList.add(ImmutableMolecularMatchTrialsIntervation.builder()
+                    .intervention_name(!intervation.getAsJsonObject().has("intervention_name")
+                            ? null
+                            : intervation.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
+                    .other_name(!intervation.getAsJsonObject().has("other_name")
+                            ? null
+                            : otherNameMolecularMatchTrials(intervation.getAsJsonObject()))
+                    .description(!intervation.getAsJsonObject().has("description")
+                            ? null
+                            : intervation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .arm_group_label(!intervation.getAsJsonObject().has("arm_group_label")
+                            ? null
+                            : armGroupLabelMolecularMatchTrials(intervation.getAsJsonObject()))
+                    .intervention_type(!intervation.getAsJsonObject().has("intervention_type")
+                            ? null
+                            : intervation.getAsJsonObject().getAsJsonPrimitive("intervention_type").getAsString())
+                    .build());
+        }
+        return molecularMatchTrialsIntervationList;
+    }
+
+    @NotNull
+    private static Iterable<String> otherNameMolecularMatchTrials(@NotNull JsonObject otherNameObject) {
+        if (otherNameObject.get("other_name").isJsonPrimitive()) {
+            return Arrays.asList(otherNameObject.getAsJsonPrimitive("other_name").getAsString());
+        } else {
+            return jsonArrayToStringList(otherNameObject.getAsJsonArray("other_name"));
+        }
+
+    }
+
+    @NotNull
+    private static Iterable<String> armGroupLabelMolecularMatchTrials(@NotNull JsonObject armGroupLabel) {
+        if (armGroupLabel.get("arm_group_label").isJsonArray()) {
+            return jsonArrayToStringList(armGroupLabel.getAsJsonArray("arm_group_label"));
+        } else if (armGroupLabel.get("arm_group_label").isJsonPrimitive()) {
+            return Arrays.asList(armGroupLabel.getAsJsonPrimitive("arm_group_label").getAsString());
+        } else {
+            return Lists.newArrayList();
+        }
+    }
+
+    @NotNull
+    private static MolecularMatchTrialsOverallContact createMolecularMatchTrialsOverallContact(@NotNull JsonObject overallContactObject) {
+        Set<String> keysOverallContact = overallContactObject.getAsJsonObject().keySet();
+        if (!EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES.contains(keysOverallContact.size())) {
+            LOGGER.warn("Found " + keysOverallContact.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES);
+            LOGGER.warn(keysOverallContact);
+        }
+        return ImmutableMolecularMatchTrialsOverallContact.builder()
+                .phone(!overallContactObject.has("phone") || overallContactObject.get("phone").isJsonNull()
+                        ? null
+                        : overallContactObject.getAsJsonPrimitive("phone").getAsString())
+                .last_name(!overallContactObject.has("last_name")
+                        ? null
+                        : overallContactObject.getAsJsonPrimitive("last_name").getAsString())
+                .email(!overallContactObject.has("email") ? null : overallContactObject.getAsJsonPrimitive("email").getAsString())
+                .affiliation(!overallContactObject.has("affiliation") || overallContactObject.get("affiliation").isJsonNull()
+                        ? null
+                        : overallContactObject.getAsJsonPrimitive("affiliation").getAsString())
+                .phone_ext(!overallContactObject.has("phone_ext")
+                        ? null
+                        : overallContactObject.getAsJsonPrimitive("phone_ext").getAsString())
+                .country(!overallContactObject.has("country") ? null : overallContactObject.getAsJsonPrimitive("country").getAsString())
+                .city(!overallContactObject.has("city") ? null : overallContactObject.getAsJsonPrimitive("city").getAsString())
+                .name(!overallContactObject.has("name") ? null : overallContactObject.getAsJsonPrimitive("name").getAsString())
+                .zip(!overallContactObject.has("zip") ? null : overallContactObject.getAsJsonPrimitive("zip").getAsString())
+                .url(!overallContactObject.has("url") ? null : overallContactObject.getAsJsonPrimitive("url").getAsString())
+                .street(!overallContactObject.has("street") ? null : overallContactObject.getAsJsonPrimitive("street").getAsString())
+                .type(!overallContactObject.has("type") ? null : overallContactObject.getAsJsonPrimitive("type").getAsString())
+                .build();
+    }
+
+    @NotNull
     private static MolecularMatchTrialsGeo createMolecularMatchTrialsGeo(@NotNull JsonObject geoObject) {
+        Set<String> keySGeo = geoObject.getAsJsonObject().keySet();
+        if (!EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES.contains(keySGeo.size())) {
+            LOGGER.warn("Found " + keySGeo.size() + " elements in geo of molecular match trials object rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES);
+            LOGGER.warn(keySGeo);
+        }
         return ImmutableMolecularMatchTrialsGeo.builder()
                 .lat(geoObject.getAsJsonPrimitive("lat").getAsString())
                 .lon(geoObject.getAsJsonPrimitive("lon").getAsString())
@@ -717,6 +895,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static MolecularMatchTrialsLocation createMolecularMatchTrialsLocation(@NotNull JsonObject locationObject) {
+        Set<String> keysLocation = locationObject.getAsJsonObject().keySet();
+        if (!EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES.contains(keysLocation.size())) {
+            LOGGER.warn("Found " + keysLocation.size() + " elements in location of molecular match trials object rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES);
+            LOGGER.warn(keysLocation);
+        }
         return ImmutableMolecularMatchTrialsLocation.builder()
                 .type(locationObject.getAsJsonPrimitive("type").getAsString())
                 .coordinates(jsonArrayToStringList(locationObject.getAsJsonArray("coordinates")))
@@ -725,6 +909,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static MolecularMatchTrialsContact createMolecularMatchTrialsContact(@NotNull JsonObject contactObject) {
+        Set<String> keysContact = contactObject.getAsJsonObject().keySet();
+        if (!EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES.contains(keysContact.size())) {
+            LOGGER.warn("Found " + keysContact.size() + " elements in contact of molecular match trials object rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES);
+            LOGGER.warn(keysContact);
+        }
         return ImmutableMolecularMatchTrialsContact.builder()
                 .phone(!contactObject.has("phone") ? null : contactObject.getAsJsonPrimitive("phone").getAsString())
                 .name(!contactObject.has("name") ? null : contactObject.getAsJsonPrimitive("name").getAsString())
@@ -736,6 +926,12 @@ public final class ViccJsonReader {
     private static List<MolecularMatchTrialsTags> createMolecularMatchTrialsTags(@NotNull JsonArray arrayTags) {
         List<MolecularMatchTrialsTags> tagsList = Lists.newArrayList();
         for (JsonElement tag : arrayTags) {
+            Set<String> keysTags = tag.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES.contains(keysTags.size())) {
+                LOGGER.warn("Found " + keysTags.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES);
+                LOGGER.warn(keysTags);
+            }
             tagsList.add(ImmutableMolecularMatchTrialsTags.builder()
                     .facet(tag.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
                     .compositeKey(tag.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
@@ -745,34 +941,22 @@ public final class ViccJsonReader {
                     .custom(tag.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
                     .priority(tag.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
                     .alias(!tag.getAsJsonObject().has("alias") ? null : tag.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
+                    .manualSuppress(!tag.getAsJsonObject().has("manualSuppress")
+                            ? null
+                            : tag.getAsJsonObject().getAsJsonPrimitive("manualSuppress").getAsString())
+                    .generatedBy(!tag.getAsJsonObject().has("generatedBy")
+                            ? null
+                            : tag.getAsJsonObject().getAsJsonPrimitive("generatedBy").getAsString())
+                    .generatedByTerm(!tag.getAsJsonObject().has("generatedByTerm")
+                            ? null
+                            : tag.getAsJsonObject().getAsJsonPrimitive("generatedByTerm").getAsString())
+                    .id(!tag.getAsJsonObject().has("id") ? null : tag.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .manualPriority(!tag.getAsJsonObject().has("manualPriority")
+                            ? null
+                            : tag.getAsJsonObject().getAsJsonPrimitive("manualPriority").getAsString())
                     .build());
         }
         return tagsList;
-    }
-
-    @NotNull
-    private static MolecularMatchTrialsOverallContact createMolecularMatchTrialsOverallContact(@NotNull JsonObject overallContactObject) {
-        return ImmutableMolecularMatchTrialsOverallContact.builder()
-                .phone(!overallContactObject.has("phone") || overallContactObject.get("phone").isJsonNull()
-                        ? null
-                        : overallContactObject.getAsJsonPrimitive("phone").getAsString())
-                .last_name(!overallContactObject.has("last_name") ? null : overallContactObject.getAsJsonPrimitive("last_name").getAsString())
-                .email(!overallContactObject.has("email") ? null : overallContactObject.getAsJsonPrimitive("email").getAsString())
-                .affiliation(!overallContactObject.has("affiliation") || overallContactObject.get("affiliation").isJsonNull()
-                        ? null
-                        : overallContactObject.getAsJsonPrimitive("affiliation").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static List<MolecularMatchTrialsIntervation> createMolecularMatchTrialsIntervations(@NotNull JsonArray intervationsArray) {
-        List<MolecularMatchTrialsIntervation> molecularMatchTrialsIntervationList = Lists.newArrayList();
-        for (JsonElement intervation : intervationsArray) {
-            molecularMatchTrialsIntervationList.add(ImmutableMolecularMatchTrialsIntervation.builder()
-                    .intervention_name(!intervation.getAsJsonObject().has("intervention_name") ? null : intervation.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
-                    .build());
-        }
-        return molecularMatchTrialsIntervationList;
     }
 
     @NotNull

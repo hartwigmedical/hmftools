@@ -15,8 +15,32 @@ public abstract class MolecularMatchTrialsOverallContact {
     public abstract String last_name();
 
     @Nullable
+    public abstract String phone_ext();
+
+    @Nullable
+    public abstract String country();
+
+    @Nullable
     public abstract String email();
 
     @Nullable
     public abstract String affiliation();
+
+    @Nullable
+    public abstract String city();
+
+    @Nullable
+    public abstract String name();
+
+    @Nullable
+    public abstract String zip();
+
+    @Nullable
+    public abstract String url();
+
+    @Nullable
+    public abstract String street();
+
+    @Nullable
+    public abstract String type();
 }

@@ -13,6 +13,9 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     @NotNull
     public abstract String status();
 
+    @Nullable
+    public abstract String startDate();
+
     @NotNull
     public abstract String title();
 
