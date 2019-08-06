@@ -964,12 +964,20 @@ public class ChainFinder
 
         // search for a chain which can be closed if it contains all the DM SVs
 
+        SvChain dmChain = mDoubleMinuteSVs.get(0).getCluster().getDoubleMinuteChain();
+        boolean dmChainMatched = false;
+
         for(SvChain chain : mChains)
         {
             int chainedDmSVs = (int)mDoubleMinuteSVs.stream().filter(x -> chain.hasSV(x)).count();
 
             if(chainedDmSVs != mDoubleMinuteSVs.size())
                 continue;
+
+            if(!dmChainMatched && dmChain != null && chain.identicalChain(dmChain, false))
+            {
+                dmChainMatched = true;
+            }
 
             SvBreakend chainStart = chain.getOpenBreakend(true);
             SvBreakend chainEnd = chain.getOpenBreakend(false);
@@ -987,6 +995,12 @@ public class ChainFinder
                     }
                 }
             }
+        }
+
+        if(!dmChainMatched && dmChain != null)
+        {
+            LOGGER.debug("cluster({}) added pre-formed DM chain", mClusterId);
+            mChains.add(dmChain);
         }
     }
 

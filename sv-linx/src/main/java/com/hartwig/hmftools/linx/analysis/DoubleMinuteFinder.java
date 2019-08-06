@@ -300,13 +300,15 @@ public class DoubleMinuteFinder
         mClusterSVs.put(cluster.id(), highPloidySVs);
 
         if(fullyChained)
-            cluster.setDoubleMinuteSVs(highPloidySVs);
+            cluster.setDoubleMinuteData(highPloidySVs, dmChain);
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
 
         if(highPloidySVs.size() == 1 && fullyChained)
         {
             // single DUPs won't go through the chaining routine so cache this chain here
+            final SvVarData var = highPloidySVs.get(0);
+            dmChain.setPloidyData(var.ploidy(), var.ploidyUncertainty());
             cluster.addChain(dmChain, false);
         }
 

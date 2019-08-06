@@ -77,6 +77,7 @@ public class SvCluster
     private List<SvVarData> mLongDelDups;
     private List<SvVarData> mFoldbacks;
     private List<SvVarData> mDoubleMinuteSVs;
+    private SvChain mDoubleMinuteChain;
     private boolean mHasLinkingLineElements;
     private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
@@ -133,6 +134,7 @@ public class SvCluster
         mLongDelDups = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
         mDoubleMinuteSVs = Lists.newArrayList();
+        mDoubleMinuteChain = null;
         mHasLinkingLineElements = false;
         mInversions = Lists.newArrayList();
         mShortTIRemoteSVs = Lists.newArrayList();
@@ -173,6 +175,7 @@ public class SvCluster
 
         mAnnotationList.clear();
         mDoubleMinuteSVs.clear();
+        mDoubleMinuteChain = null;
 
         var.setCluster(this);
 
@@ -516,6 +519,7 @@ public class SvCluster
     public final List<SvVarData> getFoldbacks() { return mFoldbacks; }
     public final List<SvVarData> getInversions() { return mInversions; }
     public final List<SvVarData> getDoubleMinuteSVs() { return mDoubleMinuteSVs; }
+    public final SvChain getDoubleMinuteChain() { return mDoubleMinuteChain; }
 
     public void registerFoldback(final SvVarData var)
     {
@@ -541,7 +545,11 @@ public class SvCluster
             mLongDelDups.add(var);
     }
 
-    public void setDoubleMinuteSVs(final List<SvVarData> svList) { mDoubleMinuteSVs.addAll(svList); }
+    public void setDoubleMinuteData(final List<SvVarData> svList, final SvChain chain)
+    {
+        mDoubleMinuteSVs.addAll(svList);
+        mDoubleMinuteChain = chain;
+    }
 
     public void markAsLine()
     {
@@ -754,7 +762,7 @@ public class SvCluster
             {
                 boolean isRepeat = false;
 
-                // only log each chain link once, and log how many times the link has been used
+                // only add each chain link once, and log how many times the link has been used
                 for (final SvLinkedPair existingPair : mLinkedPairs)
                 {
                     if (pair.matches(existingPair))
