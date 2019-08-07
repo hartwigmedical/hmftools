@@ -208,7 +208,6 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_PMKB_GENE_ELEMENT_SIZES = Lists.newArrayList(7);
 
     private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
-
     private static final List<Integer> EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES = Lists.newArrayList(11);
     private static final List<Integer> EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES = Lists.newArrayList(9);
