@@ -8,18 +8,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CivicOrganization {
 
-    @NotNull
+    @Nullable
     public abstract String url();
 
-    @NotNull
+    @Nullable
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract CivicProfileImage profileImage();
 
-    @NotNull
+    @Nullable
     public abstract String description();
 
-    @NotNull
+    @Nullable
     public abstract String name();
 }

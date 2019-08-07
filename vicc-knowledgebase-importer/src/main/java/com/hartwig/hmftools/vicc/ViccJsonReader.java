@@ -441,7 +441,7 @@ public final class ViccJsonReader {
     @NotNull
     private static Civic createCivic(@NotNull JsonObject objectCivic) {
         return ImmutableCivic.builder()
-                .variantGroups(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_groups")))
+                .variantGroups(Lists.newArrayList())
                 .entrezName(objectCivic.getAsJsonPrimitive("entrez_name").getAsString())
                 .variantTypes(createVariantTypes(objectCivic.getAsJsonArray("variant_types")))
                 .civicActionabilityScore(objectCivic.get("civic_actionability_score").isJsonNull()
@@ -479,16 +479,22 @@ public final class ViccJsonReader {
                 .variantBases(objectCoordinates.get("variant_bases").isJsonNull()
                         ? null
                         : objectCoordinates.getAsJsonPrimitive("variant_bases").getAsString())
-                .stop(objectCoordinates.getAsJsonPrimitive("stop").getAsString())
+                .stop(objectCoordinates.get("stop").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("stop").getAsString())
                 .stop2(objectCoordinates.get("stop2").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("stop2").getAsString())
                 .representativeTranscript2(objectCoordinates.get("representative_transcript2").isJsonNull()
                         ? null
                         : objectCoordinates.getAsJsonPrimitive("representative_transcript2").getAsString())
-                .start(objectCoordinates.getAsJsonPrimitive("start").getAsString())
-                .representativeTranscript(objectCoordinates.getAsJsonPrimitive("representative_transcript").getAsString())
-                .ensemblVersion(objectCoordinates.getAsJsonPrimitive("ensembl_version").getAsString())
-                .chromosome(objectCoordinates.getAsJsonPrimitive("chromosome").getAsString())
-                .referenceBuild(objectCoordinates.getAsJsonPrimitive("reference_build").getAsString())
+                .start(objectCoordinates.get("start").isJsonNull() ? null : objectCoordinates.getAsJsonPrimitive("start").getAsString())
+                .representativeTranscript(objectCoordinates.get("representative_transcript").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("representative_transcript").getAsString())
+                .ensemblVersion(objectCoordinates.get("ensembl_version").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("ensembl_version").getAsString())
+                .chromosome(objectCoordinates.get("chromosome").isJsonNull()
+                        ? null
+                        : objectCoordinates.getAsJsonPrimitive("chromosome").getAsString())
+                .referenceBuild("")
                 .build();
     }
 
@@ -508,12 +514,16 @@ public final class ViccJsonReader {
                     .openChangeCount(evideneItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
                     .evidenceType(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
                     .drugs(createDrugs(evideneItem.getAsJsonObject().getAsJsonArray("drugs")))
-                    .variantOrigin(evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
+                    .variantOrigin(evideneItem.getAsJsonObject().get("variant_origin").isJsonNull() ? null : evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
                     .disease(createDiseases(evideneItem.getAsJsonObject().getAsJsonObject("disease")))
                     .source(createSource(evideneItem.getAsJsonObject().getAsJsonObject("source")))
-                    .evidenceDirection(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_direction").getAsString())
-                    .variantId(evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_id").getAsString())
-                    .clinicalSignificance(evideneItem.getAsJsonObject().getAsJsonPrimitive("clinical_significance").getAsString())
+                    .evidenceDirection(evideneItem.getAsJsonObject().get("evidence_direction").isJsonNull()
+                            ? null
+                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_direction").toString())
+                    .variantId("")
+                    .clinicalSignificance(evideneItem.getAsJsonObject().get("clinical_significance").isJsonNull()
+                            ? null
+                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("clinical_significance").getAsString())
                     .evidenceLevel(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_level").getAsString())
                     .type(evideneItem.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .id(evideneItem.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
@@ -530,13 +540,13 @@ public final class ViccJsonReader {
                 .openAccess(objectSource.get("open_access").isJsonNull()
                         ? null
                         : objectSource.getAsJsonPrimitive("open_access").getAsString())
-                .name(objectSource.getAsJsonPrimitive("name").getAsString())
-                .journal(objectSource.getAsJsonPrimitive("journal").getAsString())
-                .citation(objectSource.getAsJsonPrimitive("citation").getAsString())
+                .name("")
+                .journal("")
+                .citation("")
                 .pmc_I(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
-                .fullJournalTitle(objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
+                .fullJournalTitle(objectSource.get("full_journal_title").isJsonNull() ? null : objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
                 .sourceUrl(objectSource.getAsJsonPrimitive("source_url").getAsString())
-                .clinicalTrials(jsonArrayToStringList(objectSource.getAsJsonArray("clinical_trials")))
+                .clinicalTrials(Lists.newArrayList())
                 .pubmedId(objectSource.getAsJsonPrimitive("pubmed_id").getAsString())
                 .isReview(objectSource.getAsJsonPrimitive("is_review").getAsString())
                 .publicationDate(createPublicationDate(objectSource.getAsJsonObject("publication_date")))
@@ -547,7 +557,7 @@ public final class ViccJsonReader {
     @NotNull
     private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
         return ImmutableCivicPublicationDate.builder()
-                .year(objectPublicationDate.getAsJsonPrimitive("year").getAsString())
+                .year(objectPublicationDate.get("year")== null ? null : objectPublicationDate.getAsJsonPrimitive("year").getAsString())
                 .day(!objectPublicationDate.has("day") ? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
                 .month(!objectPublicationDate.has("month") ? null : objectPublicationDate.getAsJsonPrimitive("month").getAsString())
                 .build();
@@ -556,7 +566,7 @@ public final class ViccJsonReader {
     @NotNull
     private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
         return ImmutableCivicDisease.builder()
-                .doid(objectDisease.getAsJsonPrimitive("doid").getAsString())
+                .doid(objectDisease.get("doid").isJsonNull() ? null : objectDisease.getAsJsonPrimitive("doid").getAsString())
                 .url(objectDisease.getAsJsonPrimitive("url").getAsString())
                 .displayName(objectDisease.getAsJsonPrimitive("display_name").getAsString())
                 .id(objectDisease.getAsJsonPrimitive("id").getAsString())
@@ -582,9 +592,15 @@ public final class ViccJsonReader {
     @NotNull
     private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
         return ImmutableCivicLifecycleActions.builder()
-                .lastCommentedOn(createLastCommentOn(objectLifeCycleActions.getAsJsonObject("last_commented_on")))
-                .lastModified(createLastModified(objectLifeCycleActions.getAsJsonObject("last_modified")))
-                .lastReviewed(createLastReviewed(objectLifeCycleActions.getAsJsonObject("last_reviewed")))
+                .lastCommentedOn(objectLifeCycleActions.getAsJsonObject("last_commented_on") == null
+                        ? null
+                        : createLastCommentOn(objectLifeCycleActions.getAsJsonObject("last_commented_on")))
+                .lastModified(objectLifeCycleActions.getAsJsonObject("last_modified") == null
+                        ? null
+                        : createLastModified(objectLifeCycleActions.getAsJsonObject("last_modified")))
+                .lastReviewed(objectLifeCycleActions.getAsJsonObject("last_reviewed") == null
+                        ? null
+                        : createLastReviewed(objectLifeCycleActions.getAsJsonObject("last_reviewed")))
                 .build();
     }
 
@@ -620,23 +636,29 @@ public final class ViccJsonReader {
                         ? null
                         : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
                 .organization(createOrganization(objectUser.getAsJsonObject("organization")))
-                .twitterHandle(objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
+                .twitterHandle(objectUser.get("twitter_handle").isJsonNull() ? null : objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
                 .name(objectUser.getAsJsonPrimitive("name").getAsString())
-                .bio(objectUser.getAsJsonPrimitive("bio").getAsString())
-                .url(objectUser.getAsJsonPrimitive("url").getAsString())
+                .bio(objectUser.get("bio").isJsonNull() ? null : objectUser.getAsJsonPrimitive("bio").getAsString())
+                .url(objectUser.get("url").isJsonNull() ? null : objectUser.getAsJsonPrimitive("url").getAsString())
                 .createdAt(objectUser.getAsJsonPrimitive("created_at").getAsString())
                 .avatars(createAvatars(objectUser.getAsJsonObject("avatars")))
                 .acceptedLicense(objectUser.get("accepted_license").isJsonNull()
                         ? null
                         : objectUser.getAsJsonPrimitive("accepted_license").getAsString())
-                .affiliation(objectUser.getAsJsonPrimitive("affiliation").getAsString())
+                .affiliation(objectUser.get("affiliation").isJsonNull() ? null : objectUser.getAsJsonPrimitive("affiliation").getAsString())
                 .avatarUrl(objectUser.getAsJsonPrimitive("avatar_url").getAsString())
                 .role(objectUser.getAsJsonPrimitive("role").getAsString())
-                .facebookProfile(objectUser.getAsJsonPrimitive("facebook_profile").getAsString())
-                .linkedinProfile(objectUser.getAsJsonPrimitive("linkedin_profile").getAsString())
-                .orcid(objectUser.getAsJsonPrimitive("orcid").getAsString())
+                .facebookProfile(objectUser.get("facebook_profile").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("facebook_profile").getAsString())
+                .linkedinProfile(objectUser.get("linkedin_profile").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("linkedin_profile").getAsString())
+                .orcid(objectUser.get("orcid").isJsonNull() ? null : objectUser.getAsJsonPrimitive("orcid").getAsString())
                 .displayName(objectUser.getAsJsonPrimitive("display_name").getAsString())
-                .lastSeenAt(objectUser.getAsJsonPrimitive("last_seen_at").getAsString())
+                .lastSeenAt(objectUser.get("last_seen_at").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("last_seen_at").getAsString())
                 .featuredExpert(objectUser.getAsJsonPrimitive("featured_expert").getAsString())
                 .id(objectUser.getAsJsonPrimitive("id").getAsString())
                 .signupComplete(objectUser.get("signup_complete").isJsonNull()
@@ -648,11 +670,13 @@ public final class ViccJsonReader {
     @NotNull
     private static CivicOrganization createOrganization(@NotNull JsonObject objectOrganization) {
         return ImmutableCivicOrganization.builder()
-                .url(objectOrganization.getAsJsonPrimitive("url").getAsString())
-                .id(objectOrganization.getAsJsonPrimitive("id").getAsString())
-                .profileImage(createProfileImage(objectOrganization.getAsJsonObject("profile_image")))
-                .description(objectOrganization.getAsJsonPrimitive("description").getAsString())
-                .name(objectOrganization.getAsJsonPrimitive("name").getAsString())
+                .url(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("url").getAsString())
+                .id(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("id").getAsString())
+                .profileImage(!objectOrganization.has("url")
+                        ? null
+                        : createProfileImage(objectOrganization.getAsJsonObject("profile_image")))
+                .description(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("description").getAsString())
+                .name(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("name").getAsString())
                 .build();
     }
 
@@ -1035,8 +1059,8 @@ public final class ViccJsonReader {
         for (JsonElement therapeuticContext : arrayTherapeuticContext) {
             Set<String> keysTherapeuticContext = therapeuticContext.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES.contains(keysTherapeuticContext.size())) {
-                LOGGER.warn(
-                        "Found " + keysTherapeuticContext.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
+                LOGGER.warn("Found " + keysTherapeuticContext.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
                 LOGGER.warn(keysTherapeuticContext);
             }
 
@@ -1057,8 +1081,8 @@ public final class ViccJsonReader {
         for (JsonElement classification : objectClassifications) {
             Set<String> keysClassification = classification.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES.contains(keysClassification.size())) {
-                LOGGER.warn(
-                        "Found " + keysClassification.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
+                LOGGER.warn("Found " + keysClassification.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
                 LOGGER.warn(keysClassification);
             }
             classificationList.add(ImmutableMolecularMatchClassification.builder()
@@ -1156,8 +1180,8 @@ public final class ViccJsonReader {
         for (JsonElement tags : arrayTags) {
             Set<String> keysTags = tags.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TAGS_SIZES.contains(keysTags.size())) {
-                LOGGER.warn(
-                        "Found " + keysTags.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_TAGS_SIZES);
+                LOGGER.warn("Found " + keysTags.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TAGS_SIZES);
                 LOGGER.warn(keysTags);
             }
 
@@ -1193,8 +1217,8 @@ public final class ViccJsonReader {
         for (JsonElement tierExplanation : arrarTierExplanation) {
             Set<String> keysTierExplanation = tierExplanation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES.contains(keysTierExplanation.size())) {
-                LOGGER.warn(
-                        "Found " + keysTierExplanation.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES);
+                LOGGER.warn("Found " + keysTierExplanation.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES);
                 LOGGER.warn(keysTierExplanation);
             }
 
@@ -1215,8 +1239,8 @@ public final class ViccJsonReader {
         for (JsonElement variantInfo : arrayVariantInfo) {
             Set<String> keysVariantInfo = variantInfo.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES.contains(keysVariantInfo.size())) {
-                LOGGER.warn(
-                        "Found " + keysVariantInfo.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES);
+                LOGGER.warn("Found " + keysVariantInfo.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES);
                 LOGGER.warn(keysVariantInfo);
             }
 
@@ -1244,8 +1268,8 @@ public final class ViccJsonReader {
         for (JsonElement locations : arrayLocations) {
             Set<String> keysLocations = locations.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES.contains(keysLocations.size())) {
-                LOGGER.warn(
-                        "Found " + keysLocations.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES);
+                LOGGER.warn("Found " + keysLocations.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES);
                 LOGGER.warn(keysLocations);
             }
 

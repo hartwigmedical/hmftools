@@ -8,13 +8,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CivicLifecycleActions {
 
-    @NotNull
+    @Nullable
     public abstract CivicLastCommentedOn lastCommentedOn();
 
-    @NotNull
+    @Nullable
     public abstract CivicLastModified lastModified();
 
-    @NotNull
+    @Nullable
     public abstract CivicLastReviewed lastReviewed();
 
 

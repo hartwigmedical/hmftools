@@ -31,7 +31,7 @@ public abstract class CivicEvidenceItems {
     @NotNull
     public abstract List<CivicDrugs> drugs();
 
-    @NotNull
+    @Nullable
     public abstract String variantOrigin();
 
     @NotNull
@@ -40,13 +40,13 @@ public abstract class CivicEvidenceItems {
     @NotNull
     public abstract CivicSource source();
 
-    @NotNull
+    @Nullable
     public abstract String evidenceDirection();
 
     @NotNull
     public abstract String variantId();
 
-    @NotNull
+    @Nullable
     public abstract String clinicalSignificance();
 
     @NotNull
