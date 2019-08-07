@@ -25,6 +25,6 @@ public abstract class MolecularMatchTranscriptConsequencesGRCH37 {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
+    @Nullable
     public abstract String cdna();
 }

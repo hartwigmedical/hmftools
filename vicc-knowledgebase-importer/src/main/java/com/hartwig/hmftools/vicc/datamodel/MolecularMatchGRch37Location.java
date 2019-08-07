@@ -16,13 +16,13 @@ public abstract class MolecularMatchGRch37Location {
     @Nullable
     public abstract String ref();
 
-    @NotNull
+    @Nullable
     public abstract String stop();
 
-    @NotNull
+    @Nullable
     public abstract String start();
 
-    @NotNull
+    @Nullable
     public abstract String chr();
 
     @Nullable

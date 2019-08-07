@@ -23,16 +23,16 @@ public abstract class MolecularMatchTranscriptConsequence {
     @NotNull
     public abstract String suppress();
 
-    @NotNull
+    @Nullable
     public abstract String stop();
 
     @NotNull
     public abstract String custom();
 
-    @NotNull
+    @Nullable
     public abstract String start();
 
-    @NotNull
+    @Nullable
     public abstract String chr();
 
     @NotNull
@@ -44,7 +44,7 @@ public abstract class MolecularMatchTranscriptConsequence {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
+    @Nullable
     public abstract String cdna();
 
     @NotNull

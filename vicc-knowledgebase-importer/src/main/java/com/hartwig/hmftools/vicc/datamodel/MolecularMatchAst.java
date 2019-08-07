@@ -11,12 +11,12 @@ public abstract class MolecularMatchAst {
     @NotNull
     public abstract String operator();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchAstRight right();
 
     @NotNull
     public abstract String type();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchAstLeft left();
 }

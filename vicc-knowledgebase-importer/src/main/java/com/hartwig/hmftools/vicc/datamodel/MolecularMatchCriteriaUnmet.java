@@ -29,7 +29,7 @@ public abstract class MolecularMatchCriteriaUnmet {
     @NotNull
     public abstract String facet();
 
-    @NotNull
+    @Nullable
     public abstract String valid();
 
     @Nullable

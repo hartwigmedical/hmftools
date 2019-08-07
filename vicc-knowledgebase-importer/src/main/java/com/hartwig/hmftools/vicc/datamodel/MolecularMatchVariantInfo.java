@@ -28,7 +28,7 @@ public abstract class MolecularMatchVariantInfo {
     @NotNull
     public abstract String geneFusionPartner();
 
-    @NotNull
+    @Nullable
     public abstract String COSMIC_ID();
 
     @NotNull

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchClassification {
 
-    @NotNull
+    @Nullable
     public abstract List<String> end();
 
     @NotNull
@@ -19,81 +19,81 @@ public abstract class MolecularMatchClassification {
     @Nullable
     public abstract String classificationOverride();
 
-    @NotNull
+    @Nullable
     public abstract List<String> start();
 
-    @NotNull
+    @Nullable
     public abstract List<String> chr();
 
-    @NotNull
+    @Nullable
     public abstract String geneSymbol();
 
-    @NotNull
+    @Nullable
     public abstract List<String> pathology();
 
-    @NotNull
+    @Nullable
     public abstract List<String> ref();
 
-    @NotNull
+    @Nullable
     public abstract String description();
 
-    @NotNull
+    @Nullable
     public abstract String priority();
 
-    @NotNull
+    @Nullable
     public abstract List<String> NucleotideChange();
 
-    @NotNull
+    @Nullable
     public abstract String drugsExperimentalCount();
 
-    @NotNull
+    @Nullable
     public abstract List<String> exon();
 
-    @NotNull
+    @Nullable
     public abstract String drugsApprovedOffLabelCount();
 
-    @NotNull
+    @Nullable
     public abstract List<String> exonicFunc();
 
-    @NotNull
+    @Nullable
     public abstract List<String> popFreqMax();
 
     @Nullable
     public abstract String copyNumberType();
 
-    @NotNull
+    @Nullable
     public abstract String publicationCount();
 
     @Nullable
     public abstract String transcript();
 
-    @NotNull
+    @Nullable
     public abstract List<String> dbSNP();
 
-    @NotNull
+    @Nullable
     public abstract List<String> alt();
 
-    @NotNull
+    @Nullable
     public abstract String name();
 
-    @NotNull
+    @Nullable
     public abstract String rootTerm();
 
-    @NotNull
+    @Nullable
     public abstract List<String> sources();
 
-    @NotNull
+    @Nullable
     public abstract String drugsApprovedOnLabelCount();
 
-    @NotNull
+    @Nullable
     public abstract String trialCount();
 
-    @NotNull
+    @Nullable
     public abstract String alias();
 
-    @NotNull
+    @Nullable
     public abstract List<String> COSMIC_ID();
 
-    @NotNull
+    @Nullable
     public abstract List<String> transcripts();
 }

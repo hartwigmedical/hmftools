@@ -14,7 +14,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract List<MolecularMatchCriteriaUnmet> criteriaUnmet();
 
     @NotNull
-    public abstract List<MolecularMatchPrevalence> prevalences();
+    public abstract List<MolecularMatchPrevalence> prevalence();
 
     @NotNull
     public abstract String score();
@@ -59,6 +59,9 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract List<String> includeMutation1();
 
     @Nullable
+    public abstract List<String> includeMutation0();
+
+    @Nullable
     public abstract String guidelineBody();
 
     @NotNull
@@ -73,11 +76,17 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @NotNull
     public abstract String ampcap();
 
-    @NotNull
+    @Nullable
     public abstract MolecularMatchAst asts();
 
     @NotNull
     public abstract List<MolecularMatchVariantInfo> variantInfo();
+
+    @Nullable
+    public abstract String guidelineVersion();
+
+    @Nullable
+    public abstract String institution();
 
     @NotNull
     public abstract String tier();
@@ -100,7 +109,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @NotNull
     public abstract List<MolecularMatchClassification> classification();
 
-    @NotNull
+    @Nullable
     public abstract List<String> includeDrug1();
 
     @NotNull
@@ -109,13 +118,19 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @NotNull
     public abstract String sixtier();
 
+    @Nullable
+    public abstract String noTherapyAvailable();
+
+    @Nullable
+    public abstract String external_id();
+
     @NotNull
     public abstract String narrative();
 
     @NotNull
     public abstract String expression();
 
-    @NotNull
+    @Nullable
     public abstract List<String> includeGene0();
 
 }
