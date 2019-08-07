@@ -339,4 +339,51 @@ public class ChainingActualTest
         assertTrue(chain.isClosedLoop());
     }
 
+    @Test
+    public void testActualDoubleMinuteChaining2()
+    {
+        // based on an MDM2 AMP - ends up with 1 high-ploidy chain, another with some extra low-ploidy SVs, and 2 more disconnected
+
+        LinxTester tester = new LinxTester();
+        tester.logVerbose(true);
+
+        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
+
+        /* SOLUTION: a closed loop:
+
+
+         */
+
+        final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("DM_SAMPLE2");
+
+        tester.AllVariants.addAll(svList);
+
+        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
+
+        lohData.add(new LohEvent( "12", 41741113, 50109706,
+                "DEL", "INV", 1, 1, 1, 0, 1, 1,39, 56));
+
+        tester.Analyser.getState().setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        // check clustering
+        assertEquals(tester.Analyser.getClusters().size(), 1);
+
+        final SvCluster cluster = tester.Analyser.getClusters().get(0);
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
+        assertEquals(6, cluster.getDoubleMinuteSVs().size());
+
+        // check chains
+        assertEquals(4, cluster.getChains().size());
+
+        /*
+        final SvChain chain = cluster.getChains().get(0);
+        assertEquals(8, chain.getLinkCount());
+        assertEquals(7, chain.getSvCount());
+        assertTrue(chain.isClosedLoop());
+        */
+    }
 }
