@@ -142,7 +142,7 @@ public class CnDataLoader
         else
         {
             mCnRecords = mDbAccess.readCopynumbers(sampleId);
-            LOGGER.debug("sample({}) retrievd {} CN entries", sampleId, mCnRecords.size());
+            LOGGER.debug("sample({}) retrieved {} CN entries", sampleId, mCnRecords.size());
             mPurityContext = mDbAccess.readPurityContext(sampleId);
         }
 
@@ -210,7 +210,7 @@ public class CnDataLoader
                         else
                         {
                             // allow matches if the position if correct
-                            LOGGER.debug("SV({} chr={} pos={} type={}) matches {} CN segment: id({})",
+                            LOGGER.trace("SV({} chr={} pos={} type={}) matches {} CN segment: id({})",
                                     svData.id(), svChromosome, svPosition, svData.type(), cnData.SegStart, cnData.id());
                         }
                     }
@@ -338,7 +338,7 @@ public class CnDataLoader
                             svData != null ? svData.id() : CN_DATA_NO_SV,
                             nextSvData != null ? nextSvData.id() : CN_DATA_NO_SV);
 
-                    LOGGER.debug("chromosome({}) HOM-loss at positions({} -> {}) segments({} - {})",
+                    LOGGER.trace("chromosome({}) HOM-loss at positions({} -> {}) segments({} - {})",
                             chromosome, homLoss.PosStart, homLoss.PosEnd, homLoss.SegStart, homLoss.SegEnd);
 
                     mHomLossData.add(homLoss);
@@ -370,7 +370,7 @@ public class CnDataLoader
                             if (nextData.EndPos - cnData.StartPos > REMOTE_SV_DISTANCE && nextMinCN < MIN_LOH_CN
                             && lohStartCnData != null && cnData.StartPos - lohStartCnData.StartPos > REMOTE_SV_DISTANCE)
                             {
-                                LOGGER.debug("chr({}) skipping short isolated TI seg({}) length({})",
+                                LOGGER.trace("chr({}) skipping short isolated TI seg({}) length({})",
                                         chromosome, cnData, cnData.EndPos - cnData.StartPos);
                                 continue;
                             }
@@ -448,11 +448,11 @@ public class CnDataLoader
 
                         if (lohOnStartTelomere)
                         {
-                            LOGGER.debug("chr({}) LOH at telemore", chromosome);
+                            LOGGER.trace("chr({}) LOH at telemore", chromosome);
                         }
                         else
                         {
-                            LOGGER.debug(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
+                            LOGGER.trace(String.format("chr(%s) starting LOH at pos(%d) minCN(%.3f cn=%.3f baf=%.3f) priorCN(%.3f)",
                                     chromosome, cnData.StartPos, cnData.CopyNumber, cnData.ActualBaf, lohMinCN, priorCN));
 
                             // check for segments ending on telomere

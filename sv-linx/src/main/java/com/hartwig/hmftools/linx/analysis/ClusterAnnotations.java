@@ -363,10 +363,9 @@ public class ClusterAnnotations
                     final SvBreakend breakend = breakendList.get(i);
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
 
-                    if(nextBreakend.position() > MAX_MERGE_DISTANCE)
-                        genomicSpan += MAX_MERGE_DISTANCE;
-                    else
-                        genomicSpan += nextBreakend.position() - breakend.position();
+                    long breakendDistance = nextBreakend.position() - breakend.position();
+
+                    genomicSpan += min(MAX_MERGE_DISTANCE * 2, breakendDistance);
 
                     // look for gaps in this cluster's breakend list
                     if (nextBreakend.getChrPosIndex() == breakend.getChrPosIndex() + 1)

@@ -303,7 +303,7 @@ public class ComplexClustering
         return false;
     }
 
-    private static final int MAX_COMPLEX_CLUSTER_MERGE_SIZE = 3;
+    private static final int MAX_COMPLEX_CLUSTER_MERGE_SIZE = 5;
 
     private boolean mergeBreakendStraddledClusters(List<SvCluster> clusters)
     {

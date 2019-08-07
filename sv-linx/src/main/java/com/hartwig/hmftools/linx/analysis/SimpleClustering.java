@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
+import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -247,8 +248,6 @@ public class SimpleClustering
 
         int initClusterCount = clusters.size();
 
-        int iterations = 0;
-
         mergeOnLOHEvents(clusters);
 
         mergeOnMajorAllelePloidyBounds(clusters);
@@ -258,9 +257,12 @@ public class SimpleClustering
         // the merge must be run a few times since as clusters grow, more single SVs and other clusters
         // will then fall within the bounds of the new larger clusters
         boolean foundMerges = true;
+        int iterations = 0;
 
-        while(foundMerges && iterations < 10)
+        while(foundMerges)
         {
+            foundMerges = false;
+
             if(mergeOnOverlappingInvDupDels(clusters))
                 foundMerges = true;
 
@@ -269,8 +271,14 @@ public class SimpleClustering
             //     foundMerges = true;
 
             ++iterations;
-        }
 
+            if(iterations >= 10)
+            {
+                if(foundMerges)
+                    LOGGER.warn("sample({}) exiting simple merge loop after {} iterations with merge just found", mSampleId, iterations);
+                break;
+            }
+        }
 
         if(clusters.size() < initClusterCount)
         {
@@ -644,42 +652,42 @@ public class SimpleClustering
     private boolean mergeOnOverlappingInvDupDels(List<SvCluster> clusters)
     {
         // merge any clusters with overlapping inversions, long dels or long dups on the same arm
-        int initClusterCount = clusters.size();
+        List<SvCluster> mergedClusters = Lists.newArrayList();
 
-        final List<StructuralVariantType> requiredTypes = Lists.newArrayList();
-        requiredTypes.add(INV);
+        List<SvCluster> clustersWithIDD = clusters.stream()
+                .filter(x -> !x.getInversions().isEmpty() || !x.getLongDelDups().isEmpty())
+                .filter(x -> !x.hasLinkingLineElements())
+                .collect(Collectors.toList());
 
         int index1 = 0;
-        while(index1 < clusters.size())
+        while(index1 < clustersWithIDD.size())
         {
-            SvCluster cluster1 = clusters.get(index1);
+            SvCluster cluster1 = clustersWithIDD.get(index1);
 
-            if(cluster1.getInversions().isEmpty() && cluster1.getLongDelDups().isEmpty() || cluster1.hasLinkingLineElements())
+            if(mergedClusters.contains(cluster1))
             {
                 ++index1;
                 continue;
             }
 
-            List<SvVarData> cluster1Svs = Lists.newArrayList();
-            cluster1Svs.addAll(cluster1.getLongDelDups());
+            boolean mergedOtherClusters = false;
+
+            List<SvVarData> cluster1Svs = Lists.newArrayList(cluster1.getLongDelDups());
             cluster1Svs.addAll(cluster1.getInversions());
 
             int index2 = index1 + 1;
-            while(index2 < clusters.size())
+            while(index2 < clustersWithIDD.size())
             {
-                SvCluster cluster2 = clusters.get(index2);
+                SvCluster cluster2 = clustersWithIDD.get(index2);
 
-                if(cluster2.getInversions().isEmpty() && cluster2.getLongDelDups().isEmpty() || cluster2.hasLinkingLineElements())
+                if(mergedClusters.contains(cluster2))
                 {
                     ++index2;
                     continue;
                 }
 
-                List<SvVarData> cluster2Svs = Lists.newArrayList();
-                cluster2Svs.addAll(cluster2.getLongDelDups());
+                List<SvVarData> cluster2Svs = Lists.newArrayList(cluster2.getLongDelDups());
                 cluster2Svs.addAll(cluster2.getInversions());
-
-                boolean canMergeClusters = false;
 
                 for (final SvVarData var1 : cluster1Svs)
                 {
@@ -707,19 +715,20 @@ public class SimpleClustering
 
                         addClusterReasons(var1, var2, CR_LONG_DEL_DUP_OR_INV);
 
-                        canMergeClusters = true;
+                        mergedOtherClusters = true;
                         break;
                     }
 
-                    if(canMergeClusters)
+                    if(mergedOtherClusters)
                         break;
                 }
 
-                if(canMergeClusters)
+                if(mergedOtherClusters)
                 {
                     cluster1.mergeOtherCluster(cluster2);
                     cluster1.addClusterReason(CR_LONG_DEL_DUP_OR_INV);
-                    clusters.remove(index2);
+                    mergedClusters.add(cluster2);
+                    break;
                 }
                 else
                 {
@@ -727,10 +736,17 @@ public class SimpleClustering
                 }
             }
 
-            ++index1;
+            if(mergedOtherClusters)
+                continue; // repeat this cluster after merging in another's SVs
+            else
+                ++index1;
         }
 
-        return clusters.size() < initClusterCount;
+        if(mergedClusters.isEmpty())
+            return false;
+
+        mergedClusters.forEach(x -> clusters.remove(x));
+        return true;
     }
 
     protected static boolean variantsViolateLohHomLoss(final SvVarData var1, final SvVarData var2)
