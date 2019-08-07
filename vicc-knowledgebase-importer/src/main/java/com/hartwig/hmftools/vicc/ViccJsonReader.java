@@ -269,7 +269,7 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES = Lists.newArrayList(0, 3);
     private static final List<Integer> EXPECTED_CIVIC_ORGANIZATION_SIZES = Lists.newArrayList(0, 5);
     private static final List<Integer> EXPECTED_CIVIC_PROFILE_IMAGE_SIZES = Lists.newArrayList(5);
-    private static final List<Integer> EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES = Lists.newArrayList(0, 1,2,3);
+    private static final List<Integer> EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES = Lists.newArrayList(0, 1, 2, 3);
     private static final List<Integer> EXPECTED_CIVIC_SOURCE_SIZES = Lists.newArrayList(13);
     private static final List<Integer> EXPECTED_CIVIC_USER_SIZES = Lists.newArrayList(21);
     private static final List<Integer> EXPECTED_CIVIC_VARIANTTYPES_SIZES = Lists.newArrayList(6);
@@ -315,7 +315,7 @@ public final class ViccJsonReader {
             Set<String> keysAssociation = elementAssociation.getAsJsonObject().keySet();
 
             if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
-                LOGGER.warn("Found " + keysAssociation.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysAssociation.size() + " in association rather than the expected "
                         + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
                 LOGGER.warn(keysAssociation);
             }
@@ -330,8 +330,7 @@ public final class ViccJsonReader {
                 Set<String> keysCgi = objectCgi.keySet();
 
                 if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
-                    LOGGER.warn(
-                            "Found " + keysCgi.size() + " elements in a vicc entry rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysCgi.size() + " in cgi rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
                     LOGGER.warn(keysCgi);
                 }
             }
@@ -340,8 +339,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("brca")) {
                 Set<String> keysBRCA = objectBRCA.keySet();
                 if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
-                    LOGGER.warn("Found " + keysBRCA.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_BRCA_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysBRCA.size() + " in brca rather than the expected " + EXPECTED_BRCA_ELEMENT_SIZES);
                     LOGGER.warn(keysBRCA);
                 }
             }
@@ -350,8 +348,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("sage")) {
                 Set<String> keysSage = objectSage.keySet();
                 if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
-                    LOGGER.warn("Found " + keysSage.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_SAGE_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysSage.size() + " in sage rather than the expected " + EXPECTED_SAGE_ELEMENT_SIZES);
                     LOGGER.warn(keysSage);
                 }
             }
@@ -360,8 +357,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("pmkb")) {
                 Set<String> keysPmkb = objectPmkb.keySet();
                 if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
-                    LOGGER.warn("Found " + keysPmkb.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_PMKB_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysPmkb.size() + " in pmkb rather than the expected " + EXPECTED_PMKB_ELEMENT_SIZES);
                     LOGGER.warn(keysPmkb);
                 }
             }
@@ -370,8 +366,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("oncokb")) {
                 Set<String> keysOncokb = objectOncokb.keySet();
                 if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
-                    LOGGER.warn("Found " + keysOncokb.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_ONCOKB_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysOncokb.size() + " in oncokb rather than the expected " + EXPECTED_ONCOKB_ELEMENT_SIZES);
                     LOGGER.warn(keysOncokb);
                 }
             }
@@ -380,8 +375,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("jax")) {
                 Set<String> keysJax = objectJax.keySet();
                 if (!EXPECTED_JAX_ELEMENT_SIZES.contains(keysJax.size())) {
-                    LOGGER.warn(
-                            "Found " + keysJax.size() + " elements in a vicc entry rather than the expected " + EXPECTED_JAX_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysJax.size() + " in jax rather than the expected " + EXPECTED_JAX_ELEMENT_SIZES);
                     LOGGER.warn(keysJax);
                 }
             }
@@ -391,7 +385,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("jax_trials")) {
                 Set<String> keysJaxTrials = objectJaxTrials.keySet();
                 if (!EXPECTED_JAX_TRIALS_ELEMENT_SIZES.contains(keysJaxTrials.size())) {
-                    LOGGER.warn("Found " + keysJaxTrials.size() + " elements in a vicc entry rather than the expected "
+                    LOGGER.warn("Found " + keysJaxTrials.size() + " in jax trials rather than the expected "
                             + EXPECTED_JAX_TRIALS_ELEMENT_SIZES);
                     LOGGER.warn(keysJaxTrials);
                 }
@@ -401,7 +395,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("molecularmatch")) {
                 Set<String> keysMolecularMatch = objectMolecularMatch.keySet();
                 if (!EXPECTED_MOLECULARMATCH_ELEMENT_SIZES.contains(keysMolecularMatch.size())) {
-                    LOGGER.warn("Found " + keysMolecularMatch.size() + " elements in a vicc entry rather than the expected "
+                    LOGGER.warn("Found " + keysMolecularMatch.size() + " in molecular match rather than the expected "
                             + EXPECTED_MOLECULARMATCH_ELEMENT_SIZES);
                     LOGGER.warn(keysMolecularMatch);
                 }
@@ -411,7 +405,7 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("molecularmatch_trials")) {
                 Set<String> keysMolecularMatchTrials = objectMolecularMatchTrials.keySet();
                 if (!EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES.contains(keysMolecularMatchTrials.size())) {
-                    LOGGER.warn("Found " + keysMolecularMatchTrials.size() + " elements in a vicc entry rather than the expected "
+                    LOGGER.warn("Found " + keysMolecularMatchTrials.size() + " in molecular match trials rather than the expected "
                             + EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES);
                     LOGGER.warn(keysMolecularMatchTrials);
                 }
@@ -421,12 +415,10 @@ public final class ViccJsonReader {
             if (viccEntryObject.has("civic")) {
                 Set<String> keysCivic = objectCivic.keySet();
                 if (!EXPECTED_CIVIC_ELEMENT_SIZES.contains(keysCivic.size())) {
-                    LOGGER.warn("Found " + keysCivic.size() + " elements in a vicc entry rather than the expected "
-                            + EXPECTED_CIVIC_ELEMENT_SIZES);
+                    LOGGER.warn("Found " + keysCivic.size() + " in civic rather than the expected " + EXPECTED_CIVIC_ELEMENT_SIZES);
                     LOGGER.warn(keysCivic);
                 }
             }
-
 
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
@@ -496,7 +488,7 @@ public final class ViccJsonReader {
     private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
         Set<String> keysCoordinates = objectCoordinates.keySet();
         if (!EXPECTED_CIVIC_COORDINATES_SIZES.contains(keysCoordinates.size())) {
-            LOGGER.warn("Found " + keysCoordinates.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysCoordinates.size() + " in civic coordinates rather than the expectedd "
                     + EXPECTED_CIVIC_COORDINATES_SIZES);
             LOGGER.warn(keysCoordinates);
         }
@@ -537,7 +529,7 @@ public final class ViccJsonReader {
         for (JsonElement evideneItem : evidenceItemsArray) {
             Set<String> keysEvidenceItems = evideneItem.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES.contains(keysEvidenceItems.size())) {
-                LOGGER.warn("Found " + keysEvidenceItems.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysEvidenceItems.size() + " in civic evidence items rather than the expected "
                         + EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES);
                 LOGGER.warn(keysEvidenceItems);
             }
@@ -554,7 +546,9 @@ public final class ViccJsonReader {
                     .openChangeCount(evideneItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
                     .evidenceType(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
                     .drugs(createDrugs(evideneItem.getAsJsonObject().getAsJsonArray("drugs")))
-                    .variantOrigin(evideneItem.getAsJsonObject().get("variant_origin").isJsonNull() ? null : evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
+                    .variantOrigin(evideneItem.getAsJsonObject().get("variant_origin").isJsonNull()
+                            ? null
+                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
                     .disease(createDiseases(evideneItem.getAsJsonObject().getAsJsonObject("disease")))
                     .source(createSource(evideneItem.getAsJsonObject().getAsJsonObject("source")))
                     .evidenceDirection(evideneItem.getAsJsonObject().get("evidence_direction").isJsonNull()
@@ -577,8 +571,7 @@ public final class ViccJsonReader {
     private static CivicSource createSource(@NotNull JsonObject objectSource) {
         Set<String> keysSource = objectSource.keySet();
         if (!EXPECTED_CIVIC_SOURCE_SIZES.contains(keysSource.size())) {
-            LOGGER.warn("Found " + keysSource.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_CIVIC_SOURCE_SIZES);
+            LOGGER.warn("Found " + keysSource.size() + " in civic source rather than the expected " + EXPECTED_CIVIC_SOURCE_SIZES);
             LOGGER.warn(keysSource);
         }
 
@@ -591,7 +584,9 @@ public final class ViccJsonReader {
                 .journal("")
                 .citation("")
                 .pmc_Id(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
-                .fullJournalTitle(objectSource.get("full_journal_title").isJsonNull() ? null : objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
+                .fullJournalTitle(objectSource.get("full_journal_title").isJsonNull()
+                        ? null
+                        : objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
                 .sourceUrl(objectSource.getAsJsonPrimitive("source_url").getAsString())
                 .clinicalTrials(Lists.newArrayList())
                 .pubmedId(objectSource.getAsJsonPrimitive("pubmed_id").getAsString())
@@ -605,13 +600,13 @@ public final class ViccJsonReader {
     private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
         Set<String> keysPublicationDate = objectPublicationDate.keySet();
         if (!EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES.contains(keysPublicationDate.size())) {
-            LOGGER.warn("Found " + keysPublicationDate.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysPublicationDate.size() + " in civic publication date rather than the expected "
                     + EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES);
             LOGGER.warn(keysPublicationDate);
         }
 
         return ImmutableCivicPublicationDate.builder()
-                .year(objectPublicationDate.get("year")== null ? null : objectPublicationDate.getAsJsonPrimitive("year").getAsString())
+                .year(objectPublicationDate.get("year") == null ? null : objectPublicationDate.getAsJsonPrimitive("year").getAsString())
                 .day(!objectPublicationDate.has("day") ? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
                 .month(!objectPublicationDate.has("month") ? null : objectPublicationDate.getAsJsonPrimitive("month").getAsString())
                 .build();
@@ -621,8 +616,7 @@ public final class ViccJsonReader {
     private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
         Set<String> keysDisease = objectDisease.keySet();
         if (!EXPECTED_CIVIC_DISEASES_SIZES.contains(keysDisease.size())) {
-            LOGGER.warn("Found " + keysDisease.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_CIVIC_DISEASES_SIZES);
+            LOGGER.warn("Found " + keysDisease.size() + " in civic disease rather than the expected " + EXPECTED_CIVIC_DISEASES_SIZES);
             LOGGER.warn(keysDisease);
         }
 
@@ -641,8 +635,7 @@ public final class ViccJsonReader {
         for (JsonElement drug : arrayDrugs) {
             Set<String> keysDrugs = drug.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_DRUGS_SIZES.contains(keysDrugs.size())) {
-                LOGGER.warn("Found " + keysDrugs.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_CIVIC_DRUGS_SIZES);
+                LOGGER.warn("Found " + keysDrugs.size() + " in civic drugs rather than the expected " + EXPECTED_CIVIC_DRUGS_SIZES);
                 LOGGER.warn(keysDrugs);
             }
 
@@ -661,7 +654,7 @@ public final class ViccJsonReader {
     private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
         Set<String> keysLifecycleActions = objectLifeCycleActions.keySet();
         if (!EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES.contains(keysLifecycleActions.size())) {
-            LOGGER.warn("Found " + keysLifecycleActions.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysLifecycleActions.size() + " in civic lifecycle actions rather than the expected "
                     + EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES);
             LOGGER.warn(keysLifecycleActions);
         }
@@ -683,7 +676,7 @@ public final class ViccJsonReader {
     private static CivicLastCommentedOn createLastCommentOn(@NotNull JsonObject objectLastCommned) {
         Set<String> keysLastCommentedOn = objectLastCommned.keySet();
         if (!EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES.contains(keysLastCommentedOn.size())) {
-            LOGGER.warn("Found " + keysLastCommentedOn.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysLastCommentedOn.size() + " in civic last commented on rather than the expected "
                     + EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES);
             LOGGER.warn(keysLastCommentedOn);
         }
@@ -698,7 +691,7 @@ public final class ViccJsonReader {
     private static CivicLastModified createLastModified(@NotNull JsonObject objectLastModified) {
         Set<String> keysLastModified = objectLastModified.keySet();
         if (!EXPECTED_CIVIC_LAST_MODIFIED_SIZES.contains(keysLastModified.size())) {
-            LOGGER.warn("Found " + keysLastModified.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysLastModified.size() + " in civic last modified rather than the expected"
                     + EXPECTED_CIVIC_LAST_MODIFIED_SIZES);
             LOGGER.warn(keysLastModified);
         }
@@ -713,7 +706,7 @@ public final class ViccJsonReader {
     private static CivicLastReviewed createLastReviewed(@NotNull JsonObject objectLastReviewed) {
         Set<String> keysLastReviewed = objectLastReviewed.keySet();
         if (!EXPECTED_CIVIC_LAST_REVIEWED_SIZES.contains(keysLastReviewed.size())) {
-            LOGGER.warn("Found " + keysLastReviewed.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysLastReviewed.size() + " in civic last reviewed rather than the expected "
                     + EXPECTED_CIVIC_LAST_REVIEWED_SIZES);
             LOGGER.warn(keysLastReviewed);
         }
@@ -728,8 +721,7 @@ public final class ViccJsonReader {
     private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
         Set<String> keysUser = objectUser.keySet();
         if (!EXPECTED_CIVIC_USER_SIZES.contains(keysUser.size())) {
-            LOGGER.warn("Found " + keysUser.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_CIVIC_USER_SIZES);
+            LOGGER.warn("Found " + keysUser.size() + " in civic user rather than the expected " + EXPECTED_CIVIC_USER_SIZES);
             LOGGER.warn(keysUser);
         }
 
@@ -739,7 +731,9 @@ public final class ViccJsonReader {
                         ? null
                         : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
                 .organization(createOrganization(objectUser.getAsJsonObject("organization")))
-                .twitterHandle(objectUser.get("twitter_handle").isJsonNull() ? null : objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
+                .twitterHandle(objectUser.get("twitter_handle").isJsonNull()
+                        ? null
+                        : objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
                 .name(objectUser.getAsJsonPrimitive("name").getAsString())
                 .bio(objectUser.get("bio").isJsonNull() ? null : objectUser.getAsJsonPrimitive("bio").getAsString())
                 .url(objectUser.get("url").isJsonNull() ? null : objectUser.getAsJsonPrimitive("url").getAsString())
@@ -774,7 +768,7 @@ public final class ViccJsonReader {
     private static CivicOrganization createOrganization(@NotNull JsonObject objectOrganization) {
         Set<String> keysOrganization = objectOrganization.keySet();
         if (!EXPECTED_CIVIC_ORGANIZATION_SIZES.contains(keysOrganization.size())) {
-            LOGGER.warn("Found " + keysOrganization.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysOrganization.size() + " in civic organization rather than the expected "
                     + EXPECTED_CIVIC_ORGANIZATION_SIZES);
             LOGGER.warn(keysOrganization);
         }
@@ -794,7 +788,7 @@ public final class ViccJsonReader {
     private static CivicProfileImage createProfileImage(@NotNull JsonObject objectProfileImage) {
         Set<String> keysProfileImage = objectProfileImage.keySet();
         if (!EXPECTED_CIVIC_PROFILE_IMAGE_SIZES.contains(keysProfileImage.size())) {
-            LOGGER.warn("Found " + keysProfileImage.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysProfileImage.size() + " in civic profile image rather than the expected "
                     + EXPECTED_CIVIC_PROFILE_IMAGE_SIZES);
             LOGGER.warn(keysProfileImage);
         }
@@ -812,8 +806,7 @@ public final class ViccJsonReader {
     private static CivicAvatars createAvatars(@NotNull JsonObject objectAvatars) {
         Set<String> keysAvatars = objectAvatars.keySet();
         if (!EXPECTED_CIVIC_AVATARS_SIZES.contains(keysAvatars.size())) {
-            LOGGER.warn("Found " + keysAvatars.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_CIVIC_AVATARS_SIZES);
+            LOGGER.warn("Found " + keysAvatars.size() + " in civic avatars rather than the expected " + EXPECTED_CIVIC_AVATARS_SIZES);
             LOGGER.warn(keysAvatars);
         }
 
@@ -831,7 +824,7 @@ public final class ViccJsonReader {
         for (JsonElement variantTypes : arrayvariantTypes) {
             Set<String> keysVariantTypes = variantTypes.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTTYPES_SIZES.contains(keysVariantTypes.size())) {
-                LOGGER.warn("Found " + keysVariantTypes.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysVariantTypes.size() + " in civic variant types rather than the expected "
                         + EXPECTED_CIVIC_VARIANTTYPES_SIZES);
                 LOGGER.warn(keysVariantTypes);
             }
@@ -882,7 +875,7 @@ public final class ViccJsonReader {
         for (JsonElement location : arrayLocations) {
             Set<String> keysLocation = location.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES.contains(keysLocation.size())) {
-                LOGGER.warn("Found " + keysLocation.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysLocation.size() + " in molecular match trials locations rather than the expected"
                         + EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES);
                 LOGGER.warn(keysLocation);
             }
@@ -971,7 +964,7 @@ public final class ViccJsonReader {
         for (JsonElement intervation : intervationsArray) {
             Set<String> keysClinical = intervation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES.contains(keysClinical.size())) {
-                LOGGER.warn("Found " + keysClinical.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysClinical.size() + " in molecular match trials intervation rather than the expected "
                         + EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES);
                 LOGGER.warn(keysClinical);
             }
@@ -1022,7 +1015,7 @@ public final class ViccJsonReader {
     private static MolecularMatchTrialsOverallContact createMolecularMatchTrialsOverallContact(@NotNull JsonObject overallContactObject) {
         Set<String> keysOverallContact = overallContactObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES.contains(keysOverallContact.size())) {
-            LOGGER.warn("Found " + keysOverallContact.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysOverallContact.size() + " in molecular match trials overall contact rather than the expected "
                     + EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES);
             LOGGER.warn(keysOverallContact);
         }
@@ -1054,7 +1047,7 @@ public final class ViccJsonReader {
     private static MolecularMatchTrialsGeo createMolecularMatchTrialsGeo(@NotNull JsonObject geoObject) {
         Set<String> keySGeo = geoObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES.contains(keySGeo.size())) {
-            LOGGER.warn("Found " + keySGeo.size() + " elements in geo of molecular match trials object rather than the expected "
+            LOGGER.warn("Found " + keySGeo.size() + " in molecular match trials geo rather than the expected "
                     + EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES);
             LOGGER.warn(keySGeo);
         }
@@ -1068,7 +1061,7 @@ public final class ViccJsonReader {
     private static MolecularMatchTrialsLocation createMolecularMatchTrialsLocation(@NotNull JsonObject locationObject) {
         Set<String> keysLocation = locationObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES.contains(keysLocation.size())) {
-            LOGGER.warn("Found " + keysLocation.size() + " elements in location of molecular match trials object rather than the expected "
+            LOGGER.warn("Found " + keysLocation.size() + " in molecular match trials location rather than the expected "
                     + EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES);
             LOGGER.warn(keysLocation);
         }
@@ -1082,7 +1075,7 @@ public final class ViccJsonReader {
     private static MolecularMatchTrialsContact createMolecularMatchTrialsContact(@NotNull JsonObject contactObject) {
         Set<String> keysContact = contactObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES.contains(keysContact.size())) {
-            LOGGER.warn("Found " + keysContact.size() + " elements in contact of molecular match trials object rather than the expected "
+            LOGGER.warn("Found " + keysContact.size() + " in molecular match trials contact rather than the expected "
                     + EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES);
             LOGGER.warn(keysContact);
         }
@@ -1099,7 +1092,7 @@ public final class ViccJsonReader {
         for (JsonElement tag : arrayTags) {
             Set<String> keysTags = tag.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES.contains(keysTags.size())) {
-                LOGGER.warn("Found " + keysTags.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysTags.size() + " ein molecular match trials tags rather than the expected "
                         + EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES);
                 LOGGER.warn(keysTags);
             }
@@ -1190,7 +1183,7 @@ public final class ViccJsonReader {
         for (JsonElement therapeuticContext : arrayTherapeuticContext) {
             Set<String> keysTherapeuticContext = therapeuticContext.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES.contains(keysTherapeuticContext.size())) {
-                LOGGER.warn("Found " + keysTherapeuticContext.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysTherapeuticContext.size() + " in molecular match therapeutic context rather than the expected "
                         + EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
                 LOGGER.warn(keysTherapeuticContext);
             }
@@ -1212,7 +1205,7 @@ public final class ViccJsonReader {
         for (JsonElement classification : objectClassifications) {
             Set<String> keysClassification = classification.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES.contains(keysClassification.size())) {
-                LOGGER.warn("Found " + keysClassification.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysClassification.size() + " in molecular match classification rather than the expected "
                         + EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
                 LOGGER.warn(keysClassification);
             }
@@ -1311,7 +1304,7 @@ public final class ViccJsonReader {
         for (JsonElement tags : arrayTags) {
             Set<String> keysTags = tags.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TAGS_SIZES.contains(keysTags.size())) {
-                LOGGER.warn("Found " + keysTags.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysTags.size() + " in molecular match tags rather than the expected "
                         + EXPECTED_MOLECULARMATCH_TAGS_SIZES);
                 LOGGER.warn(keysTags);
             }
@@ -1348,7 +1341,7 @@ public final class ViccJsonReader {
         for (JsonElement tierExplanation : arrarTierExplanation) {
             Set<String> keysTierExplanation = tierExplanation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES.contains(keysTierExplanation.size())) {
-                LOGGER.warn("Found " + keysTierExplanation.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysTierExplanation.size() + " in molecular match tier explanation rather than the expected "
                         + EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES);
                 LOGGER.warn(keysTierExplanation);
             }
@@ -1370,7 +1363,7 @@ public final class ViccJsonReader {
         for (JsonElement variantInfo : arrayVariantInfo) {
             Set<String> keysVariantInfo = variantInfo.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES.contains(keysVariantInfo.size())) {
-                LOGGER.warn("Found " + keysVariantInfo.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysVariantInfo.size() + " in molecular match variant info rather than the expected "
                         + EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES);
                 LOGGER.warn(keysVariantInfo);
             }
@@ -1399,7 +1392,7 @@ public final class ViccJsonReader {
         for (JsonElement locations : arrayLocations) {
             Set<String> keysLocations = locations.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES.contains(keysLocations.size())) {
-                LOGGER.warn("Found " + keysLocations.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysLocations.size() + " in molecular match locations rather than the expected "
                         + EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES);
                 LOGGER.warn(keysLocations);
             }
@@ -1440,7 +1433,7 @@ public final class ViccJsonReader {
         Set<String> keysAst = objectAst.keySet();
         if (!EXPECTED_MOLECULARMATCH_AST_SIZES.contains(keysAst.size())) {
             LOGGER.warn(
-                    "Found " + keysAst.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_AST_SIZES);
+                    "Found " + keysAst.size() + " in molecular match ast rather than the expected " + EXPECTED_MOLECULARMATCH_AST_SIZES);
             LOGGER.warn(keysAst);
         }
 
@@ -1458,7 +1451,7 @@ public final class ViccJsonReader {
     private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
         Set<String> keysLeft = objectLeft.keySet();
         if (!EXPECTED_MOLECULARMATCH_LEFT_SIZES.contains(keysLeft.size())) {
-            LOGGER.warn("Found " + keysLeft.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysLeft.size() + " in molecular match ast left rather than the expected "
                     + EXPECTED_MOLECULARMATCH_LEFT_SIZES);
             LOGGER.warn(keysLeft);
         }
@@ -1474,7 +1467,7 @@ public final class ViccJsonReader {
     private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
         Set<String> keysRight = objectRight.keySet();
         if (!EXPECTED_MOLECULARMATCH_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right rather than the expected "
                     + EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
             LOGGER.warn(keysRight);
         }
@@ -1489,7 +1482,7 @@ public final class ViccJsonReader {
         for (JsonElement source : arraySources) {
             Set<String> keysSource = source.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_SOURCE_SIZES.contains(keysSource.size())) {
-                LOGGER.warn("Found " + keysSource.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysSource.size() + " in molecular match source rather than the expected "
                         + EXPECTED_MOLECULARMATCH_SOURCE_SIZES);
                 LOGGER.warn(keysSource);
             }
@@ -1525,7 +1518,7 @@ public final class ViccJsonReader {
         for (JsonElement criteriaUnmet : arrayCriteriaUnmet) {
             Set<String> keysCriteriaUnmet = criteriaUnmet.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES.contains(keysCriteriaUnmet.size())) {
-                LOGGER.warn("Found " + keysCriteriaUnmet.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysCriteriaUnmet.size() + " in molecular match criteria unmet rather than the expected "
                         + EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES);
                 LOGGER.warn(keysCriteriaUnmet);
             }
@@ -1561,7 +1554,7 @@ public final class ViccJsonReader {
         for (JsonElement prevelance : arrayPrevelance) {
             Set<String> keysPrevalence = prevelance.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES.contains(keysPrevalence.size())) {
-                LOGGER.warn("Found " + keysPrevalence.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysPrevalence.size() + " in molecular match prevalence rather than the expected "
                         + EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES);
                 LOGGER.warn(keysPrevalence);
             }
@@ -1589,7 +1582,7 @@ public final class ViccJsonReader {
         for (JsonElement mutation : arrayMutations) {
             Set<String> keysMutations = mutation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES.contains(keysMutations.size())) {
-                LOGGER.warn("Found " + keysMutations.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysMutations.size() + " in molecular match mutations rather than the expected "
                         + EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES);
                 LOGGER.warn(keysMutations);
             }
@@ -1636,7 +1629,7 @@ public final class ViccJsonReader {
         for (JsonElement location : arrayLocation) {
             Set<String> keysLocation = location.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES.contains(keysLocation.size())) {
-                LOGGER.warn("Found " + keysLocation.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysLocation.size() + " in molecular match grch37 location rather than the expected "
                         + EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES);
                 LOGGER.warn(keysLocation);
             }
@@ -1674,7 +1667,8 @@ public final class ViccJsonReader {
         for (JsonElement transcriptConsequences : arrayTranscriptConsequence) {
             Set<String> keysTranscriptConsequences = transcriptConsequences.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES.contains(keysTranscriptConsequences.size())) {
-                LOGGER.warn("Found " + keysTranscriptConsequences.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysTranscriptConsequences.size()
+                        + " in molecular match transcript consequences grch37 rather than the expected "
                         + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES);
                 LOGGER.warn(keysTranscriptConsequences);
             }
@@ -1704,8 +1698,9 @@ public final class ViccJsonReader {
         for (JsonElement transcriptConsequence : arrayTranscriptConsequence) {
             Set<String> keysTranscriptConsequence = transcriptConsequence.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES.contains(keysTranscriptConsequence.size())) {
-                LOGGER.warn("Found " + keysTranscriptConsequence.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES);
+                LOGGER.warn(
+                        "Found " + keysTranscriptConsequence.size() + " in molecular match transcript consequence rather than the expected "
+                                + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES);
                 LOGGER.warn(keysTranscriptConsequence);
             }
 
@@ -1770,7 +1765,7 @@ public final class ViccJsonReader {
         for (JsonElement indications : arrayIndications) {
             Set<String> keysIndications = indications.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES.contains(keysIndications.size())) {
-                LOGGER.warn("Found " + keysIndications.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysIndications.size() + " in jax trials indications rather than the expected "
                         + EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES);
                 LOGGER.warn(keysIndications);
             }
@@ -1790,7 +1785,7 @@ public final class ViccJsonReader {
         for (JsonElement variantRequirementDetails : arrarVariantRequirementDetails) {
             Set<String> keysRequirementDetails = variantRequirementDetails.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES.contains(keysRequirementDetails.size())) {
-                LOGGER.warn("Found " + keysRequirementDetails.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysRequirementDetails.size() + " in jax trials requirement details rather than the expected "
                         + EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES);
                 LOGGER.warn(keysRequirementDetails);
             }
@@ -1809,7 +1804,7 @@ public final class ViccJsonReader {
 
         Set<String> keysMolecularProfile = objectMolecularProfile.keySet();
         if (!EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES.contains(keysMolecularProfile.size())) {
-            LOGGER.warn("Found " + keysMolecularProfile.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysMolecularProfile.size() + " in jax trials molecular profile rather than the expected "
                     + EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES);
             LOGGER.warn(keysMolecularProfile);
         }
@@ -1827,7 +1822,7 @@ public final class ViccJsonReader {
         for (JsonElement therapies : arrayTherapies) {
             Set<String> keysTherapies = therapies.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES.contains(keysTherapies.size())) {
-                LOGGER.warn("Found " + keysTherapies.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysTherapies.size() + " in jax trials therapies rather than the expected "
                         + EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES);
                 LOGGER.warn(keysTherapies);
             }
@@ -1859,7 +1854,7 @@ public final class ViccJsonReader {
     private static JaxMolecularProfile createMolecularProfile(@NotNull JsonObject objectMolecularProfile) {
         Set<String> keysMolecularProfile = objectMolecularProfile.keySet();
         if (!EXPECTED_JAX_MOLECULAR_PROFILE_ELEMENT_SIZES.contains(keysMolecularProfile.size())) {
-            LOGGER.warn("Found " + keysMolecularProfile.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysMolecularProfile.size() + " in jax molecular profile rather than the expected "
                     + EXPECTED_JAX_MOLECULAR_PROFILE_ELEMENT_SIZES);
             LOGGER.warn(keysMolecularProfile);
         }
@@ -1873,8 +1868,7 @@ public final class ViccJsonReader {
     private static JaxTherapy createJaxTherapy(@NotNull JsonObject objectTherapy) {
         Set<String> keysTherapy = objectTherapy.keySet();
         if (!EXPECTED_JAX_THERAPY_ELEMENT_SIZES.contains(keysTherapy.size())) {
-            LOGGER.warn("Found " + keysTherapy.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_JAX_THERAPY_ELEMENT_SIZES);
+            LOGGER.warn("Found " + keysTherapy.size() + " in jax therapy rather than the expected " + EXPECTED_JAX_THERAPY_ELEMENT_SIZES);
             LOGGER.warn(keysTherapy);
         }
         return ImmutableJaxTherapy.builder()
@@ -1887,8 +1881,8 @@ public final class ViccJsonReader {
     private static JaxIndications createJaxIndications(@NotNull JsonObject objectIndications) {
         Set<String> keysIndications = objectIndications.keySet();
         if (!EXPECTED_JAX_INDICATIONS_SIZES.contains(keysIndications.size())) {
-            LOGGER.warn("Found " + keysIndications.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_JAX_INDICATIONS_SIZES);
+            LOGGER.warn(
+                    "Found " + keysIndications.size() + " in jax indications rather than the expected " + EXPECTED_JAX_INDICATIONS_SIZES);
             LOGGER.warn(keysIndications);
         }
         return ImmutableJaxIndications.builder()
@@ -1904,7 +1898,7 @@ public final class ViccJsonReader {
         for (JsonElement references : objectReferences) {
             Set<String> keysReferences = references.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_REFERENCES_ELEMENT_SIZES.contains(keysReferences.size())) {
-                LOGGER.warn("Found " + keysReferences.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysReferences.size() + " in jax references rather than the expected "
                         + EXPECTED_JAX_REFERENCES_ELEMENT_SIZES);
                 LOGGER.warn(keysReferences);
             }
@@ -1934,7 +1928,7 @@ public final class ViccJsonReader {
     private static OncoKbClinical createClinicalOncoKb(@NotNull JsonObject objectClinical) {
         Set<String> keysClinical = objectClinical.keySet();
         if (!EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES.contains(keysClinical.size())) {
-            LOGGER.warn("Found " + keysClinical.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysClinical.size() + " in oncokb clinical rather than the expected "
                     + EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES);
             LOGGER.warn(keysClinical);
         }
@@ -1961,7 +1955,7 @@ public final class ViccJsonReader {
             Set<String> keysBiological = drugAbstracts.getAsJsonObject().keySet();
 
             if (!EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES.contains(keysBiological.size())) {
-                LOGGER.warn("Found " + keysBiological.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysBiological.size() + " in oncokb drugs abstracts rather than the expected "
                         + EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES);
                 LOGGER.warn(keysBiological);
             }
@@ -1977,7 +1971,7 @@ public final class ViccJsonReader {
     private static OncoKbBiological createBiologicalOncoKb(@NotNull JsonObject objectBiological) {
         Set<String> keysBiological = objectBiological.keySet();
         if (!EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES.contains(keysBiological.size())) {
-            LOGGER.warn("Found " + keysBiological.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysBiological.size() + " in oncokb biological rather than the expected "
                     + EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES);
             LOGGER.warn(keysBiological);
         }
@@ -2000,8 +1994,8 @@ public final class ViccJsonReader {
         Set<String> keysVariant = objectVariant.keySet();
 
         if (!EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
-            LOGGER.warn("Found " + keysVariant.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES);
+            LOGGER.warn(
+                    "Found " + keysVariant.size() + " in oncokb variant rather than the expected" + EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES);
             LOGGER.warn(keysVariant);
         }
 
@@ -2026,7 +2020,7 @@ public final class ViccJsonReader {
         Set<String> keysConsequence = objectConsequence.keySet();
 
         if (!EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES.contains(keysConsequence.size())) {
-            LOGGER.warn("Found " + keysConsequence.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysConsequence.size() + " in oncokb consequence rather than the expected "
                     + EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES);
             LOGGER.warn(keysConsequence);
         }
@@ -2043,8 +2037,7 @@ public final class ViccJsonReader {
         Set<String> keysGene = objectGene.keySet();
 
         if (!EXPECTED_ONCOKB_GENE_ELEMENT_SIZES.contains(keysGene.size())) {
-            LOGGER.warn("Found " + keysGene.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_ONCOKB_GENE_ELEMENT_SIZES);
+            LOGGER.warn("Found " + keysGene.size() + " in oncokb gene rather than the expected " + EXPECTED_ONCOKB_GENE_ELEMENT_SIZES);
             LOGGER.warn(keysGene);
         }
 
@@ -2077,8 +2070,7 @@ public final class ViccJsonReader {
     private static List<PmkbTumor> createTumor(@NotNull JsonObject tumor) {
         Set<String> keysTumor = tumor.keySet();
         if (!EXPECTED_PMKB_TUMOR_ELEMENT_SIZES.contains(keysTumor.size())) {
-            LOGGER.warn("Found " + keysTumor.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_PMKB_TUMOR_ELEMENT_SIZES);
+            LOGGER.warn("Found " + keysTumor.size() + " in pmkb tumor rather than the expected " + EXPECTED_PMKB_TUMOR_ELEMENT_SIZES);
             LOGGER.warn(keysTumor);
         }
 
@@ -2098,8 +2090,8 @@ public final class ViccJsonReader {
         for (JsonElement tissue : tissues) {
             Set<String> keysTissue = tissue.getAsJsonObject().keySet();
             if (!EXPECTED_PMKB_TISSUE_ELEMENT_SIZES.contains(keysTissue.size())) {
-                LOGGER.warn("Found " + keysTissue.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
+                LOGGER.warn(
+                        "Found " + keysTissue.size() + " in pmkb tissue rather than the expected " + EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
                 LOGGER.warn(keysTissue);
             }
             listTissue.add(ImmutablePmkbTissue.builder()
@@ -2114,8 +2106,7 @@ public final class ViccJsonReader {
     private static List<PmkbVariant> createVariantPmkb(@NotNull JsonObject variant) {
         Set<String> keysVariant = variant.keySet();
         if (!EXPECTED_PMKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
-            LOGGER.warn("Found " + keysVariant.size() + " elements in a vicc entry rather than the expected "
-                    + EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
+            LOGGER.warn("Found " + keysVariant.size() + " in pmkb variant rather than the expected " + EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
             LOGGER.warn(keysVariant);
         }
         return Lists.newArrayList(ImmutablePmkbVariant.builder()
@@ -2151,8 +2142,7 @@ public final class ViccJsonReader {
 
         Set<String> keysgene = gene.keySet();
         if (!EXPECTED_PMKB_GENE_ELEMENT_SIZES.contains(keysgene.size())) {
-            LOGGER.warn(
-                    "Found " + keysgene.size() + " elements in a vicc entry rather than the expected " + EXPECTED_PMKB_GENE_ELEMENT_SIZES);
+            LOGGER.warn("Found " + keysgene.size() + " in pmkb gene rather than the expected " + EXPECTED_PMKB_GENE_ELEMENT_SIZES);
             LOGGER.warn(keysgene);
         }
 
@@ -2380,8 +2370,7 @@ public final class ViccJsonReader {
             JsonObject objectFeatures = elementFeature.getAsJsonObject();
             Set<String> keysFeatures = objectFeatures.keySet();
             if (!EXPECTED_FEATURES_ELEMENT_SIZES.contains(keysFeatures.size())) {
-                LOGGER.warn("Found " + keysFeatures.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_FEATURES_ELEMENT_SIZES);
+                LOGGER.warn("Found " + keysFeatures.size() + " in feature rather than the expected " + EXPECTED_FEATURES_ELEMENT_SIZES);
                 LOGGER.warn(keysFeatures);
             }
             featureList.add(ImmutableFeature.builder()
@@ -2423,7 +2412,7 @@ public final class ViccJsonReader {
     private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
         Set<String> keysSequenceOntology = objectSequenceOntology.keySet();
         if (!EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES.contains(keysSequenceOntology.size())) {
-            LOGGER.warn("Found " + keysSequenceOntology.size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + keysSequenceOntology.size() + " in sequence ontology rather than the expected "
                     + EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES);
             LOGGER.warn(keysSequenceOntology);
         }
@@ -2447,7 +2436,7 @@ public final class ViccJsonReader {
         for (JsonElement elementGeneIdentifier : geneIdentifiers) {
             Set<String> keysGeneIdentifier = elementGeneIdentifier.getAsJsonObject().keySet();
             if (!EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
-                LOGGER.warn("Found " + keysGeneIdentifier.size() + " elements in a vicc entry rather than the expected "
+                LOGGER.warn("Found " + keysGeneIdentifier.size() + " in gene identifier rather than the expected "
                         + EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES);
                 LOGGER.warn(keysGeneIdentifier);
             }
@@ -2556,8 +2545,7 @@ public final class ViccJsonReader {
             JsonObject evidenceObject = evidenceElement.getAsJsonObject();
             Set<String> keysEvidence = evidenceObject.keySet();
             if (!EXPECTED_EVIDENCE_ELEMENT_SIZES.contains(keysEvidence.size())) {
-                LOGGER.warn("Found " + keysEvidence.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_EVIDENCE_ELEMENT_SIZES);
+                LOGGER.warn("Found " + keysEvidence.size() + " in evidence rather than the expected " + EXPECTED_EVIDENCE_ELEMENT_SIZES);
                 LOGGER.warn(keysEvidence);
             }
 
@@ -2574,7 +2562,7 @@ public final class ViccJsonReader {
     @NotNull
     private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
         if (!EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES.contains(evidenceTypeObject.keySet().size())) {
-            LOGGER.warn("Found " + evidenceTypeObject.keySet().size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + evidenceTypeObject.keySet().size() + " in evidence type rather than the expected "
                     + EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
             LOGGER.warn(evidenceTypeObject.keySet());
         }
@@ -2587,7 +2575,7 @@ public final class ViccJsonReader {
     @NotNull
     private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
         if (!EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES.contains(evidenceInfoObject.keySet().size())) {
-            LOGGER.warn("Found " + evidenceInfoObject.keySet().size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + evidenceInfoObject.keySet().size() + " in evidence info rather than the expected "
                     + EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
             LOGGER.warn(evidenceInfoObject.keySet());
         }
@@ -2599,7 +2587,7 @@ public final class ViccJsonReader {
     @NotNull
     private static Phenotype createPhenotype(@NotNull JsonObject phenotypeObject) {
         if (!EXPECTED_PHENOTYPE_ELEMENT_SIZES.contains(phenotypeObject.keySet().size())) {
-            LOGGER.warn("Found " + phenotypeObject.keySet().size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + phenotypeObject.keySet().size() + " in phenotype rather than the expected "
                     + EXPECTED_PHENOTYPE_ELEMENT_SIZES);
             LOGGER.warn(phenotypeObject.keySet());
         }
@@ -2614,7 +2602,7 @@ public final class ViccJsonReader {
     @NotNull
     private static PhenotypeType createPhenotypeType(JsonObject phenotypeTypeObject) {
         if (!EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES.contains(phenotypeTypeObject.keySet().size())) {
-            LOGGER.warn("Found " + phenotypeTypeObject.keySet().size() + " elements in a vicc entry rather than the expected "
+            LOGGER.warn("Found " + phenotypeTypeObject.keySet().size() + " in phenotype type rather than the expected "
                     + EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES);
             LOGGER.warn(phenotypeTypeObject.keySet());
         }
