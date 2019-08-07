@@ -27,24 +27,24 @@ public class ViccJsonToSQLImporter {
 
         final String baseDir =
                 System.getProperty("user.home") + File.separator + "hmf" + File.separator + "projects" + File.separator + "vicc";
-        final String inputFile = baseDir + File.separator + "civic.json";
+        final String inputFile = baseDir + File.separator + "molecularmatch.json";
 
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
 
         LOGGER.info("DONE!");
 
-        ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
-
-        viccDAO.deleteAll();
-        int count = 0;
-        for (ViccEntry viccEntry : viccEntries) {
-            viccDAO.writeViccEntry(viccEntry);
-            count++;
-            if (count % 1000 == 0) {
-                LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
-            }
-        }
+//        ViccDAO viccDAO = ViccDAO.connectToViccDAO("build", "build", "jdbc:mysql://localhost:3306/vicc_db?serverTimezone=CET");
+//
+//        viccDAO.deleteAll();
+//        int count = 0;
+//        for (ViccEntry viccEntry : viccEntries) {
+//            viccDAO.writeViccEntry(viccEntry);
+//            count++;
+//            if (count % 1000 == 0) {
+//                LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
+//            }
+//        }
     }
 
     private static void analyzeViccEntries(@NotNull List<ViccEntry> viccEntries) {

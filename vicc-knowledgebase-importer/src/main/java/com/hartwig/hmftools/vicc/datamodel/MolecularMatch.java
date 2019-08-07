@@ -86,7 +86,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract String guidelineVersion();
 
     @Nullable
-    public abstract String institution();
+    public abstract List<String> institution();
 
     @NotNull
     public abstract String tier();

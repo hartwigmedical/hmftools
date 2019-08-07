@@ -285,7 +285,7 @@ public final class ViccJsonReader {
         LOGGER.info("Reading VICC knowledgebase from " + jsonPath);
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            LOGGER.info(number);
+        //    LOGGER.info(number);
             number++;
             if (!EXPECTED_VICC_ENTRY_SIZES.contains(viccEntryObject.size())) {
                 LOGGER.warn("Found " + viccEntryObject.size() + " elements in a vicc entry rather than the expected "
@@ -1151,8 +1151,8 @@ public final class ViccJsonReader {
                 .ampcap(objectMolecularMatch.getAsJsonPrimitive("ampcap").getAsString())
                 .asts(createAst(objectMolecularMatch.getAsJsonObject("ast")))
                 .variantInfo(createVariantInfo(objectMolecularMatch.getAsJsonArray("variantInfo")))
-                .guidelineVersion("")
-                .institution("")
+                .guidelineVersion(!objectMolecularMatch.has("guidelineVersion") ? null : objectMolecularMatch.getAsJsonPrimitive("guidelineVersion").getAsString())
+                .institution(!objectMolecularMatch.has("institution") ? null :  jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("institution")))
                 .tier(objectMolecularMatch.getAsJsonPrimitive("tier").getAsString())
                 .tierExplanation(createTierExplanation(objectMolecularMatch.getAsJsonArray("tierExplanation")))
                 .mvld(objectMolecularMatch.getAsJsonPrimitive("mvld").getAsString())
