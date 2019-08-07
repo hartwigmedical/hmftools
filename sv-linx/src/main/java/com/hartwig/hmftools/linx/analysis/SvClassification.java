@@ -388,6 +388,7 @@ public class SvClassification
             cluster.getChains().clear();
 
             SvChain newChain = new SvChain(0);
+            newChain.setPloidyData(chain.ploidy(), chain.ploidyUncertainty());
 
             for (SvLinkedPair pair : chain.getLinkedPairs())
             {
@@ -455,6 +456,7 @@ public class SvClassification
 
             SvChain newChain = new SvChain(0);
             newChain.addLink(newLink, true);
+            newChain.setPloidyData(chain.ploidy(), chain.ploidyUncertainty());
 
             longestTILength = newLink.length();
 

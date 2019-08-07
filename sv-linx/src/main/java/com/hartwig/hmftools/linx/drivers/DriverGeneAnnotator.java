@@ -428,6 +428,13 @@ public class DriverGeneAnnotator
     {
         annotateArmAmplification(dgData);
         annotateBreakendAmplification(dgData, breakendList);
+
+        if(dgData.getEvents().isEmpty())
+        {
+            // otherwise no event
+            DriverGeneEvent event = new DriverGeneEvent(GAIN);
+            dgData.addEvent(event);
+        }
     }
 
     private void annotateArmAmplification(final DriverGeneData dgData)
@@ -578,10 +585,6 @@ public class DriverGeneAnnotator
                 return;
             }
         }
-
-        // otherwise no event
-        DriverGeneEvent event = new DriverGeneEvent(GAIN);
-        dgData.addEvent(event);
     }
 
     private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)

@@ -241,6 +241,8 @@ public class SvChain {
         mLinkSum += chainEnd.getSV().id() + chainStart.getSV().id();
     }
 
+    public void closeChain() { mIsClosedLoop = true; }
+
     public void foldbackChainOnLink(final SvLinkedPair pair1, final SvLinkedPair pair2)
     {
         // validate the links being added

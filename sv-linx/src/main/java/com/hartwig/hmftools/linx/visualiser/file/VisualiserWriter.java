@@ -231,41 +231,33 @@ public class VisualiserWriter
 
                 for (final SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    boolean isRepeat = false;
-
-                    // only log each chain link once, and log how many times the link has been used
-                    for (final SvLinkedPair existingPair : uniquePairs)
-                    {
-                        if (pair.matches(existingPair))
-                        {
-                            isRepeat = true;
-                            break;
-                        }
-                    }
+                    boolean isRepeat = uniquePairs.stream().anyMatch(x -> x.matches(pair));
 
                     if (isRepeat)
                         continue;
 
                     uniquePairs.add(pair);
 
-                    if(chainPloidy == 0)
-                    {
-                        int pairRepeatCount = pair.repeatCount();
+                    double linkPloidy = 0;
 
-                        // check for duplicate links - would only exist in non-identical chains since these have already been removed
+                    if(cluster.requiresReplication() || cluster.getChains().size() > 1)
+                    {
                         for (final SvChain otherChain : cluster.getChains())
                         {
-                            pairRepeatCount += otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
+                            int linkRepeats = (int) otherChain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
+                            linkPloidy += linkRepeats * otherChain.ploidy();
                         }
-
-                        chainPloidy = pairRepeatCount;
+                    }
+                    else
+                    {
+                        linkPloidy = chainPloidy;
                     }
 
                     final SvBreakend beStart = pair.getBreakend(true);
                     final SvBreakend beEnd = pair.getBreakend(false);
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(),
-                            beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), chainPloidy));
+                            beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy));
                 }
 
                 if(!chain.isClosedLoop())

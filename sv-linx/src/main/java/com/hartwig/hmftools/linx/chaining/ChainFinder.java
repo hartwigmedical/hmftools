@@ -328,16 +328,6 @@ public class ChainFinder
 
                     // combine the ploidies
                     chain.setPloidyData(chain.ploidy() + newChain.ploidy(), chain.ploidyUncertainty());
-
-                    // record repeated links
-                    for(SvLinkedPair pair : chain.getLinkedPairs())
-                    {
-                        if(newChain.getLinkedPairs().stream().anyMatch(x -> x.matches(pair)))
-                        {
-                            pair.setRepeatCount(pair.repeatCount()+1);
-                        }
-                    }
-
                     matched = true;
                     break;
                 }
@@ -739,7 +729,7 @@ public class ChainFinder
             if(chainedDmSVs != mDoubleMinuteSVs.size())
                 continue;
 
-            if(!dmChainMatched && dmChain != null && chain.identicalChain(dmChain, false))
+            if(!dmChainMatched && dmChain != null && chain.identicalChain(dmChain, false, true))
             {
                 dmChainMatched = true;
             }
@@ -749,7 +739,11 @@ public class ChainFinder
 
             if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
             {
-                if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
+                if(chainEnd.getSV() == chainStart.getSV())
+                {
+                    chain.closeChain();
+                }
+                else if (areLinkedSection(chainStart.getSV(), chainEnd.getSV(), chainStart.usesStart(), chainEnd.usesStart()))
                 {
                     SvLinkedPair pair = SvLinkedPair.from(chainStart, chainEnd);
 

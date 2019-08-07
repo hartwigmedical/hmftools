@@ -368,6 +368,7 @@ public class DoubleMinuteFinder
 
             SvLinkedPair pair = new SvLinkedPair(var, var, LINK_TYPE_TI, true, false);
             chain.addLink(pair, true);
+            chain.setPloidyData(var.ploidy(), var.ploidyUncertainty());
             return chain;
         }
 
