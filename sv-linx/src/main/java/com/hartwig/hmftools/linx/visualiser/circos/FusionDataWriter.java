@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExons;
@@ -37,10 +39,29 @@ public class FusionDataWriter
             final List<FusedExon> fusedExons = FusedExons.fusedExons(fusion, exons);
             final List<ProteinDomain> fusedProteinDomain = FusedProteinDomains.fusedProteinDomains(fusion, fusedExons, proteinDomains);
 
-            final ScaleFusion scaler = new ScaleFusion(fusedExons);
-            finalExons.addAll(scaler.scaleExons(fusedExons));
-            finalProteinDomains.addAll(scaler.scaleProteinDomains(fusedProteinDomain));
-            finalProteinDomains.addAll(legendOnlyDomains(fusion.name(), proteinDomains, fusedProteinDomain));
+            final ScaleIntrons scaler = new ScaleIntrons(ScaleIntrons.introns(fusedExons));
+            final List<FusedExon> intronScaledExons = scaler.scaleIntronsInExons(fusedExons);
+            final List<ProteinDomain> intronScaledProteinDomains = scaler.scaleIntronsInProteinDomains(fusedProteinDomain);
+
+            final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
+            for (FusedExon fusedExon : intronScaledExons)
+            {
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.geneStart()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.geneEnd()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.start()));
+                unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.end()));
+            }
+
+            for (ProteinDomain proteinDomain : intronScaledProteinDomains)
+            {
+                unadjustedPositions.add(GenomePositions.create(proteinDomain.chromosome(), proteinDomain.start()));
+                unadjustedPositions.add(GenomePositions.create(proteinDomain.chromosome(), proteinDomain.end()));
+            }
+
+            final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
+            finalExons.addAll(scalePosition.scaleFusedExon(intronScaledExons));
+            finalProteinDomains.addAll(scalePosition.interpolateProteinDomains(intronScaledProteinDomains));
+            finalProteinDomains.addAll(legendOnlyDomains(fusion.name(), proteinDomains, intronScaledProteinDomains));
         }
     }
 
