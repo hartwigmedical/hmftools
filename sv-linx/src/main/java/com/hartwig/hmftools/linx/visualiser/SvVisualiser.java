@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -81,19 +83,21 @@ public class SvVisualiser implements AutoCloseable
 
     private void run() throws InterruptedException, ExecutionException
     {
-
         final List<Future<Object>> futures = Lists.newArrayList();
+
         if (!config.clusters().isEmpty() || !config.chromosomes().isEmpty())
         {
-            config.clusters().forEach(clusterId -> futures.add(executorService.submit(() -> runCluster(clusterId, false))));
+            // config.clusters().forEach(clusterId -> futures.add(executorService.submit(() -> runCluster(clusterId, false))));
+            futures.add(executorService.submit(() -> runCluster(config.clusters(), false)));
             config.chromosomes().forEach(chromosome -> futures.add(executorService.submit(() -> runChromosome(chromosome))));
         }
         else
         {
             final List<Integer> clusterIds = config.links().stream().map(Link::clusterId).distinct().sorted().collect(toList());
+
             for (Integer clusterId : clusterIds)
             {
-                futures.add(executorService.submit(() -> runCluster(clusterId, true)));
+                futures.add(executorService.submit(() -> runCluster(Lists.newArrayList(clusterId), true)));
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
@@ -161,20 +165,27 @@ public class SvVisualiser implements AutoCloseable
     }
 
     @Nullable
-    private Object runCluster(int clusterId, boolean skipSingles) throws IOException, InterruptedException
+    private Object runCluster(List<Integer> clusterIds, boolean skipSingles) throws IOException, InterruptedException
     {
-        final List<Link> clusterLinks = config.links().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        final List<Segment> clusterSegments = config.segments().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Link> clusterLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Segment> clusterSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+
+        String clusterIdsStr = "";
+
+        for(int clusterId : clusterIds)
+        {
+            clusterIdsStr = appendStr(clusterIdsStr, String.valueOf(clusterId), '-');
+        }
 
         if (clusterLinks.isEmpty())
         {
-            LOGGER.warn("Cluster {} not present in file", clusterId);
+            LOGGER.warn("Cluster {} not present in file", clusterIdsStr);
             return null;
         }
 
         if (clusterLinks.size() == 1 && skipSingles)
         {
-            LOGGER.info("Skipping simple cluster {}", clusterId);
+            LOGGER.debug("Skipping simple cluster {}", clusterIdsStr);
             return null;
         }
 
@@ -183,24 +194,24 @@ public class SvVisualiser implements AutoCloseable
         segmentChainIds.removeAll(linkChainIds);
         if (!segmentChainIds.isEmpty())
         {
-            LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterId, segmentChainIds);
+            LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterIdsStr, segmentChainIds);
             return null;
         }
 
         final String resolvedTypeString = clusterLinks.stream().findFirst().map(Link::resolvedType).map(Enum::toString).orElse("Unknown");
 
-        final String sample =
-                config.sample() + ".cluster" + String.format("%03d", clusterId) + "." + resolvedTypeString + ".sv" + clusterLinks.size() + (
-                        config
-                                .debug()
-                                ? ".debug"
-                                : "");
+        final String sample = config.sample() + ".cluster" + clusterIdsStr + "." + resolvedTypeString + ".sv" + clusterLinks.size()
+                + (config.debug() ? ".debug" : "");
 
-        final List<Exon> clusterExons = config.exons().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
+        final List<Exon> clusterExons = config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+
         final List<ProteinDomain> clusterProteinDomains =
-                config.proteinDomain().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        final List<Fusion> clusterFusions = config.fusions().stream().filter(x -> x.clusterId() == clusterId).collect(toList());
-        return runFiltered(ColorPicker::chainColors, sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions);
+                config.proteinDomain().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+
+        final List<Fusion> clusterFusions = config.fusions().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+
+        return runFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
+                sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions);
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
