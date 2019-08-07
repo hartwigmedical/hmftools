@@ -385,7 +385,7 @@ public class SvClassification
         {
             // remove the long chain link on the assumption that these breakends aren't joined,
             // leaving 2 separate chains or SVs
-            cluster.getChains().clear();
+            cluster.dissolveLinksAndChains();
 
             SvChain newChain = new SvChain(0);
             newChain.setPloidyData(chain.ploidy(), chain.ploidyUncertainty());
@@ -505,7 +505,7 @@ public class SvClassification
                 return;
             }
 
-            cluster.getChains().clear();
+            cluster.dissolveLinksAndChains();
 
             if (newChain != null && newChain.getLinkCount() > 0)
                 cluster.addChain(newChain, false);

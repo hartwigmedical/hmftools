@@ -53,9 +53,8 @@ import org.apache.logging.log4j.core.config.Configurator;
     - repeat until no further links can be made
 
     Priority rules in order:
-    - Single-Option - if a breakend has only one possible link, select this one
     - Foldbacks - look for a breakend which can link to both ends of a foldback
-    - Foldback to foldback
+    - Single-Option - if a breakend has only one possible link, select this one
     - Ploidy-Match - starting with the highest ploidy SV, only link SVs of the same ploidy
     - Shortest - after all other rules, if there is more than 1 possible link then choose the shortest
 */
