@@ -13,6 +13,27 @@ public abstract class MolecularMatchMutations {
     @Nullable
     public abstract List<MolecularMatchTranscriptConsequence> transcriptConsequence();
 
+    @Nullable
+    public abstract String longestTranscript();
+
+    @Nullable
+    public abstract String parents();
+
+    @Nullable
+    public abstract String wgsaData();
+
+    @Nullable
+    public abstract String wgsaMap();
+
+    @Nullable
+    public abstract String exonsInfo();
+
+    @Nullable
+    public abstract String fusionData();
+
+    @Nullable
+    public abstract String transcriptRecognized();
+
     @NotNull
     public abstract String description();
 

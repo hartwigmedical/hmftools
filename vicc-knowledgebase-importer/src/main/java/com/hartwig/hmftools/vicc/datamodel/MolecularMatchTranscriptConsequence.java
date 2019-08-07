@@ -49,4 +49,10 @@ public abstract class MolecularMatchTranscriptConsequence {
 
     @NotNull
     public abstract String referenceGenome();
+
+    @Nullable
+    public abstract String ref();
+
+    @Nullable
+    public abstract String alt();
 }

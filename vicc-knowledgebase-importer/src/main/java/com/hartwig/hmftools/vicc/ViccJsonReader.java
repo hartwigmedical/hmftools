@@ -229,7 +229,23 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
 
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(34, 35, 36, 37, 38, 39, 40, 41);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(34, 35, 36, 37, 38, 39, 40, 41, 42);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_AST_SIZES = Lists.newArrayList(3, 4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_LEFT_SIZES = Lists.newArrayList(3, 4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_SIZES = Lists.newArrayList(3, 4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES = Lists.newArrayList(3, 29, 30, 31);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES = Lists.newArrayList(8, 9, 12, 13);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES = Lists.newArrayList(9);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES = Lists.newArrayList(3, 11);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES = Lists.newArrayList(13, 14, 16, 17, 18, 19);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES = Lists.newArrayList(4, 6);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_SOURCE_SIZES = Lists.newArrayList(8, 9, 10, 11, 12, 13);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TAGS_SIZES = Lists.newArrayList(3, 8, 9, 12, 13);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES = Lists.newArrayList(3, 4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES = Lists.newArrayList(4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES = Lists.newArrayList(9, 14, 15, 16);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES = Lists.newArrayList(6);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES = Lists.newArrayList(10);
 
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES = Lists.newArrayList(13, 14);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES = Lists.newArrayList(1, 2, 3, 4, 5);
@@ -978,6 +994,7 @@ public final class ViccJsonReader {
                 .regulatoryBodyApproved(objectMolecularMatch.getAsJsonPrimitive("regulatoryBodyApproved").getAsString())
                 .version(objectMolecularMatch.getAsJsonPrimitive("version").getAsString())
                 .includeMutation1(Lists.newArrayList())
+                .includeMutation0(Lists.newArrayList())
                 .guidelineBody(!objectMolecularMatch.has("guidelineBody")
                         ? null
                         : objectMolecularMatch.getAsJsonPrimitive("guidelineBody").getAsString())
@@ -987,6 +1004,8 @@ public final class ViccJsonReader {
                 .ampcap(objectMolecularMatch.getAsJsonPrimitive("ampcap").getAsString())
                 .asts(createAst(objectMolecularMatch.getAsJsonObject("ast")))
                 .variantInfo(createVariantInfo(objectMolecularMatch.getAsJsonArray("variantInfo")))
+                .guidelineVersion("")
+                .institution("")
                 .tier(objectMolecularMatch.getAsJsonPrimitive("tier").getAsString())
                 .tierExplanation(createTierExplanation(objectMolecularMatch.getAsJsonArray("tierExplanation")))
                 .mvld(objectMolecularMatch.getAsJsonPrimitive("mvld").getAsString())
@@ -997,8 +1016,11 @@ public final class ViccJsonReader {
                 .includeDrug1(objectMolecularMatch.getAsJsonArray("includeDrug1") == null
                         ? null
                         : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeDrug1")))
+                .includeStage0("")
                 .therapeuticContext(createTherapeuticContext(objectMolecularMatch.getAsJsonArray("therapeuticContext")))
                 .sixtier(objectMolecularMatch.getAsJsonPrimitive("sixtier").getAsString())
+                .noTherapyAvailable("")
+                .external_id("")
                 .narrative(objectMolecularMatch.getAsJsonPrimitive("narrative").getAsString())
                 .expression(objectMolecularMatch.getAsJsonPrimitive("expression").getAsString())
                 .includeGene0(objectMolecularMatch.getAsJsonArray("includeDrug0") == null
@@ -1011,6 +1033,13 @@ public final class ViccJsonReader {
     private static List<MolecularMatchTherapeuticContext> createTherapeuticContext(@NotNull JsonArray arrayTherapeuticContext) {
         List<MolecularMatchTherapeuticContext> therapeuticContextList = Lists.newArrayList();
         for (JsonElement therapeuticContext : arrayTherapeuticContext) {
+            Set<String> keysTherapeuticContext = therapeuticContext.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES.contains(keysTherapeuticContext.size())) {
+                LOGGER.warn(
+                        "Found " + keysTherapeuticContext.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
+                LOGGER.warn(keysTherapeuticContext);
+            }
+
             therapeuticContextList.add(ImmutableMolecularMatchTherapeuticContext.builder()
                     .facet(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
                     .suppress(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
@@ -1023,8 +1052,15 @@ public final class ViccJsonReader {
 
     @NotNull
     private static List<MolecularMatchClassification> createClassification(@NotNull JsonArray objectClassifications) {
+
         List<MolecularMatchClassification> classificationList = Lists.newArrayList();
         for (JsonElement classification : objectClassifications) {
+            Set<String> keysClassification = classification.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES.contains(keysClassification.size())) {
+                LOGGER.warn(
+                        "Found " + keysClassification.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
+                LOGGER.warn(keysClassification);
+            }
             classificationList.add(ImmutableMolecularMatchClassification.builder()
                     .end(classification.getAsJsonObject().get("End") == null
                             ? null
@@ -1055,6 +1091,8 @@ public final class ViccJsonReader {
                     .NucleotideChange(classification.getAsJsonObject().get("NucleotideChange") == null
                             ? null
                             : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("NucleotideChange")))
+                    .parents("")
+                    .expandGeneSearch("")
                     .drugsExperimentalCount(classification.getAsJsonObject().get("drugsExperimentalCount") == null
                             ? null
                             : classification.getAsJsonObject().getAsJsonPrimitive("drugsExperimentalCount").getAsString())
@@ -1116,6 +1154,13 @@ public final class ViccJsonReader {
     private static List<MolecularMatchTags> createTags(@NotNull JsonArray arrayTags) {
         List<MolecularMatchTags> tagsList = Lists.newArrayList();
         for (JsonElement tags : arrayTags) {
+            Set<String> keysTags = tags.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TAGS_SIZES.contains(keysTags.size())) {
+                LOGGER.warn(
+                        "Found " + keysTags.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_TAGS_SIZES);
+                LOGGER.warn(keysTags);
+            }
+
             tagsList.add(ImmutableMolecularMatchTags.builder()
                     .priority(tags.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
                     .compositeKey(!tags.getAsJsonObject().has("compositeKey")
@@ -1132,6 +1177,11 @@ public final class ViccJsonReader {
                     .custom(!tags.getAsJsonObject().has("custom")
                             ? null
                             : tags.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .isNew("")
+                    .generatedBy("")
+                    .manualSuppress("")
+                    .generatedByTerm("")
+                    .transcript("")
                     .build());
         }
         return tagsList;
@@ -1141,6 +1191,13 @@ public final class ViccJsonReader {
     private static List<MolecularMatchTierExplanation> createTierExplanation(@NotNull JsonArray arrarTierExplanation) {
         List<MolecularMatchTierExplanation> tierExplanationList = Lists.newArrayList();
         for (JsonElement tierExplanation : arrarTierExplanation) {
+            Set<String> keysTierExplanation = tierExplanation.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES.contains(keysTierExplanation.size())) {
+                LOGGER.warn(
+                        "Found " + keysTierExplanation.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES);
+                LOGGER.warn(keysTierExplanation);
+            }
+
             tierExplanationList.add(ImmutableMolecularMatchTierExplanation.builder()
                     .tier(tierExplanation.getAsJsonObject().getAsJsonPrimitive("tier").getAsString())
                     .step(tierExplanation.getAsJsonObject().getAsJsonPrimitive("step").getAsString())
@@ -1156,6 +1213,13 @@ public final class ViccJsonReader {
         List<MolecularMatchVariantInfo> variantInfoList = Lists.newArrayList();
 
         for (JsonElement variantInfo : arrayVariantInfo) {
+            Set<String> keysVariantInfo = variantInfo.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES.contains(keysVariantInfo.size())) {
+                LOGGER.warn(
+                        "Found " + keysVariantInfo.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES);
+                LOGGER.warn(keysVariantInfo);
+            }
+
             variantInfoList.add(ImmutableMolecularMatchVariantInfo.builder()
                     .classification(variantInfo.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
                     .name(variantInfo.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
@@ -1178,6 +1242,13 @@ public final class ViccJsonReader {
     private static List<MolecularMatchLocations> createLocations(@NotNull JsonArray arrayLocations) {
         List<MolecularMatchLocations> locationsList = Lists.newArrayList();
         for (JsonElement locations : arrayLocations) {
+            Set<String> keysLocations = locations.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES.contains(keysLocations.size())) {
+                LOGGER.warn(
+                        "Found " + keysLocations.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES);
+                LOGGER.warn(keysLocations);
+            }
+
             locationsList.add(ImmutableMolecularMatchLocations.builder()
                     .aminoAcidChange(!locations.getAsJsonObject().has("amino_acid_change")
                             ? null
@@ -1211,7 +1282,16 @@ public final class ViccJsonReader {
 
     @NotNull
     private static MolecularMatchAst createAst(@NotNull JsonObject objectAst) {
+        Set<String> keysAst = objectAst.keySet();
+        if (!EXPECTED_MOLECULARMATCH_AST_SIZES.contains(keysAst.size())) {
+            LOGGER.warn(
+                    "Found " + keysAst.size() + " elements in a vicc entry rather than the expected " + EXPECTED_MOLECULARMATCH_AST_SIZES);
+            LOGGER.warn(keysAst);
+        }
+
         return ImmutableMolecularMatchAst.builder()
+                .raw("")
+                .value("")
                 .operator("")
                 .right(objectAst.get("right") == null ? null : createRight(objectAst.getAsJsonObject("right")))
                 .type(objectAst.getAsJsonPrimitive("type").getAsString())
@@ -1221,12 +1301,30 @@ public final class ViccJsonReader {
 
     @NotNull
     private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
-        return ImmutableMolecularMatchAstLeft.builder().raw("").type(objectLeft.getAsJsonPrimitive("type").getAsString()).value("").build();
+        Set<String> keysLeft = objectLeft.keySet();
+        if (!EXPECTED_MOLECULARMATCH_LEFT_SIZES.contains(keysLeft.size())) {
+            LOGGER.warn("Found " + keysLeft.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_LEFT_SIZES);
+            LOGGER.warn(keysLeft);
+        }
+        return ImmutableMolecularMatchAstLeft.builder()
+                .operator("")
+                .raw("")
+                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
+                .value("")
+                .build();
     }
 
     @NotNull
     private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
-        return ImmutableMolecularMatchAstRight.builder().raw("").type("").value("").build();
+        Set<String> keysRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_SIZES.contains(keysRight.size())) {
+            LOGGER.warn("Found " + keysRight.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
+            LOGGER.warn(keysRight);
+        }
+
+        return ImmutableMolecularMatchAstRight.builder().operator("").left("").right("").raw("").type("").value("").build();
 
     }
 
@@ -1234,6 +1332,13 @@ public final class ViccJsonReader {
     private static List<MolecularMatchSource> createSource(@NotNull JsonArray arraySources) {
         List<MolecularMatchSource> sourcesList = Lists.newArrayList();
         for (JsonElement source : arraySources) {
+            Set<String> keysSource = source.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_SOURCE_SIZES.contains(keysSource.size())) {
+                LOGGER.warn("Found " + keysSource.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_SOURCE_SIZES);
+                LOGGER.warn(keysSource);
+            }
+
             sourcesList.add(ImmutableMolecularMatchSource.builder()
                     .name(source.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .suppress(source.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
@@ -1249,6 +1354,10 @@ public final class ViccJsonReader {
                             : source.getAsJsonObject().getAsJsonPrimitive("trialId").getAsString())
                     .type(source.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .id(source.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .institution("")
+                    .trialPhase("")
+                    .functionalConsequence("")
+                    .trustRating("")
                     .build());
         }
         return sourcesList;
@@ -1259,9 +1368,20 @@ public final class ViccJsonReader {
         List<MolecularMatchCriteriaUnmet> criteriaUnmetList = Lists.newArrayList();
 
         for (JsonElement criteriaUnmet : arrayCriteriaUnmet) {
+            Set<String> keysCriteriaUnmet = criteriaUnmet.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES.contains(keysCriteriaUnmet.size())) {
+                LOGGER.warn("Found " + keysCriteriaUnmet.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES);
+                LOGGER.warn(keysCriteriaUnmet);
+            }
+
             criteriaUnmetList.add(ImmutableMolecularMatchCriteriaUnmet.builder()
                     .priority(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
                     .compositeKey(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
+                    .isNew("")
+                    .generatedBy("")
+                    .manualSuppress("")
+                    .generatedByTerm("")
                     .suppress(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .filterType(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
                     .term(criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
@@ -1273,6 +1393,7 @@ public final class ViccJsonReader {
                     .custom(!criteriaUnmet.getAsJsonObject().has("custom")
                             ? null
                             : criteriaUnmet.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
+                    .transcript("")
                     .build());
         }
         return criteriaUnmetList;
@@ -1283,6 +1404,13 @@ public final class ViccJsonReader {
         List<MolecularMatchPrevalence> prevalenceList = Lists.newArrayList();
 
         for (JsonElement prevelance : arrayPrevelance) {
+            Set<String> keysPrevalence = prevelance.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES.contains(keysPrevalence.size())) {
+                LOGGER.warn("Found " + keysPrevalence.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES);
+                LOGGER.warn(keysPrevalence);
+            }
+
             prevalenceList.add(ImmutableMolecularMatchPrevalence.builder()
                     .count(prevelance.getAsJsonObject().getAsJsonPrimitive("count").getAsString())
                     .percent(prevelance.getAsJsonObject().getAsJsonPrimitive("percent").getAsString())
@@ -1304,10 +1432,24 @@ public final class ViccJsonReader {
         List<MolecularMatchMutations> mutationList = Lists.newArrayList();
 
         for (JsonElement mutation : arrayMutations) {
+            Set<String> keysMutations = mutation.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES.contains(keysMutations.size())) {
+                LOGGER.warn("Found " + keysMutations.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES);
+                LOGGER.warn(keysMutations);
+            }
+
             mutationList.add(ImmutableMolecularMatchMutations.builder()
                     .transcriptConsequence(mutation.getAsJsonObject().get("transcriptConsequence") == null
                             ? null
                             : createTranscriptConsequence(mutation.getAsJsonObject().getAsJsonArray("transcriptConsequence")))
+                    .longestTranscript("")
+                    .parents("")
+                    .wgsaData("")
+                    .wgsaMap("")
+                    .exonsInfo("")
+                    .fusionData("")
+                    .transcriptRecognized("")
                     .description(mutation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .mutationType(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
                     .src(mutation.getAsJsonObject().getAsJsonPrimitive("_src").getAsString())
@@ -1337,6 +1479,13 @@ public final class ViccJsonReader {
         List<MolecularMatchGRch37Location> gRch37LocationList = Lists.newArrayList();
 
         for (JsonElement location : arrayLocation) {
+            Set<String> keysLocation = location.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES.contains(keysLocation.size())) {
+                LOGGER.warn("Found " + keysLocation.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES);
+                LOGGER.warn(keysLocation);
+            }
+
             gRch37LocationList.add(ImmutableMolecularMatchGRch37Location.builder()
                     .compositeKey(location.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
                     .ref(location.getAsJsonObject().get("ref").isJsonNull()
@@ -1368,6 +1517,13 @@ public final class ViccJsonReader {
             @NotNull JsonArray arrayTranscriptConsequence) {
         List<MolecularMatchTranscriptConsequencesGRCH37> transcriptConsequencesGRCH37List = Lists.newArrayList();
         for (JsonElement transcriptConsequences : arrayTranscriptConsequence) {
+            Set<String> keysTranscriptConsequences = transcriptConsequences.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES.contains(keysTranscriptConsequences.size())) {
+                LOGGER.warn("Found " + keysTranscriptConsequences.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES);
+                LOGGER.warn(keysTranscriptConsequences);
+            }
+
             transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCH37.builder()
                     .aminoAcidChange(transcriptConsequences.getAsJsonObject().get("amino_acid_change").isJsonNull()
                             ? null
@@ -1391,6 +1547,13 @@ public final class ViccJsonReader {
         List<MolecularMatchTranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
 
         for (JsonElement transcriptConsequence : arrayTranscriptConsequence) {
+            Set<String> keysTranscriptConsequence = transcriptConsequence.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES.contains(keysTranscriptConsequence.size())) {
+                LOGGER.warn("Found " + keysTranscriptConsequence.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES);
+                LOGGER.warn(keysTranscriptConsequence);
+            }
+
             transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
                     .aminoAcidChange(!transcriptConsequence.getAsJsonObject().has("amino_acid_change")
                             && transcriptConsequence.getAsJsonObject().get("amino_acid_change") == null
@@ -1420,6 +1583,8 @@ public final class ViccJsonReader {
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
+                    .ref("")
+                    .alt("")
                     .build());
         }
         return transcriptConsequenceList;

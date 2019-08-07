@@ -44,6 +44,12 @@ public abstract class MolecularMatchClassification {
     public abstract List<String> NucleotideChange();
 
     @Nullable
+    public abstract String expandGeneSearch();
+
+    @Nullable
+    public abstract String parents();
+
+    @Nullable
     public abstract String drugsExperimentalCount();
 
     @Nullable

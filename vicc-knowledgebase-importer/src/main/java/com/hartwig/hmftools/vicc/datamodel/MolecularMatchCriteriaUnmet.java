@@ -14,6 +14,18 @@ public abstract class MolecularMatchCriteriaUnmet {
     @NotNull
     public abstract String compositeKey();
 
+    @Nullable
+    public abstract String isNew();
+
+    @Nullable
+    public abstract  String generatedBy();
+
+    @Nullable
+    public abstract String manualSuppress();
+
+    @Nullable
+    public abstract  String generatedByTerm();
+
     @NotNull
     public abstract String suppress();
 
@@ -34,4 +46,7 @@ public abstract class MolecularMatchCriteriaUnmet {
 
     @Nullable
     public abstract String custom();
+
+    @Nullable
+    public abstract String transcript();
 }

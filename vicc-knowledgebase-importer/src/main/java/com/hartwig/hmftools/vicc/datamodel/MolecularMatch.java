@@ -112,6 +112,9 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @Nullable
     public abstract List<String> includeDrug1();
 
+    @Nullable
+    public abstract String includeStage0();
+
     @NotNull
     public abstract List<MolecularMatchTherapeuticContext> therapeuticContext();
 
