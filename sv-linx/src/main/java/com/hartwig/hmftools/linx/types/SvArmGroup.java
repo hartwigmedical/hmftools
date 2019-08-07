@@ -127,15 +127,4 @@ public class SvArmGroup {
 
     public boolean isConsistent() { return mConsistency == 0; }
 
-    public boolean canLink(long maxBoundaryLength)
-    {
-        if(!isConsistent())
-            return true;
-
-        if(hasEndsSet() && posEnd() - posStart() >= maxBoundaryLength)
-            return true;
-
-        return false;
-    }
-
 }

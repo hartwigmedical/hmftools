@@ -87,7 +87,6 @@ public class SvVisualiser implements AutoCloseable
 
         if (!config.clusters().isEmpty() || !config.chromosomes().isEmpty())
         {
-            // config.clusters().forEach(clusterId -> futures.add(executorService.submit(() -> runCluster(clusterId, false))));
             futures.add(executorService.submit(() -> runCluster(config.clusters(), false)));
             config.chromosomes().forEach(chromosome -> futures.add(executorService.submit(() -> runChromosome(chromosome))));
         }

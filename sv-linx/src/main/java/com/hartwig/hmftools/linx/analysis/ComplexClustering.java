@@ -113,7 +113,7 @@ public class ComplexClustering
                     canMergeClusters = canMergeClustersOnFoldbacks(cluster1, cluster2);
 
                     if(!canMergeClusters)
-                        canMergeClusters = canMergeClustersOnCommonArms(cluster1, cluster2, longDelDupCutoffLength);
+                        canMergeClusters = canMergeClustersOnCommonArms(cluster1, cluster2);
 
                     if(!canMergeClusters)
                     {
@@ -236,7 +236,7 @@ public class ComplexClustering
         return null;
     }
 
-    private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2, long armWidthCutoff)
+    private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2)
     {
         // merge if the 2 clusters have BNDs linking the same 2 inconsistent or long arms
         areSpecificClusters(cluster1, cluster2);
@@ -244,20 +244,6 @@ public class ComplexClustering
         // re-check which BNDs may link arms
         cluster1.setArmLinks();
         cluster2.setArmLinks();
-
-        // first find arm groups which are inconsistent in both clusters
-        // BNDs only touching an arm in a short TI are ignored from the common arm check
-        List<SvArmGroup> inconsistentArms1 = cluster1.getArmGroups().stream()
-                .filter(x -> x.canLink(armWidthCutoff))
-                .collect(Collectors.toList());
-
-        List<SvArmGroup> inconsistentArms2 = cluster2.getArmGroups().stream()
-                .filter(x -> x.canLink(armWidthCutoff))
-                .collect(Collectors.toList());
-
-        // now search for common BNDs where either end is in one of these inconsistent arms
-        if(inconsistentArms1.isEmpty() || inconsistentArms2.isEmpty())
-            return false;
 
         final List<SvVarData> crossArmList1 = cluster1.getUnlinkedRemoteSVs();
         final List<SvVarData> crossArmList2 = cluster2.getUnlinkedRemoteSVs();
@@ -269,34 +255,20 @@ public class ComplexClustering
         {
             for (final SvVarData var2 : crossArmList2)
             {
-                if(!haveSameChrArms(var1, var2))
+                if (!haveSameChrArms(var1, var2))
                     continue;
 
-                if(variantsViolateLohHomLoss(var1, var2))
+                if (variantsViolateLohHomLoss(var1, var2))
                     continue;
 
-                for(final SvArmGroup armGroup1 : inconsistentArms1)
-                {
-                    if (!armGroup1.getSVs().contains(var1))
-                        continue;
+                LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
+                        cluster1.id(), cluster2.id(), var1.posId(), var2.posId());
 
-                    for (final SvArmGroup armGroup2 : inconsistentArms2)
-                    {
-                        if (!armGroup2.getSVs().contains(var2))
-                            continue;
+                mSimpleClustering.addClusterReasons(var1, var2, CR_COMMON_ARMS);
 
-                        LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
-                                cluster1.id(), cluster2.id(), var1.posId(), var2.posId());
-
-                        // final String commonArms = var1.id() + "_" + var2.id();
-
-                        mSimpleClustering.addClusterReasons(var1, var2, CR_COMMON_ARMS);
-
-                        cluster1.addClusterReason(CR_COMMON_ARMS);
-                        cluster2.addClusterReason(CR_COMMON_ARMS);
-                        return true;
-                    }
-                }
+                cluster1.addClusterReason(CR_COMMON_ARMS);
+                cluster2.addClusterReason(CR_COMMON_ARMS);
+                return true;
             }
         }
 
