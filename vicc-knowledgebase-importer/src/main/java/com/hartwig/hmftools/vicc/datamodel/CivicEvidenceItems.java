@@ -61,7 +61,4 @@ public abstract class CivicEvidenceItems {
     @NotNull
     public abstract String name();
 
-
-
-
 }

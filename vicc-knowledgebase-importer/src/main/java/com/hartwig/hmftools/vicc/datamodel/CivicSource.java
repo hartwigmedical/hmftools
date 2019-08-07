@@ -26,7 +26,7 @@ public abstract class CivicSource {
     public abstract String citation();
 
     @Nullable
-    public abstract String pmc_I();
+    public abstract String pmc_Id();
 
     @Nullable
     public abstract String fullJournalTitle();

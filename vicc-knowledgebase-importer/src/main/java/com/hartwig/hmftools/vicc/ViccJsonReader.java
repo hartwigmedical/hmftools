@@ -178,7 +178,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
@@ -258,7 +257,22 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES = Lists.newArrayList(0, 1, 2, 3);
 
-    private static final List<Integer> EXPECTED_CIVIC_ELEMENT_SIZES = Lists.newArrayList(1);
+    private static final List<Integer> EXPECTED_CIVIC_ELEMENT_SIZES = Lists.newArrayList(21);
+    private static final List<Integer> EXPECTED_CIVIC_AVATARS_SIZES = Lists.newArrayList(4);
+    private static final List<Integer> EXPECTED_CIVIC_COORDINATES_SIZES = Lists.newArrayList(12);
+    private static final List<Integer> EXPECTED_CIVIC_DISEASES_SIZES = Lists.newArrayList(5);
+    private static final List<Integer> EXPECTED_CIVIC_DRUGS_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES = Lists.newArrayList(17);
+    private static final List<Integer> EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_CIVIC_LAST_MODIFIED_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_CIVIC_LAST_REVIEWED_SIZES = Lists.newArrayList(2);
+    private static final List<Integer> EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES = Lists.newArrayList(0, 3);
+    private static final List<Integer> EXPECTED_CIVIC_ORGANIZATION_SIZES = Lists.newArrayList(0, 5);
+    private static final List<Integer> EXPECTED_CIVIC_PROFILE_IMAGE_SIZES = Lists.newArrayList(5);
+    private static final List<Integer> EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES = Lists.newArrayList(0, 1,2,3);
+    private static final List<Integer> EXPECTED_CIVIC_SOURCE_SIZES = Lists.newArrayList(13);
+    private static final List<Integer> EXPECTED_CIVIC_USER_SIZES = Lists.newArrayList(21);
+    private static final List<Integer> EXPECTED_CIVIC_VARIANTTYPES_SIZES = Lists.newArrayList(6);
 
     private ViccJsonReader() {
     }
@@ -395,15 +409,24 @@ public final class ViccJsonReader {
 
             JsonObject objectMolecularMatchTrials = viccEntryObject.getAsJsonObject("molecularmatch_trials");
             if (viccEntryObject.has("molecularmatch_trials")) {
-                Set<String> keysMolecularMatch = objectMolecularMatchTrials.keySet();
-                if (!EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES.contains(keysMolecularMatch.size())) {
-                    LOGGER.warn("Found " + keysMolecularMatch.size() + " elements in a vicc entry rather than the expected "
+                Set<String> keysMolecularMatchTrials = objectMolecularMatchTrials.keySet();
+                if (!EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES.contains(keysMolecularMatchTrials.size())) {
+                    LOGGER.warn("Found " + keysMolecularMatchTrials.size() + " elements in a vicc entry rather than the expected "
                             + EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES);
-                    LOGGER.warn(keysMolecularMatch);
+                    LOGGER.warn(keysMolecularMatchTrials);
                 }
             }
 
             JsonObject objectCivic = viccEntryObject.getAsJsonObject("civic");
+            if (viccEntryObject.has("civic")) {
+                Set<String> keysCivic = objectCivic.keySet();
+                if (!EXPECTED_CIVIC_ELEMENT_SIZES.contains(keysCivic.size())) {
+                    LOGGER.warn("Found " + keysCivic.size() + " elements in a vicc entry rather than the expected "
+                            + EXPECTED_CIVIC_ELEMENT_SIZES);
+                    LOGGER.warn(keysCivic);
+                }
+            }
+
 
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(createCgi(objectCgi));
@@ -453,12 +476,15 @@ public final class ViccJsonReader {
                 .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull()
                         ? null
                         : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
+                .provisional_values("")
                 .geneId(objectCivic.getAsJsonPrimitive("gene_id").getAsString())
                 .name(objectCivic.getAsJsonPrimitive("name").getAsString())
                 .evidenceItem(createEvidenceitems(objectCivic.getAsJsonArray("evidence_items")))
+                .sources("")
                 .entrezId(objectCivic.getAsJsonPrimitive("entrez_id").getAsString())
                 .assertions(jsonArrayToStringList(objectCivic.getAsJsonArray("assertions")))
                 .hgvs_expressions(jsonArrayToStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
+                .errors("")
                 .coordinates(createCoordinates(objectCivic.getAsJsonObject("coordinates")))
                 .type(objectCivic.getAsJsonPrimitive("type").getAsString())
                 .id(objectCivic.getAsJsonPrimitive("id").getAsString())
@@ -468,6 +494,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
+        Set<String> keysCoordinates = objectCoordinates.keySet();
+        if (!EXPECTED_CIVIC_COORDINATES_SIZES.contains(keysCoordinates.size())) {
+            LOGGER.warn("Found " + keysCoordinates.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_COORDINATES_SIZES);
+            LOGGER.warn(keysCoordinates);
+        }
+
         return ImmutableCivicCoordinates.builder()
                 .chromosome2(objectCoordinates.get("chromosome2").isJsonNull()
                         ? null
@@ -502,6 +535,13 @@ public final class ViccJsonReader {
     private static List<CivicEvidenceItems> createEvidenceitems(@NotNull JsonArray evidenceItemsArray) {
         List<CivicEvidenceItems> evidenceItemsList = Lists.newArrayList();
         for (JsonElement evideneItem : evidenceItemsArray) {
+            Set<String> keysEvidenceItems = evideneItem.getAsJsonObject().keySet();
+            if (!EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES.contains(keysEvidenceItems.size())) {
+                LOGGER.warn("Found " + keysEvidenceItems.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES);
+                LOGGER.warn(keysEvidenceItems);
+            }
+
             evidenceItemsList.add(ImmutableCivicEvidenceItems.builder()
                     .status(evideneItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
                     .rating(evideneItem.getAsJsonObject().get("rating").isJsonNull()
@@ -535,6 +575,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicSource createSource(@NotNull JsonObject objectSource) {
+        Set<String> keysSource = objectSource.keySet();
+        if (!EXPECTED_CIVIC_SOURCE_SIZES.contains(keysSource.size())) {
+            LOGGER.warn("Found " + keysSource.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_SOURCE_SIZES);
+            LOGGER.warn(keysSource);
+        }
+
         return ImmutableCivicSource.builder()
                 .status(objectSource.getAsJsonPrimitive("status").getAsString())
                 .openAccess(objectSource.get("open_access").isJsonNull()
@@ -543,7 +590,7 @@ public final class ViccJsonReader {
                 .name("")
                 .journal("")
                 .citation("")
-                .pmc_I(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
+                .pmc_Id(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
                 .fullJournalTitle(objectSource.get("full_journal_title").isJsonNull() ? null : objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
                 .sourceUrl(objectSource.getAsJsonPrimitive("source_url").getAsString())
                 .clinicalTrials(Lists.newArrayList())
@@ -556,6 +603,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
+        Set<String> keysPublicationDate = objectPublicationDate.keySet();
+        if (!EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES.contains(keysPublicationDate.size())) {
+            LOGGER.warn("Found " + keysPublicationDate.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES);
+            LOGGER.warn(keysPublicationDate);
+        }
+
         return ImmutableCivicPublicationDate.builder()
                 .year(objectPublicationDate.get("year")== null ? null : objectPublicationDate.getAsJsonPrimitive("year").getAsString())
                 .day(!objectPublicationDate.has("day") ? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
@@ -565,6 +619,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
+        Set<String> keysDisease = objectDisease.keySet();
+        if (!EXPECTED_CIVIC_DISEASES_SIZES.contains(keysDisease.size())) {
+            LOGGER.warn("Found " + keysDisease.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_DISEASES_SIZES);
+            LOGGER.warn(keysDisease);
+        }
+
         return ImmutableCivicDisease.builder()
                 .doid(objectDisease.get("doid").isJsonNull() ? null : objectDisease.getAsJsonPrimitive("doid").getAsString())
                 .url(objectDisease.getAsJsonPrimitive("url").getAsString())
@@ -578,6 +639,13 @@ public final class ViccJsonReader {
     private static List<CivicDrugs> createDrugs(@NotNull JsonArray arrayDrugs) {
         List<CivicDrugs> drugsList = Lists.newArrayList();
         for (JsonElement drug : arrayDrugs) {
+            Set<String> keysDrugs = drug.getAsJsonObject().keySet();
+            if (!EXPECTED_CIVIC_DRUGS_SIZES.contains(keysDrugs.size())) {
+                LOGGER.warn("Found " + keysDrugs.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_CIVIC_DRUGS_SIZES);
+                LOGGER.warn(keysDrugs);
+            }
+
             drugsList.add(ImmutableCivicDrugs.builder()
                     .pubchemId(drug.getAsJsonObject().get("pubchem_id").isJsonNull()
                             ? null
@@ -591,6 +659,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
+        Set<String> keysLifecycleActions = objectLifeCycleActions.keySet();
+        if (!EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES.contains(keysLifecycleActions.size())) {
+            LOGGER.warn("Found " + keysLifecycleActions.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES);
+            LOGGER.warn(keysLifecycleActions);
+        }
+
         return ImmutableCivicLifecycleActions.builder()
                 .lastCommentedOn(objectLifeCycleActions.getAsJsonObject("last_commented_on") == null
                         ? null
@@ -606,6 +681,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicLastCommentedOn createLastCommentOn(@NotNull JsonObject objectLastCommned) {
+        Set<String> keysLastCommentedOn = objectLastCommned.keySet();
+        if (!EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES.contains(keysLastCommentedOn.size())) {
+            LOGGER.warn("Found " + keysLastCommentedOn.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES);
+            LOGGER.warn(keysLastCommentedOn);
+        }
+
         return ImmutableCivicLastCommentedOn.builder()
                 .timestamp(objectLastCommned.getAsJsonPrimitive("timestamp").getAsString())
                 .user(createCivicUser(objectLastCommned.getAsJsonObject("user")))
@@ -614,6 +696,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicLastModified createLastModified(@NotNull JsonObject objectLastModified) {
+        Set<String> keysLastModified = objectLastModified.keySet();
+        if (!EXPECTED_CIVIC_LAST_MODIFIED_SIZES.contains(keysLastModified.size())) {
+            LOGGER.warn("Found " + keysLastModified.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_LAST_MODIFIED_SIZES);
+            LOGGER.warn(keysLastModified);
+        }
+
         return ImmutableCivicLastModified.builder()
                 .timestamp(objectLastModified.getAsJsonPrimitive("timestamp").getAsString())
                 .user(createCivicUser(objectLastModified.getAsJsonObject("user")))
@@ -622,6 +711,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicLastReviewed createLastReviewed(@NotNull JsonObject objectLastReviewed) {
+        Set<String> keysLastReviewed = objectLastReviewed.keySet();
+        if (!EXPECTED_CIVIC_LAST_REVIEWED_SIZES.contains(keysLastReviewed.size())) {
+            LOGGER.warn("Found " + keysLastReviewed.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_LAST_REVIEWED_SIZES);
+            LOGGER.warn(keysLastReviewed);
+        }
+
         return ImmutableCivicLastReviewed.builder()
                 .timestamp(objectLastReviewed.getAsJsonPrimitive("timestamp").getAsString())
                 .user(createCivicUser(objectLastReviewed.getAsJsonObject("user")))
@@ -630,6 +726,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
+        Set<String> keysUser = objectUser.keySet();
+        if (!EXPECTED_CIVIC_USER_SIZES.contains(keysUser.size())) {
+            LOGGER.warn("Found " + keysUser.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_USER_SIZES);
+            LOGGER.warn(keysUser);
+        }
+
         return ImmutableCivicUser.builder()
                 .username(objectUser.getAsJsonPrimitive("username").getAsString())
                 .areaOfExpertise(objectUser.get("area_of_expertise").isJsonNull()
@@ -669,6 +772,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicOrganization createOrganization(@NotNull JsonObject objectOrganization) {
+        Set<String> keysOrganization = objectOrganization.keySet();
+        if (!EXPECTED_CIVIC_ORGANIZATION_SIZES.contains(keysOrganization.size())) {
+            LOGGER.warn("Found " + keysOrganization.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_ORGANIZATION_SIZES);
+            LOGGER.warn(keysOrganization);
+        }
+
         return ImmutableCivicOrganization.builder()
                 .url(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("url").getAsString())
                 .id(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("id").getAsString())
@@ -682,6 +792,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicProfileImage createProfileImage(@NotNull JsonObject objectProfileImage) {
+        Set<String> keysProfileImage = objectProfileImage.keySet();
+        if (!EXPECTED_CIVIC_PROFILE_IMAGE_SIZES.contains(keysProfileImage.size())) {
+            LOGGER.warn("Found " + keysProfileImage.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_PROFILE_IMAGE_SIZES);
+            LOGGER.warn(keysProfileImage);
+        }
+
         return ImmutableCivicProfileImage.builder()
                 .x32(objectProfileImage.getAsJsonPrimitive("x32").getAsString())
                 .x256(objectProfileImage.getAsJsonPrimitive("x256").getAsString())
@@ -693,6 +810,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static CivicAvatars createAvatars(@NotNull JsonObject objectAvatars) {
+        Set<String> keysAvatars = objectAvatars.keySet();
+        if (!EXPECTED_CIVIC_AVATARS_SIZES.contains(keysAvatars.size())) {
+            LOGGER.warn("Found " + keysAvatars.size() + " elements in a vicc entry rather than the expected "
+                    + EXPECTED_CIVIC_AVATARS_SIZES);
+            LOGGER.warn(keysAvatars);
+        }
+
         return ImmutableCivicAvatars.builder()
                 .x32(objectAvatars.getAsJsonPrimitive("x32").getAsString())
                 .x14(objectAvatars.getAsJsonPrimitive("x14").getAsString())
@@ -705,6 +829,13 @@ public final class ViccJsonReader {
     private static List<CivicVariantTypes> createVariantTypes(@NotNull JsonArray arrayvariantTypes) {
         List<CivicVariantTypes> civicVariantTypesList = Lists.newArrayList();
         for (JsonElement variantTypes : arrayvariantTypes) {
+            Set<String> keysVariantTypes = variantTypes.getAsJsonObject().keySet();
+            if (!EXPECTED_CIVIC_VARIANTTYPES_SIZES.contains(keysVariantTypes.size())) {
+                LOGGER.warn("Found " + keysVariantTypes.size() + " elements in a vicc entry rather than the expected "
+                        + EXPECTED_CIVIC_VARIANTTYPES_SIZES);
+                LOGGER.warn(keysVariantTypes);
+            }
+
             civicVariantTypesList.add(ImmutableCivicVariantTypes.builder()
                     .displayName(variantTypes.getAsJsonObject().getAsJsonPrimitive("display_name").getAsString())
                     .description(variantTypes.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
