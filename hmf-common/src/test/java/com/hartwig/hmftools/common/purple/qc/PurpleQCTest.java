@@ -11,11 +11,11 @@ public class PurpleQCTest {
 
     @Test
     public void testSegmentScore() {
-        assertEquals(PurpleQCStatus.PASS, create(240, 2d).status());
-        assertEquals(PurpleQCStatus.FAIL_SEGMENT, create(241, 2d).status());
+        assertEquals(PurpleQCStatus.PASS, create(220, 2d).status());
+        assertEquals(PurpleQCStatus.FAIL_SEGMENT, create(221, 2d).status());
 
-        assertEquals(PurpleQCStatus.PASS, create(120, 1d).status());
-        assertEquals(PurpleQCStatus.FAIL_SEGMENT, create(121, 1d).status());
+        assertEquals(PurpleQCStatus.PASS, create(220, 1d).status());
+        assertEquals(PurpleQCStatus.FAIL_SEGMENT, create(221, 1d).status());
     }
 
     @Test

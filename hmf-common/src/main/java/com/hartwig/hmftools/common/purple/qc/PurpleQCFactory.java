@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.common.purple.qc;
 
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.INF;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+
+import java.util.EnumSet;
 import java.util.List;
 
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
@@ -14,13 +20,19 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleQCFactory {
 
+    private static EnumSet<SegmentSupport> INTERNAL = EnumSet.of(NONE, CENTROMERE, TELOMERE, INF);
+
     private PurpleQCFactory() {
     }
 
     @NotNull
     public static PurpleQC create(@NotNull FittedPurity purity, @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull Gender amberGender,
             @NotNull Gender cobaltGender, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        int unsupportedSegments = (int) copyNumbers.stream().filter(x -> x.segmentStartSupport() == SegmentSupport.NONE).count();
+        boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleQCFactory::isStructuralVariantBreak);
+
+        int unsupportedSegments = containsAnySvSupport ? (int) copyNumbers.stream()
+                .filter(x -> x.segmentStartSupport() == NONE && x.segmentEndSupport() == NONE)
+                .count() : 0;
         int deletedGenes = (int) geneCopyNumbers.stream()
                 .filter(x -> !HumanChromosome.fromString(x.chromosome()).equals(HumanChromosome._Y) && x.germlineHet2HomRegions() == 0
                         && x.germlineHomRegions() == 0 && Doubles.lessThan(x.minCopyNumber(), 0.5))
@@ -34,4 +46,9 @@ public final class PurpleQCFactory {
                 .deletedGenes(deletedGenes)
                 .build();
     }
+
+    private static boolean isStructuralVariantBreak(@NotNull PurpleCopyNumber copyNumber) {
+        return !INTERNAL.contains(copyNumber.segmentStartSupport());
+    }
+
 }

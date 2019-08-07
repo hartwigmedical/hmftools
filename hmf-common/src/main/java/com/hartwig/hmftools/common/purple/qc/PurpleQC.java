@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleQC {
 
-    private static final int SEGMENT_THRESHOLD = 120;
+    private static final int SEGMENT_THRESHOLD = 220;
     private static final int DELETED_GENES_THRESHOLD = 280;
 
     @NotNull
@@ -43,7 +43,7 @@ public abstract class PurpleQC {
     }
 
     public int segmentScore() {
-        return (int) Math.round(unsupportedSegments() / ploidy());
+        return unsupportedSegments();
     }
 
     abstract int unsupportedSegments();
