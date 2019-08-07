@@ -254,10 +254,9 @@ public final class ViccJsonReader {
         int number = 1;
         List<ViccEntry> entries = Lists.newArrayList();
         LOGGER.info("Reading VICC knowledgebase from " + jsonPath);
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
+        while (reader.peek() != JsonToken.END_DOCUMENT && number < 4000) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            // LOGGER.info(number);
-            number++;
+            number ++;
             if (!EXPECTED_VICC_ENTRY_SIZES.contains(viccEntryObject.size())) {
                 LOGGER.warn("Found " + viccEntryObject.size() + " elements in a vicc entry rather than the expected "
                         + EXPECTED_VICC_ENTRY_SIZES);

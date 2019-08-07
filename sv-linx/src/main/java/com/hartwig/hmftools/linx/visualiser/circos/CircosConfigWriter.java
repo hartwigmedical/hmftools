@@ -121,20 +121,21 @@ public class CircosConfigWriter
     }
 
     @NotNull
-    private static String cnaAxisPositions(int maxTracks) {
+    static String cnaAxisPositions(int maxTracks)
+    {
         StringJoiner builder = new StringJoiner(",");
 
         final double rel = 1d / maxTracks;
-        final Function<Integer, String> relString = i -> String.valueOf(Math.round(i * rel * 10000)/10000d) + "r";
+        final Function<Integer, String> relString = i -> String.valueOf(Math.round(i * rel * 10000) / 10000d) + "r";
 
-        for (int i = 1; i <= Math.min(9, maxTracks); i++) {
+        for (int i = 1; i <= Math.min(7, maxTracks); i++)
+        {
             builder.add(relString.apply(i));
         }
 
-        for (int i = 10; i <= maxTracks; i++) {
-            if (i % 10 == 0 ){
-                builder.add(relString.apply(i));
-            }
+        for (int i = 8; i <= maxTracks; i += 10)
+        {
+            builder.add(relString.apply(i));
         }
 
         return builder.toString();
