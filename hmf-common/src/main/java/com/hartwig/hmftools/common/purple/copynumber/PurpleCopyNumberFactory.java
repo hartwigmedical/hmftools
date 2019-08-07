@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -64,11 +65,12 @@ public class PurpleCopyNumberFactory {
                 svImpliedFactory.svImpliedCopyNumber(structuralVariants, diploidExtension);
 
         for (final HumanChromosome chromosome : HumanChromosome.values()) {
+            final ExtendDiploidBAF extendDiploidBAF = new ExtendDiploidBAF(simpleVariants(chromosome, structuralVariants));
 
             final List<CombinedRegion> svImplied = allSVImplied.get(chromosome);
             final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
             final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
-            final List<CombinedRegion> bafExtended = ExtendDiploidBAF.extendBAF(populateUnknown);
+            final List<CombinedRegion> bafExtended = extendDiploidBAF.extendBAF(populateUnknown);
 
             final List<CombinedRegion> somatics = extendGermline.extendGermlineAmplifications(bafExtended);
             final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(bafExtended);
@@ -76,6 +78,16 @@ public class PurpleCopyNumberFactory {
             this.somaticCopyNumbers.addAll(toCopyNumber(somatics));
             this.germlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, SegmentSupport.UNKNOWN)).collect(toList()));
         }
+    }
+
+    @NotNull
+    private List<StructuralVariant> simpleVariants(HumanChromosome chromosome, final List<StructuralVariant> structuralVariants) {
+        return structuralVariants.stream().filter(x -> {
+            StructuralVariantLeg end = x.end();
+            return end != null && HumanChromosome.contains(x.start().chromosome()) && HumanChromosome.contains(end.chromosome())
+                    && x.start().chromosome().equals(end.chromosome()) && HumanChromosome.fromString(x.start().chromosome())
+                    .equals(chromosome);
+        }).collect(toList());
     }
 
     @NotNull
