@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.UNDER_CLUSTERING;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
@@ -359,7 +360,10 @@ public class ClusterAnalyser {
     {
         annotateTemplatedInsertions(mClusters, mState.getChrBreakendMap());
 
-        reportUnderclustering(mSampleId, mClusters, mState.getChrBreakendMap());
+        if(runAnnotation(mConfig.RequiredAnnotations, UNDER_CLUSTERING))
+        {
+            reportUnderclustering(mSampleId, mClusters, mState.getChrBreakendMap());
+        }
     }
 
     private void reportClusterFeatures(final SvCluster cluster)

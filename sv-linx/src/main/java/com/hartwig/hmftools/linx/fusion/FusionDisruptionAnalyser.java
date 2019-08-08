@@ -350,13 +350,6 @@ public class FusionDisruptionAnalyser
         {
             findChainedFusions(clusters);
         }
-
-        /*
-        if(checkKnown)
-        {
-            findUnclusteredKnownFusions(svList);
-        }
-        */
     }
 
     private void finalSingleSVFusions(final List<SvVarData> svList)
@@ -492,6 +485,9 @@ public class FusionDisruptionAnalyser
             for(GeneFusion fusion : chainFusions)
             {
                 if (mLogReportableOnly && !fusion.reportable())
+                    continue;
+
+                if(fusion.getAnnotations() == null)
                     continue;
 
                 mFusions.add(fusion);

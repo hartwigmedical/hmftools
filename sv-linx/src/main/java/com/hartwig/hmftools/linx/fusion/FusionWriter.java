@@ -167,6 +167,12 @@ public class FusionWriter
 
             final FusionAnnotations annotations = fusion.getAnnotations();
 
+            if(annotations == null)
+            {
+                LOGGER.error("annotations not set");
+                return;
+            }
+
             writer.write(String.format("%s,%s,%s",
                     sampleId, fusion.reportable(), fusion.getKnownFusionType()));
 
