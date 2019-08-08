@@ -1723,7 +1723,9 @@ public final class ViccJsonReader {
                     .transcriptConsequence(mutation.getAsJsonObject().get("transcriptConsequence") == null
                             ? null
                             : createTranscriptConsequence(mutation.getAsJsonObject().getAsJsonArray("transcriptConsequence")))
-                    .longestTranscript(!mutation.getAsJsonObject().has("longestTranscript") ? null : mutation.getAsJsonObject().getAsJsonPrimitive("longestTranscript").getAsString())
+                    .longestTranscript(!mutation.getAsJsonObject().has("longestTranscript")
+                            ? null
+                            : mutation.getAsJsonObject().getAsJsonPrimitive("longestTranscript").getAsString())
                     .parents("")
                     .wgsaData("")
                     .wgsaMap("")
@@ -1805,13 +1807,14 @@ public final class ViccJsonReader {
                 LOGGER.warn(keysTranscriptConsequences);
             }
 
-            LOGGER.info(transcriptConsequences);
             transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCH37.builder()
                     .aminoAcidChange(transcriptConsequences.getAsJsonObject().get("amino_acid_change").isJsonNull()
                             ? null
                             : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
                     .txSites(jsonArrayToStringList(transcriptConsequences.getAsJsonObject().getAsJsonArray("txSites")))
-                    .exonNumber("")
+                    .exonNumber(transcriptConsequences.getAsJsonObject().get("exonNumber").isJsonNull()
+                            ? null
+                            : createArrayExonNumber(transcriptConsequences))
                     .intronNumber(transcriptConsequences.getAsJsonObject().get("intronNumber").isJsonNull()
                             ? null
                             : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
@@ -1838,15 +1841,17 @@ public final class ViccJsonReader {
             }
 
             transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
-                    .aminoAcidChange(!transcriptConsequence.getAsJsonObject().has("amino_acid_change")
-                            || transcriptConsequence.getAsJsonObject().get("amino_acid_change").isJsonNull()
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().get("amino_acid_change").getAsString())
+                    .aminoAcidChange(
+                            !transcriptConsequence.getAsJsonObject().has("amino_acid_change") || transcriptConsequence.getAsJsonObject()
+                                    .get("amino_acid_change")
+                                    .isJsonNull() ? null : transcriptConsequence.getAsJsonObject().get("amino_acid_change").getAsString())
                     .compositeKey(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
                     .intronNumber(transcriptConsequence.getAsJsonObject().get("intronNumber").isJsonNull()
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
-                    .exonNumber("")
+                    .exonNumber(transcriptConsequence.getAsJsonObject().get("exonNumber").isJsonNull()
+                            ? null
+                            : createArrayExonNumber(transcriptConsequence))
                     .suppress(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
                     .stop(!transcriptConsequence.getAsJsonObject().has("stop")
                             ? null
@@ -1865,8 +1870,8 @@ public final class ViccJsonReader {
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
-                    .ref("")
-                    .alt("")
+                    .ref(!transcriptConsequence.getAsJsonObject().has("ref") ? null : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .alt(!transcriptConsequence.getAsJsonObject().has("alt") ? null : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
                     .build());
         }
         return transcriptConsequenceList;

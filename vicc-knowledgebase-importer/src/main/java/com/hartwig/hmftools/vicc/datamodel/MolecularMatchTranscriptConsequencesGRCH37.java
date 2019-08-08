@@ -17,7 +17,7 @@ public abstract class MolecularMatchTranscriptConsequencesGRCH37 {
     public abstract List<String> txSites();
 
     @Nullable
-    public abstract String exonNumber();
+    public abstract List<String> exonNumber();
 
     @Nullable
     public abstract String intronNumber();
