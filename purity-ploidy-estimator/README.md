@@ -951,7 +951,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-33)
   - Raised QC segment fail to >220 unsupported segments
   - Infer LOH in simple DUPs between 2 LOH regions 
   - Fixed HG38 regression bug
