@@ -1839,7 +1839,6 @@ public final class ViccJsonReader {
 
             transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
                     .aminoAcidChange(!transcriptConsequence.getAsJsonObject().has("amino_acid_change")
-                            && transcriptConsequence.getAsJsonObject().get("amino_acid_change") == null
                             || transcriptConsequence.getAsJsonObject().get("amino_acid_change").isJsonNull()
                             ? null
                             : transcriptConsequence.getAsJsonObject().get("amino_acid_change").getAsString())
@@ -1849,20 +1848,20 @@ public final class ViccJsonReader {
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
                     .exonNumber("")
                     .suppress(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
-                    .stop(transcriptConsequence.getAsJsonObject().get("stop") == null
+                    .stop(!transcriptConsequence.getAsJsonObject().has("stop")
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
                     .custom(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
-                    .start(transcriptConsequence.getAsJsonObject().get("start") == null
+                    .start(!transcriptConsequence.getAsJsonObject().has("start")
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
-                    .chr(transcriptConsequence.getAsJsonObject().get("chr") == null
+                    .chr(!transcriptConsequence.getAsJsonObject().has("chr")
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
                     .strand(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
                     .validated(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("validated").getAsString())
                     .transcript(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
-                    .cdna(transcriptConsequence.getAsJsonObject().get("cdna") == null
+                    .cdna(!transcriptConsequence.getAsJsonObject().has("cdna")
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
