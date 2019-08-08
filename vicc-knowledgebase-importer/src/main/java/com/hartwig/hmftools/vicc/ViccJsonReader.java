@@ -58,6 +58,8 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRight;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRightLeft;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchFusions;
@@ -100,6 +102,8 @@ import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRight;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRightLeft;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchFusions;
@@ -234,7 +238,10 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_ELEMENT_SIZES = Lists.newArrayList(34, 35, 36, 37, 38, 39, 40, 41, 42);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_AST_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LEFT_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_SIZES = Lists.newArrayList(3, 4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_SIZES = Lists.newArrayList(3,4);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES = Lists.newArrayList(3);
+
     private static final List<Integer> EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES = Lists.newArrayList(3, 29, 30, 31);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES = Lists.newArrayList(8, 9, 12, 13);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES = Lists.newArrayList(9);
@@ -291,7 +298,7 @@ public final class ViccJsonReader {
         LOGGER.info("Reading VICC knowledgebase from " + jsonPath);
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            //    LOGGER.info(number);
+            LOGGER.info(number);
             number++;
             if (!EXPECTED_VICC_ENTRY_SIZES.contains(viccEntryObject.size())) {
                 LOGGER.warn("Found " + viccEntryObject.size() + " elements in a vicc entry rather than the expected "
@@ -1541,7 +1548,6 @@ public final class ViccJsonReader {
                     "Found " + keysAst.size() + " in molecular match ast rather than the expected " + EXPECTED_MOLECULARMATCH_AST_SIZES);
             LOGGER.warn(keysAst);
         }
-
         return ImmutableMolecularMatchAst.builder()
                 .raw(objectAst.get("raw") == null ? null : objectAst.getAsJsonPrimitive("raw").getAsString())
                 .value(!objectAst.has("value") ? null : objectAst.getAsJsonPrimitive("value").getAsString())
@@ -1576,16 +1582,45 @@ public final class ViccJsonReader {
                     + EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
             LOGGER.warn(keysRight);
         }
-
         return ImmutableMolecularMatchAstRight.builder()
                 .operator(!objectRight.has("operator") ? null : objectRight.getAsJsonPrimitive("operator").getAsString())
-                .left("")
-                .right("")
-                .raw("")
-                .type("")
-                .value("")
+                .left(!objectRight.has("left") ? null : createRightLeft(objectRight.getAsJsonObject("left")))
+                .right(!objectRight.has("right") ? null : createRightRight(objectRight.getAsJsonObject("right")))
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
                 .build();
 
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightRight createRightRight(@NotNull JsonObject objectRight) {
+        Set<String> keysRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRight.size())) {
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match right right rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
+            LOGGER.warn(keysRight);
+        }
+        return ImmutableMolecularMatchAstRightRight.builder()
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
+        Set<String> keysRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRight.size())) {
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match right left rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
+            LOGGER.warn(keysRight);
+        }
+        return ImmutableMolecularMatchAstRightLeft.builder()
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .build();
     }
 
     @NotNull
@@ -1726,12 +1761,12 @@ public final class ViccJsonReader {
                     .longestTranscript(!mutation.getAsJsonObject().has("longestTranscript")
                             ? null
                             : mutation.getAsJsonObject().getAsJsonPrimitive("longestTranscript").getAsString())
-                    .parents("")
+                    .parents(createParents(mutation.getAsJsonObject().getAsJsonArray("parents")))
                     .wgsaData("")
                     .wgsaMap("")
                     .exonsInfo("")
                     .fusionData("")
-                    .transcriptRecognized("")
+                    .transcriptRecognized(!mutation.getAsJsonObject().has("transcriptRecognized") ? null : mutation.getAsJsonObject().get("transcriptRecognized").getAsString())
                     .description(mutation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .mutationType(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
                     .src(mutation.getAsJsonObject().getAsJsonPrimitive("_src").getAsString())
@@ -1870,8 +1905,12 @@ public final class ViccJsonReader {
                             ? null
                             : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
                     .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
-                    .ref(!transcriptConsequence.getAsJsonObject().has("ref") ? null : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
-                    .alt(!transcriptConsequence.getAsJsonObject().has("alt") ? null : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
+                    .ref(!transcriptConsequence.getAsJsonObject().has("ref")
+                            ? null
+                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
+                    .alt(!transcriptConsequence.getAsJsonObject().has("alt")
+                            ? null
+                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
                     .build());
         }
         return transcriptConsequenceList;

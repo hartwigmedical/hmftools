@@ -17,7 +17,7 @@ public abstract class MolecularMatchMutations {
     public abstract String longestTranscript();
 
     @Nullable
-    public abstract String parents();
+    public abstract List<MolecularMatchParents> parents();
 
     @Nullable
     public abstract String wgsaData();
