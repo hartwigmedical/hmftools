@@ -385,13 +385,16 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+        // invalud fusions are no longer cached
+        assertEquals(0, tester.FusionAnalyser.getFusions().size());
 
+        /*
         fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(var3.id(), fusion.upstreamTrans().parent().id());
         assertEquals(var7.id(), fusion.downstreamTrans().parent().id());
 
         assertFalse(validateFusionAnnotations(fusion, false, false));
+        */
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)

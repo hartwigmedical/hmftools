@@ -497,7 +497,7 @@ public class DriverGeneAnnotator
                 if(breakend != null)
                     index += traverseUp ? 1 : -1;
 
-                if(index < 0 || index > centromereIndex)
+                if(index < startIndex || index > endIndex)
                     break;
 
                 breakend = breakendList.get(index);
