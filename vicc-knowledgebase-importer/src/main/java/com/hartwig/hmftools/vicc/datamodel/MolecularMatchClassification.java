@@ -47,7 +47,7 @@ public abstract class MolecularMatchClassification {
     public abstract String expandGeneSearch();
 
     @Nullable
-    public abstract String parents();
+    public abstract List<MolecularMatchParents> parents();
 
     @Nullable
     public abstract String drugsExperimentalCount();

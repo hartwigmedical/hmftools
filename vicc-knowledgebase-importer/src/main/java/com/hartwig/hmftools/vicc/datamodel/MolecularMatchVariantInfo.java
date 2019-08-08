@@ -20,7 +20,7 @@ public abstract class MolecularMatchVariantInfo {
     public abstract List<String> consequences();
 
     @NotNull
-    public abstract List<String> fusions();
+    public abstract List<MolecularMatchFusions> fusions();
 
     @NotNull
     public abstract List<MolecularMatchLocations> locations();

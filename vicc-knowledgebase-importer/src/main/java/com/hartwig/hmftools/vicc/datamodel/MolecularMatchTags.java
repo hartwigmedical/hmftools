@@ -14,10 +14,10 @@ public abstract class MolecularMatchTags {
     @Nullable
     public abstract String compositeKey();
 
-    @NotNull
+    @Nullable
     public abstract String suppress();
 
-    @NotNull
+    @Nullable
     public abstract String filterType();
 
     @NotNull

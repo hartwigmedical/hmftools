@@ -1,22 +1,25 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchTherapeuticContext {
+public abstract class MolecularMatchParents {
 
     @NotNull
-    public abstract String facet();
-
-    @NotNull
-    public abstract String suppress();
+    public abstract List<String> transcripts();
 
     @Nullable
-    public abstract String valid();
+    public abstract String type();
 
     @NotNull
     public abstract String name();
+
+    @Nullable
+    public abstract String actionableParent();
+
 }

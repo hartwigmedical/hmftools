@@ -55,7 +55,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @NotNull
     public abstract String version();
 
-    @NotNull
+    @Nullable
     public abstract List<String> includeMutation1();
 
     @Nullable
@@ -113,7 +113,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract List<String> includeDrug1();
 
     @Nullable
-    public abstract String includeStage0();
+    public abstract List<String> includeStage0();
 
     @NotNull
     public abstract List<MolecularMatchTherapeuticContext> therapeuticContext();
@@ -125,7 +125,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract String noTherapyAvailable();
 
     @Nullable
-    public abstract String external_id();
+    public abstract List<String> external_id();
 
     @NotNull
     public abstract String narrative();

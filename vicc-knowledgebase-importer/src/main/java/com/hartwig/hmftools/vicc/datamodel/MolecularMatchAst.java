@@ -14,7 +14,7 @@ public abstract class MolecularMatchAst {
     @Nullable
     public abstract String value();
 
-    @NotNull
+    @Nullable
     public abstract String operator();
 
     @Nullable
