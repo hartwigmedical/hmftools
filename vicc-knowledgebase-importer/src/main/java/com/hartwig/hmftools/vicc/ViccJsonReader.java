@@ -259,9 +259,8 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_AST_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LEFT_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES = Lists.newArrayList(3);
-
     private static final List<Integer> EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES = Lists.newArrayList(3, 29, 30, 31);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES = Lists.newArrayList(8, 9, 12, 13);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES = Lists.newArrayList(9);
@@ -1647,11 +1646,11 @@ public final class ViccJsonReader {
                     + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
             LOGGER.warn(keysRight);
         }
-        //  LOGGER.info(objectRight.get("left"));
         return ImmutableMolecularMatchAstRightLeft.builder()
                 .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
                 .type(objectRight.getAsJsonPrimitive("type").getAsString())
                 .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .left(!objectRight.has("left") ? null : createRight(objectRight.getAsJsonObject("left")))
                 .build();
     }
 
