@@ -452,13 +452,14 @@ If only one side of the unknown region is available then we determine which of t
 
 If there is neighbouring information on both sides of the unknown region, then the following rules apply to determine which allele ploidy to hold constant:
 - If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele ploidy as the constant ploidy.
-- Else, If the major allele of the neighbours is significantly different keep the minor allele constant.
-- Else, If the minor allele of the neighbours is significantly different keep the major allele constant.
-- Else, If the unknown region is tiny (<= 30 bases), and is greater in copy number than the neighbour with the largest number of BAF observations, then hold constant that neighbours minor allele.  
+- Else, if the major allele of the neighbours is significantly different keep the minor allele constant.
+- Else, if the minor allele of the neighbours is significantly different keep the major allele constant.
+- Else, if the unknown region is tiny (<= 30 bases), and is greater in copy number than the neighbour with the largest number of BAF observations, then hold constant that neighbours minor allele.  
 This rule is intended to deal with the very short overlap which can occur at double strand breaks particularly for LINE insertions.
-- Else, If the unknown region is small (<= 1000 bases) and is flanked by large (> 1,000,000 bases) LOH regions, then hold constant the minor allele from the neighbour with the largest number of BAF observations.
+- Else, if the unknown region is small (<= 1000 bases) and is flanked by large (> 1,000,000 bases) LOH regions, then hold constant the minor allele from the neighbour with the largest number of BAF observations.
 This rule is intended to ensure that short templated insertions do not break regions of LOH.
-- Else, Find the nearest region on each side (without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
+- Else, if the unknown region is bounded by a simple DUP with LOH on both sides, keep the minor allele constant.
+- Else, find the nearest region on each side (without crossing the centromere) with a change in minor or major allele. If found, re-apply logic from the first three steps. 
 - Failing everything else, hold constant the minor allele of the neighbour with the largest number of BAF observations.
 
 At this stage we have determined a copy number and minor allele ploidy for every base in the genome
@@ -499,7 +500,7 @@ The status field reflects how we have determined the purity of the sample:
 - `NO_TUMOR` - PURPLE failed to find any aneuploidy and somatic variants were supplied but there were fewer than 300 with observed VAF > 0.1.
 
 PURPLE also provides a qc status that can fail for the following 3 reasons:
-- `FAIL_SEGMENT` - We remove samples with more than 120 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
+- `FAIL_SEGMENT` - We remove samples with more than 220 copy number segments unsupported at either end by SV breakpoints. This step was added to remove samples with extreme GC bias, with differences in depth of up to or in excess of 10x between high and low GC regions. GC normalisation is unreliable when the corrections are so extreme so we filter.
 - `FAIL_DELETED_GENES` - We fail any sample with more than 280 deleted genes. This QC step was added after observing that in a handful of samples with high MB scale positive GC bias we sometimes systematically underestimate the copy number in high GC regions. This can lead us to incorrectly infer homozygous loss of entire chromosomes, particularly on chromosome 17 and 19.
 - `FAIL_GENDER` - If the AMBER and COBALT gender are inconsistent we use the COBALT gender but fail the sample.
 
@@ -950,7 +951,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-33)
+  - Raised QC segment fail to >220 unsupported segments
+  - Infer LOH in simple DUPs between 2 LOH regions 
   - Fixed HG38 regression bug
   - Added new logic to structural variant recovery to create inferred variant if unable to find suitable candidate in file.  
   - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 

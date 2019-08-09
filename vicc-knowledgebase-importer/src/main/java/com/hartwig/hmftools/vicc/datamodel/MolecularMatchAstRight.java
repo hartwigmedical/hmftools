@@ -7,12 +7,22 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchAstRight {
-    @NotNull
+
+    @Nullable
+    public abstract String operator();
+
+    @Nullable
+    public abstract MolecularMatchAstRightRight right();
+
+    @Nullable
+    public abstract MolecularMatchAstRightLeft left();
+
+    @Nullable
     public abstract String raw();
 
     @NotNull
     public abstract String type();
 
-    @NotNull
+    @Nullable
     public abstract String value();
 }

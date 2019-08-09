@@ -2,13 +2,18 @@ package com.hartwig.hmftools.common.purple.copynumber;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,8 +30,24 @@ class ExtendDiploidBAF {
     private static Set<SegmentSupport> IGNORE_SUPPORT =
             EnumSet.of(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE, SegmentSupport.UNKNOWN);
 
+    private final Map<Long, Long> simpleDupMap = Maps.newHashMap();
+
+    ExtendDiploidBAF(@NotNull final List<StructuralVariant> simpleVariants) {
+        for (StructuralVariant simpleVariant : simpleVariants) {
+            StructuralVariantLeg end = simpleVariant.end();
+            if (simpleVariant.type() == StructuralVariantType.DUP && end != null) {
+                simpleDupMap.put(simpleVariant.start().cnaPosition(), end.cnaPosition());
+            }
+        }
+    }
+
+    @VisibleForTesting
+    ExtendDiploidBAF(@NotNull final Map<Long, Long> simpleDupMap) {
+        this.simpleDupMap.putAll(simpleDupMap);
+    }
+
     @NotNull
-    static List<CombinedRegion> extendBAF(@NotNull final List<CombinedRegion> regions) {
+    public List<CombinedRegion> extendBAF(@NotNull final List<CombinedRegion> regions) {
 
         InferRegion inferRegion = nextRegion(false, regions);
         while (inferRegion.isValid()) {
@@ -82,7 +103,7 @@ class ExtendDiploidBAF {
         return source.minorAllelePloidy();
     }
 
-    private static double multiSourceTargetPloidy(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
+    private double multiSourceTargetPloidy(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         final FittedRegion primarySource;
         final FittedRegion secondarySource;
         if (regions.get(inferRegion.leftSourceIndex).bafCount() > regions.get(inferRegion.rightSourceIndex).bafCount()) {
@@ -98,6 +119,10 @@ class ExtendDiploidBAF {
         }
 
         if (isSingleTinyRegionWithGreaterCopyNumber(inferRegion, regions, primarySource)) {
+            return primarySource.minorAllelePloidy();
+        }
+
+        if (isSimpleDupSurroundedByLOH(inferRegion, regions)) {
             return primarySource.minorAllelePloidy();
         }
 
@@ -158,7 +183,7 @@ class ExtendDiploidBAF {
                 : source.majorAllelePloidy();
     }
 
-    private static void inferBetween(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
+    private void inferBetween(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isValid());
 
         // Exactly one source available (XOR)
@@ -314,6 +339,33 @@ class ExtendDiploidBAF {
     private static boolean isSingleSmallRegion(long maxSize, @NotNull final InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions) {
         return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && regions.get(inferRegion.leftTargetIndex).bases() <= maxSize;
+    }
+
+    @VisibleForTesting
+    boolean isSimpleDupSurroundedByLOH(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
+
+        boolean isValidIndexes = inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && inferRegion.leftSourceIndex != -1
+                && inferRegion.rightSourceIndex != -1;
+        if (!isValidIndexes) {
+            return false;
+        }
+
+        FittedRegion target = regions.get(inferRegion.leftTargetIndex).region();
+        FittedRegion right = regions.get(inferRegion.rightSourceIndex).region();
+        boolean isStartAndEndDup = target.support() == SegmentSupport.DUP && right.support() == SegmentSupport.DUP;
+        if (!isStartAndEndDup) {
+            return false;
+        }
+
+        boolean isTheSameDup = simpleDupMap.containsKey(target.start()) && simpleDupMap.get(target.start()) == right.start();
+        if (!isTheSameDup) {
+            return false;
+        }
+
+        FittedRegion left = regions.get(inferRegion.leftSourceIndex).region();
+
+
+        return Doubles.lessThan(left.minorAllelePloidy(), 0.5) && Doubles.lessThan(right.minorAllelePloidy(), 0.5);
     }
 
     static class InferRegion {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,21 +20,21 @@ public abstract class MolecularMatchTranscriptConsequence {
     public abstract String intronNumber();
 
     @Nullable
-    public abstract String exonNumber();
+    public abstract List<String> exonNumber();
 
     @NotNull
     public abstract String suppress();
 
-    @NotNull
+    @Nullable
     public abstract String stop();
 
     @NotNull
     public abstract String custom();
 
-    @NotNull
+    @Nullable
     public abstract String start();
 
-    @NotNull
+    @Nullable
     public abstract String chr();
 
     @NotNull
@@ -44,9 +46,15 @@ public abstract class MolecularMatchTranscriptConsequence {
     @NotNull
     public abstract String transcript();
 
-    @NotNull
+    @Nullable
     public abstract String cdna();
 
     @NotNull
     public abstract String referenceGenome();
+
+    @Nullable
+    public abstract String ref();
+
+    @Nullable
+    public abstract String alt();
 }

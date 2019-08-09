@@ -20,7 +20,7 @@ public abstract class CivicCoordinates {
     @Nullable
     public abstract String variantBases();
 
-    @NotNull
+    @Nullable
     public abstract String stop();
 
     @Nullable
@@ -29,19 +29,19 @@ public abstract class CivicCoordinates {
     @Nullable
     public abstract String representativeTranscript2();
 
-    @NotNull
+    @Nullable
     public abstract String start();
 
-    @NotNull
+    @Nullable
     public abstract String representativeTranscript();
 
-    @NotNull
+    @Nullable
     public abstract String ensemblVersion();
 
-    @NotNull
+    @Nullable
     public abstract String chromosome();
 
-    @NotNull
+    @Nullable
     public abstract String referenceBuild();
 
 }

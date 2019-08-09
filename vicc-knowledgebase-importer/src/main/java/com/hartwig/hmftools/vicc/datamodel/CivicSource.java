@@ -16,7 +16,7 @@ public abstract class CivicSource {
     @Nullable
     public abstract String openAccess();
 
-    @NotNull
+    @Nullable
     public abstract String name();
 
     @NotNull
@@ -26,15 +26,15 @@ public abstract class CivicSource {
     public abstract String citation();
 
     @Nullable
-    public abstract String pmc_I();
+    public abstract String pmc_Id();
 
-    @NotNull
+    @Nullable
     public abstract String fullJournalTitle();
 
     @NotNull
     public abstract String sourceUrl();
 
-    @NotNull
+    @Nullable
     public abstract List<String> clinicalTrials();
 
     @NotNull

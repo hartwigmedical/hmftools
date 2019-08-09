@@ -39,8 +39,12 @@ public class FusionDataWriter
             final List<FusedExon> fusedExons = FusedExons.fusedExons(fusion, exons);
             final List<ProteinDomain> fusedProteinDomain = FusedProteinDomains.fusedProteinDomains(fusion, fusedExons, proteinDomains);
 
+            final ScaleIntrons scaler = new ScaleIntrons(ScaleIntrons.introns(fusedExons));
+            final List<FusedExon> intronScaledExons = scaler.scaleIntronsInExons(fusedExons);
+            final List<ProteinDomain> intronScaledProteinDomains = scaler.scaleIntronsInProteinDomains(fusedProteinDomain);
+
             final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
-            for (FusedExon fusedExon : fusedExons)
+            for (FusedExon fusedExon : intronScaledExons)
             {
                 unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.geneStart()));
                 unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.geneEnd()));
@@ -48,16 +52,16 @@ public class FusionDataWriter
                 unadjustedPositions.add(GenomePositions.create(fusedExon.fusion(), fusedExon.end()));
             }
 
-            for (ProteinDomain proteinDomain : fusedProteinDomain)
+            for (ProteinDomain proteinDomain : intronScaledProteinDomains)
             {
                 unadjustedPositions.add(GenomePositions.create(proteinDomain.chromosome(), proteinDomain.start()));
                 unadjustedPositions.add(GenomePositions.create(proteinDomain.chromosome(), proteinDomain.end()));
             }
 
             final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
-            finalExons.addAll(scalePosition.scaleFusedExon(fusedExons));
-            finalProteinDomains.addAll(scalePosition.interpolateProteinDomains(fusedProteinDomain));
-            finalProteinDomains.addAll(legendOnlyDomains(fusion.name(), proteinDomains, fusedProteinDomain));
+            finalExons.addAll(scalePosition.scaleFusedExon(intronScaledExons));
+            finalProteinDomains.addAll(scalePosition.interpolateProteinDomains(intronScaledProteinDomains));
+            finalProteinDomains.addAll(legendOnlyDomains(fusion.name(), proteinDomains, intronScaledProteinDomains));
         }
     }
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +17,7 @@ public abstract class MolecularMatchLocations {
     public abstract String intronNumber();
 
     @Nullable
-    public abstract String exonNumber();
+    public abstract List<String> exonNumber();
 
     @NotNull
     public abstract String stop();

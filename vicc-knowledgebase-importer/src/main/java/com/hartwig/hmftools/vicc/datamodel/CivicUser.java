@@ -17,16 +17,16 @@ public abstract class CivicUser {
     @NotNull
     public abstract CivicOrganization organization();
 
-    @NotNull
+    @Nullable
     public abstract String twitterHandle();
 
     @NotNull
     public abstract String name();
 
-    @NotNull
+    @Nullable
     public abstract String bio();
 
-    @NotNull
+    @Nullable
     public abstract String url();
 
     @NotNull
@@ -38,7 +38,7 @@ public abstract class CivicUser {
     @Nullable
     public abstract String acceptedLicense();
 
-    @NotNull
+    @Nullable
     public abstract String affiliation();
 
     @NotNull
@@ -47,19 +47,19 @@ public abstract class CivicUser {
     @NotNull
     public abstract String role();
 
-    @NotNull
+    @Nullable
     public abstract String facebookProfile();
 
-    @NotNull
+    @Nullable
     public abstract String linkedinProfile();
 
-    @NotNull
+    @Nullable
     public abstract String orcid();
 
     @NotNull
     public abstract String displayName();
 
-    @NotNull
+    @Nullable
     public abstract String lastSeenAt();
 
     @NotNull

@@ -37,4 +37,16 @@ public abstract class MolecularMatchSource {
 
     @NotNull
     public abstract String id();
+
+    @Nullable
+    public abstract String institution();
+
+    @Nullable
+    public abstract String trialPhase();
+
+    @Nullable
+    public abstract String functionalConsequence();
+
+    @Nullable
+    public abstract String trustRating();
 }

@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -15,6 +20,25 @@ import org.junit.Test;
 public class ExtendDiploidBAFTest {
 
     private static final double EPSILON = 1e-10;
+
+    @Test
+    public void testDUPWithLOH() {
+
+        final Map<Long, Long> dupMap = Maps.newHashMap();
+        dupMap.put(1001L, 2001L);
+        final ExtendDiploidBAF victim = new ExtendDiploidBAF(dupMap);
+
+        CombinedRegion leftWithLOH = create(1, 1000, SegmentSupport.TELOMERE, 10, 1, 2);
+        CombinedRegion dup = create(1001, 2000, SegmentSupport.DUP, 0, 1, 4);
+        CombinedRegion del = create(1001, 2000, SegmentSupport.DEL, 0, 1, 4);
+        CombinedRegion rightWithLOH = create(2001, 3000, SegmentSupport.DUP, 1, 1, 2);
+        CombinedRegion rightWithoutLOH = create(2001, 3000, SegmentSupport.DUP, 1, 0.5, 2);
+        ExtendDiploidBAF.InferRegion inferRegion = new ExtendDiploidBAF.InferRegion(0, 1, 1, 2);
+
+        assertTrue(victim.isSimpleDupSurroundedByLOH(inferRegion, Lists.newArrayList(leftWithLOH, dup, rightWithLOH)));
+        assertFalse(victim.isSimpleDupSurroundedByLOH(inferRegion, Lists.newArrayList(leftWithLOH, dup, rightWithoutLOH)));
+        assertFalse(victim.isSimpleDupSurroundedByLOH(inferRegion, Lists.newArrayList(leftWithLOH, del, rightWithLOH)));
+    }
 
     @Test
     public void testTargetAllele() {
@@ -56,10 +80,10 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr3a = create(1032, 2000, SegmentSupport.NONE, 100, 1, 1.9);
         CombinedRegion cr4 = create(2001, 3000, SegmentSupport.NONE, 100, 0.666, 3);
 
-        List<CombinedRegion> result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        List<CombinedRegion> result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
         assertEquals(0, result.get(1).region().minorAllelePloidy(), EPSILON);
 
-        result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2a, cr3a, cr4));
+        result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2a, cr3a, cr4));
         assertEquals(0.3, result.get(1).region().minorAllelePloidy(), EPSILON);
     }
 
@@ -70,7 +94,7 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr3 = create(101_000_001, 101_001_000, SegmentSupport.NONE, 0, 0, 3.0);
         CombinedRegion cr4 = create(101_001_001, 104_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
 
-        List<CombinedRegion> result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        List<CombinedRegion> result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
         assertEquals(0, result.get(2).region().minorAllelePloidy(), EPSILON);
     }
 
@@ -81,7 +105,7 @@ public class ExtendDiploidBAFTest {
         CombinedRegion cr3 = create(101_001_001, 102_001_000, SegmentSupport.NONE, 1000, 1, 2.0);
         CombinedRegion cr4 = create(102_001_001, 104_000_000, SegmentSupport.NONE, 1000, 0.66, 3);
 
-        List<CombinedRegion> result = ExtendDiploidBAF.extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
+        List<CombinedRegion> result = new ExtendDiploidBAF(Collections.emptyList()).extendBAF(Lists.newArrayList(cr1, cr2, cr3, cr4));
         assertEquals(0, result.get(1).region().minorAllelePloidy(), EPSILON);
     }
 

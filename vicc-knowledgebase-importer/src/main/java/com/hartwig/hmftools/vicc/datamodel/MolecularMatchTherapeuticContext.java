@@ -14,7 +14,7 @@ public abstract class MolecularMatchTherapeuticContext {
     @NotNull
     public abstract String suppress();
 
-    @NotNull
+    @Nullable
     public abstract String valid();
 
     @NotNull
