@@ -469,7 +469,7 @@ public class ClusterAnnotations
                 int matchCount = entry.getValue();
 
                 double hitProbability = genomicSpan / 3e9;
-                int otherClusterBreakendCount = otherCluster.getSvCount() * 2 - otherCluster.getTypeCount(SGL);
+                int otherClusterBreakendCount = otherCluster.getSvCount() * 2 - otherCluster.getSglBreakendCount();
                 double expectedHits = hitProbability * otherClusterBreakendCount;
 
                 if(expectedHits >= matchCount)

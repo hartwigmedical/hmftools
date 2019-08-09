@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -159,8 +160,8 @@ public class SvVarData
     public SvBreakend getBreakend(int seIndex) { return mBreakend[seIndex]; }
     public SvBreakend getBreakend(boolean isStart) { return mBreakend[seIndex(isStart)]; }
 
-    public boolean isSglBreakend() { return type() == SGL; }
-    public boolean isInferredSgl() { return mSVData.filter().equals(NONE_SEGMENT_INFERRED); }
+    public boolean isSglBreakend() { return type() == SGL || type() == INF; }
+    public boolean isInferredSgl() { return type() == INF; }
 
     public final String posId()
     {

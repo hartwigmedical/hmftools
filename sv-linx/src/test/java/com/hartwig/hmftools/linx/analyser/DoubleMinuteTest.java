@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static Utils.SvTestRoutines.createTestSv;
@@ -180,10 +181,10 @@ public class DoubleMinuteTest
         tester.clearClustersAndSVs();
 
         // cannot be 2 close INFs
-        var1 = createTestSv(1,"1","0",1000,-1,1,-1, SGL,
+        var1 = createTestSv(1,"1","0",1000,-1,1,-1, INF,
                 10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
 
-        var2 = createTestSv(2,"1","0",2000,-1,-1,-1, SGL,
+        var2 = createTestSv(2,"1","0",2000,-1,-1,-1, INF,
                 10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
 
         tester.AllVariants.add(var1);

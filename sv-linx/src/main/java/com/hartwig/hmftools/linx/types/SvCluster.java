@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
@@ -77,7 +78,6 @@ public class SvCluster
     private boolean mHasLinkingLineElements;
     private boolean mIsSubclonal;
     private List<SvVarData> mInversions;
-    private int mInferredSvCount;
     private boolean mRequiresRecalc;
 
     // state for SVs which link different arms or chromosomes
@@ -106,7 +106,6 @@ public class SvCluster
         mArmGroups = Lists.newArrayList();
         mArmClusters = Lists.newArrayList();
         mTypeCounts = new int[StructuralVariantType.values().length];
-        mInferredSvCount = 0;
 
         // annotation info
         mDesc = "";
@@ -183,10 +182,7 @@ public class SvCluster
 
         // isSpecificSV(var.id())
 
-        if(var.isInferredSgl())
-            ++mInferredSvCount;
-        else
-            ++mTypeCounts[typeAsInt(var.type())];
+        ++mTypeCounts[typeAsInt(var.type())];
 
         if (var.type() == BND || var.isCrossArm())
             mRecalcRemoteSVStatus = true;
@@ -479,23 +475,18 @@ public class SvCluster
             return mSVs.get(0).typeStr();
         }
 
-        String typesStr = getSvTypesStr(mTypeCounts);
+        return getSvTypesStr(mTypeCounts);
+    }
 
-        if(mInferredSvCount > 0)
-            return appendStr(typesStr, String.format("%s=%d", INF_SV_TYPE, mInferredSvCount), '_');
-        else
-            return typesStr;
+    public int getSglBreakendCount()
+    {
+        return mTypeCounts[typeAsInt(SGL)] + mTypeCounts[typeAsInt(INF)];
     }
 
     public int getTypeCount(StructuralVariantType type)
     {
-        if(type == SGL)
-            return mTypeCounts[typeAsInt(type)] + mInferredSvCount;
-        else
-            return mTypeCounts[typeAsInt(type)];
+        return mTypeCounts[typeAsInt(type)];
     }
-
-    public int getInferredTypeCount() { return mInferredSvCount; }
 
     public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
     public final List<SvVarData> getFoldbacks() { return mFoldbacks; }

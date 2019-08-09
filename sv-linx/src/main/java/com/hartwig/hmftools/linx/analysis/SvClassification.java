@@ -104,7 +104,7 @@ public class SvClassification
 
         if(resolvedType.isSimple())
         {
-            if(cluster.getTypeCount(SGL) == 2)
+            if(cluster.getSglBreakendCount() == 2)
                 return false;
             else
                 return cluster.getSvCount() > 1;
@@ -188,14 +188,14 @@ public class SvClassification
         }
 
         // markSyntheticTypes(cluster, isFinal, longDelThreshold, longDupThreshold, proximityThreshold);
-        if(cluster.getTypeCount(SGL) == 0)
+        if(cluster.getSglBreakendCount() == 0)
         {
             classifyPairClusters(cluster, isFinal, proximityThreshold, longDelThreshold, longDupThreshold);
         }
         else
         {
             // to be reworked once new inferred changes are complete
-            if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getTypeCount(SGL) == 2)
+            if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getSglBreakendCount() == 2)
             {
                 final SvVarData sgl1 = cluster.getSV(0);
                 final SvVarData sgl2 = cluster.getSV(1);
@@ -351,7 +351,7 @@ public class SvClassification
 
     public static void markSyntheticTypes(SvCluster cluster, boolean isFinal, long longDelThreshold, long longDupThreshold, int proximityThreshold)
     {
-        if(cluster.getTypeCount(SGL) == 0)
+        if(cluster.getSglBreakendCount() == 0)
         {
             classifyPairClusters(cluster, isFinal, proximityThreshold, longDelThreshold, longDupThreshold);
 
@@ -369,7 +369,7 @@ public class SvClassification
             markSyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
             */
         }
-        else if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getTypeCount(SGL) == 2)
+        else if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getSglBreakendCount() == 2)
         {
             final SvVarData sgl1 = cluster.getSV(0);
             final SvVarData sgl2 = cluster.getSV(1);
@@ -387,7 +387,7 @@ public class SvClassification
     /*
     public static void markSyntheticDelDups(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
-        if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getTypeCount(SGL) > 0)
+        if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getSglBreakendCount() > 0)
             return;
 
         SvChain chain = cluster.getChains().get(0);

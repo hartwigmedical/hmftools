@@ -305,7 +305,7 @@ public class LineElementAnnotator {
         }
         else if(hasPolyAorT)
         {
-            int sglCount = cluster.getTypeCount(SGL);
+            int sglCount = cluster.getSglBreakendCount();
 
             if(sglCount >= 1 && sglCount <= 2 && sglCount == cluster.getSvCount())
             {

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWrite
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -680,9 +681,6 @@ public class SvSampleAnalyser {
 
                 ResolvedType resolvedType = cluster.getResolvedType();
 
-                int inferredCount = cluster.getInferredTypeCount();
-                int sglCount = cluster.getTypeCount(SGL);
-
                 final String superType = getSuperType(cluster);
 
                 if(mClusterFileWriter != null)
@@ -694,7 +692,7 @@ public class SvSampleAnalyser {
 
                     mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
                             cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
-                            cluster.getTypeCount(INV), cluster.getTypeCount(BND), sglCount - inferredCount, inferredCount));
+                            cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL), cluster.getTypeCount(INF)));
 
                     double foldbackCount = 0;
 
