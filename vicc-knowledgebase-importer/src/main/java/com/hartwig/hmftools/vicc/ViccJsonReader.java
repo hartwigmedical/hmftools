@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.vicc;
 
-import java.awt.image.LookupOp;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
@@ -203,9 +202,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import jdk.nashorn.internal.ir.ReturnNode;
 
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
