@@ -12,11 +12,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import static Utils.SvTestRoutines.createBnd;
-import static Utils.SvTestRoutines.createDel;
-import static Utils.SvTestRoutines.createInv;
-
-import java.util.List;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -25,7 +22,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
 
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class InversionPairTest
 {

@@ -1,8 +1,8 @@
-package Utils;
+package com.hartwig.hmftools.linx.utils;
 
 import static java.util.stream.Collectors.toList;
 
-import static Utils.SvTestRoutines.initialiseSV;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.initialiseSV;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

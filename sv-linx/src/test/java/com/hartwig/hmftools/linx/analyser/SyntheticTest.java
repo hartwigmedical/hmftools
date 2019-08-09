@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static Utils.SvTestRoutines.createBnd;
-import static Utils.SvTestRoutines.createDel;
-import static Utils.SvTestRoutines.createDup;
-import static Utils.SvTestRoutines.createInv;
-import static Utils.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
 
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
@@ -26,10 +25,9 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class SyntheticTest
 {

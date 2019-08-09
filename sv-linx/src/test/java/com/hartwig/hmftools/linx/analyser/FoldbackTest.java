@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static Utils.SvTestRoutines.createDel;
-import static Utils.SvTestRoutines.createDup;
-import static Utils.SvTestRoutines.createInv;
-import static Utils.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,7 +15,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
 
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class FoldbackTest
 {

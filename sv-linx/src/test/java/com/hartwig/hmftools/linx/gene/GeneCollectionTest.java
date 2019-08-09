@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.gene;
 
-import static Utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.extractTranscriptExonData;
@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProte
 
 import org.junit.Test;
 
-import Utils.GeneTestUtils;
+import com.hartwig.hmftools.linx.utils.GeneTestUtils;
 
 public class GeneCollectionTest
 {

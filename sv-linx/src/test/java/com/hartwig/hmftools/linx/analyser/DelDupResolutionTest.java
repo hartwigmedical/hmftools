@@ -6,15 +6,15 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import static Utils.SvTestRoutines.createDel;
-import static Utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
 
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
 
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class DelDupResolutionTest
 {

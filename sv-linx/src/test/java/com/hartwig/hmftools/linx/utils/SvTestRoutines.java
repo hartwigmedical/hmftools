@@ -1,4 +1,4 @@
-package Utils;
+package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;

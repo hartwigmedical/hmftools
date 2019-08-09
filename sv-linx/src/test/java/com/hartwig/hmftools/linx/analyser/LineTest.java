@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static Utils.SvTestRoutines.createBnd;
-import static Utils.SvTestRoutines.createSv;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSv;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.KNOWN_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
@@ -19,7 +19,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
 
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class LineTest
 {

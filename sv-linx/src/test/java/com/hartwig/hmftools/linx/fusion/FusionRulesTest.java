@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static Utils.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 
 import static org.junit.Assert.assertTrue;

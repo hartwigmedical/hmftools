@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static Utils.SvTestRoutines.createBnd;
-import static Utils.SvTestRoutines.createDel;
-import static Utils.SvTestRoutines.createDup;
-import static Utils.SvTestRoutines.createIns;
-import static Utils.SvTestRoutines.createInv;
-import static Utils.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createIns;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -25,7 +25,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
 
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class MiscTest
 {

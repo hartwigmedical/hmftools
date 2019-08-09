@@ -17,10 +17,10 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOve
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
 
-import static Utils.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.calcCombinedPhase;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.simpleToCombinedPhase;
-import static Utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

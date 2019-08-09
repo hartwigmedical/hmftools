@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static Utils.SvTestRoutines.createBnd;
-import static Utils.SvTestRoutines.createInv;
-import static Utils.GeneTestUtils.addGeneData;
-import static Utils.GeneTestUtils.addTransExonData;
-import static Utils.GeneTestUtils.createEnsemblGeneData;
-import static Utils.SvTestRoutines.createDel;
-import static Utils.SvTestRoutines.createDup;
-import static Utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import Utils.LinxTester;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;

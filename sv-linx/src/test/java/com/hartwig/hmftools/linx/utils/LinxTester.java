@@ -1,4 +1,4 @@
-package Utils;
+package com.hartwig.hmftools.linx.utils;
 
 import static java.lang.Math.max;
 
