@@ -148,11 +148,8 @@ public class SvClassification
         if (smallSimpleSVs(cluster))
         {
             if(cluster.getChains().size() == 1)
-            // if(cluster.getSvCount() == 2 && cluster.getTypeCount(DUP) == 1 && cluster.getTypeCount(DEL) == 1)
             {
                 classifyPairClusters(cluster, isFinal, proximityThreshold, longDelThreshold, longDupThreshold);
-
-                // markSyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
 
                 if(cluster.getResolvedType() != NONE)
                     return;

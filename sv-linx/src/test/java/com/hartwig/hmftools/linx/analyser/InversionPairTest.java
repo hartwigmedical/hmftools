@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -127,8 +130,8 @@ public class InversionPairTest
         LinxTester tester = new LinxTester();
 
         // first with a uniform ploidy and long TI
-        SvVarData var1 = createInv(tester.nextVarId(), "1", 110000, 350000, 1);
-        SvVarData var2 = createInv(tester.nextVarId(), "1", 1000, 200000, -1);
+        SvVarData var1 = createInv(tester.nextVarId(), "1", 210000, 450000, 1);
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 1000, 300000, -1);
 
         tester.addAndCluster(var1, var2);
 
@@ -137,6 +140,11 @@ public class InversionPairTest
 
         assertTrue(!cluster.isResolved());
         assertEquals(DUP_TI, cluster.getResolvedType());
+
+        assertEquals(var1.position(true) - var2.position(true), getSyntheticLength(cluster));
+        assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
+        assertEquals(var2.position(false) - var1.position(true), getSyntheticGapLength(cluster));
+
 
         // test again but with the TI in LOH bounds
         var1 = createInv(tester.nextVarId(), "1", 50000, 350000, 1);
@@ -174,8 +182,8 @@ public class InversionPairTest
         LinxTester tester = new LinxTester();
 
         // first with a uniform ploidy and long TI
-        SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 200000, 1);
-        SvVarData var2 = createInv(tester.nextVarId(), "1", 5000, 50000, -1);
+        SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 400000, 1);
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 200000, 250000, -1);
 
         tester.addAndCluster(var1, var2);
 
@@ -184,6 +192,10 @@ public class InversionPairTest
 
         assertTrue(!cluster.isResolved());
         assertEquals(DEL_TI, cluster.getResolvedType());
+
+        assertEquals(var2.position(true) - var1.position(true), getSyntheticLength(cluster));
+        assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
+        assertEquals(var2.position(false) - var2.position(true), getSyntheticGapLength(cluster));
 
         // test again but with the TI in LOH bounds
         var1 = createInv(tester.nextVarId(), "1", 1000, 200000, 1);

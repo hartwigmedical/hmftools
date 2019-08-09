@@ -1,12 +1,21 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
+import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
+import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
 
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -18,7 +27,7 @@ public class TranslocationPairTest
 {
 
     @Test
-    public void testSyntheticReciprocalTranslocations()
+    public void testReciprocalTranslocations()
     {
         LinxTester tester = new LinxTester();
 
@@ -86,6 +95,121 @@ public class TranslocationPairTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_TRANS);
+        assertEquals(2, cluster.getChains().size());
+        assertFalse(cluster.getChains().stream().anyMatch(x -> x.getLinkedPairs().stream().anyMatch(y -> y.length() > SHORT_TI_LENGTH)));
+    }
+
+    @Test
+    public void testFacingDelTranslocations()
+    {
+        LinxTester tester = new LinxTester();
+
+        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
+        SvVarData var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DEL_TI);
+
+        // again but relying on an LOH to mark the TI as definitely a TI
+        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50000, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
+
+        tester.CnDataLoader.getLohData().add(new LohEvent(var1.chromosome(false), 1, var1.position(false),
+                SegmentSupport.TELOMERE.toString(), var1.typeStr(), 1, LohEvent.CN_DATA_NO_SV, var1.id()));
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DEL_TI);
+
+        // and now as a RECIP_DEL_DUP
+        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50000, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
+
+        tester.CnDataLoader.getLohData().clear();
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS_DEL_DUP);
+
+    }
+
+    @Test
+    public void testFacingDupTranslocations()
+    {
+        LinxTester tester = new LinxTester();
+
+        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 1000, -1);
+        SvVarData var2 = createBnd(tester.nextVarId(), "1", 200000, 1, "2", 150000, 1);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DUP_TI);
+
+        // again but relying on an LOH to mark the TI as definitely a TI
+        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 50000, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 200000, 1, "2", 150000, 1);
+
+        tester.CnDataLoader.getLohData().add(new LohEvent(var1.chromosome(false), 1, var1.position(false),
+                SegmentSupport.TELOMERE.toString(), var1.typeStr(), 1, LohEvent.CN_DATA_NO_SV, var1.id()));
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DUP_TI);
+
+        // and now as a RECIP_DUPS
+        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 50000, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 200000, 1, "2", 150000, 1);
+
+        tester.CnDataLoader.getLohData().clear();
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS_DUPS);
+    }
+
+    @Test
+    public void testThreeArmTranslocations()
+    {
+        LinxTester tester = new LinxTester();
+
+        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 1000, -1);
+        SvVarData var2 = createBnd(tester.nextVarId(), "2", 10000, 1, "3", 1000, 1);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == PAIR_OTHER);
     }
 
 }
