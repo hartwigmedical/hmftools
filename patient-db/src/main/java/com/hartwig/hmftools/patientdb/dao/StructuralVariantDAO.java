@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
@@ -42,16 +43,18 @@ class StructuralVariantDAO
 
         for (Record record : result)
         {
-
-            boolean isSingleBreakend =
-                    record.getValue(STRUCTURALVARIANT.ENDCHROMOSOME) == null && record.getValue(STRUCTURALVARIANT.ENDPOSITION) == null
-                            && record.getValue(STRUCTURALVARIANT.ENDORIENTATION) == null;
+            StructuralVariantType type = StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE));
 
             final String filterStr = record.getValue(STRUCTURALVARIANT.FILTER);
 
-            // TEMP CAS: ploidy correction for NONE segment SVs
+            if(type == SGL && filterStr.equals(INFERRED))
+                type = INF;
+
+            boolean isSingleBreakend = (type == SGL) || (type == INF);
+
+            // ploidy correction for NONE segment SVs
             Double ploidy = record.getValue(STRUCTURALVARIANT.PLOIDY);
-            if (isSingleBreakend && ploidy == null && filterStr.equals(INFERRED))
+            if (type == INF && ploidy == null)
             {
                 ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
@@ -76,7 +79,7 @@ class StructuralVariantDAO
                     .adjustedStartCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART)))
                     .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND)))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
-                    .type(StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE)))
+                    .type(type)
                     .filter(filterStr)
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))

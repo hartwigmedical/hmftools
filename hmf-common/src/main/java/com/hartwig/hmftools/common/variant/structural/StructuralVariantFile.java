@@ -2,6 +2,10 @@ package com.hartwig.hmftools.common.variant.structural;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -112,7 +116,8 @@ public class StructuralVariantFile
     }
 
     @NotNull
-    private static String toString(@NotNull final StructuralVariantData svData) {
+    private static String toString(@NotNull final StructuralVariantData svData)
+    {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.id()))
                 .add(String.valueOf(svData.startChromosome()))
@@ -196,9 +201,15 @@ public class StructuralVariantFile
                 .adjustedEndCopyNumber(getDoubleValue(values[index++]))
                 .adjustedStartCopyNumberChange(Double.valueOf(values[index++]))
                 .adjustedEndCopyNumberChange(getDoubleValue(values[index++]))
-                .insertSequence(values[index++])
-                .type(StructuralVariantType.fromAttribute(values[index++]))
-                .filter(values[index++])
+                .insertSequence(values[index++]);
+
+        StructuralVariantType type = StructuralVariantType.fromAttribute(values[index++]);
+        final String filterStr = values[index++];
+        if(type == SGL && filterStr.equals(INFERRED))
+            type = INF;
+
+        builder.type(type)
+                .filter(filterStr)
                 .imprecise(Boolean.valueOf(values[index++]))
                 .qualityScore(Double.valueOf(values[index++]))
                 .event(values[index++])
