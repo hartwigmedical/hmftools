@@ -67,10 +67,6 @@ public class SvCluster
     private List<LohEvent> mLohEvents;
     private String mClusteringReasons;
 
-    // for synthetic DELs and DUPs
-    private long mSyntheticTILength;
-    private long mSyntheticLength;
-
     private boolean mRequiresReplication;
 
     // cached lists of identified special cases
@@ -118,8 +114,6 @@ public class SvCluster
         mIsConsistent = false;
         mIsResolved = false;
         mResolvedType = NONE;
-        mSyntheticTILength = 0;
-        mSyntheticLength = 0;
         mRequiresRecalc = true;
         mAnnotationList = Lists.newArrayList();
         mChrBreakendMap = new HashMap();
@@ -186,9 +180,6 @@ public class SvCluster
             mIsResolved = false;
             mResolvedType = NONE;
         }
-
-        mSyntheticTILength = 0;
-        mSyntheticLength = 0;
 
         // isSpecificSV(var.id())
 
@@ -402,12 +393,6 @@ public class SvCluster
     public boolean isResolved() { return mIsResolved; }
     public final ResolvedType getResolvedType() { return mResolvedType; }
 
-    public void setSyntheticData(long length, long tiLength)
-    {
-        mSyntheticLength = length;
-        mSyntheticTILength = tiLength;
-    }
-
     public boolean isSyntheticType()
     {
         if(mSVs.size() == 1)
@@ -415,9 +400,6 @@ public class SvCluster
 
         return SvClassification.isSyntheticType(this);
     }
-
-    public long getSyntheticTILength() { return mSyntheticTILength; }
-    public long getSyntheticLength() { return mSyntheticLength; }
 
     private void updateClusterDetails()
     {

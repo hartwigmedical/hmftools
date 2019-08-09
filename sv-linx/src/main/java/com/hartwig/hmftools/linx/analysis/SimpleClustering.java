@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_SOLO_SINGLE;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.markSinglePairResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -244,8 +245,6 @@ public class SimpleClustering
             markClusterInversions(cluster);
         }
 
-        associateBreakendCnEvents(sampleId, clusters);
-
         int initClusterCount = clusters.size();
 
         mergeOnLOHEvents(clusters);
@@ -297,101 +296,6 @@ public class SimpleClustering
             return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
     }
 
-    private void associateBreakendCnEvents(final String sampleId, List<SvCluster> clusters)
-    {
-        // search for breakends that match LOH and Hom-loss events
-        // note that LOH-breakend links are established here and then must be tidied up once the sample is complete
-
-        String currentChromosome = "";
-        List<SvBreakend> breakendList = null;
-
-        int missedEvents = 0;
-
-        if(mState.getLohEventList() != null && !mState.getLohEventList().isEmpty())
-        {
-            for (final LohEvent lohEvent : mState.getLohEventList())
-            {
-                if (!lohEvent.isSvEvent())
-                    continue;
-
-                // use the breakend table to find matching SVs
-                if (breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
-                {
-                    breakendList = mState.getChrBreakendMap().get(lohEvent.Chromosome);
-                    currentChromosome = lohEvent.Chromosome;
-                }
-
-                if (breakendList == null)
-                    continue;
-
-                for (final SvBreakend breakend : breakendList)
-                {
-                    if (breakend.orientation() == 1 && breakend.getSV().id() == lohEvent.StartSV)
-                    {
-                        lohEvent.setBreakend(breakend, true);
-                        breakend.getCluster().addLohEvent(lohEvent);
-                    }
-
-                    if (breakend.orientation() == -1 && breakend.getSV().id() == lohEvent.EndSV)
-                    {
-                        lohEvent.setBreakend(breakend, false);
-                        breakend.getCluster().addLohEvent(lohEvent);
-                    }
-
-                    if (lohEvent.matchedBothSVs())
-                        break;
-                }
-
-                if (lohEvent.StartSV != CN_DATA_NO_SV && lohEvent.getBreakend(true) == null)
-                    ++missedEvents;
-
-                if (lohEvent.EndSV != CN_DATA_NO_SV && lohEvent.getBreakend(false) == null)
-                    ++missedEvents;
-            }
-        }
-
-        if(mState.getHomLossList() != null && !mState.getHomLossList().isEmpty())
-        {
-            for (HomLossEvent homLossEvent : mState.getHomLossList())
-            {
-                if (homLossEvent.StartSV == CN_DATA_NO_SV && homLossEvent.EndSV == CN_DATA_NO_SV)
-                    continue;
-
-                breakendList = mState.getChrBreakendMap().get(homLossEvent.Chromosome);
-
-                if (breakendList == null)
-                    continue;
-
-                for (final SvBreakend breakend : breakendList)
-                {
-                    if (breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
-                    {
-                        homLossEvent.setBreakend(breakend, true);
-                    }
-
-                    if (breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
-                    {
-                        homLossEvent.setBreakend(breakend, false);
-                    }
-
-                    if (homLossEvent.matchedBothSVs())
-                        break;
-                }
-
-                if (homLossEvent.StartSV != CN_DATA_NO_SV && homLossEvent.getBreakend(true) == null)
-                    ++missedEvents;
-
-                if (homLossEvent.EndSV != CN_DATA_NO_SV && homLossEvent.getBreakend(false) == null)
-                    ++missedEvents;
-            }
-        }
-
-        if(missedEvents > 0)
-        {
-            LOGGER.warn("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
-        }
-    }
-
     private void mergeOnLOHEvents(List<SvCluster> clusters)
     {
         if (mState.getLohEventList().isEmpty() && mState.getHomLossList().isEmpty())
@@ -414,9 +318,8 @@ public class SimpleClustering
             {
                 if (!lohClusterStart.hasLinkingLineElements() && !lohClusterEnd.hasLinkingLineElements())
                 {
-                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event: SVs({} and {}) length({})",
-                            lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(),
-                            lohEvent.StartSV, lohEvent.EndSV, lohEvent.Length);
+                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
+                            lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(), lohEvent);
 
                     addClusterReasons(lohSvStart, lohSvEnd, CR_LOH);
                     lohClusterStart.addClusterReason(CR_LOH);
@@ -624,8 +527,10 @@ public class SimpleClustering
         // find and record any long DEL or DUP for merging, including long synthetic ones
         if(cluster.isSyntheticType() && cluster.getResolvedType().isSimple() && !cluster.isResolved())
         {
-            if ((cluster.getResolvedType() == ResolvedType.DEL && cluster.getSyntheticLength() >= mState.getDelCutoffLength())
-            || (cluster.getResolvedType() == ResolvedType.DUP && cluster.getSyntheticLength() >= mState.getDupCutoffLength()))
+            long syntheticLength = getSyntheticLength(cluster);
+
+            if ((cluster.getResolvedType() == ResolvedType.DEL && syntheticLength >= mState.getDelCutoffLength())
+            || (cluster.getResolvedType() == ResolvedType.DUP && syntheticLength >= mState.getDupCutoffLength()))
             {
                 for (final SvVarData var : cluster.getSVs())
                 {
@@ -1097,7 +1002,6 @@ public class SimpleClustering
                     otherCluster.mergeOtherCluster(cluster);
                     otherCluster.addClusterReason(CLUSTER_REASON_SOLO_SINGLE);
                     otherCluster.setResolved(true, resolvedType);
-                    otherCluster.setSyntheticData(abs(otherVar.position(true) - var.position(true)), 0);
 
                     clusters.remove(cluster);
                     foundMerges = true;

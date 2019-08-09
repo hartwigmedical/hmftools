@@ -216,12 +216,9 @@ public class MergeRuleTest
         SvVarData var4 = createBnd(4, "1", 20000, 1, "5", 200, 1);
         SvVarData var5 = createBnd(5, "1", 22000, -1, "5", 100, -1);
 
-        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
+        LohEvent lohEvent = new LohEvent("1", 1000, 100000, "BND", "BND", 1, var1.id(), var2.id());
 
-        LohEvent lohEvent = new LohEvent("1", 1000, 100000, "BND", "BND",
-                2, 1, 1, 1, 1, 99000, var1.id(), var2.id());
-
-        lohData.add(lohEvent);
+        tester.CnDataLoader.getLohData().add(lohEvent);
 
         List<HomLossEvent> homLossData = tester.CnDataLoader.getHomLossData();
 
@@ -257,12 +254,12 @@ public class MergeRuleTest
         var4 = createBnd(4, "1", 30000, 1, "4", 100, 1);
         var5 = createBnd(5, "1", 40000, -1, "5", 100, 1);
 
-        lohData.clear();
+        tester.CnDataLoader.getLohData().clear();
 
         lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var1.position(false),
-                "DEL", "DEL", 2, 1, 1, 1, 1, 99000, var1.id(), var1.id());
+                "DEL", "DEL", 1, var1.id(), var1.id());
 
-        lohData.add(lohEvent);
+        tester.CnDataLoader.getLohData().add(lohEvent);
 
         homLossData.clear();
 
@@ -309,12 +306,12 @@ public class MergeRuleTest
         var2 = createBnd(2, "1", 20000, 1, "2", 100, 1);
         var3 = createBnd(3, "1", 40000, -1, "3", 100, 1);
 
-        lohData.clear();
+        tester.CnDataLoader.getLohData().clear();
 
         lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var3.position(true),
-                var1.typeStr(), var3.typeStr(), 2, 1, 1, 1, 1, 20000, var1.id(), var3.id());
+                var1.typeStr(), var3.typeStr(), 1,var1.id(), var3.id());
 
-        lohData.add(lohEvent);
+        tester.CnDataLoader.getLohData().add(lohEvent);
 
         homLossData.clear();
 
@@ -342,12 +339,12 @@ public class MergeRuleTest
         var3 = createBnd(3, "1", 20000, 1, "2", 100, 1);
         var4 = createBnd(4, "1", 50000, -1, "3", 100, 1);
 
-        lohData.clear();
+        tester.CnDataLoader.getLohData().clear();
 
         lohEvent = new LohEvent(var1.chromosome(true), var1.position(true), var2.position(false),
-                var1.typeStr(), var2.typeStr(), 2, 1, 1, 1, 1, 20000, var1.id(), var2.id());
+                var1.typeStr(), var2.typeStr(), 1, var1.id(), var2.id());
 
-        lohData.add(lohEvent);
+        tester.CnDataLoader.getLohData().add(lohEvent);
 
         homLossData.clear();
 
@@ -404,21 +401,13 @@ public class MergeRuleTest
 
         List<LohEvent> lohData = tester.CnDataLoader.getLohData();
 
-        lohData.add(new LohEvent("1", 10000, 20000,
-                "DEL", "DUP", 1, 1, 1, 0, 1, 10000,
-                var1.id(), var2.id()));
+        lohData.add(new LohEvent("1", 10000, 20000, "DEL", "DUP", 1, var1.id(), var2.id()));
 
-        lohData.add(new LohEvent("1", 50000, 60000,
-                "DUP", "DEL", 1, 1, 1, 0, 1, 19000,
-                var2.id(), var1.id()));
+        lohData.add(new LohEvent("1", 50000, 60000,"DUP", "DEL", 1, var2.id(), var1.id()));
 
-        lohData.add(new LohEvent("1", 110000, 120000,
-                "DUP", "DEL", 1, 1, 1, 0, 1, 10000,
-                var6.id(), var5.id()));
+        lohData.add(new LohEvent("1", 110000, 120000, "DUP", "DEL", 1, var6.id(), var5.id()));
 
-        lohData.add(new LohEvent("2", 20000, 30000,
-                "BND", "DUP", 1, 1, 1, 0, 1, 10000,
-                var4.id(), var9.id()));
+        lohData.add(new LohEvent("2", 20000, 30000,"BND", "DUP", 1, var4.id(), var9.id()));
 
         tester.preClusteringInit();
 

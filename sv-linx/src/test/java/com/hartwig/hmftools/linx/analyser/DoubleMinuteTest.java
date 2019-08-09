@@ -33,9 +33,6 @@ public class DoubleMinuteTest
     {
         LinxTester tester = new LinxTester();
 
-        // tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
-
         // need to put another SV before it to set the background copy number for this chromatid
         final SvVarData var1 = createTestSv(1,"1","1",500,600,1,-1, DEL,1);
 
@@ -70,7 +67,6 @@ public class DoubleMinuteTest
         LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
         final SvVarData var1 = createTestSv(1,"1","1",1000,6000,-1,-1, INV,8);
         final SvVarData var2 = createTestSv(2,"1","1",3000,8000,1,1, INV,8);
@@ -104,7 +100,6 @@ public class DoubleMinuteTest
         LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
         // 1 s10100 -> 6 e10600-10500s -> 4 s11500-10100e -> 3 s10200-12000e -> 5 s12100-12200e -> 2 e12500-11200s -> 1 e11000
 
@@ -157,7 +152,6 @@ public class DoubleMinuteTest
         LinxTester tester = new LinxTester();
 
         tester.logVerbose(true);
-        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
 
         // a cluster with a set of 3 foldbacks which control the ploidies
         SvVarData var1 = createTestSv(1,"1","1",400,500,-1,-1, INV,1);

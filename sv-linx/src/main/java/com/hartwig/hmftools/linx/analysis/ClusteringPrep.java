@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
+import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 
@@ -18,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.cn.HomLossEvent;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -192,6 +196,116 @@ public class ClusteringPrep
 
                 var.setNearestSvRelation(relationType);
             }
+        }
+    }
+
+    protected static void associateBreakendCnEvents(final String sampleId, final ClusteringState state)
+    {
+        // search for breakends that match LOH and Hom-loss events
+        // note that LOH-breakend links are established here and then must be tidied up once the sample is complete
+
+        String currentChromosome = "";
+        List<SvBreakend> breakendList = null;
+
+        int missedEvents = 0;
+
+        if(state.getLohEventList() != null && !state.getLohEventList().isEmpty())
+        {
+            for (final LohEvent lohEvent : state.getLohEventList())
+            {
+                if (!lohEvent.isSvEvent())
+                    continue;
+
+                // use the breakend table to find matching SVs
+                if (breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
+                {
+                    breakendList = state.getChrBreakendMap().get(lohEvent.Chromosome);
+                    currentChromosome = lohEvent.Chromosome;
+                }
+
+                if (breakendList == null)
+                    continue;
+
+                for (final SvBreakend breakend : breakendList)
+                {
+                    final SvVarData var = breakend.getSV();
+
+                    if (breakend.orientation() == 1 && var.id() == lohEvent.StartSV)
+                    {
+                        // check for an INV that the correct end is associated
+                        boolean skipInvBreakend = var.type() == INV
+                                && abs(breakend.position() - lohEvent.PosStart) > abs(breakend.getOtherBreakend().position() - lohEvent.PosStart);
+
+                        if(!skipInvBreakend)
+                        {
+                            lohEvent.setBreakend(breakend, true);
+                            var.getCluster().addLohEvent(lohEvent);
+                        }
+                    }
+
+                    if (breakend.orientation() == -1 && var.id() == lohEvent.EndSV)
+                    {
+                        boolean skipInvBreakend = var.type() == INV
+                                && abs(breakend.position() - lohEvent.PosEnd) > abs(breakend.getOtherBreakend().position() - lohEvent.PosEnd);
+
+                        if(!skipInvBreakend)
+                        {
+                            lohEvent.setBreakend(breakend, false);
+                            var.getCluster().addLohEvent(lohEvent);
+                        }
+                    }
+
+                    if (lohEvent.matchedBothSVs())
+                        break;
+                }
+
+                if (lohEvent.StartSV != CN_DATA_NO_SV && lohEvent.getBreakend(true) == null)
+                    ++missedEvents;
+
+                if (lohEvent.EndSV != CN_DATA_NO_SV && lohEvent.getBreakend(false) == null)
+                    ++missedEvents;
+            }
+        }
+
+        if(state.getHomLossList() != null && !state.getHomLossList().isEmpty())
+        {
+            for (HomLossEvent homLossEvent : state.getHomLossList())
+            {
+                if (homLossEvent.StartSV == CN_DATA_NO_SV && homLossEvent.EndSV == CN_DATA_NO_SV)
+                    continue;
+
+                breakendList = state.getChrBreakendMap().get(homLossEvent.Chromosome);
+
+                if (breakendList == null)
+                    continue;
+
+                for (final SvBreakend breakend : breakendList)
+                {
+                    if (breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
+                    {
+                        homLossEvent.setBreakend(breakend, true);
+                    }
+
+                    if (breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
+                    {
+                        homLossEvent.setBreakend(breakend, false);
+                    }
+
+                    if (homLossEvent.matchedBothSVs())
+                        break;
+                }
+
+                if (homLossEvent.StartSV != CN_DATA_NO_SV && homLossEvent.getBreakend(true) == null)
+                    ++missedEvents;
+
+                if (homLossEvent.EndSV != CN_DATA_NO_SV && homLossEvent.getBreakend(false) == null)
+                    ++missedEvents;
+            }
+        }
+
+        if(missedEvents > 0)
+        {
+            LOGGER.warn("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
         }
     }
 

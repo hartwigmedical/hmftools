@@ -9,7 +9,11 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
@@ -651,7 +655,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
             mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,IsLINE,Replication,MinPloidy,MaxPloidy,Foldbacks");
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain,ExtTIsCnGain,OverlapTIs");
-            mClusterFileWriter.write(",DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway,SyntheticLen,SyntheticTILen");
+            mClusterFileWriter.write(",DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway,SyntheticLengthData");
             mClusterFileWriter.write(",OriginArms,FragmentArms,UnchainedSVs,Annotations,AlleleValidPerc");
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
@@ -720,8 +724,17 @@ public class SvSampleAnalyser {
                             chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
                             chainMetrics.DSBs, chainMetrics.ShortDSBs, chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway));
 
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
-                            cluster.getSyntheticLength(), cluster.getSyntheticTILength(), cluster.getOriginArms(), cluster.getFragmentArms(),
+                    String syntheticLengthData = "";
+                    long syntheticLength = getSyntheticLength(cluster);
+
+                    if(syntheticLength != NO_LENGTH)
+                    {
+                        syntheticLengthData = String.format("%d;%d;%d",
+                                syntheticLength, getSyntheticTiLength(cluster), getSyntheticGapLength(cluster));
+                    }
+
+                    mClusterFileWriter.write(String.format(",%s,%d,%d,%d,%s,%.2f",
+                            syntheticLengthData, cluster.getOriginArms(), cluster.getFragmentArms(),
                             cluster.getUnlinkedSVs().size(), cluster.getAnnotations(), cluster.getValidAllelePloidySegmentPerc()));
 
                     final int[] armClusterData = getArmClusterData(cluster);

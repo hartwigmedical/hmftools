@@ -19,6 +19,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
@@ -90,6 +91,15 @@ public class LinxTester
         Analyser.getLinkFinder().setLogVerbose(toggle);
     }
 
+    public void addAndCluster(SvVarData var1, SvVarData var2)
+    {
+        clearClustersAndSVs();
+        AllVariants.add(var1);
+        AllVariants.add(var2);
+        preClusteringInit();
+        Analyser.clusterAndAnalyse();
+    }
+
     public void preClusteringInit()
     {
         preClusteringInit(false);
@@ -104,6 +114,17 @@ public class LinxTester
         populateCopyNumberData(includePloidyCalcs);
 
         Analyser.preClusteringPreparation();
+    }
+
+    public void addLohEvent(final SvBreakend breakend1, final SvBreakend breakend2)
+    {
+        if(breakend1.orientation() != 1 || breakend2.orientation() != -1 || !breakend1.chromosome().equals(breakend2.chromosome()))
+            return;
+
+        LohEvent lohEvent = new LohEvent(breakend1.chromosome(), breakend1.position(), breakend2.position(),
+                breakend1.getSV().typeStr(), breakend2.getSV().typeStr(), 1, breakend1.getSV().id(), breakend2.getSV().id());
+
+        CnDataLoader.getLohData().add(lohEvent);
     }
 
     public void addClusterAndSVs(final SvCluster cluster)

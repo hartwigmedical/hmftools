@@ -5,14 +5,13 @@ import static Utils.SvTestRoutines.createDel;
 import static Utils.SvTestRoutines.createDup;
 import static Utils.SvTestRoutines.createInv;
 import static Utils.SvTestRoutines.createSgl;
+
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
-import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUPS;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_DUP_DEL;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
@@ -27,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import Utils.LinxTester;
@@ -45,7 +45,7 @@ public class SyntheticTest
         SvVarData var1 = createInv(tester.nextVarId(), "1", 100, 200, 1);
         SvVarData var2 = createInv(tester.nextVarId(), "1", 300, 400, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.getClusters().get(0);
@@ -57,15 +57,15 @@ public class SyntheticTest
         var1 = createInv(tester.nextVarId(), "1", 100, 300, 1);
         var2 = createInv(tester.nextVarId(), "1", 200, 400, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
 
         assertEquals(1, cluster.getArmClusters().size());
         assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
@@ -75,15 +75,15 @@ public class SyntheticTest
         var1 = createInv(tester.nextVarId(), "1", 100, 400, 1);
         var2 = createInv(tester.nextVarId(), "1", 90, 1000, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
 
 
         // test 2 overlapping breakends
@@ -92,15 +92,15 @@ public class SyntheticTest
         var1.setAssemblyData(false, "asmb12");
         var2.setAssemblyData(false, "asmb12");
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
 
         assertEquals(2, cluster.getArmClusters().size());
         assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
@@ -110,29 +110,29 @@ public class SyntheticTest
         var1 = createInv(tester.nextVarId(), "1", 500, 1000, 1);
         var2 = createInv(tester.nextVarId(), "1", 480, 2000, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
 
         // 3 overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 200, 10400, 1);
         var2 = createInv(tester.nextVarId(), "1", 100, 10350, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticLength(cluster), var1.position(true) - var2.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
 
         assertEquals(2, cluster.getArmClusters().size());
         assertEquals(ARM_CL_COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
@@ -142,15 +142,15 @@ public class SyntheticTest
         var1 = createInv(tester.nextVarId(), "1", 300, 400, 1);
         var2 = createInv(tester.nextVarId(), "1", 100, 250, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(cluster.getSyntheticLength(), var1.position(false) - var2.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(true) - var2.position(false));
+        assertEquals(getSyntheticLength(cluster), var1.position(false) - var2.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(true) - var2.position(false));
 
         assertEquals(1, cluster.getArmClusters().size());
         assertEquals(ARM_CL_COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
@@ -167,29 +167,29 @@ public class SyntheticTest
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
         SvVarData var2 = createBnd(tester.nextVarId(), "1", 200, -1, "2", 150, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
 
         // 2 TIs with a DUP
         var1 = createBnd(tester.nextVarId(), "1", 200, 1, "2", 200, 1);
         var2 = createBnd(tester.nextVarId(), "1", 100, -1, "2", 150, -1);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticLength(cluster), var1.position(true) - var2.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
     }
 
     @Test
@@ -197,22 +197,64 @@ public class SyntheticTest
     {
         LinxTester tester = new LinxTester();
 
-        // 2 DUPs next to each other
-        SvVarData var1 = createDup(tester.nextVarId(), "1", 100, 200);
-        SvVarData var2 = createDup(tester.nextVarId(), "1", 300, 400);
+        // DEL and DUP - DEL enclosed
+        SvVarData var1 = createDel(tester.nextVarId(), "1", 300, 350);
+        SvVarData var2 = createDup(tester.nextVarId(), "1", 100, 400);
 
-        var1.getTIAssemblies(true).add("asmb1");
-        var2.getTIAssemblies(false).add("asmb1");
-
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DUP);
+        assertEquals(getSyntheticLength(cluster), var1.position(true) - var2.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false));
+
+        // DEL and DUP - DEL overlapping DUP
+        var1 = createDel(tester.nextVarId(), "1", 100, 350);
+        var2 = createDup(tester.nextVarId(), "1", 200, 400);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(false));
-        assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false));
+
+        // DEL and DUP - overlapping the other way
+        var1 = createDup(tester.nextVarId(), "1", 100, 350);
+        var2 = createDel(tester.nextVarId(), "1", 200, 400);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DEL);
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
+
+        // 2 DUPs next to each other
+        var1 = createDup(tester.nextVarId(), "1", 100, 200);
+        var2 = createDup(tester.nextVarId(), "1", 300, 400);
+
+        var1.getTIAssemblies(true).add("asmb1");
+        var2.getTIAssemblies(false).add("asmb1");
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == DEL);
+        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(true));
 
         // 2 DUPs with an overlap
         var1 = createDup(tester.nextVarId(), "1", 100, 300);
@@ -221,15 +263,15 @@ public class SyntheticTest
         var1.getTIAssemblies(false).add("asmb1");
         var2.getTIAssemblies(true).add("asmb1");
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
 
         // 2 DUPs with one enclosed
         var1 = createDup(tester.nextVarId(), "1", 100, 400);
@@ -238,90 +280,50 @@ public class SyntheticTest
         var1.getTIAssemblies(false).add("asmb1");
         var2.getTIAssemblies(true).add("asmb1");
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
-
-        // DEL and DUP - DEL enclosed
-        var1 = createDel(tester.nextVarId(), "1", 300, 350);
-        var2 = createDup(tester.nextVarId(), "1", 100, 400);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(cluster.getSyntheticLength(), var1.position(true) - var2.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
-
-        // DEL and DUP - DEL overlapping DUP
-        var1 = createDel(tester.nextVarId(), "1", 100, 350);
-        var2 = createDup(tester.nextVarId(), "1", 200, 400);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
-
-        // DEL and DUP - overlapping the other way
-        var1 = createDup(tester.nextVarId(), "1", 100, 350);
-        var2 = createDel(tester.nextVarId(), "1", 200, 400);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(false));
-        assertEquals(cluster.getSyntheticTILength(), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
 
         // DEL before DUP no overlap
         var1 = createDel(tester.nextVarId(), "1", 100, 200);
         var2 = createDup(tester.nextVarId(), "1", 250, 400);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(true) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var2.position(false) - var1.position(false));
+        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false));
 
         // DEL after DUP no overlap
         var1 = createDup(tester.nextVarId(), "1", 100, 200);
         var2 = createDel(tester.nextVarId(), "1", 250, 400);
 
-        addAndCluster(tester, var1, var2);
+        tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(false));
-        assertEquals(cluster.getSyntheticTILength(), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
+
     }
 
     @Test
-    public void testSyntheticChainedDelsAndDups()
+    public void testSyntheticDelsAndDupsWithLongerChains()
     {
+        // as above but with more than 1 short TI
         LinxTester tester = new LinxTester();
 
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
@@ -339,8 +341,8 @@ public class SyntheticTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(cluster.getSyntheticLength(), var3.position(true) - var1.position(true));
-        assertEquals(400, cluster.getSyntheticTILength()); // takes the longest
+        assertEquals(getSyntheticLength(cluster), var3.position(true) - var1.position(true));
+        assertEquals(400, getSyntheticTiLength(cluster)); // takes the longest
 
         tester.clearClustersAndSVs();
 
@@ -360,242 +362,14 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
         assertTrue(cluster.isSyntheticType());
-        assertEquals(cluster.getSyntheticLength(), var1.position(true) - var4.position(true));
-        assertEquals(600, cluster.getSyntheticTILength()); // takes average
+        assertEquals(getSyntheticLength(cluster), var1.position(true) - var4.position(true));
+        assertEquals(600, getSyntheticTiLength(cluster)); // takes average
 
         tester.clearClustersAndSVs();
-
-        // special case of the reciprocal DUP which is more likely to not be chained through a long TI, and so is split
-        var1 = createBnd(tester.nextVarId(), "1", 20000, 1, "3", 1000, -1);
-        var2 = createBnd(tester.nextVarId(), "2", 1000, -1, "3", 1500, 1);
-
-        var3 = createBnd(tester.nextVarId(), "1", 1000, -1, "3", 2000, -1);
-        var4 = createBnd(tester.nextVarId(), "2", 20000, 1, "3", 2500, 1);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-        assertEquals(2, cluster.getChains().size());
-
-        assertTrue(!cluster.isResolved());
-        assertEquals(RECIP_DUPS, cluster.getResolvedType());
-        assertTrue(cluster.isSyntheticType());
-        assertEquals(0, cluster.getSyntheticLength());
-        assertEquals(500, cluster.getSyntheticTILength());
-
-        // test the 2 INV (typically foldbacks) case
-
-        tester.clearClustersAndSVs();
-
-        var1 = createInv(tester.nextVarId(), "1", 1000, 3000, -1);
-        var2 = createInv(tester.nextVarId(), "1", 51000, 53000, 1);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-        assertEquals(1, cluster.getChains().size());
-
-        assertTrue(!cluster.isResolved());
-        assertEquals(FB_INV_PAIR, cluster.getResolvedType());
-        assertTrue(!cluster.isSyntheticType());
-        assertEquals(var2.position(false) - var1.position(true), cluster.getSyntheticLength());
-        assertEquals(var2.position(true) - var1.position(false), cluster.getSyntheticTILength());
-
-        // and finally a local version of the overlapping DUPs scenarios with a reconfigured chain
-        tester.clearClustersAndSVs();
-
-        var1 = createInv(tester.nextVarId(), "1", 1000, 51000, -1);
-        var2 = createInv(tester.nextVarId(), "1", 5000, 53000, 1);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-        assertEquals(1, cluster.getChains().size());
-
-        assertTrue(!cluster.isResolved());
-        assertEquals(RECIP_DUPS, cluster.getResolvedType());
-        assertTrue(!cluster.isSyntheticType());
-        assertEquals(var1.position(false) - var2.position(true), cluster.getSyntheticLength());
-        assertEquals(var2.position(false) - var1.position(true), cluster.getSyntheticTILength());
-
-        // and test again with additional short TIs in the mix
-        tester.clearClustersAndSVs();
-
-        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 2000, -1);
-        var2 = createBnd(tester.nextVarId(), "1", 51000, -1, "2", 2500, 1);
-
-        var3 = createBnd(tester.nextVarId(), "1", 5000, 1, "2", 4000, -1);
-        var4 = createBnd(tester.nextVarId(), "1", 53000, 1, "2", 4500, 1);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-        assertEquals(1, cluster.getChains().size());
-
-        assertTrue(!cluster.isResolved());
-        assertEquals(RECIP_DUPS, cluster.getResolvedType());
-        assertTrue(cluster.isSyntheticType());
-        assertEquals(var2.position(true) - var3.position(true), cluster.getSyntheticLength());
-        assertEquals(var4.position(true) - var1.position(true), cluster.getSyntheticTILength());
-
     }
 
-    @Test
-    public void testSyntheticReciprocalInversions()
-    {
-        // test reciprocal inversion defined as a TI greater than 50% of the synthetic length and internal to a DEL
-        LinxTester tester = new LinxTester();
-
-        SvVarData var1 = createInv(tester.nextVarId(), "1", 100, 1000, 1);
-        SvVarData var2 = createInv(tester.nextVarId(), "1", 90, 990, -1);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_INV);
-        assertEquals(cluster.getSyntheticLength(), var2.position(false) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var1.position(false) - var2.position(true));
-
-        // again but with a longer chain - initially with the DB too long
-        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1500, 1);
-        var2 = createBnd(tester.nextVarId(), "1", 20000, -1, "2", 1000, -1);
-        SvVarData var3 = createDel(tester.nextVarId(), "1", 22000, 25000);
-
-        tester.clearClustersAndSVs();
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_DUP_DEL);
-
-        var2 = createBnd(tester.nextVarId(), "1", 2000, -1, "2", 1000, -1);
-        var3 = createBnd(tester.nextVarId(), "1", 21000, 1, "2", 5000, -1);
-        SvVarData var4 = createBnd(tester.nextVarId(), "1", 21500, -1, "2", 5500, 1);
-
-        tester.clearClustersAndSVs();
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_INV);
-        assertEquals(cluster.getSyntheticLength(), var4.position(true) - var1.position(true));
-        assertEquals(cluster.getSyntheticTILength(), var3.position(true) - var2.position(true));
-
-    }
-
-    @Test
-    public void testSyntheticReciprocalTranslocations()
-    {
-        LinxTester tester = new LinxTester();
-
-        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
-        SvVarData var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
-        SvVarData var2 = createBnd(tester.nextVarId(), "1", 120, -1, "2", 220, -1);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
-        assertEquals(cluster.getSyntheticLength(), 0);
-        assertEquals(cluster.getSyntheticTILength(), 0);
-
-        // similar but with small overlaps
-        var1 = createBnd(tester.nextVarId(), "1", 100, 1, "2", 200, 1);
-        var2 = createBnd(tester.nextVarId(), "1", 90, -1, "2", 190, -1);
-
-        addAndCluster(tester, var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
-        assertEquals(cluster.getSyntheticLength(), 0);
-        assertEquals(cluster.getSyntheticTILength(), 0);
-
-        tester.clearClustersAndSVs();
-
-        // from a chain and a BND
-        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
-        var2 = createBnd(tester.nextVarId(), "2", 1200, 1, "3", 2000, -1);
-        SvVarData var3 = createBnd(tester.nextVarId(), "1", 4000, -1, "3", 1600, 1);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
-        assertEquals(200, cluster.getSyntheticTILength()); // takes average
 
 
-        tester.clearClustersAndSVs();
-
-        // 2 chains
-        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
-        var2 = createBnd(tester.nextVarId(), "2", 1200, 1, "3", 2000, -1);
-
-        var3 = createBnd(tester.nextVarId(), "1", 4000, -1, "4", 10000, 1);
-        SvVarData var4 = createBnd(tester.nextVarId(), "3", 1600, 1, "4", 9400, -1);
-
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.AllVariants.add(var3);
-        tester.AllVariants.add(var4);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == RECIP_TRANS);
-        assertEquals(600, cluster.getSyntheticTILength()); // takes average
-    }
 
     @Test
     public void testSyntheticIncompletes()
@@ -615,8 +389,6 @@ public class SyntheticTest
 
         assertFalse(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == UNBAL_TRANS);
-        assertEquals(0, cluster.getSyntheticLength());
-        assertEquals(200, cluster.getSyntheticTILength());
 
         tester.clearClustersAndSVs();
 
@@ -633,8 +405,6 @@ public class SyntheticTest
 
         assertFalse(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == INV);
-        assertEquals(0, cluster.getSyntheticLength());
-        assertEquals(500, cluster.getSyntheticTILength());
 
         tester.clearClustersAndSVs();
 
@@ -651,17 +421,8 @@ public class SyntheticTest
 
         assertFalse(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == SGL);
-        assertEquals(0, cluster.getSyntheticLength());
-        assertEquals(500, cluster.getSyntheticTILength());
     }
 
-    private void addAndCluster(LinxTester tester, SvVarData var1, SvVarData var2)
-    {
-        tester.clearClustersAndSVs();
-        tester.AllVariants.add(var1);
-        tester.AllVariants.add(var2);
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-    }
+
 
 }

@@ -3,27 +3,44 @@ package com.hartwig.hmftools.linx.types;
 public enum ResolvedType
 {
     NONE,
+
+    // artefacts
     DUP_BE,
     LOW_VAF,
-    LINE,
+
+    // simple types including synthetic instances
     DEL,
     DUP,
     INF,
     SGL,
     INV,
     INS,
-    RECIP_TRANS,
-    RECIP_INV,
     UNBAL_TRANS,
-    RECIP_DUPS,
-    RECIP_DUP_DEL,
-    COMPLEX,
+    SIMPLE_GRP, // group of DUPs, INS and DELs - later split up
+
+    // 2-SV types:
+    RECIP_TRANS,
+    RECIP_TRANS_DEL_DUP,
+    RECIP_TRANS_DUPS,
+    RECIP_INV,
+    RECIP_INV_DUPS,
+    RECIP_INV_DEL_DUP,
+    DUP_TI,
+    DEL_TI,
+    // RECIP_DUPS,
+    // RECIP_DUP_DEL,
     PAIR_OTHER,
-    SIMPLE_GRP,
+    RESOLVED_FOLDBACK,
     FB_INV_PAIR,
     SGL_PAIR_DEL,
     SGL_PAIR_DUP,
-    SGL_PAIR_INS;
+    SGL_PAIR_INS,
+
+    // complex types
+    LINE,
+    COMPLEX,
+    DOUBLE_MINUTE;
+
 
     public boolean isSimple()
     {

@@ -587,11 +587,8 @@ public class CnDataLoader
         LohEvent lohData = new LohEvent(
                 chr,
                 startData.StartPos, incomplete ? endData.EndPos : endData.StartPos,
-                startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart,
-                lastMinCN, startData.minorAllelePloidy(), endData.minorAllelePloidy(),
-                lohMinCN, segCount, lohLength,
-                startSvData != null ? startSvData.id() : CN_DATA_NO_SV,
-                endSvData != null ? endSvData.id() : CN_DATA_NO_SV);
+                startData.SegStart, incomplete ? endData.SegEnd : endData.SegStart, segCount,
+                startSvData != null ? startSvData.id() : CN_DATA_NO_SV, endSvData != null ? endSvData.id() : CN_DATA_NO_SV);
 
         if(lohHomLossEvents != null)
             lohData.addHomLossEvents(lohHomLossEvents);

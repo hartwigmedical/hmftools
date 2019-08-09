@@ -16,12 +16,7 @@ public class LohEvent
     public final long PosEnd;
     public final String SegStart;
     public final String SegEnd;
-    public final double PrevCN;
-    public final double StartCN;
-    public final double EndCN;
-    public final double MinCN;
     public final int SegCount;
-    public final long Length;
     public final int StartSV; // the DB SvId
     public final int EndSV;
 
@@ -39,12 +34,7 @@ public class LohEvent
             final long posEnd,
             final String segStart,
             final String segEnd,
-            final double prevCN,
-            final double startCN,
-            final double endCN,
-            final double minCN,
             final int segCount,
-            final long length,
             final int startSV,
             final int endSV)
     {
@@ -53,12 +43,7 @@ public class LohEvent
         PosEnd = posEnd;
         SegStart = segStart;
         SegEnd = segEnd;
-        PrevCN = prevCN;
-        StartCN = startCN;
-        EndCN = endCN;
-        MinCN = minCN;
         SegCount = segCount;
-        Length = length;
         StartSV = startSV;
         EndSV = endSV;
 
@@ -86,6 +71,7 @@ public class LohEvent
 
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
     public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
+    public long length() { return PosEnd - PosStart; }
 
     public void addHomLossEvents(final List<HomLossEvent> events)
     {

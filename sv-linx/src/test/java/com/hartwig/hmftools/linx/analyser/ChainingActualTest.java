@@ -234,13 +234,10 @@ public class ChainingActualTest
         final SvVarData var1 = svList.get(0);
         final SvVarData var4 = svList.get(3);
 
-        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
+        tester.CnDataLoader.getLohData().add(new LohEvent( "18", 23601785, 23577410,
+                "BND", "BND", 1, var1.id(), var4.id()));
 
-        lohData.add(new LohEvent( "18", 23601785, 23577410,
-                "BND", "BND", 1, 1, 1, 0, 1, 1,
-                var1.id(), var4.id()));
-
-        tester.Analyser.getState().setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
+        tester.Analyser.getState().setSampleCnEventData(tester.CnDataLoader.getLohData(), tester.CnDataLoader.getHomLossData());
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();
@@ -360,10 +357,10 @@ public class ChainingActualTest
 
         List<LohEvent> lohData = tester.CnDataLoader.getLohData();
 
-        lohData.add(new LohEvent( "12", 41741113, 50109706,
-                "DEL", "INV", 1, 1, 1, 0, 1, 1,39, 56));
+        tester.CnDataLoader.getLohData().add(new LohEvent( "12", 41741113, 50109706,
+                "DEL", "INV", 1,39, 56));
 
-        tester.Analyser.getState().setSampleCnEventData(lohData, tester.CnDataLoader.getHomLossData());
+        tester.Analyser.getState().setSampleCnEventData(tester.CnDataLoader.getLohData(), tester.CnDataLoader.getHomLossData());
 
         tester.preClusteringInit();
 

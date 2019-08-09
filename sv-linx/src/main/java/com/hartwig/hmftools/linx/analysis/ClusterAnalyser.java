@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.UNDER_CLUSTERING;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.setSimpleVariantLengths;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
@@ -163,6 +164,8 @@ public class ClusterAnalyser {
         // mark line clusters since these are excluded from most subsequent logic
         mClusters.forEach(x -> markLineCluster(x, mConfig.ProximityDistance));
 
+        associateBreakendCnEvents(mSampleId, mState);
+
         if(mRunValidationChecks)
         {
             if(!mSimpleClustering.validateClustering(mClusters))
@@ -240,6 +243,7 @@ public class ClusterAnalyser {
         {
             if(isSimpleSingleSV(cluster))
             {
+                mDmFinder.analyseCluster(cluster);
                 setClusterResolvedState(cluster, false);
                 continue;
             }
@@ -303,8 +307,11 @@ public class ClusterAnalyser {
 
     private void dissolveSimpleGroups()
     {
+        // break apart any clusters of simple SVs which aren't likely or required to be chained
         List<SvCluster> simpleGroups = mClusters.stream()
                 .filter(x -> x.getResolvedType() == SIMPLE_GRP)
+                .filter(x -> x.getLohEvents().isEmpty())
+                .filter(x -> x.getAssemblyLinkedPairs().isEmpty())
                 .collect(Collectors.toList());
 
         for(SvCluster cluster : simpleGroups)

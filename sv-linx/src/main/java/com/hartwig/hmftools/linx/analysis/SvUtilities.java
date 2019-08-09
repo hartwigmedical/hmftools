@@ -26,9 +26,12 @@ public class SvUtilities {
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
     public static final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
 
-    public static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
-    public static String CHROMOSOME_ARM_Q = "Q";
-    public static String CHROMOSOME_ARM_CENTROMERE = "C";
+    public final static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
+    public final static String CHROMOSOME_ARM_Q = "Q";
+    public final static String CHROMOSOME_ARM_CENTROMERE = "C";
+
+    public final static int NO_LENGTH = -1;
+
 
     public static final String getChromosomalArm(final String chromosome, final long position)
     {

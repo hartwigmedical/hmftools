@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -303,6 +305,7 @@ public class DoubleMinuteFinder
             cluster.setDoubleMinuteData(highPloidySVs, dmChain);
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
+        cluster.setResolved(false, DOUBLE_MINUTE);
 
         if(highPloidySVs.size() == 1 && fullyChained)
         {
@@ -386,9 +389,6 @@ public class DoubleMinuteFinder
 
     public void reportCluster(final String sampleId, final SvCluster cluster)
     {
-        // check whether this cluster has been processed
-        analyseCluster(cluster, false);
-
         if(mOutputDir == null || mOutputDir.isEmpty())
             return;
 

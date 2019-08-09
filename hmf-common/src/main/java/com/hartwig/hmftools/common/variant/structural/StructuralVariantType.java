@@ -27,9 +27,10 @@ public enum StructuralVariantType {
             case BND: return 0;
             case DEL: return 1;
             case DUP: return 2;
-            case INS: return 3;
-            case INV: return 4;
-            case SGL: return 5;
+            case INF: return 3;
+            case INS: return 4;
+            case INV: return 5;
+            case SGL: return 6;
         }
 
         return 0;
