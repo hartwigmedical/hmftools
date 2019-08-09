@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DUPS;
+import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import static Utils.SvTestRoutines.createBnd;
@@ -43,6 +45,7 @@ public class InversionPairTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_INV);
+        assertTrue(cluster.getChains().isEmpty());
 
         // test again but with an overlapping DB at one end
         var1 = createInv(tester.nextVarId(), "1", 100, 10010, 1);
@@ -55,6 +58,30 @@ public class InversionPairTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_INV);
+        assertTrue(cluster.getChains().isEmpty());
+
+        // require splitting a longer chain
+        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 100, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 10000, 1, "2", 200, 1);
+
+        SvVarData var3 = createBnd(tester.nextVarId(), "1", 1500, -1, "3", 100, -1);
+        SvVarData var4 = createBnd(tester.nextVarId(), "1", 10500, -1, "3", 200, 1);
+
+        tester.clearClustersAndSVs();
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RECIP_INV);
+        assertEquals(2, cluster.getChains().size());
+        assertFalse(cluster.getChains().stream().anyMatch(x -> x.getLinkedPairs().stream().anyMatch(y -> y.length() > SHORT_TI_LENGTH)));
     }
 
     @Test
@@ -72,6 +99,7 @@ public class InversionPairTest
 
         assertTrue(!cluster.isResolved());
         assertEquals(FB_INV_PAIR, cluster.getResolvedType());
+        assertEquals(1, cluster.getChains().size());
 
         // test again but with a short TI in one of the inversions
         var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 1500, 1);
@@ -90,6 +118,7 @@ public class InversionPairTest
 
         assertTrue(!cluster.isResolved());
         assertEquals(FB_INV_PAIR, cluster.getResolvedType());
+        assertEquals(1, cluster.getChains().size());
     }
 
     @Test

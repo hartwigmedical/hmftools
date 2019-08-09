@@ -71,7 +71,7 @@ public class PairResolution
     {
         // handles synthetic DELs and DUPs from a single chain with no long TIs, and other paired configurations from either 2 SVs,
         // a chain and an SV or 2 chains
-        if(cluster.getChains().size() > 2 || cluster.getTypeCount(SGL) > 0)
+        if(cluster.getChains().size() > 2 || cluster.getSglBreakendCount() > 0)
             return;
 
         // establish the nature of the breakends
@@ -84,7 +84,12 @@ public class PairResolution
         SvLinkedPair longTiLink = null;
         boolean uniformPloidy = false;
 
-        if(!cluster.getChains().isEmpty())
+        List<SvChain> clusterChains = Lists.newArrayList(cluster.getChains());
+        SvVarData unchainedSv = !cluster.getUnlinkedSVs().isEmpty() ? cluster.getUnlinkedSVs().get(0) : null;
+        int unchainedSvCount = cluster.getUnlinkedSVs().size();
+        boolean existingChainModified = false;
+
+        if(!clusterChains.isEmpty())
         {
             List<SvLinkedPair> longTiLinks = cluster.getChains().get(0).getLinkedPairs().stream()
                     .filter(x -> x.length() > SHORT_TI_LENGTH).collect(Collectors.toList());
@@ -103,7 +108,7 @@ public class PairResolution
         }
 
         // first handle the single chain case either handling it as a synthetic with only short TIs, or by splitting it
-        if(cluster.isFullyChained(false) && cluster.getChains().size() == 1)
+        if(cluster.isFullyChained(false) && clusterChains.size() == 1)
         {
             if(longTiLink == null)
             {
@@ -114,20 +119,22 @@ public class PairResolution
             }
             else
             {
-                // go into regular 2 break logic by effectively breaking the chain at this long TI
-                SvChain chain = cluster.getChains().get(0);
-
-                cluster.dissolveLinksAndChains();
+                // go into regular 2 break logic after first breaking the chain at this long TI
+                SvChain chain = clusterChains.get(0);
+                clusterChains.clear();
+                existingChainModified = true;
 
                 final List<SvLinkedPair> pairs = chain.getLinkedPairs();
 
                 if(pairs.size() > 1)
                 {
                     SvChain newChain = new SvChain(chain.id());
-                    newChain.setPloidyData(chain.ploidy(), chain.ploidyUncertainty());
 
                     if (pairs.get(0) == longTiLink || pairs.get(pairs.size() - 1) == longTiLink)
                     {
+                        unchainedSvCount = 1;
+                        unchainedSv = pairs.get(0) == longTiLink ? pairs.get(0).first() : pairs.get(pairs.size() - 1).second();
+
                         for (SvLinkedPair pair : pairs)
                         {
                             if (pair != longTiLink)
@@ -136,7 +143,7 @@ public class PairResolution
                             }
                         }
 
-                        cluster.addChain(newChain, false);
+                        clusterChains.add(newChain);
                     }
                     else
                     {
@@ -144,23 +151,22 @@ public class PairResolution
                         {
                             if (pair == longTiLink)
                             {
-                                cluster.addChain(newChain, false);
+                                clusterChains.add(newChain);
 
                                 newChain = new SvChain(chain.id() + 1);
-                                newChain.setPloidyData(chain.ploidy(), chain.ploidyUncertainty());
                                 continue;
                             }
 
                             newChain.addLink(pair, false);
                         }
 
-                        cluster.addChain(newChain, false);
+                        clusterChains.add(newChain);
                     }
                 }
             }
         }
 
-        if(cluster.getChains().isEmpty())
+        if(clusterChains.isEmpty())
         {
             if(cluster.getSvCount() != 2)
                 return;
@@ -174,10 +180,10 @@ public class PairResolution
             endBe2 = var2.getBreakend(false);
             uniformPloidy = ploidyMatch(var1.ploidy(), var1.ploidyUncertainty(), var2.ploidy(), var2.ploidyUncertainty());
         }
-        else if(cluster.isFullyChained(false) && cluster.getChains().size() == 2)
+        else if(cluster.isFullyChained(false) && clusterChains.size() == 2)
         {
-            SvChain chain1 = cluster.getChains().get(0);
-            SvChain chain2 = cluster.getChains().get(1);
+            SvChain chain1 = clusterChains.get(0);
+            SvChain chain2 = clusterChains.get(1);
 
             startBe1 = chain1.getOpenBreakend(true);
             endBe1 = chain1.getOpenBreakend(false);
@@ -185,11 +191,11 @@ public class PairResolution
             endBe2 = chain2.getOpenBreakend(false);
             uniformPloidy = ploidyMatch(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
         }
-        else if(cluster.getChains().size() == 1 && cluster.getUnlinkedSVs().size() == 1)
+        else if(clusterChains.size() == 1 && unchainedSvCount == 1)
         {
             // check for a single SV and a chain
-            SvVarData var = cluster.getUnlinkedSVs().get(0);
-            SvChain chain = cluster.getChains().get(0);
+            SvVarData var = unchainedSv;
+            SvChain chain = clusterChains.get(0);
 
             startBe1 = chain.getOpenBreakend(true);
             endBe1 = chain.getOpenBreakend(false);
@@ -235,13 +241,25 @@ public class PairResolution
                     startBe1, endBe1, startBe2, endBe2, uniformPloidy, longTiLink);
         }
 
-        // if(cluster.getResolvedType() == NONE)
-        //    cluster.setResolved(false, PAIR_OTHER);
+        if(existingChainModified && (cluster.getResolvedType() == RECIP_TRANS || cluster.getResolvedType() == RECIP_INV))
+        {
+            LOGGER.debug("cluster({}) splitting existing chain into {} for resolvedType({})",
+                    cluster.id(), clusterChains.size(), cluster.getResolvedType());
+
+            final SvChain existingChain = cluster.getChains().get(0);
+            cluster.dissolveLinksAndChains();
+
+            for(SvChain newChain : clusterChains)
+            {
+                newChain.setPloidyData(existingChain.ploidy(), existingChain.ploidyUncertainty());
+                cluster.addChain(newChain, true);
+            }
+        }
     }
 
     public static void classifySyntheticDelDups(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
-        if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getTypeCount(SGL) > 0)
+        if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getSglBreakendCount() > 0)
             return;
 
         SvChain chain = cluster.getChains().get(0);
@@ -258,7 +276,6 @@ public class PairResolution
         boolean faceAway = (startBreakend.position() < endBreakend.position()) == (startBreakend.orientation() == 1);
 
         int totalChainLength = chain.getLength(false);
-        long longestTILength = chain.getLinkedPairs().stream().mapToLong(x -> x.length()).max().getAsLong();
         long syntheticLength = abs(startBreakend.position() - endBreakend.position());
 
         ResolvedType resolvedType = faceAway ? ResolvedType.DEL : ResolvedType.DUP;

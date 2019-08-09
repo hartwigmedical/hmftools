@@ -265,6 +265,12 @@ public class FusionTest
         // intronic del which then runs out remainder of transcript
         var4 = createDup(3, chromosome, 10900, 56500);
 
+
+        // var1.setAssemblyData(false, "asmb12");
+        // var2.setAssemblyData(true, "asmb12");
+        // var3.setAssemblyData(false, "asmb34");
+        //var4.setAssemblyData(false, "asmb34");
+
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);
