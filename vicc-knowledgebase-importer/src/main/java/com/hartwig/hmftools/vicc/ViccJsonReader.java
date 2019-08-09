@@ -32,6 +32,7 @@ import com.hartwig.hmftools.vicc.datamodel.CivicProfileImage;
 import com.hartwig.hmftools.vicc.datamodel.CivicPublicationDate;
 import com.hartwig.hmftools.vicc.datamodel.CivicSource;
 import com.hartwig.hmftools.vicc.datamodel.CivicUser;
+import com.hartwig.hmftools.vicc.datamodel.CivicVariantGroup;
 import com.hartwig.hmftools.vicc.datamodel.CivicVariantTypes;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCivic;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicAvatars;
@@ -48,6 +49,7 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicProfileImage;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicPublicationDate;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicSource;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicUser;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicVariantGroup;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableCivicVariantTypes;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrials;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableJaxTrialsIndications;
@@ -203,7 +205,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-
 public final class ViccJsonReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
@@ -312,6 +313,8 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_CIVIC_SOURCE_SIZES = Lists.newArrayList(13);
     private static final List<Integer> EXPECTED_CIVIC_USER_SIZES = Lists.newArrayList(21);
     private static final List<Integer> EXPECTED_CIVIC_VARIANTTYPES_SIZES = Lists.newArrayList(6);
+    private static final List<Integer> EXPECTED_CIVIC_VARIANTGROUPS_SIZES = Lists.newArrayList(5);
+    private static final List<Integer> EXPECTED_CIVIC_VARIANTS_SIZES = Lists.newArrayList(10);
 
     private ViccJsonReader() {
     }
@@ -494,8 +497,11 @@ public final class ViccJsonReader {
 
     @NotNull
     private static Civic createCivic(@NotNull JsonObject objectCivic) {
+        //LOGGER.info(objectCivic.get("variant_groups"));
         return ImmutableCivic.builder()
-                .variantGroups(Lists.newArrayList())
+                .variantGroups(!objectCivic.has("variant_groups")
+                        ? null
+                        : createVariantsGroups(objectCivic.getAsJsonArray("variant_groups")))
                 .entrezName(objectCivic.getAsJsonPrimitive("entrez_name").getAsString())
                 .variantTypes(createVariantTypes(objectCivic.getAsJsonArray("variant_types")))
                 .civicActionabilityScore(objectCivic.get("civic_actionability_score").isJsonNull()
@@ -521,6 +527,41 @@ public final class ViccJsonReader {
                 .id(objectCivic.getAsJsonPrimitive("id").getAsString())
                 .description(objectCivic.getAsJsonPrimitive("description").getAsString())
                 .build();
+    }
+
+    @NotNull
+    private static List<CivicVariantGroup> createVariantsGroups(@NotNull JsonArray arrayVariantsGroup) {
+        List<CivicVariantGroup> civicVariantGroupList = Lists.newArrayList();
+        for (JsonElement variantGroup : arrayVariantsGroup) {
+            Set<String> keysVariantGroup = variantGroup.getAsJsonObject().keySet();
+            if (!EXPECTED_CIVIC_VARIANTGROUPS_SIZES.contains(keysVariantGroup.size())) {
+                LOGGER.warn("Found " + keysVariantGroup.size() + " in civic variant group rather than the expected "
+                        + EXPECTED_CIVIC_VARIANTGROUPS_SIZES);
+                LOGGER.warn(keysVariantGroup);
+            }
+           // LOGGER.info(variantGroup.getAsJsonObject().get("variants"));
+            civicVariantGroupList.add(ImmutableCivicVariantGroup.builder()
+                    .id(variantGroup.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .variants(createVariants(variantGroup.getAsJsonObject().getAsJsonArray("variants")))
+                    .type(variantGroup.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
+                    .description(variantGroup.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .name(variantGroup.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .build());
+        }
+        return civicVariantGroupList;
+    }
+
+    @NotNull
+    private static String createVariants(@NotNull JsonArray arrayVariants) {
+        for (JsonElement variants : arrayVariants) {
+            Set<String> keysVariants = variants.getAsJsonObject().keySet();
+            if (!EXPECTED_CIVIC_VARIANTS_SIZES.contains(keysVariants.size())) {
+                LOGGER.warn("Found " + keysVariants.size() + " in civic variants rather than the expected "
+                        + EXPECTED_CIVIC_VARIANTS_SIZES);
+                LOGGER.warn(keysVariants);
+            }
+        }
+        return "";
     }
 
     @NotNull

@@ -10,8 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Civic implements KbSpecificObject {
 
-    @NotNull
-    public abstract List<String> variantGroups();
+    @Nullable
+    public abstract List<CivicVariantGroup> variantGroups();
 
     @NotNull
     public abstract String entrezName();
