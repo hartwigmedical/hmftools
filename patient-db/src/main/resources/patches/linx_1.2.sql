@@ -1,6 +1,8 @@
 ALTER TABLE svFusion
     CHANGE skippedExons skippedExonsUp INT,
-    ADD skippedExonsDown INT;
+    ADD skippedExonsDown INT,
+    ADD fusedExonUp INT,
+    ADD fusedExonDown INT;
 
 ALTER TABLE svLink
     ADD ploidyUncertainty DOUBLE PRECISION,

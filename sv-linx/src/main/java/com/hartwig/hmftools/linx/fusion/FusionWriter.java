@@ -55,10 +55,10 @@ public class FusionWriter
                 reportedFusions.add(ImmutableReportableGeneFusion.builder()
                         .geneStart(fusion.upstreamTrans().geneName())
                         .geneTranscriptStart(fusion.upstreamTrans().StableId)
-                        .geneContextStart(context(fusion.upstreamTrans()))
+                        .geneContextStart(context(fusion.upstreamTrans(), fusion.getFusedExon(true)))
                         .geneEnd(fusion.downstreamTrans().geneName())
                         .geneTranscriptEnd(fusion.downstreamTrans().StableId)
-                        .geneContextEnd(context(fusion.downstreamTrans()))
+                        .geneContextEnd(context(fusion.downstreamTrans(), fusion.getFusedExon(false)))
                         .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
                         .build());
             }

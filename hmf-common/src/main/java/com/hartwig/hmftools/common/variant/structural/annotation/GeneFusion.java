@@ -51,6 +51,7 @@ public class GeneFusion
 
     public boolean phaseMatched(){ return mPhaseMatched; }
     public boolean viable(){ return mViable; }
+
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {
         mExonsSkippedUp = exonsUp;
@@ -58,6 +59,21 @@ public class GeneFusion
     }
 
     public int getExonsSkipped(boolean isUpstream) { return isUpstream ? mExonsSkippedUp : mExonsSkippedDown; }
+
+    public int getFusedExon(boolean isUpstream)
+    {
+        if(isUpstream)
+        {
+            return mUpstreamTrans.ExonUpstream;
+        }
+        else
+        {
+            if (mDownstreamTrans.isExonic() && !mUpstreamTrans.isExonic())
+                return mUpstreamTrans.ExonDownstream + 1;
+            else
+                return mUpstreamTrans.ExonDownstream;
+        }
+    }
 
     public boolean isExonic()
     {

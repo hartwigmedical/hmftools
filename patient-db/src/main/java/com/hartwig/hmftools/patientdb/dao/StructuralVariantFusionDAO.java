@@ -24,7 +24,7 @@ import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep14;
+import org.jooq.InsertValuesStep16;
 import org.jooq.InsertValuesStep18;
 import org.jooq.Record;
 import org.jooq.Record2;
@@ -90,7 +90,6 @@ public class StructuralVariantFusionDAO
             final GeneAnnotation geneAnnotation = transcript.parent();
             boolean isUpstream = transcript.isUpstream();
 
-            //noinspection unchecked
             inserter.values(timestamp,
                     sampleId,
                     transcript.parent().id(),
@@ -135,7 +134,7 @@ public class StructuralVariantFusionDAO
 
         for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
-            final InsertValuesStep14 fusionInserter = context.insertInto(SVFUSION,
+            final InsertValuesStep16 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -149,7 +148,9 @@ public class StructuralVariantFusionDAO
                     SVFUSION.DOMAINSKEPT,
                     SVFUSION.DOMAINSLOST,
                     SVFUSION.SKIPPEDEXONSUP,
-                    SVFUSION.SKIPPEDEXONSDOWN);
+                    SVFUSION.SKIPPEDEXONSDOWN,
+                    SVFUSION.FUSEDEXONUP,
+                    SVFUSION.FUSEDEXONDOWN);
 
             //noinspection unchecked
             batch.forEach(fusion -> fusionInserter.values(timestamp,
@@ -165,7 +166,9 @@ public class StructuralVariantFusionDAO
                     DatabaseUtil.checkStringLength(fusion.downstreamTrans().getProteinFeaturesKept(), SVFUSION.DOMAINSKEPT),
                     DatabaseUtil.checkStringLength(fusion.downstreamTrans().getProteinFeaturesLost(), SVFUSION.DOMAINSLOST),
                     fusion.getExonsSkipped(true),
-                    fusion.getExonsSkipped(false)));
+                    fusion.getExonsSkipped(false),
+                    fusion.getFusedExon(true),
+                    fusion.getFusedExon(false)));
 
             fusionInserter.execute();
         }

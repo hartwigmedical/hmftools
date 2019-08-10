@@ -629,6 +629,8 @@ CREATE TABLE svFusion
     domainsLost VARCHAR(255),
     skippedExonsUp INT,
     skippedExonsDown INT,
+    fusedExonUp INT,
+    fusedExonDown INT,
     PRIMARY KEY (id),
     INDEX(fivePrimeBreakendId),
     INDEX(threePrimeBreakendId),

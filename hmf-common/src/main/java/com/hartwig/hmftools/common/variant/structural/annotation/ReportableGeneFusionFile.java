@@ -100,16 +100,16 @@ public final class ReportableGeneFusionFile {
                 .build();
     }
 
-    public static String context(final Transcript transcript)
+    public static String context(final Transcript transcript, int fusedExon)
     {
         switch (transcript.regionType())
         {
             case TRANS_REGION_TYPE_UPSTREAM:
                 return "Promoter Region";
             case TRANS_REGION_TYPE_EXONIC:
-                return String.format("Exon %d", transcript.ExonUpstream);
+                return String.format("Exon %d", fusedExon);
             case TRANS_REGION_TYPE_INTRONIC:
-                return String.format("Intron %d", transcript.isUpstream() ? transcript.ExonUpstream : transcript.ExonDownstream);
+                return String.format("Intron %d", fusedExon);
         }
 
         return String.format("ERROR: %s", transcript.regionType());
