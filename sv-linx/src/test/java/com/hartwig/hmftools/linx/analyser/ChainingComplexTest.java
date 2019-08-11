@@ -287,12 +287,13 @@ public class ChainingComplexTest
         tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1, "1", "2", 1000,1000, -1, -1, BND, 1);
-        final SvVarData var2 = createTestSv(2, "1", "2", 2000,3000, -1, 1, BND, 1);
+        final SvVarData var2 = createTestSv(2, "1", "2", 6000,3000, -1, 1, BND, 1);
 
         final SvVarData var3 = createTestSv(3, "1", "2", 10000,20000, 1, -1, BND, 2);
         final SvVarData var4 = createTestSv(4, "1", "2", 11000,25000, -1, 1, BND, 2);
         final SvVarData var5 = createTestSv(5, "1", "3", 28000,2000, 1, 1, BND, 1);
 
+        // mark breakends as assembled to ensure they are foldbacks
         var1.setAssemblyData(false, "asmb12");
         var2.setAssemblyData(false, "asmb12");
 
