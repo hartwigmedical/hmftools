@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analyser;
+package com.hartwig.hmftools.linx.misc;
 
 import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_ADJACENT_SEGS;
 import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_EXACT_MATCHES;
