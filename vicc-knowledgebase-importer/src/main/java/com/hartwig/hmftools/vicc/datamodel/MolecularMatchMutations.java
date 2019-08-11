@@ -20,16 +20,16 @@ public abstract class MolecularMatchMutations {
     public abstract List<MolecularMatchParents> parents();
 
     @Nullable
-    public abstract String wgsaData();
+    public abstract List<MolecularMatchWGSadataLocation> wgsaData();
 
     @Nullable
-    public abstract String wgsaMap();
+    public abstract List<MolecularMatchWGSaMap> wgsaMap();
 
     @Nullable
-    public abstract String exonsInfo();
+    public abstract MolecularMatchExonInfo exonsInfo();
 
     @Nullable
-    public abstract String fusionData();
+    public abstract List<MolecularMatchFusionData> fusionData();
 
     @Nullable
     public abstract String transcriptRecognized();
