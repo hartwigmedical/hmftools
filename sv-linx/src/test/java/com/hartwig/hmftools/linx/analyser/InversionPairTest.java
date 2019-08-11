@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvCluster;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.junit.Test;
@@ -45,7 +46,6 @@ public class InversionPairTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_INV);
-        assertTrue(cluster.getChains().isEmpty());
 
         // test again but with an overlapping DB at one end
         var1 = createInv(tester.nextVarId(), "1", 100, 10010, 1);
@@ -58,9 +58,8 @@ public class InversionPairTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_INV);
-        assertTrue(cluster.getChains().isEmpty());
 
-        // require splitting a longer chain
+        // check a chained version
         var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 100, -1);
         var2 = createBnd(tester.nextVarId(), "1", 10000, 1, "2", 200, 1);
 
@@ -80,8 +79,7 @@ public class InversionPairTest
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_INV);
-        assertEquals(2, cluster.getChains().size());
-        assertFalse(cluster.getChains().stream().anyMatch(x -> x.getLinkedPairs().stream().anyMatch(y -> y.length() > SHORT_TI_LENGTH)));
+        assertEquals(1, cluster.getChains().size());
     }
 
     @Test
@@ -145,7 +143,6 @@ public class InversionPairTest
         assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
         assertEquals(var2.position(false) - var1.position(true), getSyntheticGapLength(cluster));
 
-
         // test again but with the TI in LOH bounds
         var1 = createInv(tester.nextVarId(), "1", 50000, 350000, 1);
         var2 = createInv(tester.nextVarId(), "1", 1000, 200000, -1);
@@ -162,6 +159,7 @@ public class InversionPairTest
         assertEquals(DUP_TI, cluster.getResolvedType());
 
         // neither case, is resolved as a RECIP_INV_DUPS
+        // the chain needs to be reconfigured to form the longest possible TI
         tester.CnDataLoader.getLohData().clear();
 
         tester.addAndCluster(var1, var2);
@@ -171,6 +169,30 @@ public class InversionPairTest
 
         assertTrue(!cluster.isResolved());
         assertEquals(RECIP_INV_DUPS, cluster.getResolvedType());
+        assertEquals(1, cluster.getChains().size());
+
+        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();
+        assertEquals(longTiLength, var1.position(false) - var2.position(true));
+
+        // test another instance with short TIs mixed in
+        var1 = createBnd(tester.nextVarId(), "1", 50000, 1, "2", 100, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 350000, 1, "2", 200, 1);
+
+        SvVarData var3 = createBnd(tester.nextVarId(), "1", 1000, -1, "3", 100, -1);
+        SvVarData var4 = createBnd(tester.nextVarId(), "1", 200000, -1, "3", 200, 1);
+
+        tester.clearClustersAndSVs();
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertTrue(!cluster.isResolved());
+        assertEquals(RECIP_INV_DUPS, cluster.getResolvedType());
+        assertEquals(1, cluster.getChains().size());
+        assertEquals(longTiLength, var2.position(true) - var3.position(true));
     }
 
     @Test
@@ -222,6 +244,30 @@ public class InversionPairTest
 
         assertTrue(!cluster.isResolved());
         assertEquals(RECIP_INV_DEL_DUP, cluster.getResolvedType());
+
+        // test again with orientations reversed and a chained version
+        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 100, -1);
+        var2 = createBnd(tester.nextVarId(), "1", 200000, -1, "2", 200, 1);
+
+        SvVarData var3 = createBnd(tester.nextVarId(), "1", 5000, 1, "3", 100, -1);
+        SvVarData var4 = createBnd(tester.nextVarId(), "1", 150000, 1, "3", 200, 1);
+
+        tester.clearClustersAndSVs();
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertEquals(RECIP_INV_DEL_DUP, cluster.getResolvedType());
+        assertEquals(1, cluster.getChains().size());
+        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();;
+        assertEquals(longTiLength, var4.position(true) - var1.position(true));
+
     }
 
 }

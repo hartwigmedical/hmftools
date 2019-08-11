@@ -116,7 +116,7 @@ public class SvArmGroup {
 
         for(final SvBreakend breakend : mBreakends)
         {
-            mConsistency += calcConsistency(breakend.getSV(), breakend.usesStart());
+            mConsistency += calcConsistency(breakend);
         }
 
         //LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",

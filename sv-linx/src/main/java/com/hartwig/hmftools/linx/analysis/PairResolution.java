@@ -10,8 +10,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -40,6 +42,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class PairResolution
 {
@@ -69,13 +72,13 @@ public class PairResolution
     public static void classifyPairClusters(
             SvCluster cluster, boolean isFinal, int proximityThreshold, long longDelThreshold, long longDupThreshold)
     {
-        // handles synthetic DELs and DUPs from a single chain with no long TIs, and other paired configurations from either 2 SVs,
-        // a chain and an SV or 2 chains
+        // classifies 2-event clusters based on the types of breakends and their orientations
+        // treat existing chains as SVs - ie with 2 breakends from the open ends
         if(cluster.getChains().size() > 2 || cluster.getSglBreakendCount() > 0)
             return;
 
         // establish the nature of the breakends
-        // first reduce BNDs and/or chains to a set of breakends and record TI length(s)
+        // first reduce SVs and/or chains to a set of breakends and record TI length(s)
         SvBreakend startBe1 = null;
         SvBreakend endBe1 = null;
         SvBreakend startBe2 = null;
@@ -83,6 +86,8 @@ public class PairResolution
 
         SvLinkedPair longTiLink = null;
         boolean uniformPloidy = false;
+
+        // 2x translocations can exist in the form of 2 BNDs,
 
         List<SvChain> clusterChains = Lists.newArrayList(cluster.getChains());
         SvVarData unchainedSv = !cluster.getUnlinkedSVs().isEmpty() ? cluster.getUnlinkedSVs().get(0) : null;
@@ -107,61 +112,62 @@ public class PairResolution
                 longTiLink = longTiLinks.get(0);
         }
 
+        boolean isSingleChain = cluster.isFullyChained(false) && clusterChains.size() == 1;
+
         // first handle the single chain case either handling it as a synthetic with only short TIs, or by splitting it
-        if(cluster.isFullyChained(false) && clusterChains.size() == 1)
+        if(isSingleChain && longTiLink == null)
         {
-            if(longTiLink == null)
+            //  a single chain with only short TIs may be resovled as a synthetic DEL or DUP or something else,
+            // but not a pair-type cluster
+            classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
+            return;
+        }
+
+            // first handle the single chain case either handling it as a synthetic with only short TIs, or by splitting it
+        if(isSingleChain)
+        {
+            // go into regular 2 break logic after first breaking the chain at this long TI
+            SvChain chain = clusterChains.get(0);
+            clusterChains.clear();
+            existingChainModified = true;
+
+            final List<SvLinkedPair> pairs = chain.getLinkedPairs();
+
+            if(pairs.size() > 1)
             {
-                classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
+                SvChain newChain = new SvChain(chain.id());
 
-                // may alternatively be another synthetic type, so don't classify as PAIR OTHER
-                return;
-            }
-            else
-            {
-                // go into regular 2 break logic after first breaking the chain at this long TI
-                SvChain chain = clusterChains.get(0);
-                clusterChains.clear();
-                existingChainModified = true;
-
-                final List<SvLinkedPair> pairs = chain.getLinkedPairs();
-
-                if(pairs.size() > 1)
+                if (pairs.get(0) == longTiLink || pairs.get(pairs.size() - 1) == longTiLink)
                 {
-                    SvChain newChain = new SvChain(chain.id());
+                    unchainedSvCount = 1;
+                    unchainedSv = pairs.get(0) == longTiLink ? pairs.get(0).first() : pairs.get(pairs.size() - 1).second();
 
-                    if (pairs.get(0) == longTiLink || pairs.get(pairs.size() - 1) == longTiLink)
+                    for (SvLinkedPair pair : pairs)
                     {
-                        unchainedSvCount = 1;
-                        unchainedSv = pairs.get(0) == longTiLink ? pairs.get(0).first() : pairs.get(pairs.size() - 1).second();
-
-                        for (SvLinkedPair pair : pairs)
+                        if (pair != longTiLink)
                         {
-                            if (pair != longTiLink)
-                            {
-                                newChain.addLink(pair, false);
-                            }
-                        }
-
-                        clusterChains.add(newChain);
-                    }
-                    else
-                    {
-                        for (SvLinkedPair pair : pairs)
-                        {
-                            if (pair == longTiLink)
-                            {
-                                clusterChains.add(newChain);
-
-                                newChain = new SvChain(chain.id() + 1);
-                                continue;
-                            }
-
                             newChain.addLink(pair, false);
                         }
-
-                        clusterChains.add(newChain);
                     }
+
+                    clusterChains.add(newChain);
+                }
+                else
+                {
+                    for (SvLinkedPair pair : pairs)
+                    {
+                        if (pair == longTiLink)
+                        {
+                            clusterChains.add(newChain);
+
+                            newChain = new SvChain(chain.id() + 1);
+                            continue;
+                        }
+
+                        newChain.addLink(pair, false);
+                    }
+
+                    clusterChains.add(newChain);
                 }
             }
         }
@@ -213,6 +219,9 @@ public class PairResolution
         if(startBe1.getChrArm().equals(endBe1.getChrArm()) && startBe2.getChrArm().equals(endBe2.getChrArm())
         && startBe1.getChrArm().equals(startBe2.getChrArm()))
         {
+            if(!isSingleChain)
+                return;
+
             // same arm events - first 2 INVs
             if(startBe1.orientation() == endBe1.orientation() && startBe2.orientation() == endBe2.orientation()
             && startBe1.orientation() != startBe2.orientation())
@@ -237,27 +246,12 @@ public class PairResolution
         {
             // check for translocation type events
             classifyTranslocationPairClusters(
-                    cluster, isFinal, proximityThreshold, longDupThreshold,
-                    startBe1, endBe1, startBe2, endBe2, uniformPloidy, longTiLink);
-        }
-
-        if(existingChainModified && (cluster.getResolvedType() == RECIP_TRANS || cluster.getResolvedType() == RECIP_INV))
-        {
-            LOGGER.debug("cluster({}) splitting existing chain into {} for resolvedType({})",
-                    cluster.id(), clusterChains.size(), cluster.getResolvedType());
-
-            final SvChain existingChain = cluster.getChains().get(0);
-            cluster.dissolveLinksAndChains();
-
-            for(SvChain newChain : clusterChains)
-            {
-                newChain.setPloidyData(existingChain.ploidy(), existingChain.ploidyUncertainty());
-                cluster.addChain(newChain, true);
-            }
+                    cluster, isFinal, proximityThreshold, longDupThreshold, startBe1, endBe1, startBe2, endBe2,
+                    uniformPloidy, longTiLink, existingChainModified ? clusterChains: null);
         }
     }
 
-    public static void classifySyntheticDelDups(SvCluster cluster, long longDelThreshold, long longDupThreshold)
+    private static void classifySyntheticDelDups(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
         if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getSglBreakendCount() > 0)
             return;
@@ -297,11 +291,45 @@ public class PairResolution
     private static void classifyTranslocationPairClusters(
             SvCluster cluster, boolean isFinal, int proximityThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformPloidy, final SvLinkedPair longestTiPair)
+            boolean uniformPloidy, final SvLinkedPair longestTiPair,
+            List<SvChain> rearrangedChains)
     {
-        // first reduce BNDs and/or chains to a set of breakends and record TI length(s)
-        if(startBe1.getChrArm().equals(endBe1.getChrArm()) || startBe2.getChrArm().equals(endBe2.getChrArm()))
+        // first check consistency
+        int consistency = calcConsistency(startBe1) + calcConsistency(endBe1) + calcConsistency(startBe2) + calcConsistency(endBe2);
+
+        if(consistency != 0)
             return;
+
+        // reciprocal translocations require each of the breakend pairs to start and end on the same pair of arms
+
+        if(startBe1.getChrArm().equals(endBe1.getChrArm()) || startBe2.getChrArm().equals(endBe2.getChrArm()))
+        {
+            // one chain start and ends on the same arm, the other doesn't
+            cluster.setResolved(false, PAIR_OTHER);
+            return;
+        }
+
+        // assign to arms for easier comparison
+        SvBreakend arm1Be1 = startBe1;
+        SvBreakend arm2Be1 = endBe1;
+        SvBreakend arm1Be2 = null;
+        SvBreakend arm2Be2 = null;
+
+        if(startBe2.getChrArm().equals(arm1Be1.getChrArm()) && endBe2.getChrArm().equals(arm2Be1.getChrArm()))
+        {
+            arm1Be2 = startBe2;
+            arm2Be2 = endBe2;
+        }
+        else if(endBe2.getChrArm().equals(arm1Be1.getChrArm()) && startBe2.getChrArm().equals(arm2Be1.getChrArm()))
+        {
+            arm1Be2 = endBe2;
+            arm2Be2 = startBe2;
+        }
+        else
+        {
+            cluster.setResolved(false, PAIR_OTHER);
+            return;
+        }
 
         /* establish configuration:
             - Deletion bridge on both arms
@@ -309,19 +337,6 @@ public class PairResolution
             - Facing on 2 arms
             - 1 arm shared only. Facing or deletion bridge
          */
-
-        // check for 3 different arms being involved
-        List<String> arms = Lists.newArrayList(startBe1.getChrArm(), endBe1.getChrArm());
-        if(!arms.contains(startBe2.getChrArm()) || !arms.contains(endBe2.getChrArm()))
-        {
-            return;
-        }
-
-        // assign to arms for easier comparison
-        SvBreakend arm1Be1 = startBe1;
-        SvBreakend arm2Be1 = endBe1;
-        SvBreakend arm1Be2 = startBe2.getChrArm().equals(arm1Be1.getChrArm()) ? startBe2 : endBe2;
-        SvBreakend arm2Be2 = startBe2.getChrArm().equals(arm2Be1.getChrArm()) ? startBe2 : endBe2;
 
         // check for linked, short DBs at both ends
         SvLinkedPair arm1Db1 = arm1Be1.getDBLink();
@@ -331,40 +346,60 @@ public class PairResolution
         boolean arm2MatchingDB = arm2Db1 != null && arm2Db1 == arm2Be2.getDBLink();
 
         // basic reciprocal translocation
+        ResolvedType resolvedType;
+        boolean isResolved = false;
         if(arm1MatchingDB && arm2MatchingDB)
         {
             if(!isFinal && (arm1Db1.length() > proximityThreshold || arm2Db1.length() > proximityThreshold))
                 return;
 
-            cluster.setResolved(true, RECIP_TRANS);
-            return;
-        }
-
-        if(longestTiPair == null)
-            return;
-
-        ResolvedType resolvedType;
-        boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
-
-        if(!arm1MatchingDB && !arm2MatchingDB)
-        {
-            resolvedType = longOrLohBoundedTi && uniformPloidy ? DUP_TI : RECIP_TRANS_DUPS;
+            resolvedType = RECIP_TRANS;
+            isResolved = true;
         }
         else
         {
-            resolvedType = longOrLohBoundedTi && uniformPloidy ? DEL_TI : RECIP_TRANS_DEL_DUP;
+            if (longestTiPair == null)
+                return;
+
+            boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
+
+            if (!arm1MatchingDB && !arm2MatchingDB)
+            {
+                resolvedType = longOrLohBoundedTi && uniformPloidy ? DUP_TI : RECIP_TRANS_DUPS;
+            }
+            else
+            {
+                resolvedType = longOrLohBoundedTi && uniformPloidy ? DEL_TI : RECIP_TRANS_DEL_DUP;
+            }
+
+            isResolved = (resolvedType == RECIP_TRANS_DUPS || resolvedType == RECIP_TRANS_DEL_DUP);
         }
 
         LOGGER.debug("cluster({}) longestTI({}) marked as {}",
-                cluster.id(), longestTiPair.length(), resolvedType);
+                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType);
 
-        cluster.setResolved(false, resolvedType);
+        if(rearrangedChains != null)
+        {
+            LOGGER.debug("cluster({}) splitting existing chain into {} for resolvedType({})",
+                    cluster.id(), rearrangedChains.size(), cluster.getResolvedType());
+
+            final SvChain existingChain = cluster.getChains().get(0);
+            cluster.dissolveLinksAndChains();
+
+            for(SvChain newChain : rearrangedChains)
+            {
+                newChain.setPloidyData(existingChain.ploidy(), existingChain.ploidyUncertainty());
+                cluster.addChain(newChain, true);
+            }
+        }
+
+        cluster.setResolved(isResolved, resolvedType);
     }
 
     private static void classifyInversionPairClusters(
             SvCluster cluster, boolean isFinal, int proximityThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
-            boolean uniformPloidy, final SvLinkedPair longestTiPair)
+            boolean uniformPloidy, @NotNull final SvLinkedPair longestTiPair)
     {
         /* establish configuration:
             - Facing, no overlap
@@ -410,14 +445,12 @@ public class PairResolution
             return;
         }
 
-        if(longestTiPair == null)
-            return;
-
         boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
 
         if((lowerBe1.position() < lowerBe2.position() && upperBe1.position() > upperBe2.position())
         || (lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position()))
         {
+            // one INV encloses the other - the DEL scenario
             if(longOrLohBoundedTi && uniformPloidy)
             {
                 cluster.setResolved(false, DEL_TI);
@@ -432,18 +465,59 @@ public class PairResolution
                 }
                 else
                 {
+                    // re-arrange the links so that the inner inversion links using its outer breakend to make a longer link
+                    SvChain chain = cluster.getChains().get(0);
+
+                    // work out which is the inner INV then switch around the end of it which is part of the long TI
+                    SvBreakend breakendToSwitch = null;
+
+                    if(lowerBe1.position() < lowerBe2.position())
+                    {
+                        // pair 2 is the inner pair
+                        breakendToSwitch = longestTiPair.hasBreakend(lowerBe2) ? lowerBe2 : upperBe2;
+                    }
+                    else
+                    {
+                        breakendToSwitch = longestTiPair.hasBreakend(lowerBe1) ? lowerBe1 : upperBe1;
+                    }
+
+                    chain.reverseSectionOnBreakend(breakendToSwitch);
+
+                    LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
+                    chain.logLinks();
+
                     cluster.setResolved(false, RECIP_INV_DEL_DUP);
                 }
             }
         }
         else
         {
+            // otherwise the inner breakends overlap
             if(longOrLohBoundedTi && uniformPloidy)
             {
                 cluster.setResolved(false, DUP_TI);
             }
             else
             {
+                // flip the chain on the inner breakend which is in the long TI
+                SvChain chain = cluster.getChains().get(0);
+                SvBreakend breakendToSwitch = null;
+
+                if(lowerBe1.position() > lowerBe2.position())
+                {
+                    // lower breakend 1 is one of the inner breakends
+                    breakendToSwitch = longestTiPair.hasBreakend(lowerBe1) ? lowerBe1 : longestTiPair.getOtherBreakend(lowerBe1);
+                }
+                else
+                {
+                    breakendToSwitch = longestTiPair.hasBreakend(lowerBe2) ? lowerBe2 : longestTiPair.getOtherBreakend(lowerBe1);
+                }
+
+                chain.reverseSectionOnBreakend(breakendToSwitch);
+
+                LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
+                chain.logLinks();
+
                 cluster.setResolved(false, RECIP_INV_DUPS);
             }
         }
@@ -489,82 +563,6 @@ public class PairResolution
             // overlapping
             cluster.setResolved(false, DEL_TI);
         }
-    }
-
-
-    public static void markInversionPairClusters(SvCluster cluster, boolean isFinal, int proximityThreshold)
-    {
-        if(!cluster.isFullyChained(false) || cluster.getChains().size() != 1)
-            return;
-
-        SvChain chain = cluster.getChains().get(0);
-
-        int totalLinks = 0;
-
-        SvLinkedPair tiPair = null;
-
-        for (SvLinkedPair pair : chain.getLinkedPairs())
-        {
-            if(tiPair == null)
-            {
-                tiPair = pair;
-            }
-            else if(pair.length() > tiPair.length())
-            {
-                if(tiPair.length() > SHORT_TI_LENGTH)
-                    return; // can only be one long pair
-
-                tiPair = pair;
-            }
-
-
-            ++totalLinks;
-        }
-
-        if(tiPair == null)
-            return;
-
-        SvBreakend tiStart = tiPair.getBreakend(true);
-        SvBreakend tiEnd = tiPair.getBreakend(false);
-
-        SvBreakend chainStart = chain.getOpenBreakend(true);
-        SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-        // check for opposite orientations
-
-        if(chainStart.orientation() == chainEnd.orientation())
-            return;
-
-        // check for linked, short DBs at both ends
-        SvLinkedPair startDB = tiStart.getSV().getDBLink(tiStart.usesStart());
-        SvLinkedPair endDB = tiEnd.getSV().getDBLink(tiEnd.usesStart());
-
-        if(startDB == null || endDB == null)
-            return;
-
-        if(!isFinal && (startDB.length() > proximityThreshold || endDB.length() > proximityThreshold))
-            return;
-
-        long syntheticLength = 0;
-        if ((startDB.hasBreakend(chainStart) && endDB.hasBreakend(chainEnd)) || (startDB.hasBreakend(chainEnd) && endDB.hasBreakend(chainStart)))
-        {
-            syntheticLength = abs(chainStart.position() - chainEnd.position());
-        }
-        else
-        {
-            return;
-        }
-
-        // require the large TI to be at least 50% of the length of teh
-        if (tiPair.length() < 0.5 * syntheticLength)
-            return;
-
-        ResolvedType resolvedType = RECIP_INV;
-
-        LOGGER.debug("cluster({}) chain(links=({} longestTI={}) synLen({}) marked as {}",
-                cluster.id(), totalLinks, tiPair.length(), syntheticLength, resolvedType);
-
-        cluster.setResolved(false, resolvedType);
     }
 
 }

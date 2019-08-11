@@ -235,18 +235,18 @@ public class SvUtilities {
         int consistencyCount = 0;
         for(int be = SE_START; be <= SE_END; ++be)
         {
-            consistencyCount += calcConsistency(var, isStart(be));
+            if(be == SE_END && var.isSglBreakend())
+                continue;
+
+            consistencyCount += calcConsistency(var.getBreakend(be));
         }
 
         return consistencyCount;
     }
 
-    public static int calcConsistency(final SvVarData var, boolean useStart)
+    public static int calcConsistency(final SvBreakend breakend)
     {
-        if(!useStart && var.isSglBreakend())
-            return 0;
-
-        return (var.arm(useStart) == CHROMOSOME_ARM_P ? 1 : -1) * var.orientation(useStart) * 1;
+        return (breakend.arm() == CHROMOSOME_ARM_P ? 1 : -1) * breakend.orientation() * 1;
     }
 
     public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.5;

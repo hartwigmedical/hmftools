@@ -167,8 +167,8 @@ public class SvChain {
             return false;
 
         // treat the start and end breakends like those of a single SV
-        int consistency = calcConsistency(getFirstSV(), firstLinkOpenOnStart());
-        consistency += calcConsistency(getLastSV(), lastLinkOpenOnStart());
+        int consistency = calcConsistency(getOpenBreakend(SE_START));
+        consistency += calcConsistency(getOpenBreakend(SE_END));
         return consistency == 0;
     }
 
@@ -404,6 +404,69 @@ public class SvChain {
         {
             final SvLinkedPair pair = mLinkedPairs.get(index);
             addLink(pair, false);
+        }
+    }
+
+    public void reverseSectionOnBreakend(final SvBreakend breakend)
+    {
+        // reverses a section of a chain
+        // eg sAe - B - eCs - D if reversed at C's start breaknd will become sCe - B - eAs - D
+
+        for(int i = 0; i < mLinkedPairs.size(); ++i)
+        {
+            final SvLinkedPair pair = mLinkedPairs.get(i);
+
+            // find the location in the chain where the breakend is joined and join its closest chain end here instead
+            if(pair.firstBreakend() == breakend)
+            {
+                SvBreakend chainStart = getOpenBreakend(true);
+                SvLinkedPair newLink = SvLinkedPair.from(chainStart, pair.secondBreakend());
+
+                List<SvLinkedPair> linksToSwitch = Lists.newArrayList();
+                for(int j = 0; j < i; ++j)
+                {
+                    linksToSwitch.add(mLinkedPairs.get(j));
+                }
+
+                for(int j = 0; j < linksToSwitch.size() + 1; ++j)
+                {
+                    mLinkedPairs.remove(0);
+                }
+
+                addLink(newLink, true);
+
+                for(int j = 0; j < linksToSwitch.size(); ++j)
+                {
+                    addLink(linksToSwitch.get(j), true);
+                }
+
+                break;
+            }
+            else if(pair.secondBreakend() == breakend)
+            {
+                SvBreakend chainEnd = getOpenBreakend(false);
+                SvLinkedPair newLink = SvLinkedPair.from(pair.firstBreakend(), chainEnd);
+
+                List<SvLinkedPair> linksToSwitch = Lists.newArrayList();
+                for(int j = i + 1; j < mLinkedPairs.size(); ++j)
+                {
+                    linksToSwitch.add(mLinkedPairs.get(j));
+                }
+
+                for(int j = 0; j < linksToSwitch.size() + 1; ++j)
+                {
+                    mLinkedPairs.remove(i);
+                }
+
+                addLink(newLink, false);
+
+                for(int j = linksToSwitch.size() - 1; j >= 0; --j)
+                {
+                    addLink(linksToSwitch.get(j), false);
+                }
+
+                break;
+            }
         }
     }
 

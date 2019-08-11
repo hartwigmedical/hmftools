@@ -142,9 +142,9 @@ public class TranslocationPairTest
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
 
-        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_TRANS_DEL_DUP);
-
+        assertTrue(cluster.getChains().isEmpty());
     }
 
     @Test
@@ -190,12 +190,33 @@ public class TranslocationPairTest
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
 
-        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_TRANS_DUPS);
+        assertTrue(cluster.getChains().isEmpty());
+
+        // chained version
+        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "3", 100, -1);
+        var2 = createBnd(tester.nextVarId(), "2", 50000, -1, "3", 200, 1);
+
+        SvVarData var3 = createBnd(tester.nextVarId(), "1", 200000, 1, "4", 100, -1);
+        SvVarData var4 = createBnd(tester.nextVarId(), "2", 150000, 1, "4", 200, 1);
+
+        tester.clearClustersAndSVs();
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        cluster = tester.getClusters().get(0);
+        assertTrue(cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == RECIP_TRANS_DUPS);
+        assertEquals(2, cluster.getChains().size());
     }
 
     @Test
-    public void testThreeArmTranslocations()
+    public void testPairOtherTranslocations()
     {
         LinxTester tester = new LinxTester();
 
