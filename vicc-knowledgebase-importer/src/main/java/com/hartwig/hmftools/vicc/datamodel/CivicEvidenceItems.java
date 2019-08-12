@@ -43,7 +43,7 @@ public abstract class CivicEvidenceItems {
     @Nullable
     public abstract String evidenceDirection();
 
-    @NotNull
+    @Nullable
     public abstract String variantId();
 
     @Nullable

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,12 +14,12 @@ public abstract class CivicVariants {
     public abstract String entrez_name();
 
     @NotNull
-    public abstract String variant_types();
+    public abstract List<CivicVariantTypes> variant_types();
 
     @NotNull
     public abstract String description();
 
-    @NotNull
+    @Nullable
     public abstract String civic_actionability_score();
 
     @NotNull
@@ -26,8 +28,8 @@ public abstract class CivicVariants {
     @NotNull
     public abstract String entrez_id();
 
-    @NotNull
-    public abstract String coordinates();
+    @Nullable
+    public abstract CivicCoordinates coordinates();
 
     @NotNull
     public abstract String type();
