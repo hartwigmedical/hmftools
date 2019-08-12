@@ -35,7 +35,7 @@ public class FilteringTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.TRACE);
+        // Configurator.setRootLevel(Level.TRACE);
 
         SvVarData var1 = createDel(tester.nextVarId(), "1", 1000, 1100);
 
@@ -79,7 +79,7 @@ public class FilteringTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.TRACE);
+        // Configurator.setRootLevel(Level.TRACE);
 
         SvVarData var0 = createDel(tester.nextVarId(), "1", 1000, 1100);
 
@@ -137,7 +137,7 @@ public class FilteringTest
     {
         LinxTester tester = new LinxTester();
 
-        Configurator.setRootLevel(Level.TRACE);
+        // Configurator.setRootLevel(Level.TRACE);
 
         SvVarData var0 = createTestSv(tester.nextVarId(), "1", "", 2000, 0, 1, 0,
                 INF, 1, 1, 1.0, 0, 1, "");

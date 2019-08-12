@@ -34,7 +34,7 @@ public class ChainingSimpleTest
     public void testFullyAssembledChain()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final SvVarData var1 = createDel(0, "1", 100,200);
         final SvVarData var2 = createDel(1, "1", 300,400);
@@ -73,7 +73,7 @@ public class ChainingSimpleTest
     {
         // 2 SVs which could link on both ends
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final SvVarData var1 = createInv(1, "1", 100,200, -1);
         final SvVarData var2 = createDel(2, "1", 300,400);
@@ -103,7 +103,7 @@ public class ChainingSimpleTest
     public void testPartiallyAssembledChain()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final SvVarData var0 = createDel(0, "1", 100,200);
         final SvVarData var1 = createDel(1, "1", 300,400);
