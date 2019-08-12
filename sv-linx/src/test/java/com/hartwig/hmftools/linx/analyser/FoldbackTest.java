@@ -89,10 +89,10 @@ public class FoldbackTest
         SvCluster cluster4 = new SvCluster(2);
         cluster4.addVariant(var3);
 
-        SvVarData sgl = createSgl(tester.nextVarId(), "1", 90, -1, false);
+        SvVarData sgl = createSgl(tester.nextVarId(), "1", 90, -1);
         cluster4.addVariant(sgl);
 
-        SvVarData sgl2 = createSgl(tester.nextVarId(), "1", 190, -1, false);
+        SvVarData sgl2 = createSgl(tester.nextVarId(), "1", 190, -1);
         cluster4.addVariant(sgl2);
 
         tester.addClusterAndSVs(cluster4);

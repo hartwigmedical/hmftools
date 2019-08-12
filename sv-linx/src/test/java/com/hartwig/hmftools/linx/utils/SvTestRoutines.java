@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.utils;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -48,9 +49,17 @@ public class SvTestRoutines
                 orientation == 1 ? 4 : 3, orientation == 1 ? 3 : 4, 1, 1, 1, "");
     }
 
-    public static SvVarData createSgl(final int varId, final String chromosome, long position, int orientation, boolean isNoneSegment)
+    public static SvVarData createSgl(final int varId, final String chromosome, long position, int orientation)
     {
         SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, SGL,
+                3, 0, 1, 0, 1, "");
+
+        return var;
+    }
+
+    public static SvVarData createInf(final int varId, final String chromosome, long position, int orientation)
+    {
+        SvVarData var = createTestSv(varId, chromosome, "0", position, -1, orientation, -1, INF,
                 3, 0, 1, 0, 1, "");
 
         return var;

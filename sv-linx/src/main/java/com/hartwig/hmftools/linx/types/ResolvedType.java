@@ -7,6 +7,7 @@ public enum ResolvedType
     // artefacts
     DUP_BE,
     LOW_VAF,
+    PAIR_INF,
 
     // simple types including synthetic instances
     DEL,

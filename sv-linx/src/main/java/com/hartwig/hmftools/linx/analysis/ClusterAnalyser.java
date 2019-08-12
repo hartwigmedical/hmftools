@@ -321,6 +321,8 @@ public class ClusterAnalyser {
         {
             mClusters.remove(cluster);
 
+            LOGGER.debug("cluster({}: {}) de-merged into simple SVs", cluster.id(), cluster.getDesc());
+
             for(SvVarData var : cluster.getSVs())
             {
                 SvCluster newCluster = new SvCluster(mState.getNextClusterId());

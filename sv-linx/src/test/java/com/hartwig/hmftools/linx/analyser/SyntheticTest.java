@@ -407,7 +407,7 @@ public class SyntheticTest
         tester.clearClustersAndSVs();
 
         var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
-        var2 = createSgl(tester.nextVarId(), "2", 1500, 1, false);
+        var2 = createSgl(tester.nextVarId(), "2", 1500, 1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);

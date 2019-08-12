@@ -48,7 +48,7 @@ public class MiscTest
         final SvVarData bnd = createBnd(1, "1", 100, 1, "2", 100, -1);
         assertEquals(calcConsistency(bnd), 0);
 
-        final SvVarData sgl = createSgl(1, "1", 100, 1, false);
+        final SvVarData sgl = createSgl(1, "1", 100, 1);
         assertEquals(calcConsistency(sgl), 1);
     }
 

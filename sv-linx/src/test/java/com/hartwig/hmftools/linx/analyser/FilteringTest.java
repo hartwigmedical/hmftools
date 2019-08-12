@@ -1,0 +1,182 @@
+package com.hartwig.hmftools.linx.analyser;
+
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
+import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createIns;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createTestSv;
+
+import static org.junit.Assert.assertEquals;
+
+import static junit.framework.TestCase.assertTrue;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.ResolvedType;
+import com.hartwig.hmftools.linx.types.SvCluster;
+import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.junit.Test;
+
+public class FilteringTest
+{
+    @Test
+    public void testDuplicateBreakendFiltering()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.TRACE);
+
+        SvVarData var1 = createDel(tester.nextVarId(), "1", 1000, 1100);
+
+        // equivalent breakends are kept separate
+        SvVarData var2 = createSgl(tester.nextVarId(), "1", 2000, -1);
+
+        SvVarData var3 = createSgl(tester.nextVarId(), "1", 2001, -1);
+
+        SvVarData var4 = createSgl(tester.nextVarId(), "1", 3000, -1);
+
+        SvVarData var5 = createSgl(tester.nextVarId(), "1", 3002, -1);
+        var5.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
+
+        SvVarData var6 = createDel(tester.nextVarId(), "1", 5000, 6000);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(3, tester.getClusters().size());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var3, var4, var6)));
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var5));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
+    }
+
+    @Test
+    public void testLowVAFFiltering()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.TRACE);
+
+        SvVarData var0 = createDel(tester.nextVarId(), "1", 1000, 1100);
+
+        // common arm rule will merge the BNDs except the one which is isolated, not poly-A and has low CNC support
+        SvVarData var1 = createTestSv(tester.nextVarId(), "1", "1", 2000, 2050, -1, -1,
+                INV, 1, 1, 0.1, 0.1, 0.1, "");
+
+        SvVarData var2 = createTestSv(tester.nextVarId(), "1", "2", 10000, 10000, -1, -1,
+                BND, 1, 1, 0.1, 0.1, 0.1, POLY_A_MOTIF);
+
+        SvVarData var3 = createTestSv(tester.nextVarId(), "1", "2", 20000, 20000, -1, -1,
+                BND, 1, 1, 0.1, 0.1, 0.1, "");
+
+        SvVarData var4 = createTestSv(tester.nextVarId(), "1", "2", 30000, 38000, -1, -1,
+                BND, 1, 1, 0.1, 0.1, 0.1, "");
+
+        SvVarData var5 = createTestSv(tester.nextVarId(), "1", "2", 40000, 40000, -1, -1,
+                BND, 1, 1, 0.1, 0.1, 0.1, "");
+
+        SvVarData var6 = createTestSv(tester.nextVarId(), "1", "", 50000, -1, -1, 0,
+                SGL, 1, 0, 0.1, 0, 0.1, "");
+
+        tester.AllVariants.add(var0);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(6, tester.getClusters().size());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var0)));
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2)));
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var4, var5)));
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.LOW_VAF, cluster.getResolvedType());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var3));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.LOW_VAF, cluster.getResolvedType());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var6));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.LOW_VAF, cluster.getResolvedType());
+    }
+
+    @Test
+    public void testInferredPairFiltering()
+    {
+        LinxTester tester = new LinxTester();
+
+        Configurator.setRootLevel(Level.TRACE);
+
+        SvVarData var0 = createTestSv(tester.nextVarId(), "1", "", 2000, 0, 1, 0,
+                INF, 1, 1, 1.0, 0, 1, "");
+
+        // common arm rule will merge the BNDs except the one which is isolated, not poly-A and has low CNC support
+        SvVarData var1 = createTestSv(tester.nextVarId(), "1", "", 3000, 0, -1, 0,
+                INF, 1, 1, 1.0, 0, 1, "");
+
+        SvVarData var2 = createTestSv(tester.nextVarId(), "1", "", 4000, 0, -1, 0,
+                INF, 1, 1, 1.0, 0, 1, "");
+
+        SvVarData var3 = createTestSv(tester.nextVarId(), "1", "", 6000, 0, 1, 0,
+                INF, 1, 1, 1.0, 0, 1, "");
+
+        SvVarData var4 = createTestSv(tester.nextVarId(), "1", "", 7000, 0, -1, 0,
+                INF, 1, 1, 1.0, 0, 1, "");
+
+        SvVarData var5 = createTestSv(tester.nextVarId(), "1", "", 8000, 0, 1, 0,
+                INF, 1, 1, 2.0, 0, 2, "");
+
+        tester.AllVariants.add(var0);
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(3, tester.getClusters().size());
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var0, var1));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.PAIR_INF, cluster.getResolvedType());
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.PAIR_INF, cluster.getResolvedType());
+    }
+
+}

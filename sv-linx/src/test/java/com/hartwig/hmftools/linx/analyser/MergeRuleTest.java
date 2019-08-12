@@ -57,22 +57,11 @@ public class MergeRuleTest
         SvVarData var4 = createInv(tester.nextVarId(), "1", 4000, 4100, 1);
         tester.AllVariants.add(var4);
 
-        SvVarData var5 = createSgl(tester.nextVarId(), "1", 5000, -1, false);
+        SvVarData var5 = createSgl(tester.nextVarId(), "1", 5000, -1);
         tester.AllVariants.add(var5);
 
         SvVarData var6 = createBnd(tester.nextVarId(), "1", 6000, -1, "5", 1000, 1);
         tester.AllVariants.add(var6);
-
-        // equivalent breakends are kept separate
-        SvVarData var7 = createSgl(tester.nextVarId(), "1", 7000, -1, false);
-        tester.AllVariants.add(var7);
-
-        SvVarData var8 = createSgl(tester.nextVarId(), "1", 7000, -1, false);
-        tester.AllVariants.add(var8);
-
-        SvVarData var9 = createSgl(tester.nextVarId(), "1", 7100, -1, false);
-        var9.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
-        tester.AllVariants.add(var9);
 
         // and some variants on the BND's other chromosome, and other linking BNDs
         SvVarData var10 = createIns(tester.nextVarId(), "5", 2000, 20000);
@@ -90,18 +79,16 @@ public class MergeRuleTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(3, tester.getClusters().size());
+        assertEquals(1, tester.getClusters().size());
 
-        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var7));
-        assertTrue(cluster != null);
-        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
-
-        cluster = tester.findClusterWithSVs(Lists.newArrayList(var9));
-        assertTrue(cluster != null);
-        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
-
-        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var2, var3, var4, var5, var6, var8, var10,
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var2, var3, var4, var5, var6, var10,
                 var11, var12, var13)));
+    }
+
+    @Test
+    public void testSimpleSVsDemerge()
+    {
+        LinxTester tester = new LinxTester();
 
         // simple clustered SVs are split out in the final routine
         tester.clearClustersAndSVs();
@@ -115,10 +102,24 @@ public class MergeRuleTest
         SvVarData del3 = createDel(tester.nextVarId(), "2", 3500, 8000);
         tester.AllVariants.add(del3);
 
+        // another group remains a cluster due to assembly linking the variants
+        SvVarData var1 = createDel(tester.nextVarId(), "1", 20000, 25000);
+        SvVarData var2 = createDel(tester.nextVarId(), "1", 25500, 50000);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        var1.setAssemblyData(false, "asmb12");
+        var2.setAssemblyData(true, "asmb12");
+
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(3, tester.getClusters().size());
+        assertEquals(4, tester.getClusters().size());
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.DEL, cluster.getResolvedType());
     }
 
     @Test
@@ -449,7 +450,7 @@ public class MergeRuleTest
         allVariants.add(var3);
 
         // eqv breakend will be ignored
-        SvVarData var4 = createSgl(tester.nextVarId(), "1", 80000, -1, false);
+        SvVarData var4 = createSgl(tester.nextVarId(), "1", 80000, -1);
         var4.setAssemblyData(true, ASSEMBLY_TYPE_EQV);
         allVariants.add(var4);
 
@@ -457,7 +458,7 @@ public class MergeRuleTest
         SvVarData overlap1 = createBnd(tester.nextVarId(), "1", 20000, -1, "4", 200, 1);
         allVariants.add(overlap1);
 
-        SvVarData overlap2 = createSgl(tester.nextVarId(), "1", 40000, -1, false);
+        SvVarData overlap2 = createSgl(tester.nextVarId(), "1", 40000, -1);
         allVariants.add(overlap2);
 
         tester.AllVariants.addAll(allVariants);
