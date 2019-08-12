@@ -29,6 +29,7 @@ public final class LoadChordData {
     private static final String DB_URL = "db_url";
 
     private static final String RUN_DIR = "run_dir";
+    private static final String TUMOR_SAMPLE = "tumor_sample";
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
         final Options options = createOptions();
@@ -38,8 +39,9 @@ public final class LoadChordData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
 
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
+        final String tumor_sample = cmd.getOptionValue(TUMOR_SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath)) {
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, tumor_sample)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load chord data", options);
         } else {
@@ -48,14 +50,13 @@ public final class LoadChordData {
                 final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
-                LOGGER.info(String.format("Extracting and writing chord for %s", runContext.runDirectory()));
+                LOGGER.info(String.format("Extracting and writing chord for %s", runDirectoryPath));
                 try {
-                    ChordAnalysis chordAnalysis = generateChordForRun(runContext);
-                    dbWriter.writeChord(runContext.tumorSample(), chordAnalysis);
+                    ChordAnalysis chordAnalysis = generateChordForRun(runDirectoryPath, tumor_sample);
+                    dbWriter.writeChord(tumor_sample, chordAnalysis);
 
                 } catch (IOException e) {
-                    LOGGER.warn(String.format("Cannot extract chord for %s.", runContext.runDirectory()));
+                    LOGGER.warn(String.format("Cannot extract chord for %s.", runDirectoryPath));
                 }
             } else {
                 if (!runDirectory.exists()) {
@@ -68,9 +69,8 @@ public final class LoadChordData {
     }
 
     @NotNull
-    private static ChordAnalysis generateChordForRun(@NotNull RunContext context) throws IOException {
-        assert context.isSomaticRun();
-        String chordFile = ChordFileReader.generateFilename(context.runDirectory(), context.tumorSample());
+    private static ChordAnalysis generateChordForRun(@NotNull String runDirectoryPath, @NotNull String tumorSample) throws IOException {
+        String chordFile = ChordFileReader.generateFilename(runDirectoryPath, tumorSample);
         return ChordFileReader.read(chordFile);
     }
 
@@ -81,6 +81,8 @@ public final class LoadChordData {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(RUN_DIR, true, "Path towards the folder containing patient runs.");
+        options.addOption(TUMOR_SAMPLE, true, "The tumor sample.");
+
         return options;
     }
 
