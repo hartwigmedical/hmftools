@@ -19,7 +19,7 @@ public abstract class CivicSource {
     @Nullable
     public abstract String name();
 
-    @NotNull
+    @Nullable
     public abstract String journal();
 
     @NotNull
@@ -35,7 +35,7 @@ public abstract class CivicSource {
     public abstract String sourceUrl();
 
     @Nullable
-    public abstract List<String> clinicalTrials();
+    public abstract List<CivicClinicalTrial> clinicalTrials();
 
     @NotNull
     public abstract String pubmedId();

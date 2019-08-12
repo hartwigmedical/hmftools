@@ -35,7 +35,7 @@ public abstract class Civic implements KbSpecificObject {
     public abstract String alleleRegistryId();
 
     @Nullable
-    public abstract String provisional_values();
+    public abstract CivicDescription provisional_values();
 
     @NotNull
     public abstract String geneId();
@@ -47,7 +47,7 @@ public abstract class Civic implements KbSpecificObject {
     public abstract List<CivicEvidenceItems> evidenceItem();
 
     @Nullable
-    public abstract String sources();
+    public abstract List<CivicSource> sources();
 
     @NotNull
     public abstract String entrezId();
@@ -58,8 +58,8 @@ public abstract class Civic implements KbSpecificObject {
     @NotNull
     public abstract List<String> hgvs_expressions();
 
-    @Nullable
-    public abstract String errors();
+    @NotNull
+    public abstract CivicError errors();
 
     @NotNull
     public abstract CivicCoordinates coordinates();
