@@ -12,6 +12,44 @@ import static com.hartwig.hmftools.vicc.database.Tables.CGIINFO;
 import static com.hartwig.hmftools.vicc.database.Tables.CGIREGION;
 import static com.hartwig.hmftools.vicc.database.Tables.CGISTRAND;
 import static com.hartwig.hmftools.vicc.database.Tables.CGITRANSCRIPT;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVIC;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICASSERTIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICCLINICALTRIAL;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICCLINVARENTRIES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICCOORDINATES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICDESCRIPTION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICDISEASE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICDRUGS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICERROR;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSCLINICALTRIAL;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSPUBLICATION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSSOURCE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICHGVSEXPRESSIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDON;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDONAVATARS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDONORGANIZATION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDONPROFILEIMAGE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDONUSER;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTMODIFIED;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTMODIFIEDAVATARS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTMODIFIEDORGANIZATION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTMODIFIEDPROFILEIMAGE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTMODIFIEDUSER;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWED;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDAVATARS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDORGANIZATION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDPROFILEIMAGE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDUSER;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICLIFECYCLEACTIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICPUBLICATION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICSOURCE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTALIASES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSCOORDINATES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSTYPES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSVARIANTS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTTYPES;
 import static com.hartwig.hmftools.vicc.database.Tables.DEVTAG;
 import static com.hartwig.hmftools.vicc.database.Tables.ENVIRONMENTALCONTEXT;
 import static com.hartwig.hmftools.vicc.database.Tables.EVIDENCE;
@@ -85,6 +123,16 @@ import com.hartwig.hmftools.vicc.database.tables.Oncokbbiological;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.BRCA;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.Civic;
+import com.hartwig.hmftools.vicc.datamodel.CivicClinicalTrial;
+import com.hartwig.hmftools.vicc.datamodel.CivicDescription;
+import com.hartwig.hmftools.vicc.datamodel.CivicDrugs;
+import com.hartwig.hmftools.vicc.datamodel.CivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.CivicPublicationDate;
+import com.hartwig.hmftools.vicc.datamodel.CivicSource;
+import com.hartwig.hmftools.vicc.datamodel.CivicVariantGroup;
+import com.hartwig.hmftools.vicc.datamodel.CivicVariantTypes;
+import com.hartwig.hmftools.vicc.datamodel.CivicVariants;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
@@ -1072,7 +1120,6 @@ public class ViccDAO {
                 }
             }
 
-
             if (locations.geo() != null) {
                 context.insertInto(MOLECULARMATCHTRIALSGEO,
                         MOLECULARMATCHTRIALSGEO.LAT,
@@ -1149,6 +1196,373 @@ public class ViccDAO {
 
     }
 
+    private void importCivic(int viccEntryId, @NotNull KbSpecificObject object) {
+        Civic civic = (Civic) object;
+
+        int id = context.insertInto(CIVIC,
+                CIVIC.ENTREZNAME,
+                CIVIC.CIVICACTIONABILITYSCORE,
+                CIVIC.ALLELEREGISTRYID,
+                CIVIC.GENEID,
+                CIVIC.NAME,
+                CIVIC.ENTREZID,
+                CIVIC.TYPE,
+                CIVIC.IDCIVIC,
+                CIVIC.DESCRIPTION,
+                CIVIC.VICCENTRYID)
+                .values(civic.entrezName(),
+                        civic.civicActionabilityScore(),
+                        civic.alleleRegistryId(),
+                        civic.geneId(),
+                        civic.name(),
+                        civic.entrezId(),
+                        civic.type(),
+                        civic.id(),
+                        civic.description(),
+                        viccEntryId)
+                .returning(CIVIC.ID)
+                .fetchOne()
+                .getValue(CIVIC.ID);
+
+        for (String assertions : civic.assertions()) {
+            context.insertInto(CIVICASSERTIONS, CIVICASSERTIONS.ASSERTIONS, CIVICASSERTIONS.CIVICID).values(assertions, id).execute();
+        }
+
+        for (String hgvsExpression : civic.hgvs_expressions()) {
+            context.insertInto(CIVICHGVSEXPRESSIONS, CIVICHGVSEXPRESSIONS.HGVS_EXPRESSIONS, CIVICHGVSEXPRESSIONS.CIVICID)
+                    .values(hgvsExpression, id)
+                    .execute();
+        }
+
+        for (String clinvarEntries : civic.clinvarEntries()) {
+            context.insertInto(CIVICCLINVARENTRIES, CIVICCLINVARENTRIES.CLINVARENTRIES, CIVICCLINVARENTRIES.CIVICID)
+                    .values(clinvarEntries, id)
+                    .execute();
+        }
+
+        for (String variantAliases : civic.variantAliases()) {
+            context.insertInto(CIVICVARIANTALIASES, CIVICVARIANTALIASES.VARIANTALIASES, CIVICVARIANTALIASES.CIVICID)
+                    .values(variantAliases, id)
+                    .execute();
+        }
+
+        for (CivicVariantTypes variantTypes : civic.variantTypes()) {
+            context.insertInto(CIVICVARIANTTYPES,
+                    CIVICVARIANTTYPES.DISPLAYNAME,
+                    CIVICVARIANTTYPES.DESCRIPTION,
+                    CIVICVARIANTTYPES.URL,
+                    CIVICVARIANTTYPES.SOID,
+                    CIVICVARIANTTYPES.IDVARIANTTYPES,
+                    CIVICVARIANTTYPES.NAME,
+                    CIVICVARIANTTYPES.CIVICID)
+                    .values(variantTypes.displayName(),
+                            variantTypes.description(),
+                            variantTypes.url(),
+                            variantTypes.soId(),
+                            variantTypes.id(),
+                            variantTypes.name(),
+                            id)
+                    .execute();
+        }
+
+        if (civic.provisional_values() != null) {
+            context.insertInto(CIVICDESCRIPTION, CIVICDESCRIPTION.REVISIONID, CIVICDESCRIPTION.VALUE, CIVICDESCRIPTION.CIVICID)
+                    .values(civic.provisional_values().revision_id(), civic.provisional_values().value(), id)
+                    .execute();
+        }
+
+        context.insertInto(CIVICCOORDINATES,
+                CIVICCOORDINATES.CHROMOSOME2,
+                CIVICCOORDINATES.REFERENCEBASES,
+                CIVICCOORDINATES.START2,
+                CIVICCOORDINATES.VARIANTBASES,
+                CIVICCOORDINATES.STOP,
+                CIVICCOORDINATES.STOP2,
+                CIVICCOORDINATES.REPRESENTATIVETRANSCRIPT2,
+                CIVICCOORDINATES.START,
+                CIVICCOORDINATES.REPRESENTATIVETRANSCRIPT,
+                CIVICCOORDINATES.ENSEMBLVERSION,
+                CIVICCOORDINATES.CHROMOSOME,
+                CIVICCOORDINATES.REFERENCEBUILD,
+                CIVICCOORDINATES.CIVICID)
+                .values(civic.coordinates().chromosome2(),
+                        civic.coordinates().referenceBases(),
+                        civic.coordinates().start2(),
+                        civic.coordinates().variantBases(),
+                        civic.coordinates().stop(),
+                        civic.coordinates().stop2(),
+                        civic.coordinates().representativeTranscript2(),
+                        civic.coordinates().start(),
+                        civic.coordinates().representativeTranscript(),
+                        civic.coordinates().ensemblVersion(),
+                        civic.coordinates().chromosome(),
+                        civic.coordinates().referenceBuild(),
+                        id)
+                .execute();
+
+        for (CivicVariantGroup variantGroup : civic.variantGroups()) {
+            int idVariantGroup = context.insertInto(CIVICVARIANTSGROUPS,
+                    CIVICVARIANTSGROUPS.IDVARIANTSGROUPS,
+                    CIVICVARIANTSGROUPS.TYPE,
+                    CIVICVARIANTSGROUPS.DESCRIPTION,
+                    CIVICVARIANTSGROUPS.NAME,
+                    CIVICVARIANTSGROUPS.CIVICID)
+                    .values(variantGroup.id(), variantGroup.type(), variantGroup.description(), variantGroup.name(), id)
+                    .returning(CIVICVARIANTSGROUPS.ID)
+                    .fetchOne()
+                    .getValue(CIVICVARIANTSGROUPS.ID);
+
+            for (CivicVariants variants : variantGroup.variants()) {
+                int idVariantGroupVariants = context.insertInto(CIVICVARIANTSGROUPSVARIANTS,
+                        CIVICVARIANTSGROUPSVARIANTS.ENTREZ_NAME,
+                        CIVICVARIANTSGROUPSVARIANTS.DESCRIPTION,
+                        CIVICVARIANTSGROUPSVARIANTS.CIVIC_ACTIONABILITY_SCORE,
+                        CIVICVARIANTSGROUPSVARIANTS.GENE_ID,
+                        CIVICVARIANTSGROUPSVARIANTS.ENTREZ_ID,
+                        CIVICVARIANTSGROUPSVARIANTS.TYPE,
+                        CIVICVARIANTSGROUPSVARIANTS.IDVARIANTS,
+                        CIVICVARIANTSGROUPSVARIANTS.NAME,
+                        CIVICVARIANTSGROUPSVARIANTS.CIVICVARIANTSGROUPSID)
+                        .values(variants.entrez_name(),
+                                variants.description(),
+                                variants.civic_actionability_score(),
+                                variants.gene_id(),
+                                variants.entrez_id(),
+                                variants.type(),
+                                variants.id(),
+                                variants.name(),
+                                idVariantGroup)
+                        .returning(CIVICVARIANTSGROUPSVARIANTS.ID)
+                        .fetchOne()
+                        .getValue(CIVICVARIANTSGROUPSVARIANTS.ID);
+
+                if (variants.coordinates() != null) {
+                    context.insertInto(CIVICVARIANTSGROUPSCOORDINATES,
+                            CIVICVARIANTSGROUPSCOORDINATES.CHROMOSOME2,
+                            CIVICVARIANTSGROUPSCOORDINATES.REFERENCEBASES,
+                            CIVICVARIANTSGROUPSCOORDINATES.START2,
+                            CIVICVARIANTSGROUPSCOORDINATES.VARIANTBASES,
+                            CIVICVARIANTSGROUPSCOORDINATES.STOP,
+                            CIVICVARIANTSGROUPSCOORDINATES.STOP2,
+                            CIVICVARIANTSGROUPSCOORDINATES.REPRESENTATIVETRANSCRIPT2,
+                            CIVICVARIANTSGROUPSCOORDINATES.START,
+                            CIVICVARIANTSGROUPSCOORDINATES.REPRESENTATIVETRANSCRIPT,
+                            CIVICVARIANTSGROUPSCOORDINATES.ENSEMBLVERSION,
+                            CIVICVARIANTSGROUPSCOORDINATES.CHROMOSOME,
+                            CIVICVARIANTSGROUPSCOORDINATES.REFERENCEBUILD,
+                            CIVICVARIANTSGROUPSCOORDINATES.CIVICVARIANTSGROUPSVARIANTSID)
+                            .values(variants.coordinates().chromosome2(),
+                                    variants.coordinates().referenceBases(),
+                                    variants.coordinates().start2(),
+                                    variants.coordinates().variantBases(),
+                                    variants.coordinates().stop(),
+                                    variants.coordinates().stop2(),
+                                    variants.coordinates().representativeTranscript2(),
+                                    variants.coordinates().start(),
+                                    variants.coordinates().representativeTranscript(),
+                                    variants.coordinates().ensemblVersion(),
+                                    variants.coordinates().chromosome(),
+                                    variants.coordinates().referenceBuild(),
+                                    idVariantGroupVariants)
+                            .execute();
+                }
+
+                for (CivicVariantTypes variantTypesGroup : variants.variant_types()) {
+                    context.insertInto(CIVICVARIANTSGROUPSTYPES,
+                            CIVICVARIANTSGROUPSTYPES.DISPLAYNAME,
+                            CIVICVARIANTSGROUPSTYPES.DESCRIPTION,
+                            CIVICVARIANTSGROUPSTYPES.URL,
+                            CIVICVARIANTSGROUPSTYPES.SOID,
+                            CIVICVARIANTSGROUPSTYPES.IDVARIANTTYPES,
+                            CIVICVARIANTSGROUPSTYPES.NAME,
+                            CIVICVARIANTSGROUPSTYPES.CIVICVARIANTSGROUPSVARIANTSID)
+                            .values(variantTypesGroup.displayName(),
+                                    variantTypesGroup.description(),
+                                    variantTypesGroup.url(),
+                                    variantTypesGroup.soId(),
+                                    variantTypesGroup.id(),
+                                    variantTypesGroup.name(),
+                                    idVariantGroupVariants)
+                            .execute();
+                }
+            }
+        }
+
+        for (CivicEvidenceItems evidenceItems : civic.evidenceItem()) {
+            int idEvidenceItems = context.insertInto(CIVICEVIDENCEITEMS,
+                    CIVICEVIDENCEITEMS.STATUS,
+                    CIVICEVIDENCEITEMS.RATING,
+                    CIVICEVIDENCEITEMS.DRUGINTERACTIONTYPE,
+                    CIVICEVIDENCEITEMS.DESCRIPTION,
+                    CIVICEVIDENCEITEMS.OPENCHANGECOUNT,
+                    CIVICEVIDENCEITEMS.EVIDENCETYPE,
+                    CIVICEVIDENCEITEMS.VARIANTORIGIN,
+                    CIVICEVIDENCEITEMS.EVIDENCEDIRECTION,
+                    CIVICEVIDENCEITEMS.VARIANTID,
+                    CIVICEVIDENCEITEMS.CLINICALSIGNIFICANCE,
+                    CIVICEVIDENCEITEMS.EVIDENCELEVEL,
+                    CIVICEVIDENCEITEMS.TYPE,
+                    CIVICEVIDENCEITEMS.IDEVIDENCEITEMS,
+                    CIVICEVIDENCEITEMS.NAME,
+                    CIVICEVIDENCEITEMS.CIVICID)
+                    .values(evidenceItems.status(),
+                            evidenceItems.rating(),
+                            evidenceItems.drugInteractionType(),
+                            evidenceItems.description(),
+                            evidenceItems.openChangeCount(),
+                            evidenceItems.evidenceType(),
+                            evidenceItems.variantOrigin(),
+                            evidenceItems.evidenceDirection(),
+                            evidenceItems.variantId(),
+                            evidenceItems.clinicalSignificance(),
+                            evidenceItems.evidenceLevel(),
+                            evidenceItems.type(),
+                            evidenceItems.id(),
+                            evidenceItems.name(),
+                            id)
+                    .returning(CIVICEVIDENCEITEMS.ID)
+                    .fetchOne()
+                    .getValue(CIVICEVIDENCEITEMS.ID);
+
+            for (CivicDrugs drugs : evidenceItems.drugs()) {
+                context.insertInto(CIVICDRUGS, CIVICDRUGS.PUBCHEMID, CIVICDRUGS.IDDRUGS, CIVICDRUGS.NAME, CIVICDRUGS.CIVICEVIDENCEITEMSID)
+                        .values(drugs.pubchemId(), drugs.id(), drugs.name(), idEvidenceItems)
+                        .execute();
+            }
+            context.insertInto(CIVICDISEASE,
+                    CIVICDISEASE.DOID,
+                    CIVICDISEASE.URL,
+                    CIVICDISEASE.DISPLAYNAME,
+                    CIVICDISEASE.IDDISEASE,
+                    CIVICDISEASE.NAME,
+                    CIVICDISEASE.CIVICEVIDENCEITEMSID)
+                    .values(evidenceItems.disease().doid(),
+                            evidenceItems.disease().url(),
+                            evidenceItems.disease().displayName(),
+                            evidenceItems.disease().id(),
+                            evidenceItems.disease().name(),
+                            idEvidenceItems)
+                    .execute();
+
+            int idEvidenceItemsSource = context.insertInto(CIVICEVIDENCEITEMSSOURCE,
+                    CIVICEVIDENCEITEMSSOURCE.STATUS,
+                    CIVICEVIDENCEITEMSSOURCE.OPENACCESS,
+                    CIVICEVIDENCEITEMSSOURCE.NAME,
+                    CIVICEVIDENCEITEMSSOURCE.JOURNAL,
+                    CIVICEVIDENCEITEMSSOURCE.CITATION,
+                    CIVICEVIDENCEITEMSSOURCE.PMC_ID,
+                    CIVICEVIDENCEITEMSSOURCE.FULLJOURNALTITLE,
+                    CIVICEVIDENCEITEMSSOURCE.SOURCEURL,
+                    CIVICEVIDENCEITEMSSOURCE.PUBMEDID,
+                    CIVICEVIDENCEITEMSSOURCE.ISREVIEW,
+                    CIVICEVIDENCEITEMSSOURCE.IDSOURCE,
+                    CIVICEVIDENCEITEMSSOURCE.CIVICEVIDENCEITEMSID)
+                    .values(evidenceItems.source().status(),
+                            evidenceItems.source().openAccess(),
+                            evidenceItems.source().name(),
+                            evidenceItems.source().journal(),
+                            evidenceItems.source().citation(),
+                            evidenceItems.source().pmc_Id(),
+                            evidenceItems.source().fullJournalTitle(),
+                            evidenceItems.source().sourceUrl(),
+                            evidenceItems.source().pubmedId(),
+                            evidenceItems.source().isReview(),
+                            evidenceItems.source().id(),
+                            idEvidenceItems)
+                    .returning(CIVICEVIDENCEITEMSSOURCE.CIVICEVIDENCEITEMSID)
+                    .fetchOne()
+                    .getValue(CIVICEVIDENCEITEMSSOURCE.CIVICEVIDENCEITEMSID);
+
+            context.insertInto(CIVICEVIDENCEITEMSPUBLICATION,
+                    CIVICEVIDENCEITEMSPUBLICATION.YEAR,
+                    CIVICEVIDENCEITEMSPUBLICATION.DAY,
+                    CIVICEVIDENCEITEMSPUBLICATION.MONTH,
+                    CIVICEVIDENCEITEMSPUBLICATION.CIVICEVIDENCEITEMSSOURCEID)
+                    .values(evidenceItems.source().publicationDate().year(),
+                            evidenceItems.source().publicationDate().day(),
+                            evidenceItems.source().publicationDate().month(),
+                            idEvidenceItemsSource)
+                    .execute();
+
+            for (CivicClinicalTrial clinicalTrial : evidenceItems.source().clinicalTrials()) {
+                context.insertInto(CIVICEVIDENCEITEMSCLINICALTRIAL,
+                        CIVICEVIDENCEITEMSCLINICALTRIAL.NCT_ID,
+                        CIVICEVIDENCEITEMSCLINICALTRIAL.DESCRIPTION,
+                        CIVICEVIDENCEITEMSCLINICALTRIAL.CLINICAL_TRIAL_URL,
+                        CIVICEVIDENCEITEMSCLINICALTRIAL.NAME,
+                        CIVICEVIDENCEITEMSCLINICALTRIAL.CIVICEVIDENCEITEMSSOURCEID)
+                        .values(clinicalTrial.nct_id(),
+                                clinicalTrial.description(),
+                                clinicalTrial.clinical_trial_url(),
+                                clinicalTrial.name(),
+                                idEvidenceItemsSource)
+                        .execute();
+            }
+
+        }
+
+        if (civic.sources() != null) {
+            for (CivicSource source : civic.sources()) {
+                int idSource = context.insertInto(CIVICSOURCE,
+                        CIVICSOURCE.STATUS,
+                        CIVICSOURCE.OPENACCESS,
+                        CIVICSOURCE.NAME,
+                        CIVICSOURCE.JOURNAL,
+                        CIVICSOURCE.CITATION,
+                        CIVICSOURCE.PMC_ID,
+                        CIVICSOURCE.FULLJOURNALTITLE,
+                        CIVICSOURCE.SOURCEURL,
+                        CIVICSOURCE.PUBMEDID,
+                        CIVICSOURCE.ISREVIEW,
+                        CIVICSOURCE.IDSOURCE,
+                        CIVICSOURCE.CIVICID)
+                        .values(source.status(),
+                                source.openAccess(),
+                                source.name(),
+                                source.journal(),
+                                source.citation(),
+                                source.pmc_Id(),
+                                source.fullJournalTitle(),
+                                source.sourceUrl(),
+                                source.pubmedId(),
+                                source.isReview(),
+                                source.id(),
+                                id)
+                        .returning(CIVICSOURCE.CIVICID)
+                        .fetchOne()
+                        .getValue(CIVICSOURCE.CIVICID);
+
+                //TODO: fix issue with foreign key
+//                context.insertInto(CIVICPUBLICATION,
+//                        CIVICPUBLICATION.YEAR,
+//                        CIVICPUBLICATION.DAY,
+//                        CIVICPUBLICATION.MONTH,
+//                        CIVICPUBLICATION.CIVICSOURCEID)
+//                        .values(source.publicationDate().year(), source.publicationDate().day(), source.publicationDate().month(), idSource)
+//                        .execute();
+
+                for (CivicClinicalTrial clinicalTrial : source.clinicalTrials()) {
+                    context.insertInto(CIVICCLINICALTRIAL,
+                            CIVICCLINICALTRIAL.NCT_ID,
+                            CIVICCLINICALTRIAL.DESCRIPTION,
+                            CIVICCLINICALTRIAL.CLINICAL_TRIAL_URL,
+                            CIVICCLINICALTRIAL.NAME,
+                            CIVICCLINICALTRIAL.CIVICSOURCEID)
+                            .values(clinicalTrial.nct_id(),
+                                    clinicalTrial.description(),
+                                    clinicalTrial.clinical_trial_url(),
+                                    clinicalTrial.name(),
+                                    idSource)
+                            .execute();
+                }
+            }
+        }
+
+
+        context.insertInto(CIVICERROR, CIVICERROR.CIVICID).values(id).execute();
+
+    }
+
     private void writeKbSpecificObject(int viccEntryId, @NotNull KbSpecificObject object) {
         if (object instanceof Sage) {
             importSageinSQL(viccEntryId, object);
@@ -1173,6 +1587,9 @@ public class ViccDAO {
         }
         if (object instanceof MolecularMatchTrials) {
             importMolecularMatchTrials(viccEntryId, object);
+        }
+        if (object instanceof Civic) {
+            importCivic(viccEntryId, object);
         }
     }
 
@@ -1524,5 +1941,42 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHTRIALSGEO).execute();
         context.deleteFrom(MOLECULARMATCHTRIALSLOCATION).execute();
         context.deleteFrom(MOLECULARMATCHTRIALSCOORDINATES).execute();
+        context.deleteFrom(CIVIC).execute();
+        context.deleteFrom(CIVICASSERTIONS).execute();
+        context.deleteFrom(CIVICHGVSEXPRESSIONS).execute();
+        context.deleteFrom(CIVICCLINVARENTRIES).execute();
+        context.deleteFrom(CIVICVARIANTALIASES).execute();
+        context.deleteFrom(CIVICVARIANTTYPES).execute();
+        context.deleteFrom(CIVICDESCRIPTION).execute();
+        context.deleteFrom(CIVICCOORDINATES).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPS).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPSCOORDINATES).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPSTYPES).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMS).execute();
+        context.deleteFrom(CIVICDRUGS).execute();
+        context.deleteFrom(CIVICDISEASE).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSSOURCE).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSPUBLICATION).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSCLINICALTRIAL).execute();
+        context.deleteFrom(CIVICSOURCE).execute();
+        context.deleteFrom(CIVICERROR).execute();
+        context.deleteFrom(CIVICPUBLICATION).execute();
+        context.deleteFrom(CIVICCLINICALTRIAL).execute();
+        context.deleteFrom(CIVICLIFECYCLEACTIONS).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDON).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONUSER).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONAVATARS).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONORGANIZATION).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONPROFILEIMAGE).execute();
+        context.deleteFrom(CIVICLASTMODIFIED).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDUSER).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDAVATARS).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDORGANIZATION).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDPROFILEIMAGE).execute();
+        context.deleteFrom(CIVICLASTREVIEWED).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDUSER).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDAVATARS).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDORGANIZATION).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDPROFILEIMAGE).execute();
     }
 }

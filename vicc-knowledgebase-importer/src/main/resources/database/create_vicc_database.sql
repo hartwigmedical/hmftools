@@ -72,6 +72,44 @@ DROP TABLE IF EXISTS molecularMatchTrialsContact;
 DROP TABLE IF EXISTS molecularMatchTrialsGeo;
 DROP TABLE IF EXISTS molecularMatchTrialsLocation;
 DROP TABLE IF EXISTS molecularMatchTrialsCoordinates;
+DROP TABLE IF EXISTS civic;
+DROP TABLE IF EXISTS civicAssertions;
+DROP TABLE IF EXISTS civicHGVSExpressions;
+DROP TABLE IF EXISTS civicClinvarEntries;
+DROP TABLE IF EXISTS civicVariantAliases;
+DROP TABLE IF EXISTS civicVariantTypes;
+DROP TABLE IF EXISTS civicDescription;
+DROP TABLE IF EXISTS civicCoordinates;
+DROP TABLE IF EXISTS civicVariantsGroups;
+DROP TABLE IF EXISTS civicVariantsGroupsVariants;
+DROP TABLE IF EXISTS civicVariantsGroupsCoordinates;
+DROP TABLE IF EXISTS civicVariantsGroupsTypes;
+DROP TABLE IF EXISTS civicEvidenceItems;
+DROP TABLE IF EXISTS civicDrugs;
+DROP TABLE IF EXISTS civicDisease;
+DROP TABLE IF EXISTS civicEvidenceItemsSource;
+DROP TABLE IF EXISTS civicEvidenceItemsPublication;
+DROP TABLE IF EXISTS civicEvidenceItemsClinicalTrial;
+DROP TABLE IF EXISTS civicSource;
+DROP TABLE IF EXISTS civicError;
+DROP TABLE IF EXISTS civicPublication;
+DROP TABLE IF EXISTS civicClinicalTrial;
+DROP TABLE IF EXISTS civicLifecycleActions;
+DROP TABLE IF EXISTS civicLastCommentedOn;
+DROP TABLE IF EXISTS civicLastCommentedOnUser;
+DROP TABLE IF EXISTS civicLastCommentedOnAvatars;
+DROP TABLE IF EXISTS civicLastCommentedOnOrganization;
+DROP TABLE IF EXISTS civicLastCommentedOnProfileImage;
+DROP TABLE IF EXISTS civicLastModified;
+DROP TABLE IF EXISTS civicLastModifiedUser;
+DROP TABLE IF EXISTS civicLastModifiedAvatars;
+DROP TABLE IF EXISTS civicLastModifiedOrganization;
+DROP TABLE IF EXISTS civicLastModifiedProfileImage;
+DROP TABLE IF EXISTS civicLastReviewed;
+DROP TABLE IF EXISTS civicLastReviewedUser;
+DROP TABLE IF EXISTS civicLastReviewedAvatars;
+DROP TABLE IF EXISTS civicLastReviewedOrganization;
+DROP TABLE IF EXISTS civicLastReviewedProfileImage;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -437,6 +475,492 @@ CREATE TABLE oncokbGeneAliasesClinical
     FOREIGN KEY (oncokbGeneClinicalId) REFERENCES oncokbGeneClinical(id)
 );
 
+CREATE TABLE civic
+(   id int NOT NULL AUTO_INCREMENT,
+    viccEntryId int NOT NULL,
+    entrezName varchar(255) NOT NULL,
+    civicActionabilityScore varchar(255),
+    alleleRegistryId varchar(255),
+    geneId varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    entrezId varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    idCivic varchar(255) NOT NULL,
+    description varchar(2000) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE civicAssertions
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    assertions varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicHGVSExpressions
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    hgvs_expressions varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicClinvarEntries
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    clinvarEntries varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicVariantAliases
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    variantAliases varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicVariantTypes
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    displayName varchar(255) NOT NULL,
+    description varchar(255) NOT NULL,
+    url varchar(255) NOT NULL,
+    soId varchar(255) NOT NULL,
+    idVariantTypes varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicDescription
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    revisionId varchar(255),
+    value varchar (1000),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicCoordinates
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    chromosome2 varchar(255),
+    referenceBases varchar(255),
+    start2 varchar(255),
+    variantBases varchar(255),
+    stop varchar(255),
+    stop2 varchar(255),
+    representativeTranscript2 varchar(255),
+    start varchar(255),
+    representativeTranscript varchar(255),
+    ensemblVersion varchar(255),
+    chromosome varchar(255),
+    referenceBuild varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicVariantsGroups
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    idVariantsGroups varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    description varchar(1000) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicVariantsGroupsVariants
+(   id int NOT NULL AUTO_INCREMENT,
+    civicVariantsGroupsId int NOT NULL,
+    entrez_name varchar(255) NOT NULL,
+    description varchar(1000) NOT NULL,
+    civic_actionability_score varchar(255),
+    gene_id varchar(255) NOT NULL,
+    entrez_id varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    idVariants varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicVariantsGroupsId) REFERENCES civicVariantsGroups(id)
+);
+
+CREATE TABLE civicVariantsGroupsCoordinates
+(   id int NOT NULL AUTO_INCREMENT,
+    civicVariantsGroupsVariantsId int NOT NULL,
+    chromosome2 varchar(255),
+    referenceBases varchar(255),
+    start2 varchar(255),
+    variantBases varchar(255),
+    stop varchar(255),
+    stop2 varchar(255),
+    representativeTranscript2 varchar(255),
+    start varchar(255),
+    representativeTranscript varchar(255),
+    ensemblVersion varchar(255),
+    chromosome varchar(255),
+    referenceBuild varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicVariantsGroupsVariantsId) REFERENCES civicVariantsGroupsVariants(id)
+);
+
+CREATE TABLE civicVariantsGroupsTypes
+(   id int NOT NULL AUTO_INCREMENT,
+    civicVariantsGroupsVariantsId int NOT NULL,
+    displayName varchar(255) NOT NULL,
+    description varchar(1000) NOT NULL,
+    url varchar(255) NOT NULL,
+    soId varchar(255) NOT NULL,
+    idVariantTypes varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicVariantsGroupsVariantsId) REFERENCES civicVariantsGroupsVariants(id)
+);
+
+CREATE TABLE civicEvidenceItems
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    status varchar(255) NOT NULL,
+    rating varchar(255),
+    drugInteractionType varchar(255),
+    description varchar(1500) NOT NULL,
+    openChangeCount varchar(255) NOT NULL,
+    evidenceType varchar(255) NOT NULL,
+    variantOrigin varchar(255),
+    evidenceDirection varchar(255),
+    variantId varchar(255),
+    clinicalSignificance varchar(255),
+    evidenceLevel varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    idEvidenceItems varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicDrugs
+(   id int NOT NULL AUTO_INCREMENT,
+    civicEvidenceItemsId int NOT NULL,
+    pubchemId varchar(255),
+    idDrugs varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicEvidenceItemsId) REFERENCES civicEvidenceItems(id)
+);
+
+CREATE TABLE civicDisease
+(   id int NOT NULL AUTO_INCREMENT,
+    civicEvidenceItemsId int NOT NULL,
+    doid varchar(255),
+    url varchar(255),
+    displayName varchar(255) NOT NULL,
+    idDisease varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicEvidenceItemsId) REFERENCES civicEvidenceItems(id)
+);
+
+CREATE TABLE civicEvidenceItemsSource
+(   id int NOT NULL AUTO_INCREMENT,
+    civicEvidenceItemsId int NOT NULL,
+    status varchar(255) NOT NULL,
+    openAccess varchar(255),
+    name varchar(1000),
+    journal varchar(255),
+    citation varchar(255) NOT NULL,
+    pmc_Id varchar(255),
+    fullJournalTitle varchar(255),
+    sourceUrl varchar(255) NOT NULL,
+    pubmedId varchar(255) NOT NULL,
+    isReview varchar(255) NOT NULL,
+    idSource varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicEvidenceItemsId) REFERENCES civicEvidenceItems(id)
+);
+
+CREATE TABLE civicEvidenceItemsPublication
+(   id int NOT NULL AUTO_INCREMENT,
+    civicEvidenceItemsSourceId int NOT NULL,
+    year varchar(255),
+    day varchar(255),
+    month varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicEvidenceItemsSourceId) REFERENCES civicEvidenceItemsSource(id)
+);
+
+CREATE TABLE civicEvidenceItemsClinicalTrial
+(   id int NOT NULL AUTO_INCREMENT,
+    civicEvidenceItemsSourceId int NOT NULL,
+    nct_id varchar(255),
+    description varchar(2000),
+    clinical_trial_url varchar(255),
+    name varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicEvidenceItemsSourceId) REFERENCES civicEvidenceItemsSource(id)
+);
+
+CREATE TABLE civicSource
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    status varchar(255) NOT NULL,
+    openAccess varchar(255),
+    name varchar(255),
+    journal varchar(255),
+    citation varchar(255) NOT NULL,
+    pmc_Id varchar(255),
+    fullJournalTitle varchar(255),
+    sourceUrl varchar(255) NOT NULL,
+    pubmedId varchar(255) NOT NULL,
+    isReview varchar(255) NOT NULL,
+    idSource varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicError
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicPublication
+(   id int NOT NULL AUTO_INCREMENT,
+    civicSourceId int NOT NULL,
+    year varchar(255),
+    day varchar(255),
+    month varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicSourceId) REFERENCES civicSource(id)
+);
+
+CREATE TABLE civicClinicalTrial
+(   id int NOT NULL AUTO_INCREMENT,
+    civicSourceId int NOT NULL,
+    nct_id varchar(255),
+    description varchar(1000),
+    clinical_trial_url varchar(255),
+    name varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicSourceId) REFERENCES civicSource(id)
+);
+
+CREATE TABLE civicLifecycleActions
+(   id int NOT NULL AUTO_INCREMENT,
+    civicId int NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicId) REFERENCES civic(id)
+);
+
+CREATE TABLE civicLastCommentedOn
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLifecycleActionsId int NOT NULL,
+    timestamp varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLifecycleActionsId) REFERENCES civicLifecycleActions(id)
+);
+
+CREATE TABLE civicLastCommentedOnUser
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastCommentedOnId int NOT NULL,
+    username varchar(255) NOT NULL,
+    areaOfExpertise varchar(255) NOT NULL,
+    twitterHandle varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    bio varchar(255) NOT NULL,
+    url varchar(255) NOT NULL,
+    createdAt varchar(255) NOT NULL,
+    acceptedLicense varchar(255) NOT NULL,
+    affiliation varchar(255) NOT NULL,
+    avatarUrl varchar(255) NOT NULL,
+    role varchar(255) NOT NULL,
+    facebookProfile varchar(255) NOT NULL,
+    linkedinProfile varchar(255) NOT NULL,
+    orcid varchar(255) NOT NULL,
+    displayName varchar(255) NOT NULL,
+    lastSeenAt varchar(255) NOT NULL,
+    featuredExpert varchar(255) NOT NULL,
+    idUser varchar(255) NOT NULL,
+    signupComplete varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastCommentedOnId) REFERENCES civicLastCommentedOn(id)
+);
+
+CREATE TABLE civicLastCommentedOnAvatars
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastCommentedOnUserId int NOT NULL,
+    x32 varchar(255) NOT NULL,
+    x14 varchar(255) NOT NULL,
+    x64 varchar(255) NOT NULL,
+    x128 varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastCommentedOnUserId) REFERENCES civicLastCommentedOnUser(id)
+);
+
+CREATE TABLE civicLastCommentedOnOrganization
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastCommentedOnUserId int NOT NULL,
+    url varchar(255) NOT NULL,
+    idOrganization varchar(255) NOT NULL,
+    description varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastCommentedOnUserId) REFERENCES civicLastCommentedOnUser(id)
+);
+
+CREATE TABLE civicLastCommentedOnProfileImage
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastCommentedOnOrganizationId int NOT NULL,
+    x32 varchar(255) NOT NULL,
+    x256 varchar(255) NOT NULL,
+    x14 varchar(255) NOT NULL,
+    x64 varchar(255) NOT NULL,
+    x128 varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastCommentedOnOrganizationId) REFERENCES civicLastCommentedOnOrganization(id)
+);
+
+CREATE TABLE civicLastModified
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLifecycleActionsId int NOT NULL,
+    timestamp varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLifecycleActionsId) REFERENCES civicLifecycleActions(id)
+);
+
+CREATE TABLE civicLastModifiedUser
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastModifiedId int NOT NULL,
+    username varchar(255) NOT NULL,
+    areaOfExpertise varchar(255) NOT NULL,
+    twitterHandle varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    bio varchar(255) NOT NULL,
+    url varchar(255) NOT NULL,
+    createdAt varchar(255) NOT NULL,
+    acceptedLicense varchar(255) NOT NULL,
+    affiliation varchar(255) NOT NULL,
+    avatarUrl varchar(255) NOT NULL,
+    role varchar(255) NOT NULL,
+    facebookProfile varchar(255) NOT NULL,
+    linkedinProfile varchar(255) NOT NULL,
+    orcid varchar(255) NOT NULL,
+    displayName varchar(255) NOT NULL,
+    lastSeenAt varchar(255) NOT NULL,
+    featuredExpert varchar(255) NOT NULL,
+    idUser varchar(255) NOT NULL,
+    signupComplete varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastModifiedId) REFERENCES civicLastModified(id)
+);
+
+CREATE TABLE civicLastModifiedAvatars
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastModifiedId int NOT NULL,
+    x32 varchar(255) NOT NULL,
+    x14 varchar(255) NOT NULL,
+    x64 varchar(255) NOT NULL,
+    x128 varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastModifiedId) REFERENCES civicLastModified(id)
+);
+
+CREATE TABLE civicLastModifiedOrganization
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastModifiedUserId int NOT NULL,
+    url varchar(255) NOT NULL,
+    idOrganization varchar(255) NOT NULL,
+    description varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastModifiedUserId) REFERENCES civicLastModifiedUser(id)
+);
+
+CREATE TABLE civicLastModifiedProfileImage
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastModifiedOrganizationId int NOT NULL,
+    x32 varchar(255) NOT NULL,
+    x256 varchar(255) NOT NULL,
+    x14 varchar(255) NOT NULL,
+    x64 varchar(255) NOT NULL,
+    x128 varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastModifiedOrganizationId) REFERENCES civicLastModifiedOrganization(id)
+);
+
+CREATE TABLE civicLastReviewed
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLifecycleActionsId int NOT NULL,
+    timestamp varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLifecycleActionsId) REFERENCES civicLifecycleActions(id)
+);
+
+CREATE TABLE civicLastReviewedUser
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastReviewedId int NOT NULL,
+    username varchar(255) NOT NULL,
+    areaOfExpertise varchar(255) NOT NULL,
+    twitterHandle varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    bio varchar(255) NOT NULL,
+    url varchar(255) NOT NULL,
+    createdAt varchar(255) NOT NULL,
+    acceptedLicense varchar(255) NOT NULL,
+    affiliation varchar(255) NOT NULL,
+    avatarUrl varchar(255) NOT NULL,
+    role varchar(255) NOT NULL,
+    facebookProfile varchar(255) NOT NULL,
+    linkedinProfile varchar(255) NOT NULL,
+    orcid varchar(255) NOT NULL,
+    displayName varchar(255) NOT NULL,
+    lastSeenAt varchar(255) NOT NULL,
+    featuredExpert varchar(255) NOT NULL,
+    idUser varchar(255) NOT NULL,
+    signupComplete varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastReviewedId) REFERENCES civicLastReviewed(id)
+);
+
+CREATE TABLE civicLastReviewedAvatars
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastReviewedId int NOT NULL,
+    x32 varchar(255) NOT NULL,
+    x14 varchar(255) NOT NULL,
+    x64 varchar(255) NOT NULL,
+    x128 varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastReviewedId) REFERENCES civicLastReviewed(id)
+);
+
+CREATE TABLE civicLastReviewedOrganization
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastReviewedUserId int NOT NULL,
+    url varchar(255) NOT NULL,
+    idOrganization varchar(255) NOT NULL,
+    description varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastReviewedUserId) REFERENCES civicLastReviewedUser(id)
+);
+
+CREATE TABLE civicLastReviewedProfileImage
+(   id int NOT NULL AUTO_INCREMENT,
+    civicLastReviewedOrganizationId int NOT NULL,
+    x32 varchar(255) NOT NULL,
+    x256 varchar(255) NOT NULL,
+    x14 varchar(255) NOT NULL,
+    x64 varchar(255) NOT NULL,
+    x128 varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (civicLastReviewedOrganizationId) REFERENCES civicLastReviewedOrganization(id)
+);
+
 CREATE TABLE pmkb
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
@@ -758,6 +1282,8 @@ CREATE TABLE jaxReferences
     PRIMARY KEY (id),
     FOREIGN KEY (jaxId) REFERENCES jax(id)
 );
+
+
 
 CREATE TABLE cgi
 (   id int NOT NULL AUTO_INCREMENT,
