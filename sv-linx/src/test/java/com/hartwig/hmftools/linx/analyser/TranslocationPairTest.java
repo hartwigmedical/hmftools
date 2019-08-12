@@ -128,7 +128,7 @@ public class TranslocationPairTest
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
 
-        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL_TI);
 
         // and now as a RECIP_DEL_DUP
@@ -190,7 +190,7 @@ public class TranslocationPairTest
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.Analyser.getClusters().get(0);
 
-        assertTrue(cluster.isResolved());
+        assertTrue(!cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_TRANS_DUPS);
         assertTrue(cluster.getChains().isEmpty());
 
@@ -210,7 +210,7 @@ public class TranslocationPairTest
         tester.Analyser.clusterAndAnalyse();
 
         cluster = tester.getClusters().get(0);
-        assertTrue(cluster.isResolved());
+        assertTrue(!cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_TRANS_DUPS);
         assertEquals(2, cluster.getChains().size());
     }

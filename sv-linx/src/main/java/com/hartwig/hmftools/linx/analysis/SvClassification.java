@@ -143,7 +143,7 @@ public class SvClassification
         {
             if(cluster.getChains().size() == 1)
             {
-                classifyPairClusters(cluster, isFinal, proximityThreshold, longDelThreshold, longDupThreshold);
+                classifyPairClusters(cluster, longDelThreshold, longDupThreshold);
 
                 if(cluster.getResolvedType() != NONE)
                     return;
@@ -181,7 +181,7 @@ public class SvClassification
         // markSyntheticTypes(cluster, isFinal, longDelThreshold, longDupThreshold, proximityThreshold);
         if(cluster.getSglBreakendCount() == 0)
         {
-            classifyPairClusters(cluster, isFinal, proximityThreshold, longDelThreshold, longDupThreshold);
+            classifyPairClusters(cluster, longDelThreshold, longDupThreshold);
         }
         else
         {

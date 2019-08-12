@@ -231,7 +231,7 @@ public class InversionPairTest
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
-        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.isResolved());
         assertEquals(DEL_TI, cluster.getResolvedType());
 
         // neither case, is resolved as a RECIP_INV_DUPS

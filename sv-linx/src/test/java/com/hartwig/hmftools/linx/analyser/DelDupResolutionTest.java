@@ -38,9 +38,22 @@ public class DelDupResolutionTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.getResolvedType() == DUP_TI);
+        assertTrue(cluster.isResolved());
         assertEquals(var1.position(false) - var2.position(false), getSyntheticLength(cluster));
         assertEquals(var2.position(true) - var1.position(true), getSyntheticTiLength(cluster));
         assertEquals(var2.position(false) - var2.position(true), getSyntheticGapLength(cluster));
+
+        // with an effective DUP exceeding the DUP threshold, the cluster is not resolved
+        var1 = createDup(tester.nextVarId(), "1", 1000, 250000);
+        var2 = createDel(tester.nextVarId(), "1", 5000, 20000);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(cluster.getResolvedType() == DUP_TI);
+        assertTrue(!cluster.isResolved());
     }
 
     @Test
@@ -57,9 +70,22 @@ public class DelDupResolutionTest
         SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.getResolvedType() == DEL_TI);
+        assertTrue(cluster.isResolved());
         assertEquals(var2.position(false) - var1.position(false), getSyntheticLength(cluster));
         assertEquals(var2.position(true) - var1.position(true), getSyntheticTiLength(cluster));
         assertEquals(var1.position(false) - var2.position(true), getSyntheticGapLength(cluster));
+
+        var1 = createDup(tester.nextVarId(), "1", 1000, 40000);
+        var2 = createDel(tester.nextVarId(), "1", 36000, 250000);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(cluster.getResolvedType() == DEL_TI);
+        assertTrue(!cluster.isResolved());
+
 
         tester.clearClustersAndSVs();
 
@@ -80,6 +106,7 @@ public class DelDupResolutionTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.getResolvedType() == DEL_TI);
+        assertTrue(cluster.isResolved());
         assertEquals(var4.position(true) - var2.position(true), getSyntheticLength(cluster));
         assertEquals(var3.position(true) - var1.position(true), getSyntheticTiLength(cluster));
         assertEquals(var2.position(true) - var3.position(true), getSyntheticGapLength(cluster));

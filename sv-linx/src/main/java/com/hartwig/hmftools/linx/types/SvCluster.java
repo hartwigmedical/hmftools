@@ -52,7 +52,7 @@ public class SvCluster
     private String mDesc;
     private int[] mTypeCounts;
 
-    private boolean mIsResolved;
+    private boolean mIsResolved; // if true, then protect from subsequent merging
     private ResolvedType mResolvedType;
 
     private List<String> mAnnotationList;

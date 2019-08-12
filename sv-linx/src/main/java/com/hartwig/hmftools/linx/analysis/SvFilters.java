@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
+import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -94,7 +95,7 @@ public class SvFilters
                     continue;
                 }
 
-                if((var.type() == BND || (var.type() == SGL && !var.isInferredSgl())) && isIsolatedLowVafBnd(var))
+                if((var.type() == BND || var.type() == SGL) && isIsolatedLowVafBnd(var))
                 {
                     LOGGER.debug("SV({}) filtered low VAF isolated BND or SGL", var.id());
                     removalList.add(breakend);
@@ -230,6 +231,10 @@ public class SvFilters
     private boolean isIsolatedLowVafBnd(final SvVarData var)
     {
         if(!hasLowCNChangeSupport(var))
+            return false;
+
+        // ignore possible LINE insertions
+        if(hasPolyAorTMotif(var))
             return false;
 
         for(int se = SE_START; se <= SE_END; ++se)

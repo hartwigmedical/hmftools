@@ -69,8 +69,7 @@ public class PairResolution
         return false;
     }
 
-    public static void classifyPairClusters(
-            SvCluster cluster, boolean isFinal, int proximityThreshold, long longDelThreshold, long longDupThreshold)
+    public static void classifyPairClusters(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
         // classifies 2-event clusters based on the types of breakends and their orientations
         // treat existing chains as SVs - ie with 2 breakends from the open ends
@@ -227,7 +226,7 @@ public class PairResolution
             && startBe1.orientation() != startBe2.orientation())
             {
                 classifyInversionPairClusters(
-                        cluster, isFinal, proximityThreshold, longDupThreshold,
+                        cluster, longDelThreshold, longDupThreshold,
                         startBe1, endBe1, startBe2, endBe2, uniformPloidy, longTiLink);
             }
             else if(startBe1.orientation() != endBe1.orientation() && startBe2.orientation() != endBe2.orientation())
@@ -238,7 +237,9 @@ public class PairResolution
 
                 if(secondIsDel != firstIsDel)
                 {
-                    classifyDelDupPairClusters(cluster, startBe1, endBe1, startBe2, endBe2, uniformPloidy);
+                    classifyDelDupPairClusters(
+                            cluster, longDelThreshold, longDupThreshold, longTiLink,
+                            startBe1, endBe1, startBe2, endBe2, uniformPloidy);
                 }
             }
         }
@@ -246,7 +247,7 @@ public class PairResolution
         {
             // check for translocation type events
             classifyTranslocationPairClusters(
-                    cluster, isFinal, proximityThreshold, longDupThreshold, startBe1, endBe1, startBe2, endBe2,
+                    cluster, longDelThreshold, longDupThreshold, startBe1, endBe1, startBe2, endBe2,
                     uniformPloidy, longTiLink, existingChainModified ? clusterChains: null);
         }
     }
@@ -277,19 +278,15 @@ public class PairResolution
         LOGGER.debug("cluster({}) chain(links=({} len={} synLen({}) marked as {}",
                 cluster.id(), chain.getLinkCount(), totalChainLength, syntheticLength, resolvedType);
 
-        boolean withinLongThreshold = false;
-
-        if(resolvedType == ResolvedType.DEL)
-            withinLongThreshold = syntheticLength < longDelThreshold;
-        else if(resolvedType == ResolvedType.DUP)
-            withinLongThreshold = syntheticLength < longDupThreshold;
+        boolean withinLongThreshold = resolvedType == ResolvedType.DEL ?
+                syntheticLength < longDelThreshold : syntheticLength < longDupThreshold;
 
         boolean resolved = withinLongThreshold;
         cluster.setResolved(resolved, resolvedType);
     }
 
     private static void classifyTranslocationPairClusters(
-            SvCluster cluster, boolean isFinal, int proximityThreshold, long longDupThreshold,
+            SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
             boolean uniformPloidy, final SvLinkedPair longestTiPair,
             List<SvChain> rearrangedChains)
@@ -347,14 +344,11 @@ public class PairResolution
 
         // basic reciprocal translocation
         ResolvedType resolvedType;
-        boolean isResolved = false;
+        boolean isResolved = true;
         if(arm1MatchingDB && arm2MatchingDB)
         {
-            if(!isFinal && (arm1Db1.length() > proximityThreshold || arm2Db1.length() > proximityThreshold))
-                return;
-
             resolvedType = RECIP_TRANS;
-            isResolved = true;
+            isResolved = (arm1Db1.length() <= longDelThreshold && arm2Db1.length() <= longDelThreshold);
         }
         else
         {
@@ -372,11 +366,33 @@ public class PairResolution
                 resolvedType = longOrLohBoundedTi && uniformPloidy ? DEL_TI : RECIP_TRANS_DEL_DUP;
             }
 
-            isResolved = (resolvedType == RECIP_TRANS_DUPS || resolvedType == RECIP_TRANS_DEL_DUP);
+            // test the overlap and DB lengths to determine whether this cluster is resolved (ie protected from clustering)
+            if(longestTiPair.length() > longDupThreshold)
+            {
+                isResolved = false;
+            }
+            else
+            {
+                final SvBreakend nonLongTiBe1 = longestTiPair.hasBreakend(startBe1) ? endBe1 : startBe1;
+                final SvBreakend nonLongTiBe2 = longestTiPair.hasBreakend(startBe2) ? endBe2 : startBe2;
+                long breakendDistance = abs(nonLongTiBe1.position() - nonLongTiBe2.position());
+
+                if(resolvedType == DEL_TI || resolvedType == RECIP_TRANS_DEL_DUP)
+                {
+                    if(breakendDistance > longDelThreshold)
+                        isResolved = false;
+                }
+                else
+                {
+                    // other breakends overlap in another DUP
+                    if(breakendDistance > longDupThreshold)
+                        isResolved = false;
+                }
+            }
         }
 
-        LOGGER.debug("cluster({}) longestTI({}) marked as {}",
-                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType);
+        LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
+                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
 
         if(rearrangedChains != null)
         {
@@ -397,7 +413,7 @@ public class PairResolution
     }
 
     private static void classifyInversionPairClusters(
-            SvCluster cluster, boolean isFinal, int proximityThreshold, long longDupThreshold,
+            SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
             boolean uniformPloidy, @NotNull final SvLinkedPair longestTiPair)
     {
@@ -438,14 +454,14 @@ public class PairResolution
         // basic reciprocal inversion
         if(lowerMatchingDB && upperMatchingDB)
         {
-            if(!isFinal && (lowerDb1.length() > proximityThreshold || upperDb1.length() > proximityThreshold))
-                return;
-
-            cluster.setResolved(true, RECIP_INV);
+            boolean isResolved = (lowerDb1.length() <= longDelThreshold && upperDb1.length() <= longDelThreshold);
+            cluster.setResolved(isResolved, RECIP_INV);
             return;
         }
 
         boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
+
+        ResolvedType resolvedType = NONE;
 
         if((lowerBe1.position() < lowerBe2.position() && upperBe1.position() > upperBe2.position())
         || (lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position()))
@@ -453,7 +469,7 @@ public class PairResolution
             // one INV encloses the other - the DEL scenario
             if(longOrLohBoundedTi && uniformPloidy)
             {
-                cluster.setResolved(false, DEL_TI);
+                resolvedType = DEL_TI;
             }
             else
             {
@@ -461,7 +477,7 @@ public class PairResolution
 
                 if (innerInversionLength < 100000)
                 {
-                    cluster.setResolved(false, RESOLVED_FOLDBACK);
+                    resolvedType = RESOLVED_FOLDBACK;
                 }
                 else
                 {
@@ -486,7 +502,7 @@ public class PairResolution
                     LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
                     chain.logLinks();
 
-                    cluster.setResolved(false, RECIP_INV_DEL_DUP);
+                    resolvedType = RECIP_INV_DEL_DUP;
                 }
             }
         }
@@ -495,7 +511,7 @@ public class PairResolution
             // otherwise the inner breakends overlap
             if(longOrLohBoundedTi && uniformPloidy)
             {
-                cluster.setResolved(false, DUP_TI);
+                resolvedType = DUP_TI;
             }
             else
             {
@@ -518,16 +534,41 @@ public class PairResolution
                 LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
                 chain.logLinks();
 
-                cluster.setResolved(false, RECIP_INV_DUPS);
+                resolvedType = RECIP_INV_DUPS;
             }
         }
 
-        LOGGER.debug("cluster({}) longestTI({}) marked as {}",
-                cluster.id(), longestTiPair.length(), cluster.getResolvedType());
+        boolean isResolved = false;
+
+        // test DEL and DUP lengths vs thresholds to determine whether the cluster is protected
+        long longestTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(SvLinkedPair::length).max().getAsLong();
+        final SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
+        final SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
+        long nonTiDistance = abs(chainStart.position() - chainEnd.position());
+
+        if(resolvedType == RECIP_INV_DUPS || resolvedType == DUP_TI)
+        {
+            isResolved = longestTiLength <= longDupThreshold && nonTiDistance <= longDupThreshold;
+        }
+        else if(resolvedType == RECIP_INV_DEL_DUP || resolvedType == DEL_TI)
+        {
+            isResolved = longestTiLength <= longDupThreshold && nonTiDistance <= longDelThreshold;
+        }
+        else
+        {
+            isResolved = false;
+        }
+
+        LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
+                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
+
+        cluster.setResolved(isResolved, resolvedType);
     }
 
     public static void classifyDelDupPairClusters(
-            SvCluster cluster,  SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2, boolean uniformPloidy)
+            SvCluster cluster, long longDelThreshold, long longDupThreshold, @NotNull final SvLinkedPair longestTiPair,
+            SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
+            boolean uniformPloidy)
     {
         if(!uniformPloidy)
             return;
@@ -543,26 +584,47 @@ public class PairResolution
             return;
         }
 
+        ResolvedType resolvedType = NONE;
+
         if(lowerBe1.position() < lowerBe2.position() && upperBe1.position() > upperBe2.position())
         {
             // check the DEL isn't enclosing the DUP
             if(lowerBe1.orientation() == 1)
                 return;
 
-            cluster.setResolved(false, DUP_TI);
+            resolvedType = DUP_TI;
         }
         else if(lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position())
         {
             if(lowerBe2.orientation() == 1)
                 return;
 
-            cluster.setResolved(false, DUP_TI);
+            resolvedType = DUP_TI;
         }
         else
         {
             // overlapping
-            cluster.setResolved(false, DEL_TI);
+            resolvedType = DEL_TI;
         }
+
+        final SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
+        final SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
+        long nonTiDistance = abs(chainStart.position() - chainEnd.position());
+        boolean isResolved = false;
+
+        if(resolvedType == DUP_TI)
+        {
+            isResolved = longestTiPair.length() <= longDupThreshold && nonTiDistance <= longDupThreshold;
+        }
+        else
+        {
+            isResolved = longestTiPair.length() <= longDupThreshold && nonTiDistance <= longDelThreshold;
+        }
+
+        LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
+                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
+
+        cluster.setResolved(isResolved, resolvedType);
     }
 
 }
