@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_AFTER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_AFTER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
@@ -612,7 +614,7 @@ public class ClusterAnnotations
                 chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
                 unlinkedSvCount, armGroupCount, inconsistentArmCount, shortTiCount,longTiCount);
 
-        if(isComplete && !isComplex && longTiCount > 0)
+        if(isComplete && !isComplex && longTiCount > 0 && cluster.getResolvedType() == COMPLEX)
         {
             // chromothripsis is currently defined as fully chained simple cluster
             // but needs to take into account the copy number gain / loss compared with the surrounding chromatid

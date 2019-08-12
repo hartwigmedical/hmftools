@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analyser;
+package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;

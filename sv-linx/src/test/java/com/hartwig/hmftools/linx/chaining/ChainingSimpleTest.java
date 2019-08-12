@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analyser;
+package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;

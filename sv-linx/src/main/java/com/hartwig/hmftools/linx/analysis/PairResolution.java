@@ -10,6 +10,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
@@ -26,6 +30,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
@@ -75,6 +80,8 @@ public class PairResolution
         // treat existing chains as SVs - ie with 2 breakends from the open ends
         if(cluster.getChains().size() > 2 || cluster.getSglBreakendCount() > 0)
             return;
+
+        isSpecificCluster(cluster);
 
         // establish the nature of the breakends
         // first reduce SVs and/or chains to a set of breakends and record TI length(s)
@@ -215,8 +222,8 @@ public class PairResolution
             return;
         }
 
-        if(startBe1.getChrArm().equals(endBe1.getChrArm()) && startBe2.getChrArm().equals(endBe2.getChrArm())
-        && startBe1.getChrArm().equals(startBe2.getChrArm()))
+        if(startBe1.chromosome().equals(endBe1.chromosome()) && startBe2.chromosome().equals(endBe2.chromosome())
+        && startBe1.chromosome().equals(startBe2.chromosome()))
         {
             if(!isSingleChain)
                 return;
@@ -259,19 +266,19 @@ public class PairResolution
 
         SvChain chain = cluster.getChains().get(0);
 
-        final SvBreakend startBreakend = chain.getOpenBreakend(true);
-        final SvBreakend endBreakend = chain.getOpenBreakend(false);
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
 
-        if(!startBreakend.chromosome().equals(endBreakend.chromosome()) || startBreakend.arm() != endBreakend.arm())
+        if(!chainStart.chromosome().equals(chainEnd.chromosome()) || chainStart.arm() != chainEnd.arm())
             return;
 
-        if(startBreakend.orientation() == endBreakend.orientation())
+        if(chainStart.orientation() == chainEnd.orientation())
             return;
 
-        boolean faceAway = (startBreakend.position() < endBreakend.position()) == (startBreakend.orientation() == 1);
+        boolean faceAway = (chainStart.position() < chainEnd.position()) == (chainStart.orientation() == 1);
 
         int totalChainLength = chain.getLength(false);
-        long syntheticLength = abs(startBreakend.position() - endBreakend.position());
+        long syntheticLength = abs(chainStart.position() - chainEnd.position());
 
         ResolvedType resolvedType = faceAway ? ResolvedType.DEL : ResolvedType.DUP;
 
@@ -283,6 +290,20 @@ public class PairResolution
 
         boolean resolved = withinLongThreshold;
         cluster.setResolved(resolved, resolvedType);
+        setPairLengthData(cluster);
+    }
+
+    private static void setPairLengthData(final SvCluster cluster)
+    {
+        // format is: SyntheticLength (DEL or DUP), TI or DB or OverlapLength, SV Gap Length (if applicable)
+        if(cluster.getChains().size() != 1)
+            return;
+
+        long syntheticLength = getSyntheticLength(cluster);
+        long otherLength = getSyntheticTiLength(cluster);
+        long gapLength = getSyntheticGapLength(cluster);
+
+        cluster.addAnnotation(String.format("%d;%d;%d", syntheticLength, otherLength, gapLength));
     }
 
     private static void classifyTranslocationPairClusters(
@@ -349,11 +370,16 @@ public class PairResolution
         {
             resolvedType = RECIP_TRANS;
             isResolved = (arm1Db1.length() <= longDelThreshold && arm2Db1.length() <= longDelThreshold);
+
+            cluster.addAnnotation(String.format("%d;%d;%d", arm1Db1.length(), arm2Db1.length(), NO_LENGTH));
         }
         else
         {
             if (longestTiPair == null)
                 return;
+
+            // set synthetic lengths prior to any chain reconfiguration
+            setPairLengthData(cluster);
 
             boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
 
@@ -443,6 +469,9 @@ public class PairResolution
             cluster.setResolved(false, FB_INV_PAIR);
             return;
         }
+
+        // set prior to any chain reconfiguration
+        setPairLengthData(cluster);
 
         // check for linked, short DBs at both ends
         SvLinkedPair lowerDb1 = lowerBe1.getDBLink();
@@ -624,6 +653,7 @@ public class PairResolution
         LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
                 cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
 
+        setPairLengthData(cluster);
         cluster.setResolved(isResolved, resolvedType);
     }
 

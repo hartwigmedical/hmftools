@@ -656,7 +656,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",DelCount,DupCount,InsCount,InvCount,BndCount,SglCount,InfCount");
             mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,IsLINE,Replication,MinPloidy,MaxPloidy,Foldbacks");
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain,ExtTIsCnGain,OverlapTIs");
-            mClusterFileWriter.write(",DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway,SyntheticLengthData");
+            mClusterFileWriter.write(",DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
             mClusterFileWriter.write(",OriginArms,FragmentArms,UnchainedSVs,Annotations,AlleleValidPerc");
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
@@ -722,17 +722,8 @@ public class SvSampleAnalyser {
                             chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
                             chainMetrics.DSBs, chainMetrics.ShortDSBs, chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway));
 
-                    String syntheticLengthData = "";
-                    long syntheticLength = getSyntheticLength(cluster);
-
-                    if(syntheticLength != NO_LENGTH)
-                    {
-                        syntheticLengthData = String.format("%d;%d;%d",
-                                syntheticLength, getSyntheticTiLength(cluster), getSyntheticGapLength(cluster));
-                    }
-
-                    mClusterFileWriter.write(String.format(",%s,%d,%d,%d,%s,%.2f",
-                            syntheticLengthData, cluster.getOriginArms(), cluster.getFragmentArms(),
+                    mClusterFileWriter.write(String.format(",%d,%d,%d,%s,%.2f",
+                            cluster.getOriginArms(), cluster.getFragmentArms(),
                             cluster.getUnlinkedSVs().size(), cluster.getAnnotations(), cluster.getValidAllelePloidySegmentPerc()));
 
                     final int[] armClusterData = getArmClusterData(cluster);

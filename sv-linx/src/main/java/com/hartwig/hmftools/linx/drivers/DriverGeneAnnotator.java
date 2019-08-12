@@ -459,14 +459,14 @@ public class DriverGeneAnnotator
 
         if(chromosomeCopyNumber/mSamplePloidy > 2)
         {
-            LOGGER.info("gene({}) AMP gain from chromosomeCopyNumber({}) vs samplePloidy({})",
+            LOGGER.debug("gene({}) AMP gain from chromosomeCopyNumber({}) vs samplePloidy({})",
                     dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber), formatPloidy(mSamplePloidy));
 
             dgData.addEvent(new DriverGeneEvent(GAIN_CHR));
         }
         else if(armCopyNumber/mSamplePloidy > 2)
         {
-            LOGGER.info("gene({}) AMP gain from armCopyNumber({}) vs samplePloidy({})",
+            LOGGER.debug("gene({}) AMP gain from armCopyNumber({}) vs samplePloidy({})",
                     dgData.GeneData.GeneName, formatPloidy(armCopyNumber), formatPloidy(mSamplePloidy));
 
             dgData.addEvent(new DriverGeneEvent(GAIN_ARM));
@@ -568,7 +568,7 @@ public class DriverGeneAnnotator
                     event.addSvBreakendPair(var.getBreakend(true), var.getBreakend(false), matchType);
                     dgData.addEvent(event);
 
-                    LOGGER.info("gene({}) cluster({}) net ploidy({}) from DUP({}) type({})",
+                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from DUP({}) type({})",
                             dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy), var.toString(), matchType);
 
                     continue;
@@ -621,7 +621,7 @@ public class DriverGeneAnnotator
 
                 if(maxSpanningLink != null)
                 {
-                    LOGGER.info("gene({}) cluster({}) net ploidy({}) from TI({}) ploidy({})",
+                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from TI({}) ploidy({})",
                             dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy),
                             maxSpanningLink, formatPloidy(maxSpanningLinkPloidy));
 
@@ -629,7 +629,7 @@ public class DriverGeneAnnotator
                 }
                 else if(foldback != null)
                 {
-                    LOGGER.info("gene({}) cluster({}) net ploidy({}) from foldback({}) ploidy({})",
+                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from foldback({}) ploidy({})",
                             dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy),
                             foldback, formatPloidy(foldback.ploidy()));
 
@@ -637,7 +637,7 @@ public class DriverGeneAnnotator
                 }
                 else if(maxPloidyBreakend != null)
                 {
-                    LOGGER.info("gene({}) cluster({}) net ploidy({}) from max-ploidy breakend({}) ploidy({})",
+                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from max-ploidy breakend({}) ploidy({})",
                             dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy),
                             maxPloidyBreakend, formatPloidy(maxPloidyBreakend.ploidy()));
 

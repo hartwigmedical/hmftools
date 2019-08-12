@@ -252,15 +252,13 @@ public class SvClassification
 
     public static long getSyntheticLength(final SvCluster cluster)
     {
-        ResolvedType resolvedType = cluster.getResolvedType();
+        // assumes has been called on an appropriate cluster
 
-        if(resolvedType == SGL_PAIR_DEL || resolvedType == SGL_PAIR_DUP)
+        if(cluster.getResolvedType() == SGL_PAIR_DEL || cluster.getResolvedType() == SGL_PAIR_DUP)
         {
             return abs(cluster.getSV(0).position(true) - cluster.getSV(1).position(true));
         }
-
-        if((isSyntheticType(cluster) && (resolvedType == ResolvedType.DEL || resolvedType == ResolvedType.DUP))
-        || resolvedType == DEL_TI || resolvedType == DUP_TI)
+        else
         {
             if(cluster.getChains().size() != 1)
                 return NO_LENGTH;
@@ -268,74 +266,60 @@ public class SvClassification
             final SvChain chain = cluster.getChains().get(0);
             return abs(chain.getOpenBreakend(true).position() - chain.getOpenBreakend(false).position());
         }
-
-        return NO_LENGTH;
     }
 
     public static long getSyntheticTiLength(final SvCluster cluster)
     {
-        if((isSyntheticType(cluster) && (cluster.getResolvedType() == ResolvedType.DEL || cluster.getResolvedType() == ResolvedType.DUP))
-        || cluster.getResolvedType() == DEL_TI || cluster.getResolvedType() == DUP_TI)
-        {
-            if(cluster.getChains().size() != 1)
-                return NO_LENGTH;
+        if(cluster.getChains().size() != 1)
+            return NO_LENGTH;
 
-            final SvChain chain = cluster.getChains().get(0);
+        final SvChain chain = cluster.getChains().get(0);
 
-            return chain.getLinkedPairs().stream().mapToLong(x -> x.length()).max().getAsLong();
-        }
-
-        return NO_LENGTH;
+        return chain.getLinkedPairs().stream().mapToLong(x -> x.length()).max().getAsLong();
     }
 
     public static long getSyntheticGapLength(final SvCluster cluster)
     {
-        // the min distance between the TI (longest if has one) and the chain ends
-        if((isSyntheticType(cluster) && (cluster.getResolvedType() == ResolvedType.DEL || cluster.getResolvedType() == ResolvedType.DUP))
-        || cluster.getResolvedType() == DEL_TI || cluster.getResolvedType() == DUP_TI)
+        // the min distance between the longest TI and the chain ends, if has a TI on the same end
+        if(cluster.getChains().size() != 1)
+            return NO_LENGTH;
+
+        final SvChain chain = cluster.getChains().get(0);
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        if(!chainStart.getChrArm().equals(chainEnd.getChrArm()))
+            return NO_LENGTH;
+
+        long minDistance = NO_LENGTH;
+
+        for(final SvLinkedPair pair : chain.getLinkedPairs())
         {
-            if(cluster.getChains().size() != 1)
-                return NO_LENGTH;
-
-            final SvChain chain = cluster.getChains().get(0);
-            final SvBreakend chainStart = chain.getOpenBreakend(true);
-            final SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-            if(!chainStart.getChrArm().equals(chainEnd.getChrArm()))
-                return NO_LENGTH;
-
-            long minDistance = NO_LENGTH;
-
-            for(final SvLinkedPair pair : chain.getLinkedPairs())
+            if(pair.length() > SHORT_TI_LENGTH)
             {
-                if(pair.length() > SHORT_TI_LENGTH)
-                {
-                    if(!pair.chromosome().equals(chainStart.chromosome()))
-                        return NO_LENGTH;
-                }
-                else if(pair.chromosome().equals(chainStart.chromosome()))
-                {
-                    continue;
-                }
-
-                long distanceStart = min(
-                        abs(chainStart.position() - pair.firstBreakend().position()),
-                        abs(chainStart.position() - pair.secondBreakend().position()));
-
-                long distanceEnd = min(
-                        abs(chainEnd.position() - pair.firstBreakend().position()),
-                        abs(chainEnd.position() - pair.secondBreakend().position()));
-
-                long gapLength = min(distanceStart, distanceEnd);
-
-                if(minDistance == NO_LENGTH || gapLength < minDistance)
-                    minDistance = gapLength;
+                if(!pair.chromosome().equals(chainStart.chromosome()))
+                    return NO_LENGTH;
+            }
+            else if(!pair.chromosome().equals(chainStart.chromosome()))
+            {
+                continue;
             }
 
-            return minDistance;
+            long distanceStart = min(
+                    abs(chainStart.position() - pair.firstBreakend().position()),
+                    abs(chainStart.position() - pair.secondBreakend().position()));
+
+            long distanceEnd = min(
+                    abs(chainEnd.position() - pair.firstBreakend().position()),
+                    abs(chainEnd.position() - pair.secondBreakend().position()));
+
+            long gapLength = min(distanceStart, distanceEnd);
+
+            if(minDistance == NO_LENGTH || gapLength < minDistance)
+                minDistance = gapLength;
         }
 
-        return NO_LENGTH;
+        return minDistance;
     }
 
     public static void markSyntheticIncompletes(SvCluster cluster)

@@ -305,7 +305,11 @@ public class DoubleMinuteFinder
             cluster.setDoubleMinuteData(highPloidySVs, dmChain);
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
-        cluster.setResolved(false, DOUBLE_MINUTE);
+
+        if(highPloidySVs.size() == cluster.getSvCount())
+        {
+            cluster.setResolved(false, DOUBLE_MINUTE);
+        }
 
         if(highPloidySVs.size() == 1 && fullyChained)
         {

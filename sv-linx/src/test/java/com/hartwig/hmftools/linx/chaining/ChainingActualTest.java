@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.analyser;
+package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
