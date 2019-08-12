@@ -301,8 +301,7 @@ public class DoubleMinuteFinder
         mClusterChains.put(cluster.id(), dmChain);
         mClusterSVs.put(cluster.id(), highPloidySVs);
 
-        if(fullyChained)
-            cluster.setDoubleMinuteData(highPloidySVs, dmChain);
+        cluster.setDoubleMinuteData(highPloidySVs, fullyChained ? dmChain : null);
 
         cluster.addAnnotation(CLUSTER_ANNOT_DM);
 

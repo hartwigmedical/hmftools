@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUnc
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
@@ -30,6 +31,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
@@ -61,24 +63,14 @@ public class PairResolution
                 || resolvedType == FB_INV_PAIR || resolvedType == RESOLVED_FOLDBACK || resolvedType == FB_INV_PAIR);
     }
 
-    public static boolean isLohBoundedTi(final SvLinkedPair pair)
-    {
-        for(final LohEvent lohEvent : pair.first().getCluster().getLohEvents())
-        {
-            if(lohEvent.getBreakend(true) == pair.firstBreakend() || lohEvent.getBreakend(true) == pair.secondBreakend())
-                return true;
-            else if(lohEvent.getBreakend(false) == pair.firstBreakend() || lohEvent.getBreakend(false) == pair.secondBreakend())
-                return true;
-        }
-
-        return false;
-    }
-
     public static void classifyPairClusters(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
         // classifies 2-event clusters based on the types of breakends and their orientations
         // treat existing chains as SVs - ie with 2 breakends from the open ends
         if(cluster.getChains().size() > 2 || cluster.getSglBreakendCount() > 0)
+            return;
+
+        if(cluster.hasAnnotation(CLUSTER_ANNOT_DM))
             return;
 
         isSpecificCluster(cluster);
@@ -306,6 +298,19 @@ public class PairResolution
         cluster.addAnnotation(String.format("%d;%d;%d", syntheticLength, otherLength, gapLength));
     }
 
+    private static boolean isLohBoundedTi(final SvLinkedPair pair)
+    {
+        for(final LohEvent lohEvent : pair.first().getCluster().getLohEvents())
+        {
+            if(lohEvent.getBreakend(true) == pair.firstBreakend() || lohEvent.getBreakend(true) == pair.secondBreakend())
+                return true;
+            else if(lohEvent.getBreakend(false) == pair.firstBreakend() || lohEvent.getBreakend(false) == pair.secondBreakend())
+                return true;
+        }
+
+        return false;
+    }
+
     private static void classifyTranslocationPairClusters(
             SvCluster cluster, long longDelThreshold, long longDupThreshold,
             SvBreakend startBe1, SvBreakend endBe1, SvBreakend startBe2, SvBreakend endBe2,
@@ -470,9 +475,6 @@ public class PairResolution
             return;
         }
 
-        // set prior to any chain reconfiguration
-        setPairLengthData(cluster);
-
         // check for linked, short DBs at both ends
         SvLinkedPair lowerDb1 = lowerBe1.getDBLink();
         SvLinkedPair upperDb1 = upperBe1.getDBLink();
@@ -485,8 +487,12 @@ public class PairResolution
         {
             boolean isResolved = (lowerDb1.length() <= longDelThreshold && upperDb1.length() <= longDelThreshold);
             cluster.setResolved(isResolved, RECIP_INV);
+            cluster.addAnnotation(String.format("%d;%d;%d", lowerDb1.length(), upperDb1.length(), NO_LENGTH));
             return;
         }
+
+        // set prior to any chain reconfiguration
+        setPairLengthData(cluster);
 
         boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
 

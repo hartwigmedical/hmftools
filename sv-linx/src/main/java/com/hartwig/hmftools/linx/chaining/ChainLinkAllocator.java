@@ -1207,6 +1207,11 @@ public class ChainLinkAllocator
         return mSkippedPairs.keySet().stream().anyMatch(x -> x.matches(pair));
     }
 
+    public int getSkippedPairCount(final LinkSkipType type)
+    {
+        return (int)mSkippedPairs.values().stream().filter(x -> x == type).count();
+    }
+
     private void addSkippedPair(final SvLinkedPair pair, LinkSkipType type)
     {
         if(hasSkippedPairs(pair))

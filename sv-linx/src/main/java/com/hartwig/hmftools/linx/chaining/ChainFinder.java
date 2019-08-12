@@ -435,15 +435,15 @@ public class ChainFinder
             {
                 ++iterationsWithoutNewLinks;
 
-                if (iterationsWithoutNewLinks == 10)
+                if (iterationsWithoutNewLinks >= 50)
                 {
-                    LOGGER.warn("cluster({}) {} iterations without adding a new link", mClusterId, iterationsWithoutNewLinks);
+                    LOGGER.info("cluster({}) {} iterations without adding a link, skipped pairs: closing({}) ploidyMismatch({})",
+                            mClusterId, iterationsWithoutNewLinks,
+                            mLinkAllocator.getSkippedPairCount(LinkSkipType.CLOSING),
+                            mLinkAllocator.getSkippedPairCount(LinkSkipType.PLOIDY_MISMATCH));
 
-                    if (iterationsWithoutNewLinks >= 20)
-                    {
-                        mIsValid = false;
-                        break;
-                    }
+                    // mIsValid = false;
+                    break;
                 }
             }
             else
