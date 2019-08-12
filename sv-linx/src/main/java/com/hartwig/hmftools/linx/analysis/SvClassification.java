@@ -8,23 +8,20 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
-import static com.hartwig.hmftools.linx.analysis.PairResolution.classifyDelDupPairClusters;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.classifyPairClusters;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterPairType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
-import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
-import static com.hartwig.hmftools.linx.types.ResolvedType.INF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
@@ -36,9 +33,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
@@ -95,7 +89,7 @@ public class SvClassification
 
     public static boolean isIncompleteType(final ResolvedType resolvedType)
     {
-        return (resolvedType == ResolvedType.INV || resolvedType == ResolvedType.SGL || resolvedType == INF);
+        return (resolvedType == ResolvedType.INV || resolvedType == ResolvedType.SGL || resolvedType == ResolvedType.INF);
     }
 
     public static boolean isSyntheticType(SvCluster cluster)
@@ -219,8 +213,8 @@ public class SvClassification
                     cluster.setResolved(false, UNBAL_TRANS);
                 else if(type == INV)
                     cluster.setResolved(false, ResolvedType.INV);
-                else if(type == SGL && cluster.getSV(0).isInferredSgl())
-                    cluster.setResolved(false, INF);
+                else if(type == INF)
+                    cluster.setResolved(false, ResolvedType.INF);
                 else if(type == SGL)
                     cluster.setResolved(false, ResolvedType.SGL);
 
@@ -368,10 +362,9 @@ public class SvClassification
         // first look for chains ending in SGLs or INFs
         ResolvedType resolvedType = NONE;
 
-        if((chain.getLastSV().type() == SGL && chain.getLastSV().isInferredSgl())
-        || (chain.getFirstSV().type() == SGL && chain.getFirstSV().isInferredSgl()))
+        if(chain.getLastSV().type() == INF || chain.getFirstSV().type() == INF)
         {
-            resolvedType = INF;
+            resolvedType = ResolvedType.INF;
         }
         else if(chain.getLastSV().type() == SGL || chain.getFirstSV().type() == SGL)
         {

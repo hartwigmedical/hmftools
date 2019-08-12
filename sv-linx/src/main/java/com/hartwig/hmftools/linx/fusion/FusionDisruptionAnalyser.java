@@ -437,25 +437,24 @@ public class FusionDisruptionAnalyser
             // isSpecificCluster(cluster);
 
             List<GeneFusion> chainFusions = Lists.newArrayList();
-            List<GeneFusion> validFusions = Lists.newArrayList();
 
             for (final SvChain chain : cluster.getChains())
             {
-                findChainedFusions(cluster, chain, chainFusions, validFusions);
+                findChainedFusions(cluster, chain, chainFusions);
             }
 
             if(chainFusions.isEmpty())
                 continue;
 
             // now all fusions have been gathered from this chain, set the reportable one (if any)
-            LOGGER.debug("cluster({}) found chained({} valid={}) fusions", cluster.id(), chainFusions.size(), validFusions.size());
+            LOGGER.debug("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
 
             // consider fusions from amongst unique gene-pairings
             List<String> genePairings = Lists.newArrayList();
 
-            for(int i = 0; i < validFusions.size(); ++i)
+            for(int i = 0; i < chainFusions.size(); ++i)
             {
-                GeneFusion fusion = validFusions.get(i);
+                GeneFusion fusion = chainFusions.get(i);
                 String genePair = fusion.upstreamTrans().parent().GeneName + "_" + fusion.downstreamTrans().parent().GeneName;
 
                 if(genePairings.contains(genePair))
@@ -467,10 +466,10 @@ public class FusionDisruptionAnalyser
                 List<GeneFusion> genePairFusions = Lists.newArrayList();
                 genePairFusions.add(fusion);
 
-                for(int j = i+1; j < validFusions.size(); ++j)
+                for(int j = i+1; j < chainFusions.size(); ++j)
                 {
-                    GeneFusion nextFusion = validFusions.get(j);
-                    String nextGenePair = nextFusion.upstreamTrans().parent().GeneName + "_" + nextFusion.downstreamTrans().parent().GeneName;
+                    GeneFusion nextFusion = chainFusions.get(j);
+                    String nextGenePair = nextFusion.name();
 
                     if(nextGenePair.equals(genePair))
                     {
@@ -482,23 +481,16 @@ public class FusionDisruptionAnalyser
                 mFusionFinder.setReportableGeneFusions(genePairFusions);
             }
 
-            for(GeneFusion fusion : chainFusions)
-            {
-                if (mLogReportableOnly && !fusion.reportable())
-                    continue;
-
-                if(fusion.getAnnotations() == null)
-                    continue;
-
-                mFusions.add(fusion);
-            }
+            mFusions.addAll(chainFusions.stream()
+                    .filter(x -> !mLogReportableOnly || x.reportable())
+                    .filter(x -> x.getAnnotations() != null)
+                    .collect(Collectors.toList()));
         }
     }
 
     private static int FUSION_MAX_CHAIN_LENGTH = 100000;
 
-    private void findChainedFusions(final SvCluster cluster, final SvChain chain,
-            List<GeneFusion> chainFusions, List<GeneFusion> validFusions)
+    private void findChainedFusions(final SvCluster cluster, final SvChain chain, List<GeneFusion> chainFusions)
     {
         // look for fusions formed by breakends connected in a chain
 
@@ -619,8 +611,6 @@ public class FusionDisruptionAnalyser
                         continue;
                 }
 
-                chainFusions.addAll(fusions);
-
                 int validTraversalFusionCount = 0; // between these 2 SVs
 
                 for (GeneFusion fusion : fusions)
@@ -672,9 +662,9 @@ public class FusionDisruptionAnalyser
 
                     FusionTermination[] terminationInfo = {null, null};
 
-                    for (int i = 0; i <= 1; ++i)
+                    for (int se = SE_START; se <= SE_END; ++se)
                     {
-                        boolean isUpstream = (i == 0);
+                        boolean isUpstream = (se == 0);
 
                         // look at each gene in turn
                         Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
@@ -687,13 +677,13 @@ public class FusionDisruptionAnalyser
 
                         if (isChainEnd)
                         {
-                            terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript);
+                            terminationInfo[se] = checkTranscriptDisruptionInfo(breakend, transcript);
                         }
                         else
                         {
                             // looks from this link outwards past the end of the transcript for any invalidation of the transcript
                             int linkIndex = breakend == lowerBreakend ? lpIndex1 - 1 : lpIndex2;
-                            terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                            terminationInfo[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
                         }
                     }
 
@@ -712,8 +702,8 @@ public class FusionDisruptionAnalyser
                             .clusterCount(cluster.getSvCount())
                             .resolvedType(cluster.getResolvedType().toString())
                             .chainInfo(chainInfo)
-                            .disruptionUp(terminationInfo[0])
-                            .disruptionDown(terminationInfo[1])
+                            .disruptionUp(terminationInfo[SE_START])
+                            .disruptionDown(terminationInfo[SE_END])
                             .build();
 
                     fusion.setAnnotations(annotations);
@@ -721,13 +711,13 @@ public class FusionDisruptionAnalyser
                     // accept invalidated chains and transcripts for known fusions
                     boolean isKnown = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN;
                     boolean chainLengthOk =  totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
-                    boolean notDisrupted = !fusion.isTerminated();
+                    boolean notTerminated = !fusion.isTerminated();
 
-                    if(validTraversal && ((chainLengthOk && notDisrupted) || isKnown))
+                    if(validTraversal && ((chainLengthOk && notTerminated) || isKnown))
                     {
-                        if(!hasIdenticalFusion(fusion, validFusions))
+                        if(!hasIdenticalFusion(fusion, chainFusions))
                         {
-                            validFusions.add(fusion);
+                            chainFusions.add(fusion);
                         }
                     }
                 }
@@ -853,8 +843,8 @@ public class FusionDisruptionAnalyser
                 .build();
     }
 
-    private FusionTermination checkTranscriptDisruptionInfo(final SvBreakend breakend, final Transcript transcript, final SvChain chain,
-            int linkIndex)
+    private FusionTermination checkTranscriptDisruptionInfo(
+            final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
     {
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
         // this includes subsequent links within the same chain and transcript
@@ -997,7 +987,7 @@ public class FusionDisruptionAnalyser
     private List<GeneFusion> extractUniqueFusions()
     {
         // from the list of all potential fusions, collect up all reportable ones, and then the highest priority fusion
-        // from amongst the rest
+        // from amongst the those with the same gene-pairing and/or SV Id
         List<GeneFusion> uniqueFusions = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
 
         List<String> genePairs = Lists.newArrayList();
@@ -1057,7 +1047,7 @@ public class FusionDisruptionAnalyser
             return;
 
         // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
-        // upload every breakend in a fusion to be uploaded, and any other disrupted canonical transcript
+        // upload every breakend in a fusion to be uploaded, and any other disrupted or canonical transcripts
         List<Transcript> transcriptsToUpload = Lists.newArrayList();
 
         for (SvVarData var : svList)
@@ -1067,7 +1057,7 @@ public class FusionDisruptionAnalyser
                 for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
                 {
                     transcriptsToUpload.addAll(geneAnnotation.transcripts().stream()
-                            .filter(x -> x.isCanonical() && x.isDisruptive())
+                            .filter(x -> x.isCanonical() || x.isDisruptive())
                             .collect(Collectors.toList()));
                 }
             }

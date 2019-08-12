@@ -64,14 +64,14 @@ public class GeneFusion
     {
         if(isUpstream)
         {
-            return mUpstreamTrans.ExonUpstream;
+            return mUpstreamTrans.ExonUpstream - mExonsSkippedUp;
         }
         else
         {
             if (mDownstreamTrans.isExonic() && !mUpstreamTrans.isExonic())
-                return mUpstreamTrans.ExonDownstream + 1;
+                return mDownstreamTrans.ExonDownstream + 1 + mExonsSkippedDown;
             else
-                return mUpstreamTrans.ExonDownstream;
+                return mDownstreamTrans.ExonDownstream + mExonsSkippedDown;
         }
     }
 

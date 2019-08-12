@@ -318,7 +318,7 @@ public class FusionFinder
 
             if(!phaseMatched && allowExonSkipping)
             {
-                // check for a match within the alterative phasings from upstream and downstream of the breakend
+                // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
                 {
                     if (altPhasing.getKey() == downstreamTrans.ExonDownstreamPhase)

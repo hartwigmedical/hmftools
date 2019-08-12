@@ -564,7 +564,7 @@ public class RnaFusionMapper
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
-                mWriter.write("SampleId,FusionName,GeneUp,GeneDown,ViableFusion,PhaseMatched,KnownType");
+                mWriter.write("SampleId,FusionName,GeneNameUp,GeneNameDown,ViableFusion,PhaseMatched,KnownType");
 
                 mWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterInfoUp");
                 mWriter.write(",TransViableUp,TransValidLocUp,TransIdUp,ExonsSkippedUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");

@@ -128,7 +128,9 @@ public class FusionWriter
                     fieldsStr += ",Strand" + upDown;
                     fieldsStr += ",RegionType" + upDown;
                     fieldsStr += ",CodingType" + upDown;
-                    fieldsStr += ",Exon" + upDown;
+                    fieldsStr += ",BreakendExon" + upDown;
+                    fieldsStr += ",FusedExon" + upDown;
+                    fieldsStr += ",ExonsSkipped" + upDown;
                     fieldsStr += ",Phase" + upDown;
                     fieldsStr += ",ExonMax" + upDown;
                     fieldsStr += ",Disruptive" + upDown;
@@ -142,7 +144,6 @@ public class FusionWriter
                     fieldsStr += ",DistancePrev" + upDown;
                     fieldsStr += ",Canonical" + upDown;
                     fieldsStr += ",Biotype" + upDown;
-                    fieldsStr += ",ExonsSkipped" + upDown;
                     mFusionWriter.write(fieldsStr);
                 }
 
@@ -182,7 +183,8 @@ public class FusionWriter
             // write upstream SV, transcript and exon info
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                final Transcript trans = se == SE_START ? fusion.upstreamTrans() : fusion.downstreamTrans();
+                boolean isUpstream = (se == SE_START);
+                final Transcript trans = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
                 final GeneAnnotation gene = trans.parent();
 
                 writer.write(String.format(",%d,%s,%d,%d,%s,%.6f",
@@ -193,15 +195,16 @@ public class FusionWriter
                         gene.StableId, gene.GeneName, trans.StableId,
                         gene.Strand, trans.regionType(), trans.codingType()));
 
-                writer.write(String.format(",%d,%d,%d,%s",
-                        se == SE_START ? trans.ExonUpstream : trans.ExonDownstream,
-                        se == SE_START ? trans.ExonUpstreamPhase : trans.ExonDownstreamPhase,
+                writer.write(String.format(",%d,%d,%d,%d,%d,%s",
+                        isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
+                        fusion.getFusedExon(isUpstream), fusion.getExonsSkipped(isUpstream),
+                        isUpstream ? trans.ExonUpstreamPhase : trans.ExonDownstreamPhase,
                         trans.ExonMax, trans.isDisruptive()));
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%d",
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
                         trans.exactCodingBase(), trans.calcCodingBases(true), trans.totalCodingBases(),
                         trans.codingStart(), trans.codingEnd(), trans.TranscriptStart, trans.TranscriptEnd,
-                        trans.exonDistanceUp(), trans.isCanonical(), trans.bioType(), fusion.getExonsSkipped(isStart(se))));
+                        trans.exonDistanceUp(), trans.isCanonical(), trans.bioType()));
             }
 
             writer.write(String.format(",%s,%s",

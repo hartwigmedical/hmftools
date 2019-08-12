@@ -57,7 +57,6 @@ public class Fusions
 
     private static Fusion fromLine(@NotNull final Map<String, Integer> map, @NotNull final String line)
     {
-
         String[] values = line.split(SEPARATOR);
         return ImmutableFusion.builder()
                 .sampleId(values[map.get("SampleId")])
@@ -68,14 +67,14 @@ public class Fusions
                 .geneUp(values[map.get("GeneNameUp")])
                 .strandUp(Integer.valueOf(values[map.get("StrandUp")]))
                 .regionTypeUp(values[map.get("RegionTypeUp")])
-                .exonUp(Integer.valueOf(values[map.get("ExonUp")]))
+                .exonUp(Integer.valueOf(values[map.get("FusedExonUp")]))
                 .exonsSkippedUp(Integer.valueOf(values[map.get("ExonsSkippedUp")]))
                 .chromosomeDown(values[map.get("ChrDown")])
                 .positionDown(Long.valueOf(values[map.get("PosDown")]))
                 .geneDown(values[map.get("GeneNameDown")])
                 .strandDown(Integer.valueOf(values[map.get("StrandDown")]))
                 .regionTypeDown(values[map.get("RegionTypeDown")])
-                .exonDown(Integer.valueOf(values[map.get("ExonDown")]))
+                .exonDown(Integer.valueOf(values[map.get("FusedExonDown")]))
                 .exonsSkippedDown(Integer.valueOf(values[map.get("ExonsSkippedDown")]))
                 .transcriptUp(values[map.get("TranscriptUp")])
                 .transcriptDown(values[map.get("TranscriptDown")])

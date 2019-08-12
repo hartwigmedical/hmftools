@@ -126,6 +126,13 @@ public class Transcript {
         mProteinFeaturesLost = "";
     }
 
+    @NotNull
+    public GeneAnnotation parent() { return mGene; }
+
+    public long svPosition() { return mGene.position(); }
+    public String geneName() { return mGene.GeneName; }
+    public boolean isUpstream() { return mGene.isUpstream(); }
+
     public boolean isExonic()
     {
         return ExonUpstream > 0 && ExonUpstream == ExonDownstream;
@@ -187,6 +194,19 @@ public class Transcript {
         return "Unknown";
     }
 
+    public int nextSpliceExonRank()
+    {
+        if(isExonic())
+            return isUpstream() ? ExonUpstream - 1 : ExonDownstream + 1;
+        else
+            return isUpstream() ? ExonUpstream : ExonDownstream;
+    }
+
+    public int nextSpliceExonPhase()
+    {
+        return isUpstream() ? ExonUpstreamPhase : ExonDownstreamPhase;
+    }
+
     private final String calcCodingType()
     {
         if(CodingStart == null || CodingEnd == null || mTotalCodingBases == 0)
@@ -228,13 +248,6 @@ public class Transcript {
 
     public void setBioType(final String type) { mBioType = type; }
     public final String bioType() { return mBioType; }
-
-    @NotNull
-    public GeneAnnotation parent() { return mGene; }
-
-    public long svPosition() { return mGene.position(); }
-    public String geneName() { return mGene.GeneName; }
-    public boolean isUpstream() { return mGene.isUpstream(); }
 
     public int codingBases() { return mCodingBases; }
     public int calcCodingBases(boolean isUpstream) { return isUpstream ? mCodingBases : mTotalCodingBases - mCodingBases; }

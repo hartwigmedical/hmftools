@@ -90,6 +90,8 @@ public class StructuralVariantFusionDAO
             final GeneAnnotation geneAnnotation = transcript.parent();
             boolean isUpstream = transcript.isUpstream();
 
+
+
             inserter.values(timestamp,
                     sampleId,
                     transcript.parent().id(),
@@ -104,8 +106,8 @@ public class StructuralVariantFusionDAO
                     transcript.codingType(),
                     transcript.bioType(),
                     transcript.exactCodingBase(),
-                    isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream,
-                    isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase,
+                    transcript.nextSpliceExonRank(),
+                    transcript.nextSpliceExonPhase(),
                     isUpstream ? transcript.exonDistanceUp() : transcript.exonDistanceDown(),
                     transcript.ExonMax);
 

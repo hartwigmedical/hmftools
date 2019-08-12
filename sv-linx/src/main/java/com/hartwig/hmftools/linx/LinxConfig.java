@@ -64,7 +64,7 @@ public class LinxConfig
     // logging options
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
     public static final String LOG_DEBUG = "log_debug";
-    private static final String LOG_VERBOSE = "log_verbose";
+    public static final String LOG_VERBOSE = "log_verbose";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
     private static final String LOG_CLUSTER_ID = "log_cluster_id"; // for logging and breakends
     private static final String LOG_SV_ID = "log_sv_id";
