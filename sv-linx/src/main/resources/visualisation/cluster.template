@@ -9,7 +9,7 @@ show_tick_labels    = no
     </spacing>
 
     # Ideogram position, fill and outline
-    radius           = 0.9r
+    radius           = SUBSTITUTE_IDEOGRAM_RADIUSr
     thickness        = 50p
     fill             = yes
     stroke_color     = dgrey
@@ -18,7 +18,7 @@ show_tick_labels    = no
     show_label       = yes
     label_font       = default
     label_radius     = (dims(ideogram,radius_inner)+dims(ideogram,radius_outer))/2-15
-    label_size       = 30
+    label_size       = 40
     label_parallel   = yes
     label_case       = upper
     label_format     = eval( var(chr) =~ /hs([6]|[9])$/ ? var(label) . ".": var(label) )

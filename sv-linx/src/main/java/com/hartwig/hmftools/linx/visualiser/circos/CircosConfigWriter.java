@@ -132,11 +132,10 @@ public class CircosConfigWriter
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.maxCopyNumber() - 2)));
 
         int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.maxMinorAllelePloidy() - 1)));
-        //        double mapMiddleRadius = MAP_INNER_RADIUS + (MAP_OUTER_RADIUS - MAP_INNER_RADIUS) / (mapMaxTracks + 1);
-
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", config.displayPosition() ? "0.90" : "0.99")
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
                         .replaceAll("SUBSTITUTE_EXON_RANK_INNER_RADIUS", String.valueOf(exonInnerRadius))

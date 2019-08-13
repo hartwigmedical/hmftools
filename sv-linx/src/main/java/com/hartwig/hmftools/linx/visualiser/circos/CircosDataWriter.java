@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -531,6 +532,10 @@ public class CircosDataWriter
     private List<String> createPositionText(boolean debug, @NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks,
             @NotNull final List<Segment> scaledSegments)
     {
+
+        if (!circosConfig.displayPosition()) {
+            return Collections.emptyList();
+        }
 
         final Set<String> result = Sets.newHashSet();
 
