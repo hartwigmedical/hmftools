@@ -71,6 +71,7 @@ public class SvVisualiser implements AutoCloseable
     }
 
     private final SvVisualiserConfig config;
+    private final SvCircosConfig circosConfig;
     private final ExecutorService executorService;
 
     private SvVisualiser(final Options options, final String... args) throws ParseException, IOException
@@ -78,6 +79,7 @@ public class SvVisualiser implements AutoCloseable
         final CommandLine cmd = createCommandLine(args, options);
         LOGGER.info("Loading data");
         config = SvVisualiserConfig.createConfig(cmd);
+        circosConfig = SvCircosConfig.createConfig(cmd);
         executorService = Executors.newFixedThreadPool(config.threads());
     }
 
@@ -87,7 +89,8 @@ public class SvVisualiser implements AutoCloseable
 
         if (!config.clusters().isEmpty() || !config.chromosomes().isEmpty())
         {
-            if (!config.clusters().isEmpty()) {
+            if (!config.clusters().isEmpty())
+            {
                 futures.add(executorService.submit(() -> runCluster(config.clusters(), false)));
             }
 
@@ -174,7 +177,7 @@ public class SvVisualiser implements AutoCloseable
 
         String clusterIdsStr = "";
 
-        for(int clusterId : clusterIds)
+        for (int clusterId : clusterIds)
         {
             clusterIdsStr = appendStr(clusterIdsStr, String.valueOf(clusterId), '-');
         }
@@ -231,17 +234,18 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(filteredExons));
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
-        final List<CopyNumberAlteration> alterations = CopyNumberAlterations.copyNumbers(1000, config.copyNumberAlterations(), Span.span(positionsToCover));
+        final List<CopyNumberAlteration> alterations =
+                CopyNumberAlterations.copyNumbers(1000, config.copyNumberAlterations(), Span.span(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = Segments.extendTerminals(1000, filteredSegments, links, positionsToCover);
+        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover);
 
         final ColorPicker color = colorPickerFactory.create(links);
 
         final CircosData circosData =
                 new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains, filteredFusions);
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData);
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
         confWrite.writeConfig();
 
         final ProteinDomainColors proteinDomainColors = new ProteinDomainColors(filteredProteinDomains);

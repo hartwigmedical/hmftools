@@ -159,13 +159,13 @@ chromosomes_display_default = yes
 			</background>
 		</backgrounds>
 
-		<axes>
-			<axis>
-				color     = lpurple
-				thickness = 1
-				spacing   = SUBSTITUTE_SV_SPACINGr
-			</axis>
-		</axes>
+		#<axes>
+		#	<axis>
+		#		color     = lpurple
+		#		thickness = 1
+		#		spacing   = SUBSTITUTE_SV_SPACINGr
+		#	</axis>
+		#</axes>
 
 	</plot>
 
@@ -210,8 +210,6 @@ chromosomes_display_default = yes
 		r1   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		min  = -2
 		max  = 0
-		glyph = circle
-		glyph_size = 8
 		color = copy_loss
 		fill_color = copy_loss
 
@@ -219,9 +217,16 @@ chromosomes_display_default = yes
 			<axis>
 				color     = copy_loss_l
 				thickness = 1
-				spacing   = 0.5r
+				position   = 0.5r
 			</axis>
 		</axes>
+
+        <rules>
+            <rule>
+                condition = var(value) > 0
+                show = no
+            </rule>
+        </rules>
 
 		<backgrounds>
 			<background>
@@ -399,13 +404,13 @@ chromosomes_display_default = yes
 
 <colors>
 
-    copy_loss = 197,27,125
-    copy_loss_l = 239,141,198
-    copy_loss_vl = 254,245,250
+    copy_loss = 222,119,174
+    copy_loss_l = 237,182,212
+    copy_loss_vl = 253,245,249
 
-    copy_gain = 77,146,33
-    copy_gain_l = 178,230,145
-    copy_gain_vl = 245,252,241
+    copy_gain = 166,209,122
+    copy_gain_l = 205,229,181
+    copy_gain_vl = 244,249,239
 
     chr1 = 128,125,186
     chr2 = 145,142,179
