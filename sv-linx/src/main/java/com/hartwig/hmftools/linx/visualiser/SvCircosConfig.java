@@ -34,6 +34,31 @@ public interface SvCircosConfig
         return 0.175;
     }
 
+    default int minDistanceLabelSize()
+    {
+        return 40;
+    }
+
+    default int maxDistanceLabelSize()
+    {
+        return 60;
+    }
+
+    default int maxDistanceLabelCount()
+    {
+        return 200;
+    }
+
+    default long distanceLabelSize(long count)
+    {
+        if (count > maxDistanceLabelCount())
+        {
+            return 0;
+        }
+
+        return Math.round(maxDistanceLabelSize() - 1d * count * (maxDistanceLabelSize() - minDistanceLabelSize()) / maxDistanceLabelCount());
+    }
+
     static void addOptions(@NotNull Options options)
     {
         options.addOption(GENE_RELATIVE_SIZE, true, "Size of gene track relative to copy number, ploidy and segments");

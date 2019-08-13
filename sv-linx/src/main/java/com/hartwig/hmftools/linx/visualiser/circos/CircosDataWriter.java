@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
@@ -41,21 +41,25 @@ public class CircosDataWriter
     private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
 
-    private final ColorPicker colorPicker;
-    private final String filePrefix;
     private boolean debug;
+    private final String filePrefix;
+    private final ColorPicker colorPicker;
+    private final SvCircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
     private final ProteinDomainColors proteinDomainColors;
 
     public CircosDataWriter(final boolean debug, final ColorPicker colorPicker, @NotNull final String sample,
             @NotNull final String outputDir,
-            @NotNull final CircosConfigWriter configWriter, @NotNull final ProteinDomainColors proteinDomainColors)
+            @NotNull final SvCircosConfig circosConfig,
+            @NotNull final CircosConfigWriter configWriter,
+            @NotNull final ProteinDomainColors proteinDomainColors)
     {
         this.debug = debug;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
-        this.filePrefix = outputDir + File.separator + sample;
+        this.circosConfig = circosConfig;
         this.proteinDomainColors = proteinDomainColors;
+        this.filePrefix = outputDir + File.separator + sample;
     }
 
     public void write(@NotNull final CircosData data) throws IOException
@@ -121,14 +125,7 @@ public class CircosDataWriter
         Files.write(new File(line).toPath(), highlights(lineElements));
 
         final String distances = filePrefix + ".distance.circos";
-        if (alterations.size() < 200)
-        {
-            Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
-        }
-        else
-        {
-            Files.write(new File(distances).toPath(), Collections.emptySet());
-        }
+        Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
 
     }
 
@@ -251,40 +248,30 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createDistances(@NotNull final List<CopyNumberAlteration> unadjustedSegment,
-            @NotNull final List<CopyNumberAlteration> segments)
+    private List<String> createDistances(@NotNull final List<CopyNumberAlteration> unadjustedSegment, @NotNull final List<CopyNumberAlteration> segments)
     {
-
-        final long labelSize;
-        if (segments.size() < 50)
-        {
-            labelSize = 30;
-        }
-        else if (segments.size() < 100)
-        {
-            labelSize = 25;
-        }
-        else
-        {
-            labelSize = 20;
-        }
-
         final List<String> result = Lists.newArrayList();
-        for (int i = 0; i < unadjustedSegment.size(); i++)
-        {
-            final CopyNumberAlteration adjusted = segments.get(i);
-            final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
-            if (!adjusted.truncated())
+        long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
+        if (unadjustedSegments <= circosConfig.maxDistanceLabelCount()) {
+            double labelSize = circosConfig.distanceLabelSize(unadjustedSegments);
+            for (int i = 0; i < unadjustedSegment.size(); i++)
             {
-                final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
-                        .add(String.valueOf(adjusted.start()))
-                        .add(String.valueOf(adjusted.end()))
-                        .add(shorthand(unadjusted.end() - unadjusted.start()))
-                        .add("labelSize=" + labelSize + "p")
-                        .toString();
-                result.add(distance);
+                final CopyNumberAlteration adjusted = segments.get(i);
+                final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
+                if (!adjusted.truncated())
+                {
+                    final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
+                            .add(String.valueOf(adjusted.start()))
+                            .add(String.valueOf(adjusted.end()))
+                            .add(shorthand(unadjusted.end() - unadjusted.start()))
+                            .add("label_size=" + labelSize + "p")
+                            .toString();
+                    result.add(distance);
+                }
             }
+
         }
+
         return result;
     }
 

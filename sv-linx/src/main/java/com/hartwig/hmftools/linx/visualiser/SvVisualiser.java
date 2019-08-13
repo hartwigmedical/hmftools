@@ -249,7 +249,7 @@ public class SvVisualiser implements AutoCloseable
         confWrite.writeConfig();
 
         final ProteinDomainColors proteinDomainColors = new ProteinDomainColors(filteredProteinDomains);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), confWrite, proteinDomainColors).write(circosData);
+        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), circosConfig, confWrite, proteinDomainColors).write(circosData);
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
