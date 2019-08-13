@@ -247,6 +247,7 @@ public class SvVisualiser implements AutoCloseable
                 new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains, filteredFusions);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
         confWrite.writeConfig();
+        confWrite.writeCytobands();
 
         final ProteinDomainColors proteinDomainColors = new ProteinDomainColors(filteredProteinDomains);
         new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), circosConfig, confWrite, proteinDomainColors).write(circosData);

@@ -41,6 +41,7 @@ public class CircosConfigWriter
 
     private final String sample;
     private final String configPath;
+    private final String outputDir;
     private final CircosData circosData;
     private final SvCircosConfig config;
 
@@ -65,6 +66,7 @@ public class CircosConfigWriter
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
         this.circosData = data;
         this.config = config;
+        this.outputDir = outputDir;
 
         double gapSize = config.gapSize();
         double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
@@ -166,6 +168,12 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 
         Files.write(new File(configPath).toPath(), template.getBytes(charset));
+    }
+
+    public void writeCytobands() throws IOException
+    {
+        final String template = readResource("/r/cytoBand.txt");
+        Files.write(new File(outputDir + File.separator + "cytoBand.txt").toPath(), template.getBytes(StandardCharsets.UTF_8));
     }
 
     @NotNull
