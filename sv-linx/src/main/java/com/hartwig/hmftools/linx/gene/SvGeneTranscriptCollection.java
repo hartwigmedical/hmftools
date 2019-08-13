@@ -213,20 +213,6 @@ public class SvGeneTranscriptCollection
         }
     }
 
-    private void setPrecedingGeneDistance(
-            Transcript transcript, final EnsemblGeneData geneData, long position,
-            final List<EnsemblGeneData> geneRegions, final List<EnsemblGeneData> geneRegionsReversed)
-    {
-        // annotate with preceding gene info if the up distance isn't set
-        long precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(geneData, geneData.Strand == 1 ? geneRegionsReversed : geneRegions);
-
-        if(precedingGeneSAPos >= 0)
-        {
-            long preDistance = geneData.Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
-            transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
-        }
-    }
-
     public final TranscriptData getTranscriptData(final String geneId, final String transcriptId)
     {
         final List<TranscriptData> transDataList = mTranscriptDataMap.get(geneId);
@@ -379,8 +365,8 @@ public class SvGeneTranscriptCollection
         // for reverse-strand transcripts the current exon is upstream, the previous is downstream
         // and the end-phase is taken from the upstream (current) exon, the phase from the downstream (previous) exon
 
-        // for each exon, the 'phase' is always the phase at the start of the exon regardless of strand direction,
-        // and 'end_phase' is the phase at the end of the exon, but note that 'phase' will correspond to an exon end
+        // for each exon, the 'phase' is always the phase at the start of the exon in the direction of transcrition
+        // regardless of strand direction, and 'end_phase' is the phase at the end of the exon
 
         if(position < firstExon.ExonStart)
         {
@@ -605,11 +591,13 @@ public class SvGeneTranscriptCollection
 
     public static int EXON_RANK_MIN = 0;
     public static int EXON_RANK_MAX = 1;
+    public static int EXON_PHASE_MIN = 2;
+    public static int EXON_PHASE_MAX = 3;
 
     public int[] getExonRankings(final String geneId, long position)
     {
         // finds the exon before and after this position, setting to -1 if before the first or beyond the last exon
-        int[] exonData = new int[EXON_RANK_MAX + 1];
+        int[] exonData = new int[EXON_PHASE_MAX + 1];
 
         final TranscriptData transData = getTranscriptData(geneId, "");
 
@@ -621,7 +609,7 @@ public class SvGeneTranscriptCollection
 
     public static int[] getExonRankings(int strand, final List<ExonData> exonDataList, long position)
     {
-        int[] exonData = new int[EXON_RANK_MAX + 1];
+        int[] exonData = new int[EXON_PHASE_MAX + 1];
 
         // first test a position outside the range of the exons
         final ExonData firstExon = exonDataList.get(0);
@@ -629,13 +617,19 @@ public class SvGeneTranscriptCollection
 
         if((position < firstExon.ExonStart && strand == 1) || (position > lastExon.ExonEnd && strand == -1))
         {
+            // before the start of the transcript
             exonData[EXON_RANK_MIN] = 0;
             exonData[EXON_RANK_MAX] = 1;
+            exonData[EXON_PHASE_MIN] = -1;
+            exonData[EXON_PHASE_MAX] = -1;
         }
         else if((position < firstExon.ExonStart && strand == -1) || (position > lastExon.ExonEnd && strand == 1))
         {
+            // past the end of the transcript
             exonData[EXON_RANK_MIN] = exonDataList.size();
             exonData[EXON_RANK_MAX] = -1;
+            exonData[EXON_PHASE_MIN] = -1;
+            exonData[EXON_PHASE_MAX] = -1;
         }
         else
         {
@@ -644,10 +638,32 @@ public class SvGeneTranscriptCollection
                 final ExonData transExonData = exonDataList.get(i);
                 final ExonData nextTransExonData = i < exonDataList.size() - 1 ? exonDataList.get(i+1) : null;
 
-                if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
+                if(position == transExonData.ExonEnd || position == transExonData.ExonStart)
                 {
+                    // position matches the bounds of an exon
                     exonData[EXON_RANK_MIN] = transExonData.ExonRank;
                     exonData[EXON_RANK_MAX] = transExonData.ExonRank;
+
+                    if((strand == 1) == (position == transExonData.ExonStart))
+                    {
+                        exonData[EXON_PHASE_MIN] = transExonData.ExonPhase;
+                        exonData[EXON_PHASE_MAX] = transExonData.ExonPhase;
+                    }
+                    else
+                    {
+                        exonData[EXON_PHASE_MIN] = transExonData.ExonPhaseEnd;
+                        exonData[EXON_PHASE_MAX] = transExonData.ExonPhaseEnd;
+                    }
+                    break;
+                }
+
+                if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
+                {
+                    // position matches within or at the bounds of an exon
+                    exonData[EXON_RANK_MIN] = transExonData.ExonRank;
+                    exonData[EXON_RANK_MAX] = transExonData.ExonRank;
+                    exonData[EXON_PHASE_MIN] = transExonData.ExonPhase;
+                    exonData[EXON_PHASE_MAX] = transExonData.ExonPhase;
                     break;
                 }
 
@@ -657,11 +673,15 @@ public class SvGeneTranscriptCollection
                     {
                         exonData[EXON_RANK_MIN] = transExonData.ExonRank;
                         exonData[EXON_RANK_MAX] = nextTransExonData.ExonRank;
+                        exonData[EXON_PHASE_MIN] = transExonData.ExonPhase;
+                        exonData[EXON_PHASE_MAX] = nextTransExonData.ExonPhase;
                     }
                     else
                     {
                         exonData[EXON_RANK_MIN] = nextTransExonData.ExonRank;
                         exonData[EXON_RANK_MAX] = transExonData.ExonRank;
+                        exonData[EXON_PHASE_MIN] = nextTransExonData.ExonPhase;
+                        exonData[EXON_PHASE_MAX] = transExonData.ExonPhase;
                     }
 
                     break;
@@ -732,30 +752,6 @@ public class SvGeneTranscriptCollection
         }
 
         transcript.setAlternativePhasing(alternativePhasing);
-    }
-
-    public List<Integer> getTranscriptIdsMatchingPosition(final String geneId, long position)
-    {
-        List<Integer> transIdList = Lists.newArrayList();
-
-        List<TranscriptData> transDataList = getTranscripts(geneId);
-
-        if(transDataList == null || transDataList.isEmpty())
-            return transIdList;
-
-        for(final TranscriptData transData : transDataList)
-        {
-            for(ExonData exonData : transData.exons())
-            {
-                if(abs(exonData.ExonStart - position) <= 1 || abs(exonData.ExonEnd - position) <= 1)
-                {
-                    transIdList.add(transData.TransId);
-                    break;
-                }
-            }
-        }
-
-        return transIdList;
     }
 
     public static int PSEUDO_GENE_DATA_TRANS_ID = 0;

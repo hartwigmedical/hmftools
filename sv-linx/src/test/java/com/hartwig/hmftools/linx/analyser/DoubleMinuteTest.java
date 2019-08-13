@@ -26,7 +26,6 @@ import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class DoubleMinuteTest
 {
-
     @Test
     public void testSimpleDupDM()
     {
@@ -182,7 +181,7 @@ public class DoubleMinuteTest
         var1 = createTestSv(1,"1","0",1000,-1,1,-1, INF,
                 10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
 
-        var2 = createTestSv(2,"1","0",2000,-1,-1,-1, INF,
+        var2 = createTestSv(2,"1","0",2000,-1,1,-1, INF,
                 10, 10, 8, 8, 8, "", NONE_SEGMENT_INFERRED);
 
         tester.AllVariants.add(var1);

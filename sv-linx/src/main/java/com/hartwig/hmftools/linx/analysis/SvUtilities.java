@@ -259,9 +259,6 @@ public class SvUtilities {
 
     public static boolean copyNumbersEqual(double cn1, double cn2, double maxDiff, double maxDiffPerc)
     {
-        if(round(cn1) == round(cn2))
-            return true;
-
         double copyNumDiff = abs(cn2 - cn1);
         double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
 

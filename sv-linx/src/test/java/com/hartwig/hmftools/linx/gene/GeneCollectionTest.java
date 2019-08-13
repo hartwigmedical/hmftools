@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MAX;
+import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MIN;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
@@ -77,25 +79,32 @@ public class GeneCollectionTest
 
         assertEquals(1, transUpExonData[EXON_RANK_MIN]);
         assertEquals(2, transUpExonData[EXON_RANK_MAX]);
+        assertEquals(-1, transUpExonData[EXON_PHASE_MIN]);
+        assertEquals(-1, transUpExonData[EXON_PHASE_MAX]);
 
         // before the first
         transUpExonData = geneTransCache.getExonRankings(geneId, 9000);
 
         assertEquals(0, transUpExonData[EXON_RANK_MIN]);
         assertEquals(1, transUpExonData[EXON_RANK_MAX]);
+        assertEquals(-1, transUpExonData[EXON_PHASE_MIN]);
+        assertEquals(-1, transUpExonData[EXON_PHASE_MAX]);
 
         // after the last
         transUpExonData = geneTransCache.getExonRankings(geneId, 16000);
 
         assertEquals(4, transUpExonData[EXON_RANK_MIN]);
         assertEquals(-1, transUpExonData[EXON_RANK_MAX]);
-
+        assertEquals(-1, transUpExonData[EXON_PHASE_MIN]);
+        assertEquals(-1, transUpExonData[EXON_PHASE_MAX]);
 
         // on an exon boundary
         transUpExonData = geneTransCache.getExonRankings(geneId, 12500);
 
         assertEquals(3, transUpExonData[EXON_RANK_MIN]);
         assertEquals(3, transUpExonData[EXON_RANK_MAX]);
+        assertEquals(1, transUpExonData[EXON_PHASE_MIN]);
+        assertEquals(1, transUpExonData[EXON_PHASE_MAX]);
     }
 
     @Test

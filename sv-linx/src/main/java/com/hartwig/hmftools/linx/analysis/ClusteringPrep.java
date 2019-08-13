@@ -305,7 +305,8 @@ public class ClusteringPrep
 
         if(missedEvents > 0)
         {
-            LOGGER.warn("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
+            // a common cause for these are filtered breakends (eg low VAF or inferred pairs)
+            LOGGER.debug("sample({}) missed {} links to LOH and hom-loss events", sampleId, missedEvents);
         }
     }
 

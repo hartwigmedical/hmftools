@@ -12,8 +12,10 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscrip
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.Arrays;
@@ -152,7 +154,8 @@ public class FusionDisruptionAnalyser
 
             if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
             {
-                mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder);
+                mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder, mFusions);
+                mRnaFusionMapper.setOutputDir(mOutputDir);
                 mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
             }
 
@@ -339,7 +342,6 @@ public class FusionDisruptionAnalyser
 
         boolean checkSoloSVs = true;
         boolean checkClusters = true;
-        boolean checkKnown = false; // not used due to rate of false positives
 
         if(checkSoloSVs)
         {
@@ -434,7 +436,7 @@ public class FusionDisruptionAnalyser
             if (cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
+            //isSpecificCluster(cluster);
 
             List<GeneFusion> chainFusions = Lists.newArrayList();
 
@@ -521,7 +523,7 @@ public class FusionDisruptionAnalyser
                 lowerBreakend = prevPair.secondBreakend();
             }
 
-            // isSpecificSV(lowerSV);
+            //isSpecificSV(lowerSV);
 
             if (lowerSV.isSglBreakend())
                 continue;

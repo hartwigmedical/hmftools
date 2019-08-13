@@ -56,7 +56,6 @@ public class SvFilters
     public void applyFilters()
     {
         filterBreakends();
-        // filterInferreds();
     }
 
     private void filterBreakends()
@@ -132,10 +131,13 @@ public class SvFilters
                     mExcludedSVs.put(var, PAIR_INF);
                     mExcludedSVs.put(nextVar, PAIR_INF);
 
+                    /* creating a cluster creates downstream issues - simpler to leave unclustered
                     SvCluster newCluster = new SvCluster(mState.getNextClusterId());
                     newCluster.addVariant(var);
                     newCluster.addVariant(nextVar);
                     newCluster.setResolved(true, PAIR_INF);
+                    */
+
                     continue;
                 }
 

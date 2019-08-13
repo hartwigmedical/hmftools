@@ -51,6 +51,7 @@ public class GeneFusion
 
     public boolean phaseMatched(){ return mPhaseMatched; }
     public boolean viable(){ return mViable; }
+    public void setViable(boolean viable){ mViable = viable; }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {

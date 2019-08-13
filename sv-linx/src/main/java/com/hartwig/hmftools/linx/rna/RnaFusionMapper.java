@@ -13,8 +13,9 @@ import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
@@ -32,9 +33,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.fusion.KnownFusionData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -53,16 +56,24 @@ public class RnaFusionMapper
     private FusionFinder mFusionFinder;
     private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
+    private final List<GeneFusion> mDnaFusions;
+
     private BufferedWriter mWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaFusionMapper.class);
 
-    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, FusionFinder fusionFinder)
+    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, FusionFinder fusionFinder, final List<GeneFusion> dnaFusions)
     {
         mSampleRnaData = Maps.newHashMap();
         mWriter = null;
         mFusionFinder = fusionFinder;
         mGeneTransCollection = geneTransCollection;
+        mDnaFusions = dnaFusions;
+    }
+
+    public void setOutputDir(final String outputDir)
+    {
+        mOutputDir = outputDir;
     }
 
     public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
@@ -176,12 +187,12 @@ public class RnaFusionMapper
                 // check that breakend has correct orientation and position relative to RNA breakend
                 boolean correctLocation = isViableBreakend(breakend, rnaPosition, geneStrand, isUpstream);
 
-                // check whether any of the breakend's transcripts falls within the nearest exon of the RNA fusion breakpoint
+                // check whether any of the breakend's transcripts match the exon (exact or nearest) of the RNA fusion breakpoint
                 for(final Transcript trans : genesList.get(0).transcripts())
                 {
                     if(isExactRnaExon)
                     {
-                        if(!rnaFusion.getPotentialTrans(isUpstream).contains(trans.TransId))
+                        if(!rnaFusion.getExactMatchTransIds(isUpstream).contains(trans.TransId))
                             continue;
                     }
                     else if(!trans.isCanonical())
@@ -200,7 +211,7 @@ public class RnaFusionMapper
                         genicTranscripts.add(trans);
                     }
 
-                    if(correctLocation && mFusionFinder.isTranscriptBreakendViableForRnaBoundary(
+                    if(correctLocation && isTranscriptBreakendViableForRnaBoundary(
                             trans, isUpstream,  breakend.position(), rnaPosition, isExactRnaExon))
                     {
                         viableBreakends.add(breakend);
@@ -237,14 +248,21 @@ public class RnaFusionMapper
                     if(downBreakend.getSV().isSglBreakend())
                         continue;
 
-                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, false, false, null);
+                    GeneFusion possibleFusion = checkFusionLogic(
+                            upTrans, downTrans, false, false, null);
 
                     // form one any way but mark it as not meeting standard fusion rules
                     if(possibleFusion == null)
+                    {
                         possibleFusion = new GeneFusion(upTrans, downTrans, false, false);
+                    }
+                    else if(!matchesDnaFusion(possibleFusion))
+                    {
+                        possibleFusion.setViable(false);
+                    }
 
                     if (topCandidateFusion == null
-                            || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend, rnaFusion))
+                    || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend, rnaFusion))
                     {
                         topCandidateFusion = possibleFusion;
                         topUpBreakend = upBreakend;
@@ -368,6 +386,123 @@ public class RnaFusionMapper
         rnaFusion.setFusionClusterChainInfo();
     }
 
+    private boolean matchesDnaFusion(final GeneFusion fusion)
+    {
+        for(final GeneFusion dnaFusion : mDnaFusions)
+        {
+            if(dnaFusion.upstreamTrans().parent().id() == fusion.upstreamTrans().parent().id()
+            && dnaFusion.downstreamTrans().parent().id() == fusion.downstreamTrans().parent().id())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static int MAX_PROMOTOR_DISTANCE_UP = 100000;
+
+    public boolean isTranscriptBreakendViableForRnaBoundary(final Transcript trans, boolean isUpstream, long breakendPosition,
+            long rnaPosition, boolean exactRnaPosition)
+    {
+        // breakend must fall at or before the RNA boundary but not further upstream than the previous splice acceptor
+
+        // if the RNA boundary is at or before the 2nd exon (which has the first splice acceptor), then the breakend can
+        // be upstream as far the previous gene or 100K
+        final TranscriptData transData = mGeneTransCollection.getTranscriptData(trans.parent().StableId, trans.StableId);
+
+        if (transData == null || transData.exons().isEmpty())
+            return false;
+
+        int strand = trans.parent().Strand;
+
+        // first find the matching exon boundary for this RNA fusion boundary
+        for (int i = 0; i < transData.exons().size(); ++i)
+        {
+            final ExonData exonData = transData.exons().get(i);
+            final ExonData prevExonData = i > 0 ? transData.exons().get(i - 1) : null;
+            final ExonData nextExonData = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
+
+            if (isUpstream)
+            {
+                // first check if at an exon boundary or before the start of the next exon and after the start of this one
+                if(strand == 1)
+                {
+                    if ((rnaPosition == exonData.ExonEnd)
+                    || (!exactRnaPosition && nextExonData != null && rnaPosition > exonData.ExonStart && rnaPosition < nextExonData.ExonStart))
+                    {
+                        // in which case check whether the breakend is before the next exon's splice acceptor
+                        if (nextExonData != null)
+                        {
+                            return breakendPosition < nextExonData.ExonStart;
+                        }
+
+                        // can't take the last exon
+                        return false;
+                    }
+                }
+                else
+                {
+                    if ((rnaPosition == exonData.ExonStart)
+                    || (!exactRnaPosition && prevExonData != null && rnaPosition < exonData.ExonEnd && rnaPosition > prevExonData.ExonEnd))
+                    {
+                        if(prevExonData != null)
+                        {
+                            return breakendPosition > prevExonData.ExonEnd;
+                        }
+
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                if((strand == 1 && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
+                || (strand == -1 && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
+                {
+                    int distanceUp = trans.exonDistanceUp();
+                    long breakendDistance = abs(breakendPosition - rnaPosition);
+
+                    if(breakendDistance > MAX_PROMOTOR_DISTANCE_UP || distanceUp < 0)
+                        return false;
+                    else
+                        return true;
+                }
+
+                if(strand == 1)
+                {
+                    if ((rnaPosition == exonData.ExonStart)
+                    || (!exactRnaPosition && prevExonData != null && rnaPosition > prevExonData.ExonStart && rnaPosition < exonData.ExonStart))
+                    {
+                        if(prevExonData != null)
+                        {
+                            // after the previous exon's splice acceptor
+                            return breakendPosition > prevExonData.ExonStart;
+                        }
+
+                        return false;
+                    }
+                }
+                else
+                {
+                    if ((rnaPosition == exonData.ExonEnd)
+                    || (!exactRnaPosition && nextExonData != null && rnaPosition < nextExonData.ExonEnd && rnaPosition > exonData.ExonEnd))
+                    {
+                        if(nextExonData != null)
+                        {
+                            // after the previous exon's splice acceptor
+                            return breakendPosition < nextExonData.ExonStart;
+                        }
+
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     private boolean isCandidateBetter(final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,
             final GeneFusion candidateFusion, final SvBreakend beCandidateStart, final SvBreakend beCandidateEnd, final RnaFusionData rnaFusion)
     {
@@ -463,56 +598,97 @@ public class RnaFusionMapper
 
     private void setRnaFusionData(final RnaFusionData rnaFusion)
     {
-        for(int i = 0; i <=1; ++i)
+        Map<String,Integer> transPhasesUp = Maps.newHashMap();
+        Map<String,Integer> transPhasesDown = Maps.newHashMap();
+
+        for(int i = 0; i <= 1; ++i)
         {
             boolean isUpstream = (i == 0);
             final String geneName = isUpstream ? rnaFusion.GeneUp : rnaFusion.GeneDown;
             long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
+            Map<String,Integer> transPhases = isUpstream ? transPhasesUp : transPhasesDown;
 
             EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(geneName);
 
-            if (geneData != null)
-            {
-                if (rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_UNKONWN))
-                {
-                    // check that the RNA position is within the bounds of the gene before proceeding
-                    long upPosLimit = geneData.GeneEnd;
-                    long downPosLimit = geneData.GeneStart;
-
-                    if(!isUpstream)
-                    {
-                        if(geneData.Strand == 1)
-                            downPosLimit -= PRE_GENE_PROMOTOR_DISTANCE;
-                        else
-                            upPosLimit += PRE_GENE_PROMOTOR_DISTANCE;
-                    }
-
-                    if(rnaPosition < downPosLimit || rnaPosition > upPosLimit)
-                    {
-                        LOGGER.debug("sample({}) rnaFusion({}) {} position({}) outside geneBounds({} -> {})",
-                                mSampleId, rnaFusion.Name, isUpstream ? "up" : "down", rnaPosition, downPosLimit, upPosLimit);
-                        rnaFusion.setValid(false);
-                        return;
-                    }
-                }
-
-                if (rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF))
-                {
-                    List<Integer> transIdList = mGeneTransCollection.getTranscriptIdsMatchingPosition(geneData.GeneId, rnaPosition);
-                    rnaFusion.setPotentialTrans(isUpstream, transIdList);
-                }
-
-                int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaPosition);
-                rnaFusion.setExonRank(isUpstream, transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
-            }
-            else
+            if (geneData == null)
             {
                 LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.Name, isUpstream ? "up" : "down");
                 rnaFusion.setValid(false);
                 return;
             }
+
+            rnaFusion.setGeneId(geneData.GeneId, isUpstream);
+
+            if (rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_UNKONWN))
+            {
+                // check that the RNA position is within the bounds of the gene before proceeding
+                long upPosLimit = geneData.GeneEnd;
+                long downPosLimit = geneData.GeneStart;
+
+                if(!isUpstream)
+                {
+                    if(geneData.Strand == 1)
+                        downPosLimit -= PRE_GENE_PROMOTOR_DISTANCE;
+                    else
+                        upPosLimit += PRE_GENE_PROMOTOR_DISTANCE;
+                }
+
+                if(rnaPosition < downPosLimit || rnaPosition > upPosLimit)
+                {
+                    LOGGER.warn("sample({}) rnaFusion({}) {} position({}) outside geneBounds({} -> {})",
+                            mSampleId, rnaFusion.Name, isUpstream ? "upstream" : "downstream", rnaPosition, downPosLimit, upPosLimit);
+                    rnaFusion.setValid(false);
+                    return;
+                }
+            }
+
+            List<TranscriptData> transDataList = mGeneTransCollection.getTranscripts(geneData.GeneId);
+
+            if(transDataList != null)
+            {
+                for(final TranscriptData transData : transDataList)
+                {
+                    int[] exonMatchData = findExonMatch(transData.exons(), transData.Strand, rnaPosition);
+
+                    if(exonMatchData[EXON_EXACT_MATCH] > 0)
+                        rnaFusion.getExactMatchTransIds(isUpstream).add(transData.TransId);
+
+                    if(exonMatchData[EXON_FOUND] > 0)
+                        transPhases.put(transData.TransName, exonMatchData[EXON_PHASE]);
+                }
+            }
+
+            LOGGER.debug("rnaFusion({}) type({}) {} position({}) matched {} transcripts",
+                    rnaFusion.Name, rnaFusion.SpliceType, isUpstream ? "upstream" : "downstream", rnaPosition, transPhases.size());
+
+            // int[] transUpExonData = mGeneTransCollection.getExonRankings(geneData.GeneId, rnaPosition);
+            // rnaFusion.setExonRank(isUpstream, transUpExonData[EXON_RANK_MIN], transUpExonData[EXON_RANK_MAX]);
         }
 
+        if(!transPhasesUp.isEmpty() && !transPhasesDown.isEmpty())
+        {
+            for (Map.Entry<String, Integer> entryUp : transPhasesUp.entrySet())
+            {
+                final String transIdUp = entryUp.getKey();
+                int exonPhaseUp = entryUp.getValue();
+
+                for (Map.Entry<String, Integer> entryDown : transPhasesDown.entrySet())
+                {
+                    final String transIdDown = entryDown.getKey();
+                    int exonPhaseDown = entryDown.getValue();
+
+                    boolean phaseMatched = exonPhaseUp == exonPhaseDown;
+
+                    if (phaseMatched && !rnaFusion.hasRnaPhasedFusion())
+                    {
+                        LOGGER.debug("rnaFusion({}) type({}) transUp({}) transDown({} phase({}) matched({})",
+                                rnaFusion.Name, rnaFusion.SpliceType, transIdUp, transIdDown, exonPhaseUp, phaseMatched);
+
+                        rnaFusion.setRnaPhasedFusionData(transIdUp, transIdDown);
+                    }
+                }
+            }
+        }
 
         KnownFusionData refFusionData = mFusionFinder.getKnownFusionDatal();
 
@@ -552,6 +728,68 @@ public class RnaFusionMapper
         }
     }
 
+    private static final int EXON_FOUND = 0;
+    private static final int EXON_RANK = 1;
+    private static final int EXON_PHASE = 2;
+    private static final int EXON_EXACT_MATCH = 3;
+
+    private int[] findExonMatch(final List<ExonData> exonDataList, int strand, long position)
+    {
+        int[] exonMatch = new int[EXON_EXACT_MATCH+1];
+
+        for (int i = 0; i < exonDataList.size(); ++i)
+        {
+            final ExonData transExonData = exonDataList.get(i);
+            final ExonData nextTransExonData = i < exonDataList.size() - 1 ? exonDataList.get(i + 1) : null;
+
+            if (position == transExonData.ExonEnd || position == transExonData.ExonStart)
+            {
+                // position exactly matches the bounds of an exon
+                exonMatch[EXON_FOUND] = 1;
+                exonMatch[EXON_EXACT_MATCH] = 1;
+                exonMatch[EXON_RANK] = transExonData.ExonRank;
+
+                if ((strand == 1) == (position == transExonData.ExonStart))
+                {
+                    exonMatch[EXON_PHASE] = transExonData.ExonPhase;
+                }
+                else
+                {
+                    exonMatch[EXON_PHASE] = transExonData.ExonPhaseEnd;
+                }
+                break;
+            }
+
+            if (position > transExonData.ExonStart && position < transExonData.ExonEnd)
+            {
+                // position is within the bounds of an exon
+                exonMatch[EXON_FOUND] = 1;
+                exonMatch[EXON_RANK] = transExonData.ExonRank;
+                exonMatch[EXON_PHASE] = transExonData.ExonPhase;
+                break;
+            }
+
+            if (nextTransExonData != null && position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
+            {
+                exonMatch[EXON_FOUND] = 1;
+                if (strand == 1)
+                {
+                    exonMatch[EXON_RANK] = transExonData.ExonRank;
+                    exonMatch[EXON_PHASE] = transExonData.ExonPhase;
+                }
+                else
+                {
+                    exonMatch[EXON_RANK] = nextTransExonData.ExonRank;
+                    exonMatch[EXON_PHASE] = nextTransExonData.ExonPhase;
+                }
+
+                break;
+            }
+        }
+
+        return exonMatch;
+    }
+
     public void writeRnaMatchData(final String sampleId, final RnaFusionData rnaFusion)
     {
         try
@@ -566,13 +804,38 @@ public class RnaFusionMapper
 
                 mWriter.write("SampleId,FusionName,GeneNameUp,GeneNameDown,ViableFusion,PhaseMatched,KnownType");
 
-                mWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterInfoUp");
-                mWriter.write(",TransViableUp,TransValidLocUp,TransIdUp,ExonsSkippedUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    String upDown = se == SE_START ? "Up" : "Down";
 
-                mWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeDown,ClusterInfoDown");
-                mWriter.write(",TransViableDown,TransValidLocDown,TransIdDown,ExonsSkippedDown,RegionTypeDown,CodingTypeDown,ExonDown,DisruptiveDown,DistancePrevDown");
+                    String fieldsStr = ",SvId" + upDown;
+                    fieldsStr += ",Chr" + upDown;
+                    fieldsStr += ",Pos" + upDown;
+                    fieldsStr += ",RnaPos" + upDown;
+                    fieldsStr += ",Orient" + upDown;
+                    fieldsStr += ",Strand" + upDown;
+                    fieldsStr += ",Type" + upDown;
+                    fieldsStr += ",ClusterInfo" + upDown;
+                    fieldsStr += ",TransViable" + upDown;
+                    fieldsStr += ",TransValidLoc" + upDown;
+                    fieldsStr += ",TransId" + upDown;
+                    fieldsStr += ",ExonsSkipped" + upDown;
+                    fieldsStr += ",RegionType" + upDown;
+                    fieldsStr += ",CodingType" + upDown;
+                    fieldsStr += ",Exon" + upDown;
+                    fieldsStr += ",Disruptive" + upDown;
+                    fieldsStr += ",DistancePrev" + upDown;
+                    mWriter.write(fieldsStr);
+                }
+
+                // mWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterInfoUp");
+                // mWriter.write(",TransViableUp,TransValidLocUp,TransIdUp,ExonsSkippedUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");
+
+                // mWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeDown,ClusterInfoDown");
+                // mWriter.write(",TransViableDown,TransValidLocDown,TransIdDown,ExonsSkippedDown,RegionTypeDown,CodingTypeDown,ExonDown,DisruptiveDown,DistancePrevDown");
 
                 mWriter.write(",ChainInfo,JunctionReadCount,SpanningFragCount,SpliceType");
+                mWriter.write(",RnaPhaseMatched,RnaTransIdUp,RnaTransIdDown");
                 mWriter.write(",ExonMinRankUp,ExonMaxRankUp,ExonMinRankDown,ExonMaxRankDown");
 
                 mWriter.newLine();
@@ -584,61 +847,45 @@ public class RnaFusionMapper
                     sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown,
                     rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(), rnaFusion.getKnownType()));
 
-            final Transcript transUp = rnaFusion.getTrans(true);
-
-            if(transUp != null)
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
-                        transUp.parent().id(), transUp.parent().chromosome(), transUp.parent().position(), rnaFusion.PositionUp,
-                        transUp.parent().orientation(), transUp.parent().Strand, transUp.parent().type(),
-                        rnaFusion.getClusterInfo(true)));
+                boolean isUpstream = (se == SE_START);
+                final Transcript trans = rnaFusion.getTrans(isUpstream);
 
-                writer.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
-                        rnaFusion.isTransViable(true), rnaFusion.isTransCorrectLocation(true),
-                        transUp.StableId, rnaFusion.getExonsSkipped(true),
-                        transUp.regionType(), transUp.codingType(),
-                        transUp.ExonUpstream, transUp.isDisruptive(), transUp.exonDistanceUp()));
-            }
-            else
-            {
-                writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
-                        "", rnaFusion.ChrUp, 0, rnaFusion.PositionUp,
-                        0, rnaFusion.StrandUp, "", ""));
+                if(trans != null)
+                {
+                    final GeneAnnotation gene = trans.parent();
 
-                writer.write(String.format(",%s,%s,,,,,,,",
-                        rnaFusion.isTransViable(true), rnaFusion.isTransCorrectLocation(true)));
-            }
+                    writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
+                            gene.id(), gene.chromosome(), gene.position(),
+                            isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown,
+                            gene.orientation(), gene.Strand, gene.type(),
+                            rnaFusion.getClusterInfo(isUpstream)));
 
-            final Transcript transDown = rnaFusion.getTrans(false);
+                    writer.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
+                            rnaFusion.isTransViable(isUpstream), rnaFusion.isTransCorrectLocation(isUpstream),
+                            trans.StableId, rnaFusion.getExonsSkipped(isUpstream),
+                            trans.regionType(), trans.codingType(),
+                            isUpstream ? trans.ExonUpstream : trans.ExonDownstream, trans.isDisruptive(), trans.exonDistanceUp()));
+                }
+                else
+                {
+                    writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
+                            "", isUpstream ? rnaFusion.ChrUp : rnaFusion.ChrDown, 0,
+                            isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown, 0,
+                            isUpstream ? rnaFusion.StrandUp : rnaFusion.StrandDown, "", ""));
 
-            if(transDown != null)
-            {
-                writer.write(
-                        String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
-                                transDown.parent().id(), transDown.parent().chromosome(), transDown.parent().position(), rnaFusion.PositionDown,
-                                transDown.parent().orientation(), transDown.parent().Strand, transDown.parent().type(),
-                                rnaFusion.getClusterInfo(false)));
-
-                writer.write(
-                        String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
-                                rnaFusion.isTransViable(false), rnaFusion.isTransCorrectLocation(false),
-                                transDown.StableId, rnaFusion.getExonsSkipped(false),
-                                transDown.regionType(), transDown.codingType(),
-                                transDown.ExonDownstream, transDown.isDisruptive(), transDown.exonDistanceUp()));
-            }
-            else
-            {
-                writer.write(String.format(",%s,%s,%d,%d,%d,%d,%s,%s",
-                        "", rnaFusion.ChrDown, 0, rnaFusion.PositionDown,
-                        0, rnaFusion.StrandDown, "", ""));
-
-                writer.write(String.format(",%s,%s,,,,,,,",
-                        rnaFusion.isTransViable(false), rnaFusion.isTransCorrectLocation(false)));
+                    writer.write(String.format(",%s,%s,,,,,,,",
+                            rnaFusion.isTransViable(isUpstream), rnaFusion.isTransCorrectLocation(isUpstream)));
+                }
             }
 
             writer.write(String.format(",%s,%d,%d,%s",
                     !rnaFusion.getChainInfo().isEmpty() ? rnaFusion.getChainInfo() : "0;0",
                     rnaFusion.JunctionReadCount, rnaFusion.SpanningFragCount, rnaFusion.SpliceType));
+
+            writer.write(String.format(",%s,%s,%s", rnaFusion.hasRnaPhasedFusion(),
+                    rnaFusion.getRnaPhasedFusionTransName(true), rnaFusion.getRnaPhasedFusionTransName(false)));
 
             writer.write(String.format(",%d,%d,%d,%d",
                     rnaFusion.exonMinRankUp(), rnaFusion.exonMaxRankUp(), rnaFusion.exonMinRankDown(), rnaFusion.exonMaxRankDown()));

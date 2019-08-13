@@ -8,6 +8,7 @@ import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -30,7 +31,6 @@ public class CnPloidyCalcs
     private final Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
     private final Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private final List<StructuralVariantData> mSvDataList;
-
 
     private static double ABS_UNCERTAINTY = 0.15;
     private static double RELATIVE_UNCERTAINTY = 0.10;
@@ -79,7 +79,7 @@ public class CnPloidyCalcs
             }
 
             /*
-            if(svId == Integer.parseInt(SPECIFIC_SV_ID))
+            if(svId == SPECIFIC_SV_ID)
             {
                 LOGGER.debug("spec SV({})", svId);
             }

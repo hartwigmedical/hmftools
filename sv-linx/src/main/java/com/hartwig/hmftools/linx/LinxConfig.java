@@ -44,7 +44,6 @@ public class LinxConfig
     // config options
     public static final String PURPLE_DATA_DIR = "purple_dir";
     public static final String DATA_OUTPUT_DIR = "output_dir";
-    public static final String DATA_OUTPUT_PATH = "data_output_path"; // old config name support
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
@@ -117,8 +116,6 @@ public class LinxConfig
         String dataOutputDir = "";
         if(cmd.hasOption(DATA_OUTPUT_DIR))
             dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
-        else if(cmd.hasOption(DATA_OUTPUT_PATH))
-            dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_PATH);
 
         OutputDataPath = formOutputPath(dataOutputDir);
 
@@ -180,7 +177,6 @@ public class LinxConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(PURPLE_DATA_DIR, true, "Sample purple data directory");
-        options.addOption(DATA_OUTPUT_PATH, true, "Linx output directory");
         options.addOption(DATA_OUTPUT_DIR, true, "Linx output directory");
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
