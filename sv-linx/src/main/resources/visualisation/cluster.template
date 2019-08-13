@@ -181,12 +181,12 @@ chromosomes_display_default = yes
 		max  = SUBSTITUTE_CNA_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
-		color = green
-		fill_color = green
+		color = copy_gain
+		fill_color = copy_gain
 
 		<axes>
 			<axis>
-				color     = lgreen
+				color     = copy_gain_l
 				thickness = 1
 				position  = SUBSTITUTE_CNA_GAIN_AXIS_POSITION
 			</axis>
@@ -194,7 +194,7 @@ chromosomes_display_default = yes
 
 		<backgrounds>
 			<background>
-				color = vlgreen_a5
+				color = copy_gain_vl
 			</background>
 		</backgrounds>
 
@@ -210,14 +210,14 @@ chromosomes_display_default = yes
 		r1   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		min  = -2
 		max  = 0
-		color = red
 		glyph = circle
 		glyph_size = 8
-		fill_color = red
+		color = copy_loss
+		fill_color = copy_loss
 
 		<axes>
 			<axis>
-				color     = lred
+				color     = copy_loss_l
 				thickness = 1
 				spacing   = 0.5r
 			</axis>
@@ -225,7 +225,7 @@ chromosomes_display_default = yes
 
 		<backgrounds>
 			<background>
-				color = vlred_a5
+				color = copy_loss_vl
 			</background>
 		</backgrounds>
 
@@ -398,6 +398,15 @@ chromosomes_display_default = yes
 <<include etc/housekeeping.conf>>
 
 <colors>
+
+    copy_loss = 197,27,125
+    copy_loss_l = 239,141,198
+    copy_loss_vl = 254,245,250
+
+    copy_gain = 77,146,33
+    copy_gain_l = 178,230,145
+    copy_gain_vl = 245,252,241
+
     chr1 = 128,125,186
     chr2 = 145,142,179
     chr3 = 161,159,173
