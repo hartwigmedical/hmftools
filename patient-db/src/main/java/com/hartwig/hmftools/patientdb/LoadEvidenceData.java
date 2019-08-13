@@ -38,6 +38,7 @@ public class LoadEvidenceData {
     private static final String DB_URL = "db_url";
 
     private static final String RUN_DIR = "run_dir";
+    private static final String TUMOR_SAMPLE = "tumor_sample";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -47,8 +48,9 @@ public class LoadEvidenceData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
+        final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory)) {
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory, tumorSample)) {
             printUsageAndExit(options);
         }
 
@@ -62,17 +64,14 @@ public class LoadEvidenceData {
 
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
-        RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory.toPath().toString());
-        String sample = runContext.tumorSample();
-
-        LOGGER.info("sample: " + sample);
+        LOGGER.info("sample: " + tumorSample);
 
         LOGGER.info("Reading primary tumor location from DB");
-        String primaryTumorLocation = dbAccess.readTumorLocation(sample);
+        String primaryTumorLocation = dbAccess.readTumorLocation(tumorSample);
         LOGGER.info("Primary tumor location: " + primaryTumorLocation);
 
         LOGGER.info("Reading somatic variants from DB");
-        List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
+        List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(tumorSample);
         List<SomaticVariant> passSomaticVariants = extractPassSomaticVariants(variants);
 
         LOGGER.info("All somatic Variants: " + variants.size());
@@ -85,10 +84,10 @@ public class LoadEvidenceData {
         LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
 
         LOGGER.info("Reading gene copy numbers and sample ploidy from DB");
-        List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
+        List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(tumorSample);
         LOGGER.info("All geneCopyNumbers: " + geneCopyNumbers.size());
 
-        PurityContext purityContext = dbAccess.readPurityContext(sample);
+        PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
         assert purityContext != null;
 
         double ploidy = purityContext.bestFit().ploidy();
@@ -103,7 +102,7 @@ public class LoadEvidenceData {
                 evidencePerGeneCopyNumber.keySet().size());
 
         LOGGER.info("Reading gene fusions from DB");
-        List<ReportableGeneFusion> fusions = dbAccess.readGeneFusions(sample);
+        List<ReportableGeneFusion> fusions = dbAccess.readGeneFusions(tumorSample);
         LOGGER.info(" All fusions: " + fusions.size());
 
         Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion =
@@ -117,7 +116,7 @@ public class LoadEvidenceData {
         combinedEvidence.addAll(allEvidenceForCopyNumbers);
         combinedEvidence.addAll(allEvidenceForGeneFusions);
 
-        dbAccess.writeClinicalEvidence(sample, combinedEvidence);
+        dbAccess.writeClinicalEvidence(tumorSample, combinedEvidence);
     }
 
     @NotNull
@@ -154,6 +153,8 @@ public class LoadEvidenceData {
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(RUN_DIR, true, "Path towards the folder containing patient run.");
+        options.addOption(TUMOR_SAMPLE, true, "Tumor sample of patient");
+
         return options;
     }
 
