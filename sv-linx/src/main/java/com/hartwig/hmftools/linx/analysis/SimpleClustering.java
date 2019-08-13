@@ -598,6 +598,10 @@ public class SimpleClustering
                 {
                     for (final SvVarData var2 : cluster2Svs)
                     {
+                        // cannot be a DEL and a DUP overlapping - one must be an INV
+                        if(var1.type() != INV && var2.type() != INV)
+                            continue;
+
                         if(!var1.chromosome(true).equals(var2.chromosome(true)))
                             continue;
 
