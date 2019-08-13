@@ -31,17 +31,17 @@ public interface SvCircosConfig
 
     default double innerRadius()
     {
-        return 0.175;
+        return 0.2;
     }
 
     default int minDistanceLabelSize()
     {
-        return 40;
+        return 30;
     }
 
     default int maxDistanceLabelSize()
     {
-        return 60;
+        return 40;
     }
 
     default int maxDistanceLabelCount()
@@ -68,7 +68,7 @@ public interface SvCircosConfig
     static SvCircosConfig createConfig(@NotNull final CommandLine cmd) throws ParseException
     {
         return ImmutableSvCircosConfig.builder()
-                .displayPosition(false)
+                .displayPosition(true)
                 .geneRelativeSize(1)
                 .segmentRelativeSize(1)
                 .copyNumberRelativeSize(2)

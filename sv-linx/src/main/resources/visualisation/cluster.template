@@ -107,6 +107,22 @@ chromosomes_display_default = yes
 <plots>
 
 	# -----------------------------------------------------------
+	# Position Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.position.circos
+		r0               = 1.01r
+		r1               = 1.11r
+		show_links       = no
+		label_size       = 40p
+		label_font       = condensed
+		label_snuggle    = yes
+		padding          = 0p
+		rpadding         = 0p
+	</plot>
+
+	# -----------------------------------------------------------
 	# Exon Rank
 	<plot>
 		type             = text
@@ -331,62 +347,35 @@ chromosomes_display_default = yes
 		rpadding = 15p
 	</plot>
 
-	# -----------------------------------------------------------
-	# Locations Text
-	<plot>
-		type             = text
-		color            = black
-		file             = SUBSTITUTE_SAMPLE.text.circos
 
-		r0   = 1.01r
-		r1   = 1.11r
-
-		show_links     = no
-		link_dims      = 4p,4p,260p,20p,0p
-		link_thickness = 2p
-		link_color     = black
-
-		label_size   = 20p
-		label_font   = condensed
-		label_snuggle=yes
-
-		padding  = 0p
-		rpadding = 0p
-	</plot>
 
 	# -----------------------------------------------------------
 	# Scatter
 	<plot>
 		type             = scatter
 		file             = SUBSTITUTE_SAMPLE.scatter.circos
-
-		r0   = SUBSTITUTE_SV_INNER_RADIUSr
-		r1   = SUBSTITUTE_SV_OUTER_RADIUSr
-
+		r0               = SUBSTITUTE_SV_INNER_RADIUSr
+		r1               = SUBSTITUTE_SV_OUTER_RADIUSr
         glyph            = circle
         glyph_size       = 20
         color            = red
         stroke_color     = dred
         stroke_thickness = 0
         orientation      = out
-
-        min  = 0
-        max = SUBSTITUTE_SV_MAX
+        min              = 0
+        max              = SUBSTITUTE_SV_MAX
 
 	</plot>
 
 	# -----------------------------------------------------------
 	# Connectors
     <plot>
-
-        type = connector
-        file = SUBSTITUTE_SAMPLE.connector.circos
-
-        r0	=	SUBSTITUTE_MAP_INNER_RADIUSr
-        connector_dims = 0.0,0.3,0.4,0.3,0
-
-        thickness = 4
-        color     = red
+        type             = connector
+        file             = SUBSTITUTE_SAMPLE.connector.circos
+        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
+        connector_dims   = 0.0,0.3,0.4,0.3,0
+        thickness        = 4
+        color            = red
     </plot>
 
 </plots>
@@ -394,8 +383,8 @@ chromosomes_display_default = yes
 <links>
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
+        radius        = SUBSTITUTE_MAP_INNER_RADIUSr
         color         = red
-        radius        = 0.175r
         thickness     = 2
     </link>
 </links>
