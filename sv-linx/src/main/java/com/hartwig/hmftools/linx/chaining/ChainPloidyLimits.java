@@ -379,6 +379,14 @@ public class ChainPloidyLimits
         return new PloidyCalcData(estPloidy, estUncertainty, true);
     }
 
+    public static final double UNCERTAINTY_SCALE_FACTOR = sqrt(2);
+
+    public static boolean ploidyMatchForSplits(double ploidyLower, double uncertaintyLower, double ploidy, double uncertainty)
+    {
+        return copyNumbersEqual(ploidyLower * 2, ploidy)
+            || ploidyOverlap(ploidyLower * 2, uncertaintyLower * UNCERTAINTY_SCALE_FACTOR, ploidy, uncertainty);
+    }
+
     public static boolean ploidyMatch(double ploidy1, double uncertainty1, double ploidy2, double uncertainty2)
     {
         return copyNumbersEqual(ploidy1, ploidy2) || ploidyOverlap(ploidy1, uncertainty1, ploidy2, uncertainty2);

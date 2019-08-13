@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -102,6 +103,11 @@ public class ChainingActualTest
         final SvChain chain = cluster.getChains().get(0);
         assertEquals(10, chain.getLinkCount());
         assertEquals(8, chain.getSvCount());
+
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        assertTrue((chainStart == null && chainEnd.getSV() == var1) || (chainEnd == null && chainStart.getSV() == var1));
 
         /* strip out and store log [0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9] \[main\] \[[A-Z].*\]
 

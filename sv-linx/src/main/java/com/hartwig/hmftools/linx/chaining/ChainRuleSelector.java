@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatchForSplits;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ADJACENT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ADJACENT_MATCH;
@@ -528,7 +529,7 @@ public class ChainRuleSelector
                 boolean allowSplits = !(copyNumbersEqual(foldbackPloidy, nonFbPloidy) && foldbackPloidy < 1 && nonFbPloidy < 1);
 
                 // a) first check if it splits another chain or SV with 2x ploidy
-                if (allowSplits && ploidyMatch(foldbackPloidy * 2, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty())
+                if (allowSplits && ploidyMatchForSplits(foldbackPloidy, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty())
                 && !nonFbPloidyData.multiConnections())
                 {
                     // a 2:1 splitting event
@@ -562,7 +563,8 @@ public class ChainRuleSelector
                         .findFirst().orElse(null);
 
                 // b) check for an exact match with a chain or another SV
-                if (!nonFbPloidyData.multiConnections() && ploidyMatch(foldbackPloidy, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty()))
+                if (!nonFbPloidyData.multiConnections()
+                && ploidyMatch(foldbackPloidy, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty()))
                 {
                     // int newPriority = otherFbPair != null ? FOLDBACK_B_FB_PRIORITY : FOLDBACK_B_PRIORITY;
 
@@ -597,8 +599,8 @@ public class ChainRuleSelector
 
                 // if this foldback splits another foldback then the other foldback's ploidy must be 2x or higher
                 if (otherFbPair != null
-                        && (!ploidyMatch(foldbackPloidy * 2, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty())
-                        && nonFbPloidy > foldbackPloidy * 2))
+                && (!ploidyMatchForSplits(foldbackPloidy, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty())
+                && nonFbPloidy > foldbackPloidy * 2))
                 {
                     if (linkScore < FOLDBACK_C_PRIORITY) // 1
                     {
@@ -623,7 +625,7 @@ public class ChainRuleSelector
 
                 // d) check whether the foldback is itself split by another foldback or complex duplication
                 if (otherFbPair != null && allowSplits
-                && ploidyMatch(foldbackPloidy, foldbackUncertainty, nonFbPloidy * 2, nonFbVar.ploidyUncertainty()))
+                && ploidyMatchForSplits(nonFbPloidy, nonFbVar.ploidyUncertainty(), foldbackPloidy, foldbackUncertainty))
                 {
                     linkScore = FOLDBACK_D_PRIORITY; // 0
 
@@ -787,7 +789,7 @@ public class ChainRuleSelector
                     SvBreakend chainBeStart = chain.getOpenBreakend(true);
                     SvBreakend chainBeEnd = chain.getOpenBreakend(false);
 
-                    if (!ploidyMatch(compDupPloidy * 2, compDup.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty()))
+                    if (!ploidyMatchForSplits(compDupPloidy, compDup.ploidyUncertainty(), chain.ploidy(), chain.ploidyUncertainty()))
                         continue;
 
                     if((chainBeStart == otherBreakend1 && chainBeEnd == otherBreakend2)

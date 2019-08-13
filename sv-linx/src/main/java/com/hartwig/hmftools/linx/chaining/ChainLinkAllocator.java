@@ -7,6 +7,7 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_PLOIDY_LEVEL;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.UNCERTAINTY_SCALE_FACTOR;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
@@ -754,7 +755,7 @@ public class ChainLinkAllocator
         }
 
         double newPloidy = targetChain.ploidy() * 0.5;
-        double newUncertainty = targetChain.ploidyUncertainty() / sqrt(2);
+        double newUncertainty = targetChain.ploidyUncertainty() / UNCERTAINTY_SCALE_FACTOR;
         targetChain.setPloidyData(newPloidy, newUncertainty);
         mChainsSplit = true;
 
