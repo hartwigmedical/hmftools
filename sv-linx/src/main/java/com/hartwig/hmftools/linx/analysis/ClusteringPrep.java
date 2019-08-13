@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendM
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,8 +32,6 @@ import org.apache.logging.log4j.Logger;
 
 public class ClusteringPrep
 {
-    public static int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
-    public static int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
     private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
     private static int MAX_ARM_COUNT = 41; // excluding the 5 short arms
 

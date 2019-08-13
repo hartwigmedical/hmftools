@@ -123,13 +123,16 @@ public class InversionPairTest
     public void testInnerOverlapInversions()
     {
         // one of inner breakends overlaps with the other INV
-        // if the resultant long TI is either very long, LOH-bounded or has an INV-overlap < 100K, then it's a DUP_TI
+        // if the resultant long TI is LOH-bounded or has an INV-overlap < 100K, then it's a DUP_TI
         // otherwise it's 2 unconnected SVs and is a RECIP_INV_DUPs
         LinxTester tester = new LinxTester();
 
-        // first with a uniform ploidy and long TI
-        SvVarData var1 = createInv(tester.nextVarId(), "1", 210000, 450000, 1);
-        SvVarData var2 = createInv(tester.nextVarId(), "1", 1000, 300000, -1);
+        // first with a uniform ploidy and TI in LOH bounds
+        SvVarData var1 = createInv(tester.nextVarId(), "1", 50000, 350000, 1);
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 1000, 200000, -1);
+
+        tester.CnDataLoader.getLohData().add(new LohEvent( var2.chromosome(true), 1, var2.position(true),
+                SegmentSupport.TELOMERE.toString(), var2.typeStr(), 1, LohEvent.CN_DATA_NO_SV, var2.id()));
 
         tester.addAndCluster(var1, var2);
 
@@ -139,26 +142,11 @@ public class InversionPairTest
         assertTrue(!cluster.isResolved());
         assertEquals(DUP_TI, cluster.getResolvedType());
 
-        assertEquals(var1.position(true) - var2.position(true), getSyntheticLength(cluster));
-        assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
+        assertEquals(var1.position(false) - var2.position(false), getSyntheticLength(cluster));
+        assertEquals(var1.position(true) - var2.position(true), getSyntheticTiLength(cluster));
         assertEquals(var2.position(false) - var1.position(true), getSyntheticGapLength(cluster));
 
-        // test again but with the TI in LOH bounds
-        var1 = createInv(tester.nextVarId(), "1", 50000, 350000, 1);
-        var2 = createInv(tester.nextVarId(), "1", 1000, 200000, -1);
-
-        tester.CnDataLoader.getLohData().add(new LohEvent( var2.chromosome(true), 1, var2.position(true),
-                SegmentSupport.TELOMERE.toString(), var2.typeStr(), 1, LohEvent.CN_DATA_NO_SV, var2.id()));
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertEquals(DUP_TI, cluster.getResolvedType());
-
-        // neither case, is resolved as a RECIP_INV_DUPS
+        // no LOH then is resolved as a RECIP_INV_DUPS
         // the chain needs to be reconfigured to form the longest possible TI
         tester.CnDataLoader.getLohData().clear();
 
@@ -199,29 +187,13 @@ public class InversionPairTest
     public void testEnclosingInversions()
     {
         // one INV enclosed another INV
-        // if the resultant long TI is either very long, LOH-bounded or has an INV-overlap < 100K, then it's a DEL_TI
+        // if the resultant long TI is LOH-bounded then it's a DEL_TI
         // otherwise it's 2 unconnected SVs and is a RECIP_INV_DEL_DUP
         LinxTester tester = new LinxTester();
 
-        // first with a uniform ploidy and long TI
-        SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 400000, 1);
-        SvVarData var2 = createInv(tester.nextVarId(), "1", 200000, 250000, -1);
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertEquals(DEL_TI, cluster.getResolvedType());
-
-        assertEquals(var2.position(true) - var1.position(true), getSyntheticLength(cluster));
-        assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
-        assertEquals(var2.position(false) - var2.position(true), getSyntheticGapLength(cluster));
-
-        // test again but with the TI in LOH bounds
-        var1 = createInv(tester.nextVarId(), "1", 1000, 200000, 1);
-        var2 = createInv(tester.nextVarId(), "1", 5000, 150000, -1);
+        // test with the TI in LOH bounds
+        SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 200000, 1);
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 5000, 150000, -1);
 
         tester.CnDataLoader.getLohData().add(new LohEvent( var1.chromosome(false), var1.position(false), 1000000,
                 var1.typeStr(), SegmentSupport.TELOMERE.toString(), 1, var1.id(), LohEvent.CN_DATA_NO_SV));
@@ -229,12 +201,16 @@ public class InversionPairTest
         tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
+        SvCluster cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertEquals(DEL_TI, cluster.getResolvedType());
 
-        // neither case, is resolved as a RECIP_INV_DUPS
+        assertEquals(var2.position(true) - var1.position(true), getSyntheticLength(cluster));
+        assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
+        assertEquals(var2.position(false) - var2.position(true), getSyntheticGapLength(cluster));
+
+        //no LOH, then is resolved as a RECIP_INV_DUPS
         tester.CnDataLoader.getLohData().clear();
 
         tester.addAndCluster(var1, var2);

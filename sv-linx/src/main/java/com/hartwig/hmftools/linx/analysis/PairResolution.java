@@ -33,6 +33,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
+import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
@@ -228,6 +229,7 @@ public class PairResolution
                         cluster, longDelThreshold, longDupThreshold,
                         startBe1, endBe1, startBe2, endBe2, uniformPloidy, longTiLink);
             }
+            /* no longer any pair-resolution for DELs and DUPs
             else if(startBe1.orientation() != endBe1.orientation() && startBe2.orientation() != endBe2.orientation())
             {
                 // next a DUP and DEL
@@ -241,6 +243,7 @@ public class PairResolution
                             startBe1, endBe1, startBe2, endBe2, uniformPloidy);
                 }
             }
+            */
         }
         else
         {
@@ -386,15 +389,15 @@ public class PairResolution
             // set synthetic lengths prior to any chain reconfiguration
             setPairLengthData(cluster);
 
-            boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
+            boolean lohBoundedTi = isLohBoundedTi(longestTiPair); // length no longer a classifying factor
 
             if (!arm1MatchingDB && !arm2MatchingDB)
             {
-                resolvedType = longOrLohBoundedTi && uniformPloidy ? DUP_TI : RECIP_TRANS_DUPS;
+                resolvedType = lohBoundedTi && uniformPloidy ? DUP_TI : RECIP_TRANS_DUPS;
             }
             else
             {
-                resolvedType = longOrLohBoundedTi && uniformPloidy ? DEL_TI : RECIP_TRANS_DEL_DUP;
+                resolvedType = lohBoundedTi && uniformPloidy ? DEL_TI : RECIP_TRANS_DEL_DUP;
             }
 
             // test the overlap and DB lengths to determine whether this cluster is resolved (ie protected from clustering)
@@ -494,7 +497,7 @@ public class PairResolution
         // set prior to any chain reconfiguration
         setPairLengthData(cluster);
 
-        boolean longOrLohBoundedTi = isLohBoundedTi(longestTiPair) || longestTiPair.length() > longDupThreshold;
+        boolean lohBoundedTi = isLohBoundedTi(longestTiPair);
 
         ResolvedType resolvedType = NONE;
 
@@ -502,7 +505,7 @@ public class PairResolution
         || (lowerBe2.position() < lowerBe1.position() && upperBe2.position() > upperBe1.position()))
         {
             // one INV encloses the other - the DEL scenario
-            if(longOrLohBoundedTi && uniformPloidy)
+            if(lohBoundedTi && uniformPloidy)
             {
                 resolvedType = DEL_TI;
             }
@@ -510,7 +513,7 @@ public class PairResolution
             {
                 long innerInversionLength = min(upperBe1.position() - lowerBe1.position(), upperBe2.position() - lowerBe2.position());
 
-                if (innerInversionLength < 100000)
+                if (innerInversionLength < MIN_SIMPLE_DUP_DEL_CUTOFF)
                 {
                     resolvedType = RESOLVED_FOLDBACK;
                 }
@@ -544,7 +547,7 @@ public class PairResolution
         else
         {
             // otherwise the inner breakends overlap
-            if(longOrLohBoundedTi && uniformPloidy)
+            if(lohBoundedTi && uniformPloidy)
             {
                 resolvedType = DUP_TI;
             }

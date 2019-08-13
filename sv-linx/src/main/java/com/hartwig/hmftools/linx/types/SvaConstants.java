@@ -14,6 +14,9 @@ public class SvaConstants
 
     public static final int MAX_FOLDBACK_CHAIN_LENGTH = 5000;
 
+    public static final int MAX_SIMPLE_DUP_DEL_CUTOFF = 5000000;
+    public static final int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
+
     public static final double LOW_CN_CHANGE_SUPPORT = 0.5;
 
     public static final double SUBCLONAL_LOW_CNC_PERCENT = 0.5;

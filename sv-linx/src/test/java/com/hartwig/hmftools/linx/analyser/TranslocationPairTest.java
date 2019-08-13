@@ -104,21 +104,8 @@ public class TranslocationPairTest
     {
         LinxTester tester = new LinxTester();
 
-        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
-        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50000, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL_TI);
-
-        // again but relying on an LOH to mark the TI as definitely a TI
-        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50000, -1);
-        var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
 
         tester.CnDataLoader.getLohData().add(new LohEvent(var1.chromosome(false), 1, var1.position(false),
                 SegmentSupport.TELOMERE.toString(), var1.typeStr(), 1, LohEvent.CN_DATA_NO_SV, var1.id()));
@@ -126,7 +113,7 @@ public class TranslocationPairTest
         tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL_TI);
@@ -152,21 +139,8 @@ public class TranslocationPairTest
     {
         LinxTester tester = new LinxTester();
 
-        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
-        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 1000, -1);
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 50000, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), "1", 200000, 1, "2", 150000, 1);
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
-
-        assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DUP_TI);
-
-        // again but relying on an LOH to mark the TI as definitely a TI
-        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 50000, -1);
-        var2 = createBnd(tester.nextVarId(), "1", 200000, 1, "2", 150000, 1);
 
         tester.CnDataLoader.getLohData().add(new LohEvent(var1.chromosome(false), 1, var1.position(false),
                 SegmentSupport.TELOMERE.toString(), var1.typeStr(), 1, LohEvent.CN_DATA_NO_SV, var1.id()));
@@ -174,7 +148,7 @@ public class TranslocationPairTest
         tester.addAndCluster(var1, var2);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(!cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP_TI);
