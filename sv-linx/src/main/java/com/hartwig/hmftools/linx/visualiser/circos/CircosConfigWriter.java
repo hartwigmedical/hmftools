@@ -27,7 +27,6 @@ public class CircosConfigWriter
     //    private static final double EXON_OUTER_RADIUS = 0.95;
     static final double EXON_INNER_RADIUS = 0.9;
 
-    private static final double GENE_OUTER_RADIUS = 0.95;
     private static final double GENE_INNER_RADIUS = 0.93;
     //
     //    private static final double SEGMENT_OUTER_RADIUS = 0.875;
@@ -141,15 +140,13 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.ideogramRadius() + "r"))
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.ideogramRadius()))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
-
-                        .replaceAll("SUBSTITUTE_EXON_RANK_INNER_RADIUS", String.valueOf(exonInnerRadius))
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(exonInnerRadius))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(exonOuterRadius))
                         .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(GENE_INNER_RADIUS))
-                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(GENE_OUTER_RADIUS))
+                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(exonOuterRadius))
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))

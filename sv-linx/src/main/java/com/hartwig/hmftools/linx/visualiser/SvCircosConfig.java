@@ -16,7 +16,7 @@ public interface SvCircosConfig
     String CNA_RELATIVE_SIZE = "cna_relative_size";
     String SEGMENT_RELATIVE_SIZE = "segment_relative_size";
 
-    double DEFAULT_GENE_RELATIVE_SIZE = 1;
+    double DEFAULT_GENE_RELATIVE_SIZE = 0.5;
     double DEFAULT_SEGMENT_RELATIVE_SIZE = 1;
     double DEFAULT_CNA_RELATIVE_SIZE = 2;
     double DEFAULT_IDEOGRAM_RADIUS = 0.88;
@@ -84,9 +84,9 @@ public interface SvCircosConfig
     {
         return ImmutableSvCircosConfig.builder()
                 .displayPosition(true)
-                .geneRelativeSize(1)
-                .segmentRelativeSize(1)
-                .copyNumberRelativeSize(2)
+                .geneRelativeSize(DEFAULT_GENE_RELATIVE_SIZE)
+                .segmentRelativeSize(DEFAULT_SEGMENT_RELATIVE_SIZE)
+                .copyNumberRelativeSize(DEFAULT_CNA_RELATIVE_SIZE)
                 .build();
     }
 

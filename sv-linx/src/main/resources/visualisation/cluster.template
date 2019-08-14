@@ -129,12 +129,12 @@ chromosomes_display_default = yes
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
 
-		r0 = SUBSTITUTE_EXON_RANK_INNER_RADIUSr
-		r1 = 1r
+		r0               = SUBSTITUTE_EXON_INNER_RADIUSr
+		r1               = 1r
 
 		show_links   = no
-		label_size   = 24p
-		label_font   = mono
+		label_size   = SUBSTITUTE_LABEL_SIZEp
+		label_font   = condensed
 		label_snuggle= yes
 
 		padding  = 0p
@@ -152,7 +152,7 @@ chromosomes_display_default = yes
 		r1 = 1r
 
 		show_links   = no
-		label_size   = 10p
+		label_size   = SUBSTITUTE_LABEL_SIZEp
 		label_font   = mono
 		label_snuggle= yes
 
@@ -174,14 +174,6 @@ chromosomes_display_default = yes
 				color = vlpurple_a5
 			</background>
 		</backgrounds>
-
-		#<axes>
-		#	<axis>
-		#		color     = lpurple
-		#		thickness = 1
-		#		spacing   = SUBSTITUTE_SV_SPACINGr
-		#	</axis>
-		#</axes>
 
 	</plot>
 

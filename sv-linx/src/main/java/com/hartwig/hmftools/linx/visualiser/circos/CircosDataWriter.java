@@ -224,7 +224,6 @@ public class CircosDataWriter
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(gene.name())
-                    .add("label_size=" + labelSize + "p,rpadding=0r")
                     .toString();
             result.add(exonString);
         }
