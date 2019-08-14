@@ -67,18 +67,11 @@ public class KnownFusionData
             return false;
 
         return hasPromiscuousFiveGene(fiveGene) || hasPromiscuousThreeGene(threeGene);
-
-        // return fiveGeneNames.stream().noneMatch(threeGeneNames::contains) && (
-        //  fiveGeneNames.stream().anyMatch(promiscuousFive()::containsKey) || threeGeneNames.stream()
-        //  .anyMatch(promiscuousThree()::containsKey));
     }
 
     public boolean intragenicPromiscuousMatch(final String fiveGene, final String threeGene)
     {
         return fiveGene.equals(threeGene) && hasPromiscuousThreeGene(threeGene);
-
-        // return fiveGeneNames.stream().anyMatch(threeGeneNames::contains) && threeGeneNames.stream()
-        //  .anyMatch(promiscuousThree()::containsKey);
     }
 
     public boolean loadFromFile(@NotNull final CommandLine cmd)
@@ -122,25 +115,24 @@ public class KnownFusionData
 
         if(!fileContents.isEmpty())
         {
-            // remove header
+            // assumes a header row
             fileContents.remove(0);
         }
 
         if(!fileContents.isEmpty())
         {
-            if(fileContents.get(0).split(FILE_DELIMITER).length > expectedDataCount)
+            int index = 0;
+
+            while (index < fileContents.size())
             {
-                for (int i = 0; i < fileContents.size(); ++i)
+                if (fileContents.get(index).split(FILE_DELIMITER).length != expectedDataCount)
                 {
-                    String[] items = fileContents.get(i).split(FILE_DELIMITER);
-                    String trimmedStr = items[0].replaceAll("\"", "");
-
-                    for (int j = 1; j < expectedDataCount; ++j)
-                    {
-                        trimmedStr += FILE_DELIMITER + items[j].replaceAll("\"", "");
-                    }
-
-                    fileContents.set(i, trimmedStr);
+                    LOGGER.error("file({}) invalid data will be skipped: {}", filename, fileContents.get(index));
+                    fileContents.remove(index);
+                }
+                else
+                {
+                    ++index;
                 }
             }
         }
