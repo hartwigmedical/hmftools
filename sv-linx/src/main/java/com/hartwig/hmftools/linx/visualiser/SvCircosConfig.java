@@ -12,9 +12,16 @@ import org.jetbrains.annotations.Nullable;
 public interface SvCircosConfig
 {
     String DISPLAY_POSITION = "displayPosition";
-    String GENE_RELATIVE_SIZE = "gene_proportion";
+    String GENE_RELATIVE_SIZE = "gene_relative_size";
+    String CNA_RELATIVE_SIZE = "cna_relative_size";
+    String SEGMENT_RELATIVE_SIZE = "segment_relative_size";
 
-    double DEFAULT_GENE_PROPORTION = 0.1;
+    double DEFAULT_GENE_RELATIVE_SIZE = 1;
+    double DEFAULT_SEGMENT_RELATIVE_SIZE = 1;
+    double DEFAULT_CNA_RELATIVE_SIZE = 2;
+    double DEFAULT_IDEOGRAM_RADIUS = 0.88;
+    double DEFAULT_INNER_RADIUS = 0.2;
+    double DEFAULT_GAP_RADIUS = 0.025;
 
     boolean displayPosition();
 
@@ -24,24 +31,29 @@ public interface SvCircosConfig
 
     double copyNumberRelativeSize();
 
-    default double gapSize()
+    default double ideogramRadius()
     {
-        return 0.025;
+        return DEFAULT_IDEOGRAM_RADIUS;
+    }
+
+    default double gapRadius()
+    {
+        return DEFAULT_GAP_RADIUS;
     }
 
     default double innerRadius()
     {
-        return 0.2;
+        return DEFAULT_INNER_RADIUS;
     }
 
-    default int minDistanceLabelSize()
-    {
-        return 30;
-    }
-
-    default int maxDistanceLabelSize()
+    default int minTextSize()
     {
         return 40;
+    }
+
+    default int maxLabelSize()
+    {
+        return 50;
     }
 
     default int maxDistanceLabelCount()
@@ -56,7 +68,7 @@ public interface SvCircosConfig
             return 0;
         }
 
-        return Math.round(maxDistanceLabelSize() - 1d * count * (maxDistanceLabelSize() - minDistanceLabelSize()) / maxDistanceLabelCount());
+        return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minTextSize()) / maxDistanceLabelCount());
     }
 
     static void addOptions(@NotNull Options options)

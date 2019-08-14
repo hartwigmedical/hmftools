@@ -68,7 +68,7 @@ public class CircosConfigWriter
         this.config = config;
         this.outputDir = outputDir;
 
-        double gapSize = config.gapSize();
+        double gapSize = config.gapRadius();
         double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
         double segmentRelativeSize = config.segmentRelativeSize();
         double copyNumberRelativeSize = config.copyNumberRelativeSize();
@@ -137,7 +137,7 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", config.displayPosition() ? "0.90" : "0.99")
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.ideogramRadius() + "r"))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
                         .replaceAll("SUBSTITUTE_EXON_RANK_INNER_RADIUS", String.valueOf(exonInnerRadius))
@@ -165,6 +165,8 @@ public class CircosConfigWriter
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))
+
+                        .replaceAll("SUBSTITUTE_MAX_LABEL_SIZE", String.valueOf(config.maxLabelSize()))
 
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 
