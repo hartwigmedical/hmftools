@@ -3,11 +3,8 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -15,7 +12,6 @@ import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExons;
 import com.hartwig.hmftools.linx.visualiser.data.FusedProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,13 +22,12 @@ public class FusionDataWriter
     private final List<ProteinDomain> finalProteinDomains;
     private final ProteinDomainColors proteinDomainColors;
 
-    public FusionDataWriter(@NotNull final List<Fusion> fusions,
-            @NotNull final List<Exon> exons,
-            @NotNull final List<ProteinDomain> proteinDomains, @NotNull final ProteinDomainColors proteinDomainColors)
+    public FusionDataWriter(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons,
+            @NotNull final List<ProteinDomain> proteinDomains)
     {
+
         this.finalExons = Lists.newArrayList();
         this.finalProteinDomains = Lists.newArrayList();
-        this.proteinDomainColors = proteinDomainColors;
 
         for (Fusion fusion : fusions)
         {
@@ -61,8 +56,9 @@ public class FusionDataWriter
             final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
             finalExons.addAll(scalePosition.scaleFusedExon(intronScaledExons));
             finalProteinDomains.addAll(scalePosition.interpolateProteinDomains(intronScaledProteinDomains));
-            finalProteinDomains.addAll(legendOnlyDomains(fusion.name(), proteinDomains, intronScaledProteinDomains));
         }
+
+        this.proteinDomainColors = new ProteinDomainColors(finalProteinDomains);
     }
 
     public void write(@NotNull final String sample, @NotNull final String outputDir)
@@ -76,24 +72,6 @@ public class FusionDataWriter
     public List<FusedExon> finalExons()
     {
         return finalExons;
-    }
-
-    @NotNull
-    private Set<ProteinDomain> legendOnlyDomains(@NotNull final String fusion, @NotNull final List<ProteinDomain> original,
-            @NotNull final List<ProteinDomain> fused)
-    {
-        final Set<ProteinDomain> result = Sets.newHashSet();
-
-        final Set<String> fusedNames = fused.stream().map(ProteinDomain::name).collect(Collectors.toSet());
-        for (final ProteinDomain proteinDomain : original)
-        {
-            if (!fusedNames.contains(proteinDomain.name()))
-            {
-                result.add(ImmutableProteinDomain.builder().from(proteinDomain).chromosome(fusion).start(0).end(0).build());
-            }
-        }
-
-        return result;
     }
 
 }

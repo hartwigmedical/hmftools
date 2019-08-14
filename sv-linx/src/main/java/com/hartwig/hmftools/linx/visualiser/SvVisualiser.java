@@ -27,7 +27,6 @@ import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
-import com.hartwig.hmftools.linx.visualiser.circos.ProteinDomainColors;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
@@ -248,8 +247,7 @@ public class SvVisualiser implements AutoCloseable
         confWrite.writeConfig();
         confWrite.writeCytobands();
 
-        final ProteinDomainColors proteinDomainColors = new ProteinDomainColors(filteredProteinDomains);
-        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, proteinDomainColors).write(circosData);
+        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite).write(circosData);
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
@@ -257,8 +255,7 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
-        final FusionDataWriter fusionDataWriter =
-                new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains, proteinDomainColors);
+        final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
         if (!fusionDataWriter.finalExons().isEmpty())
         {
             fusionDataWriter.write(sample, config.outputConfPath());
