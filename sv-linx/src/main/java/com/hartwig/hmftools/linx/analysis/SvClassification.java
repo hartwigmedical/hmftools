@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.analysis.PairResolution.classifyPairClus
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterPairType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
@@ -195,7 +196,6 @@ public class SvClassification
 
                 if(resolvedType != NONE)
                 {
-                    long length = abs(sgl1.position(true) - sgl2.position(true));
                     cluster.setResolved(true, resolvedType);
                 }
             }
@@ -384,6 +384,9 @@ public class SvClassification
         if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
             return NONE;
 
+        if(sgl1.isInferredSgl() && sgl2.isInferredSgl())
+            return NONE;
+
         final SvBreakend breakend1 = sgl1.getBreakend(true);
         final SvBreakend breakend2 = sgl2.getBreakend(true);
 
@@ -392,10 +395,7 @@ public class SvClassification
             return NONE;
 
         // check copy number consistency
-        double cn1 = sgl2.copyNumberChange(true);
-        double cn2 = sgl1.copyNumberChange(true);
-
-        if(!copyNumbersEqual(cn1, cn2))
+        if(!ploidyMatch(sgl1.ploidy(), sgl1.ploidyUncertainty(), sgl2.ploidy(), sgl2.ploidyUncertainty()))
             return NONE;
 
         boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)
