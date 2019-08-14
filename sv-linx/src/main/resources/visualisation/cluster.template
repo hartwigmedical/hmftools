@@ -112,7 +112,7 @@ chromosomes_display_default = yes
 		type             = text
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.position.circos
-		label_size       = SUBSTITUTE_MAX_LABEL_SIZEp
+		label_size       = SUBSTITUTE_LABEL_SIZEp
 		r0               = 1r
 		r1               = 2r
 		show_links       = no
@@ -222,12 +222,12 @@ chromosomes_display_default = yes
 		type             = text
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.distance.circos
-		r0               = SUBSTITUTE_CNA_DISTANCE_RADIUSr
+		r0               = SUBSTITUTE_CNA_DISTANCE_RADIUS
 		r1               = 1r
 		show_links       = no
-		label_size       = SUBSTITUTE_MAX_LABEL_SIZEp
+		label_size       = SUBSTITUTE_LABEL_SIZEp
 		label_font       = condensed
-		label_snuggle    = no
+		label_snuggle    = yes
 		padding          = 0p
 		rpadding         = 0p
 	</plot>
@@ -253,13 +253,6 @@ chromosomes_display_default = yes
 				position   = 0.5r
 			</axis>
 		</axes>
-
-        <rules>
-            <rule>
-                condition = var(value) > 0
-                show = no
-            </rule>
-        </rules>
 
 		<backgrounds>
 			<background>

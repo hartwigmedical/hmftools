@@ -134,6 +134,10 @@ public class CircosConfigWriter
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.maxCopyNumber() - 2)));
 
         int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.maxMinorAllelePloidy() - 1)));
+
+        double labelSize = config.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
+        double distanceLabelOffset = Math.ceil(4 * labelSize);
+
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
@@ -161,12 +165,12 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(copyNumberMiddleRadius + 3d/4d * (copyNumberOuterRadius - copyNumberMiddleRadius)))
+                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(copyNumberOuterRadius + "r -" + distanceLabelOffset + "p"))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))
 
-                        .replaceAll("SUBSTITUTE_MAX_LABEL_SIZE", String.valueOf(config.maxLabelSize()))
+                        .replaceAll("SUBSTITUTE_LABEL_SIZE", String.valueOf(labelSize))
 
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 

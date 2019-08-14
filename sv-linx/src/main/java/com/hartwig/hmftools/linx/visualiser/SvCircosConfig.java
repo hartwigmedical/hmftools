@@ -23,6 +23,9 @@ public interface SvCircosConfig
     double DEFAULT_INNER_RADIUS = 0.2;
     double DEFAULT_GAP_RADIUS = 0.025;
 
+    int MIN_TEXT_SIZE = 35;
+    int MAX_TEXT_SIZE = 40;
+
     boolean displayPosition();
 
     double geneRelativeSize();
@@ -46,29 +49,29 @@ public interface SvCircosConfig
         return DEFAULT_INNER_RADIUS;
     }
 
-    default int minTextSize()
+    default int minLabelSize()
     {
-        return 40;
+        return MIN_TEXT_SIZE;
     }
 
     default int maxLabelSize()
     {
-        return 50;
+        return MAX_TEXT_SIZE;
     }
 
-    default int maxDistanceLabelCount()
+    default int maxDistanceLabels()
     {
-        return 200;
+        return 100;
     }
 
-    default long distanceLabelSize(long count)
+    default long labelSize(long count)
     {
-        if (count > maxDistanceLabelCount())
+        if (count > maxDistanceLabels())
         {
             return 0;
         }
 
-        return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minTextSize()) / maxDistanceLabelCount());
+        return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minLabelSize()) / maxDistanceLabels());
     }
 
     static void addOptions(@NotNull Options options)

@@ -212,6 +212,11 @@ public class CircosData
         return contigLengths().values().stream().mapToInt(x -> x).sum();
     }
 
+    public long untruncatedCopyNumberAlterationsCount()
+    {
+        return alterations.stream().filter(x -> !x.truncated()).count();
+    }
+
     @NotNull
     private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions)
     {

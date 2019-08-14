@@ -273,9 +273,8 @@ public class CircosDataWriter
     {
         final List<String> result = Lists.newArrayList();
         long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
-        if (unadjustedSegments <= circosConfig.maxDistanceLabelCount())
+        if (unadjustedSegments <= circosConfig.maxDistanceLabels())
         {
-            double labelSize = circosConfig.distanceLabelSize(unadjustedSegments);
             for (int i = 0; i < unadjustedSegment.size(); i++)
             {
                 final CopyNumberAlteration adjusted = segments.get(i);
@@ -286,7 +285,6 @@ public class CircosDataWriter
                             .add(String.valueOf(adjusted.start()))
                             .add(String.valueOf(adjusted.end()))
                             .add(shorthand(unadjusted.end() - unadjusted.start()))
-                            .add("label_size=" + labelSize + "p")
                             .toString();
                     result.add(distance);
                 }
@@ -597,7 +595,6 @@ public class CircosDataWriter
     @NotNull
     private static String thicknessString(double usage)
     {
-
         return "thickness=" + thicknessPixels(usage);
     }
 
