@@ -9,7 +9,7 @@ show_tick_labels    = no
     </spacing>
 
     # Ideogram position, fill and outline
-    radius           = 0.9r
+    radius           = SUBSTITUTE_IDEOGRAM_RADIUSr
     thickness        = 50p
     fill             = yes
     stroke_color     = dgrey
@@ -18,7 +18,7 @@ show_tick_labels    = no
     show_label       = yes
     label_font       = default
     label_radius     = (dims(ideogram,radius_inner)+dims(ideogram,radius_outer))/2-15
-    label_size       = 30
+    label_size       = 40
     label_parallel   = yes
     label_case       = upper
     label_format     = eval( var(chr) =~ /hs([6]|[9])$/ ? var(label) . ".": var(label) )
@@ -107,18 +107,34 @@ chromosomes_display_default = yes
 <plots>
 
 	# -----------------------------------------------------------
+	# Position Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.position.circos
+		label_size       = SUBSTITUTE_LABEL_SIZEp
+		r0               = 1r
+		r1               = 2r
+		show_links       = no
+		label_font       = condensed
+		label_snuggle    = yes
+		padding          = 0p
+		rpadding         = 10p
+	</plot>
+
+	# -----------------------------------------------------------
 	# Exon Rank
 	<plot>
 		type             = text
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
 
-		r0 = SUBSTITUTE_EXON_RANK_INNER_RADIUSr
-		r1 = 1r
+		r0               = SUBSTITUTE_EXON_INNER_RADIUSr
+		r1               = 1r
 
 		show_links   = no
-		label_size   = 24p
-		label_font   = mono
+		label_size   = SUBSTITUTE_LABEL_SIZEp
+		label_font   = condensed
 		label_snuggle= yes
 
 		padding  = 0p
@@ -136,7 +152,7 @@ chromosomes_display_default = yes
 		r1 = 1r
 
 		show_links   = no
-		label_size   = 10p
+		label_size   = SUBSTITUTE_LABEL_SIZEp
 		label_font   = mono
 		label_snuggle= yes
 
@@ -159,14 +175,6 @@ chromosomes_display_default = yes
 			</background>
 		</backgrounds>
 
-		<axes>
-			<axis>
-				color     = lpurple
-				thickness = 1
-				spacing   = SUBSTITUTE_SV_SPACINGr
-			</axis>
-		</axes>
-
 	</plot>
 
 
@@ -181,24 +189,41 @@ chromosomes_display_default = yes
 		max  = SUBSTITUTE_CNA_GAIN_MAX
 		glyph = circle
 		glyph_size = 8
-		color = green
-		fill_color = green
+		color = copy_gain
+		fill_color = copy_gain
 
 		<axes>
 			<axis>
-				color     = lgreen
-				thickness = 1
+				color     = copy_gain_l
+				thickness = 3
 				position  = SUBSTITUTE_CNA_GAIN_AXIS_POSITION
 			</axis>
 		</axes>
 
 		<backgrounds>
 			<background>
-				color = vlgreen_a5
+				color = copy_gain_vl
 			</background>
 		</backgrounds>
 
 	</plot>
+
+	# -----------------------------------------------------------
+	# Distances Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.distance.circos
+		r0               = SUBSTITUTE_CNA_DISTANCE_RADIUS
+		r1               = 1r
+		show_links       = no
+		label_size       = SUBSTITUTE_LABEL_SIZEp
+		label_font       = condensed
+		label_snuggle    = yes
+		padding          = 0p
+		rpadding         = 0p
+	</plot>
+
 
 
 	# -----------------------------------------------------------
@@ -210,22 +235,20 @@ chromosomes_display_default = yes
 		r1   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
 		min  = -2
 		max  = 0
-		color = red
-		glyph = circle
-		glyph_size = 8
-		fill_color = red
+		color = copy_loss
+		fill_color = copy_loss
 
 		<axes>
 			<axis>
-				color     = lred
-				thickness = 1
-				spacing   = 0.5r
+				color     = copy_loss_l
+				thickness = 3
+				position   = 0.5r
 			</axis>
 		</axes>
 
 		<backgrounds>
 			<background>
-				color = vlred_a5
+				color = copy_loss_vl
 			</background>
 		</backgrounds>
 
@@ -306,82 +329,34 @@ chromosomes_display_default = yes
 		</rules>
 	</plot>
 
-	# -----------------------------------------------------------
-	# Distances Text
-	<plot>
-		type             = text
-		color            = black
-		file             = SUBSTITUTE_SAMPLE.distance.circos
-
-		r0   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1   = 1r
-
-		show_links     = no
-
-		label_size   = 30p
-		label_font   = condensed
-		label_snuggle=yes
-
-		padding  = 0p
-		rpadding = 15p
-	</plot>
-
-	# -----------------------------------------------------------
-	# Locations Text
-	<plot>
-		type             = text
-		color            = black
-		file             = SUBSTITUTE_SAMPLE.text.circos
-
-		r0   = 1.01r
-		r1   = 1.11r
-
-		show_links     = no
-		link_dims      = 4p,4p,260p,20p,0p
-		link_thickness = 2p
-		link_color     = black
-
-		label_size   = 20p
-		label_font   = condensed
-		label_snuggle=yes
-
-		padding  = 0p
-		rpadding = 0p
-	</plot>
 
 	# -----------------------------------------------------------
 	# Scatter
 	<plot>
 		type             = scatter
 		file             = SUBSTITUTE_SAMPLE.scatter.circos
-
-		r0   = SUBSTITUTE_SV_INNER_RADIUSr
-		r1   = SUBSTITUTE_SV_OUTER_RADIUSr
-
+		r0               = SUBSTITUTE_SV_INNER_RADIUSr
+		r1               = SUBSTITUTE_SV_OUTER_RADIUSr
         glyph            = circle
         glyph_size       = 20
         color            = red
         stroke_color     = dred
         stroke_thickness = 0
         orientation      = out
-
-        min  = 0
-        max = SUBSTITUTE_SV_MAX
+        min              = 0
+        max              = SUBSTITUTE_SV_MAX
 
 	</plot>
 
 	# -----------------------------------------------------------
 	# Connectors
     <plot>
-
-        type = connector
-        file = SUBSTITUTE_SAMPLE.connector.circos
-
-        r0	=	SUBSTITUTE_MAP_INNER_RADIUSr
-        connector_dims = 0.0,0.3,0.4,0.3,0
-
-        thickness = 4
-        color     = red
+        type             = connector
+        file             = SUBSTITUTE_SAMPLE.connector.circos
+        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
+        connector_dims   = 0.0,0.3,0.4,0.3,0
+        thickness        = 4
+        color            = red
     </plot>
 
 </plots>
@@ -389,8 +364,8 @@ chromosomes_display_default = yes
 <links>
     <link>
         file          = SUBSTITUTE_SAMPLE.link.circos
+        radius        = SUBSTITUTE_MAP_INNER_RADIUSr
         color         = red
-        radius        = 0.175r
         thickness     = 2
     </link>
 </links>
@@ -398,6 +373,15 @@ chromosomes_display_default = yes
 <<include etc/housekeeping.conf>>
 
 <colors>
+
+    copy_loss = 222,119,174
+    copy_loss_l = 237,182,212
+    copy_loss_vl = 253,245,249
+
+    copy_gain = 166,209,122
+    copy_gain_l = 205,229,181
+    copy_gain_vl = 244,249,239
+
     chr1 = 128,125,186
     chr2 = 145,142,179
     chr3 = 161,159,173

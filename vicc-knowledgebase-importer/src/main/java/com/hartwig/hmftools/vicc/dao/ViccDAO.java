@@ -130,6 +130,7 @@ import com.hartwig.hmftools.vicc.datamodel.CivicDrugs;
 import com.hartwig.hmftools.vicc.datamodel.CivicEvidenceItems;
 import com.hartwig.hmftools.vicc.datamodel.CivicPublicationDate;
 import com.hartwig.hmftools.vicc.datamodel.CivicSource;
+import com.hartwig.hmftools.vicc.datamodel.CivicUser;
 import com.hartwig.hmftools.vicc.datamodel.CivicVariantGroup;
 import com.hartwig.hmftools.vicc.datamodel.CivicVariantTypes;
 import com.hartwig.hmftools.vicc.datamodel.CivicVariants;
@@ -1533,13 +1534,13 @@ public class ViccDAO {
                         .getValue(CIVICSOURCE.CIVICID);
 
                 //TODO: fix issue with foreign key
-//                context.insertInto(CIVICPUBLICATION,
-//                        CIVICPUBLICATION.YEAR,
-//                        CIVICPUBLICATION.DAY,
-//                        CIVICPUBLICATION.MONTH,
-//                        CIVICPUBLICATION.CIVICSOURCEID)
-//                        .values(source.publicationDate().year(), source.publicationDate().day(), source.publicationDate().month(), idSource)
-//                        .execute();
+                //                context.insertInto(CIVICPUBLICATION,
+                //                        CIVICPUBLICATION.YEAR,
+                //                        CIVICPUBLICATION.DAY,
+                //                        CIVICPUBLICATION.MONTH,
+                //                        CIVICPUBLICATION.CIVICSOURCEID)
+                //                        .values(source.publicationDate().year(), source.publicationDate().day(), source.publicationDate().month(), idSource)
+                //                        .execute();
 
                 for (CivicClinicalTrial clinicalTrial : source.clinicalTrials()) {
                     context.insertInto(CIVICCLINICALTRIAL,
@@ -1558,8 +1559,301 @@ public class ViccDAO {
             }
         }
 
-
         context.insertInto(CIVICERROR, CIVICERROR.CIVICID).values(id).execute();
+
+        int idLifeActions = context.insertInto(CIVICLIFECYCLEACTIONS, CIVICLIFECYCLEACTIONS.CIVICID)
+                .values(id)
+                .returning(CIVICLIFECYCLEACTIONS.CIVICID)
+                .fetchOne()
+                .getValue(CIVICLIFECYCLEACTIONS.CIVICID);
+
+        if (civic.lifecycleActions().lastCommentedOn() != null) {
+            int idLastCommendOn =
+                    context.insertInto(CIVICLASTCOMMENTEDON, CIVICLASTCOMMENTEDON.TIMESTAMP, CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID)
+                            .values(civic.lifecycleActions().lastCommentedOn().timestamp(), idLifeActions)
+                            .returning(CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID)
+                            .fetchOne()
+                            .getValue(CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID);
+
+            CivicUser userLastCommend = civic.lifecycleActions().lastCommentedOn().user();
+            //TODO fix foreign key
+            //            int idLastCommentUser = context.insertInto(CIVICLASTCOMMENTEDONUSER,
+            //                    CIVICLASTCOMMENTEDONUSER.USERNAME,
+            //                    CIVICLASTCOMMENTEDONUSER.AREAOFEXPERTISE,
+            //                    CIVICLASTCOMMENTEDONUSER.TWITTERHANDLE,
+            //                    CIVICLASTCOMMENTEDONUSER.NAME,
+            //                    CIVICLASTCOMMENTEDONUSER.BIO,
+            //                    CIVICLASTCOMMENTEDONUSER.URL,
+            //                    CIVICLASTCOMMENTEDONUSER.CREATEDAT,
+            //                    CIVICLASTCOMMENTEDONUSER.ACCEPTEDLICENSE,
+            //                    CIVICLASTCOMMENTEDONUSER.AFFILIATION,
+            //                    CIVICLASTCOMMENTEDONUSER.AVATARURL,
+            //                    CIVICLASTCOMMENTEDONUSER.ROLE,
+            //                    CIVICLASTCOMMENTEDONUSER.FACEBOOKPROFILE,
+            //                    CIVICLASTCOMMENTEDONUSER.LINKEDINPROFILE,
+            //                    CIVICLASTCOMMENTEDONUSER.ORCID,
+            //                    CIVICLASTCOMMENTEDONUSER.DISPLAYNAME,
+            //                    CIVICLASTCOMMENTEDONUSER.LASTSEENAT,
+            //                    CIVICLASTCOMMENTEDONUSER.FEATUREDEXPERT,
+            //                    CIVICLASTCOMMENTEDONUSER.IDUSER,
+            //                    CIVICLASTCOMMENTEDONUSER.SIGNUPCOMPLETE,
+            //                    CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID)
+            //                    .values(userLastCommend.username(),
+            //                            userLastCommend.areaOfExpertise(),
+            //                            userLastCommend.twitterHandle(),
+            //                            userLastCommend.name(),
+            //                            userLastCommend.bio(),
+            //                            userLastCommend.url(),
+            //                            userLastCommend.createdAt(),
+            //                            userLastCommend.acceptedLicense(),
+            //                            userLastCommend.affiliation(),
+            //                            userLastCommend.avatarUrl(),
+            //                            userLastCommend.role(),
+            //                            userLastCommend.facebookProfile(),
+            //                            userLastCommend.linkedinProfile(),
+            //                            userLastCommend.orcid(),
+            //                            userLastCommend.displayName(),
+            //                            userLastCommend.lastSeenAt(),
+            //                            userLastCommend.featuredExpert(),
+            //                            userLastCommend.id(),
+            //                            userLastCommend.signupComplete(),
+            //                            idLastCommendOn)
+            //                    .returning(CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID)
+            //                    .fetchOne()
+            //                    .getValue(CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID);
+            //
+            //            context.insertInto(CIVICLASTCOMMENTEDONAVATARS,
+            //                    CIVICLASTCOMMENTEDONAVATARS.X32,
+            //                    CIVICLASTCOMMENTEDONAVATARS.X14,
+            //                    CIVICLASTCOMMENTEDONAVATARS.X64,
+            //                    CIVICLASTCOMMENTEDONAVATARS.X128,
+            //                    CIVICLASTCOMMENTEDONAVATARS.CIVICLASTCOMMENTEDONUSERID)
+            //                    .values(userLastCommend.avatars().x32(), userLastCommend.avatars().x14(), userLastCommend.avatars().x64(), userLastCommend.avatars().x128(), idLastCommentUser)
+            //                    .execute();
+            //
+            //            int idLastCommentOnOrganization = context.insertInto(CIVICLASTCOMMENTEDONORGANIZATION,
+            //                    CIVICLASTCOMMENTEDONORGANIZATION.URL,
+            //                    CIVICLASTCOMMENTEDONORGANIZATION.IDORGANIZATION,
+            //                    CIVICLASTCOMMENTEDONORGANIZATION.DESCRIPTION,
+            //                    CIVICLASTCOMMENTEDONORGANIZATION.NAME,
+            //                    CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID)
+            //                    .values(userLastCommend.organization().url(),
+            //                            userLastCommend.organization().id(),
+            //                            userLastCommend.organization().description(),
+            //                            userLastCommend.organization().name(),
+            //                            idLastCommentUser)
+            //                    .returning(CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID)
+            //                    .fetchOne()
+            //                    .getValue(CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID);
+            //
+            //            context.insertInto(CIVICLASTCOMMENTEDONPROFILEIMAGE,
+            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X32,
+            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X256,
+            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X14,
+            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X64,
+            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X128,
+            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.CIVICLASTCOMMENTEDONORGANIZATIONID)
+            //                    .values(userLastCommend.organization().profileImage().x32(),
+            //                            userLastCommend.organization().profileImage().x256(),
+            //                            userLastCommend.organization().profileImage().x14(),
+            //                            userLastCommend.organization().profileImage().x64(),
+            //                            userLastCommend.organization().profileImage().x128(),
+            //                            idLastCommentOnOrganization)
+            //                    .execute();
+        }
+
+        if (civic.lifecycleActions().lastModified() != null) {
+            int idLastModiefied =
+                    context.insertInto(CIVICLASTMODIFIED, CIVICLASTMODIFIED.TIMESTAMP, CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID)
+                            .values(civic.lifecycleActions().lastModified().timestamp(), idLifeActions)
+                            .returning(CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID)
+                            .fetchOne()
+                            .getValue(CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID);
+
+            CivicUser userModified = civic.lifecycleActions().lastModified().user();
+            //TODO fix foreign key
+            //            int idLastModiefiedUser = context.insertInto(CIVICLASTMODIFIEDUSER,
+            //                    CIVICLASTMODIFIEDUSER.USERNAME,
+            //                    CIVICLASTMODIFIEDUSER.AREAOFEXPERTISE,
+            //                    CIVICLASTMODIFIEDUSER.TWITTERHANDLE,
+            //                    CIVICLASTMODIFIEDUSER.NAME,
+            //                    CIVICLASTMODIFIEDUSER.BIO,
+            //                    CIVICLASTMODIFIEDUSER.URL,
+            //                    CIVICLASTMODIFIEDUSER.CREATEDAT,
+            //                    CIVICLASTMODIFIEDUSER.ACCEPTEDLICENSE,
+            //                    CIVICLASTMODIFIEDUSER.AFFILIATION,
+            //                    CIVICLASTMODIFIEDUSER.AVATARURL,
+            //                    CIVICLASTMODIFIEDUSER.ROLE,
+            //                    CIVICLASTMODIFIEDUSER.FACEBOOKPROFILE,
+            //                    CIVICLASTMODIFIEDUSER.LINKEDINPROFILE,
+            //                    CIVICLASTMODIFIEDUSER.ORCID,
+            //                    CIVICLASTMODIFIEDUSER.DISPLAYNAME,
+            //                    CIVICLASTMODIFIEDUSER.LASTSEENAT,
+            //                    CIVICLASTMODIFIEDUSER.FEATUREDEXPERT,
+            //                    CIVICLASTMODIFIEDUSER.IDUSER,
+            //                    CIVICLASTMODIFIEDUSER.SIGNUPCOMPLETE,
+            //                    CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID)
+            //                    .values(userModified.username(),
+            //                            userModified.areaOfExpertise(),
+            //                            userModified.twitterHandle(),
+            //                            userModified.name(),
+            //                            userModified.bio(),
+            //                            userModified.url(),
+            //                            userModified.createdAt(),
+            //                            userModified.acceptedLicense(),
+            //                            userModified.affiliation(),
+            //                            userModified.avatarUrl(),
+            //                            userModified.role(),
+            //                            userModified.facebookProfile(),
+            //                            userModified.linkedinProfile(),
+            //                            userModified.orcid(),
+            //                            userModified.displayName(),
+            //                            userModified.lastSeenAt(),
+            //                            userModified.featuredExpert(),
+            //                            userModified.id(),
+            //                            userModified.signupComplete(),
+            //                            idLastModiefied)
+            //                    .returning(CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID)
+            //                    .fetchOne()
+            //                    .getValue(CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID);
+            //
+            //            context.insertInto(CIVICLASTMODIFIEDAVATARS,
+            //                    CIVICLASTMODIFIEDAVATARS.X32,
+            //                    CIVICLASTMODIFIEDAVATARS.X14,
+            //                    CIVICLASTMODIFIEDAVATARS.X64,
+            //                    CIVICLASTMODIFIEDAVATARS.X128,
+            //                    CIVICLASTMODIFIEDAVATARS.CIVICLASTMODIFIEDID)
+            //                    .values(userModified.avatars().x32(), userModified.avatars().x14(), userModified.avatars().x64(), userModified.avatars().x128(), idLastModiefiedUser)
+            //                    .execute();
+            //
+            //            int idLastModiefiedOrganization = context.insertInto(CIVICLASTMODIFIEDORGANIZATION,
+            //                    CIVICLASTMODIFIEDORGANIZATION.URL,
+            //                    CIVICLASTMODIFIEDORGANIZATION.IDORGANIZATION,
+            //                    CIVICLASTMODIFIEDORGANIZATION.DESCRIPTION,
+            //                    CIVICLASTMODIFIEDORGANIZATION.NAME,
+            //                    CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID)
+            //                    .values(userModified.organization().url(),
+            //                            userModified.organization().id(),
+            //                            userModified.organization().description(),
+            //                            userModified.organization().name(),
+            //                            idLastModiefiedUser)
+            //                    .returning(CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID)
+            //                    .fetchOne()
+            //                    .getValue(CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID);
+            //
+            //            if (userModified.organization().profileImage() != null) {
+            //                context.insertInto(CIVICLASTMODIFIEDPROFILEIMAGE,
+            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X32,
+            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X256,
+            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X14,
+            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X64,
+            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X128,
+            //                        CIVICLASTMODIFIEDPROFILEIMAGE.CIVICLASTMODIFIEDORGANIZATIONID)
+            //                        .values(userModified.organization().profileImage().x32(),
+            //                                userModified.organization().profileImage().x256(),
+            //                                userModified.organization().profileImage().x14(),
+            //                                userModified.organization().profileImage().x64(),
+            //                                userModified.organization().profileImage().x128(),
+            //                                idLastModiefiedOrganization)
+            //                        .execute();
+            //            }
+
+        }
+
+        if (civic.lifecycleActions().lastReviewed() != null) {
+            int idLastReviewed =
+                    context.insertInto(CIVICLASTREVIEWED, CIVICLASTREVIEWED.TIMESTAMP, CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID)
+                            .values(civic.lifecycleActions().lastCommentedOn().timestamp(), idLifeActions)
+                            .returning(CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID)
+                            .fetchOne()
+                            .getValue(CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID);
+
+            CivicUser userLastReviewed = civic.lifecycleActions().lastReviewed().user();
+            //TODO fix foreign key
+            //            int idLastReviewedUser = context.insertInto(CIVICLASTREVIEWEDUSER,
+            //                    CIVICLASTREVIEWEDUSER.USERNAME,
+            //                    CIVICLASTREVIEWEDUSER.AREAOFEXPERTISE,
+            //                    CIVICLASTREVIEWEDUSER.TWITTERHANDLE,
+            //                    CIVICLASTREVIEWEDUSER.NAME,
+            //                    CIVICLASTREVIEWEDUSER.BIO,
+            //                    CIVICLASTREVIEWEDUSER.URL,
+            //                    CIVICLASTREVIEWEDUSER.CREATEDAT,
+            //                    CIVICLASTREVIEWEDUSER.ACCEPTEDLICENSE,
+            //                    CIVICLASTREVIEWEDUSER.AFFILIATION,
+            //                    CIVICLASTREVIEWEDUSER.AVATARURL,
+            //                    CIVICLASTREVIEWEDUSER.ROLE,
+            //                    CIVICLASTREVIEWEDUSER.FACEBOOKPROFILE,
+            //                    CIVICLASTREVIEWEDUSER.LINKEDINPROFILE,
+            //                    CIVICLASTREVIEWEDUSER.ORCID,
+            //                    CIVICLASTREVIEWEDUSER.DISPLAYNAME,
+            //                    CIVICLASTREVIEWEDUSER.LASTSEENAT,
+            //                    CIVICLASTREVIEWEDUSER.FEATUREDEXPERT,
+            //                    CIVICLASTREVIEWEDUSER.IDUSER,
+            //                    CIVICLASTREVIEWEDUSER.SIGNUPCOMPLETE,
+            //                    CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID)
+            //                    .values(userLastReviewed.username(),
+            //                            userLastReviewed.areaOfExpertise(),
+            //                            userLastReviewed.twitterHandle(),
+            //                            userLastReviewed.name(),
+            //                            userLastReviewed.bio(),
+            //                            userLastReviewed.url(),
+            //                            userLastReviewed.createdAt(),
+            //                            userLastReviewed.acceptedLicense(),
+            //                            userLastReviewed.affiliation(),
+            //                            userLastReviewed.avatarUrl(),
+            //                            userLastReviewed.role(),
+            //                            userLastReviewed.facebookProfile(),
+            //                            userLastReviewed.linkedinProfile(),
+            //                            userLastReviewed.orcid(),
+            //                            userLastReviewed.displayName(),
+            //                            userLastReviewed.lastSeenAt(),
+            //                            userLastReviewed.featuredExpert(),
+            //                            userLastReviewed.id(),
+            //                            userLastReviewed.signupComplete(),
+            //                            idLastReviewed)
+            //                    .returning(CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID)
+            //                    .fetchOne()
+            //                    .getValue(CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID);
+            //
+            //            context.insertInto(CIVICLASTREVIEWEDAVATARS,
+            //                    CIVICLASTREVIEWEDAVATARS.X32,
+            //                    CIVICLASTREVIEWEDAVATARS.X14,
+            //                    CIVICLASTREVIEWEDAVATARS.X64,
+            //                    CIVICLASTREVIEWEDAVATARS.X128,
+            //                    CIVICLASTREVIEWEDAVATARS.CIVICLASTREVIEWEDID)
+            //                    .values(userLastReviewed.avatars().x32(), userLastReviewed.avatars().x14(), userLastReviewed.avatars().x64(), userLastReviewed.avatars().x128(), idLastReviewedUser)
+            //                    .execute();
+            //
+            //            int idLastReviewedOrganization = context.insertInto(CIVICLASTREVIEWEDORGANIZATION,
+            //                    CIVICLASTREVIEWEDORGANIZATION.URL,
+            //                    CIVICLASTREVIEWEDORGANIZATION.IDORGANIZATION,
+            //                    CIVICLASTREVIEWEDORGANIZATION.DESCRIPTION,
+            //                    CIVICLASTREVIEWEDORGANIZATION.NAME,
+            //                    CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID)
+            //                    .values(userLastReviewed.organization().url(),
+            //                            userLastReviewed.organization().id(),
+            //                            userLastReviewed.organization().description(),
+            //                            userLastReviewed.organization().name(),
+            //                            idLastReviewedUser)
+            //                    .returning(CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID)
+            //                    .fetchOne()
+            //                    .getValue(CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID);
+            //
+            //            context.insertInto(CIVICLASTREVIEWEDPROFILEIMAGE,
+            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X32,
+            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X256,
+            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X14,
+            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X64,
+            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X128,
+            //                    CIVICLASTREVIEWEDPROFILEIMAGE.CIVICLASTREVIEWEDORGANIZATIONID)
+            //                    .values(userLastReviewed.organization().profileImage().x32(),
+            //                            userLastReviewed.organization().profileImage().x256(),
+            //                            userLastReviewed.organization().profileImage().x14(),
+            //                            userLastReviewed.organization().profileImage().x64(),
+            //                            userLastReviewed.organization().profileImage().x128(),
+            //                            idLastReviewedOrganization)
+            //                    .execute();
+        }
 
     }
 

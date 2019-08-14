@@ -37,14 +37,12 @@ public class Span
         final List<GenomeRegion> result = Lists.newArrayList();
 
         final List<String> chromosomes = positions.stream().map(GenomePosition::chromosome).distinct().collect(Collectors.toList());
-        for (final String chromosome : chromosomes)
+        for (final String contig : chromosomes)
         {
-            long min =
-                    positions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomePosition::position).min().orElse(0);
-            long max =
-                    positions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomePosition::position).max().orElse(0);
+            long min = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToLong(GenomePosition::position).min().orElse(0);
+            long max = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToLong(GenomePosition::position).max().orElse(0);
 
-            result.add(GenomeRegions.create(chromosome, min, max));
+            result.add(GenomeRegions.create(contig, min, max));
         }
 
         Collections.sort(result);

@@ -17,8 +17,7 @@ public class CopyNumberAlterations
     // From DB: select sampleId, chromosome, start, end, copyNumber, baf from copyNumber where sampleId = 'xxxxx';
 
     @NotNull
-    public static List<CopyNumberAlteration> copyNumbers(long copyNumberDistance, @NotNull final List<CopyNumberAlteration> alterations,
-            @NotNull final List<GenomeRegion> span)
+    public static List<CopyNumberAlteration> copyNumbers(double copyNumberDistancePercent, long copyNumberDistanceMax, @NotNull final List<CopyNumberAlteration> alterations,  @NotNull final List<GenomeRegion> span)
     {
         final List<CopyNumberAlteration> result = Lists.newArrayList();
 
@@ -30,8 +29,13 @@ public class CopyNumberAlterations
                     span.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeSegments.isEmpty())
             {
-                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0) - copyNumberDistance;
-                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0) + copyNumberDistance;
+                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0);
+                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0);
+                long chromosomeDistance = maxTrackPosition - minTrackPosition;
+                long additional = Math.min(copyNumberDistanceMax, Math.round(copyNumberDistancePercent * chromosomeDistance));
+                minTrackPosition = minTrackPosition - additional;
+                maxTrackPosition = maxTrackPosition + additional;
+
                 if (alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition)
                 {
 

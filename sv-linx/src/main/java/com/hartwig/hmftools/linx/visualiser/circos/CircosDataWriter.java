@@ -5,12 +5,12 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -19,6 +19,9 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
+import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
+import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
@@ -35,27 +38,28 @@ public class CircosDataWriter
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
 
-    private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
     private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
 
-    private final ColorPicker colorPicker;
     private final String filePrefix;
-    private boolean debug;
+    private final ColorPicker colorPicker;
+    private final SvCircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
     private final ProteinDomainColors proteinDomainColors;
 
-    public CircosDataWriter(final boolean debug, final ColorPicker colorPicker, @NotNull final String sample,
+    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample,
             @NotNull final String outputDir,
-            @NotNull final CircosConfigWriter configWriter, @NotNull final ProteinDomainColors proteinDomainColors)
+            @NotNull final SvCircosConfig circosConfig,
+            @NotNull final CircosConfigWriter configWriter,
+            @NotNull final ProteinDomainColors proteinDomainColors)
     {
-        this.debug = debug;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
-        this.filePrefix = outputDir + File.separator + sample;
+        this.circosConfig = circosConfig;
         this.proteinDomainColors = proteinDomainColors;
+        this.filePrefix = outputDir + File.separator + sample;
     }
 
     public void write(@NotNull final CircosData data) throws IOException
@@ -90,8 +94,8 @@ public class CircosDataWriter
         final String geneNamePath = filePrefix + ".gene.name.circos";
         Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
 
-        final String textPath = filePrefix + ".text.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(debug, data.unadjustedLinks(), links, segments));
+        final String textPath = filePrefix + ".position.circos";
+        Files.write(new File(textPath).toPath(), createPositionText(data.unadjustedLinks(), links));
 
         final String histogramPath = filePrefix + ".segment.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(segments));
@@ -121,16 +125,29 @@ public class CircosDataWriter
         Files.write(new File(line).toPath(), highlights(lineElements));
 
         final String distances = filePrefix + ".distance.circos";
-        if (alterations.size() < 200)
-        {
-            Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
-        }
-        else
-        {
-            Files.write(new File(distances).toPath(), Collections.emptySet());
-        }
+        Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
+
+        //        final String chromosomeBandPath = filePrefix + ".chromosome.circos";
+        //        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.unadjustedAlterations()));
 
     }
+
+    //    @NotNull
+    //    private List<String> chromosomeLocations(List<CopyNumberAlteration> unadjustedAlterations) {
+    //        List<String> result = Lists.newArrayList();
+    //
+    //        List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
+    //        for (GenomeRegion region : regions)
+    //        {
+    //            final String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
+    //                    .add(String.valueOf(region.start()))
+    //                    .add(String.valueOf(region.end()))
+    //                    .toString();
+    //            result.add(bandString);
+    //        }
+    //
+    //        return result;
+    //    }
 
     @NotNull
     private List<String> genes(@NotNull final Map<String, String> geneColours, @NotNull final List<Gene> genes)
@@ -207,7 +224,6 @@ public class CircosDataWriter
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(gene.name())
-                    .add("label_size=" + labelSize + "p,rpadding=0r")
                     .toString();
             result.add(exonString);
         }
@@ -254,37 +270,27 @@ public class CircosDataWriter
     private List<String> createDistances(@NotNull final List<CopyNumberAlteration> unadjustedSegment,
             @NotNull final List<CopyNumberAlteration> segments)
     {
-
-        final long labelSize;
-        if (segments.size() < 50)
-        {
-            labelSize = 30;
-        }
-        else if (segments.size() < 100)
-        {
-            labelSize = 25;
-        }
-        else
-        {
-            labelSize = 20;
-        }
-
         final List<String> result = Lists.newArrayList();
-        for (int i = 0; i < unadjustedSegment.size(); i++)
+        long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
+        if (unadjustedSegments <= circosConfig.maxDistanceLabels())
         {
-            final CopyNumberAlteration adjusted = segments.get(i);
-            final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
-            if (!adjusted.truncated())
+            for (int i = 0; i < unadjustedSegment.size(); i++)
             {
-                final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
-                        .add(String.valueOf(adjusted.start()))
-                        .add(String.valueOf(adjusted.end()))
-                        .add(shorthand(unadjusted.end() - unadjusted.start()))
-                        .add("labelSize=" + labelSize + "p")
-                        .toString();
-                result.add(distance);
+                final CopyNumberAlteration adjusted = segments.get(i);
+                final CopyNumberAlteration unadjusted = unadjustedSegment.get(i);
+                if (!adjusted.truncated())
+                {
+                    final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
+                            .add(String.valueOf(adjusted.start()))
+                            .add(String.valueOf(adjusted.end()))
+                            .add(shorthand(unadjusted.end() - unadjusted.start()))
+                            .toString();
+                    result.add(distance);
+                }
             }
+
         }
+
         return result;
     }
 
@@ -541,65 +547,39 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createPositionText(boolean debug, @NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks,
-            @NotNull final List<Segment> scaledSegments)
+    private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
 
-        final Set<String> result = Sets.newHashSet();
-
-        for (int i = 0; i < originalLinks.size(); i++)
+        if (!circosConfig.displayPosition())
         {
-
-            final Link original = originalLinks.get(i);
-            final Link scaled = scaledLinks.get(i);
-
-            if (scaled.isValidStart())
-            {
-                final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.startChromosome()))
-                        .add(String.valueOf(scaled.startPosition()))
-                        .add(String.valueOf(scaled.startPosition()))
-                        .add(String.valueOf(debug ? original.svId() : POSITION_FORMAT.format(original.startPosition())))
-                        .toString();
-
-                result.add(start);
-            }
-
-            if (scaled.isValidEnd())
-            {
-                final String start = new StringJoiner(DELIMITER).add(circosContig(scaled.endChromosome()))
-                        .add(String.valueOf(scaled.endPosition()))
-                        .add(String.valueOf(scaled.endPosition()))
-                        .add(String.valueOf(debug ? original.svId() : POSITION_FORMAT.format(original.endPosition())))
-                        .toString();
-
-                result.add(start);
-            }
+            return Collections.emptyList();
         }
 
-        for (final Segment segment : scaledSegments)
+        final Set<String> result = Sets.newHashSet();
+        final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
+        final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
+
+        for (final String contig : contigs)
         {
-            if (segment.startTerminal() != SegmentTerminal.NONE)
+            long currentPosition = 0;
+            for (final AdjustedPosition position : positions)
             {
-                final String startText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
-                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                        .add(String.valueOf(segment.start()))
-                        .add(String.valueOf(segment.start()))
-                        .add(startText)
-                        .toString();
-                result.add(start);
-            }
+                if (position.chromosome().equals(contig))
+                {
+                    long roundedPosition = position.unadjustedPosition() / 100_000;
+                    if (roundedPosition > currentPosition)
+                    {
+                        final String start = new StringJoiner(DELIMITER).add(circosContig(contig))
+                                .add(String.valueOf(position.position()))
+                                .add(String.valueOf(position.position()))
+                                .add(String.valueOf(roundedPosition / 10d + "m"))
+                                .toString();
 
-            if (segment.endTerminal() != SegmentTerminal.NONE)
-            {
-                final String endText = segment.endTerminal() == SegmentTerminal.CENTROMERE ? "Centromere" : "Telomere";
-                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                        .add(String.valueOf(segment.end()))
-                        .add(String.valueOf(segment.end()))
-                        .add(endText)
-                        .toString();
-                result.add(start);
+                        result.add(start);
+                        currentPosition = roundedPosition;
+                    }
+                }
             }
-
         }
 
         return result.stream().sorted().distinct().collect(toList());
@@ -619,7 +599,7 @@ public class CircosDataWriter
 
     static double thicknessPixels(double usage)
     {
-        return Math.max(1, 2 + 1.5 * Math.log(usage) / Math.log(2));
+        return Math.min(12, Math.max(1, Math.pow(2 * usage, 1)));
     }
 
     @NotNull
