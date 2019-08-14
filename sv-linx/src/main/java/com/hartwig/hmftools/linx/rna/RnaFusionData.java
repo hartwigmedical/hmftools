@@ -46,10 +46,10 @@ public class RnaFusionData
     private Transcript mTransDown;
 
     // canonical exon positions based on RNA positions
-    private int mExonMinRankUp;
-    private int mExonMaxRankUp;
-    private int mExonMinRankDown;
-    private int mExonMaxRankDown;
+    private int mExonRankUp;
+    private int mExonPhaseUp;
+    private int mExonRankDown;
+    private int mExonPhaseDown;
 
     // transcripts matching RNA positions if in a phased fusion
     private String mRnaTransNameUp;
@@ -90,10 +90,10 @@ public class RnaFusionData
         SpliceType = spliceType;
 
         mIsValid = true;
-        mExonMinRankUp = 0;
-        mExonMaxRankUp = 0;
-        mExonMinRankDown = 0;
-        mExonMaxRankDown = 0;
+        mExonRankUp = 0;
+        mExonPhaseUp = 0;
+        mExonRankDown = 0;
+        mExonPhaseDown = 0;
 
         mExonMatchedTransIdDown = Lists.newArrayList();
         mExonMatchedTransIdUp = Lists.newArrayList();
@@ -134,17 +134,17 @@ public class RnaFusionData
             mGeneIdDown = geneId;
     }
 
-    public void setExonRank(boolean isUpstream, int min, int max)
+    public void setExonData(boolean isUpstream, int rank, int phase)
     {
         if(isUpstream)
         {
-            mExonMaxRankUp = max;
-            mExonMinRankUp = min;
+            mExonPhaseUp = phase;
+            mExonRankUp = rank;
         }
         else
         {
-            mExonMaxRankDown = max;
-            mExonMinRankDown = min;
+            mExonPhaseDown = phase;
+            mExonRankDown = rank;
         }
     }
 
@@ -153,10 +153,8 @@ public class RnaFusionData
         return isUpstream ? mExonMatchedTransIdUp : mExonMatchedTransIdDown;
     }
 
-    public int exonMinRankUp() { return mExonMinRankUp; }
-    public int exonMaxRankUp() {return mExonMaxRankUp; }
-    public int exonMinRankDown() { return mExonMinRankDown; }
-    public int exonMaxRankDown() { return mExonMaxRankDown; }
+    public int exonRank(boolean isUpstream) { return isUpstream ? mExonRankUp : mExonRankDown; }
+    public int exonPhase(boolean isUpstream) {return isUpstream ? mExonPhaseUp : mExonPhaseDown; }
 
     public void setRnaPhasedFusionData(final String transNameUp, final String transNameDown)
     {
