@@ -215,8 +215,7 @@ public class SimpleClustering
     {
         long breakendDistance = getProximity(var1, var2);
 
-        boolean clonalDiscrepancy = hasLowCNChangeSupport(var1) != hasLowCNChangeSupport(var2)
-                && !ploidyMatch(var1.ploidy(), var1.ploidyUncertainty(), var2.ploidy(), var2.ploidyUncertainty());
+        boolean clonalDiscrepancy = hasLowCNChangeSupport(var1) != hasLowCNChangeSupport(var2) && !ploidyMatch(var1, var2);
 
         // [0-9][0-9]:[0-9][0-9]:[0-9][0-9] - \[INFO \] - CLUSTERING:
         // SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2,Reason,MinDistance,ClonalDiscrepancy

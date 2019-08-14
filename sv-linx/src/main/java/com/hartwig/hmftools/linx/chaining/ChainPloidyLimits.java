@@ -18,6 +18,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -373,7 +374,6 @@ public class ChainPloidyLimits
         double adjUncertainty = uncertInvSqrd1 * pow(max(data1.PloidyEstimate - estPloidy, data1.PloidyUncertainty/2),2);
         adjUncertainty += uncertInvSqrd2 * pow(max(data2.PloidyEstimate - estPloidy, data2.PloidyUncertainty/2),2);
 
-
         double estUncertainty = sqrt(2 * adjUncertainty / sumUncertainty);
 
         return new PloidyCalcData(estPloidy, estUncertainty, true);
@@ -385,6 +385,16 @@ public class ChainPloidyLimits
     {
         return copyNumbersEqual(ploidyLower * 2, ploidy)
             || ploidyOverlap(ploidyLower * 2, uncertaintyLower * UNCERTAINTY_SCALE_FACTOR, ploidy, uncertainty);
+    }
+
+    public static boolean ploidyMatch(final SvVarData var1, final SvVarData var2)
+    {
+        return ploidyMatch(var1.ploidy(), var1.ploidyUncertainty(), var2.ploidy(), var2.ploidyUncertainty());
+    }
+
+    public static boolean ploidyMatch(final SvBreakend breakend1, final SvBreakend breakend2)
+    {
+        return ploidyMatch(breakend1.ploidy(), breakend1.ploidyUncertainty(), breakend2.ploidy(), breakend2.ploidyUncertainty());
     }
 
     public static boolean ploidyMatch(double ploidy1, double uncertainty1, double ploidy2, double uncertainty2)

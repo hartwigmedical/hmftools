@@ -395,7 +395,7 @@ public class SvClassification
             return NONE;
 
         // check copy number consistency
-        if(!ploidyMatch(sgl1.ploidy(), sgl1.ploidyUncertainty(), sgl2.ploidy(), sgl2.ploidyUncertainty()))
+        if(!ploidyMatch(sgl1, sgl2))
             return NONE;
 
         boolean breakendsFace = (breakend1.position() < breakend2.position() && breakend1.orientation() == -1)

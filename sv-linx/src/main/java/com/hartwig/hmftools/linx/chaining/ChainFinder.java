@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowPloidyThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatchForSplits;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -646,7 +647,7 @@ public class ChainFinder
         if(var.ploidy() > otherSV.ploidy() || var.ploidyMin() * 2 > otherSV.ploidyMax())
             return;
 
-        if(!ploidyMatch(var.ploidy() * 2, var.ploidyUncertainty(), otherSV.ploidy(), otherSV.ploidyUncertainty()))
+        if(!ploidyMatchForSplits(var.ploidy(), var.ploidyUncertainty(), otherSV.ploidy(), otherSV.ploidyUncertainty()))
             return;
 
         // check whether the other breakend satisfies the same ploidy comparison criteria
@@ -677,7 +678,7 @@ public class ChainFinder
 
             SvVarData otherSV2 = breakend.getSV();
 
-            if(!ploidyMatch(var.ploidy() * 2, var.ploidyUncertainty(), otherSV2.ploidy(), otherSV2.ploidyUncertainty()))
+            if(!ploidyMatchForSplits(var.ploidy(), var.ploidyUncertainty(), otherSV2.ploidy(), otherSV2.ploidyUncertainty()))
                 return;
 
             List<SvLinkedPair> links = Lists.newArrayList(SvLinkedPair.from(lowerPloidyBreakend, higherPloidyBreakend),

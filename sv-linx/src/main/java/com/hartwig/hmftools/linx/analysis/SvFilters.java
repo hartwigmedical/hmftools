@@ -122,8 +122,7 @@ public class SvFilters
                 }
 
                 if(var.type() == INF && nextVar.type() == INF && breakend.orientation() != nextBreakend.orientation()
-                && ploidyMatch(var.ploidy(), var.ploidyUncertainty(), nextVar.ploidy(), nextVar.ploidyUncertainty())
-                && !mExcludedSVs.containsKey(var) && !mExcludedSVs.containsKey(nextVar))
+                && ploidyMatch(var, nextVar) && !mExcludedSVs.containsKey(var) && !mExcludedSVs.containsKey(nextVar))
                 {
                     LOGGER.trace("SV({} & {}) filtered pair of ploidy-match INFs", var.id(), nextVar.id());
                     removalList.add(breakend);

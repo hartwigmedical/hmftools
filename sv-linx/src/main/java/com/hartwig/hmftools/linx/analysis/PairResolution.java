@@ -183,7 +183,7 @@ public class PairResolution
             endBe1 = var1.getBreakend(false);
             startBe2 = var2.getBreakend(true);
             endBe2 = var2.getBreakend(false);
-            uniformPloidy = ploidyMatch(var1.ploidy(), var1.ploidyUncertainty(), var2.ploidy(), var2.ploidyUncertainty());
+            uniformPloidy = ploidyMatch(var1, var2);
         }
         else if(cluster.isFullyChained(false) && clusterChains.size() == 2)
         {

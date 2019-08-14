@@ -188,6 +188,11 @@ public class CnPloidyCalcs
         }
         else
         {
+            // A = countObservations/(countObservations-1)
+            // B = SUM[(1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedPloidy,Uncertainty(i)/2))^2]
+            // K = SUM(1/Uncertainty(i)^2)
+            // net uncertainty = SQRT(A * B / K)
+
             double sumUncertainty = 0;
             double sumObservedUncertainty = 0;
 
@@ -210,9 +215,6 @@ public class CnPloidyCalcs
                 adjUncertainty += relativeUncertainty;
             }
 
-            // consolidatedUncertainty = SQRT(countObservations/(countObervations-1) * SUM[(1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedPloidy,Uncertainty(i)/2))^2]
-            // / Sum[1/Uncertainty(i)^2] )
-
             estUncertainty = sqrt(observations.size() / (double)(observations.size() - 1) * adjUncertainty / sumUncertainty);
         }
 
@@ -224,9 +226,7 @@ public class CnPloidyCalcs
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
     {
-        int minDepthCount = min(depthData[0], depthData[1]);
-
-        minDepthCount = max(minDepthCount, 1);
+        double minDepthCount = max(min(depthData[0], depthData[1]), 0.1);
 
         // MAX(copyNumber*relUncertainty,absUncertainty)+MAX(addAbsUncertainty,addRelUncertainty*copyNumber)/SQRT(MAX(minDepthCount,1))
         double uncertainty = max(copyNumber*RELATIVE_UNCERTAINTY, ABS_UNCERTAINTY);

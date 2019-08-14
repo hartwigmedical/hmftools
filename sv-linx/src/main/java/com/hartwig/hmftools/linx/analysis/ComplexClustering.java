@@ -353,7 +353,7 @@ public class ComplexClustering
                             }
                         }
 
-                        if(!ploidyMatch(lowerBreakend.ploidy(), lowerBreakend.ploidyUncertainty(), upperBreakend.ploidy(), upperBreakend.ploidyUncertainty()))
+                        if(!ploidyMatch(lowerBreakend, upperBreakend))
                             continue;
                     }
 
