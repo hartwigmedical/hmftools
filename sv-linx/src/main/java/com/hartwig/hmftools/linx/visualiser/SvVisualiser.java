@@ -235,7 +235,7 @@ public class SvVisualiser implements AutoCloseable
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
         final List<CopyNumberAlteration> alterations =
-                CopyNumberAlterations.copyNumbers(0.1, 1000, config.copyNumberAlterations(), Span.span(positionsToCover));
+                CopyNumberAlterations.copyNumbers(config.copyNumberAlterations(), Span.span(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
