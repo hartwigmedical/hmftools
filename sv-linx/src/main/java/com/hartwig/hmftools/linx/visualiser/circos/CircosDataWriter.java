@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -549,11 +548,6 @@ public class CircosDataWriter
     @NotNull
     private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
-
-        if (!circosConfig.displayPosition())
-        {
-            return Collections.emptyList();
-        }
 
         final Set<String> result = Sets.newHashSet();
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);

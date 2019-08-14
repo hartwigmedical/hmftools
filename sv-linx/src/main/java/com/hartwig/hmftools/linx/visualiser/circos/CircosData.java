@@ -49,8 +49,7 @@ public class CircosData
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
 
-    public CircosData(boolean scaleExons,
-            @NotNull final List<Segment> unadjustedSegments,
+    public CircosData(@NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons,
@@ -79,15 +78,8 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
         unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
-        if (scaleExons)
-        {
-            unadjustedPositions.addAll(Span.allPositions(unadjustedGeneProteinDomains));
-            unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
-        }
-        else
-        {
-            unadjustedPositions.addAll(Span.allPositions(Exons.geneSpanPerChromosome(unadjustedGeneExons)));
-        }
+        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneProteinDomains));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         final List<GenomePosition> scaledPositions = scalePosition.scaled();

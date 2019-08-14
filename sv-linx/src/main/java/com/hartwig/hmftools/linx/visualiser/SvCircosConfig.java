@@ -68,7 +68,7 @@ public interface SvCircosConfig
     {
         if (count > maxDistanceLabels())
         {
-            return 0;
+            return minLabelSize();
         }
 
         return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minLabelSize()) / maxDistanceLabels());
