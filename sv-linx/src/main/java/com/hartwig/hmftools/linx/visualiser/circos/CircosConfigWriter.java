@@ -161,6 +161,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
+                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(copyNumberMiddleRadius + 3d/4d * (copyNumberOuterRadius - copyNumberMiddleRadius)))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))

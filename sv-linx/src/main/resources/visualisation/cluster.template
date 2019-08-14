@@ -203,7 +203,7 @@ chromosomes_display_default = yes
 		<axes>
 			<axis>
 				color     = copy_gain_l
-				thickness = 1
+				thickness = 3
 				position  = SUBSTITUTE_CNA_GAIN_AXIS_POSITION
 			</axis>
 		</axes>
@@ -215,6 +215,23 @@ chromosomes_display_default = yes
 		</backgrounds>
 
 	</plot>
+
+	# -----------------------------------------------------------
+	# Distances Text
+	<plot>
+		type             = text
+		color            = black
+		file             = SUBSTITUTE_SAMPLE.distance.circos
+		r0               = SUBSTITUTE_CNA_DISTANCE_RADIUSr
+		r1               = 1r
+		show_links       = no
+		label_size       = 30p
+		label_font       = condensed
+		label_snuggle    = no
+		padding          = 0p
+		rpadding         = 0p
+	</plot>
+
 
 
 	# -----------------------------------------------------------
@@ -232,7 +249,7 @@ chromosomes_display_default = yes
 		<axes>
 			<axis>
 				color     = copy_loss_l
-				thickness = 1
+				thickness = 3
 				position   = 0.5r
 			</axis>
 		</axes>
@@ -326,27 +343,6 @@ chromosomes_display_default = yes
 			</rule>
 		</rules>
 	</plot>
-
-	# -----------------------------------------------------------
-	# Distances Text
-	<plot>
-		type             = text
-		color            = black
-		file             = SUBSTITUTE_SAMPLE.distance.circos
-
-		r0   = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1   = 1r
-
-		show_links     = no
-
-		label_size   = 30p
-		label_font   = condensed
-		label_snuggle=yes
-
-		padding  = 0p
-		rpadding = 15p
-	</plot>
-
 
 
 	# -----------------------------------------------------------
