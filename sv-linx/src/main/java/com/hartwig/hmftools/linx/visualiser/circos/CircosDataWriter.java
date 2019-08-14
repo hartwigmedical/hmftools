@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,26 +38,23 @@ public class CircosDataWriter
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
 
-    private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
     private static final int MIN_KAROTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
 
-    private boolean debug;
     private final String filePrefix;
     private final ColorPicker colorPicker;
     private final SvCircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
     private final ProteinDomainColors proteinDomainColors;
 
-    public CircosDataWriter(final boolean debug, final ColorPicker colorPicker, @NotNull final String sample,
+    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample,
             @NotNull final String outputDir,
             @NotNull final SvCircosConfig circosConfig,
             @NotNull final CircosConfigWriter configWriter,
             @NotNull final ProteinDomainColors proteinDomainColors)
     {
-        this.debug = debug;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
@@ -99,7 +95,7 @@ public class CircosDataWriter
         Files.write(new File(geneNamePath).toPath(), geneName(data.genes()));
 
         final String textPath = filePrefix + ".position.circos";
-        Files.write(new File(textPath).toPath(), createPositionText(data.unadjustedLinks(), links, segments));
+        Files.write(new File(textPath).toPath(), createPositionText(data.unadjustedLinks(), links));
 
         final String histogramPath = filePrefix + ".segment.circos";
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(segments));
@@ -554,8 +550,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks,
-            @NotNull final List<Segment> scaledSegments)
+    private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
 
         if (!circosConfig.displayPosition())
@@ -590,32 +585,6 @@ public class CircosDataWriter
             }
         }
 
-//        for (final Segment segment : scaledSegments)
-//        {
-//            if (segment.startTerminal() != SegmentTerminal.NONE)
-//            {
-//                final String startText = segment.startTerminal() == SegmentTerminal.CENTROMERE ? "C" : "T";
-//                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-//                        .add(String.valueOf(segment.start()))
-//                        .add(String.valueOf(segment.start()))
-//                        .add(startText)
-//                        .toString();
-//                result.add(start);
-//            }
-//
-//            if (segment.endTerminal() != SegmentTerminal.NONE)
-//            {
-//                final String endText = segment.endTerminal() == SegmentTerminal.CENTROMERE ? "C" : "T";
-//                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-//                        .add(String.valueOf(segment.end()))
-//                        .add(String.valueOf(segment.end()))
-//                        .add(endText)
-//                        .toString();
-//                result.add(start);
-//            }
-//
-//        }
-
         return result.stream().sorted().distinct().collect(toList());
     }
 
@@ -628,12 +597,13 @@ public class CircosDataWriter
     @NotNull
     private static String thicknessString(double usage)
     {
+
         return "thickness=" + thicknessPixels(usage);
     }
 
     static double thicknessPixels(double usage)
     {
-        return Math.max(1, 2 + 1.5 * Math.log(usage) / Math.log(2));
+        return Math.min(12, Math.max(1, Math.pow(2 * usage, 1)));
     }
 
     @NotNull

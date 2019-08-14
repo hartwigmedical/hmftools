@@ -235,7 +235,7 @@ public class SvVisualiser implements AutoCloseable
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
         final List<CopyNumberAlteration> alterations =
-                CopyNumberAlterations.copyNumbers(1000, config.copyNumberAlterations(), Span.span(positionsToCover));
+                CopyNumberAlterations.copyNumbers(0.1, 1000, config.copyNumberAlterations(), Span.span(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
@@ -250,7 +250,7 @@ public class SvVisualiser implements AutoCloseable
         confWrite.writeCytobands();
 
         final ProteinDomainColors proteinDomainColors = new ProteinDomainColors(filteredProteinDomains);
-        new CircosDataWriter(config.debug(), color, sample, config.outputConfPath(), circosConfig, confWrite, proteinDomainColors).write(circosData);
+        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, proteinDomainColors).write(circosData);
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
