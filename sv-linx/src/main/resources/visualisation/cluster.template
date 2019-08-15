@@ -55,32 +55,6 @@ show_tick_labels    = no
     </highlight>
 
     <highlight>
-        z          = 1
-        file       = SUBSTITUTE_SAMPLE.protein_domain.circos
-        r0         = SUBSTITUTE_GENE_INNER_RADIUSr
-        r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
-        stroke_thickness = 0
-
-        <rules>
-            <rule>
-                condition = true
-                color = white
-                fill_color = white
-            </rule>
-        </rules>
-    </highlight>
-
-
-    <highlight>
-        z          = 2
-        file       = SUBSTITUTE_SAMPLE.protein_domain.circos
-        r0         = SUBSTITUTE_GENE_INNER_RADIUSr
-        r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
-        color      = black
-        stroke_thickness = 1
-    </highlight>
-
-    <highlight>
 		file = SUBSTITUTE_SAMPLE.segment.circos
         <rules>
             <rule>
@@ -89,8 +63,6 @@ show_tick_labels    = no
             </rule>
         </rules>
     </highlight>
-
-
 
 </highlights>
 
@@ -129,13 +101,13 @@ chromosomes_display_default = yes
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
 
-		r0               = SUBSTITUTE_EXON_INNER_RADIUSr
+		r0               = SUBSTITUTE_GENE_INNER_RADIUSr
 		r1               = 1r
 
 		show_links   = no
 		label_size   = SUBSTITUTE_LABEL_SIZEp
 		label_font   = condensed
-		label_snuggle= yes
+		label_snuggle= no
 
 		padding  = 0p
 		rpadding = 5p

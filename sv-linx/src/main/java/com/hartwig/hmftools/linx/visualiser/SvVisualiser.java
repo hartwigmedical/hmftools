@@ -27,7 +27,6 @@ import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionDataWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
-import com.hartwig.hmftools.linx.visualiser.circos.ProteinDomainColors;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
@@ -58,6 +57,8 @@ public class SvVisualiser implements AutoCloseable
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException
     {
         final Options options = SvVisualiserConfig.createOptions();
+        SvCircosConfig.addOptions(options);
+
         try (final SvVisualiser application = new SvVisualiser(options, args))
         {
             application.run();
@@ -236,7 +237,7 @@ public class SvVisualiser implements AutoCloseable
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
         final List<CopyNumberAlteration> alterations =
-                CopyNumberAlterations.copyNumbers(0.1, 1000, config.copyNumberAlterations(), Span.span(positionsToCover));
+                CopyNumberAlterations.copyNumbers(config.copyNumberAlterations(), Span.span(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
@@ -244,14 +245,12 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData =
-                new CircosData(config.scaleExons(), segments, links, alterations, filteredExons, filteredProteinDomains, filteredFusions);
+        final CircosData circosData = new CircosData(segments, links, alterations, filteredExons, filteredProteinDomains, filteredFusions);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
         confWrite.writeConfig();
         confWrite.writeCytobands();
 
-        final ProteinDomainColors proteinDomainColors = new ProteinDomainColors(filteredProteinDomains);
-        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, proteinDomainColors).write(circosData);
+        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite).write(circosData);
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
@@ -259,8 +258,7 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
-        final FusionDataWriter fusionDataWriter =
-                new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains, proteinDomainColors);
+        final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
         if (!fusionDataWriter.finalExons().isEmpty())
         {
             fusionDataWriter.write(sample, config.outputConfPath());

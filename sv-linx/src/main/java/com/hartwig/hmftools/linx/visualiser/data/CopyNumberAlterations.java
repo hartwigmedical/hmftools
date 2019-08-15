@@ -13,11 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberAlterations
 {
+    private static final int MAX_EXTRA_DISTANCE = 1000;
+    private static final double MIN_EXTRA_DISTANCE_PERCENT = 0.1;
 
     // From DB: select sampleId, chromosome, start, end, copyNumber, baf from copyNumber where sampleId = 'xxxxx';
 
     @NotNull
-    public static List<CopyNumberAlteration> copyNumbers(double copyNumberDistancePercent, long copyNumberDistanceMax, @NotNull final List<CopyNumberAlteration> alterations,  @NotNull final List<GenomeRegion> span)
+    public static List<CopyNumberAlteration> copyNumbers(@NotNull final List<CopyNumberAlteration> alterations,
+            @NotNull final List<GenomeRegion> span)
     {
         final List<CopyNumberAlteration> result = Lists.newArrayList();
 
@@ -32,13 +35,12 @@ public class CopyNumberAlterations
                 long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0);
                 long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0);
                 long chromosomeDistance = maxTrackPosition - minTrackPosition;
-                long additional = Math.min(copyNumberDistanceMax, Math.round(copyNumberDistancePercent * chromosomeDistance));
+                long additional = Math.max(1, Math.min(MAX_EXTRA_DISTANCE, Math.round(MIN_EXTRA_DISTANCE_PERCENT * chromosomeDistance)));
                 minTrackPosition = minTrackPosition - additional;
                 maxTrackPosition = maxTrackPosition + additional;
 
                 if (alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition)
                 {
-
                     boolean isStartDecreasing = i > 0 && lessThan(alteration, alterations.get(i - 1));
                     long startPosition = isStartDecreasing ? alteration.start() - 1 : alteration.start();
 

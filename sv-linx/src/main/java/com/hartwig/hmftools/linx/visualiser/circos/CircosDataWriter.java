@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,13 +27,13 @@ import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
+    private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
@@ -47,18 +47,15 @@ public class CircosDataWriter
     private final ColorPicker colorPicker;
     private final SvCircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
-    private final ProteinDomainColors proteinDomainColors;
 
     public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample,
             @NotNull final String outputDir,
             @NotNull final SvCircosConfig circosConfig,
-            @NotNull final CircosConfigWriter configWriter,
-            @NotNull final ProteinDomainColors proteinDomainColors)
+            @NotNull final CircosConfigWriter configWriter)
     {
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
-        this.proteinDomainColors = proteinDomainColors;
         this.filePrefix = outputDir + File.separator + sample;
     }
 
@@ -78,9 +75,6 @@ public class CircosDataWriter
         final List<GenomeRegion> fragileSites = data.fragileSites();
         final List<GenomeRegion> lineElements = data.lineElements();
         final List<Exon> exons = data.exons();
-
-        final String proteinDomainPath = filePrefix + ".protein_domain.circos";
-        Files.write(new File(proteinDomainPath).toPath(), proteinDomain(data.proteinDomains()));
 
         final String exonPath = filePrefix + ".exon.circos";
         Files.write(new File(exonPath).toPath(), exons(geneColorMap, exons));
@@ -160,27 +154,6 @@ public class CircosDataWriter
                     .add(String.valueOf(gene.end()))
                     .add(String.valueOf(1))
                     .add("fill_color=" + geneColours.get(gene.name()))
-                    .toString();
-            result.add(exonString);
-
-        }
-
-        return result;
-    }
-
-    @NotNull
-    private List<String> proteinDomain(@NotNull final List<ProteinDomain> proteinDomains)
-    {
-        final List<String> result = Lists.newArrayList();
-        for (final ProteinDomain proteinDomain : proteinDomains)
-        {
-            final String color = proteinDomainColors.rgb(proteinDomain.name());
-
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(proteinDomain.chromosome()))
-                    .add(String.valueOf(proteinDomain.start()))
-                    .add(String.valueOf(proteinDomain.end()))
-                    .add(String.valueOf(1))
-                    .add("fill_color=" + color + ",name=" + proteinDomain.name().replace(' ', '.'))
                     .toString();
             result.add(exonString);
 
@@ -549,12 +522,6 @@ public class CircosDataWriter
     @NotNull
     private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
-
-        if (!circosConfig.displayPosition())
-        {
-            return Collections.emptyList();
-        }
-
         final Set<String> result = Sets.newHashSet();
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
@@ -562,21 +529,27 @@ public class CircosDataWriter
         for (final String contig : contigs)
         {
             long currentPosition = 0;
-            for (final AdjustedPosition position : positions)
+            for (final AdjustedPosition adjustedPosition : positions)
             {
-                if (position.chromosome().equals(contig))
+                if (adjustedPosition.chromosome().equals(contig))
                 {
-                    long roundedPosition = position.unadjustedPosition() / 100_000;
-                    if (roundedPosition > currentPosition)
+                    long position = circosConfig.exactPosition()
+                            ? adjustedPosition.unadjustedPosition()
+                            : adjustedPosition.unadjustedPosition() / 100_000;
+
+                    if (position > currentPosition)
                     {
+                        final String positionLabel =
+                                circosConfig.exactPosition() ? POSITION_FORMAT.format(position) : String.valueOf(position / 10d + "m");
+
                         final String start = new StringJoiner(DELIMITER).add(circosContig(contig))
-                                .add(String.valueOf(position.position()))
-                                .add(String.valueOf(position.position()))
-                                .add(String.valueOf(roundedPosition / 10d + "m"))
+                                .add(String.valueOf(adjustedPosition.position()))
+                                .add(String.valueOf(adjustedPosition.position()))
+                                .add(positionLabel)
                                 .toString();
 
                         result.add(start);
-                        currentPosition = roundedPosition;
+                        currentPosition = position;
                     }
                 }
             }

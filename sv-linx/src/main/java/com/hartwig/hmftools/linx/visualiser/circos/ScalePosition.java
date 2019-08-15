@@ -36,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 
 class ScalePosition
 {
+    private static final double MIN_CONTIG_PERCENTAGE = 0.01;
 
     private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
 
@@ -48,6 +49,7 @@ class ScalePosition
 
     private ScalePosition(final int start, @NotNull final List<? extends GenomePosition> positions)
     {
+        long totalScaledPosition = 0;
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs)
         {
@@ -55,7 +57,30 @@ class ScalePosition
                     .filter(x -> x.chromosome().equals(contig))
                     .map(GenomePosition::position)
                     .collect(Collectors.toList());
-            chromosomePositionMap.put(contig, positionMap(start, contigPositions));
+
+            final Map<Long, Integer> contigPositionMap = positionMap(start, contigPositions);
+            totalScaledPosition += contigPositionMap.values().stream().mapToLong(x -> x).max().orElse(0);
+
+            chromosomePositionMap.put(contig, contigPositionMap);
+        }
+
+        // Linear interpolate scaled positions if chromosome does not meet minimum size of 1% of total
+        long minContigDistance = Math.round(MIN_CONTIG_PERCENTAGE * totalScaledPosition);
+        for (final String contig : contigs)
+        {
+            final Map<Long, Integer> contigPositionMap = chromosomePositionMap.get(contig);
+            long contigDistance = contigPositionMap.values().stream().mapToLong(x -> x).max().orElse(0);
+            if (contigDistance < minContigDistance)
+            {
+                double factor = minContigDistance / contigDistance;
+                for (Map.Entry<Long, Integer> entry : contigPositionMap.entrySet())
+                {
+                    if (entry.getValue() > 1)
+                    {
+                        entry.setValue((int) Math.round(factor * entry.getValue()));
+                    }
+                }
+            }
         }
     }
 
@@ -210,10 +235,10 @@ class ScalePosition
     }
 
     @NotNull
-    private static Map<Long, Integer> positionMap(int start, @NotNull final List<Long> positions)
+    private static Map<Long, Integer> positionMap(int start, @NotNull final List<Long> contigPositions)
     {
         final Map<Long, Integer> results = Maps.newHashMap();
-        final List<Long> sortedDistinctPositions = positions.stream().sorted().distinct().collect(Collectors.toList());
+        final List<Long> sortedDistinctPositions = contigPositions.stream().sorted().distinct().collect(Collectors.toList());
 
         if (!sortedDistinctPositions.isEmpty())
         {
