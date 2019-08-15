@@ -18,22 +18,39 @@ public interface SvCircosConfig
     String DISPLAY_POSITION = "displayPosition";
     String GENE_RELATIVE_SIZE = "gene_relative_size";
     String CNA_RELATIVE_SIZE = "cna_relative_size";
+    String SEGMENT_RELATIVE_SIZE = "segment_relative_size";
 
     String MIN_LABEL_SIZE = "min_label_size";
     String MAX_LABEL_SIZE = "max_label_size";
-    String IDEOGRAM_RADIUS = "ideogram_radius";
+    String OUTER_RADIUS = "outer_radius";
+    String INNER_RADIUS = "inner_radius";
     String EXACT_POSITION = "exact_position";
 
     double DEFAULT_GENE_RELATIVE_SIZE = 0.3;
     double DEFAULT_SEGMENT_RELATIVE_SIZE = 1;
     double DEFAULT_CNA_RELATIVE_SIZE = 2;
 
-    double DEFAULT_IDEOGRAM_RADIUS = 0.88;
-    double DEFAULT_INNER_RADIUS = 0.2;
+    double DEFAULT_OUTER_RADIUS = 0.88;
+    double DEFAULT_INNER_RADIUS = 0.20;
     double DEFAULT_GAP_RADIUS = 0.025;
 
     int DEFAULT_MIN_LABEL_SIZE = 35;
     int DEFAULT_MAX_LABEL_SIZE = 40;
+
+    static void addOptions(@NotNull Options options)
+    {
+        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
+
+        options.addOption(GENE_RELATIVE_SIZE, true, "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
+        options.addOption(SEGMENT_RELATIVE_SIZE, true, "Size of segment track relative to copy number alterations and genes[" + DEFAULT_SEGMENT_RELATIVE_SIZE + "]");
+        options.addOption(CNA_RELATIVE_SIZE, true, "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
+
+        options.addOption(OUTER_RADIUS, true, "Set outer radius [" + DEFAULT_OUTER_RADIUS + "]");
+        options.addOption(INNER_RADIUS, true, "Set inner radius [" + DEFAULT_INNER_RADIUS + "]");
+
+        options.addOption(MIN_LABEL_SIZE, true, "Minimum label size [" + DEFAULT_MIN_LABEL_SIZE + "]");
+        options.addOption(MAX_LABEL_SIZE, true, "Maximum label size [" + DEFAULT_MAX_LABEL_SIZE + "]");
+    }
 
     boolean exactPosition();
 
@@ -43,17 +60,14 @@ public interface SvCircosConfig
 
     double copyNumberRelativeSize();
 
-    double ideogramRadius();
+    double outerRadius();
 
     default double gapRadius()
     {
         return DEFAULT_GAP_RADIUS;
     }
 
-    default double innerRadius()
-    {
-        return DEFAULT_INNER_RADIUS;
-    }
+    double innerRadius();
 
     int minLabelSize();
 
@@ -74,14 +88,6 @@ public interface SvCircosConfig
         return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minLabelSize()) / maxDistanceLabels());
     }
 
-    static void addOptions(@NotNull Options options)
-    {
-        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
-        options.addOption(IDEOGRAM_RADIUS, true, "Set ideogram radius [" + DEFAULT_IDEOGRAM_RADIUS + "]");
-        options.addOption(MIN_LABEL_SIZE, true, "Set ideogram radius [" + DEFAULT_MIN_LABEL_SIZE + "]");
-        options.addOption(MAX_LABEL_SIZE, true, "Set ideogram radius [" + DEFAULT_MAX_LABEL_SIZE + "]");
-    }
-
     @NotNull
     static SvCircosConfig createConfig(@NotNull final CommandLine cmd) throws ParseException
     {
@@ -99,10 +105,11 @@ public interface SvCircosConfig
 
         return ImmutableSvCircosConfig.builder()
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
-                .ideogramRadius(defaultValue(cmd, IDEOGRAM_RADIUS, DEFAULT_IDEOGRAM_RADIUS))
-                .geneRelativeSize(DEFAULT_GENE_RELATIVE_SIZE)
-                .segmentRelativeSize(DEFAULT_SEGMENT_RELATIVE_SIZE)
-                .copyNumberRelativeSize(DEFAULT_CNA_RELATIVE_SIZE)
+                .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
+                .innerRadius(defaultValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
+                .geneRelativeSize(defaultValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
+                .segmentRelativeSize(defaultValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
+                .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
                 .minLabelSize(minLabelSize)
                 .maxLabelSize(maxLabelSize)
                 .build();

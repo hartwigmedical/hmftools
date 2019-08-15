@@ -148,7 +148,7 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.ideogramRadius()))
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.outerRadius()))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(exonInnerRadius))
