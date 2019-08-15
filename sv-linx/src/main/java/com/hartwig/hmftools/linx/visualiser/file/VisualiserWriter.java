@@ -203,10 +203,8 @@ public class VisualiserWriter
                 if(isFilteredResolvedType(cluster.getResolvedType()))
                     continue;
 
-                if(isSimpleSingleSV(cluster))
-                    continue;
-
                 // BNDs, INVs and SGLs will have lines showing their orientation
+                // simple SVs will show connectors when plotting a single cluster
             }
 
             // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains

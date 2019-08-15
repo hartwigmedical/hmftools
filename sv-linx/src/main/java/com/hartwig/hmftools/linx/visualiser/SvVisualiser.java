@@ -165,8 +165,8 @@ public class SvVisualiser implements AutoCloseable
         final List<ProteinDomain> chromosomeProteinDomains =
                 config.proteinDomain().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains, Collections
-                .emptyList());
+        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
+                Collections.emptyList(), false);
     }
 
     @Nullable
@@ -216,7 +216,7 @@ public class SvVisualiser implements AutoCloseable
         final List<Fusion> clusterFusions = config.fusions().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
 
         return runFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
-                sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions);
+                sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
@@ -224,7 +224,8 @@ public class SvVisualiser implements AutoCloseable
             @NotNull final List<Segment> filteredSegments,
             @NotNull final List<Exon> filteredExons,
             @NotNull final List<ProteinDomain> filteredProteinDomains,
-            @NotNull final List<Fusion> filteredFusions)
+            @NotNull final List<Fusion> filteredFusions,
+            boolean extendSimpleSVs)
             throws IOException, InterruptedException
     {
 
@@ -239,7 +240,7 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover);
+        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, extendSimpleSVs);
 
         final ColorPicker color = colorPickerFactory.create(links);
 

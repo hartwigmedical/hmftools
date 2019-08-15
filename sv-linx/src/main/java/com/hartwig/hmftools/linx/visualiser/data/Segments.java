@@ -72,7 +72,7 @@ public class Segments
 
     @NotNull
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions)
+            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions, boolean extendSimpleSVs)
     {
         final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
@@ -109,7 +109,7 @@ public class Segments
             result.add(segment);
         }
 
-        return incrementOnChromosome(addCentromeres(result), links);
+        return incrementOnChromosome(addCentromeres(result), links, extendSimpleSVs);
     }
 
     @NotNull
@@ -200,49 +200,14 @@ public class Segments
     }
 
     @NotNull
-    private static List<Segment> incrementOnChromosome3(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    private static List<Segment> incrementOnChromosome(
+            @NotNull final List<Segment> segments, @NotNull final List<Link> links, boolean extendSimpleSVs)
     {
 
         final Set<Integer> clustersWithoutSegments =
-                links.stream().filter(Link::connectorsOnly).map(Link::clusterId).collect(Collectors.toSet());
-
-        final Map<String, Integer> trackMap = Maps.newHashMap();
-        final List<Segment> result = Lists.newArrayList();
-
-        int currentTrack = 1;
-        for (final Segment segment : segments)
-        {
-            if (segment.clusterId() == -1)
-            {
-                result.add(ImmutableSegment.builder().from(segment).track(0).build());
-            }
-            else if (!clustersWithoutSegments.contains(segment.clusterId()))
-            {
-                final String chromosome = segment.chromosome();
-                if (!trackMap.containsKey(chromosome))
-                {
-                    trackMap.put(chromosome, currentTrack);
-                }
-                else
-                {
-                    currentTrack = Math.max(currentTrack, trackMap.get(chromosome) + 1);
-                    trackMap.put(chromosome, currentTrack);
-                }
-
-                result.add(ImmutableSegment.builder().from(segment).track(currentTrack).build());
-            }
-        }
-
-        return result;
-
-    }
-
-    @NotNull
-    private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
-    {
-
-        final Set<Integer> clustersWithoutSegments =
-                links.stream().filter(Link::connectorsOnly).map(Link::clusterId).collect(Collectors.toSet());
+                links.stream()
+                        .filter(x -> (x.connectorsOnly() && !extendSimpleSVs))
+                        .map(Link::clusterId).collect(Collectors.toSet());
 
         final Map<String, Integer> trackMap = Maps.newHashMap();
         final List<Segment> result = Lists.newArrayList();
