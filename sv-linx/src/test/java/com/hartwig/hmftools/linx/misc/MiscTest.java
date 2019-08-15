@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.misc;
 
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createIns;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createIns;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;

@@ -9,14 +9,13 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DUPS;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;

@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 

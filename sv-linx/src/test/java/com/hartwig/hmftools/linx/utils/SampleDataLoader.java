@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.utils;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.initialiseSV;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

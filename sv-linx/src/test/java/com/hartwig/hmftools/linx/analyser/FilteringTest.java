@@ -6,13 +6,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createBnd;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createIns;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createTestSv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,8 +20,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class FilteringTest

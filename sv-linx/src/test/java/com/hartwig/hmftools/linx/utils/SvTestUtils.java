@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class SvTestRoutines
+public class SvTestUtils
 {
     public static SvVarData createSv(final int varId, final String chrStart, final String chrEnd,
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type, final String insertSeq)

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDel;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createDup;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createInv;
-import static com.hartwig.hmftools.linx.utils.SvTestRoutines.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
