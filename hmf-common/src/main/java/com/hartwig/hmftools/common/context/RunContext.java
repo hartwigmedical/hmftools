@@ -15,6 +15,4 @@ public interface RunContext {
 
     @NotNull
     String tumorSample();
-
-    boolean isSomaticRun();
 }

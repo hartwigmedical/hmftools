@@ -12,15 +12,13 @@ class RunContextImpl implements RunContext {
     private final String refSample;
     @NotNull
     private final String tumorSample;
-    private final boolean isSomaticRun;
 
     RunContextImpl(@NotNull final String runDirectory, @NotNull final String runName, @NotNull final String refSample,
-            @NotNull final String tumorSample, final boolean isSomaticRun) {
+            @NotNull final String tumorSample) {
         this.runDirectory = runDirectory;
         this.runName = runName;
         this.refSample = refSample;
         this.tumorSample = tumorSample;
-        this.isSomaticRun = isSomaticRun;
     }
 
     @NotNull
@@ -45,11 +43,6 @@ class RunContextImpl implements RunContext {
     @Override
     public String tumorSample() {
         return tumorSample;
-    }
-
-    @Override
-    public boolean isSomaticRun() {
-        return isSomaticRun;
     }
 }
 

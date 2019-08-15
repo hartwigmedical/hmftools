@@ -123,7 +123,7 @@ final class MetaDataResolver {
                 setName = setName5;
             }
             final boolean isSomaticRun = !tumorSample.equals(Strings.EMPTY) && !tumorSample.equals(NO_TUMOR_SAMPLE);
-            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY, isSomaticRun);
+            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY);
         }
     }
 
