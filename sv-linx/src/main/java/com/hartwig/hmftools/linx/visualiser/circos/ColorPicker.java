@@ -17,6 +17,54 @@ import org.jetbrains.annotations.NotNull;
 
 public class ColorPicker
 {
+    private static final Map<String, Color> COLOR_MAP = Maps.newHashMap();
+    static {
+        COLOR_MAP.put("1", new Color(128, 125, 186));
+        COLOR_MAP.put("2", new Color(145, 142, 179));
+        COLOR_MAP.put("3", new Color(161, 159, 173));
+        COLOR_MAP.put("4", new Color(179, 176, 166));
+        COLOR_MAP.put("5", new Color(196, 193, 160));
+        COLOR_MAP.put("6", new Color(213, 210, 153));
+
+        COLOR_MAP.put("7", new Color(230, 228, 147));
+        COLOR_MAP.put("8", new Color(202, 218, 138));
+        COLOR_MAP.put("9", new Color(175, 209, 129));
+        COLOR_MAP.put("10", new Color(147, 199, 120));
+        COLOR_MAP.put("11", new Color(120, 190, 111));
+        COLOR_MAP.put("12", new Color(92, 180, 102));
+
+        COLOR_MAP.put("13", new Color(65, 171, 93));
+        COLOR_MAP.put("14", new Color(65, 166, 110));
+        COLOR_MAP.put("15", new Color(65, 162, 128));
+        COLOR_MAP.put("16", new Color(65, 158, 145));
+        COLOR_MAP.put("17", new Color(65, 154, 163));
+        COLOR_MAP.put("18", new Color(65, 150, 180));
+
+        COLOR_MAP.put("19", new Color(66, 146, 198));
+        COLOR_MAP.put("20", new Color(76, 142, 196));
+        COLOR_MAP.put("21", new Color(86, 139, 194));
+        COLOR_MAP.put("22", new Color(97, 135, 192));
+        COLOR_MAP.put("X", new Color(107, 132, 190));
+        COLOR_MAP.put("Y", new Color(117, 128, 188));
+    }
+
+    public static Color contigColour(@NotNull final String contig)
+    {
+        return COLOR_MAP.getOrDefault(contig.replace("chr", ""), Color.BLACK);
+    }
+
+    @NotNull
+    public static String hexContigColor(@NotNull final String contig)
+    {
+        return hexColor(contigColour(contig));
+    }
+
+    @NotNull
+    public static String hexColor(@NotNull final Color color)
+    {
+        return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
+    }
+
 
     private static final Color BLACK = new Color(5, 5, 5);
 

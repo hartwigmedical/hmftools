@@ -121,27 +121,28 @@ public class CircosDataWriter
         final String distances = filePrefix + ".distance.circos";
         Files.write(new File(distances).toPath(), createDistances(data.unadjustedAlterations(), alterations));
 
-        //        final String chromosomeBandPath = filePrefix + ".chromosome.circos";
-        //        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.unadjustedAlterations()));
-
+        final String chromosomeBandPath = filePrefix + ".chromosome.circos";
+        Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.unadjustedAlterations()));
     }
 
-    //    @NotNull
-    //    private List<String> chromosomeLocations(List<CopyNumberAlteration> unadjustedAlterations) {
-    //        List<String> result = Lists.newArrayList();
-    //
-    //        List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
-    //        for (GenomeRegion region : regions)
-    //        {
-    //            final String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
-    //                    .add(String.valueOf(region.start()))
-    //                    .add(String.valueOf(region.end()))
-    //                    .toString();
-    //            result.add(bandString);
-    //        }
-    //
-    //        return result;
-    //    }
+    @NotNull
+    private List<String> chromosomeLocations(@NotNull final  List<CopyNumberAlteration> unadjustedAlterations)
+    {
+        List<String> result = Lists.newArrayList();
+
+        List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
+        for (GenomeRegion region : regions)
+        {
+            final String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
+                    .add(String.valueOf(region.start()))
+                    .add(String.valueOf(region.end()))
+                    .add(ColorPicker.hexContigColor(region.chromosome()))
+                    .toString();
+            result.add(bandString);
+        }
+
+        return result;
+    }
 
     @NotNull
     private List<String> genes(@NotNull final Map<String, String> geneColours, @NotNull final List<Gene> genes)
