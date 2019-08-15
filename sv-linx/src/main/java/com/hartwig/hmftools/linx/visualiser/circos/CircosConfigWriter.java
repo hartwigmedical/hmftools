@@ -19,25 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosConfigWriter
 {
-
-    static final double PIXELS = 1500;
-
-    //    private static final double EXON_RANK_INNER_RADIUS = 0.95;
-
-    //    private static final double EXON_OUTER_RADIUS = 0.95;
-    static final double EXON_INNER_RADIUS = 0.9;
-
-    private static final double GENE_INNER_RADIUS = 0.93;
-    //
-    //    private static final double SEGMENT_OUTER_RADIUS = 0.875;
-    //    private static final double SEGMENT_INNER_RADIUS = 0.5;
-    //
-    //    private static final double MAP_OUTER_RADIUS = 0.275;
-    //        private static final double INNER_RADIUS = 0.175;
-    //
-    //    private static final double CNA_OUTER_RADIUS = 0.475;
-    //    private static final double CNA_INNER_RADIUS = 0.3;
-
     private final String sample;
     private final String configPath;
     private final String outputDir;
@@ -68,8 +49,6 @@ public class CircosConfigWriter
         this.circosData = data;
         this.config = config;
         this.outputDir = outputDir;
-
-        double labelSize = config.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
 
         double gapSize = config.gapRadius();
         double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();

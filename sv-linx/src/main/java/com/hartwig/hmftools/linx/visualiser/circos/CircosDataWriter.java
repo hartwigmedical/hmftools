@@ -191,8 +191,6 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
         for (final Gene gene : genes)
         {
-            final double labelSize = geneNameLabelSize(gene.name());
-
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
@@ -202,12 +200,6 @@ public class CircosDataWriter
         }
 
         return result;
-    }
-
-    private static double geneNameLabelSize(@NotNull final String gene)
-    {
-        double availablePixels = CircosConfigWriter.PIXELS * (1 - CircosConfigWriter.EXON_INNER_RADIUS);
-        return Math.min(26, 4 + Math.floor(availablePixels / gene.length()));
     }
 
     @NotNull
