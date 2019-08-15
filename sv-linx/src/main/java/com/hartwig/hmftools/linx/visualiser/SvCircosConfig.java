@@ -24,9 +24,10 @@ public interface SvCircosConfig
     String IDEOGRAM_RADIUS = "ideogram_radius";
     String EXACT_POSITION = "exact_position";
 
-    double DEFAULT_GENE_RELATIVE_SIZE = 0.5;
+    double DEFAULT_GENE_RELATIVE_SIZE = 0.3;
     double DEFAULT_SEGMENT_RELATIVE_SIZE = 1;
     double DEFAULT_CNA_RELATIVE_SIZE = 2;
+
     double DEFAULT_IDEOGRAM_RADIUS = 0.88;
     double DEFAULT_INNER_RADIUS = 0.2;
     double DEFAULT_GAP_RADIUS = 0.025;

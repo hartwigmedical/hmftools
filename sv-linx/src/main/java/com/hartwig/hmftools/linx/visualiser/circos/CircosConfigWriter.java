@@ -46,6 +46,8 @@ public class CircosConfigWriter
 
     private final double exonOuterRadius;
     private final double exonInnerRadius;
+    private final double geneOuterRadius;
+    private final double geneInnerRadius;
 
     private final double segmentOuterRadius;
     private final double segmentInnerRadius;
@@ -67,6 +69,8 @@ public class CircosConfigWriter
         this.config = config;
         this.outputDir = outputDir;
 
+        double labelSize = config.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
+
         double gapSize = config.gapRadius();
         double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
         double segmentRelativeSize = config.segmentRelativeSize();
@@ -75,7 +79,7 @@ public class CircosConfigWriter
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
         boolean displayGenes = Doubles.greaterThan(geneRelativeSize, 0);
-        int numberOfGaps = displayGenes ? 4 : 3;
+        int numberOfGaps = displayGenes ? 5 : 3;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.innerRadius();
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
@@ -85,7 +89,7 @@ public class CircosConfigWriter
 
         if (displayGenes)
         {
-            exonOuterRadius = 1 - gapSize;
+            exonOuterRadius = 1 - 2 * gapSize;
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
             segmentOuterRadius = exonInnerRadius - gapSize;
         }
@@ -95,6 +99,10 @@ public class CircosConfigWriter
             exonInnerRadius = 0;
             segmentOuterRadius = 1 - gapSize;
         }
+
+        geneOuterRadius = exonOuterRadius;
+        geneInnerRadius = exonInnerRadius + (exonOuterRadius - exonInnerRadius) / 2;
+
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
         copyNumberOuterRadius = segmentInnerRadius - gapSize;
@@ -145,8 +153,8 @@ public class CircosConfigWriter
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(exonInnerRadius))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(exonOuterRadius))
-                        .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(GENE_INNER_RADIUS))
-                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(exonOuterRadius))
+                        .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(geneInnerRadius))
+                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(geneOuterRadius))
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))
