@@ -159,7 +159,7 @@ public class StructuralVariantFusionDAO
                     transcriptToDatabaseIdMap.get(fusion.downstreamTrans()),
                     fusion.name(),
                     fusion.reportable(),
-                    fusion.getKnownFusionType(),
+                    fusion.getKnownType(),
                     fusion.getChainLength(),
                     fusion.getChainLinks(),
                     fusion.isTerminated(),

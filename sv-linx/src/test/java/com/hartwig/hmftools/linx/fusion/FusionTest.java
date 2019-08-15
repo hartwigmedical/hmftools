@@ -116,7 +116,7 @@ public class FusionTest
         downGenes.get(3).setPositionalData(chromosome, 10850, negOrient);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, true, true, null, false);
-        fusions.forEach(x -> x.setKnownFusionType(REPORTABLE_TYPE_KNOWN));
+        fusions.forEach(x -> x.setKnownType(REPORTABLE_TYPE_KNOWN));
         tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
 
         assertEquals(6, fusions.size());

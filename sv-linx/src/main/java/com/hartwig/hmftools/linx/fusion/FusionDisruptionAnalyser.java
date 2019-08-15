@@ -12,10 +12,8 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscrip
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.util.Arrays;
@@ -313,9 +311,9 @@ public class FusionDisruptionAnalyser
         {
             for(final GeneFusion fusion : uniqueFusions)
             {
-                LOGGER.debug("fusion({}-{}) reportable({}) cluster({}) SVs({} & {})",
+                LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({}) SVs({} & {})",
                         fusion.upstreamTrans().parent().GeneName, fusion.downstreamTrans().parent().GeneName,
-                        fusion.reportable(), fusion.getAnnotations().clusterId(),
+                        fusion.reportable(), fusion.getKnownType(), fusion.getAnnotations().clusterId(),
                         fusion.upstreamTrans().parent().id(), fusion.downstreamTrans().parent().id());
             }
         }
@@ -711,7 +709,7 @@ public class FusionDisruptionAnalyser
                     fusion.setAnnotations(annotations);
 
                     // accept invalidated chains and transcripts for known fusions
-                    boolean isKnown = fusion.getKnownFusionType() == REPORTABLE_TYPE_KNOWN;
+                    boolean isKnown = fusion.getKnownType() == REPORTABLE_TYPE_KNOWN;
                     boolean chainLengthOk =  totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
                     boolean notTerminated = !fusion.isTerminated();
 

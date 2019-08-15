@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.Reportab
 import static com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile.fusionPloidy;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -175,7 +173,7 @@ public class FusionWriter
             }
 
             writer.write(String.format("%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.getKnownFusionType()));
+                    sampleId, fusion.reportable(), fusion.getKnownType()));
 
             writer.write(String.format(",%s,%d,%d,%s",
                     fusion.phaseMatched(), annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));

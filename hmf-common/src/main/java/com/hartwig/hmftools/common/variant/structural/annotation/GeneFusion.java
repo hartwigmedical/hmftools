@@ -6,14 +6,12 @@ public class GeneFusion
 
     private final Transcript mDownstreamTrans;
 
-    private String mPrimarySource;
-
     private boolean mIsReportable;
     private boolean mPhaseMatched;
     private boolean mViable; // passes fusion rules
     private int mExonsSkippedUp;
     private int mExonsSkippedDown;
-    private String mKnownFusionType;
+    private String mKnownType;
 
     // private String mAnnotations;
     private FusionAnnotations mAnnotations;
@@ -28,9 +26,8 @@ public class GeneFusion
     {
         mUpstreamTrans = upstreamTrans;
         mDownstreamTrans = downstream;
-        mPrimarySource = "";
         mIsReportable = false;
-        mKnownFusionType = REPORTABLE_TYPE_NONE;
+        mKnownType = REPORTABLE_TYPE_NONE;
         mPhaseMatched = phaseMatched;
         mViable = viable;
         mExonsSkippedUp = 0;
@@ -46,8 +43,8 @@ public class GeneFusion
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
 
-    public final String getKnownFusionType(){ return mKnownFusionType; }
-    public void setKnownFusionType(final String type) { mKnownFusionType = type; }
+    public final String getKnownType(){ return mKnownType; }
+    public void setKnownType(final String type) { mKnownType = type; }
 
     public boolean phaseMatched(){ return mPhaseMatched; }
     public boolean viable(){ return mViable; }
