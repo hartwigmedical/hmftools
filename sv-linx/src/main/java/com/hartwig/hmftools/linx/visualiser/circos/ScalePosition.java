@@ -1,17 +1,14 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegions;
@@ -37,19 +34,17 @@ import org.jetbrains.annotations.NotNull;
 class ScalePosition
 {
     private static final double MIN_CONTIG_PERCENTAGE = 0.01;
+    private static final double GENE_NAME_DISTANCE = 1.5 / 360d;
 
     private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
 
-    private final Map<String, Map<Long, Integer>> chromosomePositionMap = Maps.newHashMap();
+    private final int totalLength;
+    private final Map<String, Integer> contigLength = Maps.newHashMap();
+    private final Map<String, ScaleContig> contigMap = Maps.newHashMap();
 
-    ScalePosition(@NotNull final List<? extends GenomePosition> regions)
+    ScalePosition(@NotNull final List<? extends GenomePosition> positions)
     {
-        this(1, regions);
-    }
-
-    private ScalePosition(final int start, @NotNull final List<? extends GenomePosition> positions)
-    {
-        long totalScaledPosition = 0;
+        int totalLength = 0;
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs)
         {
@@ -58,47 +53,31 @@ class ScalePosition
                     .map(GenomePosition::position)
                     .collect(Collectors.toList());
 
-            final Map<Long, Integer> contigPositionMap = positionMap(start, contigPositions);
-            totalScaledPosition += contigPositionMap.values().stream().mapToLong(x -> x).max().orElse(0);
-
-            chromosomePositionMap.put(contig, contigPositionMap);
+            ScaleContig scaleContig = new ScaleContig(contig, contigPositions);
+            contigMap.put(contig, scaleContig);
+            totalLength += scaleContig.length();
         }
 
-        // Linear interpolate scaled positions if chromosome does not meet minimum size of 1% of total
-        long minContigDistance = Math.round(MIN_CONTIG_PERCENTAGE * totalScaledPosition);
-        for (final String contig : contigs)
+        long minContigDistance = Math.round(MIN_CONTIG_PERCENTAGE * totalLength);
+
+        totalLength = 0;
+        for (final ScaleContig scaleContig : contigMap.values())
         {
-            final Map<Long, Integer> contigPositionMap = chromosomePositionMap.get(contig);
-            long contigDistance = contigPositionMap.values().stream().mapToLong(x -> x).max().orElse(0);
-            if (contigDistance < minContigDistance)
+            if (scaleContig.length() < minContigDistance)
             {
-                double factor = minContigDistance / contigDistance;
-                for (Map.Entry<Long, Integer> entry : contigPositionMap.entrySet())
-                {
-                    if (entry.getValue() > 1)
-                    {
-                        entry.setValue((int) Math.round(factor * entry.getValue()));
-                    }
-                }
+                scaleContig.expand(1d * minContigDistance / scaleContig.length());
             }
+            totalLength += scaleContig.length();
+            contigLength.put(scaleContig.contig(), scaleContig.length());
         }
+
+        this.totalLength = totalLength;
     }
 
     @NotNull
-    public List<GenomePosition> scaled()
+    public Map<String, Integer> contigLengths()
     {
-        final List<GenomePosition> result = Lists.newArrayList();
-
-        for (String contig : chromosomePositionMap.keySet())
-        {
-            for (Integer position : chromosomePositionMap.get(contig).values())
-            {
-                result.add(GenomePositions.create(contig, position));
-            }
-        }
-
-        Collections.sort(result);
-        return result;
+        return contigLength;
     }
 
     @NotNull
@@ -128,10 +107,20 @@ class ScalePosition
     @NotNull
     public List<Gene> scaleGene(@NotNull final List<Gene> genes)
     {
+        double geneNameDistance = GENE_NAME_DISTANCE * totalLength;
+
         return genes.stream().map(x ->
         {
-            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.chromosome());
-            return scale(x, y -> ImmutableGene.builder().from(y).namePosition(positionMap.get(y.namePosition())), positionMap);
+            ScaleContig positionMap = contigMap.get(x.chromosome());
+            final int scaledGeneStart = positionMap.scale(x.start());
+            final int scaledGeneEnd = positionMap.scale(x.end());
+            final int scaledNamePositions = positionMap.scale(x.namePosition());
+
+            final int geneNamePosition = (int) Math.round(x.start() == x.namePosition()
+                    ? scaledNamePositions - geneNameDistance
+                    : scaledNamePositions + geneNameDistance);
+
+            return ImmutableGene.builder().from(x).start(scaledGeneStart).end(scaledGeneEnd).namePosition(geneNamePosition).build();
         }).collect(Collectors.toList());
     }
 
@@ -139,57 +128,29 @@ class ScalePosition
     {
         return exons.stream().map(x ->
         {
-            Map<Long, Integer> positionMap = chromosomePositionMap.get(x.fusion());
+            ScaleContig positionMap = contigMap.get(x.fusion());
             return scale(x, y -> ImmutableFusedExon.builder()
                     .from(y)
-                    .geneStart(positionMap.get(y.geneStart()))
-                    .geneEnd(positionMap.get(y.geneEnd())), positionMap);
+                    .geneStart(positionMap.scale(y.geneStart()))
+                    .geneEnd(positionMap.scale(y.geneEnd())), positionMap);
         }).collect(Collectors.toList());
     }
 
     @NotNull
     private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
-        final Map<Long, Integer> positionMap = chromosomePositionMap.get(exon.chromosome());
+        final ScaleContig positionMap = contigMap.get(exon.chromosome());
         assert (positionMap != null && !positionMap.isEmpty());
 
         return builderFunction.apply(exon)
-                .start(interpolate(exon.start(), positionMap))
-                .end(interpolate(exon.end(), positionMap))
+                .start(positionMap.interpolate(exon.start()))
+                .end(positionMap.interpolate(exon.end()))
                 .build();
-    }
-
-    static int interpolate(long value, Map<Long, Integer> positionMap)
-    {
-
-        final Set<Long> keySet = positionMap.keySet();
-
-        if (positionMap.containsKey(value))
-        {
-            return positionMap.get(value);
-        }
-
-        long minValue = keySet.stream().mapToLong(x -> x).min().orElse(0);
-        long maxValue = keySet.stream().mapToLong(x -> x).max().orElse(0);
-
-        long closestToStart = keySet.stream().filter(x -> x < value).mapToLong(x -> x).max().orElse(minValue);
-        long closestToEnd = keySet.stream().filter(x -> x > value).mapToLong(x -> x).min().orElse(maxValue);
-        if (closestToStart == closestToEnd)
-        {
-            return positionMap.get(closestToStart);
-        }
-
-        double longDistanceProportion = Math.abs(value - closestToStart) / ((double) Math.abs(closestToEnd - closestToStart));
-
-        int clostestIntToStart = positionMap.get(closestToStart);
-        int clostestIntToEnd = positionMap.get(closestToEnd);
-
-        return clostestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(clostestIntToEnd - clostestIntToStart));
     }
 
     public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions)
     {
-        return regions.stream().map(x -> scale(x, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+        return regions.stream().map(x -> scale(x, contigMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
@@ -203,12 +164,12 @@ class ScalePosition
                 final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
                 if (link.isValidStart())
                 {
-                    builder.startPosition(chromosomePositionMap.get(link.startChromosome()).get(link.startPosition()));
+                    builder.startPosition(contigMap.get(link.startChromosome()).scale(link.startPosition()));
                 }
 
                 if (link.isValidEnd())
                 {
-                    builder.endPosition(chromosomePositionMap.get(link.endChromosome()).get(link.endPosition()));
+                    builder.endPosition(contigMap.get(link.endChromosome()).scale(link.endPosition()));
                 }
 
                 results.add(builder.build());
@@ -223,61 +184,24 @@ class ScalePosition
     }
 
     @NotNull
-    private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final Map<Long, Integer> positionMap)
+    private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final ScaleContig positionMap)
     {
-        return GenomeRegions.create(region.chromosome(), positionMap.get(region.start()), positionMap.get(region.end()));
-    }
-
-    @VisibleForTesting
-    static Map<Long, Integer> positionMap(int start, @NotNull final Long... positionArray)
-    {
-        return positionMap(start, Lists.newArrayList(positionArray));
-    }
-
-    @NotNull
-    private static Map<Long, Integer> positionMap(int start, @NotNull final List<Long> contigPositions)
-    {
-        final Map<Long, Integer> results = Maps.newHashMap();
-        final List<Long> sortedDistinctPositions = contigPositions.stream().sorted().distinct().collect(Collectors.toList());
-
-        if (!sortedDistinctPositions.isEmpty())
-        {
-            int logPosition = start;
-            long lastPosition = sortedDistinctPositions.get(0);
-            results.put(lastPosition, logPosition);
-
-            for (int i = 1; i < sortedDistinctPositions.size(); i++)
-            {
-                long position = sortedDistinctPositions.get(i);
-                long linearDistance = position - lastPosition;
-                int logDistance = logDistance(linearDistance);
-                logPosition = logPosition + logDistance;
-                lastPosition = position;
-
-                results.put(lastPosition, logPosition);
-            }
-        }
-
-        return results;
-    }
-
-    static int logDistance(long distance)
-    {
-        return (int) Math.floor(Math.pow(Math.log10(distance), 3)) + 10;
+        return GenomeRegions.create(region.chromosome(), positionMap.scale(region.start()), positionMap.scale(region.end()));
     }
 
     @NotNull
     private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
-        return inputs.stream().map(x -> scale(x, builderFunction, chromosomePositionMap.get(x.chromosome()))).collect(Collectors.toList());
+        return inputs.stream().map(x -> scale(x, builderFunction, contigMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
     private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilder<T>> builderFunction,
-            @NotNull final Map<Long, Integer> positionMap)
+            @NotNull final ScaleContig positionMap)
     {
         return builderFunction.apply(victim)
-                .start(positionMap.get(victim.start()))
-                .end(positionMap.get(victim.end())).build();
+                .start(positionMap.scale(victim.start()))
+                .end(positionMap.scale(victim.end())).build();
     }
+
 }

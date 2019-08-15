@@ -52,7 +52,7 @@ public class Genes
             final Exon first = transcriptExons.get(0);
             final Exon last = transcriptExons.get(transcriptExons.size() - 1);
 
-            long namePosition = first.rank() <= last.rank() ? first.start() - 1 : last.end() + 1;
+            long namePosition = first.rank() <= last.rank() ? first.start() : last.end();
 
             final Gene gene = ImmutableGene.builder()
                     .from(first)
