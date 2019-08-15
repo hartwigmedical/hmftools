@@ -457,6 +457,8 @@ public class ChainLinkAllocator
 
             boolean allowChainSplits = allowDmChainSplits(proposedLinks.Links.get(0));
 
+            boolean pairPloidyMatched = ploidyMatch(newPair.firstBreakend(), newPair.secondBreakend());
+
             // test every chain for whether the link would close it and look for a chain which can connect with this link
 
             // if one of the breakends in this new link has its other breakend in another chain and is exhausted, then force it
@@ -493,7 +495,7 @@ public class ChainLinkAllocator
                 {
                     if (!ploidyMatch(
                             requiredChains[SE_START].ploidy(), requiredChains[SE_START].ploidyUncertainty(),
-                            requiredChains[SE_END].ploidy(), requiredChains[SE_END].ploidyUncertainty()))
+                            requiredChains[SE_END].ploidy(), requiredChains[SE_END].ploidyUncertainty()) && !pairPloidyMatched)
                     {
                         if(!allowChainSplits)
                         {
@@ -544,7 +546,8 @@ public class ChainLinkAllocator
                 double newUncertainty = pairLinkedOnFirst ? newPair.second().ploidyUncertainty() : newPair.first().ploidyUncertainty();
 
                 // check new link matches the target chain
-                if(!ploidyMatch(targetChain.ploidy(), targetChain.ploidyUncertainty(), proposedLinks.ploidy(), newUncertainty))
+                if(!ploidyMatch(targetChain.ploidy(), targetChain.ploidyUncertainty(), proposedLinks.ploidy(), newUncertainty)
+                && !pairPloidyMatched)
                 {
                     if(!allowChainSplits)
                     {
@@ -897,6 +900,8 @@ public class ChainLinkAllocator
         {
             mPloidyLimits.assignLinkPloidy(newPair, proposedLink.ploidy());
 
+            mSkippedPairs.remove(newPair);
+
             removeOppositeLinks(newPair);
 
             for (int se = SE_START; se <= SE_END; ++se)
@@ -1211,6 +1216,11 @@ public class ChainLinkAllocator
     public int getSkippedPairCount(final LinkSkipType type)
     {
         return (int)mSkippedPairs.values().stream().filter(x -> x == type).count();
+    }
+
+    public final Map<SvLinkedPair, LinkSkipType> getSkippedPairs()
+    {
+        return mSkippedPairs;
     }
 
     private void addSkippedPair(final SvLinkedPair pair, LinkSkipType type)

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -472,10 +473,10 @@ public class SvChain {
 
     public static void reconcileChains(final List<SvChain> chains)
     {
-        reconcileChains(chains, false, 0);
+        reconcileChains(chains, false, 0, false);
     }
 
-    public static void reconcileChains(final List<SvChain> chains, boolean checkChainSplits, int nextChainId)
+    public static void reconcileChains(final List<SvChain> chains, boolean checkChainSplits, int nextChainId, boolean useChainEndPloidies)
     {
         // join 2 chains into a single chain if they have the same SV's opposing breakends on their ends
         // if the chains differ in ploidy then either skip merging them or split off (copy) the larger ploidy chain before joining
@@ -522,10 +523,9 @@ public class SvChain {
                 }
                 */
 
-                boolean ploidyMatched = copyNumbersEqual(chain1.ploidy(), chain2.ploidy())
-                        || ploidyOverlap(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
+                boolean ploidyMatched = ploidyMatch(chain1.ploidy(), chain1.ploidyUncertainty(), chain2.ploidy(), chain2.ploidyUncertainty());
 
-                if(!ploidyMatched && !checkChainSplits)
+                if(!ploidyMatched && !checkChainSplits && !useChainEndPloidies)
                     continue;
 
                 for (int be1 = SE_START; be1 <= SE_END; ++be1)
@@ -550,6 +550,15 @@ public class SvChain {
 
                         if(!couldJoinChains)
                             continue;
+
+                        if(useChainEndPloidies && !ploidyMatched)
+                        {
+                            // even if the chains don't have a match, check the breakends themselves
+                            if(ploidyMatch(breakend1, breakend2))
+                                ploidyMatched = true;
+                            else if(!checkChainSplits)
+                                continue;
+                        }
 
                         if(!ploidyMatched)
                         {

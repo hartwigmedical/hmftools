@@ -353,12 +353,7 @@ public class ChainingActualTest
 
         tester.AllVariants.addAll(svList);
 
-        List<LohEvent> lohData = tester.CnDataLoader.getLohData();
-
-        tester.CnDataLoader.getLohData().add(new LohEvent( "12", 41741113, 50109706,
-                "DEL", "INV", 1,39, 56));
-
-        tester.Analyser.getState().setSampleCnEventData(tester.CnDataLoader.getLohData(), tester.CnDataLoader.getHomLossData());
+        tester.addLohEvent(svList.get(1).getBreakend(true), svList.get(13).getBreakend(true));
 
         tester.preClusteringInit();
 
@@ -372,13 +367,13 @@ public class ChainingActualTest
         assertEquals(6, cluster.getDoubleMinuteSVs().size());
 
         // check chains
-        assertEquals(4, cluster.getChains().size());
+        assertEquals(3, cluster.getChains().size());
 
-        /*
-        final SvChain chain = cluster.getChains().get(0);
-        assertEquals(8, chain.getLinkCount());
-        assertEquals(7, chain.getSvCount());
-        assertTrue(chain.isClosedLoop());
-        */
-    }
+        assertTrue(cluster.getUnlinkedSVs().isEmpty());
+
+        final SvChain dmChain = cluster.getDoubleMinuteChain();
+        assertTrue(dmChain != null);
+
+        assertTrue(cluster.getChains().stream().anyMatch(x -> x.identicalChain(dmChain, false, true)));
+   }
 }

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatchFo
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
+import static com.hartwig.hmftools.linx.chaining.LinkSkipType.PLOIDY_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
 import static com.hartwig.hmftools.linx.chaining.SvChain.reconcileChains;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
@@ -455,9 +456,39 @@ public class ChainFinder
             mDiagnostics.checkProgress(mLinkAllocator.getLinkIndex());
         }
 
+        // TEMP - analysis of links not made due to chain ploidy mismatches where the SVs themselves would satisfy the same test
+        if(mLinkAllocator.getSkippedPairCount(LinkSkipType.PLOIDY_MISMATCH) > 0)
+        {
+            int ploidyMismatches = 0;
+            int ploidyOverlaps = 0;
+            for(Map.Entry<SvLinkedPair,LinkSkipType> entry : mLinkAllocator.getSkippedPairs().entrySet())
+            {
+                if(entry.getValue() != PLOIDY_MISMATCH)
+                    continue;
+
+                ++ploidyMismatches;
+
+                final SvLinkedPair pair = entry.getKey();
+
+                if(ploidyMatch(pair.firstBreakend(), pair.secondBreakend()))
+                {
+                    ++ploidyOverlaps;
+                    LOGGER.debug("skipped pair({}) has ploidy overlap be1({} & {}) and be2({} & {})",
+                            pair.toString(), formatPloidy(pair.firstBreakend().ploidy()), formatPloidy(pair.firstBreakend().ploidyUncertainty()),
+                            formatPloidy(pair.secondBreakend().ploidy()), formatPloidy(pair.secondBreakend().ploidyUncertainty()));
+                }
+            }
+
+            if(ploidyOverlaps > 0)
+            {
+                LOGGER.info("sample({}) cluster({}) ploidy skips({}) with overlaps({}) chainCount({})",
+                        mSampleId, mClusterId, ploidyMismatches, ploidyOverlaps, mChains.size());
+            }
+        }
+
         if(mChains.size() < 50)
         {
-            reconcileChains(mChains, false, mLinkAllocator.getNextChainId());
+            reconcileChains(mChains, false, mLinkAllocator.getNextChainId(), true);
         }
 
         checkDoubleMinuteChains();
@@ -715,7 +746,7 @@ public class ChainFinder
         if(mDoubleMinuteSVs.isEmpty())
             return;
 
-        reconcileChains(mChains, true, mLinkAllocator.getNextChainId());
+        reconcileChains(mChains, true, mLinkAllocator.getNextChainId(), true);
 
         // search for a chain which can be closed if it contains all the DM SVs
 
