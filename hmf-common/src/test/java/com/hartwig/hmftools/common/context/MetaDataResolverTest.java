@@ -63,7 +63,6 @@ public class MetaDataResolverTest {
         final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
-      //  assertFalse(runContext.isSomaticRun()); //TODO: fix test.
         assertEquals("GIAB", runContext.refSample());
         assertEquals(Strings.EMPTY, runContext.tumorSample());
         assertEquals(setName, runContext.setName());
