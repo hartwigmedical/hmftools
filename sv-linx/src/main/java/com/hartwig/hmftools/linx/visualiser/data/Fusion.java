@@ -32,9 +32,7 @@ public abstract class Fusion
 
     public abstract int strandUp();
 
-    public abstract int exonUp();
-
-    public abstract int exonsSkippedUp();
+    public abstract int fusedExonUp();
 
     @NotNull
     public abstract String geneDown();
@@ -52,9 +50,7 @@ public abstract class Fusion
 
     public abstract int strandDown();
 
-    public abstract int exonDown();
-
-    public abstract int exonsSkippedDown();
+    public abstract int fusedExonDown();
 
     @NotNull
     public String name()

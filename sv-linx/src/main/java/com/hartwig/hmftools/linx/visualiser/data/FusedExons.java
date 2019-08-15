@@ -40,9 +40,6 @@ public class FusedExons
         final GenomeRegion upGeneRegion = upGeneRegion(fusion, firstUpExon);
         final GenomeRegion convertedUpGeneRegion = convertRegion(fusion.strandUp(), upGeneRegion, upGeneRegion);
 
-        int lastUpExon = fusion.exonUp() - fusion.exonsSkippedUp();
-        int firstDownExon = Math.max(2, fusion.exonDown() + fusion.exonsSkippedDown());
-
         final ImmutableFusedExon.Builder upFusedExonBuilder = ImmutableFusedExon.builder()
                 .sampleId(fusion.sampleId())
                 .clusterId(fusion.clusterId())
@@ -64,7 +61,7 @@ public class FusedExons
                         .start(convertedExon.start())
                         .end(convertedExon.end())
                         .rank(exon.rank())
-                        .skipped(exon.rank() > lastUpExon)
+                        .skipped(exon.rank() > fusion.fusedExonUp())
                         .build();
                 result.add(fusedExon);
             }
@@ -95,7 +92,7 @@ public class FusedExons
                         .start(convertedExon.start() + convertedUpGeneRegion.end())
                         .end(convertedExon.end() + convertedUpGeneRegion.end())
                         .rank(exon.rank())
-                        .skipped(exon.rank() < firstDownExon || (i == 0 && intronicToExonicFusion))
+                        .skipped(exon.rank() < fusion.fusedExonDown() || (i == 0 && intronicToExonicFusion))
                         .build();
                 result.add(fusedExon);
             }
