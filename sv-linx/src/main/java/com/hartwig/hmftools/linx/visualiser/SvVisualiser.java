@@ -57,6 +57,8 @@ public class SvVisualiser implements AutoCloseable
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException
     {
         final Options options = SvVisualiserConfig.createOptions();
+        SvCircosConfig.addOptions(options);
+
         try (final SvVisualiser application = new SvVisualiser(options, args))
         {
             application.run();

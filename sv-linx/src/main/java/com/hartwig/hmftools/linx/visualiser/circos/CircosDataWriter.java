@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
+    private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
@@ -520,7 +522,6 @@ public class CircosDataWriter
     @NotNull
     private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
-
         final Set<String> result = Sets.newHashSet();
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
@@ -528,21 +529,27 @@ public class CircosDataWriter
         for (final String contig : contigs)
         {
             long currentPosition = 0;
-            for (final AdjustedPosition position : positions)
+            for (final AdjustedPosition adjustedPosition : positions)
             {
-                if (position.chromosome().equals(contig))
+                if (adjustedPosition.chromosome().equals(contig))
                 {
-                    long roundedPosition = position.unadjustedPosition() / 100_000;
-                    if (roundedPosition > currentPosition)
+                    long position = circosConfig.exactPosition()
+                            ? adjustedPosition.unadjustedPosition()
+                            : adjustedPosition.unadjustedPosition() / 100_000;
+
+                    if (position > currentPosition)
                     {
+                        final String positionLabel =
+                                circosConfig.exactPosition() ? POSITION_FORMAT.format(position) : String.valueOf(position / 10d + "m");
+
                         final String start = new StringJoiner(DELIMITER).add(circosContig(contig))
-                                .add(String.valueOf(position.position()))
-                                .add(String.valueOf(position.position()))
-                                .add(String.valueOf(roundedPosition / 10d + "m"))
+                                .add(String.valueOf(adjustedPosition.position()))
+                                .add(String.valueOf(adjustedPosition.position()))
+                                .add(positionLabel)
                                 .toString();
 
                         result.add(start);
-                        currentPosition = roundedPosition;
+                        currentPosition = position;
                     }
                 }
             }
