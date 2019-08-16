@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.common.context;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.security.acl.LastOwnerException;
 
 import com.google.common.io.Resources;
 
@@ -63,7 +60,6 @@ public class MetaDataResolverTest {
         final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
-      //  assertFalse(runContext.isSomaticRun()); //TODO: fix test.
         assertEquals("GIAB", runContext.refSample());
         assertEquals(Strings.EMPTY, runContext.tumorSample());
         assertEquals(setName, runContext.setName());
@@ -77,7 +73,6 @@ public class MetaDataResolverTest {
         final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
-        assertTrue(runContext.isSomaticRun());
         assertEquals("CPCT12345678R", runContext.refSample());
         assertEquals("CPCT12345678T", runContext.tumorSample());
         assertEquals(setName, runContext.setName());

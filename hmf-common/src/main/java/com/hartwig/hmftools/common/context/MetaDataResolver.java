@@ -122,8 +122,8 @@ final class MetaDataResolver {
             if( setName5 != null && fileP5.exists()){
                 setName = setName5;
             }
-            final boolean isSomaticRun = !tumorSample.equals(NO_TUMOR_SAMPLE);
-            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY, isSomaticRun);
+            final boolean isSomaticRun = !tumorSample.equals(Strings.EMPTY) && !tumorSample.equals(NO_TUMOR_SAMPLE);
+            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY);
         }
     }
 

@@ -19,25 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosConfigWriter
 {
-
-    static final double PIXELS = 1500;
-
-    //    private static final double EXON_RANK_INNER_RADIUS = 0.95;
-
-    //    private static final double EXON_OUTER_RADIUS = 0.95;
-    static final double EXON_INNER_RADIUS = 0.9;
-
-    private static final double GENE_INNER_RADIUS = 0.93;
-    //
-    //    private static final double SEGMENT_OUTER_RADIUS = 0.875;
-    //    private static final double SEGMENT_INNER_RADIUS = 0.5;
-    //
-    //    private static final double MAP_OUTER_RADIUS = 0.275;
-    //        private static final double INNER_RADIUS = 0.175;
-    //
-    //    private static final double CNA_OUTER_RADIUS = 0.475;
-    //    private static final double CNA_INNER_RADIUS = 0.3;
-
     private final String sample;
     private final String configPath;
     private final String outputDir;
@@ -46,6 +27,8 @@ public class CircosConfigWriter
 
     private final double exonOuterRadius;
     private final double exonInnerRadius;
+    private final double geneOuterRadius;
+    private final double geneInnerRadius;
 
     private final double segmentOuterRadius;
     private final double segmentInnerRadius;
@@ -75,7 +58,7 @@ public class CircosConfigWriter
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
         boolean displayGenes = Doubles.greaterThan(geneRelativeSize, 0);
-        int numberOfGaps = displayGenes ? 4 : 3;
+        int numberOfGaps = displayGenes ? 5 : 3;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.innerRadius();
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
@@ -85,7 +68,7 @@ public class CircosConfigWriter
 
         if (displayGenes)
         {
-            exonOuterRadius = 1 - gapSize;
+            exonOuterRadius = 1 - 2 * gapSize;
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
             segmentOuterRadius = exonInnerRadius - gapSize;
         }
@@ -95,6 +78,10 @@ public class CircosConfigWriter
             exonInnerRadius = 0;
             segmentOuterRadius = 1 - gapSize;
         }
+
+        geneOuterRadius = exonOuterRadius;
+        geneInnerRadius = exonInnerRadius + (exonOuterRadius - exonInnerRadius) / 2;
+
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
         copyNumberOuterRadius = segmentInnerRadius - gapSize;
@@ -140,13 +127,13 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.ideogramRadius()))
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.outerRadius()))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(exonInnerRadius))
                         .replaceAll("SUBSTITUTE_EXON_OUTER_RADIUS", String.valueOf(exonOuterRadius))
-                        .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(GENE_INNER_RADIUS))
-                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(exonOuterRadius))
+                        .replaceAll("SUBSTITUTE_GENE_INNER_RADIUS", String.valueOf(geneInnerRadius))
+                        .replaceAll("SUBSTITUTE_GENE_OUTER_RADIUS", String.valueOf(geneOuterRadius))
 
                         .replaceAll("SUBSTITUTE_SV_INNER_RADIUS", String.valueOf(segmentInnerRadius))
                         .replaceAll("SUBSTITUTE_SV_OUTER_RADIUS", String.valueOf(segmentOuterRadius))

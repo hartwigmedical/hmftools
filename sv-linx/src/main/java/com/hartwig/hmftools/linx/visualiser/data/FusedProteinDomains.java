@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import static com.hartwig.hmftools.linx.visualiser.data.FusedExons.convertRegion;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.linx.visualiser.circos.ColorPicker;
 import com.hartwig.hmftools.linx.visualiser.circos.ProteinDomainColors;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,6 @@ public class FusedProteinDomains
 {
 
     private static final String DELIMITER = "\t";
-
 
     @NotNull
     public static List<ProteinDomain> fusedProteinDomains(@NotNull final Fusion fusion, @NotNull final List<FusedExon> fusedExons,
@@ -125,14 +124,9 @@ public class FusedProteinDomains
                 .add(String.valueOf(domain.start()))
                 .add(String.valueOf(domain.end()))
                 .add(String.valueOf(domain.name()))
-                .add(hexColor(colors.color(domain.name())))
+                .add(ColorPicker.hexColor(colors.color(domain.name())))
                 .add(domain.transcript())
                 .toString();
-    }
-
-    private static String hexColor(@NotNull final Color color)
-    {
-        return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
     }
 
 }

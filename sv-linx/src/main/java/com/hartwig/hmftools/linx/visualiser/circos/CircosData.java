@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,8 +80,7 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
-        final List<GenomePosition> scaledPositions = scalePosition.scaled();
-        contigLengths = contigLengths(scaledPositions);
+        contigLengths = scalePosition.contigLengths();
 
         segments = scalePosition.scaleSegments(unadjustedSegments);
         links = scalePosition.scaleLinks(unadjustedLinks);
@@ -209,17 +206,4 @@ public class CircosData
         return alterations.stream().filter(x -> !x.truncated()).count();
     }
 
-    @NotNull
-    private Map<String, Integer> contigLengths(@NotNull final List<GenomePosition> positions)
-    {
-        final Map<String, Integer> results = new LinkedHashMap<>();
-        final List<GenomePosition> sortedPositions = positions.stream().sorted().collect(toList());
-
-        for (GenomePosition position : sortedPositions)
-        {
-            int end = (int) position.position();
-            results.merge(position.chromosome(), end, Math::max);
-        }
-        return results;
-    }
 }

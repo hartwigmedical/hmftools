@@ -101,8 +101,8 @@ chromosomes_display_default = yes
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
 
-		r0               = SUBSTITUTE_GENE_INNER_RADIUSr
-		r1               = 1r
+		r0               = SUBSTITUTE_GENE_OUTER_RADIUSr
+		r1               = 1r-50p
 
 		show_links   = no
 		label_size   = SUBSTITUTE_LABEL_SIZEp
@@ -121,15 +121,15 @@ chromosomes_display_default = yes
 		file             = SUBSTITUTE_SAMPLE.gene.name.circos
 
 		r0 = SUBSTITUTE_EXON_INNER_RADIUSr
-		r1 = 1r
+		r1 = 1.2r
 
 		show_links   = no
 		label_size   = SUBSTITUTE_LABEL_SIZEp
-		label_font   = mono
+		label_font   = condensed
 		label_snuggle= yes
 
-		padding  = -20p
-		rpadding = 0p
+		padding  = 0p
+		rpadding = -20p
 	</plot>
 
 
