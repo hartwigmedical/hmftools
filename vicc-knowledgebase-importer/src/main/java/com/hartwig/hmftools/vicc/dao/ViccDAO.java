@@ -80,6 +80,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICA
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONEND;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONEXON;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONEXONICFUNC;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONPARENTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONPARENTSTRANSCRIPTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONPATHOLOGY;
@@ -89,6 +90,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICA
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONSTART;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONTRANSCRIPTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCRITERIAMET;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCRITERIAUNMET;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHEXTERNALID;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHINCLUDECONDITION0;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHINCLUDECONDITION1;
@@ -138,6 +140,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSW
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSWGSMAP;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSWGSMAPPROTCOORDS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSWGSMAPSYNONYMS;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHPREFELANCE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHSOURCE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTAGS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTHERAPEUTICCONTEXT;
@@ -2424,5 +2427,9 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFO).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES).execute();
+        context.deleteFrom(MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE).execute();
+        context.deleteFrom(MOLECULARMATCHCRITERIAUNMET).execute();
+        context.deleteFrom(MOLECULARMATCHPREFELANCE).execute();
+
     }
 }

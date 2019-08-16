@@ -186,7 +186,9 @@ DROP TABLE IF EXISTS molecularMatchMutationsFusionAreg;
 DROP TABLE IF EXISTS molecularMatchMutationsExonsInfo;
 DROP TABLE IF EXISTS molecularMatchMutationsExonsInfoBoundries;
 DROP TABLE IF EXISTS molecularMatchMutationsExonsInfoBoundriesExonPosities;
-
+DROP TABLE IF EXISTS molecularMatchClassificationNucleotideChange;
+DROP TABLE IF EXISTS molecularMatchCriteriaUnmet;
+DROP TABLE IF EXISTS molecularMatchPrefelance;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -1041,6 +1043,7 @@ CREATE TABLE civicLastReviewedProfileImage
 CREATE TABLE molecularmatch
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
+    score varchar(255) NOT NULL,
     autoGenerateNarrative varchar(255) NOT NULL,
     clinicalSignificance varchar(255) NOT NULL,
     idMolecularMatch varchar(255) NOT NULL,
@@ -1061,6 +1064,7 @@ CREATE TABLE molecularmatch
     noTherapyAvailable varchar(255) NOT NULL,
     narrative varchar(255) NOT NULL,
     expression varchar(255) NOT NULL,
+    biomarkerClass varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -1399,6 +1403,14 @@ CREATE TABLE molecularMatchClassificationExonicFunc
     FOREIGN KEY (molecularMatchClassificationId) REFERENCES molecularMatchClassification(id)
 );
 
+CREATE TABLE molecularMatchClassificationNucleotideChange
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchClassificationId int NOT NULL,
+    NucleotideChange varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchClassificationId) REFERENCES molecularMatchClassification(id)
+);
+
 CREATE TABLE molecularMatchClassificationParents
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchClassificationId int NOT NULL,
@@ -1415,6 +1427,40 @@ CREATE TABLE molecularMatchClassificationParentsTranscripts
     transcript varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchClassificationParentsId) REFERENCES molecularMatchClassificationParents(id)
+);
+
+CREATE TABLE molecularMatchCriteriaUnmet
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchId int NOT NULL,
+    priority varchar(255) NOT NULL,
+    compositeKey varchar(255) NOT NULL,
+    isNew varchar(255) NOT NULL,
+    generatedBy varchar(255) NOT NULL,
+    manualSuppress varchar(255) NOT NULL,
+    generatedByTerm varchar(255) NOT NULL,
+    suppress varchar(255) NOT NULL,
+    filterType varchar(255) NOT NULL,
+    term varchar(255) NOT NULL,
+    primaryValue varchar(255) NOT NULL,
+    facet varchar(255) NOT NULL,
+    valid varchar(255) NOT NULL,
+    custom varchar(255) NOT NULL,
+    transcript varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchId) REFERENCES molecularmatch(id)
+);
+
+CREATE TABLE molecularMatchPrefelance
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchId int NOT NULL,
+    count varchar(255) NOT NULL,
+    percent varchar(255) NOT NULL,
+    studyId varchar(255) NOT NULL,
+    samples varchar(255) NOT NULL,
+    conditionValue varchar(255) NOT NULL,
+    molecular varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchId) REFERENCES molecularmatch(id)
 );
 
 CREATE TABLE molecularMatchMutations
