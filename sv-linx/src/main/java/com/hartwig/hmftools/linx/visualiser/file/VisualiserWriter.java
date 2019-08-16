@@ -345,24 +345,12 @@ public class VisualiserWriter
         List<VisGeneExonFile> geneExonList = Lists.newArrayList();
         List<VisProteinDomainFile> proteinList = Lists.newArrayList();
 
-        // exons: SampleId,ClusterId,Gene,Transcript,Chromosome,AnnotationType,ExonRank,ExonStart,ExonEnd
-
-        // protein domains: SampleId,ClusterId,Gene,Transcript,Start,End,Info
-
-        // first remove duplicates from amongst the genes
-        List<String> loggedTranscripts = Lists.newArrayList();
-
         for(final VisGeneData geneData : mGeneData)
         {
-            if(geneData.ClusterId < 0) // skip drivers not linked to a cluster
+            if(geneData.ClusterId < 0) // skip genes not linked to a cluster
                 continue;
 
             final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(geneData.GeneId, geneData.TransName);
-
-            if (loggedTranscripts.contains(transData.TransName))
-                continue;
-
-            loggedTranscripts.add(transData.TransName);
 
             if(transData == null || transData.exons().isEmpty())
                 continue;
