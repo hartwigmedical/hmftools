@@ -443,7 +443,7 @@ public class EnsemblDAO
     }
 
     public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
-            List<String> restrictedGeneIds)
+            List<String> restrictedGeneIds, boolean cacheExons)
     {
         String filename = dataPath;
 
@@ -520,12 +520,15 @@ public class EnsemblDAO
                     transDataList.add(currentTrans);
                 }
 
-                ExonData exonData = new ExonData(
-                        transId, Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
-                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]));
+                if(cacheExons || currentTrans.IsCanonical)
+                {
+                    ExonData exonData = new ExonData(
+                            transId, Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
+                            Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]));
 
-                exonDataList.add(exonData);
-                ++exonCount;
+                    exonDataList.add(exonData);
+                    ++exonCount;
+                }
 
                 line = fileReader.readLine();
             }

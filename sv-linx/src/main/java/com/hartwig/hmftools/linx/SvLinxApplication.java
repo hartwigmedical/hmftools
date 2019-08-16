@@ -109,6 +109,9 @@ public class SvLinxApplication
             ensemblDataCache = new SvGeneTranscriptCollection();
             ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
 
+            if(checkDrivers && !checkFusions)
+                ensemblDataCache.setRequireCodingInfo(false);
+
             if(!ensemblDataCache.loadEnsemblData(selectiveGeneLoading))
             {
                 LOGGER.error("Ensembl data cache load failed, exiting");

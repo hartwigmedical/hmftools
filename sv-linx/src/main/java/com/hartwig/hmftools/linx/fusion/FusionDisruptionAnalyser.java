@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscrip
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -311,9 +312,9 @@ public class FusionDisruptionAnalyser
         {
             for(final GeneFusion fusion : uniqueFusions)
             {
-                LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({}) SVs({} & {})",
-                        fusion.upstreamTrans().parent().GeneName, fusion.downstreamTrans().parent().GeneName,
-                        fusion.reportable(), fusion.getKnownType(), fusion.getAnnotations().clusterId(),
+                LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
+                        fusion.upstreamTrans().parent().GeneName, fusion.downstreamTrans().parent().GeneName, fusion.reportable(),
+                        fusion.getKnownType(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
                         fusion.upstreamTrans().parent().id(), fusion.downstreamTrans().parent().id());
             }
         }
@@ -434,7 +435,7 @@ public class FusionDisruptionAnalyser
             if (cluster.getChains().isEmpty())
                 continue;
 
-            //isSpecificCluster(cluster);
+            // isSpecificCluster(cluster);
 
             List<GeneFusion> chainFusions = Lists.newArrayList();
 

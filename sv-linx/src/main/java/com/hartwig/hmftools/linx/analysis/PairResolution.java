@@ -74,7 +74,7 @@ public class PairResolution
         if(cluster.hasAnnotation(CLUSTER_ANNOT_DM))
             return;
 
-        isSpecificCluster(cluster);
+        // isSpecificCluster(cluster);
 
         // establish the nature of the breakends
         // first reduce SVs and/or chains to a set of breakends and record TI length(s)

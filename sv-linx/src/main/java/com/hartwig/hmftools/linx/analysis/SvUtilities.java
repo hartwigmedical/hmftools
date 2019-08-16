@@ -32,7 +32,6 @@ public class SvUtilities {
 
     public final static int NO_LENGTH = -1;
 
-
     public static final String getChromosomalArm(final String chromosome, final long position)
     {
         final GenomeRegion region = CENTROMERES.get(chromosome);

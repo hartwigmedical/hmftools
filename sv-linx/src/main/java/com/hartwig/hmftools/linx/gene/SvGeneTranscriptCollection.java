@@ -42,6 +42,8 @@ public class SvGeneTranscriptCollection
     private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
     private Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
 
+    private boolean mRequireCodingInfo;
+
     // the distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
@@ -55,6 +57,7 @@ public class SvGeneTranscriptCollection
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
         mGeneNameIdMap = Maps.newHashMap();
+        mRequireCodingInfo = true;
     }
 
     public void setDataPath(final String dataPath)
@@ -64,6 +67,8 @@ public class SvGeneTranscriptCollection
         if(!mDataPath.endsWith(File.separator))
             mDataPath += File.separator;
     }
+
+    public void setRequireCodingInfo(boolean toggle) { mRequireCodingInfo = toggle; }
 
     public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
@@ -288,61 +293,14 @@ public class SvGeneTranscriptCollection
         return spliceAcceptorPos != null ? spliceAcceptorPos : -1;
     }
 
-    public long findPrecedingGeneSpliceAcceptorPosition(final EnsemblGeneData refGene, List<EnsemblGeneData> geneDataList)
-    {
-        // find the first upstream non-overlapping gene with a splice acceptor
-        if(refGene.Strand == 1)
-        {
-            for(int i = refGene.getReverseListIndex() - 1; i >= 0; --i)
-            {
-                final EnsemblGeneData gene = geneDataList.get(i);
-
-                if(gene.Strand != refGene.Strand)
-                    continue;
-
-                if(gene.GeneEnd > refGene.GeneStart)
-                    continue;
-
-                TranscriptData transData = getTranscriptData(gene.GeneId, "");
-
-                if(transData == null || transData.exons().size() <= 1)
-                    continue;
-
-                // otherwise taken the start of the last exon
-                ExonData lastExonData = transData.exons().get(transData.exons().size() - 1);
-                return lastExonData.ExonStart;
-            }
-        }
-        else
-        {
-            for(int i = refGene.getListIndex() + 1; i < geneDataList.size(); ++i)
-            {
-                final EnsemblGeneData gene = geneDataList.get(i);
-
-                if(gene.Strand != refGene.Strand)
-                    continue;
-
-                if(gene.GeneStart < refGene.GeneEnd)
-                    continue;
-
-                TranscriptData transData = getTranscriptData(gene.GeneId, "");
-
-                if(transData == null || transData.exons().size() <= 1)
-                    continue;
-
-                // otherwise taken the start of the last exon
-                ExonData lastExonData = transData.exons().get(0);
-                return lastExonData.ExonEnd;
-            }
-        }
-
-        return -1;
-    }
-
     public static Transcript extractTranscriptExonData(final TranscriptData transData, long position,
             final GeneAnnotation geneAnnotation)
     {
         final List<ExonData> exonList = transData.exons();
+
+        if(exonList.isEmpty())
+            return null;
+
         int exonMax = exonList.size();
 
         boolean isForwardStrand = geneAnnotation.Strand == 1;
@@ -801,22 +759,25 @@ public class SvGeneTranscriptCollection
 
         if(!delayTranscriptLoading)
         {
-            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, Lists.newArrayList()))
+            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, Lists.newArrayList(), mRequireCodingInfo))
                 return false;
 
-            if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
+            if(mRequireCodingInfo && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
                 return false;
 
-            final String transSpliceFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+            if(mRequireCodingInfo)
+            {
+                final String transSpliceFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
-            if (Files.exists(Paths.get(transSpliceFile)))
-            {
-                if(!EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
-                    return false;
-            }
-            else
-            {
-                // createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap());
+                if (Files.exists(Paths.get(transSpliceFile)))
+                {
+                    if (!EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
+                        return false;
+                }
+                else
+                {
+                    // createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap());
+                }
             }
         }
 
@@ -825,7 +786,7 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblTranscriptData(final List<String> uniqueGeneIds)
     {
-        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, uniqueGeneIds))
+        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, uniqueGeneIds, mRequireCodingInfo))
             return false;
 
         List<Integer> uniqueTransIds = Lists.newArrayList();
