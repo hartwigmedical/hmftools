@@ -189,6 +189,9 @@ DROP TABLE IF EXISTS molecularMatchMutationsExonsInfoBoundriesExonPosities;
 DROP TABLE IF EXISTS molecularMatchClassificationNucleotideChange;
 DROP TABLE IF EXISTS molecularMatchCriteriaUnmet;
 DROP TABLE IF EXISTS molecularMatchPrefelance;
+DROP TABLE IF EXISTS molecularMatchMutationsGRCH37LocationConsequences;
+DROP TABLE IF EXISTS molecularMatchMutationsGRCH37LocConsequencesTxsites;
+DROP TABLE IF EXISTS molecularMatchMutationsGRCH37LocConsequencesExonNumber;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -1706,6 +1709,37 @@ CREATE TABLE molecularMatchMutationsGRCH37Location
     strand varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchMutationsId) REFERENCES molecularMatchMutations(id)
+);
+
+CREATE TABLE molecularMatchMutationsGRCH37LocationConsequences
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationsGRCH37LocationId int NOT NULL,
+    aminoAcidChange varchar(255) NOT NULL,
+    intronNumber varchar(255) NOT NULL,
+    transcript varchar(255) NOT NULL,
+    cdna varchar(255) NOT NULL,
+    chr varchar(255) NOT NULL,
+    alt varchar(255) NOT NULL,
+    validated varchar(255) NOT NULL,
+    strand varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationsGRCH37LocationId) REFERENCES molecularMatchMutationsGRCH37Location(id)
+);
+
+CREATE TABLE molecularMatchMutationsGRCH37LocConsequencesTxsites
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationsGRCH37LocationConsequencesId int NOT NULL,
+    txSites varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationsGRCH37LocationConsequencesId) REFERENCES molecularMatchMutationsGRCH37LocationConsequences(id)
+);
+
+CREATE TABLE molecularMatchMutationsGRCH37LocConsequencesExonNumber
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationsGRCH37LocationConsequencesId int NOT NULL,
+    exonNumber varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationsGRCH37LocationConsequencesId) REFERENCES molecularMatchMutationsGRCH37LocationConsequences(id)
 );
 
 CREATE TABLE molecularMatchMutationsFusion

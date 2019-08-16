@@ -122,6 +122,8 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSF
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSFUSIONBTX;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSFUSIONINS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCATION;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSMUTATIONTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSPARENTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSPARENTSTRANSCRIPT;
@@ -2430,6 +2432,9 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE).execute();
         context.deleteFrom(MOLECULARMATCHCRITERIAUNMET).execute();
         context.deleteFrom(MOLECULARMATCHPREFELANCE).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCATION).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER).execute();
 
     }
 }
