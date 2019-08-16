@@ -161,12 +161,6 @@ public class CircosConfigWriter
         Files.write(new File(configPath).toPath(), template.getBytes(charset));
     }
 
-    public void writeCytobands() throws IOException
-    {
-        final String template = readResource("/r/cytoBand.txt");
-        Files.write(new File(outputDir + File.separator + "cytoBand.txt").toPath(), template.getBytes(StandardCharsets.UTF_8));
-    }
-
     @NotNull
     private String readResource(@NotNull final String resource) throws IOException
     {
