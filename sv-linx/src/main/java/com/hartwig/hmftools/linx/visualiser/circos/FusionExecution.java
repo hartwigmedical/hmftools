@@ -31,7 +31,7 @@ public class FusionExecution
                 plotFile);
         if (result != 0)
         {
-            LOGGER.warn("Error generating R copy number plots.");
+            LOGGER.warn("Error adding fusion plots.");
         }
 
         return result;

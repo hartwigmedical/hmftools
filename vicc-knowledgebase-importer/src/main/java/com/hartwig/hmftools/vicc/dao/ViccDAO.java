@@ -80,6 +80,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICA
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONEND;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONEXON;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONEXONICFUNC;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONPARENTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONPARENTSTRANSCRIPTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONPATHOLOGY;
@@ -89,6 +90,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICA
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONSTART;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONTRANSCRIPTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCRITERIAMET;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCRITERIAUNMET;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHEXTERNALID;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHINCLUDECONDITION0;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHINCLUDECONDITION1;
@@ -120,6 +122,9 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSF
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSFUSIONBTX;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSFUSIONINS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCATION;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSMUTATIONTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSPARENTS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSPARENTSTRANSCRIPT;
@@ -138,6 +143,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSW
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSWGSMAP;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSWGSMAPPROTCOORDS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSWGSMAPSYNONYMS;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHPREFELANCE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHSOURCE;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTAGS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTHERAPEUTICCONTEXT;
@@ -224,6 +230,7 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsMolecularProfile;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrials;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
@@ -1961,6 +1968,64 @@ public class ViccDAO {
         if (object instanceof Civic) {
             importCivic(viccEntryId, object);
         }
+        if (object instanceof MolecularMatch) {
+            importMolecularMatch(viccEntryId, object);
+        }
+    }
+
+    private void importMolecularMatch(int viccEntryId, @NotNull KbSpecificObject object) {
+        MolecularMatch molecularMatch = (MolecularMatch) object;
+
+        int id = context.insertInto(MOLECULARMATCH,
+                MOLECULARMATCH.SCORE,
+                MOLECULARMATCH.AUTOGENERATENARRATIVE,
+                MOLECULARMATCH.CLINICALSIGNIFICANCE,
+                MOLECULARMATCH.IDMOLECULARMATCH,
+                MOLECULARMATCH.UNIQUEKEY,
+                MOLECULARMATCH.CIVICVALUE,
+                MOLECULARMATCH.HASHKEY,
+                MOLECULARMATCH.REGULATORYBODYAPPROVED,
+                MOLECULARMATCH.VERSION,
+                MOLECULARMATCH.GUIDELINEBODY,
+                MOLECULARMATCH.REGULATORYBODY,
+                MOLECULARMATCH.CUSTOMER,
+                MOLECULARMATCH.DIRECTION,
+                MOLECULARMATCH.AMPCAP,
+                MOLECULARMATCH.GUIDELINEVERSION,
+                MOLECULARMATCH.TIER,
+                MOLECULARMATCH.MVLD,
+                MOLECULARMATCH.SIXTIER,
+                MOLECULARMATCH.NOTHERAPYAVAILABLE,
+                MOLECULARMATCH.NARRATIVE,
+                MOLECULARMATCH.EXPRESSION,
+                MOLECULARMATCH.BIOMARKERCLASS,
+                MOLECULARMATCH.VICCENTRYID)
+                .values(molecularMatch.score(),
+                        molecularMatch.autoGenerateNarrative(),
+                        molecularMatch.clinicalSignificance(),
+                        molecularMatch.id(),
+                        molecularMatch.uniqueKey(),
+                        molecularMatch.civicValue(),
+                        molecularMatch.hashKey(),
+                        molecularMatch.regulatoryBodyApproved(),
+                        molecularMatch.version(),
+                        molecularMatch.guidelineBody(),
+                        molecularMatch.regulatoryBody(),
+                        molecularMatch.customer(),
+                        molecularMatch.direction(),
+                        molecularMatch.ampcap(),
+                        molecularMatch.guidelineVersion(),
+                        molecularMatch.tier(),
+                        molecularMatch.mvld(),
+                        molecularMatch.sixtier(),
+                        molecularMatch.noTherapyAvailable(),
+                        molecularMatch.narrative(),
+                        molecularMatch.expression(),
+                        molecularMatch.biomarkerClass(),
+                        viccEntryId)
+                .returning(MOLECULARMATCH.ID)
+                .fetchOne()
+                .getValue(MOLECULARMATCH.ID);
     }
 
     private void writeAssociation(int viccEntryId, @NotNull Association association) {
@@ -2382,8 +2447,11 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHCLASSIFICATIONDBSNP).execute();
         context.deleteFrom(MOLECULARMATCHCLASSIFICATIONPOPFREQMAX).execute();
         context.deleteFrom(MOLECULARMATCHCLASSIFICATIONEXONICFUNC).execute();
+        context.deleteFrom(MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE).execute();
         context.deleteFrom(MOLECULARMATCHCLASSIFICATIONPARENTS).execute();
         context.deleteFrom(MOLECULARMATCHCLASSIFICATIONPARENTSTRANSCRIPTS).execute();
+        context.deleteFrom(MOLECULARMATCHCRITERIAUNMET).execute();
+        context.deleteFrom(MOLECULARMATCHPREFELANCE).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONS).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSMUTATIONTYPE).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSSOURCE).execute();
@@ -2405,6 +2473,9 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHMUTATIONSWGSMAPSYNONYMS).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSWGSMAPPROTCOORDS).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCATION).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSFUSION).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSFUSIONBCHR).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSFUSIONAGENE).execute();
@@ -2424,5 +2495,6 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFO).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES).execute();
+        //TODO: adding object asts of molecular match
     }
 }
