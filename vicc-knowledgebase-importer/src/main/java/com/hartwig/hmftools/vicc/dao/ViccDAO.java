@@ -230,6 +230,7 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsMolecularProfile;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrials;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
@@ -1967,6 +1968,64 @@ public class ViccDAO {
         if (object instanceof Civic) {
             importCivic(viccEntryId, object);
         }
+        if (object instanceof MolecularMatch) {
+            importMolecularMatch(viccEntryId, object);
+        }
+    }
+
+    private void importMolecularMatch(int viccEntryId, @NotNull KbSpecificObject object) {
+        MolecularMatch molecularMatch = (MolecularMatch) object;
+
+        int id = context.insertInto(MOLECULARMATCH,
+                MOLECULARMATCH.SCORE,
+                MOLECULARMATCH.AUTOGENERATENARRATIVE,
+                MOLECULARMATCH.CLINICALSIGNIFICANCE,
+                MOLECULARMATCH.IDMOLECULARMATCH,
+                MOLECULARMATCH.UNIQUEKEY,
+                MOLECULARMATCH.CIVICVALUE,
+                MOLECULARMATCH.HASHKEY,
+                MOLECULARMATCH.REGULATORYBODYAPPROVED,
+                MOLECULARMATCH.VERSION,
+                MOLECULARMATCH.GUIDELINEBODY,
+                MOLECULARMATCH.REGULATORYBODY,
+                MOLECULARMATCH.CUSTOMER,
+                MOLECULARMATCH.DIRECTION,
+                MOLECULARMATCH.AMPCAP,
+                MOLECULARMATCH.GUIDELINEVERSION,
+                MOLECULARMATCH.TIER,
+                MOLECULARMATCH.MVLD,
+                MOLECULARMATCH.SIXTIER,
+                MOLECULARMATCH.NOTHERAPYAVAILABLE,
+                MOLECULARMATCH.NARRATIVE,
+                MOLECULARMATCH.EXPRESSION,
+                MOLECULARMATCH.BIOMARKERCLASS,
+                MOLECULARMATCH.VICCENTRYID)
+                .values(molecularMatch.score(),
+                        molecularMatch.autoGenerateNarrative(),
+                        molecularMatch.clinicalSignificance(),
+                        molecularMatch.id(),
+                        molecularMatch.uniqueKey(),
+                        molecularMatch.civicValue(),
+                        molecularMatch.hashKey(),
+                        molecularMatch.regulatoryBodyApproved(),
+                        molecularMatch.version(),
+                        molecularMatch.guidelineBody(),
+                        molecularMatch.regulatoryBody(),
+                        molecularMatch.customer(),
+                        molecularMatch.direction(),
+                        molecularMatch.ampcap(),
+                        molecularMatch.guidelineVersion(),
+                        molecularMatch.tier(),
+                        molecularMatch.mvld(),
+                        molecularMatch.sixtier(),
+                        molecularMatch.noTherapyAvailable(),
+                        molecularMatch.narrative(),
+                        molecularMatch.expression(),
+                        molecularMatch.biomarkerClass(),
+                        viccEntryId)
+                .returning(MOLECULARMATCH.ID)
+                .fetchOne()
+                .getValue(MOLECULARMATCH.ID);
     }
 
     private void writeAssociation(int viccEntryId, @NotNull Association association) {
