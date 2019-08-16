@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -28,7 +29,6 @@ public class AnnotationTest
     public void testLocalTopology()
     {
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         // create a set of SVs which exhibit the various types of local topology
         final SvVarData var1 = createInv(1, "1", 101000, 107000, 1);
@@ -75,6 +75,47 @@ public class AnnotationTest
         assertEquals(1, armClusterData[ARM_CL_FOLDBACK]);
         assertEquals(1, armClusterData[ARM_CL_FOLDBACK_DSB]);
         assertEquals(1, armClusterData[ARM_CL_COMPLEX_FOLDBACK]);
+    }
+
+    @Test
+    public void testMultipleTIs()
+    {
+        LinxTester tester = new LinxTester();
+
+        final SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 1000, -1);
+        final SvVarData var2 = createBnd(tester.nextVarId(), "1", 1110, -1, "2", 1200, 1);
+        final SvVarData var3 = createBnd(tester.nextVarId(), "1", 1310, 1, "2", 1210, -1);
+        final SvVarData var4 = createBnd(tester.nextVarId(), "1", 1320, -1, "2", 1410, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        final int[] armClusterData = getArmClusterData(cluster);
+
+        assertEquals(2, cluster.getArmClusters().size());
+        assertEquals(1, armClusterData[ARM_CL_TI_ONLY]);
+        assertEquals(1, armClusterData[ARM_CL_DSB]);
+
+        long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
+        assertEquals(3, armClusterTIs);
+
+        boolean hasDoubleTI = false;
+
+        for(SvArmCluster armCluster : cluster.getArmClusters())
+        {
+            if(armCluster.getTICount() == 2 && armCluster.getType() == ARM_CL_TI_ONLY)
+                hasDoubleTI = true;
+        }
+
+        assertTrue(hasDoubleTI);
     }
 
 }

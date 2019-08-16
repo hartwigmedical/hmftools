@@ -139,18 +139,10 @@ public class SvLinxApplication
 
             if(checkDrivers)
             {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig);
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig, cnDataLoader);
                 driverGeneAnnotator.loadConfig(cmd);
                 driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }
-        }
-
-        if(driverGeneAnnotator != null)
-        {
-            driverGeneAnnotator.setCopyNumberData(
-                    cnDataLoader.getChrCopyNumberMap(),
-                    cnDataLoader.getLohData(),
-                    cnDataLoader.getHomLossData());
         }
 
         PerformanceCounter prefCounter = new PerformanceCounter("SVA Total");

@@ -88,9 +88,6 @@ public class SvArmCluster
         mMaxCopyNumber = max(mMaxCopyNumber, breakend.getCopyNumber(false));
     }
 
-    public double getMinCopyNumber() { return mMinCopyNumber; }
-    public double getMaxCopyNumber() { return mMaxCopyNumber; }
-
     public static final int ARM_CL_ISOLATED_BE = 0;
     public static final int ARM_CL_TI_ONLY = 1;
     public static final int ARM_CL_DSB = 2; // includes simple DELs within the arm-cluster window
@@ -187,28 +184,26 @@ public class SvArmCluster
 
         List<SvBreakend> tiBreakends = Lists.newArrayList();
 
-        for (int i = 0; i < mBreakends.size(); ++i)
+        for (final SvBreakend breakend : mBreakends)
         {
-            final SvBreakend be1 = mBreakends.get(i);
-
-            if(be1.getSV().isLineElement(be1.usesStart()))
+            if(breakend.getSV().isLineElement(breakend.usesStart()))
             {
                 ++suspectLine;
             }
 
-            if(be1.getSV().isFoldback())
+            if(breakend.getSV().isFoldback())
             {
                 ++foldbackCount;
             }
 
-            if(be1.orientation() == -1)
+            if(breakend.orientation() == -1)
             {
-                final SvLinkedPair tiPair = be1.getSV().getLinkedPair(be1.usesStart());
+                final SvLinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
 
-                if (tiPair != null && be1.position() + tiPair.length() <= mEndPos)
+                if (tiPair != null && mBreakends.contains(tiPair.getOtherBreakend(breakend)))
                 {
-                    tiBreakends.add(be1);
-                    tiBreakends.add(tiPair.getOtherBreakend(be1));
+                    tiBreakends.add(breakend);
+                    tiBreakends.add(tiPair.getOtherBreakend(breakend));
                     ++tiCount;
                 }
             }
@@ -224,6 +219,12 @@ public class SvArmCluster
         }
 
         mTICount = tiCount;
+
+        if(tiBreakends.size() == mBreakends.size())
+        {
+            mType = ARM_CL_TI_ONLY;
+            return;
+        }
 
         if(suspectLine > 0)
         {

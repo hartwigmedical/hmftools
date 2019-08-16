@@ -475,6 +475,8 @@ public class SvSampleAnalyser {
         }
     }
 
+    private static final int INF_DB_MARKER = -2000;
+
     private void generateSvDataOutput(@Nullable  List<LinxSvData> linxSvData)
     {
         try
@@ -551,8 +553,21 @@ public class SvSampleAnalyser {
 
                     mSvFileWriter.write(chainStr);
 
-                    int dbLenStart = var.getDBLink(true) != null ? var.getDBLink(true).length() : NO_DB_MARKER;
-                    int dbLenEnd = var.getDBLink(false) != null ? var.getDBLink(false).length() : NO_DB_MARKER;
+                    final SvLinkedPair dbStart = var.getDBLink(true);
+                    final SvLinkedPair dbEnd = var.getDBLink(false);
+
+                    int dbLenStart = NO_DB_MARKER;
+                    int dbLenEnd = NO_DB_MARKER;
+
+                    if(dbStart != null)
+                    {
+                        dbLenStart = (!var.isInferredSgl() && !dbStart.getOtherSV(var).isInferredSgl()) ? dbStart.length() : INF_DB_MARKER;
+                    }
+
+                    if(dbEnd != null)
+                    {
+                        dbLenEnd = (!var.isInferredSgl() && !dbEnd.getOtherSV(var).isInferredSgl()) ? dbEnd.length() : INF_DB_MARKER;
+                    }
 
                     mSvFileWriter.write(String.format(",%d,%s,%d,%d",
                             var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
@@ -730,11 +745,10 @@ public class SvSampleAnalyser {
                     long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
                     mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                            cluster.getArmClusters()
-                                    .size(), armClusterTIs, armClusterData[ARM_CL_ISOLATED_BE], armClusterData[ARM_CL_TI_ONLY],
-                            armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP], armClusterData[ARM_CL_FOLDBACK],
-                            armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK], armClusterData[ARM_CL_COMPLEX_LINE],
-                            armClusterData[ARM_CL_COMPLEX_OTHER]));
+                            cluster.getArmClusters().size(), armClusterTIs, armClusterData[ARM_CL_ISOLATED_BE],
+                            armClusterData[ARM_CL_TI_ONLY], armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP],
+                            armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
+                            armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
 
                     mClusterFileWriter.newLine();
                 }

@@ -733,25 +733,12 @@ public class SvCluster
         {
             for (final SvLinkedPair pair : chain.getLinkedPairs())
             {
-                boolean isRepeat = false;
-
-                // only add each chain link once, and log how many times the link has been used
-                for (final SvLinkedPair existingPair : mLinkedPairs)
-                {
-                    if (pair.matches(existingPair))
-                    {
-                        isRepeat = true;
-                        break;
-                    }
-                }
-
-                if (isRepeat)
+                if(mLinkedPairs.stream().anyMatch(x -> x.matches(pair)))
                     continue;
 
                 mLinkedPairs.add(pair);
                 pair.first().addLinkedPair(pair, pair.firstLinkOnStart());
                 pair.second().addLinkedPair(pair, pair.secondLinkOnStart());
-
             }
         }
     }

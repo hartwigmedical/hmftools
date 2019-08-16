@@ -536,7 +536,31 @@ public class ClusterAnnotations
 
         for (final SvChain chain : cluster.getChains())
         {
-            if (!chain.isConsistent())
+            boolean chainConsistent = chain.isConsistent();
+
+            for(final SvLinkedPair pair : chain.getLinkedPairs())
+            {
+                final SvVarData first = pair.first();
+
+                if (pair.first().isSglBreakend() || pair.second().isSglBreakend())
+                    continue;
+
+                final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
+
+                if(pair.length() <= SHORT_TI_LENGTH)
+                {
+                    ++shortTiCount;
+
+                    if(!fragmentArms.contains(chrArm))
+                        fragmentArms.add(chrArm);
+                }
+                else
+                {
+                    ++longTiCount;
+                }
+            }
+
+            if (!chainConsistent)
             {
                 ++inconsistentChains;
                 continue;
@@ -548,36 +572,17 @@ public class ClusterAnnotations
             final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
             final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
 
-            if(!startChrArm.isEmpty() && !chainEndArms.contains(startChrArm))
-                chainEndArms.add(startChrArm);
+            if(!startChrArm.isEmpty() && !originArms.contains(startChrArm))
+                originArms.add(startChrArm);
             else
                 ++repeatedChainEndArms;
 
             if(!startChrArm.equals(endChrArm))
             {
-                if (!endChrArm.isEmpty() && !chainEndArms.contains(endChrArm))
-                    chainEndArms.add(startChrArm);
+                if (!endChrArm.isEmpty() && !originArms.contains(endChrArm))
+                    originArms.add(startChrArm);
                 else
                     ++repeatedChainEndArms;
-            }
-
-            for(final SvLinkedPair pair : chain.getLinkedPairs())
-            {
-                final SvVarData first = pair.first();
-
-                if(pair.first().type() == SGL || pair.second().type() == SGL)
-                    continue;
-
-                final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
-
-                if(pair.length() <= SHORT_TI_LENGTH)
-                {
-                    ++shortTiCount;
-                }
-                else
-                {
-                    ++longTiCount;
-                }
             }
         }
 
