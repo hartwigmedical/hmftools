@@ -26,6 +26,7 @@ public class LinxConfig
     final public String SvDataPath;
     final public boolean UploadToDB;
     final public String FragileSiteFile;
+    final public String KataegisFile;
     final public String LineElementFile;
     final public String ReplicationOriginsFile;
     final public String ViralHostsFile;
@@ -56,6 +57,7 @@ public class LinxConfig
 
     // reference files
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
+    private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
@@ -125,6 +127,7 @@ public class LinxConfig
                 : DEFAULT_PROXIMITY_DISTANCE;
 
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
+        KataegisFile = cmd.getOptionValue(KATAEGIS_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
         ViralHostsFile = cmd.getOptionValue(VIRAL_HOSTS_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
@@ -162,6 +165,7 @@ public class LinxConfig
         SvDataPath = "";
         UploadToDB = false;
         FragileSiteFile = "";
+        KataegisFile = "";
         LineElementFile = "";
         ViralHostsFile = "";
         ReplicationOriginsFile = "";
@@ -185,6 +189,7 @@ public class LinxConfig
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
+        options.addOption(KATAEGIS_FILE, true, "Kataegis data file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");

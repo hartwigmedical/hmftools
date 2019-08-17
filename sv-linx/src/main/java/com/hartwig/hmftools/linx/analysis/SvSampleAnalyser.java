@@ -58,6 +58,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvDataFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
+import com.hartwig.hmftools.linx.annotators.KataegisAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
@@ -100,6 +101,7 @@ public class SvSampleAnalyser {
     private LineElementAnnotator mLineElementAnnotator;
     private ReplicationOriginAnnotator mReplicationOriginAnnotator;
     private ViralInsertAnnotator mViralInsertAnnotator;
+    private KataegisAnnotator mKataegisAnnotator;
     private CnDataLoader mCnDataLoader;
 
     private boolean mIsValid;
@@ -138,6 +140,9 @@ public class SvSampleAnalyser {
 
         mViralInsertAnnotator = new ViralInsertAnnotator();
         mViralInsertAnnotator.loadViralHostData(mConfig.ViralHostsFile);
+
+        mKataegisAnnotator = new KataegisAnnotator();
+        mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
 
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
