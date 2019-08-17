@@ -131,7 +131,7 @@ public class FusionDisruptionAnalyser
         mGeneTransCollection = ensemblDataCache;
         mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
         mFusionWriter = new FusionWriter(mOutputDir);
-        mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache);
+        mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
 
         populateKnownFusionGenes();
 
@@ -143,6 +143,9 @@ public class FusionDisruptionAnalyser
             {
                 String fusionFileName = mConfig.hasMultipleSamples() ? "SVA_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
                 mFusionWriter.initialiseOutputFile(fusionFileName);
+
+                if(mConfig.hasMultipleSamples())
+                    mDisruptionFinder.initialiseOutputFile("SVA_DISRUPTIONS.csv");
             }
 
             if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
@@ -294,7 +297,12 @@ public class FusionDisruptionAnalyser
 
         if(mConfig.isSingleSample())
         {
-            mFusionWriter.writeSampleData(mSampleId, mFusions, mDisruptions);
+            mFusionWriter.writeSampleData(mSampleId, mFusions);
+            mDisruptionFinder.writeSampleData(mSampleId, mDisruptions);
+        }
+        else
+        {
+            mDisruptions.forEach(x -> mDisruptionFinder.writeDisruptionData(mSampleId, x));
         }
 
         List<GeneFusion> uniqueFusions = extractUniqueFusions();
@@ -1150,6 +1158,9 @@ public class FusionDisruptionAnalyser
 
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.close();
+
+        if(mDisruptionFinder != null)
+            mDisruptionFinder.close();
     }
 
     // currently unused logic for finding unclustered or chained fusions:

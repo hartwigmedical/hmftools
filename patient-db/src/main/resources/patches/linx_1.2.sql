@@ -1,6 +1,8 @@
 ALTER TABLE svFusion
     CHANGE skippedExons skippedExonsUp INT,
-    ADD skippedExonsDown INT,
+    ADD skippedExonsDown INT;
+
+ALTER TABLE svFusion
     ADD fusedExonUp INT,
     ADD fusedExonDown INT;
 

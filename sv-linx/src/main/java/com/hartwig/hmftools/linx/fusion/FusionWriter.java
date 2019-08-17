@@ -38,10 +38,9 @@ public class FusionWriter
     {
         mOutputDir = outputDir;
         mFusionWriter = null;
-
     }
 
-    public void writeSampleData(final String sampleId, final List<GeneFusion> fusions, final List<Transcript> disruptions)
+    public void writeSampleData(final String sampleId, final List<GeneFusion> fusions)
     {
         // write sample files for patient reporter
         List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
@@ -62,37 +61,17 @@ public class FusionWriter
             }
         }
 
-        for(final Transcript transcript : disruptions)
-        {
-            final GeneAnnotation gene = transcript.parent();
-
-            reportedDisruptions.add(ImmutableReportableDisruption.builder()
-                    .svId(gene.id())
-                    .chromosome(gene.chromosome())
-                    .orientation(gene.orientation())
-                    .strand(gene.Strand)
-                    .chrBand(gene.karyotypeBand())
-                    .gene(transcript.geneName())
-                    .type(gene.type().toString())
-                    .ploidy(gene.ploidy())
-                    .exonUp(transcript.ExonUpstream)
-                    .exonDown(transcript.ExonDownstream)
-                    .build());
-        }
-
         try
         {
             final String fusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, sampleId);
             ReportableGeneFusionFile.write(fusionsFile, reportedFusions);
-
-            final String disruptionsFile = ReportableDisruptionFile.generateFilename(mOutputDir, sampleId);
-            ReportableDisruptionFile.write(disruptionsFile, reportedDisruptions);
         }
         catch(IOException e)
         {
             LOGGER.error("failed to write fusions file: {}", e.toString());
         }
     }
+
     public void initialiseOutputFile(final String fileName)
     {
         try
@@ -260,6 +239,4 @@ public class FusionWriter
     {
         closeBufferedWriter(mFusionWriter);
     }
-
-
 }

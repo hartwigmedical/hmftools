@@ -351,7 +351,7 @@ public class ClusterAnalyser {
 
         if(mConfig.ChainingSvLimit > 0 && svCount > mConfig.ChainingSvLimit)
         {
-            LOGGER.info("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
+            LOGGER.debug("sample({}) skipping large cluster({}) with SV counts: unique({}) replicated({})",
                     mSampleId, cluster.id(), cluster.getSvCount(), svCount);
             return;
         }
