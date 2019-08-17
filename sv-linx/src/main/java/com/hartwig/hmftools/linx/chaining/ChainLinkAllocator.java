@@ -1036,7 +1036,7 @@ public class ChainLinkAllocator
     {
         List<SvLinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
 
-        if (possibleLinks == null || possibleLinks.isEmpty())
+        if (possibleLinks == null)
             return;
 
         mSvBreakendPossibleLinks.remove(breakend);
@@ -1072,6 +1072,12 @@ public class ChainLinkAllocator
 
             if (possibleLinks == null)
                 continue;
+
+            if(possibleLinks.isEmpty())
+            {
+                mSvBreakendPossibleLinks.remove(otherBreakend);
+                continue;
+            }
 
             SvBreakend otherPairBreakend = pair.getBreakend(!isStart(se)).getOtherBreakend();
 
