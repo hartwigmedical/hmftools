@@ -3,9 +3,11 @@ library(dplyr)
 library(grid)
 library(ggplot2)
 library(cowplot)
+library(magick)
 
-#chromosomeHeight = 150
+#chromosomeHeightPerRow = 150
 #chromosomeFontsize = 70
+#chromosomeColumns = 4
 #circosPicturePath = "~/hmf/analysis/fusions/plot/COLO829T.cluster27.COMPLEX.sv8.png"
 #bandsPath = "/Users/jon/hmf/analysis/fusions/data/COLO829T.cluster27.COMPLEX.sv8.cytoBand.txt"
 #chromosomeRangePath = "/Users/jon/hmf/analysis/fusions/data/COLO829T.cluster27.COMPLEX.sv8.chromosome.circos"
@@ -15,9 +17,11 @@ chromosomeRangePath <- args[1]
 bandsPath <- args[2]
 circosPicturePath <- args[3]
 chromosomeFontsize <- as.numeric(args[4])
-chromosomeHeight <- as.numeric(args[5])
+chromosomeHeightPerRow <- as.numeric(args[5])
 chromosomeColumns <- as.numeric(args[6])
-circosWidth = 3000
+
+imgCircos = magick::image_read(circosPicturePath)
+circosWidth = image_info(imgCircos)$width
   
 doPlot <- function(contig) {
   start = chromosomeRanges[chromosomeRanges$chromosome == contig, "start"]
@@ -31,7 +35,7 @@ doPlot <- function(contig) {
   plotTracks(itrack, from = start, to = end, add=TRUE, panel.only = F)
 }
 
-pCircos <- ggdraw() + draw_image(circosPicturePath)
+pCircos <- ggdraw() + draw_image(imgCircos)
 bands <- read.table(bandsPath, h = T)
 chromosomeRanges <- read.table(chromosomeRangePath, h = F, sep = "\t", comment = "!", stringsAsFactors = F)
 names(chromosomeRanges) <- c("chromosome", "start", "end", "chrColor")
@@ -61,10 +65,10 @@ chromosomeLengths = bands %>%
 chromosomeLengths = data.frame(chromosomeLengths)
 
 # Height is per row
-chromosomeHeight = chromosomeHeight * max(chromosomeLengths$row)
+chromosomeHeightPerRow = chromosomeHeightPerRow * max(chromosomeLengths$row)
 
 #circosPicturePath = "~/hmf/analysis/fusions/plot/COLO829T.cluster27.COMPLEX.sv8.out.png"
-png(file = circosPicturePath, width = circosWidth, height = chromosomeHeight, units = "px")
+png(file = circosPicturePath, width = circosWidth, height = chromosomeHeightPerRow, units = "px")
 for (i in 1:nrow(chromosomeLengths)) {
   x = chromosomeLengths[i, "x"]
   y = chromosomeLengths[i, "y"]
@@ -80,5 +84,5 @@ dev.off()
 
 
 pChr <- ggdraw() + draw_image(circosPicturePath)
-pCombined = plot_grid(pChr, pCircos, ncol = 1, rel_heights = c(chromosomeHeight - 0.05 * chromosomeHeight, circosWidth))
-ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeight)/300.0, units = "in", dpi = 300)
+pCombined = plot_grid(pChr, pCircos, ncol = 1, rel_heights = c(chromosomeHeightPerRow - 0.05 * chromosomeHeightPerRow, circosWidth))
+ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeightPerRow)/300.0, units = "in", dpi = 300)
