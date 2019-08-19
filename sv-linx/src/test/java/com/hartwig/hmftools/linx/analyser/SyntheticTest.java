@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.linx.analyser;
 
+import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
+import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -61,9 +65,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
+        assertTrue(cluster.getResolvedType() == RECIP_INV);
 
         assertEquals(1, cluster.getArmClusters().size());
         assertEquals(ARM_CL_DSB, cluster.getArmClusters().get(0).getType());
@@ -79,10 +81,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
-
+        assertTrue(cluster.getResolvedType() == RECIP_INV);
 
         // test 2 overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 100, 10400, 1);
@@ -114,9 +113,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
+        assertTrue(cluster.getResolvedType() == RECIP_INV);
 
         // 3 overlapping breakends
         var1 = createInv(tester.nextVarId(), "1", 200, 10400, 1);
@@ -145,13 +142,11 @@ public class SyntheticTest
         assertEquals(1, tester.Analyser.getClusters().size());
         cluster = tester.getClusters().get(0);
 
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(getSyntheticLength(cluster), var1.position(false) - var2.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(true) - var2.position(false));
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == FB_INV_PAIR);
 
         assertEquals(1, cluster.getArmClusters().size());
-        assertEquals(ARM_CL_COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
+        assertEquals(ARM_CL_COMPLEX_FOLDBACK, cluster.getArmClusters().get(0).getType());
     }
 
     @Test
@@ -237,7 +232,7 @@ public class SyntheticTest
         assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(false));
         assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
 
-        // 2 DUPs next to each other
+        // 2 DUPs next to each other - since the short TI ovelaps the chain ends, it's not considered a synthetic
         var1 = createDup(tester.nextVarId(), "1", 100, 200);
         var2 = createDup(tester.nextVarId(), "1", 300, 400);
 
@@ -250,9 +245,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(false));
-        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(true));
+        assertTrue(cluster.getResolvedType() == SIMPLE_GRP);
 
         // 2 DUPs with an overlap
         var1 = createDup(tester.nextVarId(), "1", 100, 300);
@@ -267,55 +260,7 @@ public class SyntheticTest
         cluster = tester.getClusters().get(0);
 
         assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
-
-        // 2 DUPs with one enclosed
-        var1 = createDup(tester.nextVarId(), "1", 100, 400);
-        var2 = createDup(tester.nextVarId(), "1", 250, 300);
-
-        var1.getTIAssemblies(false).add("asmb1");
-        var2.getTIAssemblies(true).add("asmb1");
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DUP);
-        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(true));
-
-        // DEL before DUP no overlap
-        var1 = createDel(tester.nextVarId(), "1", 100, 200);
-        var2 = createDup(tester.nextVarId(), "1", 250, 400);
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false));
-
-        // DEL after DUP no overlap
-        var1 = createDup(tester.nextVarId(), "1", 100, 200);
-        var2 = createDel(tester.nextVarId(), "1", 250, 400);
-
-        tester.addAndCluster(var1, var2);
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.getClusters().get(0);
-
-        assertTrue(cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == DEL);
-        assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(false));
-        assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
-
+        assertTrue(cluster.getResolvedType() == SIMPLE_GRP);
     }
 
     @Test

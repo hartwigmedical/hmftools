@@ -119,7 +119,7 @@ public class MergeRuleTest
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
         assertTrue(cluster != null);
-        assertEquals(ResolvedType.DEL, cluster.getResolvedType());
+        assertEquals(ResolvedType.SIMPLE_GRP, cluster.getResolvedType());
     }
 
     @Test

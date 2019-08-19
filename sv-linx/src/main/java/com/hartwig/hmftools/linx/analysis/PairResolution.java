@@ -5,21 +5,14 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.calcPloidyUncertainty;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
-import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
@@ -32,7 +25,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
@@ -113,19 +105,61 @@ public class PairResolution
 
         boolean isSingleChain = cluster.isFullyChained(false) && clusterChains.size() == 1;
 
-        // first handle the single chain case either handling it as a synthetic with only short TIs, or by splitting it
+        // first handle the single chain case either handling it as a synthetic with only short external TIs, or by splitting it
+        // at the location of the long (or non-external) TI
         if(isSingleChain && longTiLink == null)
         {
-            //  a single chain with only short TIs may be resovled as a synthetic DEL or DUP or something else,
-            // but not a pair-type cluster
-            classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
-            return;
+            final SvChain chain = cluster.getChains().get(0);
+            final SvBreakend chainStart = chain.getOpenBreakend(true);
+            final SvBreakend chainEnd = chain.getOpenBreakend(false);
+            boolean hasInternalTIs = false;
+
+            if(chain.isConsistent() && chainStart.getChrArm().equals(chainEnd.getChrArm()))
+            {
+                final SvBreakend chainLowerBe = chainStart.position() < chainEnd.position() ? chainStart : chainEnd;
+                final SvBreakend chainUpperBe = chainStart == chainLowerBe ? chainEnd : chainStart;
+
+                for(final SvLinkedPair pair : chain.getLinkedPairs())
+                {
+                    if(!pair.chromosome().equals(chainStart.chromosome()))
+                        continue;
+
+                    final SvBreakend pairLowerBe = pair.getBreakend(true);
+                    final SvBreakend pairUpperBe = pair.getBreakend(false);
+                    int lowerBuffer = getMinTemplatedInsertionLength(pairLowerBe, chainLowerBe);
+                    int upperBuffer = getMinTemplatedInsertionLength(pairUpperBe, chainUpperBe);
+
+                    if (pairUpperBe.position() < chainLowerBe.position() - lowerBuffer
+                    || pairLowerBe.position() > chainUpperBe.position() + upperBuffer)
+                    {
+                        // pair doesn't overlap with the chain ends segment at all
+                        continue;
+                    }
+                    else if(hasInternalTIs)
+                    {
+                        // already found an internal or overlapping TI, so can't classify as any pair type
+                        return;
+                    }
+                    else
+                    {
+                        hasInternalTIs = true;
+                        longTiLink = pair;
+                        break;
+                    }
+                }
+            }
+
+            if(!hasInternalTIs)
+            {
+                //  a single consistent chain with only short external TIs may be resovled as a synthetic DEL or DUP or something else,
+                classifySyntheticDelDups(cluster, longDelThreshold, longDupThreshold);
+                return;
+            }
         }
 
-            // first handle the single chain case either handling it as a synthetic with only short TIs, or by splitting it
-        if(isSingleChain)
+        if(isSingleChain && longTiLink != null)
         {
-            // go into regular 2 break logic after first breaking the chain at this long TI
+            // go into regular 2 break logic after first breaking the chain at this long or internal TI
             SvChain chain = clusterChains.get(0);
             clusterChains.clear();
             existingChainModified = true;
@@ -229,21 +263,6 @@ public class PairResolution
                         cluster, longDelThreshold, longDupThreshold,
                         startBe1, endBe1, startBe2, endBe2, uniformPloidy, longTiLink);
             }
-            /* no longer any pair-resolution for DELs and DUPs
-            else if(startBe1.orientation() != endBe1.orientation() && startBe2.orientation() != endBe2.orientation())
-            {
-                // next a DUP and DEL
-                boolean firstIsDel = (startBe1.orientation() == 1) == (startBe1.position() < endBe1.position());
-                boolean secondIsDel = (startBe2.orientation() == 1) == (startBe2.position() < endBe2.position());
-
-                if(secondIsDel != firstIsDel)
-                {
-                    classifyDelDupPairClusters(
-                            cluster, longDelThreshold, longDupThreshold, longTiLink,
-                            startBe1, endBe1, startBe2, endBe2, uniformPloidy);
-                }
-            }
-            */
         }
         else
         {
