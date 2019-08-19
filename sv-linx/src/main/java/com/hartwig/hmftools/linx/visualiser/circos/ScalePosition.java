@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegions;
@@ -39,7 +41,7 @@ class ScalePosition
     private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
 
     private final int totalLength;
-    private final Map<String, Integer> contigLength = Maps.newHashMap();
+    private final Set<GenomePosition> contigLength = Sets.newHashSet();
     private final Map<String, ScaleContig> contigMap = Maps.newHashMap();
 
     ScalePosition(@NotNull final List<? extends GenomePosition> positions)
@@ -68,14 +70,14 @@ class ScalePosition
                 scaleContig.expand(1d * minContigDistance / scaleContig.length());
             }
             totalLength += scaleContig.length();
-            contigLength.put(scaleContig.contig(), scaleContig.length());
+            contigLength.add(GenomePositions.create(scaleContig.contig(), scaleContig.length()));
         }
 
         this.totalLength = totalLength;
     }
 
     @NotNull
-    public Map<String, Integer> contigLengths()
+    public Set<GenomePosition> contigLengths()
     {
         return contigLength;
     }

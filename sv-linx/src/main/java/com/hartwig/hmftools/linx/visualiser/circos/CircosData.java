@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -39,7 +38,7 @@ public class CircosData
     private final List<CopyNumberAlteration> unadjustedAlterations;
     private final List<Fusion> unadjustedFusions;
 
-    private final Map<String, Integer> contigLengths;
+    private final Set<GenomePosition> contigLengths;
 
     private final Set<String> upstreamGenes;
     private final Set<String> downstreamGenes;
@@ -199,14 +198,14 @@ public class CircosData
     }
 
     @NotNull
-    public Map<String, Integer> contigLengths()
+    public Set<GenomePosition> contigLengths()
     {
         return contigLengths;
     }
 
     public int totalContigLength()
     {
-        return contigLengths().values().stream().mapToInt(x -> x).sum();
+        return contigLengths().stream().mapToInt(x -> (int) x.position()).sum();
     }
 
     public long untruncatedCopyNumberAlterationsCount()

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,7 +68,6 @@ public class CircosDataWriter
         data.upstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_BLUE));
         data.downstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_RED));
 
-        final Map<String, Integer> contigLengths = data.contigLengths();
         int totalContigLength = data.totalContigLength();
 
         final List<Segment> segments = data.segments();
@@ -96,7 +96,7 @@ public class CircosDataWriter
         Files.write(new File(histogramPath).toPath(), createHistogramTrack(segments));
 
         final String karyotypePath = filePrefix + ".karyotype.circos";
-        Files.write(new File(karyotypePath).toPath(), createKaryotypes(contigLengths));
+        Files.write(new File(karyotypePath).toPath(), createKaryotypes(data.contigLengths()));
 
         final String connectorPath = filePrefix + ".connector.circos";
         Files.write(new File(connectorPath).toPath(), createConnectors(segments, links));
@@ -522,18 +522,21 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createKaryotypes(@NotNull final Map<String, Integer> contigLengths)
+    private List<String> createKaryotypes(@NotNull final Set<GenomePosition> contigLengths)
     {
         final List<String> result = Lists.newArrayList();
-        for (String contig : contigLengths.keySet())
+        final List<GenomePosition> positions = Lists.newArrayList(contigLengths);
+        Collections.sort(positions);
+
+        for (GenomePosition contig : positions)
         {
 
             final String start = new StringJoiner(" ").add("chr -")
-                    .add(circosContig(contig))
-                    .add(HumanChromosome.fromString(contig).toString())
+                    .add(circosContig(contig.chromosome()))
+                    .add(HumanChromosome.fromString(contig.chromosome()).toString())
                     .add(String.valueOf(1))
-                    .add(String.valueOf(Math.max(MIN_KAROTYPE_LENGTH, contigLengths.get(contig))))
-                    .add("chr" + HumanChromosome.fromString(contig).toString())
+                    .add(String.valueOf(Math.max(MIN_KAROTYPE_LENGTH, contig.position())))
+                    .add("chr" + HumanChromosome.fromString(contig.chromosome()).toString())
                     .toString();
             result.add(start);
         }
