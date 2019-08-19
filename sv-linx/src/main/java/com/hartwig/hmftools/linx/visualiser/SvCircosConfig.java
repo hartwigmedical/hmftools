@@ -25,6 +25,7 @@ public interface SvCircosConfig
     String OUTER_RADIUS = "outer_radius";
     String INNER_RADIUS = "inner_radius";
     String EXACT_POSITION = "exact_position";
+    String SHOW_SV_ID = "show_sv_id";
 
     String CHR_RANGE_FONT_SIZE = "chr_range_font_size";
     String CHR_RANGE_HEIGHT = "chr_range_height";
@@ -52,6 +53,7 @@ public interface SvCircosConfig
         options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
 
         options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
+        options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
 
         options.addOption(GENE_RELATIVE_SIZE, true,
                 "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
@@ -74,6 +76,8 @@ public interface SvCircosConfig
     int chromosomeRangeColumns();
 
     boolean exactPosition();
+
+    boolean showSvId();
 
     double geneRelativeSize();
 
@@ -131,6 +135,7 @@ public interface SvCircosConfig
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
                 .chromosomeRangeFontSize(defaultIntValue(cmd, CHR_RANGE_FONT_SIZE, DEFAULT_CHR_RANGE_FONT_SIZE))
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
+                .showSvId(cmd.hasOption(SHOW_SV_ID))
                 .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
                 .innerRadius(defaultValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
                 .geneRelativeSize(defaultValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))

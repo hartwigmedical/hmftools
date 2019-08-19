@@ -260,13 +260,16 @@ public class SvVisualiser implements AutoCloseable
 
         double labelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
 
-        new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig);
-
-        final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
-        if (!fusionDataWriter.finalExons().isEmpty())
+        if(!config.debug())
         {
-            fusionDataWriter.write(sample, config.outputConfPath());
-            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(labelSize);
+            new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig);
+
+            final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
+            if (!fusionDataWriter.finalExons().isEmpty())
+            {
+                fusionDataWriter.write(sample, config.outputConfPath());
+                return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(labelSize);
+            }
         }
 
         return circosResult;

@@ -593,8 +593,13 @@ public class CircosDataWriter
 
                     if (position > currentPosition)
                     {
-                        final String positionLabel =
-                                circosConfig.exactPosition() ? POSITION_FORMAT.format(position) : String.valueOf(position / 10d + "m");
+                        String positionLabel = circosConfig.exactPosition() ?
+                                POSITION_FORMAT.format(position) : String.valueOf(position / 10d + "m");
+
+                        if(circosConfig.showSvId())
+                        {
+                            positionLabel += String.format(":%d", adjustedPosition.svId());
+                        }
 
                         final String start = new StringJoiner(DELIMITER).add(circosContig(contig))
                                 .add(String.valueOf(adjustedPosition.position()))

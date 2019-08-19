@@ -23,7 +23,9 @@ public class AdjustedPositions
                 final AdjustedPosition start = ImmutableAdjustedPosition.builder()
                         .chromosome(scaled.startChromosome())
                         .position(scaled.startPosition())
-                        .unadjustedPosition(original.startPosition()).build();
+                        .unadjustedPosition(original.startPosition())
+                        .svId(original.svId())
+                        .build();
 
                 result.add(start);
             }
@@ -33,7 +35,9 @@ public class AdjustedPositions
                 final AdjustedPosition end = ImmutableAdjustedPosition.builder()
                         .chromosome(scaled.endChromosome())
                         .position(scaled.endPosition())
-                        .unadjustedPosition(original.endPosition()).build();
+                        .unadjustedPosition(original.endPosition())
+                        .svId(original.svId())
+                        .build();
                 result.add(end);
             }
         }

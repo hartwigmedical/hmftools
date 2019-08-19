@@ -11,4 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AdjustedPosition implements GenomePosition
 {
     public abstract long unadjustedPosition();
+
+    public abstract int svId();
 }
