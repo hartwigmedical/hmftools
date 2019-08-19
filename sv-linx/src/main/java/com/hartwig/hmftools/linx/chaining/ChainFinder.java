@@ -760,11 +760,6 @@ public class ChainFinder
             if(chainedDmSVs != mDoubleMinuteSVs.size())
                 continue;
 
-            if(!dmChainMatched && dmChain != null && chain.identicalChain(dmChain, false, true))
-            {
-                dmChainMatched = true;
-            }
-
             SvBreakend chainStart = chain.getOpenBreakend(true);
             SvBreakend chainEnd = chain.getOpenBreakend(false);
 
@@ -784,6 +779,11 @@ public class ChainFinder
                         LOGGER.debug("cluster({}) closed DM chain({})", mClusterId, chain.id());
                     }
                 }
+            }
+
+            if(!dmChainMatched && dmChain != null && chain.identicalChain(dmChain, false, true))
+            {
+                dmChainMatched = true;
             }
         }
 
