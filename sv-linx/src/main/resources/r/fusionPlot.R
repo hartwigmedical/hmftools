@@ -139,7 +139,7 @@ pCircos <- ggdraw() + draw_image(imgCircos)
 circosWidth = image_info(imgCircos)$width
 circosHeight = image_info(imgCircos)$height
 
-pCombined = plot_grid(pCircos, pFusions, pLegend, ncol = 1, rel_heights = c(circosHeight, fusionHeight, fusionLegendHeight))
+pCombined = plot_grid(pFusions, pLegend, pCircos, ncol = 1, rel_heights = c(fusionHeight, fusionLegendHeight, circosHeight))
 ggsave(circosPicturePath, pCombined, width = circosWidth / 300, height = (circosHeight + fusionLegendHeight + fusionHeight) / 300, units = "in", dpi = 300, pointsize = 300)
 
 
