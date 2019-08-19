@@ -266,7 +266,7 @@ public class SvVisualiser implements AutoCloseable
         if (!fusionDataWriter.finalExons().isEmpty())
         {
             fusionDataWriter.write(sample, config.outputConfPath());
-            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(labelSize);
+            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, labelSize);
         }
 
         return circosResult;

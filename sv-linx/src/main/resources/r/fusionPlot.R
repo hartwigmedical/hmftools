@@ -9,6 +9,7 @@ clusterProteinDomainPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02010990T.c
 clusterFusedExonPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02010990T.cluster54.COMPLEX.sv66.fusions.tsv"
 circosPicturePath = "/Users/jon/hmf/analysis/fusions/plot/CPCT02010990T.cluster54.COMPLEX.sv66.png"
 fusionHeightPerRow = 250
+fusionLegendRows = 1
 fusionLegendHeightPerRow = 30
 fontSize = 35
 
@@ -18,6 +19,9 @@ clusterProteinDomainPath <- args[1]
 clusterFusedExonPath <- args[2]
 circosPicturePath   <- args[3]
 fontSize <- as.numeric(args[4])
+fusionLegendRows <- as.numeric(args[5])
+fusionLegendHeightPerRow <- as.numeric(args[6])
+fusionHeightPerRow <- as.numeric(args[7])
 
 plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
   
@@ -85,11 +89,11 @@ plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
             legend.key=element_blank(), 
             legend.direction = "horizontal", 
             legend.spacing.x = unit(1, "mm")) +
-      guides(fill = guide_legend(nrow = 1))
+      guides(fill = guide_legend(nrow = fusionLegendRows))
   } else {
     p1 = p1 + theme(legend.position = "none")
   }
-  
+
   return (p1)
 }
 
@@ -125,7 +129,7 @@ for (i in c(1:length(fusions))) {
 
 fusionPlotListCount = length(fusionPlotList)
 fusionHeight = fusionHeightPerRow * fusionPlotListCount
-fusionLegendHeight = fusionLegendHeightPerRow
+fusionLegendHeight = fusionLegendHeightPerRow * fusionLegendRows
 
 pFusions = plot_grid(plotlist = fusionPlotList, ncol = 1)
 
