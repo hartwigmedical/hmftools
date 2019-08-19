@@ -84,5 +84,5 @@ dev.off()
 
 
 pChr <- ggdraw() + draw_image(circosPicturePath)
-pCombined = plot_grid(pChr, pCircos, ncol = 1, rel_heights = c(chromosomeHeightPerRow - 0.05 * chromosomeHeightPerRow, circosWidth))
+pCombined = plot_grid(pCircos, pChr, ncol = 1, rel_heights = c(circosWidth, chromosomeHeightPerRow - 0.1 * chromosomeHeightPerRow))
 ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeightPerRow)/300.0, units = "in", dpi = 300)

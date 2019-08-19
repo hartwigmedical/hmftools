@@ -258,13 +258,15 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
+        double labelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
+
         new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig);
 
         final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
         if (!fusionDataWriter.finalExons().isEmpty())
         {
             fusionDataWriter.write(sample, config.outputConfPath());
-            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR();
+            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(labelSize);
         }
 
         return circosResult;
