@@ -51,9 +51,7 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return patientReport.titleReportCorrect().isPresent()
-                ? "Sequence Report Corrected"
-                : "Sequence Report";
+        return patientReport.titleReportCorrect().isPresent() ? "Sequence Report Corrected" : "Sequence Report";
     }
 
     @Override
@@ -77,6 +75,8 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(patientReport.sampleReport().primaryTumorLocationString(),
                 patientReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
+        reportDocument.add(new Paragraph("\nThe ‘primary tumor location’ and ‘cancer subtype’ are received from "
+                + "the requesting hospital").addStyle(ReportResources.subTextStyle()));
 
         final String summaryContent = patientReport.clinicalSummary();
         renderSummaryText(summaryContent, reportDocument);
