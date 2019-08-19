@@ -231,6 +231,10 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchSource;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTags;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTherapeuticContext;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrials;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
@@ -2026,6 +2030,177 @@ public class ViccDAO {
                 .returning(MOLECULARMATCH.ID)
                 .fetchOne()
                 .getValue(MOLECULARMATCH.ID);
+
+        if (molecularMatch.institution() != null) {
+            for (String institution : molecularMatch.institution()) {
+                context.insertInto(MOLECULARMATCHINSTUTITION,
+                        MOLECULARMATCHINSTUTITION.INSTITUTION,
+                        MOLECULARMATCHINSTUTITION.MOLECULARMATCHID).values(institution, id).execute();
+            }
+        }
+
+        if (molecularMatch.includeGene0() != null) {
+            for (String includeGene0 : molecularMatch.includeGene0()) {
+                context.insertInto(MOLECULARMATCHINCLUDEGENE0,
+                        MOLECULARMATCHINCLUDEGENE0.INCLUDEGENE0,
+                        MOLECULARMATCHINCLUDEGENE0.MOLECULARMATCHID).values(includeGene0, id).execute();
+            }
+        }
+
+        if (molecularMatch.external_id() != null) {
+            for (String externalId : molecularMatch.external_id()) {
+                context.insertInto(MOLECULARMATCHEXTERNALID,
+                        MOLECULARMATCHEXTERNALID.EXTERNAL_ID,
+                        MOLECULARMATCHEXTERNALID.MOLECULARMATCHID).values(externalId, id).execute();
+            }
+        }
+
+        if (molecularMatch.includeStage0() != null) {
+            for (String includeStage0 : molecularMatch.includeStage0()) {
+                context.insertInto(MOLECULARMATCHINCLUDESTAGE0,
+                        MOLECULARMATCHINCLUDESTAGE0.INCLUDESTAGE0,
+                        MOLECULARMATCHINCLUDESTAGE0.MOLECULARMATCHID).values(includeStage0, id).execute();
+            }
+        }
+
+        if (molecularMatch.includeDrug1() != null) {
+            for (String includeDrug1 : molecularMatch.includeDrug1()) {
+                context.insertInto(MOLECULARMATCHINCLUDEDRUG1,
+                        MOLECULARMATCHINCLUDEDRUG1.INCLUDEDRUG1,
+                        MOLECULARMATCHINCLUDEDRUG1.MOLECULARMATCHID).values(includeDrug1, id).execute();
+            }
+        }
+
+        for (String includeCondition1 : molecularMatch.includeCondition1()) {
+            context.insertInto(MOLECULARMATCHINCLUDECONDITION1,
+                    MOLECULARMATCHINCLUDECONDITION1.INCLUDECONDITION1,
+                    MOLECULARMATCHINCLUDECONDITION1.MOLECULARMATCHID).values(includeCondition1, id).execute();
+        }
+
+        if (molecularMatch.includeMutation1() != null) {
+            for (String includeMutation1 : molecularMatch.includeMutation1()) {
+                context.insertInto(MOLECULARMATCHINCLUDEMUTATION1,
+                        MOLECULARMATCHINCLUDEMUTATION1.INCLUDEMUTATION1,
+                        MOLECULARMATCHINCLUDEMUTATION1.MOLECULARMATCHID).values(includeMutation1, id).execute();
+            }
+        }
+
+        for (String includeCondition0 : molecularMatch.includeCondition0()) {
+            context.insertInto(MOLECULARMATCHINCLUDECONDITION0,
+                    MOLECULARMATCHINCLUDECONDITION0.INCLUDECONDITION0,
+                    MOLECULARMATCHINCLUDECONDITION0.MOLECULARMATCHID).values(includeCondition0, id).execute();
+        }
+
+        if (molecularMatch.includeMutation0() != null) {
+            for (String includeMutation0 : molecularMatch.includeMutation0()) {
+                context.insertInto(MOLECULARMATCHINCLUDEMUTATION0,
+                        MOLECULARMATCHINCLUDEMUTATION0.INCLUDEMUTATION0,
+                        MOLECULARMATCHINCLUDEMUTATION0.MOLECULARMATCHID).values(includeMutation0, id).execute();
+            }
+        }
+
+        for (String criteriaMet : molecularMatch.criteriaMet()) {
+            context.insertInto(MOLECULARMATCHCRITERIAMET, MOLECULARMATCHCRITERIAMET.CRITERIAMET, MOLECULARMATCHCRITERIAMET.MOLECULARMATCHID)
+                    .values(criteriaMet, id)
+                    .execute();
+        }
+
+        for (MolecularMatchSource source : molecularMatch.sources()) {
+            context.insertInto(MOLECULARMATCHSOURCE,
+                    MOLECULARMATCHSOURCE.NAME,
+                    MOLECULARMATCHSOURCE.SUPPRESS,
+                    MOLECULARMATCHSOURCE.PUBID,
+                    MOLECULARMATCHSOURCE.SUBTYPE,
+                    MOLECULARMATCHSOURCE.VALID,
+                    MOLECULARMATCHSOURCE.LINK,
+                    MOLECULARMATCHSOURCE.YEAR,
+                    MOLECULARMATCHSOURCE.TRIALID,
+                    MOLECULARMATCHSOURCE.TYPE,
+                    MOLECULARMATCHSOURCE.IDSOURCE,
+                    MOLECULARMATCHSOURCE.INSTITUTION,
+                    MOLECULARMATCHSOURCE.TRIALPHASE,
+                    MOLECULARMATCHSOURCE.FUNCTIONALCONSEQUENCE,
+                    MOLECULARMATCHSOURCE.TRUSTRATING,
+                    MOLECULARMATCHSOURCE.MOLECULARMATCHID)
+                    .values(source.name(),
+                            source.suppress(),
+                            source.pubId(),
+                            source.subType(),
+                            source.valid(),
+                            source.link(),
+                            source.year(),
+                            source.trialId(),
+                            source.type(),
+                            source.id(),
+                            source.institution(),
+                            source.trialPhase(),
+                            source.functionalConsequence(),
+                            source.trustRating(),
+                            id)
+                    .execute();
+        }
+
+        for (MolecularMatchTierExplanation tierExplanation : molecularMatch.tierExplanation()) {
+            context.insertInto(MOLECULARMATCHTIEREXPLANATION,
+                    MOLECULARMATCHTIEREXPLANATION.TIER,
+                    MOLECULARMATCHTIEREXPLANATION.STEP,
+                    MOLECULARMATCHTIEREXPLANATION.MESSAGE,
+                    MOLECULARMATCHTIEREXPLANATION.SUCCESS,
+                    MOLECULARMATCHTIEREXPLANATION.MOLECULARMATCHID)
+                    .values(tierExplanation.tier(), tierExplanation.step(), tierExplanation.message(), tierExplanation.success(), id)
+                    .execute();
+        }
+
+        for (MolecularMatchTherapeuticContext therapeuticContext : molecularMatch.therapeuticContext()) {
+            context.insertInto(MOLECULARMATCHTHERAPEUTICCONTEXT,
+                    MOLECULARMATCHTHERAPEUTICCONTEXT.FACET,
+                    MOLECULARMATCHTHERAPEUTICCONTEXT.NAME,
+                    MOLECULARMATCHTHERAPEUTICCONTEXT.SUPPRESS,
+                    MOLECULARMATCHTHERAPEUTICCONTEXT.VALID,
+                    MOLECULARMATCHTHERAPEUTICCONTEXT.MOLECULARMATCHID)
+                    .values(therapeuticContext.facet(),
+                            therapeuticContext.name(),
+                            therapeuticContext.suppress(),
+                            therapeuticContext.valid(),
+                            id)
+                    .execute();
+        }
+
+        for (MolecularMatchTags tags : molecularMatch.tags()) {
+            context.insertInto(MOLECULARMATCHTAGS,
+                    MOLECULARMATCHTAGS.PRIORITY,
+                    MOLECULARMATCHTAGS.COMPOSITEKEY,
+                    MOLECULARMATCHTAGS.SUPPRESS,
+                    MOLECULARMATCHTAGS.FILTERTYPE,
+                    MOLECULARMATCHTAGS.TERM,
+                    MOLECULARMATCHTAGS.PRIMARYVALUE,
+                    MOLECULARMATCHTAGS.FACET,
+                    MOLECULARMATCHTAGS.VALID,
+                    MOLECULARMATCHTAGS.CUSTOM,
+                    MOLECULARMATCHTAGS.ISNEW,
+                    MOLECULARMATCHTAGS.GENERATEDBY,
+                    MOLECULARMATCHTAGS.MANUALSUPPRESS,
+                    MOLECULARMATCHTAGS.GENERATEDBYTERM,
+                    MOLECULARMATCHTAGS.TRANSCRIPT,
+                    MOLECULARMATCHTAGS.MOLECULARMATCHID)
+                    .values(tags.priority(),
+                            tags.compositeKey(),
+                            tags.suppress(),
+                            tags.filterType(),
+                            tags.term(),
+                            tags.primary(),
+                            tags.facet(),
+                            tags.valid(),
+                            tags.custom(),
+                            tags.isNew(),
+                            tags.generatedBy(),
+                            tags.manualSuppress(),
+                            tags.generatedByTerm(),
+                            tags.transcript(),
+                            id)
+                    .execute();
+        }
+
     }
 
     private void writeAssociation(int viccEntryId, @NotNull Association association) {
