@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
+import com.hartwig.hmftools.linx.visualiser.data.DisruptedGene;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
@@ -33,6 +34,7 @@ public class CircosData
     private final List<GenomeRegion> fragileSites;
     private final List<ProteinDomain> proteinDomains;
     private final List<CopyNumberAlteration> alterations;
+    private final List<GenomeRegion> disruptedGeneRegions;
 
     private final List<Link> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
@@ -60,6 +62,12 @@ public class CircosData
         this.unadjustedAlterations = unadjustedAlterations;
         this.unadjustedFusions = fusions;
 
+        final List<GenomeRegion> unadjustedDisruptedGeneRegions = Lists.newArrayList();
+        for (Fusion fusion : fusions)
+        {
+            unadjustedDisruptedGeneRegions.addAll(DisruptedGene.disruptedGeneRegions(fusion, unadjustedExons));
+        }
+
         final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
 
@@ -78,8 +86,9 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
         unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
-        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneProteinDomains));
         unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneProteinDomains));
+        unadjustedPositions.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
         contigLengths = scalePosition.contigLengths();
@@ -90,6 +99,7 @@ public class CircosData
         fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
         lineElements = scalePosition.scaleRegions(unadjustedLineElements);
         genes = scalePosition.scaleGene(unadjustedGenes);
+        disruptedGeneRegions = scalePosition.scaleRegions(unadjustedDisruptedGeneRegions);
 
         // Note the following *might* be interpolated
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
@@ -100,6 +110,13 @@ public class CircosData
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
     }
 
+    @NotNull
+    public List<GenomeRegion> disruptedGeneRegions()
+    {
+        return disruptedGeneRegions;
+    }
+
+    @NotNull
     public List<Fusion> unadjustedFusions()
     {
         return unadjustedFusions;
