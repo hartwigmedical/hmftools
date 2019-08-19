@@ -23,4 +23,6 @@ public abstract class Gene implements GenomeRegion
 
     public abstract long namePosition();
 
+    public abstract int strand();
+
 }

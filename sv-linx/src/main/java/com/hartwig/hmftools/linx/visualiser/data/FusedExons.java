@@ -155,17 +155,19 @@ public class FusedExons
                 ImmutableGene.builder().chromosome(firstUpExon.chromosome())
                         .start(fusion.positionUp())
                         .end(firstUpExon.end())
-                        .namePosition(0)
+                        .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptUp())
+                        .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
                         .chromosome(firstUpExon.chromosome())
                         .start(firstUpExon.start())
                         .end(fusion.positionUp())
-                        .namePosition(0)
+                        .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
+                        .namePosition(0)
                         .build();
     }
 
@@ -177,17 +179,19 @@ public class FusedExons
                         .chromosome(finalDownGene.chromosome())
                         .start(finalDownGene.start())
                         .end(fusion.positionDown())
-                        .namePosition(0)
+                        .strand(fusion.strandDown())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptUp())
+                        .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
                         .chromosome(finalDownGene.chromosome())
                         .start(fusion.positionDown())
                         .end(finalDownGene.end())
-                        .namePosition(0)
+                        .strand(fusion.strandDown())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
+                        .namePosition(0)
                         .build();
     }
 

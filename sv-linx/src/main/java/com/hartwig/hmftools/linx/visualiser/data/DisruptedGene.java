@@ -48,17 +48,19 @@ public class DisruptedGene
                         .chromosome(firstExcludedDownExon.chromosome())
                         .end(firstExcludedDownExon.end())
                         .start(Math.min(fusion.positionDown(), firstIncludedDoneExon.end()))
-                        .namePosition(0)
+                        .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
+                        .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
                         .chromosome(firstExcludedDownExon.chromosome())
                         .start(firstExcludedDownExon.start())
                         .end(Math.max(fusion.positionDown(), firstIncludedDoneExon.start()))
-                        .namePosition(0)
+                        .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
+                        .namePosition(0)
                         .build();
     }
 
@@ -70,17 +72,19 @@ public class DisruptedGene
                 ImmutableGene.builder().chromosome(finalExcludedUpExon.chromosome())
                         .start(finalExcludedUpExon.start())
                         .end(Math.max(fusion.positionUp(), finalIncludedExon.start()))
-                        .namePosition(0)
+                        .strand(fusion.strandDown())
                         .name(fusion.geneUp())
                         .transcript(fusion.transcriptUp())
+                        .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
                         .chromosome(finalExcludedUpExon.chromosome())
                         .start(Math.min(fusion.positionUp(), finalIncludedExon.end()))
                         .end(finalExcludedUpExon.end())
-                        .namePosition(0)
+                        .strand(fusion.strandDown())
                         .name(fusion.geneUp())
                         .transcript(fusion.transcriptUp())
+                        .namePosition(0)
                         .build();
     }
 

@@ -116,11 +116,20 @@ class ScalePosition
             ScaleContig positionMap = contigMap.get(x.chromosome());
             final int scaledGeneStart = positionMap.scale(x.start());
             final int scaledGeneEnd = positionMap.scale(x.end());
-            final int scaledNamePositions = positionMap.scale(x.namePosition());
+            int geneNamePosition = (int) Math.round(x.strand() > 0
+                    ? scaledGeneStart - geneNameDistance
+                    : scaledGeneEnd + geneNameDistance);
 
-            final int geneNamePosition = (int) Math.round(x.start() == x.namePosition()
-                    ? scaledNamePositions - geneNameDistance
-                    : scaledNamePositions + geneNameDistance);
+            // If gene name won't be written at start of gene because it outside range, move to the end of gene
+            if (geneNamePosition < 1)
+            {
+                geneNamePosition = (int) Math.round(scaledGeneEnd + geneNameDistance);
+            }
+
+            if (geneNamePosition > positionMap.length())
+            {
+                geneNamePosition = (int) Math.round(scaledGeneStart - geneNameDistance);
+            }
 
             return ImmutableGene.builder().from(x).start(scaledGeneStart).end(scaledGeneEnd).namePosition(geneNamePosition).build();
         }).collect(Collectors.toList());
