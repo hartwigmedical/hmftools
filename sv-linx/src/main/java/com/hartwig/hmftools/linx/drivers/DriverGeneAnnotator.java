@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
@@ -70,6 +71,7 @@ import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
+import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -477,6 +479,105 @@ public class DriverGeneAnnotator
         }
     }
 
+    private void checkClusterForAmplification(
+            final DriverGeneData dgData, final List<SvBreakend> breakendList, final SvBreakend startBreakend, boolean traverseUp)
+    {
+        long transStart = dgData.TransData.TransStart;
+        long transEnd = dgData.TransData.TransEnd;
+
+        final SvCluster targetCluster = startBreakend.getCluster();
+
+        int index = startBreakend.getChrPosIndex();
+        SvBreakend breakend = null;
+
+        double netClusterCNChange = 0;
+
+        SvCNData cnData = startBreakend.getCopyNumberData(traverseUp);
+
+        if(cnData == null)
+            return;
+
+        double startCopyNumber = cnData.CopyNumber;
+
+        double segmentStartCopyNumber = startCopyNumber;
+        double currentCopyNumber = 0;
+        boolean inSegment = true;
+        int segmentCount = 0;
+        int breakendCount = 0;
+
+        while (true)
+        {
+            if (breakend != null)
+                index += traverseUp ? 1 : -1;
+
+            if(index < 0 || index >= breakendList.size())
+                break;
+
+            breakend = breakendList.get(index);
+
+            if ((traverseUp && breakend.position() > transStart) || (!traverseUp && breakend.position() < transEnd))
+                break;
+
+            final SvCluster cluster = breakend.getCluster();
+
+            if(cluster != targetCluster && inSegment)
+            {
+                // record details of this segment
+                double endCopyNumber = currentCopyNumber;
+                double segmentCNChange = endCopyNumber - segmentStartCopyNumber;
+                netClusterCNChange += segmentCNChange;
+                ++segmentCount;
+
+                LOGGER.debug("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({})",
+                        dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber),
+                        formatPloidy(endCopyNumber), formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange));
+
+                segmentStartCopyNumber = 0;
+                inSegment = false;
+            }
+            else if(cluster == targetCluster)
+            {
+                ++breakendCount;
+
+                if(!inSegment)
+                {
+                    cnData = breakend.getCopyNumberData(traverseUp);
+
+                    if(cnData == null)
+                        return;
+
+                    segmentStartCopyNumber = cnData.CopyNumber;
+                    inSegment = true;
+                }
+            }
+
+            currentCopyNumber = breakend.copyNumber();
+        }
+
+        double geneMinCopyNumber = dgData.GeneCN.minCopyNumber();
+
+        double clusterCNChange = netClusterCNChange;
+
+        if(inSegment)
+        {
+            clusterCNChange += geneMinCopyNumber - segmentStartCopyNumber;
+        }
+
+        if(clusterCNChange > startCopyNumber && !copyNumbersEqual(clusterCNChange, startCopyNumber))
+        {
+            DriverGeneEvent event = new DriverGeneEvent(GAIN);
+            event.setCluster(targetCluster);
+
+            event.setSvInfo(String.format("%s;%d;%d;%.1f;%.1f", traverseUp, breakendCount, segmentCount, startCopyNumber, clusterCNChange));
+            dgData.addEvent(event);
+
+            LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) geneMinCN({}) traversal({})",
+                    dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(clusterCNChange), formatPloidy(startCopyNumber),
+                    segmentCount, formatPloidy(netClusterCNChange), formatPloidy(geneMinCopyNumber),
+                    traverseUp ? "up" : "down");
+        }
+    }
+
     private void annotateBreakendAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList, boolean restrictToArm)
     {
         if (breakendList == null || breakendList.isEmpty())
@@ -492,8 +593,9 @@ public class DriverGeneAnnotator
         int endIndex = (dgData.Arm == CHROMOSOME_ARM_P && restrictToArm ) ? centromereIndex : breakendList.size() - 1;
 
         // if no clear explanatory breakend or cluster is found, nominate any complex cluster with high ploidy which covers the gene
-        Map<SvCluster,Double> complexClusterPloidies = Maps.newHashMap();
-        Map<SvCluster,List<SvBreakend>> clusterBreakendsMap = Maps.newHashMap();
+        // Map<SvCluster,List<SvBreakend>> clusterBreakendsMap = Maps.newHashMap();
+
+        List<SvCluster> processedClusters = Lists.newArrayList();
 
         for(int i = 0; i <= 1; ++i)
         {
@@ -511,15 +613,22 @@ public class DriverGeneAnnotator
                     break;
 
                 breakend = breakendList.get(index);
-                final SvCluster cluster = breakend.getCluster();
-
-                if (cluster.hasLinkingLineElements())
-                    continue;
 
                 // make note of any breakend preceding the gene in the direction of traversal
                 if ((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
                     break;
 
+                final SvCluster cluster = breakend.getCluster();
+
+                if (cluster.hasLinkingLineElements() || processedClusters.contains(cluster))
+                    continue;
+
+                processedClusters.add(cluster);
+
+                // proceeed from this point until the start of the gene
+                checkClusterForAmplification(dgData, breakendList, breakend, traverseUp);
+
+                /*
                 if (isSimpleSingleSV(cluster))
                 {
                     final SvVarData var = breakend.getSV();
@@ -563,9 +672,11 @@ public class DriverGeneAnnotator
                         clusterBreakends.add(cIndex, breakend);
                     }
                 }
+                */
             }
         }
 
+        /*
         for(Map.Entry<SvCluster,List<SvBreakend>> entry : clusterBreakendsMap.entrySet())
         {
             final List<SvBreakend> clusterBreakends = entry.getValue();
@@ -649,16 +760,6 @@ public class DriverGeneAnnotator
                 continue;
 
             final SvCluster cluster = entry.getKey();
-
-            /*
-            if(abs(netPloidy) > mSamplePloidy || (cluster.requiresReplication() && clusterBreakends.size() >= 5))
-            {
-                Double existingPloidy = complexClusterPloidies.get(cluster);
-
-                if(existingPloidy == null || abs(netPloidy) > existingPloidy)
-                    complexClusterPloidies.put(cluster, abs(netPloidy));
-            }
-            */
 
             // report on type of SV which caused the amp
             if(cluster.getSvCount() == 1 && cluster.getSV(0).type() == DUP && maxFacingPloidy > mSamplePloidy)
@@ -768,6 +869,7 @@ public class DriverGeneAnnotator
             LOGGER.debug("gene({}) cluster({}) has breakend({}) without meeting amp criteria",
                     dgData.GeneData.GeneName, cluster.id(), clusterBreakends.size());
         }
+        */
 
         if(dgData.getEvents().isEmpty() && !restrictToArm)
         {
@@ -795,22 +897,6 @@ public class DriverGeneAnnotator
                     event.setSvInfo(SV_DRIVER_TYPE_CENTRO_SV);
                     dgData.addEvent(event);
                 }
-            }
-        }
-
-        if(dgData.getEvents().isEmpty() && !restrictToArm && !complexClusterPloidies.isEmpty())
-        {
-            for(Map.Entry<SvCluster,Double> entry : complexClusterPloidies.entrySet())
-            {
-                final SvCluster cluster = entry.getKey();
-
-                DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.setCluster(cluster);
-                event.setSvInfo(SV_DRIVER_TYPE_COMPLEX_CLUSTER);
-                dgData.addEvent(event);
-
-                LOGGER.debug("gene({}) cluster({}) straddles gene with netPloidy({})",
-                        dgData.GeneData.GeneName, cluster.id(), formatPloidy(entry.getValue()));
             }
         }
     }

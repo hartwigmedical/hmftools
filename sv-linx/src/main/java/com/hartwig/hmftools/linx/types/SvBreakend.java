@@ -62,16 +62,9 @@ public class SvBreakend {
 
     public int getMinTemplatedLength() { return mSV.getMinTemplatedLength(mUsesStart); }
 
-    public double getCopyNumber(boolean lowSide)
+    public double copyNumberLowSide()
     {
-        if((mOrientation == 1 && lowSide) || (mOrientation == -1 && !lowSide))
-        {
-            return mSV.copyNumber(mUsesStart);
-        }
-        else
-        {
-            return mSV.copyNumber(mUsesStart) - mSV.copyNumberChange(mUsesStart);
-        }
+        return mSV.copyNumber(mUsesStart) - mSV.copyNumberChange(mUsesStart);
     }
 
     // for convenience
@@ -85,6 +78,7 @@ public class SvBreakend {
     }
     public double ploidy() { return mSV.ploidy(); }
     public double ploidyUncertainty() { return mSV.ploidyUncertainty(); }
+    public final SvCNData getCopyNumberData(boolean isPrevious) { return mSV.getCopyNumberData(mUsesStart, isPrevious); }
 
     public double majorAllelePloidy(boolean usePrevious)
     {

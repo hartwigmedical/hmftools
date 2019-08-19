@@ -357,7 +357,7 @@ public class LinxTester
                         cnDataList.add(cnData);
 
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, chromosomeLength,
-                                breakend.getCopyNumber(false),
+                                currentCopyNumber,
                                 CENTROMERE.toString(), TELOMERE.toString(),
                                 1, 0.5, 100);
 

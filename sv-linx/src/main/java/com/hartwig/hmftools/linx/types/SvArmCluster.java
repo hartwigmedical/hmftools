@@ -25,8 +25,6 @@ public class SvArmCluster
     private final String mArm;
     private long mStartPos;
     private long mEndPos;
-    private double mMinCopyNumber;
-    private double mMaxCopyNumber;
 
     private int mType;
     private int mTICount;
@@ -42,8 +40,6 @@ public class SvArmCluster
         mStartPos = 0;
         mEndPos = 0;
         mBreakends = Lists.newArrayList();
-        mMaxCopyNumber = 0;
-        mMinCopyNumber = 0;
         mType = -1;
         mTICount = 0;
     }
@@ -79,13 +75,6 @@ public class SvArmCluster
 
         mStartPos = mBreakends.get(0).position();
         mEndPos = mBreakends.get(mBreakends.size()-1).position();
-
-        double lowCopyNumber = breakend.getCopyNumber(true);
-
-        if(mMinCopyNumber == 0 || lowCopyNumber < mMinCopyNumber)
-            mMinCopyNumber = lowCopyNumber;
-
-        mMaxCopyNumber = max(mMaxCopyNumber, breakend.getCopyNumber(false));
     }
 
     public static final int ARM_CL_ISOLATED_BE = 0;
