@@ -17,6 +17,7 @@ public class DriverGeneEvent
 
     private LohEvent mLohEvent;
     private HomLossEvent mHomLossEvent;
+    private DriverAmpData mAmpData;
 
     private SvBreakend[] mBreakendPair;
     private String mSvInfo;
@@ -40,6 +41,7 @@ public class DriverGeneEvent
         mCluster = null;
         mLohEvent = null;
         mHomLossEvent = null;
+        mAmpData = null;
         mBreakendPair = new SvBreakend[SE_PAIR];
 
         mSvInfo = "";
@@ -47,8 +49,12 @@ public class DriverGeneEvent
 
     public final LohEvent getLohEvent() { return mLohEvent; }
     public void setLohEvent(final LohEvent event) { mLohEvent = event; }
+
     public final HomLossEvent getHomLossEvent() { return mHomLossEvent; }
     public void setHomLossEvent(final HomLossEvent event) { mHomLossEvent = event; }
+
+    public final DriverAmpData getAmpData() { return mAmpData; }
+    public void setAmpData(final DriverAmpData data) { mAmpData = data; }
 
     public void setCluster(final SvCluster cluster) { mCluster = cluster; }
 

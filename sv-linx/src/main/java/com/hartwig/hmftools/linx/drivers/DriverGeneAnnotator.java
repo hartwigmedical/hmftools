@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
@@ -24,21 +22,10 @@ import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_CHR;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_CENTRO_SV;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_COMPLEX_CLUSTER;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DM;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DUP;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_FOLDBACK;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_MAX_PLOIDY;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_NET_PLOIDY;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_TI;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -68,17 +55,12 @@ import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
-import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
-import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -427,12 +409,21 @@ public class DriverGeneAnnotator
         if(mSamplePloidy == 0)
             return;
 
-        annotateArmAmplification(dgData);
-        annotateBreakendAmplification(dgData, breakendList, true);
+        LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
+                dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
+                formatPloidy(dgData.GeneCN.minCopyNumber()));
+
+        checkArmAmplification(dgData);
+        checkClusterAmplification(dgData, breakendList, true);
 
         if(dgData.getEvents().isEmpty())
         {
-            annotateBreakendAmplification(dgData, breakendList, false);
+            checkClusterAmplification(dgData, breakendList, false);
+        }
+
+        if(dgData.getEvents().isEmpty())
+        {
+            checkAmpInCentromere(dgData, breakendList);
         }
 
         if(dgData.getEvents().isEmpty())
@@ -445,7 +436,7 @@ public class DriverGeneAnnotator
         }
     }
 
-    private void annotateArmAmplification(final DriverGeneData dgData)
+    private void checkArmAmplification(final DriverGeneData dgData)
     {
         // check for an arm or whole chromosome amplified above the sample ploidy
         double[] cnData = mCopyNumberData.getChrCopyNumberMap().get(dgData.GeneData.Chromosome);
@@ -465,52 +456,50 @@ public class DriverGeneAnnotator
 
         if(chromosomeCopyNumber/mSamplePloidy > 2)
         {
-            LOGGER.debug("gene({}) AMP gain from chromosomeCopyNumber({}) vs samplePloidy({})",
+            LOGGER.debug("gene({}) AMP gain from chromosomeCN({}) vs samplePloidy({})",
                     dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber), formatPloidy(mSamplePloidy));
 
             dgData.addEvent(new DriverGeneEvent(GAIN_CHR));
         }
         else if(armCopyNumber/mSamplePloidy > 2)
         {
-            LOGGER.debug("gene({}) AMP gain from armCopyNumber({}) vs samplePloidy({})",
+            LOGGER.debug("gene({}) AMP gain from armCN({}) vs samplePloidy({})",
                     dgData.GeneData.GeneName, formatPloidy(armCopyNumber), formatPloidy(mSamplePloidy));
 
             dgData.addEvent(new DriverGeneEvent(GAIN_ARM));
         }
     }
 
-    private void checkClusterForAmplification(
-            final DriverGeneData dgData, final List<SvBreakend> breakendList, final SvBreakend startBreakend, boolean traverseUp)
+    private DriverAmpData checkClusterForAmplification(
+            final DriverGeneData dgData, final List<SvBreakend> breakendList, final SvBreakend startBreakend, boolean traverseUp,
+            Map<SvBreakend,Double> opposingBreakends)
     {
         long transStart = dgData.TransData.TransStart;
         long transEnd = dgData.TransData.TransEnd;
 
+        double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
+
         final SvCluster targetCluster = startBreakend.getCluster();
+        final List<SvBreakend> clusterBreakends = targetCluster.getChrBreakendMap().get(dgData.GeneData.Chromosome);
+        int clusterStartIndex = clusterBreakends.get(0).getChrPosIndex();
+        int clusterEndIndex = clusterBreakends.get(clusterBreakends.size() - 1).getChrPosIndex();
+
+        boolean inSegment = true;
+        double segmentStartCopyNumber = startCopyNumber;
+        double netClusterCNChange = 0;
+        int segmentCount = 0;
+        int breakendCount = 0;
 
         int index = startBreakend.getChrPosIndex();
         SvBreakend breakend = null;
-
-        double netClusterCNChange = 0;
-
-        SvCNData cnData = startBreakend.getCopyNumberData(traverseUp);
-
-        if(cnData == null)
-            return;
-
-        double startCopyNumber = cnData.CopyNumber;
-
-        double segmentStartCopyNumber = startCopyNumber;
-        double currentCopyNumber = 0;
-        boolean inSegment = true;
-        int segmentCount = 0;
-        int breakendCount = 0;
+        SvBreakend segStartBreakend = startBreakend;
 
         while (true)
         {
             if (breakend != null)
                 index += traverseUp ? 1 : -1;
 
-            if(index < 0 || index >= breakendList.size())
+            if(index < 0 || index > breakendList.size())
                 break;
 
             breakend = breakendList.get(index);
@@ -520,20 +509,60 @@ public class DriverGeneAnnotator
 
             final SvCluster cluster = breakend.getCluster();
 
-            if(cluster != targetCluster && inSegment)
+            if(cluster != targetCluster)
             {
-                // record details of this segment
-                double endCopyNumber = currentCopyNumber;
-                double segmentCNChange = endCopyNumber - segmentStartCopyNumber;
-                netClusterCNChange += segmentCNChange;
-                ++segmentCount;
+                if(inSegment)
+                {
+                    // record details of this segment
+                    double endCopyNumber = breakend.getCopyNumber(traverseUp);
+                    double segmentCNChange = endCopyNumber - segmentStartCopyNumber;
+                    netClusterCNChange += segmentCNChange;
 
-                LOGGER.debug("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({})",
-                        dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber),
-                        formatPloidy(endCopyNumber), formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange));
+                    LOGGER.trace("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({}) breakends({} -> {})",
+                            dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(endCopyNumber),
+                            formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange), breakend, segStartBreakend);
 
-                segmentStartCopyNumber = 0;
-                inSegment = false;
+                    // if this next breakend lowers
+
+                    inSegment = false;
+                }
+
+                boolean isOpposingBreakend = (breakend.orientation() == 1) == traverseUp;
+
+                if(netClusterCNChange > 0 && isOpposingBreakend)
+                {
+                    Double remainingCNChange = opposingBreakends.get(breakend);
+
+                    if(remainingCNChange == null)
+                    {
+                        remainingCNChange = breakend.copyNumberChange();
+                    }
+
+                    if(remainingCNChange > netClusterCNChange)
+                    {
+                        LOGGER.trace("gene({}) cluster({}) netCN({}) cancelled by breakend({}) cnChange(orig={} remain={})",
+                                dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
+                                breakend, formatPloidy(breakend.copyNumberChange()), formatPloidy(remainingCNChange));
+
+                        remainingCNChange -= netClusterCNChange;
+                        netClusterCNChange = 0;
+
+                        opposingBreakends.put(breakend, remainingCNChange);
+                    }
+                    else
+                    {
+                        LOGGER.trace("gene({}) cluster({}) netCN({}) reducing by breakend({}) cnChange({})",
+                                dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
+                                breakend, formatPloidy(breakend.copyNumberChange()));
+
+                        netClusterCNChange -= remainingCNChange;
+                        opposingBreakends.put(breakend, 0.0); // keep so it won't be registered again but zero out
+                    }
+                }
+
+                // break if there are no more breakends in this cluster
+                // if(index < clusterStartIndex || index > clusterEndIndex)
+                //    break;
             }
             else if(cluster == targetCluster)
             {
@@ -541,17 +570,11 @@ public class DriverGeneAnnotator
 
                 if(!inSegment)
                 {
-                    cnData = breakend.getCopyNumberData(traverseUp);
-
-                    if(cnData == null)
-                        return;
-
-                    segmentStartCopyNumber = cnData.CopyNumber;
+                    segmentStartCopyNumber = breakend.getCopyNumber(traverseUp);
+                    segStartBreakend = breakend;
                     inSegment = true;
                 }
             }
-
-            currentCopyNumber = breakend.copyNumber();
         }
 
         double geneMinCopyNumber = dgData.GeneCN.minCopyNumber();
@@ -561,24 +584,25 @@ public class DriverGeneAnnotator
         if(inSegment)
         {
             clusterCNChange += geneMinCopyNumber - segmentStartCopyNumber;
+
+            LOGGER.trace("gene({}) cluster({}) open segment startCN({}) net({}) start breakend({})",
+                    dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(clusterCNChange),
+                    segStartBreakend);
         }
 
-        if(clusterCNChange > startCopyNumber && !copyNumbersEqual(clusterCNChange, startCopyNumber))
+        if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange - startCopyNumber, startCopyNumber))
         {
-            DriverGeneEvent event = new DriverGeneEvent(GAIN);
-            event.setCluster(targetCluster);
-
-            event.setSvInfo(String.format("%s;%d;%d;%.1f;%.1f", traverseUp, breakendCount, segmentCount, startCopyNumber, clusterCNChange));
-            dgData.addEvent(event);
-
-            LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) geneMinCN({}) traversal({})",
+            LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) traversal({})",
                     dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(clusterCNChange), formatPloidy(startCopyNumber),
-                    segmentCount, formatPloidy(netClusterCNChange), formatPloidy(geneMinCopyNumber),
-                    traverseUp ? "up" : "down");
+                    segmentCount, formatPloidy(netClusterCNChange), traverseUp ? "up" : "down");
+
+            return new DriverAmpData(targetCluster, traverseUp, breakendCount, segmentCount, startCopyNumber, clusterCNChange);
         }
+
+        return null;
     }
 
-    private void annotateBreakendAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList, boolean restrictToArm)
+    private void checkClusterAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList, boolean restrictToArm)
     {
         if (breakendList == null || breakendList.isEmpty())
             return;
@@ -592,14 +616,14 @@ public class DriverGeneAnnotator
         int startIndex = (dgData.Arm == CHROMOSOME_ARM_P || !restrictToArm) ? 0 : centromereIndex;
         int endIndex = (dgData.Arm == CHROMOSOME_ARM_P && restrictToArm ) ? centromereIndex : breakendList.size() - 1;
 
-        // if no clear explanatory breakend or cluster is found, nominate any complex cluster with high ploidy which covers the gene
-        // Map<SvCluster,List<SvBreakend>> clusterBreakendsMap = Maps.newHashMap();
-
-        List<SvCluster> processedClusters = Lists.newArrayList();
+        Map<SvCluster,DriverAmpData> clusterAmpData = Maps.newHashMap();
 
         for(int i = 0; i <= 1; ++i)
         {
             boolean traverseUp = (i == 0);
+
+            List<SvCluster> processedClusters = Lists.newArrayList();
+            Map<SvBreakend,Double> opposingBreakends = Maps.newHashMap();
 
             int index = traverseUp ? startIndex : endIndex;
             SvBreakend breakend = null;
@@ -626,57 +650,292 @@ public class DriverGeneAnnotator
                 processedClusters.add(cluster);
 
                 // proceeed from this point until the start of the gene
-                checkClusterForAmplification(dgData, breakendList, breakend, traverseUp);
+                DriverAmpData ampData = checkClusterForAmplification(dgData, breakendList, breakend, traverseUp, opposingBreakends);
 
-                /*
-                if (isSimpleSingleSV(cluster))
-                {
-                    final SvVarData var = breakend.getSV();
-                    if (var.type() != DUP || !traverseUp)
-                        continue;
-
-                    if (var.position(true) <= transStart && var.position(false) >= transEnd)
-                    {
-                        clusterBreakendsMap.put(cluster, Lists.newArrayList(breakend));
-                    }
-
+                if(ampData == null)
                     continue;
-                }
 
-                List<SvBreakend> clusterBreakends = clusterBreakendsMap.get(cluster);
+                DriverAmpData existingAmpData = clusterAmpData.get(cluster);
 
-                boolean breakendFacesGene = ((breakend.orientation() != 1) == traverseUp);
-
-                if (clusterBreakends == null)
+                if(existingAmpData == null || existingAmpData.NetCNChange < ampData.NetCNChange)
                 {
-                    // only start with a breakend facing the gene
-                    if (!breakendFacesGene)
-                        continue;
-
-                    clusterBreakendsMap.put(cluster, Lists.newArrayList(breakend));
+                    clusterAmpData.put(cluster, ampData);
                 }
-                else
-                {
-                    if (!clusterBreakends.contains(breakend))
-                    {
-                        // add in order
-                        int cIndex = 0;
-                        while(cIndex < clusterBreakends.size())
-                        {
-                            if(breakend.getClusterChrPosIndex() < clusterBreakends.get(cIndex).getClusterChrPosIndex())
-                                break;
-
-                            ++cIndex;
-                        }
-
-                        clusterBreakends.add(cIndex, breakend);
-                    }
-                }
-                */
             }
         }
 
-        /*
+        if(clusterAmpData.isEmpty())
+            return;
+
+        // from the identified AMP clusters, find the max and percentage contributions of each
+        double maxCnChange = clusterAmpData.values().stream().mapToDouble(x -> x.NetCNChange).max().getAsDouble();
+
+        for(Map.Entry<SvCluster,DriverAmpData> entry : clusterAmpData.entrySet())
+        {
+            final SvCluster cluster = entry.getKey();
+            final DriverAmpData ampData = entry.getValue();
+
+            if(ampData.NetCNChange / maxCnChange < 0.1)
+                continue;
+
+            LOGGER.debug("gene({}) cluster({}) adding AMP data: {}",
+                    dgData.GeneData.GeneName, cluster.id(), ampData);
+
+            DriverGeneEvent event = new DriverGeneEvent(GAIN);
+            event.setCluster(cluster);
+            event.setAmpData(ampData);
+
+            event.setSvInfo(String.format("%s;%d;%d;%.1f;%.1f",
+                    ampData.TraverseUp, ampData.BreakendCount, ampData.SegmentCount, ampData.StartCopyNumber, ampData.NetCNChange));
+            dgData.addEvent(event);
+        }
+    }
+
+    private void checkAmpInCentromere(final DriverGeneData dgData, final List<SvBreakend> breakendList)
+    {
+        // check for a CN gain across the centromere
+        int centromereIndex = findCentromereBreakendIndex(breakendList, dgData.Arm);
+        int preCentromereIndex = dgData.Arm == CHROMOSOME_ARM_P ?  centromereIndex : centromereIndex - 1;
+        int postCentromereIndex = dgData.Arm == CHROMOSOME_ARM_P ? centromereIndex + 1 : centromereIndex;
+
+        if(preCentromereIndex >= 0 && postCentromereIndex < breakendList.size())
+        {
+            final SvBreakend preCentroBreakend = breakendList.get(preCentromereIndex);
+            final SvBreakend postCentroBreakend = breakendList.get(postCentromereIndex);
+
+            double preCopyNumber = preCentroBreakend.getCopyNumber(false);
+            double postCopyNumber = postCentroBreakend.getCopyNumber(true);
+            double centromereCNChange =
+                    dgData.Arm == CHROMOSOME_ARM_P ? preCopyNumber - postCopyNumber : postCopyNumber - preCopyNumber;
+
+            if (centromereCNChange > 0 && centromereCNChange > mSamplePloidy * 2)
+            {
+                LOGGER.debug("gene({}) copy number change across centromere({} -> {} = {})",
+                        dgData.GeneData.GeneName, formatPloidy(preCopyNumber), formatPloidy(postCopyNumber),
+                        formatPloidy(centromereCNChange));
+
+                DriverGeneEvent event = new DriverGeneEvent(GAIN);
+                event.setSvInfo(SV_DRIVER_TYPE_CENTRO_SV);
+                dgData.addEvent(event);
+            }
+        }
+    }
+
+    private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
+    {
+        for(GeneCopyNumber geneCN : mGeneCopyNumberData)
+        {
+            if(driverGene.gene().equals(geneCN.gene()))
+                return geneCN;
+        }
+
+        return null;
+    }
+
+    private void cacheSampleDriverData()
+    {
+        if(mConfig.hasMultipleSamples())
+            return;
+
+        if(mDriverOutputList.isEmpty())
+            return;
+
+        if(mConfig.UploadToDB)
+        {
+            mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
+        }
+
+        try
+        {
+            final String driversFile = LinxDriverFile.generateFilename(mOutputDir, mSampleId);
+            LinxDriverFile.write(driversFile, mDriverOutputList);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write drivers file: {}", e.toString());
+        }
+    }
+
+    private void writeDriverData(final DriverGeneData dgData)
+    {
+        // convert to a sample driver record
+        for(final DriverGeneEvent driverEvent : dgData.getEvents())
+        {
+            int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
+
+            mDriverOutputList.add(ImmutableLinxDriver.builder()
+                    .clusterId(clusterId)
+                    .gene(dgData.GeneData.GeneName)
+                    .eventType(driverEvent.Type.toString())
+                    .build());
+
+            mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
+                    "", 0, dgData.GeneData.Chromosome, "DRIVER");
+        }
+
+        if(!mConfig.hasMultipleSamples())
+            return;
+
+        try
+        {
+            if(mFileWriter == null)
+            {
+                String outputFileName = mOutputDir;
+
+                outputFileName += "SVA_DRIVERS.csv";
+
+                mFileWriter = createBufferedWriter(outputFileName, false);
+
+                mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod");
+                mFileWriter.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
+                mFileWriter.write(",PosStart,PosEnd,SvIdStart,SvIdEnd,SvMatchType,SvPloidy");
+                mFileWriter.write(",SamplePloidy,Chromosome,Arm,GeneMinCN,CentromereCN,TelomereCN");
+                mFileWriter.newLine();
+            }
+
+            BufferedWriter writer = mFileWriter;
+
+            final DriverCatalog driverGene = dgData.DriverData;
+            final EnsemblGeneData geneData = dgData.GeneData;
+            double[] cnData = mCopyNumberData.getChrCopyNumberMap().get(geneData.Chromosome);
+
+            for(final DriverGeneEvent driverEvent : dgData.getEvents())
+            {
+                final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
+
+                writer.write(String.format("%s,%s,%s,%s,%s,%s,%s",
+                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.likelihoodMethod(),
+                        dgData.fullyMatched(), driverEvent.Type));
+
+                final SvCluster cluster = driverEvent.getCluster();
+
+                if(cluster != null)
+                {
+                    writer.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
+                }
+                else
+                {
+                    writer.write(String.format(",-1,0,"));
+                }
+
+                // breakend info if present
+
+                long posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
+                long posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
+                String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
+                String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
+
+                double svPloidy = breakendPair[SE_START] != null ? breakendPair[SE_START].ploidy()
+                        : (breakendPair[SE_END] != null ? breakendPair[SE_END].ploidy() : 0);
+
+                writer.write(String.format(",%d,%d,%s,%s,%s,%.2f",
+                        posStart, posEnd, svIdStart, svIdEnd, driverEvent.getSvInfo(), svPloidy));
+
+                writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
+                        mSamplePloidy, geneData.Chromosome, dgData.Arm, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
+                        cnData[CENTROMERE_CN], dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
+
+                writer.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
+        }
+    }
+
+    public void close()
+    {
+        mPerfCounter.logStats();
+
+        closeBufferedWriter(mFileWriter);
+    }
+
+    private static int GENE_CN_DATA_FILE_ITEM_COUNT = 6;
+
+    private void loadGeneCopyNumberDataFile(final String gcnFileName)
+    {
+        if(gcnFileName.isEmpty() || !Files.exists(Paths.get(gcnFileName)))
+            return;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(gcnFileName));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                LOGGER.error("Empty gene copy number CSV file({})", gcnFileName);
+                return;
+            }
+
+            String currentSample = "";
+            List<GeneCopyNumber> gcnDataList = null;
+            int rowCount = 0;
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(",");
+
+                if (items.length != GENE_CN_DATA_FILE_ITEM_COUNT)
+                {
+                    LOGGER.error("GCN file invalid item count({}) vs expected({})", items.length, GENE_CN_DATA_FILE_ITEM_COUNT);
+                    break;
+                }
+
+                String sampleId = items[0];
+
+                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
+                {
+                    gcnDataList = Lists.newArrayList();
+                    currentSample = sampleId;
+                    mSampleGeneCopyNumberMap.put(currentSample, gcnDataList);
+                }
+
+                // sampleId,minCopyNumber,minRegionStart,minRegionEnd,minMinorAllelePloidy
+
+                int index = 1;
+
+                GeneCopyNumber gcnData = ImmutableGeneCopyNumber.builder()
+                        .gene(items[index++])
+                        .minCopyNumber(Double.parseDouble(items[index++]))
+                        .minRegionStart(Integer.parseInt(items[index++]))
+                        .minRegionEnd(Integer.parseInt(items[index++]))
+                        .minMinorAllelePloidy(Double.parseDouble(items[index++]))
+                        .maxCopyNumber(0)
+                        .somaticRegions(0)
+                        .germlineHet2HomRegions(0)
+                        .germlineHomRegions(0)
+                        .minRegions(0)
+                        .minRegionStartSupport(UNKNOWN)
+                        .minRegionEndSupport(UNKNOWN)
+                        .minRegionMethod(CopyNumberMethod.UNKNOWN)
+                        .transcriptID("")
+                        .transcriptVersion(0)
+                        .chromosomeBand("")
+                        .chromosome("")
+                        .start(0)
+                        .end(0)
+                        .build();
+
+                ++rowCount;
+
+                gcnDataList.add(gcnData);
+            }
+
+            LOGGER.info("loaded {} gene copy-number records from file", rowCount);
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
+        }
+    }
+
+    /* OLD AMP SV identification
+
+            /*
         for(Map.Entry<SvCluster,List<SvBreakend>> entry : clusterBreakendsMap.entrySet())
         {
             final List<SvBreakend> clusterBreakends = entry.getValue();
@@ -869,253 +1128,6 @@ public class DriverGeneAnnotator
             LOGGER.debug("gene({}) cluster({}) has breakend({}) without meeting amp criteria",
                     dgData.GeneData.GeneName, cluster.id(), clusterBreakends.size());
         }
-        */
-
-        if(dgData.getEvents().isEmpty() && !restrictToArm)
-        {
-            // check for a CN gain across the centromere
-            int preCentromereIndex = dgData.Arm == CHROMOSOME_ARM_P ?  centromereIndex : centromereIndex - 1;
-            int postCentromereIndex = dgData.Arm == CHROMOSOME_ARM_P ? centromereIndex + 1 : centromereIndex;
-
-            if(preCentromereIndex >= 0 && postCentromereIndex < breakendList.size())
-            {
-                final SvBreakend preCentroBreakend = breakendList.get(preCentromereIndex);
-                final SvBreakend postCentroBreakend = breakendList.get(postCentromereIndex);
-
-                double preCopyNumber = preCentroBreakend.getSV().getCopyNumberData(preCentroBreakend.usesStart(), false).CopyNumber;
-                double postCopyNumber = postCentroBreakend.getSV().getCopyNumberData(postCentroBreakend.usesStart(), true).CopyNumber;
-                double centromereCNChange =
-                        dgData.Arm == CHROMOSOME_ARM_P ? preCopyNumber - postCopyNumber : postCopyNumber - preCopyNumber;
-
-                if (centromereCNChange > 0 && centromereCNChange > mSamplePloidy * 2)
-                {
-                    LOGGER.debug("gene({}) copy number change across centromere({} -> {} = {})",
-                            dgData.GeneData.GeneName, formatPloidy(preCopyNumber), formatPloidy(postCopyNumber),
-                            formatPloidy(centromereCNChange));
-
-                    DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                    event.setSvInfo(SV_DRIVER_TYPE_CENTRO_SV);
-                    dgData.addEvent(event);
-                }
-            }
-        }
-    }
-
-    private static String ampSvInfo(final String type, int breakendCount, int svCount, double maxPloidy, double totalPloidy, boolean crossArm)
-    {
-        return String.format("%s;%d;%d;%.1f;%.1f;%s", type, breakendCount, svCount, maxPloidy, totalPloidy, crossArm);
-    }
-
-    private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
-    {
-        for(GeneCopyNumber geneCN : mGeneCopyNumberData)
-        {
-            if(driverGene.gene().equals(geneCN.gene()))
-                return geneCN;
-        }
-
-        return null;
-    }
-
-    private void cacheSampleDriverData()
-    {
-        if(mConfig.hasMultipleSamples())
-            return;
-
-        if(mDriverOutputList.isEmpty())
-            return;
-
-        if(mConfig.UploadToDB)
-        {
-            mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
-        }
-
-        try
-        {
-            final String driversFile = LinxDriverFile.generateFilename(mOutputDir, mSampleId);
-            LinxDriverFile.write(driversFile, mDriverOutputList);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write drivers file: {}", e.toString());
-        }
-    }
-
-    private void writeDriverData(final DriverGeneData dgData)
-    {
-        // convert to a sample driver record
-        for(final DriverGeneEvent driverEvent : dgData.getEvents())
-        {
-            int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
-
-            mDriverOutputList.add(ImmutableLinxDriver.builder()
-                    .clusterId(clusterId)
-                    .gene(dgData.GeneData.GeneName)
-                    .eventType(driverEvent.Type.toString())
-                    .build());
-
-            mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
-                    "", 0, dgData.GeneData.Chromosome, "DRIVER");
-        }
-
-        if(!mConfig.hasMultipleSamples())
-            return;
-
-        try
-        {
-            if(mFileWriter == null)
-            {
-                String outputFileName = mOutputDir;
-
-                outputFileName += "SVA_DRIVERS.csv";
-
-                mFileWriter = createBufferedWriter(outputFileName, false);
-
-                mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod");
-                mFileWriter.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
-                mFileWriter.write(",PosStart,PosEnd,SvIdStart,SvIdEnd,SvMatchType,SvPloidy");
-                mFileWriter.write(",SamplePloidy,Chromosome,Arm,MinCN,CentromereCN,TelomereCN");
-                mFileWriter.newLine();
-            }
-
-            BufferedWriter writer = mFileWriter;
-
-            final DriverCatalog driverGene = dgData.DriverData;
-            final EnsemblGeneData geneData = dgData.GeneData;
-            double[] cnData = mCopyNumberData.getChrCopyNumberMap().get(geneData.Chromosome);
-
-            for(final DriverGeneEvent driverEvent : dgData.getEvents())
-            {
-                final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
-
-                writer.write(String.format("%s,%s,%s,%s,%s,%s,%s",
-                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.likelihoodMethod(),
-                        dgData.fullyMatched(), driverEvent.Type));
-
-                final SvCluster cluster = driverEvent.getCluster();
-
-                if(cluster != null)
-                {
-                    writer.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
-                }
-                else
-                {
-                    writer.write(String.format(",-1,0,"));
-                }
-
-                // breakend info if present
-
-                long posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
-                long posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
-                String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
-                String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
-
-                double svPloidy = breakendPair[SE_START] != null ? breakendPair[SE_START].ploidy()
-                        : (breakendPair[SE_END] != null ? breakendPair[SE_END].ploidy() : 0);
-
-                writer.write(String.format(",%d,%d,%s,%s,%s,%.2f",
-                        posStart, posEnd, svIdStart, svIdEnd, driverEvent.getSvInfo(), svPloidy));
-
-                writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
-                        mSamplePloidy, geneData.Chromosome, dgData.Arm, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
-                        cnData[CENTROMERE_CN], dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
-
-                writer.newLine();
-            }
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
-        }
-    }
-
-    public void close()
-    {
-        mPerfCounter.logStats();
-
-        closeBufferedWriter(mFileWriter);
-    }
-
-    private static int GENE_CN_DATA_FILE_ITEM_COUNT = 6;
-
-    private void loadGeneCopyNumberDataFile(final String gcnFileName)
-    {
-        if(gcnFileName.isEmpty() || !Files.exists(Paths.get(gcnFileName)))
-            return;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(gcnFileName));
-
-            // skip field names
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("Empty gene copy number CSV file({})", gcnFileName);
-                return;
-            }
-
-            String currentSample = "";
-            List<GeneCopyNumber> gcnDataList = null;
-            int rowCount = 0;
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                if (items.length != GENE_CN_DATA_FILE_ITEM_COUNT)
-                {
-                    LOGGER.error("GCN file invalid item count({}) vs expected({})", items.length, GENE_CN_DATA_FILE_ITEM_COUNT);
-                    break;
-                }
-
-                String sampleId = items[0];
-
-                if(currentSample.isEmpty() || !currentSample.equals(sampleId))
-                {
-                    gcnDataList = Lists.newArrayList();
-                    currentSample = sampleId;
-                    mSampleGeneCopyNumberMap.put(currentSample, gcnDataList);
-                }
-
-                // sampleId,minCopyNumber,minRegionStart,minRegionEnd,minMinorAllelePloidy
-
-                int index = 1;
-
-                GeneCopyNumber gcnData = ImmutableGeneCopyNumber.builder()
-                        .gene(items[index++])
-                        .minCopyNumber(Double.parseDouble(items[index++]))
-                        .minRegionStart(Integer.parseInt(items[index++]))
-                        .minRegionEnd(Integer.parseInt(items[index++]))
-                        .minMinorAllelePloidy(Double.parseDouble(items[index++]))
-                        .maxCopyNumber(0)
-                        .somaticRegions(0)
-                        .germlineHet2HomRegions(0)
-                        .germlineHomRegions(0)
-                        .minRegions(0)
-                        .minRegionStartSupport(UNKNOWN)
-                        .minRegionEndSupport(UNKNOWN)
-                        .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                        .transcriptID("")
-                        .transcriptVersion(0)
-                        .chromosomeBand("")
-                        .chromosome("")
-                        .start(0)
-                        .end(0)
-                        .build();
-
-                ++rowCount;
-
-                gcnDataList.add(gcnData);
-            }
-
-            LOGGER.info("loaded {} gene copy-number records from file", rowCount);
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
-        }
-    }
+     */
 
 }
