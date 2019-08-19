@@ -350,7 +350,6 @@ public class ChainRuleSelector
                 SvBreakend foldbackStart = foldback.getBreakend(true);
                 SvBreakend foldbackEnd = foldback.getBreakend(false);
 
-
                 double ploidy = min(mLinkAllocator.getUnlinkedBreakendCount(foldbackStart), mLinkAllocator.getUnlinkedBreakendCount(foldbackEnd));
 
                 if (ploidy == 0)
@@ -363,7 +362,7 @@ public class ChainRuleSelector
         }
         else
         {
-            // remove any foldbacks with exhausted breakends
+            // remove any foldbacks with exhausted breakends or no more possible links
             int index = 0;
             while(index < mFoldbackBreakendPairs.size())
             {
@@ -400,6 +399,10 @@ public class ChainRuleSelector
 
             // are breakends consecutive and facing the same direction?
             if(!chainStart.chromosome().equals(chainEnd.chromosome()) || chainStart.orientation() != chainEnd.orientation())
+                continue;
+
+            // exclude if no possible pairs are permitted
+            if(mSvBreakendPossibleLinks.get(chainStart) == null || mSvBreakendPossibleLinks.get(chainEnd) == null)
                 continue;
 
             int startIndex = chainStart.getClusterChrPosIndex();
