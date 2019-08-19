@@ -232,6 +232,7 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchClassification;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchFusions;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchLocations;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchParents;
@@ -2366,7 +2367,9 @@ public class ViccDAO {
                 for (String pathology : classification.pathology()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONPATHOLOGY,
                             MOLECULARMATCHCLASSIFICATIONPATHOLOGY.PATHOLOGY,
-                            MOLECULARMATCHCLASSIFICATIONPATHOLOGY.MOLECULARMATCHCLASSIFICATIONID).values(pathology, idClassification).execute();
+                            MOLECULARMATCHCLASSIFICATIONPATHOLOGY.MOLECULARMATCHCLASSIFICATIONID)
+                            .values(pathology, idClassification)
+                            .execute();
                 }
             }
 
@@ -2394,7 +2397,7 @@ public class ViccDAO {
                 }
             }
 
-            if (classification.sources() != null){
+            if (classification.sources() != null) {
                 for (String source : classification.sources()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONSOURCES,
                             MOLECULARMATCHCLASSIFICATIONSOURCES.SOURCE,
@@ -2402,8 +2405,7 @@ public class ViccDAO {
                 }
             }
 
-
-            if (classification.transcripts() != null){
+            if (classification.transcripts() != null) {
                 for (String transcript : classification.transcripts()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONTRANSCRIPTS,
                             MOLECULARMATCHCLASSIFICATIONTRANSCRIPTS.TRANSCRIPT,
@@ -2417,7 +2419,9 @@ public class ViccDAO {
                 for (String cosmicId : classification.COSMIC_ID()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONCOSMICID,
                             MOLECULARMATCHCLASSIFICATIONCOSMICID.COSMIC_ID,
-                            MOLECULARMATCHCLASSIFICATIONCOSMICID.MOLECULARMATCHCLASSIFICATIONID).values(cosmicId, idClassification).execute();
+                            MOLECULARMATCHCLASSIFICATIONCOSMICID.MOLECULARMATCHCLASSIFICATIONID)
+                            .values(cosmicId, idClassification)
+                            .execute();
                 }
             }
 
@@ -2459,7 +2463,6 @@ public class ViccDAO {
                 }
             }
 
-
             if (classification.parents() != null) {
                 for (MolecularMatchParents parents : classification.parents()) {
                     int idParents = context.insertInto(MOLECULARMATCHCLASSIFICATIONPARENTS,
@@ -2481,6 +2484,38 @@ public class ViccDAO {
                     }
                 }
             }
+        }
+
+        for (MolecularMatchCriteriaUnmet criteriaUnmet : molecularMatch.criteriaUnmet()) {
+            context.insertInto(MOLECULARMATCHCRITERIAUNMET,
+                    MOLECULARMATCHCRITERIAUNMET.PRIORITY,
+                    MOLECULARMATCHCRITERIAUNMET.COMPOSITEKEY,
+                    MOLECULARMATCHCRITERIAUNMET.ISNEW,
+                    MOLECULARMATCHCRITERIAUNMET.GENERATEDBY,
+                    MOLECULARMATCHCRITERIAUNMET.MANUALSUPPRESS,
+                    MOLECULARMATCHCRITERIAUNMET.GENERATEDBYTERM,
+                    MOLECULARMATCHCRITERIAUNMET.SUPPRESS,
+                    MOLECULARMATCHCRITERIAUNMET.FILTERTYPE,
+                    MOLECULARMATCHCRITERIAUNMET.TERM,
+                    MOLECULARMATCHCRITERIAUNMET.PRIMARYVALUE,
+                    MOLECULARMATCHCRITERIAUNMET.FACET,
+                    MOLECULARMATCHCRITERIAUNMET.VALID,
+                    MOLECULARMATCHCRITERIAUNMET.CUSTOM,
+                    MOLECULARMATCHCRITERIAUNMET.TRANSCRIPT,
+                    MOLECULARMATCHCRITERIAUNMET.MOLECULARMATCHID)
+                    .values(criteriaUnmet.priority(),
+                            criteriaUnmet.compositeKey(),
+                            criteriaUnmet.isNew(),
+                            criteriaUnmet.generatedBy(),
+                            criteriaUnmet.manualSuppress(),
+                            criteriaUnmet.generatedByTerm(),
+                            criteriaUnmet.suppress(),
+                            criteriaUnmet.filterType(),
+                            criteriaUnmet.term(),
+                            criteriaUnmet.primary(),
+                            criteriaUnmet.facet(),
+                            criteriaUnmet.valid(),
+                            criteriaUnmet.custom(), criteriaUnmet.transcript(), id).execute();
         }
 
     }
