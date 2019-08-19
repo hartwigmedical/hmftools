@@ -231,6 +231,8 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchFusions;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchLocations;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchSource;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTags;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTherapeuticContext;
@@ -240,6 +242,7 @@ import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsLocations;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsTags;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbConsequence;
@@ -2199,6 +2202,98 @@ public class ViccDAO {
                             tags.transcript(),
                             id)
                     .execute();
+        }
+
+        for (MolecularMatchVariantInfo variantInfo : molecularMatch.variantInfo()) {
+            int idVariantInfo = context.insertInto(MOLECULARMATCHVARIANTINFO,
+                    MOLECULARMATCHVARIANTINFO.CLASSIFICATION,
+                    MOLECULARMATCHVARIANTINFO.NAME,
+                    MOLECULARMATCHVARIANTINFO.GENEFUSIONPARTNER,
+                    MOLECULARMATCHVARIANTINFO.COSMIC_ID,
+                    MOLECULARMATCHVARIANTINFO.GENE,
+                    MOLECULARMATCHVARIANTINFO.TRANSCRIPT,
+                    MOLECULARMATCHVARIANTINFO.POPFREQMAX,
+                    MOLECULARMATCHVARIANTINFO.MOLECULARMATCHID)
+                    .values(variantInfo.classification(),
+                            variantInfo.name(),
+                            variantInfo.geneFusionPartner(),
+                            variantInfo.COSMIC_ID(),
+                            variantInfo.gene(),
+                            variantInfo.transcript(),
+                            variantInfo.popFreqMax(),
+                            id)
+                    .returning(MOLECULARMATCHVARIANTINFO.ID)
+                    .fetchOne()
+                    .getValue(MOLECULARMATCHVARIANTINFO.ID);
+
+            for (String consequences : variantInfo.consequences()) {
+                context.insertInto(MOLECULARMATCHVARIANTINFOCONSEQUENCES,
+                        MOLECULARMATCHVARIANTINFOCONSEQUENCES.CONSEQUENCES,
+                        MOLECULARMATCHVARIANTINFOCONSEQUENCES.MOLECULARMATCHVARIANTINFOID).values(consequences, idVariantInfo).execute();
+            }
+
+            for (MolecularMatchFusions fusions : variantInfo.fusions()) {
+                context.insertInto(MOLECULARMATCHVARIANTINFOFUSIONS,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.REFERENCEGENOME,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.LBPWREP,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.RBPWREP,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.EXONNUMBER,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.CHR,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.RBPWLEP,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.INTRONNUMBER,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.LBPWLEP,
+                        MOLECULARMATCHVARIANTINFOFUSIONS.MOLECULARMATCHVARIANTINFOID)
+                        .values(fusions.referenceGenome(),
+                                fusions.LBPWREP(),
+                                fusions.RBPWREP(),
+                                fusions.exonNumber(),
+                                fusions.chr(),
+                                fusions.RBPWLEP(),
+                                fusions.intronNumber(),
+                                fusions.RBPWLEP(),
+                                idVariantInfo)
+                        .execute();
+            }
+
+            for (MolecularMatchLocations locations : variantInfo.locations()) {
+                int Idlocation = context.insertInto(MOLECULARMATCHVARIANTINFOLOCATIONS,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.AMINOACIDCHANGE,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.INTRONNUMBER,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.STOP,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.START,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.CHR,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.STRAND,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.ALT,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.REFERENCEGENOME,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.REF,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.CDNA,
+                        MOLECULARMATCHVARIANTINFOLOCATIONS.MOLECULARMATCHVARIANTINFOID)
+                        .values(locations.aminoAcidChange(),
+                                locations.intronNumber(),
+                                locations.stop(),
+                                locations.start(),
+                                locations.chr(),
+                                locations.strand(),
+                                locations.alt(),
+                                locations.referenceGenome(),
+                                locations.ref(),
+                                locations.cdna(),
+                                idVariantInfo)
+                        .returning(MOLECULARMATCHVARIANTINFOLOCATIONS.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHVARIANTINFOLOCATIONS.ID);
+
+                if (locations.exonNumber() != null) {
+                    for (String exonNumber : locations.exonNumber()) {
+                        context.insertInto(MOLECULARMATCHVARIANTINFOLOCATIONSEXONNUMBER,
+                                MOLECULARMATCHVARIANTINFOLOCATIONSEXONNUMBER.EXONNUMBER,
+                                MOLECULARMATCHVARIANTINFOLOCATIONSEXONNUMBER.MOLECULARMATCHVARIANTINFOLOCATIONSID)
+                                .values(exonNumber, Idlocation)
+                                .execute();
+
+                    }
+                }
+            }
         }
 
     }
