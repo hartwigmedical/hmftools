@@ -26,7 +26,6 @@ public interface SvCircosConfig
     String INNER_RADIUS = "inner_radius";
     String EXACT_POSITION = "exact_position";
 
-    String CHR_RANGE_FONT_SIZE = "chr_range_font_size";
     String CHR_RANGE_HEIGHT = "chr_range_height";
     String CHR_RANGE_COLUMNS = "chr_range_columns";
 
@@ -38,7 +37,6 @@ public interface SvCircosConfig
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
     int DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW = 30;
 
-    int DEFAULT_CHR_RANGE_FONT_SIZE = 70;
     int DEFAULT_CHR_RANGE_HEIGHT = 150;
     int DEFAULT_CHR_RANGE_COLUMNS = 4;
 
@@ -62,7 +60,6 @@ public interface SvCircosConfig
                 "Height of each row in protein domain legend [" + DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW
                         + "]");
 
-        options.addOption(CHR_RANGE_FONT_SIZE, true, "Chromosome range font size [" + DEFAULT_CHR_RANGE_FONT_SIZE + "]");
         options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
         options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
 
@@ -87,8 +84,6 @@ public interface SvCircosConfig
     int fusionLegendHeightPerRow();
 
     int fusionHeight();
-
-    int chromosomeRangeFontSize();
 
     int chromosomeRangeHeight();
 
@@ -153,7 +148,6 @@ public interface SvCircosConfig
                 .fusionHeight(defaultIntValue(cmd, FUSION_HEIGHT, DEFAULT_FUSION_HEIGHT))
                 .chromosomeRangeColumns(defaultIntValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS))
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
-                .chromosomeRangeFontSize(defaultIntValue(cmd, CHR_RANGE_FONT_SIZE, DEFAULT_CHR_RANGE_FONT_SIZE))
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
                 .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
                 .innerRadius(defaultValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))

@@ -31,14 +31,14 @@ public class ChromosomeRangeExecution
         this.chromosomeFile = dataDir + File.separator + sample + ".chromosome.circos";
     }
 
-    public Integer executeR(@NotNull final SvCircosConfig config) throws IOException, InterruptedException
+    public Integer executeR(@NotNull final SvCircosConfig config, double labelSize) throws IOException, InterruptedException
     {
         writeCytobands();
         int result = RExecutor.executeFromClasspath("r/chromosomeRangePlot.R",
                 chromosomeFile,
                 bandFile,
                 plotFile,
-                String.valueOf(config.chromosomeRangeFontSize()),
+                String.valueOf(labelSize),
                 String.valueOf(config.chromosomeRangeHeight()),
                 String.valueOf(config.chromosomeRangeColumns())
         );
