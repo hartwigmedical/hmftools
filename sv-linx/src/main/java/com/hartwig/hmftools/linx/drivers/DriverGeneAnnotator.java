@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.drivers;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
@@ -28,6 +29,7 @@ import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_D
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DUP;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_FOLDBACK;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_MAX_PLOIDY;
+import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_NET_PLOIDY;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_TI;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
@@ -489,44 +491,42 @@ public class DriverGeneAnnotator
         int startIndex = (dgData.Arm == CHROMOSOME_ARM_P || !restrictToArm) ? 0 : centromereIndex;
         int endIndex = (dgData.Arm == CHROMOSOME_ARM_P && restrictToArm ) ? centromereIndex : breakendList.size() - 1;
 
-        // if no clear explanatory breakend or cluster is found, nominate any complex cluster with high ploidy which
-        // covers the gene
+        // if no clear explanatory breakend or cluster is found, nominate any complex cluster with high ploidy which covers the gene
         Map<SvCluster,Double> complexClusterPloidies = Maps.newHashMap();
+        Map<SvCluster,List<SvBreakend>> clusterBreakendsMap = Maps.newHashMap();
 
         for(int i = 0; i <= 1; ++i)
         {
             boolean traverseUp = (i == 0);
 
-            Map<SvCluster,List<SvBreakend>> clusterBreakendsMap = Maps.newHashMap();
-
             int index = traverseUp ? startIndex : endIndex;
             SvBreakend breakend = null;
 
-            while(true)
+            while (true)
             {
-                if(breakend != null)
+                if (breakend != null)
                     index += traverseUp ? 1 : -1;
 
-                if(index < startIndex || index > endIndex)
+                if (index < startIndex || index > endIndex)
                     break;
 
                 breakend = breakendList.get(index);
                 final SvCluster cluster = breakend.getCluster();
 
-                if(cluster.hasLinkingLineElements())
+                if (cluster.hasLinkingLineElements())
                     continue;
 
                 // make note of any breakend preceding the gene in the direction of traversal
-                if((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
+                if ((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
                     break;
 
-                if(isSimpleSingleSV(cluster))
+                if (isSimpleSingleSV(cluster))
                 {
                     final SvVarData var = breakend.getSV();
-                    if(var.type() != DUP || !traverseUp)
+                    if (var.type() != DUP || !traverseUp)
                         continue;
 
-                    if(var.position(true) <= transStart && var.position(false) >= transEnd)
+                    if (var.position(true) <= transStart && var.position(false) >= transEnd)
                     {
                         clusterBreakendsMap.put(cluster, Lists.newArrayList(breakend));
                     }
@@ -538,148 +538,235 @@ public class DriverGeneAnnotator
 
                 boolean breakendFacesGene = ((breakend.orientation() != 1) == traverseUp);
 
-                if(clusterBreakends == null)
+                if (clusterBreakends == null)
                 {
                     // only start with a breakend facing the gene
-                    if(!breakendFacesGene)
+                    if (!breakendFacesGene)
                         continue;
 
                     clusterBreakendsMap.put(cluster, Lists.newArrayList(breakend));
                 }
                 else
                 {
-                    clusterBreakends.add(breakend);
+                    if (!clusterBreakends.contains(breakend))
+                    {
+                        // add in order
+                        int cIndex = 0;
+                        while(cIndex < clusterBreakends.size())
+                        {
+                            if(breakend.getClusterChrPosIndex() < clusterBreakends.get(cIndex).getClusterChrPosIndex())
+                                break;
+
+                            ++cIndex;
+                        }
+
+                        clusterBreakends.add(cIndex, breakend);
+                    }
                 }
             }
+        }
 
-            for(Map.Entry<SvCluster,List<SvBreakend>> entry : clusterBreakendsMap.entrySet())
+        for(Map.Entry<SvCluster,List<SvBreakend>> entry : clusterBreakendsMap.entrySet())
+        {
+            final List<SvBreakend> clusterBreakends = entry.getValue();
+
+            List<SvLinkedPair> spanningLinks = Lists.newArrayList();
+            List<SvBreakend> facingFoldbacks = Lists.newArrayList();
+
+            SvBreakend maxFacingPloidyBreakend = null;
+            double maxFacingPloidy = 0;
+
+            for(final SvBreakend breakend : clusterBreakends)
             {
-                final List<SvBreakend> clusterBreakends = entry.getValue();
+                boolean breakendFacesGene = (breakend.position() < transStart && breakend.orientation() == -1)
+                        || (breakend.position() > transEnd && breakend.orientation() == 1);
 
-                double netPloidy = clusterBreakends.stream()
-                        .mapToDouble(x -> ((x.orientation() != 1) == traverseUp) ? x.ploidy() : -x.ploidy()).sum();
+                if (!breakendFacesGene)
+                    continue;
 
-                boolean hasHighPloidy = clusterBreakends.stream()
-                        .anyMatch(x -> x.ploidy() > mSamplePloidy || x.copyNumberChange() > mSamplePloidy);
-
-                boolean hasFoldbacks = clusterBreakends.stream().anyMatch(x -> x.isFoldback());
-
-                final SvCluster cluster = entry.getKey();
-
-                if(abs(netPloidy) > mSamplePloidy || (cluster.requiresReplication() && clusterBreakends.size() >= 5))
+                if(breakend.isFoldback())
                 {
-                    Double existingPloidy = complexClusterPloidies.get(cluster);
+                    boolean hasFoldback = facingFoldbacks.stream().anyMatch(x -> x.getSV() == breakend.getSV()
+                            || x == breakend || x == breakend.getFoldbackBreakend());
 
-                    if(existingPloidy == null || abs(netPloidy) > existingPloidy)
-                        complexClusterPloidies.put(cluster, abs(netPloidy));
+                    if(!hasFoldback)
+                        facingFoldbacks.add(breakend);
                 }
 
-                if(netPloidy < mSamplePloidy && !hasFoldbacks && !hasHighPloidy)
-                    continue;
-
-                if(dgData.getEvents().stream().anyMatch(x -> x.getCluster() == cluster))
-                    continue;
-
-                // report on type of SV which caused the amp
-                DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.setCluster(cluster);
-
-                if(cluster.getSvCount() == 1 && cluster.getSV(0).type() == DUP && hasHighPloidy)
+                // make note of any TI which span the gene
+                for(final SvLinkedPair pair : breakend.getSV().getLinkedPairs(breakend.usesStart()))
                 {
-                    final SvVarData var = cluster.getSV(0);
-                    final String matchType = cluster.hasAnnotation(CLUSTER_ANNOT_DM) ? SV_DRIVER_TYPE_DM : SV_DRIVER_TYPE_DUP;
-                    event.addSvBreakendPair(var.getBreakend(true), var.getBreakend(false), matchType);
-                    dgData.addEvent(event);
-
-                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from DUP({}) type({}) sameArm({})",
-                            dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy), var.toString(), matchType, restrictToArm);
-
-                    continue;
-                }
-
-                SvVarData foldback = null;
-                SvBreakend maxPloidyBreakend = null;
-                SvLinkedPair maxSpanningLink = null;
-                int spanningLinkCount = 0;
-                double spanningLinkPloidy = 0;
-                double maxSpanningLinkPloidy = 0;
-
-                for(final SvBreakend clusterBreakend : clusterBreakends)
-                {
-                    boolean breakendFacesGene = ((clusterBreakend.orientation() != 1) == traverseUp);
-
-                    if(!breakendFacesGene)
+                    if(spanningLinks.contains(pair))
                         continue;
 
-                    // check for a TI spanning the gene and select the highest ploidy one
-                    final SvLinkedPair spanningLink = clusterBreakend.getSV().getLinkedPairs(clusterBreakend.usesStart()).stream()
-                            .filter(x -> x.getBreakend(true).position() < transStart && x.getBreakend(false).position() > transEnd)
-                            .findFirst().orElse(null);
+                    if(pair.getBreakend(true).position() < transStart && pair.getBreakend(false).position() > transEnd)
+                        spanningLinks.add(pair);
+                }
 
-                    if(spanningLink != null && spanningLink != maxSpanningLink)
+                double breakendPloidy = max(breakend.ploidy(), breakend.copyNumberChange());
+
+                if(breakendPloidy > 1 && (maxFacingPloidyBreakend == null || breakendPloidy > maxFacingPloidyBreakend.ploidy()))
+                {
+                    maxFacingPloidyBreakend = breakend;
+                    maxFacingPloidy = breakendPloidy;
+                }
+            }
+
+            // work out net and max ploidy in each direction
+            double maxNetPloidy = 0;
+
+            for(int i = 0; i <= 1; ++i)
+            {
+                boolean traverseUp = (i == 0);
+
+                double netPloidy = 0;
+
+                int index = traverseUp ? 0 : clusterBreakends.size() - 1;
+                SvBreakend breakend = null;
+
+                while (true)
+                {
+                    if (breakend != null)
+                        index += traverseUp ? 1 : -1;
+
+                    if (index < 0 || index >= clusterBreakends.size())
+                        break;
+
+                    breakend = breakendList.get(index);
+
+                    boolean breakendFacesGene = ((breakend.orientation() != 1) == traverseUp);
+
+                    if((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
+                        break;
+
+                    netPloidy += breakendFacesGene ? breakend.ploidy() : -breakend.ploidy();
+                }
+
+                maxNetPloidy = max(maxNetPloidy, netPloidy);
+            }
+
+            if(spanningLinks.isEmpty() && maxFacingPloidy < mSamplePloidy && maxNetPloidy < mSamplePloidy && facingFoldbacks.isEmpty())
+                continue;
+
+            final SvCluster cluster = entry.getKey();
+
+            /*
+            if(abs(netPloidy) > mSamplePloidy || (cluster.requiresReplication() && clusterBreakends.size() >= 5))
+            {
+                Double existingPloidy = complexClusterPloidies.get(cluster);
+
+                if(existingPloidy == null || abs(netPloidy) > existingPloidy)
+                    complexClusterPloidies.put(cluster, abs(netPloidy));
+            }
+            */
+
+            // report on type of SV which caused the amp
+            if(cluster.getSvCount() == 1 && cluster.getSV(0).type() == DUP && maxFacingPloidy > mSamplePloidy)
+            {
+                final SvVarData var = cluster.getSV(0);
+                final String matchType = cluster.hasAnnotation(CLUSTER_ANNOT_DM) ? SV_DRIVER_TYPE_DM : SV_DRIVER_TYPE_DUP;
+                DriverGeneEvent event = new DriverGeneEvent(GAIN);
+                event.setCluster(cluster);
+                event.addSvBreakendPair(var.getBreakend(true), var.getBreakend(false), matchType);
+                dgData.addEvent(event);
+
+                LOGGER.debug("gene({}) cluster({}) net ploidy({}) from DUP({}) type({}) sameArm({})",
+                        dgData.GeneData.GeneName, cluster.id(), formatPloidy(maxFacingPloidy), var.toString(), matchType, restrictToArm);
+
+                continue;
+            }
+
+            double spanningLinkPloidy = 0;
+            double maxLinkPloidy = 0;
+
+            if(!spanningLinks.isEmpty())
+            {
+                // calculate the total ploidy for this link from all chains it is in
+                for (final SvLinkedPair pair : spanningLinks)
+                {
+                    for (final SvChain chain : cluster.getChains())
                     {
-                        // calculate the total ploidy for this link from all chains it is in
-                        double linkPloidy = 0;
-                        for (final SvChain chain : cluster.getChains())
+                        int linkRepeats = (int) chain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
+
+                        if (linkRepeats > 0)
                         {
-                            int linkRepeats = (int) chain.getLinkedPairs().stream().filter(x -> x.matches(spanningLink)).count();
-                            linkPloidy += linkRepeats * chain.ploidy();
-                        }
-
-                        ++spanningLinkCount;
-                        spanningLinkPloidy += linkPloidy;
-
-                        if(linkPloidy > 1 && (maxSpanningLink == null || maxSpanningLinkPloidy < linkPloidy))
-                        {
-                            maxSpanningLink = spanningLink;
-                            maxSpanningLinkPloidy = linkPloidy;
+                            double linkPloidy = linkRepeats * chain.ploidy();
+                            ;
+                            spanningLinkPloidy += linkPloidy;
+                            maxLinkPloidy = max(maxLinkPloidy, linkPloidy);
                         }
                     }
-
-                    if(clusterBreakend.isFoldback() && (foldback == null || clusterBreakend.ploidy() > foldback.ploidy()))
-                    {
-                        foldback = clusterBreakend.getSV();
-                    }
-
-                    if(clusterBreakend.ploidy() > 1 && (maxPloidyBreakend == null || clusterBreakend.ploidy() > maxPloidyBreakend.ploidy()))
-                    {
-                        maxPloidyBreakend = clusterBreakend;
-                    }
                 }
+            }
 
-                if(maxSpanningLink != null)
-                {
-                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from TI({} ploidy={}) totalLinks({} ploidy={}) sameArm({})",
-                            dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy), maxSpanningLink,
-                            formatPloidy(maxSpanningLinkPloidy), spanningLinkCount, formatPloidy(spanningLinkPloidy), restrictToArm);
+            DriverGeneEvent event = new DriverGeneEvent(GAIN);
+            event.setCluster(cluster);
 
-                    event.addSvBreakendPair(
-                            maxSpanningLink.getBreakend(true), maxSpanningLink.getBreakend(false), SV_DRIVER_TYPE_TI);
-                }
-                else if(foldback != null)
-                {
-                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from foldback({}) ploidy({}) sameArm({})",
-                            dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy),
-                            foldback, formatPloidy(foldback.ploidy()), restrictToArm);
+            // record results as Type;Count;MaxPloidy;TotalPloidy
 
-                    event.addSvBreakendPair(foldback.getBreakend(true), foldback.getBreakend(false), SV_DRIVER_TYPE_FOLDBACK);
-                }
-                else if(maxPloidyBreakend != null)
-                {
-                    LOGGER.debug("gene({}) cluster({}) net ploidy({}) from max-ploidy breakend({}) ploidy({} cnChg={}) sameArm({})",
-                            dgData.GeneData.GeneName, cluster.id(), formatPloidy(netPloidy), maxPloidyBreakend,
-                            formatPloidy(maxPloidyBreakend.ploidy()), formatPloidy(maxPloidyBreakend.copyNumberChange()), restrictToArm);
+            if(spanningLinkPloidy > mSamplePloidy)
+            {
+                String linkInfo = ampSvInfo(
+                        SV_DRIVER_TYPE_TI, clusterBreakends.size(), spanningLinks.size(), maxLinkPloidy, spanningLinkPloidy, !restrictToArm);
 
-                    // report highest ploidy facing SV
-                    event.addSvBreakendPair(maxPloidyBreakend, null, SV_DRIVER_TYPE_MAX_PLOIDY);
-                }
-                else
+                event.setSvInfo(linkInfo);
+
+                LOGGER.debug("gene({}) cluster({}) spanning TIs({}) maxPloidy({}) totalPloidy({}) sameArm({})",
+                        dgData.GeneData.GeneName, cluster.id(), spanningLinks.size(), formatPloidy(maxLinkPloidy),
+                        formatPloidy(spanningLinkPloidy), restrictToArm);
+                dgData.addEvent(event);
+                continue;
+            }
+
+            if(!facingFoldbacks.isEmpty())
+            {
+                double maxFoldbackPloidy = facingFoldbacks.stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
+
+                double foldbackTotalPloidy = max(
+                        facingFoldbacks.stream().filter(x -> x.orientation() == 1).mapToDouble(x -> x.ploidy()).max().orElse(0),
+                        facingFoldbacks.stream().filter(x -> x.orientation() == -1).mapToDouble(x -> x.ploidy()).max().orElse(0));
+
+                if(maxFoldbackPloidy > mSamplePloidy || foldbackTotalPloidy > mSamplePloidy)
                 {
+                    LOGGER.debug("gene({}) cluster({}) foldbacks({}) maxPloidy({}) totalFacing({}) sameArm({})",
+                            dgData.GeneData.GeneName, cluster.id(), facingFoldbacks.size(), formatPloidy(maxFoldbackPloidy),
+                            formatPloidy(foldbackTotalPloidy), restrictToArm);
+
+                    String linkInfo = ampSvInfo(SV_DRIVER_TYPE_FOLDBACK, clusterBreakends.size(), facingFoldbacks.size(),
+                            maxFoldbackPloidy, foldbackTotalPloidy, !restrictToArm);
+
+                    event.setSvInfo(linkInfo);
+                    dgData.addEvent(event);
                     continue;
                 }
-
-                dgData.addEvent(event);
             }
+
+            if(maxNetPloidy > mSamplePloidy)
+            {
+                LOGGER.debug("gene({}) cluster({}) max net ploidy({}) sameArm({})",
+                        dgData.GeneData.GeneName, cluster.id(), formatPloidy(maxNetPloidy), restrictToArm);
+
+                String linkInfo = ampSvInfo(
+                        SV_DRIVER_TYPE_NET_PLOIDY, clusterBreakends.size(), 0, maxFacingPloidy, maxNetPloidy, !restrictToArm);
+                event.setSvInfo(linkInfo);
+                dgData.addEvent(event);
+                continue;
+            }
+
+            if(maxFacingPloidy > mSamplePloidy)
+            {
+                LOGGER.debug("gene({}) cluster({}) max facing breakend({}) ploidy({}) sameArm({})",
+                        dgData.GeneData.GeneName, cluster.id(), maxFacingPloidyBreakend, formatPloidy(maxFacingPloidy), restrictToArm);
+
+                String linkInfo = ampSvInfo(
+                        SV_DRIVER_TYPE_MAX_PLOIDY, clusterBreakends.size(), 1, maxFacingPloidy, maxNetPloidy, !restrictToArm);
+                event.setSvInfo(linkInfo);
+                dgData.addEvent(event);
+                continue;
+            }
+
+            LOGGER.debug("gene({}) cluster({}) has breakend({}) without meeting amp criteria",
+                    dgData.GeneData.GeneName, cluster.id(), clusterBreakends.size());
         }
 
         if(dgData.getEvents().isEmpty() && !restrictToArm)
@@ -726,6 +813,11 @@ public class DriverGeneAnnotator
                         dgData.GeneData.GeneName, cluster.id(), formatPloidy(entry.getValue()));
             }
         }
+    }
+
+    private static String ampSvInfo(final String type, int breakendCount, int svCount, double maxPloidy, double totalPloidy, boolean crossArm)
+    {
+        return String.format("%s;%d;%d;%.1f;%.1f;%s", type, breakendCount, svCount, maxPloidy, totalPloidy, crossArm);
     }
 
     private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
@@ -833,7 +925,7 @@ public class DriverGeneAnnotator
                 String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 
                 double svPloidy = breakendPair[SE_START] != null ? breakendPair[SE_START].ploidy()
-                        : (breakendPair[SE_END] != null ? breakendPair[SE_END].ploidy() : -1);
+                        : (breakendPair[SE_END] != null ? breakendPair[SE_END].ploidy() : 0);
 
                 writer.write(String.format(",%d,%d,%s,%s,%s,%.2f",
                         posStart, posEnd, svIdStart, svIdEnd, driverEvent.getSvInfo(), svPloidy));

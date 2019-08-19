@@ -25,6 +25,7 @@ public class DriverGeneEvent
     public static final String SV_DRIVER_TYPE_TI = "TI";
     public static final String SV_DRIVER_TYPE_FOLDBACK = "FOLDBACK";
     public static final String SV_DRIVER_TYPE_MAX_PLOIDY = "MAX_PLOIDY";
+    public static final String SV_DRIVER_TYPE_NET_PLOIDY = "NET_PLOIDY";
     public static final String SV_DRIVER_TYPE_DUP = "DUP";
     public static final String SV_DRIVER_TYPE_DM = "DM";
     public static final String SV_DRIVER_TYPE_DEL = "DEL";
