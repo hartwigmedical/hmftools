@@ -37,6 +37,7 @@ public class CircosData
 
     private final List<Link> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
+    private final List<Fusion> unadjustedFusions;
 
     private final Map<String, Integer> contigLengths;
 
@@ -58,6 +59,8 @@ public class CircosData
         this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
+        this.unadjustedFusions = fusions;
+
         final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
 
@@ -96,6 +99,11 @@ public class CircosData
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+    }
+
+    public List<Fusion> unadjustedFusions()
+    {
+        return unadjustedFusions;
     }
 
     @NotNull

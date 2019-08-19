@@ -10,7 +10,7 @@ clusterFusedExonPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02010990T.clust
 circosPicturePath = "/Users/jon/hmf/analysis/fusions/plot/CPCT02010990T.cluster54.COMPLEX.sv66.png"
 fusionHeightPerRow = 250
 fusionLegendHeightPerRow = 30
-fontSize = 43
+fontSize = 35
 
 # Parse the arguments
 args <- commandArgs(trailing=T)

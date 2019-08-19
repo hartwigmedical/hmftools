@@ -24,6 +24,7 @@ import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
@@ -77,7 +78,7 @@ public class CircosDataWriter
         final List<Exon> exons = data.exons();
 
         final String exonPath = filePrefix + ".exon.circos";
-        Files.write(new File(exonPath).toPath(), exons(geneColorMap, exons));
+        Files.write(new File(exonPath).toPath(), exons(geneColorMap, data.unadjustedFusions(), exons));
 
         final String exonRankPath = filePrefix + ".exon.rank.circos";
         Files.write(new File(exonRankPath).toPath(), exonRank(totalContigLength, exons));
@@ -126,7 +127,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> chromosomeLocations(@NotNull final  List<CopyNumberAlteration> unadjustedAlterations)
+    private List<String> chromosomeLocations(@NotNull final List<CopyNumberAlteration> unadjustedAlterations)
     {
         List<String> result = Lists.newArrayList();
 
@@ -204,7 +205,8 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exons(@NotNull final Map<String, String> geneColours, @NotNull final List<Exon> exons)
+    private List<String> exons(@NotNull final Map<String, String> geneColours, @NotNull final List<Fusion> fusions,
+            @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
         for (final Exon exon : exons)
@@ -216,6 +218,62 @@ public class CircosDataWriter
                     .add("fill_color=" + geneColours.get(exon.gene()))
                     .toString();
             result.add(exonString);
+        }
+
+        for (final Fusion fusion : fusions)
+        {
+            final List<Exon> upstreamExons =
+                    exons.stream().filter(x -> x.gene().equals(fusion.geneUp()) && x.rank() >= fusion.fusedExonUp()).collect(toList());
+            if (upstreamExons != null)
+            {
+
+                final long start;
+                final long end;
+                if (fusion.strandUp() > 0)
+                {
+                    start = upstreamExons.stream().mapToLong(GenomeRegion::end).min().orElse(0) + 1;
+                    end = upstreamExons.stream().mapToLong(GenomeRegion::end).max().orElse(0);
+                }
+                else
+                {
+                    start = upstreamExons.stream().mapToLong(GenomeRegion::start).min().orElse(0);
+                    end = upstreamExons.stream().mapToLong(GenomeRegion::start).max().orElse(0) - 1;
+                }
+
+                final String exonString = new StringJoiner(DELIMITER).add(circosContig(fusion.chromosomeUp()))
+                        .add(String.valueOf(start + 1))
+                        .add(String.valueOf(end))
+                        .add(String.valueOf(1))
+                        .add("fill_color=(255,255,255,0.6)")
+                        .toString();
+                result.add(exonString);
+            }
+
+            final List<Exon> downstreamExons =
+                    exons.stream().filter(x -> x.gene().equals(fusion.geneDown()) && x.rank() <= fusion.fusedExonDown()).collect(toList());
+            if (downstreamExons != null)
+            {
+                final long start;
+                final long end;
+                if (fusion.strandDown() < 0)
+                {
+                    start = downstreamExons.stream().mapToLong(GenomeRegion::end).min().orElse(0) + 1;
+                    end = downstreamExons.stream().mapToLong(GenomeRegion::end).max().orElse(0);
+                }
+                else
+                {
+                    start = downstreamExons.stream().mapToLong(GenomeRegion::start).min().orElse(0);
+                    end = downstreamExons.stream().mapToLong(GenomeRegion::start).max().orElse(0) - 1;
+                }
+
+                final String exonString = new StringJoiner(DELIMITER).add(circosContig(fusion.chromosomeUp()))
+                        .add(String.valueOf(start + 1))
+                        .add(String.valueOf(end))
+                        .add(String.valueOf(1))
+                        .add("fill_color=(255,255,255,0.6)")
+                        .toString();
+                result.add(exonString);
+            }
         }
 
         return result;
