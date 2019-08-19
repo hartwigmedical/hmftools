@@ -21,6 +21,10 @@ fontSize <- as.numeric(args[4])
 
 plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
   
+  gene = fusedExons %>% group_by(transcript, color) %>% summarise()
+  utrRegions = fusedProteinDomains %>% filter(name == "UTR/Non-coding") %>% select(-color) %>% left_join(gene %>% select(transcript, color), by = "transcript")
+  otherRegions = fusedProteinDomains %>% filter(name != "UTR/Non-coding") %>% arrange(name)
+  
   fusion = fusedExons %>% group_by(fusion) %>% summarise(start = min(geneStart), end = max(geneEnd))
   
   fusedGenes = fusedExons %>% 
@@ -38,12 +42,12 @@ plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
     select(-start, -end)   %>% spread(upGene, value)
   
   fusedExonsAlpha = setNames(c(1, fadedAlpha), c("false","true"))
-  proteinDomainColors = fusedProteinDomains %>% select(name, color) %>% distinct()
+  proteinDomainColors = otherRegions %>% select(name, color) %>% distinct()
   proteinDomainColors = setNames(proteinDomainColors$color, proteinDomainColors$name)
   
   p1 = ggplot() +
-    geom_rect(data = fusion, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = "#f5f5f5", color = NA) +
-    geom_rect(data = fusedGenes, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = fusedGenes$color, color = NA) +
+    #geom_rect(data = fusion, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5), position = "identity", stat = "identity", fill = "#f5f5f5", color = NA) +
+    geom_rect(data = fusedGenes, mapping = aes(xmin = start, xmax = end, ymin = 0.45, ymax = 0.55), position = "identity", stat = "identity", fill = fusedGenes$color, color = NA) +
     geom_rect(data = fusedExons, mapping = aes(xmin = start, xmax = end, ymin = 0, ymax = 1), position = "identity", stat = "identity", fill = fusedExons$color, show.legend = F, color = NA) +
 
     geom_text(data = fusedGenes %>% filter(upGene), mapping = aes(label = label, x = start, y = 1.15), hjust = 0, vjust = 0, size = fontSize * 25.4 / 300) +
@@ -56,9 +60,15 @@ plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
     theme(axis.ticks = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank()) +
     theme(panel.background = element_blank(), panel.border =  element_blank(), panel.grid = element_blank(), panel.spacing = unit(3, "pt")) +
     theme(plot.margin = margin(t = 0, b = 0, l = 3, r = 3, unit = "pt"), legend.box.margin = margin(t = 0, b = 0, l = 0, r = 0, unit = "pt"))
+
+  if (nrow(utrRegions) > 0) {
+    p1 = p1 + 
+      geom_rect(data = utrRegions, mapping = aes(xmin = start, xmax = end, ymin = 0, ymax = 1), position = "identity", stat = "identity", alpha = 1, fill = "white") +
+      geom_rect(data = utrRegions, mapping = aes(xmin = start, xmax = end, ymin = 0.3, ymax = 0.7), position = "identity", stat = "identity", fill = utrRegions$color)
+  }
   
-  if (nrow(fusedProteinDomains) > 0) {
-    p1 = p1 + geom_rect(data = fusedProteinDomains, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 0.5, fill = name), position = "identity", stat = "identity", alpha = 0.8)
+  if (nrow(otherRegions) > 0) {
+    p1 = p1 + geom_rect(data = otherRegions, mapping = aes(xmin = start, xmax = end, ymin = 0.3, ymax = 0.7, fill = name), position = "identity", stat = "identity", alpha = 0.8)
   }
   
   # Want the faded area and segment break to appear on top of the protein domains
@@ -66,7 +76,7 @@ plot_fusion <- function(fusedExons, fusedProteinDomains, showLegend) {
     geom_rect(data = fadedArea, mapping = aes(xmin = start, xmax = end, ymin = 0.0, ymax = 1), position = "identity", stat = "identity", fill = "white", alpha = 1 - fadedAlpha, color = NA) + 
     geom_segment(data = fusedGenes %>% filter(upGene), mapping = aes(x = end, y = -0.1, xend = end, yend = 1.1))
 
-  if (showLegend) {
+    if (showLegend) {
     p1 = p1 +
       theme(legend.position = c(0.5, 0.8), 
             legend.key.size = unit(6, "pt"), 

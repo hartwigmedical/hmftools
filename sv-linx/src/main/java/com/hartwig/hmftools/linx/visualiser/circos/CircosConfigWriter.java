@@ -80,8 +80,8 @@ public class CircosConfigWriter
         }
 
         double exonDistance = exonOuterRadius - exonInnerRadius;
-        geneOuterRadius = exonOuterRadius - 3d/8d * exonDistance;
-        geneInnerRadius = exonInnerRadius + 3d/8d * exonDistance;
+        geneOuterRadius = exonOuterRadius - 9d/20d * exonDistance;
+        geneInnerRadius = exonInnerRadius + 9d/20d * exonDistance;
 
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
