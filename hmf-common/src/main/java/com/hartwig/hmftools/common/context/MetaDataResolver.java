@@ -40,91 +40,70 @@ final class MetaDataResolver {
 
     @Nullable
     static RunContext fromMetaDataFile(@NotNull final String runDirectory) {
-        final String metaDataFilePathP4 = runDirectory + File.separator + METADATA_FILE_P4;
-        final String metaDataFilePathP5 = runDirectory + File.separator + METADATA_FILE_P5;
-        final JsonObject json;
-        File fileP4 = new File(metaDataFilePathP4);
-        File fileP5 = new File(metaDataFilePathP5);
-        String refSample4 = Strings.EMPTY;
-        String refSample5 = Strings.EMPTY;
-        String setName4 = Strings.EMPTY;
-        String setName5 = Strings.EMPTY;
-        String tumorSample4 = Strings.EMPTY;
-        String tumorSample5 = Strings.EMPTY;
-        String metadata = Strings.EMPTY;
+        File metaDataFileP4 = new File(runDirectory + File.separator + METADATA_FILE_P4);
+        File metaDataFileP5 = new File(runDirectory + File.separator + METADATA_FILE_P5);
 
-        if (fileP4.exists()) {
+        if (metaDataFileP4.exists()) {
             try {
-                json = GSON.fromJson(new FileReader(metaDataFilePathP4), JsonObject.class);
-                refSample4 = fieldValue(json, REF_SAMPLE_FIELD_P4);
-                setName4 = fieldValue(json, SET_NAME_FIELD_P4);
-                tumorSample4 = fieldValue(json, TUMOR_SAMPLE_FIELD_P4);
+                return fromPv4MetaData(runDirectory, metaDataFileP4);
             } catch (FileNotFoundException exception) {
-                LOGGER.warn("Could not find meta data file: " + metaDataFilePathP4);
+                LOGGER.warn("Could not find meta data file {} for run dir {}.", METADATA_FILE_P4, runDirectory);
                 return null;
             }
-        } else if (fileP5.exists()) {
+        } else if (metaDataFileP5.exists()) {
             try {
-                json = GSON.fromJson(new FileReader(metaDataFilePathP5), JsonObject.class);
-                refSample5 = sampleIdP5(json, REF_SAMPLE_FIELD_P5);
-                setName5 = fieldValue(json, SET_NAME_FIELD_P5);
-                tumorSample5 = sampleIdP5(json, TUMOR_SAMPLE_FIELD_P5);
+                return fromPv5MetaData(runDirectory, metaDataFileP5);
             } catch (FileNotFoundException exception) {
-                LOGGER.warn("Could not find meta data file: " + metaDataFilePathP5);
+                LOGGER.warn("Could not find meta data file {} for run dir {}.", METADATA_FILE_P5, runDirectory);
                 return null;
             }
         } else {
-            metadata = null;
-            LOGGER.info("ERROR no metadata file");
+            LOGGER.warn("ERROR no metadata file found for run dir {}.", runDirectory);
+            return null;
         }
+    }
 
-        if (setName4 == null && fileP4.exists()) {
+    @Nullable
+    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
+        JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
+
+        String refSample = fieldValue(json, REF_SAMPLE_FIELD_P4);
+        String tumorSample = fieldValue(json, TUMOR_SAMPLE_FIELD_P4);
+        String setName = fieldValue(json, SET_NAME_FIELD_P4);
+
+        if (refSample == null) {
+            LOGGER.warn("Could not find " + REF_SAMPLE_FIELD_P4 + " in metadata file!");
+            return null;
+        } else if (setName == null) {
             LOGGER.warn("Could not find " + SET_NAME_FIELD_P4 + " in metadata file!");
             return null;
-        } else if (setName5 == null && fileP5.exists()) {
+        }
+
+        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample));
+    }
+
+    @Nullable
+    private static RunContext fromPv5MetaData(@NotNull String runDirectory, @NotNull File pv5MetadataFile) throws FileNotFoundException {
+        JsonObject json = GSON.fromJson(new FileReader(pv5MetadataFile), JsonObject.class);
+
+        String refSample = sampleIdP5(json, REF_SAMPLE_FIELD_P5);
+        String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_FIELD_P5);
+        String setName = fieldValue(json, SET_NAME_FIELD_P5);
+
+        if (refSample == null) {
+            LOGGER.warn("Could not find " + REF_SAMPLE_FIELD_P5 + " in metadata file!");
+            return null;
+        } else if (setName == null) {
             LOGGER.warn("Could not find " + SET_NAME_FIELD_P5 + " in metadata file!");
             return null;
         }
 
-        if (refSample4 == null && fileP4.exists()) {
-            LOGGER.warn("Could not find " + REF_SAMPLE_FIELD_P4 + " in metadata file!");
-            return null;
-        } else if (refSample5 == null && fileP5.exists()) {
-            LOGGER.warn("Could not find " + REF_SAMPLE_FIELD_P5 + " in metadata file!");
-            return null;
-        }
+        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample));
+    }
 
-        if (metadata == null) {
-            LOGGER.info("No metadata present");
-            return null;
-        } else {
-            String tumorSample = Strings.EMPTY;
-            String setName = Strings.EMPTY;
-            String refSample = Strings.EMPTY;
-
-            if (tumorSample4 != null && fileP4.exists()) {
-                tumorSample = tumorSample4;
-            }
-            if (tumorSample5 != null && fileP5.exists()) {
-                tumorSample = tumorSample5;
-            }
-
-            if (refSample4 != null && fileP4.exists()) {
-                refSample = refSample4;
-            }
-            if (refSample5 != null && fileP5.exists()) {
-                refSample = refSample5;
-            }
-
-            if (setName4 != null && fileP4.exists()) {
-                setName = setName4;
-            }
-            if( setName5 != null && fileP5.exists()){
-                setName = setName5;
-            }
-            final boolean isSomaticRun = !tumorSample.equals(Strings.EMPTY) && !tumorSample.equals(NO_TUMOR_SAMPLE);
-            return new RunContextImpl(runDirectory, setName, refSample, isSomaticRun ? tumorSample : Strings.EMPTY);
-        }
+    @NotNull
+    private static String convertTumorSample(@Nullable String tumorSample) {
+        return tumorSample == null || tumorSample.equals(NO_TUMOR_SAMPLE) ? Strings.EMPTY : tumorSample;
     }
 
     @Nullable
