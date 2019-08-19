@@ -26,6 +26,14 @@ public interface SvCircosConfig
     String INNER_RADIUS = "inner_radius";
     String EXACT_POSITION = "exact_position";
 
+    String CHR_RANGE_FONT_SIZE = "chr_range_font_size";
+    String CHR_RANGE_HEIGHT = "chr_range_height";
+    String CHR_RANGE_COLUMNS = "chr_range_columns";
+
+    int DEFAULT_CHR_RANGE_FONT_SIZE = 70;
+    int DEFAULT_CHR_RANGE_HEIGHT = 150;
+    int DEFAULT_CHR_RANGE_COLUMNS = 4;
+
     double DEFAULT_GENE_RELATIVE_SIZE = 0.3;
     double DEFAULT_SEGMENT_RELATIVE_SIZE = 1;
     double DEFAULT_CNA_RELATIVE_SIZE = 2;
@@ -39,11 +47,18 @@ public interface SvCircosConfig
 
     static void addOptions(@NotNull Options options)
     {
+        options.addOption(CHR_RANGE_FONT_SIZE, true, "Chromosome range font size [" + DEFAULT_CHR_RANGE_FONT_SIZE + "]");
+        options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
+        options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
+
         options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
 
-        options.addOption(GENE_RELATIVE_SIZE, true, "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
-        options.addOption(SEGMENT_RELATIVE_SIZE, true, "Size of segment track relative to copy number alterations and genes[" + DEFAULT_SEGMENT_RELATIVE_SIZE + "]");
-        options.addOption(CNA_RELATIVE_SIZE, true, "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
+        options.addOption(GENE_RELATIVE_SIZE, true,
+                "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
+        options.addOption(SEGMENT_RELATIVE_SIZE, true,
+                "Size of segment track relative to copy number alterations and genes[" + DEFAULT_SEGMENT_RELATIVE_SIZE + "]");
+        options.addOption(CNA_RELATIVE_SIZE, true,
+                "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
 
         options.addOption(OUTER_RADIUS, true, "Set outer radius [" + DEFAULT_OUTER_RADIUS + "]");
         options.addOption(INNER_RADIUS, true, "Set inner radius [" + DEFAULT_INNER_RADIUS + "]");
@@ -51,6 +66,12 @@ public interface SvCircosConfig
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size [" + DEFAULT_MAX_LABEL_SIZE + "]");
     }
+
+    int chromosomeRangeFontSize();
+
+    int chromosomeRangeHeight();
+
+    int chromosomeRangeColumns();
 
     boolean exactPosition();
 
@@ -92,18 +113,23 @@ public interface SvCircosConfig
     static SvCircosConfig createConfig(@NotNull final CommandLine cmd) throws ParseException
     {
         int minLabelSize = defaultIntValue(cmd, MIN_LABEL_SIZE, DEFAULT_MIN_LABEL_SIZE);
-        if (minLabelSize <= 0) {
+        if (minLabelSize <= 0)
+        {
             throw new ParseException("Parameter " + MIN_LABEL_SIZE + " should be > 0");
         }
 
         int maxLabelSize = defaultIntValue(cmd, MAX_LABEL_SIZE, DEFAULT_MAX_LABEL_SIZE);
-        if (maxLabelSize <= 0) {
+        if (maxLabelSize <= 0)
+        {
             throw new ParseException("Parameter " + MAX_LABEL_SIZE + " should be > 0");
         }
 
         // TODO: Add validation on ideogram radius etc
 
         return ImmutableSvCircosConfig.builder()
+                .chromosomeRangeColumns(defaultIntValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS))
+                .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
+                .chromosomeRangeFontSize(defaultIntValue(cmd, CHR_RANGE_FONT_SIZE, DEFAULT_CHR_RANGE_FONT_SIZE))
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
                 .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
                 .innerRadius(defaultValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
@@ -115,8 +141,10 @@ public interface SvCircosConfig
                 .build();
     }
 
-    static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
-        if (cmd.hasOption(opt)) {
+    static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
+    {
+        if (cmd.hasOption(opt))
+        {
             final double result = Double.valueOf(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;
@@ -125,8 +153,10 @@ public interface SvCircosConfig
         return defaultValue;
     }
 
-    static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
-        if (cmd.hasOption(opt)) {
+    static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue)
+    {
+        if (cmd.hasOption(opt))
+        {
             final int result = Integer.valueOf(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;

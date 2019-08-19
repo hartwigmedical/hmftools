@@ -16,7 +16,7 @@ show_tick_labels    = no
     stroke_thickness = 2p
 
     show_label       = yes
-    label_font       = default
+    label_font       = sans
     label_radius     = (dims(ideogram,radius_inner)+dims(ideogram,radius_outer))/2-15
     label_size       = 40
     label_parallel   = yes
@@ -42,17 +42,17 @@ show_tick_labels    = no
 		fill_color = black_a5
 	</highlight>
 
-	<highlight>
-		file       = SUBSTITUTE_SAMPLE.exon.circos
-		r0         = SUBSTITUTE_EXON_INNER_RADIUSr
-		r1         = SUBSTITUTE_EXON_OUTER_RADIUSr
-	</highlight>
-
     <highlight>
         file       = SUBSTITUTE_SAMPLE.gene.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
         r1         = SUBSTITUTE_GENE_OUTER_RADIUSr
     </highlight>
+
+	<highlight>
+		file       = SUBSTITUTE_SAMPLE.exon.circos
+		r0         = SUBSTITUTE_EXON_INNER_RADIUSr
+		r1         = SUBSTITUTE_EXON_OUTER_RADIUSr
+	</highlight>
 
     <highlight>
 		file = SUBSTITUTE_SAMPLE.segment.circos
@@ -88,7 +88,7 @@ chromosomes_display_default = yes
 		r0               = 1r
 		r1               = 2r
 		show_links       = no
-		label_font       = condensed
+		label_font       = sans
 		label_snuggle    = yes
 		padding          = 0p
 		rpadding         = 10p
@@ -101,12 +101,12 @@ chromosomes_display_default = yes
 		color            = black
 		file             = SUBSTITUTE_SAMPLE.exon.rank.circos
 
-		r0               = SUBSTITUTE_GENE_OUTER_RADIUSr
+		r0               = SUBSTITUTE_EXON_OUTER_RADIUSr
 		r1               = 1r-50p
 
 		show_links   = no
 		label_size   = SUBSTITUTE_LABEL_SIZEp
-		label_font   = condensed
+		label_font   = sans
 		label_snuggle= no
 
 		padding  = 0p
@@ -125,7 +125,7 @@ chromosomes_display_default = yes
 
 		show_links   = no
 		label_size   = SUBSTITUTE_LABEL_SIZEp
-		label_font   = condensed
+		label_font   = sans
 		label_snuggle= yes
 
 		padding  = 0p
@@ -190,7 +190,7 @@ chromosomes_display_default = yes
 		r1               = 1r
 		show_links       = no
 		label_size       = SUBSTITUTE_LABEL_SIZEp
-		label_font       = condensed
+		label_font       = sans
 		label_snuggle    = yes
 		padding          = 0p
 		rpadding         = 0p

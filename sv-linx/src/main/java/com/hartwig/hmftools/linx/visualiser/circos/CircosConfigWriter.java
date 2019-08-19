@@ -79,8 +79,9 @@ public class CircosConfigWriter
             segmentOuterRadius = 1 - gapSize;
         }
 
-        geneOuterRadius = exonOuterRadius;
-        geneInnerRadius = exonInnerRadius + (exonOuterRadius - exonInnerRadius) / 2;
+        double exonDistance = exonOuterRadius - exonInnerRadius;
+        geneOuterRadius = exonOuterRadius - 9d/20d * exonDistance;
+        geneInnerRadius = exonInnerRadius + 9d/20d * exonDistance;
 
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 

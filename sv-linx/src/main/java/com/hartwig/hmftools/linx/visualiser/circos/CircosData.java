@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -37,8 +36,9 @@ public class CircosData
 
     private final List<Link> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
+    private final List<Fusion> unadjustedFusions;
 
-    private final Map<String, Integer> contigLengths;
+    private final Set<GenomePosition> contigLengths;
 
     private final Set<String> upstreamGenes;
     private final Set<String> downstreamGenes;
@@ -58,6 +58,8 @@ public class CircosData
         this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
+        this.unadjustedFusions = fusions;
+
         final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
 
@@ -96,6 +98,11 @@ public class CircosData
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAllelePloidy).max().orElse(0);
+    }
+
+    public List<Fusion> unadjustedFusions()
+    {
+        return unadjustedFusions;
     }
 
     @NotNull
@@ -191,14 +198,14 @@ public class CircosData
     }
 
     @NotNull
-    public Map<String, Integer> contigLengths()
+    public Set<GenomePosition> contigLengths()
     {
         return contigLengths;
     }
 
     public int totalContigLength()
     {
-        return contigLengths().values().stream().mapToInt(x -> x).sum();
+        return contigLengths().stream().mapToInt(x -> (int) x.position()).sum();
     }
 
     public long untruncatedCopyNumberAlterationsCount()

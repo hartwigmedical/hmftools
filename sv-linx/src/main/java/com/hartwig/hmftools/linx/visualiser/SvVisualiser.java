@@ -21,7 +21,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeContextExecution;
+import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosDataWriter;
@@ -258,13 +258,15 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
-        new ChromosomeContextExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR();
+        double labelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
+
+        new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig);
 
         final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
         if (!fusionDataWriter.finalExons().isEmpty())
         {
             fusionDataWriter.write(sample, config.outputConfPath());
-            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR();
+            return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(labelSize);
         }
 
         return circosResult;

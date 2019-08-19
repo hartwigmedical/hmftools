@@ -23,12 +23,13 @@ public class FusionExecution
         this.proteinDomainFile = dataDir + File.separator + sample + ".protein_domains.tsv";
     }
 
-    public Integer executeR() throws IOException, InterruptedException
+    public Integer executeR(double labelSize) throws IOException, InterruptedException
     {
         int result = RExecutor.executeFromClasspath("r/fusionPlot.R",
                 proteinDomainFile,
                 exonFile,
-                plotFile);
+                plotFile,
+                String.valueOf(labelSize));
         if (result != 0)
         {
             LOGGER.warn("Error adding fusion plots.");
