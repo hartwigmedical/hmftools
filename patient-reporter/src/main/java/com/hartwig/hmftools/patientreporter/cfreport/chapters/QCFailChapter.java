@@ -53,6 +53,8 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
+        reportDocument.add(new Paragraph("\nThe ‘primary tumor location’ and ‘cancer subtype’ are received from "
+                + "the requesting hospital").addStyle(ReportResources.subTextStyle()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason()));
@@ -295,8 +297,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph disclaimerTumorLocation() {
-        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ are received from the requesting hospital and "
-                + "have influence on the clinical evidence/study matching. No check is performed to verify the received information.");
+        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ have influence on the clinical "
+                + "evidence/study matching. No check is performed to verify the received information.");
     }
 
     @NotNull

@@ -60,6 +60,7 @@ public class Genes
                     .name(first.gene())
                     .end(last.end())
                     .namePosition(namePosition)
+                    .strand(first.rank() <= last.rank() ? 1 : -1)
                     .build();
             result.add(gene);
 

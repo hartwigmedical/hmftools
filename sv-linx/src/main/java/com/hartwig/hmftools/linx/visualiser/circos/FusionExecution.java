@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.r.RExecutor;
+import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,13 +24,17 @@ public class FusionExecution
         this.proteinDomainFile = dataDir + File.separator + sample + ".protein_domains.tsv";
     }
 
-    public Integer executeR(double labelSize) throws IOException, InterruptedException
+    public Integer executeR(SvCircosConfig config, double labelSize) throws IOException, InterruptedException
     {
         int result = RExecutor.executeFromClasspath("r/fusionPlot.R",
                 proteinDomainFile,
                 exonFile,
                 plotFile,
-                String.valueOf(labelSize));
+                String.valueOf(labelSize),
+                String.valueOf(config.fusionLegendRows()),
+                String.valueOf(config.fusionLegendHeightPerRow()),
+                String.valueOf(config.fusionHeight())
+        );
         if (result != 0)
         {
             LOGGER.warn("Error adding fusion plots.");

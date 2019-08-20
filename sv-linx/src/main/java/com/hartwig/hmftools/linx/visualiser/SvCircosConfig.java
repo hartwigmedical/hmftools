@@ -27,11 +27,17 @@ public interface SvCircosConfig
     String EXACT_POSITION = "exact_position";
     String SHOW_SV_ID = "show_sv_id";
 
-    String CHR_RANGE_FONT_SIZE = "chr_range_font_size";
     String CHR_RANGE_HEIGHT = "chr_range_height";
     String CHR_RANGE_COLUMNS = "chr_range_columns";
 
-    int DEFAULT_CHR_RANGE_FONT_SIZE = 70;
+    String FUSION_HEIGHT = "fusion_height";
+    String FUSION_LEGEND_ROWS = "fusion_legend_rows";
+    String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
+
+    int DEFAULT_FUSION_HEIGHT = 250;
+    int DEFAULT_FUSION_LEGEND_ROWS = 1;
+    int DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW = 35;
+
     int DEFAULT_CHR_RANGE_HEIGHT = 150;
     int DEFAULT_CHR_RANGE_COLUMNS = 4;
 
@@ -48,7 +54,13 @@ public interface SvCircosConfig
 
     static void addOptions(@NotNull Options options)
     {
-        options.addOption(CHR_RANGE_FONT_SIZE, true, "Chromosome range font size [" + DEFAULT_CHR_RANGE_FONT_SIZE + "]");
+
+        options.addOption(FUSION_HEIGHT, true, "Height of each fusion in pixels [" + DEFAULT_FUSION_HEIGHT + "]");
+        options.addOption(FUSION_LEGEND_ROWS, true, "Number of rows in protein domain legend  [" + DEFAULT_FUSION_LEGEND_ROWS + "]");
+        options.addOption(FUSION_LEGEND_HEIGHT_PER_ROW, true,
+                "Height of each row in protein domain legend [" + DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW
+                        + "]");
+
         options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
         options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
 
@@ -69,7 +81,11 @@ public interface SvCircosConfig
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size [" + DEFAULT_MAX_LABEL_SIZE + "]");
     }
 
-    int chromosomeRangeFontSize();
+    int fusionLegendRows();
+
+    int fusionLegendHeightPerRow();
+
+    int fusionHeight();
 
     int chromosomeRangeHeight();
 
@@ -131,9 +147,11 @@ public interface SvCircosConfig
         // TODO: Add validation on ideogram radius etc
 
         return ImmutableSvCircosConfig.builder()
+                .fusionLegendRows(defaultIntValue(cmd, FUSION_LEGEND_ROWS, DEFAULT_FUSION_LEGEND_ROWS))
+                .fusionLegendHeightPerRow(defaultIntValue(cmd, FUSION_LEGEND_HEIGHT_PER_ROW, DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW))
+                .fusionHeight(defaultIntValue(cmd, FUSION_HEIGHT, DEFAULT_FUSION_HEIGHT))
                 .chromosomeRangeColumns(defaultIntValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS))
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
-                .chromosomeRangeFontSize(defaultIntValue(cmd, CHR_RANGE_FONT_SIZE, DEFAULT_CHR_RANGE_FONT_SIZE))
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
                 .showSvId(cmd.hasOption(SHOW_SV_ID))
                 .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))

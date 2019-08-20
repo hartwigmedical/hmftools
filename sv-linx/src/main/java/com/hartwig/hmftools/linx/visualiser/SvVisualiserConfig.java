@@ -150,7 +150,7 @@ public interface SvVisualiserConfig
         final List<Segment> segments = Segments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
         final List<CopyNumberAlteration> cna = CopyNumberAlterations.read(cnaPath)
                 .stream().filter(x -> x.sampleId().equals(sample)).collect(toList());
-        final List<ProteinDomain> proteinDomains = ProteinDomains.readProteinDomainsInFusionGenes(proteinDomainPath, fusions)
+        final List<ProteinDomain> proteinDomains = ProteinDomains.readProteinDomains(proteinDomainPath, fusions)
                 .stream()
                 .filter(x -> x.sampleId().equals(sample))
                 .collect(toList());

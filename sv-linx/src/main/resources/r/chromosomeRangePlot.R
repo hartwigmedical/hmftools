@@ -31,7 +31,8 @@ doPlot <- function(contig) {
   chrColor = chromosomeRanges[chromosomeRanges$chromosome == contig, "chrColor"]
   
   itrack <- IdeogramTrack(genome="X",chromosome=chr, name=label, bands=bands, ucscChromosomeNames=FALSE,
-                          fontsize = chromosomeFontsize, fontcolor = "black",  fill = chrColor, col = chrColor, lwd = 10)
+                          cex = 1, fontsize = chromosomeFontsize , fontcolor = "black", font = "helvetica",
+                          fill = chrColor, col = chrColor, lwd = 10)
   plotTracks(itrack, from = start, to = end, add=TRUE, panel.only = F)
 }
 
@@ -39,7 +40,7 @@ pCircos <- ggdraw() + draw_image(imgCircos)
 bands <- read.table(bandsPath, h = T)
 chromosomeRanges <- read.table(chromosomeRangePath, h = F, sep = "\t", comment = "!", stringsAsFactors = F)
 names(chromosomeRanges) <- c("chromosome", "start", "end", "chrColor")
-chromosomeRanges = chromosomeRanges %>% mutate(label = paste0("chr ", chromosome))
+chromosomeRanges = chromosomeRanges %>% mutate(label = paste0("CHR ", chromosome))
 
 chromosomeLengths = bands %>% 
   mutate(chromosome = gsub("chr", "", chrom)) %>% 
