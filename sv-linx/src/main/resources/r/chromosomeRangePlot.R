@@ -5,12 +5,13 @@ library(ggplot2)
 library(cowplot)
 library(magick)
 
-#chromosomeHeightPerRow = 150
-#chromosomeFontsize = 70
-#chromosomeColumns = 4
-#circosPicturePath = "~/hmf/analysis/fusions/plot/COLO829T.cluster27.COMPLEX.sv8.png"
-#bandsPath = "/Users/jon/hmf/analysis/fusions/data/COLO829T.cluster27.COMPLEX.sv8.cytoBand.txt"
-#chromosomeRangePath = "/Users/jon/hmf/analysis/fusions/data/COLO829T.cluster27.COMPLEX.sv8.chromosome.circos"
+
+circosPicturePath = "/Users/jon/hmf/analysis/fusions/plot/CPCT02070140T.cluster106.COMPLEX.sv19.png"
+bandsPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02070140T.cluster106.COMPLEX.sv19.cytoBand.txt"
+chromosomeRangePath = "/Users/jon/hmf/analysis/fusions/data/CPCT02070140T.cluster106.COMPLEX.sv19.chromosome.circos"
+chromosomeFontsize = 45.6
+chromosomeHeightPerRow = 150
+chromosomeMaxColumns = 6
 
 args <- commandArgs(trailing=T)
 chromosomeRangePath <- args[1]
@@ -18,7 +19,7 @@ bandsPath <- args[2]
 circosPicturePath <- args[3]
 chromosomeFontsize <- as.numeric(args[4])
 chromosomeHeightPerRow <- as.numeric(args[5])
-chromosomeColumns <- as.numeric(args[6])
+chromosomeMaxColumns <- as.numeric(args[6])
 
 imgCircos = magick::image_read(circosPicturePath)
 circosWidth = image_info(imgCircos)$width
@@ -42,14 +43,19 @@ chromosomeRanges <- read.table(chromosomeRangePath, h = F, sep = "\t", comment =
 names(chromosomeRanges) <- c("chromosome", "start", "end", "chrColor")
 chromosomeRanges = chromosomeRanges %>% mutate(label = paste0("CHR ", chromosome))
 
+numberRows = ceiling(nrow(chromosomeRanges) / chromosomeMaxColumns)
+chromosomeColumns = ceiling(nrow(chromosomeRanges) / numberRows)
+
 chromosomeLengths = bands %>% 
-  mutate(chromosome = gsub("chr", "", chrom)) %>% 
+  mutate(
+    chromosome = gsub("chr", "", chrom), 
+    chromosome = factor(chromosome, levels = c(1:22, "X", "Y"), ordered = T)) %>% 
   group_by(chromosome) %>% 
   summarise(length = max(chromEnd)) %>% 
   filter(chromosome %in% chromosomeRanges$chromosome) %>%
   ungroup() %>%
+  arrange(chromosome) %>%
   mutate(relLength = length / max(length)) %>%
-  arrange(-relLength) %>%
   mutate(row = (row_number() - 1) %/% chromosomeColumns + 1) %>%
   group_by(row) %>%
   mutate(rowLength = sum(relLength)) %>%
@@ -68,8 +74,9 @@ chromosomeLengths = data.frame(chromosomeLengths)
 # Height is per row
 chromosomeHeightPerRow = chromosomeHeightPerRow * max(chromosomeLengths$row)
 
-#circosPicturePath = "~/hmf/analysis/fusions/plot/COLO829T.cluster27.COMPLEX.sv8.out.png"
+#circosPicturePath = "~/hmf/analysis/fusions/plot/test.png"
 png(file = circosPicturePath, width = circosWidth, height = chromosomeHeightPerRow, units = "px")
+
 for (i in 1:nrow(chromosomeLengths)) {
   x = chromosomeLengths[i, "x"]
   y = chromosomeLengths[i, "y"]
@@ -82,6 +89,9 @@ for (i in 1:nrow(chromosomeLengths)) {
   popViewport(1)
 }
 dev.off()
+
+
+
 
 
 pChr <- ggdraw() + draw_image(circosPicturePath)
