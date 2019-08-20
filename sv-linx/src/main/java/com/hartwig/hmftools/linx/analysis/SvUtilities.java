@@ -99,6 +99,9 @@ public class SvUtilities {
 
     public static int findCentromereBreakendIndex(final List<SvBreakend> breakendList, final String arm)
     {
+        if(breakendList == null || breakendList.isEmpty())
+            return -1;
+
         // return the last breakend list index prior to the centromere from either arm direction,
         // returning an index out of bounds if all breakends are on the other arm
         if(arm == CHROMOSOME_ARM_P)

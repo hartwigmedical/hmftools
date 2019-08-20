@@ -62,7 +62,10 @@ public class GeneFusion
     {
         if(isUpstream)
         {
-            return mUpstreamTrans.ExonUpstream - mExonsSkippedUp;
+            if (mUpstreamTrans.isExonic() && !mDownstreamTrans.isExonic())
+                return mUpstreamTrans.ExonUpstream - 1 - mExonsSkippedUp;
+            else
+                return mUpstreamTrans.ExonUpstream - mExonsSkippedUp;
         }
         else
         {
