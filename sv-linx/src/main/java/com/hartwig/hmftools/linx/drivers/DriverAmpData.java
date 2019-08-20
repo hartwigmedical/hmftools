@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.linx.drivers;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-
 import com.hartwig.hmftools.linx.types.SvCluster;
-
-import sun.nio.ch.Net;
 
 public class DriverAmpData
 {

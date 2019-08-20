@@ -193,7 +193,7 @@ public class SvLinxApplication
 
             if(checkDrivers)
             {
-                driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getChrBreakendMap());
             }
 
             if(checkFusions)

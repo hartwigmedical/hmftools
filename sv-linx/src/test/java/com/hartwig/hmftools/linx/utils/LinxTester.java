@@ -87,6 +87,10 @@ public class LinxTester
     public void logVerbose(boolean toggle)
     {
         Config.LogVerbose = toggle;
+
+        if(toggle)
+            Configurator.setRootLevel(Level.TRACE);
+
         Analyser.getChainFinder().setLogVerbose(toggle);
         Analyser.getLinkFinder().setLogVerbose(toggle);
     }

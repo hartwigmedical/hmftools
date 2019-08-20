@@ -1,8 +1,20 @@
 package com.hartwig.hmftools.linx.utils;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
+import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.AMP;
+import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod.BAF_WEIGHTED;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -103,6 +115,63 @@ public class GeneTestUtils
 
         return transData;
 
+    }
+
+        public static GeneCopyNumber createGeneCopyNumber(final String gene, final String chromosome,
+                double minCopyNumber, long posStart, long posEnd)
+    {
+        return ImmutableGeneCopyNumber.builder()
+                .chromosome(chromosome)
+                .chromosomeBand("")
+                .start(posStart)
+                .end(posEnd)
+                .gene(gene)
+                .maxCopyNumber(minCopyNumber)
+                .minCopyNumber(minCopyNumber)
+                .somaticRegions(0)
+                .germlineHet2HomRegions(0)
+                .germlineHomRegions(0)
+                .minRegions(0)
+                .minRegionStart(0)
+                .minRegionEnd(0)
+                .minRegionStartSupport(SegmentSupport.BND)
+                .minRegionEndSupport(SegmentSupport.BND)
+                .minRegionMethod(BAF_WEIGHTED)
+                .minMinorAllelePloidy(0)
+                .transcriptID("")
+                .transcriptVersion(1)
+                .build();
+    }
+
+    public static DriverCatalog createDriver(final String gene, final String chromosome, DriverType type, DriverCategory category,
+            boolean biallelic, double minCopyNumber)
+    {
+        LikelihoodMethod method;
+        if(type == DriverType.AMP)
+            method = LikelihoodMethod.AMP;
+        else if(type == DriverType.DEL)
+            method = LikelihoodMethod.DEL;
+        else
+            method = LikelihoodMethod.BIALLELIC;
+
+        return ImmutableDriverCatalog.builder()
+                .biallelic(biallelic)
+                .category(category)
+                .gene(gene)
+                .chromosome(chromosome)
+                .chromosomeBand("")
+                .driver(type)
+                .driverLikelihood(1.0)
+                .dndsLikelihood(1.0)
+                .likelihoodMethod(method)
+                .minCopyNumber(minCopyNumber)
+                .maxCopyNumber(minCopyNumber)
+                .missense(0)
+                .nonsense(0)
+                .splice(0)
+                .inframe(0)
+                .frameshift(0)
+                .build();
     }
 
 }

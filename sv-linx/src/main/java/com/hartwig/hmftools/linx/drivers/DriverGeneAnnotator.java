@@ -149,10 +149,18 @@ public class DriverGeneAnnotator
     private void loadDriverCatalog(final String sampleId)
     {
         mDriverCatalog.clear();
-        mDriverGeneDataList.clear();
         mDriverCatalog.addAll(mDbAccess.readDriverCatalog(sampleId));
 
         LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
+    }
+
+    public void addDriverGene(final DriverCatalog driver, final GeneCopyNumber geneCopyNumber)
+    {
+        mDriverCatalog.clear();
+        mDriverCatalog.add(driver);
+
+        mGeneCopyNumberData.clear();
+        mGeneCopyNumberData.add(geneCopyNumber);
     }
 
     private void loadGeneCopyNumberData(final String sampleId)
@@ -174,30 +182,30 @@ public class DriverGeneAnnotator
         mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(sampleId, driverGenes);
     }
 
-    public void annotateSVs(final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
+    public void annotateSVs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        if(mDbAccess == null)
-        {
-            LOGGER.error("driver analysis requires DB connection");
-            return;
-        }
+        mDriverGeneDataList.clear();
 
         mPerfCounter.start();
 
-        final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
+        if(mDbAccess != null)
+        {
+            final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
 
-        if(purityContext != null)
-            setSamplePloidy(purityContext.bestFit().ploidy());
+            if(purityContext != null)
+                setSamplePloidy(purityContext.bestFit().ploidy());
+
+            loadDriverCatalog(sampleId);
+
+            if (mDriverCatalog.isEmpty())
+                return;
+
+            loadGeneCopyNumberData(sampleId);
+        }
 
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
-        loadDriverCatalog(sampleId);
-
-        if (mDriverCatalog.isEmpty())
-            return;
-
-        loadGeneCopyNumberData(sampleId);
 
         // types handled:
         // - TSG biallelic point mutations
@@ -445,6 +453,9 @@ public class DriverGeneAnnotator
         double[] centromereCnData = mCopyNumberData.getCentromereCopyNumberData(
                 dgData.GeneData.Chromosome, dgData.Arm == CHROMOSOME_ARM_P);
 
+        if(cnData == null || centromereCnData == null)
+            return;
+
         double centromereCopyNumber = centromereCnData[CN_SEG_DATA_CN_BEFORE];
 
         double telomereCopyNumber = min(cnData[P_ARM_TELOMERE_CN], cnData[Q_ARM_TELOMERE_CN]);
@@ -470,9 +481,70 @@ public class DriverGeneAnnotator
         }
     }
 
+    private OpposingSegment findOrCreateOpposingSegment(
+            List<OpposingSegment> opposingSegments, final List<SvBreakend> breakendList, final SvBreakend startBreakend,
+            boolean traverseUp, long stopPosition)
+    {
+        OpposingSegment opposingSegment = opposingSegments.stream()
+                .filter(x -> x.Breakends.contains(startBreakend))
+                .findFirst().orElse(null);
+
+        if(opposingSegment != null)
+            return opposingSegment;
+
+        double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
+        double endCopyNumber = startBreakend.getCopyNumber(!traverseUp);;
+
+        int index = startBreakend.getChrPosIndex();
+
+        List<SvBreakend> segmentBreakends = Lists.newArrayList(startBreakend);
+
+        while (true)
+        {
+            index += traverseUp ? 1 : -1;
+
+            if (index < 0 || index >= breakendList.size())
+                break;
+
+            SvBreakend breakend = breakendList.get(index);
+
+            if ((traverseUp && breakend.position() > stopPosition) || (!traverseUp && breakend.position() < stopPosition))
+            {
+                break;
+            }
+
+            if (breakend.getCluster() == startBreakend.getCluster())
+            {
+                segmentBreakends.add(breakend);
+                endCopyNumber = breakend.getCopyNumber(!traverseUp);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        double netClusterCNChange = endCopyNumber - startCopyNumber;
+
+        if(netClusterCNChange > 0 || copyNumbersEqual(netClusterCNChange, 0))
+        {
+            opposingSegment = new OpposingSegment(startBreakend.getCluster(), segmentBreakends, 0);
+            opposingSegments.add(opposingSegment);
+            return null;
+        }
+
+        opposingSegment = new OpposingSegment(startBreakend.getCluster(), segmentBreakends, -netClusterCNChange);
+
+        LOGGER.trace("added opposing segment: {}", opposingSegment);
+
+        opposingSegments.add(opposingSegment);
+        return opposingSegment;
+
+    }
+
     private DriverAmpData checkClusterForAmplification(
             final DriverGeneData dgData, final List<SvBreakend> breakendList, final SvBreakend startBreakend, boolean traverseUp,
-            Map<SvBreakend,Double> opposingBreakends)
+            List<OpposingSegment> opposingSegments)
     {
         long transStart = dgData.TransData.TransStart;
         long transEnd = dgData.TransData.TransEnd;
@@ -480,9 +552,10 @@ public class DriverGeneAnnotator
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
 
         final SvCluster targetCluster = startBreakend.getCluster();
-        final List<SvBreakend> clusterBreakends = targetCluster.getChrBreakendMap().get(dgData.GeneData.Chromosome);
-        int clusterStartIndex = clusterBreakends.get(0).getChrPosIndex();
-        int clusterEndIndex = clusterBreakends.get(clusterBreakends.size() - 1).getChrPosIndex();
+
+        // final List<SvBreakend> clusterBreakends = targetCluster.getChrBreakendMap().get(dgData.GeneData.Chromosome);
+        // int clusterStartIndex = clusterBreakends.get(0).getChrPosIndex();
+        // int clusterEndIndex = clusterBreakends.get(clusterBreakends.size() - 1).getChrPosIndex();
 
         boolean inSegment = true;
         double segmentStartCopyNumber = startCopyNumber;
@@ -499,7 +572,7 @@ public class DriverGeneAnnotator
             if (breakend != null)
                 index += traverseUp ? 1 : -1;
 
-            if(index < 0 || index > breakendList.size())
+            if(index < 0 || index >= breakendList.size())
                 break;
 
             breakend = breakendList.get(index);
@@ -520,34 +593,26 @@ public class DriverGeneAnnotator
 
                     LOGGER.trace("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({}) breakends({} -> {})",
                             dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(endCopyNumber),
-                            formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange), breakend, segStartBreakend);
+                            formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange), segStartBreakend, breakend);
 
                     // if this next breakend lowers
 
                     inSegment = false;
                 }
 
-                boolean isOpposingBreakend = (breakend.orientation() == 1) == traverseUp;
+                OpposingSegment opposingSegment = findOrCreateOpposingSegment(
+                        opposingSegments, breakendList, breakend, traverseUp, traverseUp ? transStart : transEnd);
 
-                if(netClusterCNChange > 0 && isOpposingBreakend)
+                if(netClusterCNChange > 0 && opposingSegment != null && opposingSegment.remainingCNChange() > 0)
                 {
-                    Double remainingCNChange = opposingBreakends.get(breakend);
-
-                    if(remainingCNChange == null)
-                    {
-                        remainingCNChange = breakend.copyNumberChange();
-                    }
-
-                    if(remainingCNChange > netClusterCNChange)
+                    if(opposingSegment.remainingCNChange() > netClusterCNChange)
                     {
                         LOGGER.trace("gene({}) cluster({}) netCN({}) cancelled by breakend({}) cnChange(orig={} remain={})",
                                 dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
-                                breakend, formatPloidy(breakend.copyNumberChange()), formatPloidy(remainingCNChange));
+                                breakend, formatPloidy(breakend.copyNumberChange()), formatPloidy(opposingSegment.remainingCNChange()));
 
-                        remainingCNChange -= netClusterCNChange;
+                        opposingSegment.reduceCNChange(netClusterCNChange);
                         netClusterCNChange = 0;
-
-                        opposingBreakends.put(breakend, remainingCNChange);
                     }
                     else
                     {
@@ -555,8 +620,8 @@ public class DriverGeneAnnotator
                                 dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(netClusterCNChange),
                                 breakend, formatPloidy(breakend.copyNumberChange()));
 
-                        netClusterCNChange -= remainingCNChange;
-                        opposingBreakends.put(breakend, 0.0); // keep so it won't be registered again but zero out
+                        netClusterCNChange -= opposingSegment.remainingCNChange();
+                        opposingSegment.zeroCNChange(); // keep so it won't be registered again but zero out
                     }
                 }
 
@@ -623,7 +688,7 @@ public class DriverGeneAnnotator
             boolean traverseUp = (i == 0);
 
             List<SvCluster> processedClusters = Lists.newArrayList();
-            Map<SvBreakend,Double> opposingBreakends = Maps.newHashMap();
+            List<OpposingSegment> opposingSegments = Lists.newArrayList();
 
             int index = traverseUp ? startIndex : endIndex;
             SvBreakend breakend = null;
@@ -650,7 +715,7 @@ public class DriverGeneAnnotator
                 processedClusters.add(cluster);
 
                 // proceeed from this point until the start of the gene
-                DriverAmpData ampData = checkClusterForAmplification(dgData, breakendList, breakend, traverseUp, opposingBreakends);
+                DriverAmpData ampData = checkClusterForAmplification(dgData, breakendList, breakend, traverseUp, opposingSegments);
 
                 if(ampData == null)
                     continue;
@@ -675,7 +740,8 @@ public class DriverGeneAnnotator
             final SvCluster cluster = entry.getKey();
             final DriverAmpData ampData = entry.getValue();
 
-            if(ampData.NetCNChange / maxCnChange < 0.1)
+            // take any at least 20% of the largest contributing cluster
+            if(ampData.NetCNChange / maxCnChange < 0.2)
                 continue;
 
             LOGGER.debug("gene({}) cluster({}) adding AMP data: {}",
@@ -759,21 +825,24 @@ public class DriverGeneAnnotator
     private void writeDriverData(final DriverGeneData dgData)
     {
         // convert to a sample driver record
-        for(final DriverGeneEvent driverEvent : dgData.getEvents())
+        if(mVisWriter != null)
         {
-            int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
+            for (final DriverGeneEvent driverEvent : dgData.getEvents())
+            {
+                int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
 
-            mDriverOutputList.add(ImmutableLinxDriver.builder()
-                    .clusterId(clusterId)
-                    .gene(dgData.GeneData.GeneName)
-                    .eventType(driverEvent.Type.toString())
-                    .build());
+                mDriverOutputList.add(ImmutableLinxDriver.builder()
+                        .clusterId(clusterId)
+                        .gene(dgData.GeneData.GeneName)
+                        .eventType(driverEvent.Type.toString())
+                        .build());
 
-            mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
-                    "", 0, dgData.GeneData.Chromosome, "DRIVER");
+                mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
+                        "", 0, dgData.GeneData.Chromosome, "DRIVER");
+            }
         }
 
-        if(!mConfig.hasMultipleSamples())
+        if(!mConfig.hasMultipleSamples() || mOutputDir.isEmpty())
             return;
 
         try
