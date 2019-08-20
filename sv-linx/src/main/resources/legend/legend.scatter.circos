@@ -1,7 +1,12 @@
-hs2	1	1	15	color=(106,61,154),glyph=square,glyph_size=20
-hs2	50	50	45	color=(106,61,154),glyph=square,glyph_size=20
-hs2	50	50	45	color=white,glyph=square,glyph_size=14
+hs2	1	1	1	color=(106,61,154),glyph=square,glyph_size=20
+hs2	350	350	3	color=(106,61,154),glyph=square,glyph_size=20
+hs2	350	350	3	color=white,glyph=square,glyph_size=14
 
-hs2	10	10	30	color=(106,61,154),glyph=circle,glyph_size=20
-hs2	20	20	15	color=(106,61,154),glyph=circle,glyph_size=20
-hs2	30	30	30	color=(106,61,154),glyph=circle,glyph_size=20
+hs2	19	19	2	color=(106,61,154),glyph=circle,glyph_size=20
+hs2	221	221	1	color=(106,61,154),glyph=circle,glyph_size=20
+hs2	259	259	2	color=(106,61,154),glyph=circle,glyph_size=20
+hs2	335	335	3	color=(106,61,154),glyph=circle,glyph_size=20
+
+
+#{100000=1, 100100=19, 701100=259, 700000=221, 712100=335}
+#1   19  221 259 335 350
