@@ -1460,8 +1460,8 @@ CREATE TABLE molecularMatchPrefelance
     percent varchar(255) NOT NULL,
     studyId varchar(255) NOT NULL,
     samples varchar(255) NOT NULL,
-    conditionValue varchar(255) NOT NULL,
-    molecular varchar(255) NOT NULL,
+    conditionValue varchar(255),
+    molecular varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchId) REFERENCES molecularmatch(id)
 );

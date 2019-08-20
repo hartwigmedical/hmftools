@@ -236,6 +236,7 @@ import com.hartwig.hmftools.vicc.datamodel.MolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchFusions;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchLocations;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchParents;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchPrevalence;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchSource;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTags;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTherapeuticContext;
@@ -2515,7 +2516,29 @@ public class ViccDAO {
                             criteriaUnmet.primary(),
                             criteriaUnmet.facet(),
                             criteriaUnmet.valid(),
-                            criteriaUnmet.custom(), criteriaUnmet.transcript(), id).execute();
+                            criteriaUnmet.custom(),
+                            criteriaUnmet.transcript(),
+                            id)
+                    .execute();
+        }
+
+        for (MolecularMatchPrevalence prevelance : molecularMatch.prevalence()) {
+            context.insertInto(MOLECULARMATCHPREFELANCE,
+                    MOLECULARMATCHPREFELANCE.COUNT,
+                    MOLECULARMATCHPREFELANCE.PERCENT,
+                    MOLECULARMATCHPREFELANCE.STUDYID,
+                    MOLECULARMATCHPREFELANCE.SAMPLES,
+                    MOLECULARMATCHPREFELANCE.MOLECULAR,
+                    MOLECULARMATCHPREFELANCE.CONDITIONVALUE,
+                    MOLECULARMATCHPREFELANCE.MOLECULARMATCHID)
+                    .values(prevelance.count(),
+                            prevelance.percent(),
+                            prevelance.studyId(),
+                            prevelance.samples(),
+                            prevelance.molecular(),
+                            prevelance.condition(),
+                            id)
+                    .execute();
         }
 
     }
