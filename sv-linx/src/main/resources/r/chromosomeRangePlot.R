@@ -81,14 +81,18 @@ chromosomeLengths = add_row_numbers(optimalColumsInFirstRow, chromosomeLengths, 
 
 chromosomeLengths = chromosomeLengths %>%
   group_by(row) %>%
-  mutate(rowLength = sum(relLength)) %>%
+  mutate(
+    column = row_number(), 
+    rowLength = sum(relLength),
+    spacing = (1 - rowLength) / (max(column - 1)),
+    spacing = ifelse(column == 1, 0, spacing)) %>%
   ungroup() %>%
   mutate(width = relLength / max(rowLength)) %>%
   group_by(row) %>%
   mutate(
     priorWidth = lag(width),
     priorWidth = ifelse(is.na(priorWidth), 0, priorWidth),
-    x = cumsum(priorWidth)) %>%
+    x = cumsum(priorWidth) + cumsum(spacing)) %>%
   ungroup() %>%
   mutate(height = 1 / max(row), y = (max(row) - row) * height) %>%
   select(chromosome, row, length, x, y, width, height)
