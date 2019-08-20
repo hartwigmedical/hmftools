@@ -98,7 +98,7 @@ public class FusionFinder
 
     public final List<GeneFusion> findFusions(
             final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2,
-            boolean requirePhaseMatch, boolean allowExonSkipping, @Nullable  List<String> invalidReasons, boolean setReportable)
+            boolean requirePhaseMatch, boolean allowExonSkipping, @Nullable List<String> invalidReasons, boolean setReportable)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 

@@ -622,6 +622,7 @@ CREATE TABLE svFusion
     name VARCHAR(50) NOT NULL,
     reported BOOLEAN NOT NULL,
     reportedType varchar(255) NULL,
+    phased BOOLEAN NULL,
     chainLength INT,
     chainLinks INT,
     chainTerminated BOOLEAN,

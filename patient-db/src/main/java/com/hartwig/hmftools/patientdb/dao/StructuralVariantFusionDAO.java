@@ -24,7 +24,7 @@ import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep16;
+import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep18;
 import org.jooq.Record;
 import org.jooq.Record2;
@@ -134,7 +134,7 @@ public class StructuralVariantFusionDAO
 
         for (List<GeneFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
         {
-            final InsertValuesStep16 fusionInserter = context.insertInto(SVFUSION,
+            final InsertValuesStep17 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -142,6 +142,7 @@ public class StructuralVariantFusionDAO
                     SVFUSION.NAME,
                     SVFUSION.REPORTED,
                     SVFUSION.REPORTEDTYPE,
+                    SVFUSION.PHASED,
                     SVFUSION.CHAINLENGTH,
                     SVFUSION.CHAINLINKS,
                     SVFUSION.CHAINTERMINATED,
@@ -160,6 +161,7 @@ public class StructuralVariantFusionDAO
                     fusion.name(),
                     fusion.reportable(),
                     fusion.getKnownType(),
+                    fusion.phaseMatched(),
                     fusion.getChainLength(),
                     fusion.getChainLinks(),
                     fusion.isTerminated(),

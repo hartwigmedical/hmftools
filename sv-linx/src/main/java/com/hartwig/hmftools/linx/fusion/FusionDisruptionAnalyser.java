@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscrip
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -70,6 +69,7 @@ public class FusionDisruptionAnalyser
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
+    private boolean mSkipUnphasedFusions;
     private List<GeneFusion> mFusions;
 
     private List<Transcript> mDisruptions;
@@ -87,6 +87,7 @@ public class FusionDisruptionAnalyser
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     public static final String LOG_ALL_POTENTIALS = "log_potential_fusions";
+    public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -120,6 +121,7 @@ public class FusionDisruptionAnalyser
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
+        options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
     }
 
@@ -170,6 +172,7 @@ public class FusionDisruptionAnalyser
             }
 
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
+            mSkipUnphasedFusions = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
         }
     }
@@ -385,7 +388,8 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, true, true, null, true);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(
+                    genesListStart, genesListEnd, mSkipUnphasedFusions, true, null, true);
 
             if (fusions.isEmpty())
                 continue;
@@ -601,7 +605,7 @@ public class FusionDisruptionAnalyser
                 // mFusionFinder.setLogInvalidReasons(logFusionReasons);
 
                 List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper,
-                        true, true, null, false);
+                        mSkipUnphasedFusions, true, null, false);
 
                 if(fusions.isEmpty())
                     continue;
