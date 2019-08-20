@@ -75,8 +75,8 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(patientReport.sampleReport().primaryTumorLocationString(),
                 patientReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
-        reportDocument.add(new Paragraph("\nThe ‘primary tumor location’ and ‘cancer subtype’ are received from "
-                + "the requesting hospital").addStyle(ReportResources.subTextStyle()));
+        reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' and 'cancer subtype'  is based on "
+                + "information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
         final String summaryContent = patientReport.clinicalSummary();
         renderSummaryText(summaryContent, reportDocument);
