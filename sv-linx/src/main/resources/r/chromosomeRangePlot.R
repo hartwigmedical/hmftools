@@ -5,8 +5,7 @@ library(ggplot2)
 library(cowplot)
 library(magick)
 
-
-circosPicturePath = "/Users/jon/hmf/analysis/fusions/plot/CPCT02070140T.cluster106.COMPLEX.sv19.png"
+circosPicturePath = "~/hmf/analysis/fusions/plot/test.png"
 bandsPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02070140T.cluster106.COMPLEX.sv19.cytoBand.txt"
 chromosomeRangePath = "/Users/jon/hmf/analysis/fusions/data/CPCT02070140T.cluster106.COMPLEX.sv19.chromosome.circos"
 chromosomeFontsize = 45.6
@@ -43,8 +42,27 @@ chromosomeRanges <- read.table(chromosomeRangePath, h = F, sep = "\t", comment =
 names(chromosomeRanges) <- c("chromosome", "start", "end", "chrColor")
 chromosomeRanges = chromosomeRanges %>% mutate(label = paste0("CHR ", chromosome))
 
-numberRows = ceiling(nrow(chromosomeRanges) / chromosomeMaxColumns)
-chromosomeColumns = ceiling(nrow(chromosomeRanges) / numberRows)
+add_row_numbers <- function(columnsInFirstRow, chromosomeLengths, minRelativeLength = 0.1) {
+  lengthOfFirstRow = sum(chromosomeLengths %>% filter(row_number() <= columnsInFirstRow) %>% pull(length))
+  chromosomeLengths = chromosomeLengths %>% 
+    mutate(
+      relLength = pmax(minRelativeLength, length / lengthOfFirstRow), 
+      totalLength = cumsum(relLength), 
+      row = ceiling(totalLength))
+  
+  return (chromosomeLengths)
+}
+
+optimal_columns_in_first_row <- function(chromosomeMaxColumns, chromosomeMaxRows, minRelativeLength, chromosomeLengths) {
+  for (columns in 1:chromosomeMaxColumns) {
+    tmp = add_row_numbers(columns, chromosomeLengths, minRelativeLength)
+    rows = max(tmp$row)
+    if (rows <= chromosomeMaxRows) {
+      return (columns)
+    }
+  }
+  return (optimal_columns_in_first_row(chromosomeMaxColumns, rows, minRelativeLength, chromosomeLengths))  
+}
 
 chromosomeLengths = bands %>% 
   mutate(
@@ -55,8 +73,13 @@ chromosomeLengths = bands %>%
   filter(chromosome %in% chromosomeRanges$chromosome) %>%
   ungroup() %>%
   arrange(chromosome) %>%
-  mutate(relLength = length / max(length)) %>%
-  mutate(row = (row_number() - 1) %/% chromosomeColumns + 1) %>%
+  mutate(relLength = length / max(length))
+
+chromosomeMaxRows = ceiling(nrow(chromosomeRanges) / chromosomeMaxColumns)
+optimalColumsInFirstRow = optimal_columns_in_first_row(chromosomeMaxColumns, chromosomeMaxRows, 0.1, chromosomeLengths)
+chromosomeLengths = add_row_numbers(optimalColumsInFirstRow, chromosomeLengths, 0.1)
+
+chromosomeLengths = chromosomeLengths %>%
   group_by(row) %>%
   mutate(rowLength = sum(relLength)) %>%
   ungroup() %>%
@@ -74,7 +97,6 @@ chromosomeLengths = data.frame(chromosomeLengths)
 # Height is per row
 chromosomeHeightPerRow = chromosomeHeightPerRow * max(chromosomeLengths$row)
 
-#circosPicturePath = "~/hmf/analysis/fusions/plot/test.png"
 png(file = circosPicturePath, width = circosWidth, height = chromosomeHeightPerRow, units = "px")
 
 for (i in 1:nrow(chromosomeLengths)) {
@@ -89,9 +111,6 @@ for (i in 1:nrow(chromosomeLengths)) {
   popViewport(1)
 }
 dev.off()
-
-
-
 
 
 pChr <- ggdraw() + draw_image(circosPicturePath)
