@@ -1,0 +1,7 @@
+hs2	1	1	15	color=(106,61,154),glyph=square,glyph_size=20
+hs2	50	50	45	color=(106,61,154),glyph=square,glyph_size=20
+hs2	50	50	45	color=white,glyph=square,glyph_size=14
+
+hs2	10	10	30	color=(106,61,154),glyph=circle,glyph_size=20
+hs2	20	20	15	color=(106,61,154),glyph=circle,glyph_size=20
+hs2	30	30	30	color=(106,61,154),glyph=circle,glyph_size=20
