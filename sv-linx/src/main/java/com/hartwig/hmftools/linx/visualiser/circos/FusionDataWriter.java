@@ -13,6 +13,7 @@ import com.hartwig.hmftools.linx.visualiser.data.FusedExons;
 import com.hartwig.hmftools.linx.visualiser.data.FusedProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
+import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,10 +30,12 @@ public class FusionDataWriter
         this.finalExons = Lists.newArrayList();
         this.finalProteinDomains = Lists.newArrayList();
 
+        final List<ProteinDomain> exonicProteinDomains = ProteinDomains.exonicProteinDomains(proteinDomains, exons);
+
         for (Fusion fusion : fusions)
         {
             final List<FusedExon> fusedExons = FusedExons.fusedExons(fusion, exons);
-            final List<ProteinDomain> fusedProteinDomain = FusedProteinDomains.fusedProteinDomains(fusion, fusedExons, proteinDomains);
+            final List<ProteinDomain> fusedProteinDomain = FusedProteinDomains.fusedProteinDomains(fusion, fusedExons, exonicProteinDomains);
 
             final ScaleIntrons scaler = new ScaleIntrons(ScaleIntrons.introns(fusedExons));
             final List<FusedExon> intronScaledExons = scaler.scaleIntronsInExons(fusedExons);

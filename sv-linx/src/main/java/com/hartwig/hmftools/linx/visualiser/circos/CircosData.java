@@ -18,8 +18,6 @@ import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,13 +30,11 @@ public class CircosData
     private final List<Segment> segments;
     private final List<GenomeRegion> lineElements;
     private final List<GenomeRegion> fragileSites;
-    private final List<ProteinDomain> proteinDomains;
     private final List<CopyNumberAlteration> alterations;
     private final List<GenomeRegion> disruptedGeneRegions;
 
     private final List<Link> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
-    private final List<Fusion> unadjustedFusions;
 
     private final Set<GenomePosition> contigLengths;
 
@@ -53,14 +49,12 @@ public class CircosData
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons,
-            @NotNull final List<ProteinDomain> unadjustedProteinDomains,
             @NotNull final List<Fusion> fusions)
     {
         this.upstreamGenes = fusions.stream().map(Fusion::geneUp).collect(toSet());
         this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
-        this.unadjustedFusions = fusions;
 
         final List<GenomeRegion> unadjustedDisruptedGeneRegions = Lists.newArrayList();
         for (Fusion fusion : fusions)
@@ -76,8 +70,6 @@ public class CircosData
 
         final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
         final List<Exon> unadjustedGeneExons = Exons.geneExons(unadjustedGenes, unadjustedExons);
-        final List<ProteinDomain> unadjustedGeneProteinDomains =
-                ProteinDomains.geneProteinDomains(unadjustedGenes, unadjustedProteinDomains);
 
         final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
         unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
@@ -87,7 +79,6 @@ public class CircosData
         unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
         unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
         unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneProteinDomains));
         unadjustedPositions.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
 
         final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
@@ -103,7 +94,6 @@ public class CircosData
 
         // Note the following *might* be interpolated
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
-        proteinDomains = scalePosition.interpolateProteinDomains(unadjustedGeneProteinDomains);
 
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
@@ -114,12 +104,6 @@ public class CircosData
     public List<GenomeRegion> disruptedGeneRegions()
     {
         return disruptedGeneRegions;
-    }
-
-    @NotNull
-    public List<Fusion> unadjustedFusions()
-    {
-        return unadjustedFusions;
     }
 
     @NotNull
@@ -206,12 +190,6 @@ public class CircosData
     public List<GenomeRegion> lineElements()
     {
         return lineElements;
-    }
-
-    @NotNull
-    public List<ProteinDomain> proteinDomains()
-    {
-        return proteinDomains;
     }
 
     @NotNull

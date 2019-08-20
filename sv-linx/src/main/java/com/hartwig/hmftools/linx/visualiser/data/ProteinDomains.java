@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 
@@ -16,19 +17,48 @@ public class ProteinDomains
     public static final String UTR = "UTR/Non-coding";
 
     @NotNull
-    public static List<ProteinDomain> geneProteinDomains(@NotNull final List<Gene> gene, @NotNull final List<ProteinDomain> exons)
-    {
-        final Set<String> transcripts = gene.stream().map(Gene::transcript).collect(Collectors.toSet());
-        return exons.stream().filter(x -> transcripts.contains(x.transcript())).collect(Collectors.toList());
-    }
-
-    @NotNull
-    public static List<ProteinDomain> readProteinDomainsInFusionGenes(@NotNull final String fileName, @NotNull final List<Fusion> fusions)
+    public static List<ProteinDomain> readProteinDomains(@NotNull final String fileName, @NotNull final List<Fusion> fusions)
             throws IOException
     {
         final List<ProteinDomain> all =
                 VisProteinDomainFile.read(fileName).stream().map(ProteinDomains::fromFile).collect(Collectors.toList());
         return proteinDomainsInFusionGenes(fusions, all);
+    }
+
+    @NotNull
+    public static List<ProteinDomain> exonicProteinDomains(@NotNull final List<ProteinDomain> proteinDomains,
+            @NotNull final List<Exon> exons)
+    {
+
+        final List<ProteinDomain> result = Lists.newArrayList();
+        for (ProteinDomain proteinDomain : proteinDomains)
+        {
+            if (proteinDomain.name().equals(UTR))
+            {
+
+                final List<Exon> proteinDomainExons =
+                        exons.stream().filter(x -> x.transcript().equals(proteinDomain.transcript())).sorted().collect(Collectors.toList());
+
+                for (Exon exon : proteinDomainExons)
+                {
+                    if (proteinDomain.overlaps(exon))
+                    {
+                        final ProteinDomain exonicProtenDomain = ImmutableProteinDomain.builder().from(proteinDomain)
+                                .start(Math.max(proteinDomain.start(), exon.start()))
+                                .end(Math.min(proteinDomain.end(), exon.end())).build();
+
+                        result.add(exonicProtenDomain);
+                    }
+                }
+            }
+            else
+            {
+                result.add(proteinDomain);
+            }
+
+        }
+
+        return result;
     }
 
     @NotNull
