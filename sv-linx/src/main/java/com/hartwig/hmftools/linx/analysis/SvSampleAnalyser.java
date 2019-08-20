@@ -141,7 +141,7 @@ public class SvSampleAnalyser {
         mViralInsertAnnotator = new ViralInsertAnnotator();
         mViralInsertAnnotator.loadViralHostData(mConfig.ViralHostsFile);
 
-        mKataegisAnnotator = new KataegisAnnotator();
+        mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
 
         mPcPrep = new PerformanceCounter("Preparation");
@@ -261,6 +261,7 @@ public class SvSampleAnalyser {
 
         mAnalyser.preClusteringPreparation();
 
+        mKataegisAnnotator.annotateVariants(mSampleId, mAnalyser.getState().getChrBreakendMap());
         mReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
 
         mPcPrep.stop();
@@ -922,6 +923,7 @@ public class SvSampleAnalyser {
         closeBufferedWriter(mSvFileWriter);
         closeBufferedWriter(mClusterFileWriter);
         closeBufferedWriter(mLinksFileWriter);
+        mKataegisAnnotator.close();
 
         mVisWriter.close();
 

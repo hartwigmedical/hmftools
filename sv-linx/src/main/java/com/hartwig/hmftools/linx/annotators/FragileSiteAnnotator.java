@@ -17,10 +17,7 @@ public class FragileSiteAnnotator
 {
     private List<GenomeRegion> mFragileSites;
 
-    public static final String KNOWN_FS = "true";
-    public static final String NO_FS = "false";
-
-    private static int CSV_REQUIRED_FIELDS = 4;
+    private final static int CSV_REQUIRED_FIELDS = 4;
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
