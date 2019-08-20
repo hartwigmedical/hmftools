@@ -84,8 +84,8 @@ chromosomeLengths = chromosomeLengths %>%
   mutate(
     column = row_number(), 
     rowLength = sum(relLength),
-    spacing = (1 - rowLength) / (max(column - 1)),
-    spacing = ifelse(column == 1, 0, spacing)) %>%
+    spacing = (1 - rowLength) / 2.0,
+    spacing = ifelse(column == 1, spacing, 0)) %>%
   ungroup() %>%
   mutate(width = relLength / max(rowLength)) %>%
   group_by(row) %>%
