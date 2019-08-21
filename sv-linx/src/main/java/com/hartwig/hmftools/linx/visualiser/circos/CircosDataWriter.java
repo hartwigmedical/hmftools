@@ -34,6 +34,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
+    private static final int SCATTER_GLYPH_SIZE = 20;
+    private static final int SCATTER_GLYPH_SIZE_INNER = 14;
+
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
@@ -105,6 +108,9 @@ public class CircosDataWriter
 
         final String scatterPath = filePrefix + ".scatter.circos";
         Files.write(new File(scatterPath).toPath(), createScatter(segments, links));
+
+        final String scatterSglPath = filePrefix + ".scatter.sgl.circos";
+        Files.write(new File(scatterSglPath).toPath(), createSglScatter(links));
 
         final String cnaPath = filePrefix + ".cna.circos";
         Files.write(new File(cnaPath).toPath(), createCNA(alterations));
@@ -320,17 +326,36 @@ public class CircosDataWriter
 
             final String colorOption = colorPicker.color(segment.clusterId(), segment.chainId());
             final String startGlyph = scatterGlyph(true, segment, links);
-            result.add(scatterEntry(true, segment, colorOption, startGlyph, 20));
+            result.add(scatterEntry(true, segment, colorOption, startGlyph, SCATTER_GLYPH_SIZE));
             if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(true, segment, "color=white", startGlyph, 14));
+                result.add(scatterEntry(true, segment, "color=white", startGlyph, SCATTER_GLYPH_SIZE_INNER));
             }
 
             final String endGlyph = scatterGlyph(false, segment, links);
-            result.add(scatterEntry(false, segment, colorOption, endGlyph, 20));
+            result.add(scatterEntry(false, segment, colorOption, endGlyph, SCATTER_GLYPH_SIZE));
             if (segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(false, segment, "color=white", endGlyph, 14));
+                result.add(scatterEntry(false, segment, "color=white", endGlyph, SCATTER_GLYPH_SIZE_INNER));
+            }
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private List<String> createSglScatter(@NotNull final List<Link> links)
+    {
+        final List<String> result = Lists.newArrayList();
+
+        // Draw open circles at SGL ends
+        for (final Link link : links)
+        {
+            if (link.isValidStart() && !link.isValidEnd())
+            {
+                final String colorOption = colorPicker.color(link.clusterId(), link.chainId());
+                result.add(scatterSGLEntry(link, colorOption, SCATTER_GLYPH_SIZE));
+                result.add(scatterSGLEntry(link, "color=white", SCATTER_GLYPH_SIZE_INNER));
             }
         }
 
@@ -368,6 +393,17 @@ public class CircosDataWriter
                 .add(String.valueOf(location))
                 .add(String.valueOf(segment.track()))
                 .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyph_size)
+                .toString();
+    }
+
+    @NotNull
+    private String scatterSGLEntry(@NotNull final Link link, @NotNull final String color, int glyph_size)
+    {
+        return new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
+                .add(String.valueOf(link.startPosition()))
+                .add(String.valueOf(link.startPosition()))
+                .add(String.valueOf(0))
+                .add(color + "," + "glyph=circle,glyph_size=" + glyph_size)
                 .toString();
     }
 
@@ -550,7 +586,7 @@ public class CircosDataWriter
                         String positionLabel = circosConfig.exactPosition() ?
                                 POSITION_FORMAT.format(position) : String.valueOf(position / 10d + "m");
 
-                        if(circosConfig.showSvId())
+                        if (circosConfig.showSvId())
                         {
                             positionLabel += String.format(":%d", adjustedPosition.svId());
                         }

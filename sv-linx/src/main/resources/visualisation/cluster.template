@@ -321,6 +321,24 @@ chromosomes_display_default = yes
 	</plot>
 
 	# -----------------------------------------------------------
+	# SGL Scatter
+	<plot>
+		type             = scatter
+		file             = SUBSTITUTE_SAMPLE.scatter.sgl.circos
+		r0               = SUBSTITUTE_MAP_INNER_RADIUSr
+		r1               = SUBSTITUTE_MAP_MIDDLE_RADIUSr
+        glyph            = circle
+        glyph_size       = 20
+        color            = red
+        stroke_color     = dred
+        stroke_thickness = 0
+        orientation      = out
+        min              = 0
+        max              = 1
+
+	</plot>
+
+	# -----------------------------------------------------------
 	# Connectors
     <plot>
         type             = connector
