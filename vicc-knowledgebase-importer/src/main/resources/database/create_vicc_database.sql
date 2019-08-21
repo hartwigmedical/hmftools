@@ -1470,14 +1470,14 @@ CREATE TABLE molecularMatchMutations
 (   id int NOT NULL AUTO_INCREMENT,
     molecularmatchId int NOT NULL,
     longestTranscript varchar(255),
-    description varchar(1000) NOT NULL,
+    description varchar(1500) NOT NULL,
     src varchar(255) NOT NULL,
     uniprotTranscript varchar(255),
     transcriptRecognized varchar(255),
     geneSymbol varchar(255) NOT NULL,
     transcript varchar(255),
     idMutations varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
+    name varchar(1000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchId) REFERENCES molecularmatch(id)
 );
@@ -1538,7 +1538,7 @@ CREATE TABLE molecularMatchMutationsTranscriptConsequences
     transcript varchar(255) NOT NULL,
     cdna varchar(255),
     referenceGenome varchar(255) NOT NULL,
-    ref varchar(255),
+    ref varchar(1000),
     alt varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchMutationsId) REFERENCES molecularMatchMutations(id)
@@ -1669,11 +1669,11 @@ CREATE TABLE molecularMatchMutationsWGSDataGene
 CREATE TABLE molecularMatchMutationsWGSMap
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationsId int NOT NULL,
-    AA varchar(255) NOT NULL,
+    AA varchar(255),
     name varchar(255) NOT NULL,
     GRCh37_Chr_Start_Ref_Alt varchar(255) NOT NULL,
     NucleotideChange varchar(255) NOT NULL,
-    Exon varchar(255) NOT NULL,
+    Exon varchar(255),
     Gene varchar(255) NOT NULL,
     Transcript varchar(255) NOT NULL,
     PRIMARY KEY (id),
@@ -1700,7 +1700,7 @@ CREATE TABLE molecularMatchMutationsGRCH37Location
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationsId int NOT NULL,
     compositeKey varchar(255) NOT NULL,
-    ref varchar(255),
+    ref varchar(1000),
     stop varchar(255),
     start varchar(255),
     chr varchar(255),
@@ -1717,7 +1717,7 @@ CREATE TABLE molecularMatchMutationsGRCH37LocationConsequences
     aminoAcidChange varchar(255),
     intronNumber varchar(255),
     transcript varchar(255) NOT NULL,
-    cdna varchar(255) NOT NULL,
+    cdna varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchMutationsGRCH37LocationId) REFERENCES molecularMatchMutationsGRCH37Location(id)
 );
