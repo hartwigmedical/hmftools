@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusion
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
+import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
 import com.hartwig.hmftools.linx.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -53,11 +57,14 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class FusionDisruptionAnalyser
 {
     private FusionFinder mFusionFinder;
     private DisruptionFinder mDisruptionFinder;
     private FusionWriter mFusionWriter;
+    private NeoEpitopeFinder mNeoEpitopeFinder;
 
     private String mSampleId;
     private String mOutputDir;
@@ -70,16 +77,16 @@ public class FusionDisruptionAnalyser
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
     private boolean mSkipUnphasedFusions;
+    private List<String> mRestrictedGenes;
+    private boolean mFindNeoEpitopes;
+
     private List<GeneFusion> mFusions;
-
     private List<Transcript> mDisruptions;
-
-    private PerformanceCounter mPerfCounter;
 
     private RnaFusionMapper mRnaFusionMapper;
     private VisualiserWriter mVisWriter;
 
-    private List<String> mRestrictedGenes;
+    private PerformanceCounter mPerfCounter;
 
     public static final String SAMPLE_RNA_FILE = "sample_rna_file";
     public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
@@ -88,6 +95,8 @@ public class FusionDisruptionAnalyser
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     public static final String LOG_ALL_POTENTIALS = "log_potential_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
+    public static final String NEO_EPITOPES = "neo_epitopes";
+    public static final String REF_GENOME_FILE = "ref_genome";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
@@ -96,13 +105,18 @@ public class FusionDisruptionAnalyser
         mFusionFinder = null;
         mFusionWriter = null;
         mDisruptionFinder = null;
+
         mGeneTransCollection = new SvGeneTranscriptCollection();
+        mNeoEpitopeFinder = null;
+
         mOutputDir = "";
         mFusions = Lists.newArrayList();
         mDisruptions = Lists.newArrayList();
         mSkipFusionCheck = false;
         mLogReportableOnly = false;
         mLogAllPotentials = false;
+        mFindNeoEpitopes = false;
+
         mVisWriter = null;
         mRnaFusionMapper = null;
 
@@ -123,6 +137,8 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
+        options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
+        options.addOption(REF_GENOME_FILE, true, "Reference genome file");
     }
 
     public void initialise(final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache)
@@ -174,6 +190,23 @@ public class FusionDisruptionAnalyser
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
             mSkipUnphasedFusions = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
+
+            mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
+
+            if(mFindNeoEpitopes && cmdLineArgs.hasOption(REF_GENOME_FILE))
+            {
+                try
+                {
+                    IndexedFastaSequenceFile refGenomeFile =
+                            new IndexedFastaSequenceFile(new File(cmdLineArgs.getOptionValue(REF_GENOME_FILE)));
+                    RefGenomeSource refGenome = new RefGenomeSource(refGenomeFile);
+                    mNeoEpitopeFinder = new NeoEpitopeFinder(refGenome, mGeneTransCollection, mOutputDir);
+                }
+                catch(IOException e)
+                {
+                    LOGGER.error("failed to load ref genome: {}", e.toString());
+                }
+            }
         }
     }
 
@@ -337,6 +370,9 @@ public class FusionDisruptionAnalyser
 
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.assessRnaFusions(sampleId, chrBreakendMap);
+
+        if(mNeoEpitopeFinder != null)
+            mNeoEpitopeFinder.reportNeoEpitopes(mSampleId, mFusions);
 
         mChrBreakendMap = null;
 
@@ -1165,6 +1201,9 @@ public class FusionDisruptionAnalyser
 
         if(mDisruptionFinder != null)
             mDisruptionFinder.close();
+
+        if(mNeoEpitopeFinder != null)
+            mNeoEpitopeFinder.close();
     }
 
     // currently unused logic for finding unclustered or chained fusions:
