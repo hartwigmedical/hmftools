@@ -26,7 +26,7 @@ public class KataegisAnnotator
     private final String mOutputDir;
     private BufferedWriter mFileWriter;
 
-    private static int PROXIMITY_THRESHOLD = 10000;
+    private static int PROXIMITY_THRESHOLD = 100000;
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -54,62 +54,67 @@ public class KataegisAnnotator
 
             final List<SvBreakend> breakendList = chrBreakendMap.get(chromosome);
 
-            // find the nearest facing breakend
-            for(final KataegisData katData : katDataList)
+            if(breakendList == null)
             {
-                if(breakendList == null)
+                katDataList.forEach(x -> writeSvData(sampleId, x,null));
+            }
+            else
+            {
+                for(final KataegisData katData : katDataList)
                 {
-                    katDataList.forEach(x -> writeSvData(sampleId, null, x));
-                }
-                else
-                {
-                    SvBreakend closestBreakend = null;
-                    long shortestDistance = 0;
-
-                    for (final SvBreakend breakend : breakendList)
-                    {
-                        if (breakend.position() < katData.PosStart)
-                        {
-                            if (breakend.orientation() == 1)
-                                continue;
-
-                            if (katData.PosStart - breakend.position() > PROXIMITY_THRESHOLD)
-                                continue;
-
-                            closestBreakend = breakend;
-                            shortestDistance = katData.PosStart - breakend.position();
-                        }
-                        else if (breakend.position() <= katData.PosEnd)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            long distance = breakend.position() - katData.PosEnd;
-
-                            if (distance > PROXIMITY_THRESHOLD)
-                                break;
-
-                            if (breakend.orientation() == -1)
-                                continue;
-
-                            if (closestBreakend == null || shortestDistance > distance)
-                            {
-                                closestBreakend = breakend;
-                            }
-
-                            break;
-                        }
-                    }
-
-                    writeSvData(sampleId, closestBreakend, katData);
+                    SvBreakend closestBreakend = findClosestBreakend(katData, breakendList);
+                    writeSvData(sampleId, katData, closestBreakend);
                 }
             }
         }
     }
 
+    private SvBreakend findClosestBreakend(final KataegisData katData, final List<SvBreakend> breakendList)
+    {
+        // find the nearest facing breakend
+        SvBreakend closestBreakend = null;
+        long shortestDistance = 0;
 
-    private void writeSvData(final String sampleId, final SvBreakend breakend, final KataegisData data)
+        for (final SvBreakend breakend : breakendList)
+        {
+            if (breakend.position() < katData.PosStart)
+            {
+                if (breakend.orientation() == 1)
+                    continue;
+
+                if (katData.PosStart - breakend.position() > PROXIMITY_THRESHOLD)
+                    continue;
+
+                closestBreakend = breakend;
+                shortestDistance = katData.PosStart - breakend.position();
+            }
+            else if (breakend.position() <= katData.PosEnd)
+            {
+                continue;
+            }
+            else
+            {
+                long distance = breakend.position() - katData.PosEnd;
+
+                if (distance > PROXIMITY_THRESHOLD)
+                    break;
+
+                if (breakend.orientation() == -1)
+                    continue;
+
+                if (closestBreakend == null || shortestDistance > distance)
+                {
+                    closestBreakend = breakend;
+                }
+
+                break;
+            }
+        }
+
+        return closestBreakend;
+    }
+
+    private void writeSvData(final String sampleId, final KataegisData data, final SvBreakend breakend)
     {
         try
         {
