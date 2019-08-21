@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.EvidenceItemMerger;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +16,7 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static List<EvidenceItemMerger> sort(@NotNull final List<EvidenceItemMerger> evidenceItems) {
+    public static List<EvidenceItem> sort(@NotNull final List<EvidenceItem> evidenceItems) {
         return evidenceItems.stream().sorted((item1, item2) -> {
             if (item1.level().equals(item2.level())) {
                 if (item1.event().equals(item2.event())) {
@@ -32,7 +31,7 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull final EvidenceItemMerger item) {
+    public static String sourceUrl(@NotNull final EvidenceItem item) {
         String source = item.source().sourceName();
         String reference = item.reference();
         String gene = item.event();
