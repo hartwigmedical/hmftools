@@ -18,5 +18,4 @@ public class CircosDataWriterTest
         assertEquals("0.1m", CircosDataWriter.shorthand(99_950));
         assertEquals("0.1m", CircosDataWriter.shorthand(100_000));
     }
-
 }
