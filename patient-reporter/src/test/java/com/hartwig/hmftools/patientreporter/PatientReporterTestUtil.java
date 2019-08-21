@@ -32,7 +32,6 @@ public final class PatientReporterTestUtil {
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
     private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
-    private static final String REF_GENOME_PATH = Resources.getResource("refgenome/ref.fasta").getPath();
 
     private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("germline/germline_genes_reporting.csv").getPath();
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
@@ -64,7 +63,6 @@ public final class PatientReporterTestUtil {
                     .from(testReportData())
                     .driverGeneView(DriverGeneViewFactory.create())
                     .actionabilityAnalyzer(testActionabilityAnalyzer())
-                    .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(REF_GENOME_PATH)))
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
                     .build();

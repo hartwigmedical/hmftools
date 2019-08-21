@@ -18,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
-import com.sun.org.apache.bcel.internal.generic.FALOAD;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

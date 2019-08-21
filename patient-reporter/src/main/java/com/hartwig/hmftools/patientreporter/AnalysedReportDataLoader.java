@@ -23,7 +23,7 @@ final class AnalysedReportDataLoader {
 
     @NotNull
     static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
-            @NotNull String fastaFileLocation, @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTsv) throws IOException {
+             @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTsv) throws IOException {
         final ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
@@ -33,7 +33,6 @@ final class AnalysedReportDataLoader {
                 .from(reportData)
                 .driverGeneView(DriverGeneViewFactory.create())
                 .actionabilityAnalyzer(actionabilityAnalyzer)
-                .refGenomeFastaFile(new IndexedFastaSequenceFile(new File(fastaFileLocation)))
                 .germlineReportingModel(germlineReportingModel)
                 .summaryModel(summaryModel)
                 .build();
