@@ -8,9 +8,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.common.region.HmfExonRegion;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.region.Strand;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +47,33 @@ public class Exons
                 .filter(x -> x.gene().equals(fusion.geneDown()) & x.transcript().equals(fusion.transcriptDown()))
                 .sorted(RANKED)
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static List<Exon> fromHmfTranscript(@NotNull final String sampleId, int clusterId, @NotNull HmfTranscriptRegion transcript)
+    {
+        final List<Exon> result = Lists.newArrayList();
+
+        for (int i = 0; i < transcript.exome().size(); i++)
+        {
+            final HmfExonRegion hmfExon = transcript.exome().get(i);
+            int rank = transcript.strand().equals(Strand.FORWARD) ? i + 1 : transcript.exome().size() - i;
+
+            Exon exon = ImmutableExon.builder()
+                    .sampleId(sampleId)
+                    .clusterId(clusterId)
+                    .gene(transcript.gene())
+                    .chromosome(transcript.chromosome())
+                    .rank(rank)
+                    .start(hmfExon.start())
+                    .end(hmfExon.end())
+                    .transcript(transcript.transcriptID())
+                    .build();
+
+            result.add(exon);
+        }
+
+        return result;
     }
 
     public static Collection<GenomeRegion> geneSpanPerChromosome(@NotNull final List<Exon> exons)

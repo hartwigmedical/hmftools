@@ -6,9 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -53,6 +56,7 @@ public interface SvVisualiserConfig
     String EXON = "exon";
     String SCALE_EXON = "scale_exons";
     String INCLUDE_LINE_ELEMENTS = "include_line_elements";
+    String GENE = "gene";
 
     @NotNull
     String sample();
@@ -113,6 +117,7 @@ public interface SvVisualiserConfig
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(DEBUG, false, "Enabled debug mode");
 
+        options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
         options.addOption(CNA, true, "Path to copy number alterations");
@@ -155,6 +160,9 @@ public interface SvVisualiserConfig
                 .filter(x -> x.sampleId().equals(sample))
                 .collect(toList());
 
+        final List<Integer> clusterIds = clusters(cmd);
+        exons.addAll(additionalExons(cmd, exons, clusterIds));
+
         if (segments.isEmpty() && links.isEmpty())
         {
             LOGGER.warn("No structural variants found for sample {}", sample);
@@ -190,7 +198,7 @@ public interface SvVisualiserConfig
                 .circosBin(circos)
                 .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))
                 .debug(cmd.hasOption(DEBUG))
-                .clusters(clusters(cmd))
+                .clusters(clusterIds)
                 .chromosomes(chromosomes(cmd))
                 .scaleExons(cmd.hasOption(SCALE_EXON))
                 .includeLineElements(cmd.hasOption(INCLUDE_LINE_ELEMENTS))
@@ -242,6 +250,42 @@ public interface SvVisualiserConfig
             return "";
         }
         return value;
+    }
+
+    @NotNull
+    static List<Exon> additionalExons(@NotNull final CommandLine cmd, @NotNull final List<Exon> currentExons,
+            @NotNull final List<Integer> clusterIds)
+    {
+        final List<Exon> result = Lists.newArrayList();
+        if (cmd.hasOption(GENE))
+        {
+            final String sampleId = cmd.getOptionValue(SAMPLE);
+
+            Map<String, HmfTranscriptRegion> geneMap = HmfGenePanelSupplier.allGenesMap37();
+            for (final String gene : cmd.getOptionValue(GENE).split(","))
+            {
+                if (currentExons.stream().noneMatch(x -> x.gene().equals(gene)))
+                {
+                    HmfTranscriptRegion hmfGene = geneMap.get(gene);
+                    if (hmfGene == null)
+                    {
+                        LOGGER.warn("No canonical transcript available for specified gene {}", gene);
+                    }
+                    else
+                    {
+                        LOGGER.info("Adding additional gene {} to plot", gene);
+                        final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
+                        for (Integer clusterId : allClusterIds)
+                        {
+                            result.addAll(Exons.fromHmfTranscript(sampleId, clusterId, hmfGene));
+                        }
+                    }
+                }
+            }
+
+        }
+
+        return result;
     }
 
 }
