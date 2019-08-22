@@ -18,6 +18,7 @@ public final class HospitalModelFactory {
 
     private static final String HOSPITALS_CSV = "hospitals.csv";
     private static final String SAMPLE_HOSPITAL_MAPPING_CSV = "sample_hospital_mapping.csv";
+    private static final String HOSPITALS_CORE_CSV = "hospitals_core.csv";
 
     private static final int HOSPITAL_ID_COLUMN = 0;
     private static final int INTERNAL_HOSPITAL_NAME_COLUMN = 1;
@@ -36,6 +37,13 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_MAPPING_COLUMN = 1;
     private static final int FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING = 2;
 
+    private static final int HOSPITAL_CORE_ID_COLUMN = 0;
+    private static final int INTERNAL_CORE_HOSPITAL_NAME_COLUMN = 1;
+    private static final int EXTERNAL_CORE_HOSPITAL_NAME_COLUMN = 2;
+    private static final int ADDRESS_CORE_ZIP_COLUMN = 3;
+    private static final int ADDRESS_CORE_CITY_COLUMN = 4;
+    private static final int HOSPITAL_CORE_FIELD_COUNT = 5;
+
     private static final String FIELD_SEPARATOR = ",";
 
     private HospitalModelFactory() {
@@ -45,16 +53,40 @@ public final class HospitalModelFactory {
     public static HospitalModel fromHospitalDirectory(@NotNull String hospitalDirectory) throws IOException {
         final String hospitalCsvPath = hospitalDirectory + File.separator + HOSPITALS_CSV;
         final String sampleHospitalMappingCsv = hospitalDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_CSV;
+        final String hospitalCoreCsv = hospitalDirectory + File.separator + HOSPITALS_CORE_CSV;
 
         final Map<String, HospitalData> hospitalPerId = readFromHospitalCsv(hospitalCsvPath);
         final Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingCsv);
+        final Map<String, HospitalCore> hospitalCoreMap = readfromCoreHospitalMapping(hospitalCoreCsv);
 
-        return ImmutableHospitalModel.of(hospitalPerId, sampleHospitalMapping);
+        return ImmutableHospitalModel.of(hospitalPerId, sampleHospitalMapping, hospitalCoreMap);
     }
 
     @NotNull
     public static HospitalModel empty() {
-        return ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap());
+        return ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap());
+    }
+
+    @NotNull
+    private static Map<String, HospitalCore> readfromCoreHospitalMapping(@NotNull String hospitalCsv) throws IOException {
+        final Map<String, HospitalCore> hospitalCore = Maps.newHashMap();
+
+        final List<String> lines = FileReader.build().readLines(new File(hospitalCsv).toPath());
+        for (final String line : lines) {
+            final String[] parts = line.split(FIELD_SEPARATOR, HOSPITAL_CORE_FIELD_COUNT);
+            if (parts.length == HOSPITAL_CORE_FIELD_COUNT) {
+                HospitalCore hospital = ImmutableHospitalCore.of(parts[INTERNAL_CORE_HOSPITAL_NAME_COLUMN],
+                        parts[EXTERNAL_CORE_HOSPITAL_NAME_COLUMN],
+                        parts[ADDRESS_CORE_ZIP_COLUMN],
+                        parts[ADDRESS_CORE_CITY_COLUMN]);
+
+                hospitalCore.put(parts[HOSPITAL_CORE_ID_COLUMN], hospital);
+            } else if (parts.length > 0) {
+                LOGGER.warn("Could not properly parse line in hospital csv: " + line);
+            }
+        }
+
+        return hospitalCore;
     }
 
     @NotNull

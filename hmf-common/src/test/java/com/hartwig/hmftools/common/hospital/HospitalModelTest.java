@@ -91,6 +91,7 @@ public class HospitalModelTest {
     private static HospitalModel buildTestHospitalModel() {
         Map<String, HospitalData> hospitalPerId = Maps.newHashMap();
         Map<String, HospitalSampleMapping> hospitalPerIdManual = Maps.newHashMap();
+        Map<String, HospitalCore> hospitalCoreMap = Maps.newHashMap();
 
         hospitalPerId.put("01",
                 ImmutableHospitalData.of("HOSP1",
@@ -106,7 +107,8 @@ public class HospitalModelTest {
         hospitalPerId.put("02",
                 ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "ExtHosp2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
         hospitalPerIdManual.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
+        hospitalCoreMap.put("01", ImmutableHospitalCore.of("HOSP1", "ExtHosp1", "Zip", "City"));
 
-        return ImmutableHospitalModel.of(hospitalPerId, hospitalPerIdManual);
+        return ImmutableHospitalModel.of(hospitalPerId, hospitalPerIdManual, hospitalCoreMap);
     }
 }
