@@ -422,12 +422,14 @@ public class DriverGeneAnnotator
                 formatPloidy(dgData.GeneCN.minCopyNumber()));
 
         checkArmAmplification(dgData);
-        checkClusterAmplification(dgData, breakendList, true);
+        checkClusterAmplification(dgData, breakendList, false);
 
+        /*
         if(dgData.getEvents().isEmpty())
         {
             checkClusterAmplification(dgData, breakendList, false);
         }
+        */
 
         if(dgData.getEvents().isEmpty())
         {
@@ -470,15 +472,22 @@ public class DriverGeneAnnotator
             LOGGER.debug("gene({}) AMP gain from chromosomeCN({}) vs samplePloidy({})",
                     dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber), formatPloidy(mSamplePloidy));
 
-            dgData.addEvent(new DriverGeneEvent(GAIN_CHR));
+            DriverGeneEvent event = new DriverGeneEvent(GAIN_CHR);
+            event.setCopyNumberGain(chromosomeCopyNumber - mSamplePloidy);
+            dgData.addEvent(event);
         }
+
+        /* won't look for arm-level gains any more since SVs on the other arm are now considered, as is a change within the centromere
         else if(armCopyNumber/mSamplePloidy > 2)
         {
             LOGGER.debug("gene({}) AMP gain from armCN({}) vs samplePloidy({})",
                     dgData.GeneData.GeneName, formatPloidy(armCopyNumber), formatPloidy(mSamplePloidy));
 
-            dgData.addEvent(new DriverGeneEvent(GAIN_ARM));
+            DriverGeneEvent event = new DriverGeneEvent(GAIN_ARM);
+            event.setCopyNumberGain(armCopyNumber - mSamplePloidy);
+            dgData.addEvent(event);
         }
+        */
     }
 
     private OpposingSegment findOrCreateOpposingSegment(
@@ -539,7 +548,6 @@ public class DriverGeneAnnotator
 
         opposingSegments.add(opposingSegment);
         return opposingSegment;
-
     }
 
     private DriverAmpData checkClusterForAmplification(
@@ -552,10 +560,6 @@ public class DriverGeneAnnotator
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
 
         final SvCluster targetCluster = startBreakend.getCluster();
-
-        // final List<SvBreakend> clusterBreakends = targetCluster.getChrBreakendMap().get(dgData.GeneData.Chromosome);
-        // int clusterStartIndex = clusterBreakends.get(0).getChrPosIndex();
-        // int clusterEndIndex = clusterBreakends.get(clusterBreakends.size() - 1).getChrPosIndex();
 
         boolean inSegment = true;
         double segmentStartCopyNumber = startCopyNumber;
@@ -595,8 +599,6 @@ public class DriverGeneAnnotator
                             dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(segmentStartCopyNumber), formatPloidy(endCopyNumber),
                             formatPloidy(segmentCNChange), formatPloidy(netClusterCNChange), segStartBreakend, breakend);
 
-                    // if this next breakend lowers
-
                     inSegment = false;
                 }
 
@@ -624,10 +626,6 @@ public class DriverGeneAnnotator
                         opposingSegment.zeroCNChange(); // keep so it won't be registered again but zero out
                     }
                 }
-
-                // break if there are no more breakends in this cluster
-                // if(index < clusterStartIndex || index > clusterEndIndex)
-                //    break;
             }
             else if(cluster == targetCluster)
             {
@@ -655,7 +653,7 @@ public class DriverGeneAnnotator
                     segStartBreakend);
         }
 
-        if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange - startCopyNumber, startCopyNumber))
+        if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange, 0) && !copyNumbersEqual(startCopyNumber + clusterCNChange, startCopyNumber))
         {
             LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) traversal({})",
                     dgData.GeneData.GeneName, targetCluster.id(), formatPloidy(clusterCNChange), formatPloidy(startCopyNumber),
@@ -666,6 +664,8 @@ public class DriverGeneAnnotator
 
         return null;
     }
+
+    private static final double MIN_AMP_PERCENT_VS_MAX = 0.25;
 
     private void checkClusterAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList, boolean restrictToArm)
     {
@@ -735,13 +735,19 @@ public class DriverGeneAnnotator
         // from the identified AMP clusters, find the max and percentage contributions of each
         double maxCnChange = clusterAmpData.values().stream().mapToDouble(x -> x.NetCNChange).max().getAsDouble();
 
+        double chrArmGain = dgData.getEvents().stream()
+                .filter(x -> x.Type.equals(GAIN_ARM) || x.Type.equals(GAIN_CHR))
+                .mapToDouble(x -> x.getCopyNumberGain()).max().orElse(0);
+
+        maxCnChange = max(chrArmGain, maxCnChange);
+
         for(Map.Entry<SvCluster,DriverAmpData> entry : clusterAmpData.entrySet())
         {
             final SvCluster cluster = entry.getKey();
             final DriverAmpData ampData = entry.getValue();
 
             // take any at least 20% of the largest contributing cluster
-            if(ampData.NetCNChange / maxCnChange < 0.2)
+            if(ampData.NetCNChange / maxCnChange < MIN_AMP_PERCENT_VS_MAX)
                 continue;
 
             LOGGER.debug("gene({}) cluster({}) adding AMP data: {}",
@@ -866,7 +872,13 @@ public class DriverGeneAnnotator
 
             final DriverCatalog driverGene = dgData.DriverData;
             final EnsemblGeneData geneData = dgData.GeneData;
+
             double[] cnData = mCopyNumberData.getChrCopyNumberMap().get(geneData.Chromosome);
+
+            double[] centromereCnData = mCopyNumberData.getCentromereCopyNumberData(
+                    dgData.GeneData.Chromosome, dgData.Arm == CHROMOSOME_ARM_P);
+
+            double centromereCopyNumber = centromereCnData[CN_SEG_DATA_CN_BEFORE];
 
             for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
@@ -902,14 +914,14 @@ public class DriverGeneAnnotator
 
                 writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
                         mSamplePloidy, geneData.Chromosome, dgData.Arm, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
-                        cnData[CENTROMERE_CN], dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
+                        centromereCopyNumber, dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
 
                 writer.newLine();
             }
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing cluster-data to outputFile: {}", e.toString());
+            LOGGER.error("error writing driver data to outputFile: {}", e.toString());
         }
     }
 
