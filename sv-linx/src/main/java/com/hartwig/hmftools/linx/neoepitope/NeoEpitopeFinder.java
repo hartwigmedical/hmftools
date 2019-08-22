@@ -2,6 +2,9 @@ package com.hartwig.hmftools.linx.neoepitope;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertDnaCodonToAminoAcid;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.isStopCodon;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -54,16 +57,17 @@ public class NeoEpitopeFinder
             final Transcript upTrans = fusion.upstreamTrans();
             final Transcript downTrans = fusion.downstreamTrans();
 
-            if(!upTrans.isCanonical() ||!downTrans.isCanonical())
+            if(!upTrans.isCanonical() || !downTrans.isCanonical())
                 continue;
 
             if(upTrans.nonCoding() || downTrans.nonCoding())
                 continue;
 
-            if(upTrans.preCoding() || downTrans.preCoding())
+            if(upTrans.preCoding() || downTrans.preCoding() || downTrans.isPromoter())
                 continue;
 
-            boolean isPhased = fusion.phaseMatched();
+            boolean isPhased = fusion.phaseMatched()
+                    && fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0;
 
             int upstreamPhaseOffset = upTrans.ExonUpstreamPhase;
             int downstreamPhaseOffset = upstreamPhaseOffset == 0 || !isPhased ? 0 : 3 - upstreamPhaseOffset;
@@ -74,27 +78,58 @@ public class NeoEpitopeFinder
             String upstreamBases = getBaseString(upTrans, false, upstreamPhaseOffset);
             String downstreamBases = getBaseString(downTrans, !isPhased, downstreamPhaseOffset);
 
+            // upstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
+            // downstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
+            // upstream strand -1, bases will be retreived from left to right (lower to higher), need to reverse and convert
+            // downstream strand -1, bases will be retreived from left to right (lower to higher), need to reverse and convert
+
+            int upStrand = upTrans.parent().Strand;
+            int downStrand = downTrans.parent().Strand;
+
+            // correct for strand
+            if(upStrand == -1)
+                upstreamBases = reverseStrandBases(upstreamBases);
+
+            if(downStrand == -1)
+                downstreamBases = reverseStrandBases(downstreamBases);
+
             String novelCodonBases = "";
+
+            if(upstreamPhaseOffset > upstreamBases.length() || downstreamPhaseOffset > downstreamBases.length())
+                continue;
+
+            // if upstream ends on a phase other than 0, need to take the bases from the downstream gene to make a novel codon
 
             if(upstreamPhaseOffset > 0)
             {
+                // take the last 1 or 2 bases from the end of upstream gene's section
                 novelCodonBases = upstreamBases.substring(upstreamBases.length() - upstreamPhaseOffset);
                 upstreamBases = upstreamBases.substring(0, upstreamBases.length() - upstreamPhaseOffset);
+            }
 
+            if(isPhased)
+            {
                 novelCodonBases += downstreamBases.substring(0, downstreamPhaseOffset);
                 downstreamBases = downstreamBases.substring(downstreamPhaseOffset);
             }
+            else
+            {
+                novelCodonBases += downstreamBases;
+                downstreamBases = "";
+            }
 
             LOGGER.debug("fusion({}) upBases({}) novelCodon({}) downBases({})",
-                    fusion.name(), upstreamBases, novelCodonBases,
-                    downstreamBases.length() < 50 ? downstreamBases : downstreamBases.substring(0, 50));
+                    fusion.name(), upstreamBases, checkTrimBases(novelCodonBases), checkTrimBases(downstreamBases));
 
-            final String upstreamRefAminoAcids = getAminoAcids(upstreamBases);
-            final String novelAminoAcids = getAminoAcids(novelCodonBases);
-            final String downstreamRefAminoAcids = getAminoAcids(downstreamBases);
+            if(upstreamBases.isEmpty() || (downstreamBases.isEmpty() && novelCodonBases.isEmpty()))
+                continue;
+
+            final String upstreamRefAminoAcids = getAminoAcids(upstreamBases, false);
+            final String novelAminoAcids = getAminoAcids(novelCodonBases, !isPhased);
+            final String downstreamRefAminoAcids = getAminoAcids(downstreamBases, !isPhased);
 
             LOGGER.debug("fusion({}) upAA({}) novel({}) downAA({})",
-                    fusion.name(), upstreamRefAminoAcids, novelAminoAcids, downstreamRefAminoAcids);
+                    fusion.name(), upstreamRefAminoAcids, checkTrimBases(novelAminoAcids), checkTrimBases(downstreamRefAminoAcids));
 
             NeoEpitopeData neoEpData = ImmutableNeoEpitopeData.builder()
                     .fusion(fusion)
@@ -109,15 +144,30 @@ public class NeoEpitopeFinder
         }
     }
 
-    private String getAminoAcids(final String baseString)
+    private static String checkTrimBases(final String bases)
     {
+        if(bases.length() < 50)
+            return bases;
+
+        return bases.substring(0, 50) + "...";
+    }
+
+    private String getAminoAcids(final String baseString, boolean checkStopCodon)
+    {
+        if(baseString.length() < 3)
+            return "";
+
         String aminoAcidStr = "";
         int index = 0;
         while(index <= baseString.length() - 3)
         {
             String codonBases = baseString.substring(index, index + 3);
-            codonBases = codonBases.replaceAll("T", "U");
-            String aminoAcid = AminoAcidConverter.convertCodonToAminoAcid(codonBases);
+
+            if(isStopCodon(codonBases) && checkStopCodon)
+                break;
+
+            String aminoAcid = convertDnaCodonToAminoAcid(codonBases);
+
             aminoAcidStr += aminoAcid;
             index += 3;
         }
@@ -189,7 +239,10 @@ public class NeoEpitopeFinder
                     requiredBases = 0;
                 }
 
-                baseString += mRefGenome.getBaseString(gene.chromosome(), posStart, posEnd + 1);
+                if(posEnd < posStart)
+                    continue;
+
+                baseString += mRefGenome.getBaseString(gene.chromosome(), posStart, posEnd);
 
                 if (requiredBases <= 0)
                     break;
@@ -231,8 +284,11 @@ public class NeoEpitopeFinder
                     requiredBases = 0;
                 }
 
+                if(posEnd < posStart)
+                    continue;
+
                 // add in reverse since walking backwards through the exons
-                baseString = mRefGenome.getBaseString(gene.chromosome(), posStart, posEnd + 1) + baseString;
+                baseString = mRefGenome.getBaseString(gene.chromosome(), posStart, posEnd) + baseString;
 
                 if(requiredBases <= 0)
                     break;
@@ -245,6 +301,9 @@ public class NeoEpitopeFinder
 
     private void writeData(final String sampleId, final NeoEpitopeData data, final GeneFusion fusion)
     {
+        if(mOutputDir.isEmpty())
+            return;
+
         try
         {
             if(mFileWriter == null)

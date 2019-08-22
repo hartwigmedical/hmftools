@@ -57,13 +57,14 @@ public class GeneTestUtils
     {
         return createTransExons(geneId, transId, strand,exonStarts, exonEndPhases, exonLength, false);
     }
+
+    public static String generateTransName(int transId) { return String.format("TRAN%04d", transId); }
+
     public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
             long[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
     {
         if(exonStarts.length == 0 || exonStarts.length != exonEndPhases.length)
             return null;
-
-        String transName = String.format("TRAN%04d", transId);
 
         int exonCount = exonStarts.length;
         long transStart = exonStarts[0];
@@ -97,7 +98,7 @@ public class GeneTestUtils
             }
         }
 
-        TranscriptData transData = new TranscriptData(transId, transName, geneId, isCanonical, strand, transStart, transEnd,
+        TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
                 codingStart, codingEnd, "");
 
         List<ExonData> exons = Lists.newArrayList();

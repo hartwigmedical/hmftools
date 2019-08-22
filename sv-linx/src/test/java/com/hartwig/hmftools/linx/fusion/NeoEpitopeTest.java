@@ -1,10 +1,17 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.START_CODON;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_CODON_1;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertAminoAcidToDnaCodon;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.swapDnaToRna;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.swapRnaToDna;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.generateTransName;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,13 +20,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeData;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
-import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 import com.hartwig.hmftools.linx.utils.MockRefGenome;
 
@@ -28,10 +35,22 @@ import org.junit.Test;
 public class NeoEpitopeTest
 {
     @Test
+    public void testDnaRnaRoutines()
+    {
+        String dnaBases = "AGCT";
+        String rnaBases = swapDnaToRna(dnaBases);
+        assertTrue(rnaBases.equals("AGCU"));
+        assertTrue(dnaBases.equals(swapRnaToDna(rnaBases)));
+
+        dnaBases = "AGCTTCGACT";
+        String reverseStrandDna = reverseStrandBases(dnaBases);
+        assertTrue(reverseStrandDna.equals("AGTCGAAGCT"));
+    }
+
+    @Test
     public void testNeoEpitopes()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
 
@@ -197,8 +216,152 @@ public class NeoEpitopeTest
         assertEquals(1, neoEpFinder.getResults().size());
         data = neoEpFinder.getResults().get(0);
         assertTrue(data.upstreamAcids().equals("MSSS"));
-        assertTrue(data.novelAcid().equals("Y"));
-        assertTrue(data.downstreamAcids().equals("HHHHHHH"));
+        assertTrue(data.novelAcid().equals("YHHHHHHH"));
+        assertTrue(data.downstreamAcids().equals(""));
+    }
+
+    @Test
+    public void testNeoEpitopesReverseStrand()
+    {
+        LinxTester tester = new LinxTester();
+
+        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+
+        tester.initialiseFusions(geneTransCache);
+
+        PRE_GENE_PROMOTOR_DISTANCE = 10;
+
+        // first a gene on the forward strand
+        String geneId1 = "ENSG0001";
+        String chromosome1 = "1";
+        byte strand = -1;
+
+        int transId = 1;
+
+        String intron = "AAAAA";
+        String nonCodingExon = "GGGGG";
+        String nonGenicDna = "TTTTT";
+        String sCodon = convertAminoAcidToDnaCodon("S");
+
+        // first exon, starts coding
+        String exon1 = nonCodingExon + swapRnaToDna(START_CODON) + sCodon;
+        String transBases = exon1;
+
+        // second exon - a string of 'S' amino acids following by 1 single base (ending on phase 1)
+        String exon2 = "";
+        int codonCount = 10;
+        for(int i = 0; i < codonCount; ++i)
+        {
+            exon2 += sCodon;
+        }
+
+        // finish on phase 1
+        exon2 += sCodon.substring(0, 1);
+
+        transBases += intron + exon2;
+
+        // final exon
+        String exon3 = sCodon.substring(1) + swapRnaToDna(STOP_CODON_1) + nonCodingExon;
+        transBases += intron + exon3;
+
+        String revBases = reverseStrandBases(nonGenicDna + transBases + nonGenicDna);
+
+        long transStart = nonGenicDna.length();
+        long transEnd = transStart + transBases.length() - 1;
+
+        // exons added from lower to higher positions
+        List<ExonData> exons = Lists.newArrayList();
+        exons.add(new ExonData(transId, transStart, transStart + exon3.length() - 1, 3, 1, -1));
+
+        long nextExonStart = exons.get(exons.size() - 1).ExonEnd + intron.length() + 1;
+        exons.add(new ExonData(transId, nextExonStart, nextExonStart + exon2.length() - 1, 2, 0, 1));
+
+        nextExonStart = exons.get(exons.size() - 1).ExonEnd + intron.length() + 1;
+        exons.add(new ExonData(transId, nextExonStart, nextExonStart + exon1.length() - 1, 1, -1, 0));
+
+        TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId1, true, strand, transStart, transEnd,
+                transStart + nonCodingExon.length(), transEnd - nonCodingExon.length(), "");
+
+        transData.exons().addAll(exons);
+
+        addTransExonData(geneTransCache, geneId1, Lists.newArrayList(transData));
+
+        // same format transcript on another chromosome, same strand
+        String geneId2 = "ENSG0002";
+        String chromosome2 = "2";
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(geneId1, "GENE1", chromosome1, strand, transStart, transEnd));
+        addGeneData(geneTransCache, chromosome1, geneList);
+
+        geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(geneId2, "GENE2", chromosome2, strand, transStart, transEnd));
+        addGeneData(geneTransCache, chromosome2, geneList);
+
+        transData = new TranscriptData(++transId, generateTransName(transId), geneId2, true, strand, transStart, transEnd,
+                transStart + nonCodingExon.length(), transEnd - nonCodingExon.length(), "");
+
+        transData.exons().addAll(exons);
+
+        addTransExonData(geneTransCache, geneId2, Lists.newArrayList(transData));
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        refGenome.RefGenomeMap.put(chromosome1, revBases);
+        refGenome.RefGenomeMap.put(chromosome2, revBases);
+
+        NeoEpitopeFinder neoEpFinder = new NeoEpitopeFinder(refGenome, geneTransCache, "");
+
+        byte posOrient = 1;
+        byte negOrient = -1;
+
+        // create fusions between various phases sections of these transcripts
+        // add upstream breakends
+        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        long upPos = 51;
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(chromosome1, upPos, posOrient);
+
+        // add downstream breakends
+        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        long downPos = 51;
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
+
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
+                false, true, null, false);
+
+        neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
+
+        assertEquals(1, neoEpFinder.getResults().size());
+        NeoEpitopeData data = neoEpFinder.getResults().get(0);
+        assertTrue(data.upstreamAcids().equals("MS"));
+        assertTrue(data.novelAcid().equals(""));
+        assertTrue(data.downstreamAcids().equals("SSSSSSSSSS"));
+
+        // with a fusion between the 2nd and 3rd exons, splitting a codon
+        upPos = 17;
+        upGenes.clear();
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(chromosome1, upPos, posOrient);
+
+        // add downstream breakends
+        downGenes.clear();
+        downPos = 17;
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
+
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
+                false, true, null, false);
+
+        neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
+
+        assertEquals(1, neoEpFinder.getResults().size());
+        data = neoEpFinder.getResults().get(0);
+        assertTrue(data.upstreamAcids().equals("SSSSSSSSSS"));
+        assertTrue(data.novelAcid().equals("S"));
+        assertTrue(data.downstreamAcids().equals("_"));
+
     }
 
 }
