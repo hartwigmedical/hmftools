@@ -41,7 +41,7 @@ public abstract class HospitalModel {
             HospitalCore hospitalCore = findHospitalForSampleCore(sample);
             return ImmutableHospitalQuery.builder()
                     .hospitalName(hospitalCore != null ? hospitalCore.externalHospitalName() : NA_STRING)
-                    .fullAddresseeString(hospitalCore != null ? fullAddresseeStringCore(sample, hospitalCore) : NA_STRING)
+                    .fullAddresseeString(hospitalCore != null ? fullAddresseeStringCore(hospitalCore) : NA_STRING)
                     .principalInvestigatorName(NA_STRING)
                     .principalInvestigatorEmail(NA_STRING)
                     .build();
@@ -58,7 +58,7 @@ public abstract class HospitalModel {
     }
 
     @NotNull
-    private static String fullAddresseeStringCore(@NotNull String sample, @NotNull HospitalCore hospital) {
+    private static String fullAddresseeStringCore(@NotNull HospitalCore hospital) {
         return hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
     }
 
