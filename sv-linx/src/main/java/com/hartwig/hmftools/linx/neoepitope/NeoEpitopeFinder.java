@@ -67,7 +67,7 @@ public class NeoEpitopeFinder
             if(!upTrans.isCanonical() || !downTrans.isCanonical())
                 continue;
 
-            if(upTrans.nonCoding() || downTrans.nonCoding() || upTrans.preCoding())
+            if(upTrans.nonCoding() || downTrans.nonCoding() || upTrans.preCoding() || upTrans.ExonUpstreamPhase == -1)
                 continue;
 
             if(upTrans.isExonic() && downTrans.isExonic()) // rare and too complicated for now
