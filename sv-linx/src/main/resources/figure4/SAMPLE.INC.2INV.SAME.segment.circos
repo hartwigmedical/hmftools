@@ -1,0 +1,4 @@
+hs16	60	356	1	fill_color=chain_1,r0=0.783r,r1=0.783r+25p
+hs16	90	356	1	fill_color=chain_1,r0=0.95r,r1=0.95r+25p
+hs16	240	356	2	fill_color=chain_2,r0=0.70r,r1=0.70r+25p
+hs16	300	356	2	fill_color=chain_2,r0=0.867r,r1=0.867r+25p
