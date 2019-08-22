@@ -6,6 +6,8 @@ public class AminoAcidConverter
     public static final String STOP_CODON_2 = "UAG";
     public static final String STOP_CODON_3 = "UGA";
 
+    public static final String STOP_SYMBOL = "_";
+
     public static final String START_CODON = "AUG";
 
     public static final String UNKNOWN = "ERROR";
@@ -64,7 +66,7 @@ public class AminoAcidConverter
     public static String convertCodonToAminoAcid(final String codon)
     {
         if(isStopCodon(codon))
-            return "_";
+            return STOP_SYMBOL;
 
         if(codon.equals(START_CODON)) return "M";
 

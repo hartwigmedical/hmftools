@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.neoepitope;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.isStopCodon;
@@ -66,6 +67,9 @@ public class NeoEpitopeFinder
             if(upTrans.preCoding() || downTrans.preCoding() || downTrans.isPromoter())
                 continue;
 
+            if(upTrans.isExonic() && downTrans.isExonic())
+                continue;
+
             boolean isPhased = fusion.phaseMatched()
                     && fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0;
 
@@ -126,10 +130,13 @@ public class NeoEpitopeFinder
 
             final String upstreamRefAminoAcids = getAminoAcids(upstreamBases, false);
             final String novelAminoAcids = getAminoAcids(novelCodonBases, !isPhased);
-            final String downstreamRefAminoAcids = getAminoAcids(downstreamBases, !isPhased);
+            String downstreamRefAminoAcids = getAminoAcids(downstreamBases, !isPhased);
 
             LOGGER.debug("fusion({}) upAA({}) novel({}) downAA({})",
                     fusion.name(), upstreamRefAminoAcids, checkTrimBases(novelAminoAcids), checkTrimBases(downstreamRefAminoAcids));
+
+            if(novelAminoAcids.equals(STOP_SYMBOL))
+                downstreamRefAminoAcids = "";
 
             NeoEpitopeData neoEpData = ImmutableNeoEpitopeData.builder()
                     .fusion(fusion)
