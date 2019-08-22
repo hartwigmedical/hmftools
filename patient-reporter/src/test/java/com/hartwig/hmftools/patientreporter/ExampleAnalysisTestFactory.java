@@ -225,7 +225,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Binimetinib + Encorafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -235,7 +234,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cobimetinib + Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -245,7 +243,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -255,7 +252,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib + Trametinib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -265,7 +261,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Trametinib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -275,7 +270,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_A)
                 .response("Responsive")
                 .reference("V600E")
@@ -285,7 +279,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("RO4987655")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:208")
@@ -334,7 +327,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Alpelisib + Cetuximab + Encorafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:17")
@@ -344,7 +336,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Bevacizumab")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -354,7 +345,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("CI-1040")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -364,7 +354,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("BRAF:V600E")
@@ -374,7 +363,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab + Encorafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:17")
@@ -384,7 +372,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Cetuximab + Irinotecan + Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -394,7 +381,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Dabrafenib + Panitumumab + Trametinib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:12")
@@ -404,7 +390,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Irinotecan")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -414,7 +399,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Oxaliplatin")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:12")
@@ -424,7 +408,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Panitumumab")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("BRAF:V600E")
@@ -434,7 +417,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
                 .drug("Vemurafenib")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("variant:17")
@@ -444,7 +426,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
                 .drug("EGFR mAB inhibitor")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Resistant")
                 .reference("PTEN:del")
@@ -454,7 +435,6 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
                 .drug("Everolimus")
-                .drugsType("Immuno")
                 .level(EvidenceLevel.LEVEL_B)
                 .response("Responsive")
                 .reference("variant:213")
@@ -662,7 +642,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static ImmutableEvidenceItem.Builder evidenceBuilder() {
-        return ImmutableEvidenceItem.builder().cancerType(Strings.EMPTY);
+        return ImmutableEvidenceItem.builder().drugsType(Strings.EMPTY).cancerType(Strings.EMPTY);
     }
 
     @NotNull

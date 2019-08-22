@@ -102,6 +102,47 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHINCLUDESTA
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHINSTUTITION;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSCDNA;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONSINFO;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES;
@@ -197,20 +238,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
 import com.hartwig.hmftools.vicc.ViccJsonToSQLImporter;
-import com.hartwig.hmftools.vicc.database.Tables;
-import com.hartwig.hmftools.vicc.database.tables.Oncokbbiological;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.BRCA;
 import com.hartwig.hmftools.vicc.datamodel.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.Civic;
 import com.hartwig.hmftools.vicc.datamodel.CivicClinicalTrial;
-import com.hartwig.hmftools.vicc.datamodel.CivicDescription;
 import com.hartwig.hmftools.vicc.datamodel.CivicDrugs;
 import com.hartwig.hmftools.vicc.datamodel.CivicEvidenceItems;
-import com.hartwig.hmftools.vicc.datamodel.CivicPublicationDate;
 import com.hartwig.hmftools.vicc.datamodel.CivicSource;
 import com.hartwig.hmftools.vicc.datamodel.CivicUser;
 import com.hartwig.hmftools.vicc.datamodel.CivicVariantGroup;
@@ -231,21 +267,31 @@ import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
 import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatch;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAreg;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchBreg;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchCriteriaUnmet;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchExonInfo;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchFusionData;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchFusions;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchGRch37Location;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchLocations;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchMutations;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchParents;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchPrevalence;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchSource;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTags;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTierExplanation;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTranscriptConsequence;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTranscriptConsequencesGRCH37;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsLocations;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsTags;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchVariantInfo;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchWGSaMap;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchWGSadataLocation;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.OncoKbConsequence;
@@ -264,7 +310,6 @@ import com.hartwig.hmftools.vicc.datamodel.Sage;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -2515,7 +2560,863 @@ public class ViccDAO {
                             criteriaUnmet.primary(),
                             criteriaUnmet.facet(),
                             criteriaUnmet.valid(),
-                            criteriaUnmet.custom(), criteriaUnmet.transcript(), id).execute();
+                            criteriaUnmet.custom(),
+                            criteriaUnmet.transcript(),
+                            id)
+                    .execute();
+        }
+
+        for (MolecularMatchPrevalence prevelance : molecularMatch.prevalence()) {
+            context.insertInto(MOLECULARMATCHPREFELANCE,
+                    MOLECULARMATCHPREFELANCE.COUNT,
+                    MOLECULARMATCHPREFELANCE.PERCENT,
+                    MOLECULARMATCHPREFELANCE.STUDYID,
+                    MOLECULARMATCHPREFELANCE.SAMPLES,
+                    MOLECULARMATCHPREFELANCE.MOLECULAR,
+                    MOLECULARMATCHPREFELANCE.CONDITIONVALUE,
+                    MOLECULARMATCHPREFELANCE.MOLECULARMATCHID)
+                    .values(prevelance.count(),
+                            prevelance.percent(),
+                            prevelance.studyId(),
+                            prevelance.samples(),
+                            prevelance.molecular(),
+                            prevelance.condition(),
+                            id)
+                    .execute();
+        }
+
+        for (MolecularMatchMutations mutations : molecularMatch.mutations()) {
+            int idMutations = context.insertInto(MOLECULARMATCHMUTATIONS,
+                    MOLECULARMATCHMUTATIONS.LONGESTTRANSCRIPT,
+                    MOLECULARMATCHMUTATIONS.DESCRIPTION,
+                    MOLECULARMATCHMUTATIONS.SRC,
+                    MOLECULARMATCHMUTATIONS.UNIPROTTRANSCRIPT,
+                    MOLECULARMATCHMUTATIONS.TRANSCRIPTRECOGNIZED,
+                    MOLECULARMATCHMUTATIONS.GENESYMBOL,
+                    MOLECULARMATCHMUTATIONS.TRANSCRIPT,
+                    MOLECULARMATCHMUTATIONS.IDMUTATIONS,
+                    MOLECULARMATCHMUTATIONS.NAME,
+                    MOLECULARMATCHMUTATIONS.MOLECULARMATCHID)
+                    .values(mutations.longestTranscript(),
+                            mutations.description(),
+                            mutations.src(),
+                            mutations.uniprotTranscript(),
+                            mutations.transcriptRecognized(),
+                            mutations.geneSymbol(),
+                            mutations.transcript(),
+                            mutations.id(),
+                            mutations.name(),
+                            id)
+                    .returning(MOLECULARMATCHMUTATIONS.ID)
+                    .fetchOne()
+                    .getValue(MOLECULARMATCHMUTATIONS.ID);
+
+            for (String mutationType : mutations.mutationType()) {
+                context.insertInto(MOLECULARMATCHMUTATIONSMUTATIONTYPE,
+                        MOLECULARMATCHMUTATIONSMUTATIONTYPE.MUTATIONTYPE,
+                        MOLECULARMATCHMUTATIONSMUTATIONTYPE.MOLECULARMATCHMUTATIONSID).values(mutationType, idMutations).execute();
+            }
+
+            for (String source : mutations.sources()) {
+                context.insertInto(MOLECULARMATCHMUTATIONSSOURCE,
+                        MOLECULARMATCHMUTATIONSSOURCE.SOURCE,
+                        MOLECULARMATCHMUTATIONSSOURCE.MOLECULARMATCHMUTATIONSID).values(source, idMutations).execute();
+            }
+
+            for (String synonyms : mutations.synonyms()) {
+                context.insertInto(MOLECULARMATCHMUTATIONSSYNONYMS,
+                        MOLECULARMATCHMUTATIONSSYNONYMS.SYNONYMS,
+                        MOLECULARMATCHMUTATIONSSYNONYMS.MOLECULARMATCHMUTATIONSID).values(synonyms, idMutations).execute();
+            }
+
+            for (String pathology : mutations.pathology()) {
+                context.insertInto(MOLECULARMATCHMUTATIONSPATHOLOGY,
+                        MOLECULARMATCHMUTATIONSPATHOLOGY.PATHOLOGY,
+                        MOLECULARMATCHMUTATIONSPATHOLOGY.MOLECULARMATCHMUTATIONSID).values(pathology, idMutations).execute();
+            }
+
+            for (String cDNA : mutations.cDNA()) {
+                context.insertInto(MOLECULARMATCHMUTATIONSCDNA,
+                        MOLECULARMATCHMUTATIONSCDNA.CDNA,
+                        MOLECULARMATCHMUTATIONSCDNA.MOLECULARMATCHMUTATIONSID).values(cDNA, idMutations).execute();
+            }
+
+            for (MolecularMatchTranscriptConsequence transcriptConsequence : mutations.transcriptConsequence()) {
+                int idTranscriptConsequence = context.insertInto(MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.AMINOACIDCHANGE,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.COMPOSITEKEY,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.INTRONNUMBER,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.SUPPRESS,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.STOP,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.CUSTOM,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.START,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.CHR,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.STRAND,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.VALIDATED,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.TRANSCRIPT,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.CDNA,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.REFERENCEGENOME,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.REF,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.ALT,
+                        MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.MOLECULARMATCHMUTATIONSID)
+                        .values(transcriptConsequence.aminoAcidChange(),
+                                transcriptConsequence.compositeKey(),
+                                transcriptConsequence.intronNumber(),
+                                transcriptConsequence.suppress(),
+                                transcriptConsequence.stop(),
+                                transcriptConsequence.custom(),
+                                transcriptConsequence.start(),
+                                transcriptConsequence.chr(),
+                                transcriptConsequence.strand(),
+                                transcriptConsequence.validated(),
+                                transcriptConsequence.transcript(),
+                                transcriptConsequence.cdna(),
+                                transcriptConsequence.referenceGenome(),
+                                transcriptConsequence.ref(),
+                                transcriptConsequence.alt(),
+                                idMutations)
+                        .returning(MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCES.ID);
+
+                if (transcriptConsequence.exonNumber() != null) {
+                    for (String exonNumber : transcriptConsequence.exonNumber()) {
+                        context.insertInto(MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCESEXONNUMBER,
+                                MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCESEXONNUMBER.EXONNUMBER,
+                                MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCESEXONNUMBER.MOLECULARMATCHMUTATIONSTRANSCRIPTCONSEQUENCESID)
+                                .values(exonNumber, idTranscriptConsequence)
+                                .execute();
+                    }
+                }
+            }
+
+            for (MolecularMatchParents parents : mutations.parents()) {
+                int idParents = context.insertInto(MOLECULARMATCHMUTATIONSPARENTS,
+                        MOLECULARMATCHMUTATIONSPARENTS.TYPE,
+                        MOLECULARMATCHMUTATIONSPARENTS.NAME,
+                        MOLECULARMATCHMUTATIONSPARENTS.ACTIONABLEPARENT,
+                        MOLECULARMATCHMUTATIONSPARENTS.MOLECULARMATCHMUTATIONSID)
+                        .values(parents.type(), parents.name(), parents.actionableParent(), idMutations)
+                        .returning(MOLECULARMATCHMUTATIONSPARENTS.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHMUTATIONSPARENTS.ID);
+
+                for (String transcripts : parents.transcripts()) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSPARENTSTRANSCRIPT,
+                            MOLECULARMATCHMUTATIONSPARENTSTRANSCRIPT.TRANSCRIPT,
+                            MOLECULARMATCHMUTATIONSPARENTSTRANSCRIPT.MOLECULARMATCHMUTATIONSPARENTSID)
+                            .values(transcripts, idParents)
+                            .execute();
+                }
+            }
+
+            if (mutations.wgsaData() != null) {
+                for (MolecularMatchWGSadataLocation wgsaDataLocation : mutations.wgsaData()) {
+                    int idWGSData = context.insertInto(MOLECULARMATCHMUTATIONSWGSDATA,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXONICFUNC,
+                            MOLECULARMATCHMUTATIONSWGSDATA.DBSNP,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_NFE,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_FIN,
+                            MOLECULARMATCHMUTATIONSWGSDATA.G1000_ALL,
+                            MOLECULARMATCHMUTATIONSWGSDATA.G1000_SAS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.G1000_EAS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.G1000_AFR,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_SAS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_EAS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_AMR,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_AFR,
+                            MOLECULARMATCHMUTATIONSWGSDATA.EXAC_FREQ,
+                            MOLECULARMATCHMUTATIONSWGSDATA.END,
+                            MOLECULARMATCHMUTATIONSWGSDATA.START,
+                            MOLECULARMATCHMUTATIONSWGSDATA.SIPHY_29WAY_LOGODDS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.REF,
+                            MOLECULARMATCHMUTATIONSWGSDATA.GERP_RS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.FATHMM,
+                            MOLECULARMATCHMUTATIONSWGSDATA.NUCLEOTIDECHANGE,
+                            MOLECULARMATCHMUTATIONSWGSDATA.PHYLOP100WAY_VERTEBRATE,
+                            MOLECULARMATCHMUTATIONSWGSDATA.FUNC,
+                            MOLECULARMATCHMUTATIONSWGSDATA.GWAS_PUBMED,
+                            MOLECULARMATCHMUTATIONSWGSDATA.TRANSCRIPT,
+                            MOLECULARMATCHMUTATIONSWGSDATA.ESP6500SI_AA,
+                            MOLECULARMATCHMUTATIONSWGSDATA.ESP6500SI_EA,
+                            MOLECULARMATCHMUTATIONSWGSDATA.G1000_EUR,
+                            MOLECULARMATCHMUTATIONSWGSDATA.G1000_AMR,
+                            MOLECULARMATCHMUTATIONSWGSDATA.CHR_START_REF_ALT,
+                            MOLECULARMATCHMUTATIONSWGSDATA.AA,
+                            MOLECULARMATCHMUTATIONSWGSDATA.POPFREQMAX,
+                            MOLECULARMATCHMUTATIONSWGSDATA.FATHMM_PRED,
+                            MOLECULARMATCHMUTATIONSWGSDATA.WGRNA,
+                            MOLECULARMATCHMUTATIONSWGSDATA.PHYLOP46WAY_PLACENTAL,
+                            MOLECULARMATCHMUTATIONSWGSDATA.KEYVALUE,
+                            MOLECULARMATCHMUTATIONSWGSDATA.TARGETSCANS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.CHR,
+                            MOLECULARMATCHMUTATIONSWGSDATA.COSMIC_ID,
+                            MOLECULARMATCHMUTATIONSWGSDATA.ALT,
+                            MOLECULARMATCHMUTATIONSWGSDATA.GWAS_DIS,
+                            MOLECULARMATCHMUTATIONSWGSDATA.GWAS_SNP,
+                            MOLECULARMATCHMUTATIONSWGSDATA.MOLECULARMATCHMUTATIONSID)
+                            .values(wgsaDataLocation.ExonicFunc(),
+                                    wgsaDataLocation.dbSNP(),
+                                    wgsaDataLocation.ExAC_NFE(),
+                                    wgsaDataLocation.ExAC_FIN(),
+                                    wgsaDataLocation.G1000_ALL(),
+                                    wgsaDataLocation.G1000_SAS(),
+                                    wgsaDataLocation.G1000_EAS(),
+                                    wgsaDataLocation.G1000_AFR(),
+                                    wgsaDataLocation.ExAC_SAS(),
+                                    wgsaDataLocation.ExAC_EAS(),
+                                    wgsaDataLocation.ExAC_AMR(),
+                                    wgsaDataLocation.ExAC_AFR(),
+                                    wgsaDataLocation.ExAC_Freq(),
+                                    wgsaDataLocation.End(),
+                                    wgsaDataLocation.Start(),
+                                    wgsaDataLocation.SiPhy_29way_logOdds(),
+                                    wgsaDataLocation.Ref(),
+                                    wgsaDataLocation.GERP_RS(),
+                                    wgsaDataLocation.FATHMM(),
+                                    wgsaDataLocation.NucleotideChange(),
+                                    wgsaDataLocation.phyloP100way_vertebrate(),
+                                    wgsaDataLocation.Func(),
+                                    wgsaDataLocation.GWAS_PUBMED(),
+                                    wgsaDataLocation.Transcript(),
+                                    wgsaDataLocation.ESP6500si_AA(),
+                                    wgsaDataLocation.ESP6500si_EA(),
+                                    wgsaDataLocation.G1000_EUR(),
+                                    wgsaDataLocation.G1000_AMR(),
+                                    wgsaDataLocation.Chr_Start_Ref_Alt(),
+                                    wgsaDataLocation.AA(),
+                                    wgsaDataLocation.PopFreqMax(),
+                                    wgsaDataLocation.FATHMM_Pred(),
+                                    wgsaDataLocation.wgRna(),
+                                    wgsaDataLocation.phyloP46way_placental(),
+                                    wgsaDataLocation.key(),
+                                    wgsaDataLocation.targetScanS(),
+                                    wgsaDataLocation.Chr(),
+                                    wgsaDataLocation.COSMIC_ID(),
+                                    wgsaDataLocation.alt(),
+                                    wgsaDataLocation.GWAS_DIS(),
+                                    wgsaDataLocation.GWAS_SNP(),
+                                    idMutations)
+                            .returning(MOLECULARMATCHMUTATIONSWGSDATA.ID)
+                            .fetchOne()
+                            .getValue(MOLECULARMATCHMUTATIONSWGSDATA.ID);
+
+                    if (wgsaDataLocation.ClinVar_DIS() != null) {
+                        for (String clinvarDIS : wgsaDataLocation.ClinVar_DIS()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARDIS,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARDIS.CLINVARDIS,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARDIS.MOLECULARMATCHMUTATIONSWGSDATAID)
+                                    .values(clinvarDIS, idWGSData)
+                                    .execute();
+                        }
+                    }
+
+                    if (wgsaDataLocation.ClinVar_SIG() != null) {
+                        for (String clinvarSig : wgsaDataLocation.ClinVar_SIG()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARSIG,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARSIG.CLINVARSIG,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARSIG.MOLECULARMATCHMUTATIONSWGSDATAID)
+                                    .values(clinvarSig, idWGSData)
+                                    .execute();
+                        }
+                    }
+
+                    if (wgsaDataLocation.ClinVar_STATUS() != null) {
+                        for (String clinvarStatus : wgsaDataLocation.ClinVar_STATUS()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARSTATUS,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARSTATUS.CLINVARSTATUS,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARSTATUS.MOLECULARMATCHMUTATIONSWGSDATAID)
+                                    .values(clinvarStatus, idWGSData)
+                                    .execute();
+                        }
+                    }
+
+                    if (wgsaDataLocation.ClinVar_DBID() != null) {
+                        for (String clinvarDBID : wgsaDataLocation.ClinVar_DBID()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARDBID,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARDBID.CLINVARDBID,
+                                    MOLECULARMATCHMUTATIONSWGSDATACLINVARDBID.MOLECULARMATCHMUTATIONSWGSDATAID)
+                                    .values(clinvarDBID, idWGSData)
+                                    .execute();
+                        }
+                    }
+
+                    for (String fullAA : wgsaDataLocation.FullAA()) {
+                        context.insertInto(MOLECULARMATCHMUTATIONSWGSDATAFULLAA,
+                                MOLECULARMATCHMUTATIONSWGSDATAFULLAA.MOLECULARMATCHMUTATIONSWGSDATAFULLAA.FULLAA,
+                                MOLECULARMATCHMUTATIONSWGSDATAFULLAA.MOLECULARMATCHMUTATIONSWGSDATAID).values(fullAA, idWGSData).execute();
+                    }
+
+                    for (String gene : wgsaDataLocation.Gene()) {
+                        context.insertInto(MOLECULARMATCHMUTATIONSWGSDATAGENE,
+                                MOLECULARMATCHMUTATIONSWGSDATAGENE.GENE,
+                                MOLECULARMATCHMUTATIONSWGSDATAGENE.MOLECULARMATCHMUTATIONSWGSDATAID).values(gene, idWGSData).execute();
+                    }
+                }
+            }
+
+            if (mutations.wgsaMap() != null) {
+                for (MolecularMatchWGSaMap wgSaMap : mutations.wgsaMap()) {
+                    int idMap = context.insertInto(MOLECULARMATCHMUTATIONSWGSMAP,
+                            MOLECULARMATCHMUTATIONSWGSMAP.AA,
+                            MOLECULARMATCHMUTATIONSWGSMAP.NAME,
+                            MOLECULARMATCHMUTATIONSWGSMAP.GRCH37_CHR_START_REF_ALT,
+                            MOLECULARMATCHMUTATIONSWGSMAP.NUCLEOTIDECHANGE,
+                            MOLECULARMATCHMUTATIONSWGSMAP.EXON,
+                            MOLECULARMATCHMUTATIONSWGSMAP.GENE,
+                            MOLECULARMATCHMUTATIONSWGSMAP.TRANSCRIPT,
+                            MOLECULARMATCHMUTATIONSWGSMAP.MOLECULARMATCHMUTATIONSID)
+                            .values(wgSaMap.AA(),
+                                    wgSaMap.name(),
+                                    wgSaMap.GRCh37_Chr_Start_Ref_Alt(),
+                                    wgSaMap.NucleotideChange(),
+                                    wgSaMap.Exon(),
+                                    wgSaMap.Gene(),
+                                    wgSaMap.Transcript(),
+                                    idMutations)
+                            .returning(MOLECULARMATCHMUTATIONSWGSMAP.ID)
+                            .fetchOne()
+                            .getValue(MOLECULARMATCHMUTATIONSWGSMAP.ID);
+
+                    for (String synonyms : wgSaMap.Synonyms()) {
+                        context.insertInto(MOLECULARMATCHMUTATIONSWGSMAPSYNONYMS,
+                                MOLECULARMATCHMUTATIONSWGSMAPSYNONYMS.SYNONYMS,
+                                MOLECULARMATCHMUTATIONSWGSMAPSYNONYMS.MOLECULARMATCHMUTATIONSWGSMAPID).values(synonyms, idMap).execute();
+                    }
+
+                    for (String protCoords : wgSaMap.ProtCoords()) {
+                        context.insertInto(MOLECULARMATCHMUTATIONSWGSMAPPROTCOORDS,
+                                MOLECULARMATCHMUTATIONSWGSMAPPROTCOORDS.PROTCOORDS,
+                                MOLECULARMATCHMUTATIONSWGSMAPPROTCOORDS.MOLECULARMATCHMUTATIONSWGSMAPID)
+                                .values(protCoords, idMap)
+                                .execute();
+                    }
+
+                }
+            }
+
+            for (MolecularMatchGRch37Location gRch37Location : mutations.gRch37Location()) {
+                int idLocation = context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCATION,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.COMPOSITEKEY,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.REF,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.STOP,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.START,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.CHR,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.ALT,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.VALIDATED,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.STRAND,
+                        MOLECULARMATCHMUTATIONSGRCH37LOCATION.MOLECULARMATCHMUTATIONSID)
+                        .values(gRch37Location.compositeKey(),
+                                gRch37Location.ref(),
+                                gRch37Location.stop(),
+                                gRch37Location.start(),
+                                gRch37Location.chr(),
+                                gRch37Location.alt(),
+                                gRch37Location.validated(),
+                                gRch37Location.strand(),
+                                idMutations)
+                        .returning(MOLECULARMATCHMUTATIONSGRCH37LOCATION.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHMUTATIONSGRCH37LOCATION.ID);
+
+                for (MolecularMatchTranscriptConsequencesGRCH37 transcriptConsequencesGRCH37 : gRch37Location.transcriptConsequences()) {
+                    int idConsequences = context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES,
+                            MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.AMINOACIDCHANGE,
+                            MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.INTRONNUMBER,
+                            MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.TRANSCRIPT,
+                            MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.CDNA,
+                            MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.MOLECULARMATCHMUTATIONSGRCH37LOCATIONID)
+                            .values(transcriptConsequencesGRCH37.aminoAcidChange(),
+                                    transcriptConsequencesGRCH37.intronNumber(),
+                                    transcriptConsequencesGRCH37.transcript(),
+                                    transcriptConsequencesGRCH37.cdna(),
+                                    idLocation)
+                            .returning(MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.ID)
+                            .fetchOne()
+                            .getValue(MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.ID);
+
+                    for (String txSites : transcriptConsequencesGRCH37.txSites()) {
+                        context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES,
+                                MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES.TXSITES,
+                                MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESTXSITES.MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCESID)
+                                .values(txSites, idConsequences)
+                                .execute();
+                    }
+
+                    if (transcriptConsequencesGRCH37.exonNumber() != null) {
+                        for (String exonNumber : transcriptConsequencesGRCH37.exonNumber()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER,
+                                    MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER.EXONNUMBER,
+                                    MOLECULARMATCHMUTATIONSGRCH37LOCCONSEQUENCESEXONNUMBER.MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCESID)
+                                    .values(exonNumber, idConsequences)
+                                    .execute();
+                        }
+                    }
+                }
+            }
+
+            if (mutations.fusionData() != null) {
+                for (MolecularMatchFusionData fusions : mutations.fusionData()) {
+                    int idFusions = context.insertInto(MOLECULARMATCHMUTATIONSFUSION,
+                            MOLECULARMATCHMUTATIONSFUSION.SYNONYM,
+                            MOLECULARMATCHMUTATIONSFUSION.SOURCE,
+                            MOLECULARMATCHMUTATIONSFUSION.PAPER,
+                            MOLECULARMATCHMUTATIONSFUSION.MOLECULARMATCHMUTATIONSID)
+                            .values(fusions.synonym(), fusions.source(), fusions.Paper(), idMutations)
+                            .returning(MOLECULARMATCHMUTATIONSFUSION.ID)
+                            .fetchOne()
+                            .getValue(MOLECULARMATCHMUTATIONSFUSION.ID);
+
+                    if (fusions.Bchr() != null) {
+                        for (String Bchr : fusions.Bchr()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBCHR,
+                                    MOLECULARMATCHMUTATIONSFUSIONBCHR.BRCHR,
+                                    MOLECULARMATCHMUTATIONSFUSIONBCHR.MOLECULARMATCHMUTATIONSFUSIONID).values(Bchr, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Agene() != null) {
+                        for (String agene : fusions.Agene()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONAGENE,
+                                    MOLECULARMATCHMUTATIONSFUSIONAGENE.AGENE,
+                                    MOLECULARMATCHMUTATIONSFUSIONAGENE.MOLECULARMATCHMUTATIONSFUSIONID).values(agene, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Btx() != null) {
+                        for (String btx : fusions.Btx()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBTX,
+                                    MOLECULARMATCHMUTATIONSFUSIONBTX.BTX,
+                                    MOLECULARMATCHMUTATIONSFUSIONBTX.MOLECULARMATCHMUTATIONSFUSIONID).values(btx, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Achr() != null) {
+                        for (String achr : fusions.Achr()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONATX,
+                                    MOLECULARMATCHMUTATIONSFUSIONATX.ATX,
+                                    MOLECULARMATCHMUTATIONSFUSIONATX.MOLECULARMATCHMUTATIONSFUSIONID).values(achr, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.ins() != null) {
+                        for (String ins : fusions.ins()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONINS,
+                                    MOLECULARMATCHMUTATIONSFUSIONINS.INS,
+                                    MOLECULARMATCHMUTATIONSFUSIONINS.MOLECULARMATCHMUTATIONSFUSIONID).values(ins, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Bgene() != null) {
+                        for (String bgene : fusions.Bgene()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBGENE,
+                                    MOLECULARMATCHMUTATIONSFUSIONBGENE.BGENE,
+                                    MOLECULARMATCHMUTATIONSFUSIONBGENE.MOLECULARMATCHMUTATIONSFUSIONID).values(bgene, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Acoord() != null) {
+                        for (String Acoord : fusions.Acoord()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONACOORD,
+                                    MOLECULARMATCHMUTATIONSFUSIONACOORD.ACOORD,
+                                    MOLECULARMATCHMUTATIONSFUSIONACOORD.MOLECULARMATCHMUTATIONSFUSIONID)
+                                    .values(Acoord, idFusions)
+                                    .execute();
+                        }
+                    }
+
+                    if (fusions.Bori() != null) {
+                        for (String bori : fusions.Bori()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBORI,
+                                    MOLECULARMATCHMUTATIONSFUSIONBORI.BORI,
+                                    MOLECULARMATCHMUTATIONSFUSIONBORI.MOLECULARMATCHMUTATIONSFUSIONID).values(bori, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Aband() != null) {
+                        for (String aband : fusions.Aband()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONABAND,
+                                    MOLECULARMATCHMUTATIONSFUSIONABAND.ABAND,
+                                    MOLECULARMATCHMUTATIONSFUSIONABAND.MOLECULARMATCHMUTATIONSFUSIONID).values(aband, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Bband() != null) {
+                        for (String bband : fusions.Bband()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBBAND,
+                                    MOLECULARMATCHMUTATIONSFUSIONBBAND.BBAND,
+                                    MOLECULARMATCHMUTATIONSFUSIONBBAND.MOLECULARMATCHMUTATIONSFUSIONID).values(bband, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Aori() != null) {
+                        for (String aori : fusions.Aori()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONAORI,
+                                    MOLECULARMATCHMUTATIONSFUSIONAORI.AORI,
+                                    MOLECULARMATCHMUTATIONSFUSIONAORI.MOLECULARMATCHMUTATIONSFUSIONID).values(aori, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Atx() != null) {
+                        for (String atx : fusions.Atx()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONATX,
+                                    MOLECULARMATCHMUTATIONSFUSIONATX.ATX,
+                                    MOLECULARMATCHMUTATIONSFUSIONATX.MOLECULARMATCHMUTATIONSFUSIONID).values(atx, idFusions).execute();
+                        }
+                    }
+
+                    if (fusions.Bcoord() != null) {
+                        for (String bcoord : fusions.Bcoord()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBCOORD,
+                                    MOLECULARMATCHMUTATIONSFUSIONBCOORD.BCOORD,
+                                    MOLECULARMATCHMUTATIONSFUSIONBCOORD.MOLECULARMATCHMUTATIONSFUSIONID)
+                                    .values(bcoord, idFusions)
+                                    .execute();
+                        }
+                    }
+
+                    if (fusions.Bgreg() != null) {
+                        for (MolecularMatchBreg breg : fusions.Bgreg()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBREG,
+                                    MOLECULARMATCHMUTATIONSFUSIONBREG.NUM,
+                                    MOLECULARMATCHMUTATIONSFUSIONBREG.TYPE,
+                                    MOLECULARMATCHMUTATIONSFUSIONBREG.MOLECULARMATCHMUTATIONSFUSIONID)
+                                    .values(breg.num(), breg.type(), idFusions)
+                                    .execute();
+                        }
+                    }
+
+                    if (fusions.Agreg() != null) {
+                        for (MolecularMatchAreg areg : fusions.Agreg()) {
+                            context.insertInto(MOLECULARMATCHMUTATIONSFUSIONAREG,
+                                    MOLECULARMATCHMUTATIONSFUSIONAREG.NUM,
+                                    MOLECULARMATCHMUTATIONSFUSIONAREG.TYPE,
+                                    MOLECULARMATCHMUTATIONSFUSIONAREG.MOLECULARMATCHMUTATIONSFUSIONID)
+                                    .values(areg.num(), areg.type(), idFusions)
+                                    .execute();
+                        }
+                    }
+                }
+            }
+
+            MolecularMatchExonInfo info = mutations.exonsInfo();
+            if (info != null) {
+                int idExons = context.insertInto(MOLECULARMATCHMUTATIONSEXONSINFO,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.TXSTART,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.CDSEND,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.CHR,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.CDSSTART,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.TRANSCRIPT,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.TXEND,
+                        MOLECULARMATCHMUTATIONSEXONSINFO.MOLECULARMATCHMUTATIONSID)
+                        .values(info.txStart(), info.cdsEnd(), info.chr(), info.cdsStart(), info.transcript(), info.txEnd(), idMutations)
+                        .returning(MOLECULARMATCHMUTATIONSEXONSINFO.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHMUTATIONSEXONSINFO.ID);
+
+                int idBoundries = context.insertInto(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES,
+                        MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES.MOLECULARMATCHMUTATIONSEXONSINFOID)
+                        .values(idExons)
+                        .returning(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES.ID);
+
+                int idExonPosities = context.insertInto(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES,
+                        MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES.MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESID)
+                        .values(idBoundries)
+                        .returning(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES.ID);
+
+                if (info.exonBoundaries().exon1() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon1().start(), info.exonBoundaries().exon1().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon2() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon2().start(), info.exonBoundaries().exon2().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon3() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon3().start(), info.exonBoundaries().exon3().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon4() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon4().start(), info.exonBoundaries().exon4().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon5() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon5().start(), info.exonBoundaries().exon5().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon6() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon6().start(), info.exonBoundaries().exon6().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon7() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon7().start(), info.exonBoundaries().exon7().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon8() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon8().start(), info.exonBoundaries().exon8().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon9() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon9().start(), info.exonBoundaries().exon9().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon10() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon10().start(), info.exonBoundaries().exon10().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon11() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon11().start(), info.exonBoundaries().exon11().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon12() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon12().start(), info.exonBoundaries().exon12().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon13() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon13().start(), info.exonBoundaries().exon13().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon14() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon14().start(), info.exonBoundaries().exon14().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon15() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon15().start(), info.exonBoundaries().exon15().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon16() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon16().start(), info.exonBoundaries().exon16().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon17() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon17().start(), info.exonBoundaries().exon17().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon18() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon18().start(), info.exonBoundaries().exon18().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon19() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon19().start(), info.exonBoundaries().exon19().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon20() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon20().start(), info.exonBoundaries().exon20().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon21() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon21().start(), info.exonBoundaries().exon21().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon22() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon22().start(), info.exonBoundaries().exon22().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon23() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon23().start(), info.exonBoundaries().exon23().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon24() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon24().start(), info.exonBoundaries().exon24().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon25() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon25().start(), info.exonBoundaries().exon25().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon26() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon26().start(), info.exonBoundaries().exon26().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon27() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon27().start(), info.exonBoundaries().exon27().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon28() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon28().start(), info.exonBoundaries().exon28().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon29() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon29().start(), info.exonBoundaries().exon29().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon30() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon30().start(), info.exonBoundaries().exon30().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon31() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon31().start(), info.exonBoundaries().exon31().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon32() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon32().start(), info.exonBoundaries().exon32().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon33() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon33().start(), info.exonBoundaries().exon33().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon34() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon34().start(), info.exonBoundaries().exon34().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon35() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon35().start(), info.exonBoundaries().exon35().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon36() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon36().start(), info.exonBoundaries().exon36().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon37() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon37().start(), info.exonBoundaries().exon37().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon38() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon38().start(), info.exonBoundaries().exon38().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon39() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon39().start(), info.exonBoundaries().exon39().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon40() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon40().start(), info.exonBoundaries().exon40().stop(), idExonPosities).execute();
+                }
+                if (info.exonBoundaries().exon41() != null) {
+                    context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41.START,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41.END,
+                            MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
+                            .values(info.exonBoundaries().exon41().start(), info.exonBoundaries().exon41().stop(), idExonPosities).execute();
+                }
+
+            }
         }
 
     }
@@ -2987,6 +3888,47 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFO).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIES).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONSINFOBOUNDRIESEXONPOSITIES).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40).execute();
+        context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41).execute();
         //TODO: adding object asts of molecular match
     }
 }

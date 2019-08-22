@@ -1,0 +1,11 @@
+hs14	32	32	1	color=chain_1,glyph=circle,glyph_size=90
+hs14	42	42	1	color=chain_1,glyph=circle,glyph_size=90
+
+hs16	5	5	1	color=chain_1,glyph=square,glyph_size=90
+hs16	5	5	1	color=white,glyph=square,glyph_size=60
+hs16	15	15	1	color=chain_1,glyph=circle,glyph_size=90
+
+hs18	60	60	3	color=chain_1,glyph=circle,glyph_size=90
+hs18	130	130	1	color=chain_1,glyph=circle,glyph_size=90
+hs18	140	140	1	color=chain_1,glyph=circle,glyph_size=90
+hs18	176	176	3	color=chain_1,glyph=square,glyph_size=90

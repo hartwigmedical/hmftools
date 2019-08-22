@@ -25,6 +25,7 @@ public class ScaleContigTest
         assertEquals(1, victim.scale(10L));
     }
 
+
     @Test
     public void testScalePosition()
     {

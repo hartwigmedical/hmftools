@@ -145,10 +145,7 @@ class AnalysedPatientReporter {
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
             @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
 
-        //TODO: Once we have bumped PURPLE we can remove the REF_GENOME enrichment
-        final List<SomaticVariant> variants =
-                SomaticVariantFactory.passOnlyInstance(VariantContextEnrichmentFactory.refGenomeEnrichment(reportData.refGenomeFastaFile()))
-                        .fromVCFFile(sample, somaticVariantVcf);
+        final List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
         return SomaticVariantAnalyzer.run(variants,

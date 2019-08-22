@@ -33,10 +33,4 @@ public interface VariantContextEnrichmentFactory {
             }
         };
     }
-
-    @NotNull
-    static VariantContextEnrichmentFactory refGenomeEnrichment(@NotNull final IndexedFastaSequenceFile reference) {
-        return consumer -> new SomaticRefContextEnrichment(reference, consumer);
-    }
-
 }

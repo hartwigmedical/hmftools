@@ -1,0 +1,8 @@
+hs16	5	5	1	color=chain_1,glyph=square,glyph_size=90
+hs16	5	5	1	color=white,glyph=square,glyph_size=60
+hs16	5	5	3	color=chain_1,glyph=square,glyph_size=90
+hs16	5	5	3	color=white,glyph=square,glyph_size=60
+hs16	60	60	1	color=chain_1,glyph=circle,glyph_size=60
+hs16	90	90	1	color=chain_1,glyph=circle,glyph_size=60
+hs16	240	240	1	color=chain_1,glyph=circle,glyph_size=60
+hs16	300	300	3	color=chain_1,glyph=circle,glyph_size=60

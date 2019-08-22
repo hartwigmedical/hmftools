@@ -24,9 +24,6 @@ public abstract class AnalysedReportData implements ReportData {
     public abstract ActionabilityAnalyzer actionabilityAnalyzer();
 
     @NotNull
-    public abstract IndexedFastaSequenceFile refGenomeFastaFile();
-
-    @NotNull
     public abstract GermlineReportingModel germlineReportingModel();
 
     @NotNull
