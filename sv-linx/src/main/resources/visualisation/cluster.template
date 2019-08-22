@@ -321,6 +321,17 @@ chromosomes_display_default = yes
 	</plot>
 
 	# -----------------------------------------------------------
+	# Connectors
+    <plot>
+        type             = connector
+        file             = SUBSTITUTE_SAMPLE.connector.circos
+        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
+        connector_dims   = 0.0,0.3,0.4,0.3,0
+        thickness        = 4
+        color            = red
+    </plot>
+
+	# -----------------------------------------------------------
 	# SGL Scatter
 	<plot>
 		type             = scatter
@@ -337,17 +348,6 @@ chromosomes_display_default = yes
         max              = 1
 
 	</plot>
-
-	# -----------------------------------------------------------
-	# Connectors
-    <plot>
-        type             = connector
-        file             = SUBSTITUTE_SAMPLE.connector.circos
-        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
-        connector_dims   = 0.0,0.3,0.4,0.3,0
-        thickness        = 4
-        color            = red
-    </plot>
 
 </plots>
 
