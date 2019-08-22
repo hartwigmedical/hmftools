@@ -243,6 +243,10 @@ public class NeoEpitopeTest
         String nonGenicDna = "TTTTT";
         String sCodon = convertAminoAcidToDnaCodon("S");
 
+        // resultant bases and exon indices
+        // AAAAACCCCCTTATGTTTTTATGATGATGATGATGATGATGATGATGATGATTTTTTGACATCCCCCAAAAA
+        // 0    5    10   15   20                             51   56    62   67
+
         // first exon, starts coding
         String exon1 = nonCodingExon + swapRnaToDna(START_CODON) + sCodon;
         String transBases = exon1;
@@ -319,13 +323,13 @@ public class NeoEpitopeTest
         // add upstream breakends
         List<GeneAnnotation> upGenes = Lists.newArrayList();
         long upPos = 51;
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(chromosome1, upPos, posOrient);
 
         // add downstream breakends
         List<GeneAnnotation> downGenes = Lists.newArrayList();
         long downPos = 51;
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
@@ -342,13 +346,13 @@ public class NeoEpitopeTest
         // with a fusion between the 2nd and 3rd exons, splitting a codon
         upPos = 17;
         upGenes.clear();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(chromosome1, upPos, posOrient);
 
         // add downstream breakends
         downGenes.clear();
         downPos = 17;
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
         fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
@@ -361,6 +365,30 @@ public class NeoEpitopeTest
         assertTrue(data.upstreamAcids().equals("SSSSSSSSSS"));
         assertTrue(data.novelAcid().equals("S"));
         assertTrue(data.downstreamAcids().equals("_"));
+
+
+        // a fusion to the 5'UTR of the downstream gene
+        upPos = 51;
+        upGenes.clear();
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(chromosome1, upPos, negOrient);
+
+        // add downstream breakends
+        downGenes.clear();
+        downPos = 68;
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(chromosome2, downPos, posOrient);
+
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
+                false, true, null, false);
+
+        neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
+
+        assertEquals(1, neoEpFinder.getResults().size());
+        data = neoEpFinder.getResults().get(0);
+        assertTrue(data.upstreamAcids().equals("MS"));
+        assertTrue(data.novelAcid().equals(""));
+        assertTrue(data.downstreamAcids().equals("SSSSSSSSSS"));
 
     }
 

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.neoepitope;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBOL;
@@ -55,19 +58,19 @@ public class NeoEpitopeFinder
 
         for(final GeneFusion fusion : fusions)
         {
+            if(isDuplicate(fusion))
+                continue;
+
             final Transcript upTrans = fusion.upstreamTrans();
             final Transcript downTrans = fusion.downstreamTrans();
 
             if(!upTrans.isCanonical() || !downTrans.isCanonical())
                 continue;
 
-            if(upTrans.nonCoding() || downTrans.nonCoding())
+            if(upTrans.nonCoding() || downTrans.nonCoding() || upTrans.preCoding())
                 continue;
 
-            if(upTrans.preCoding() || downTrans.preCoding() || downTrans.isPromoter())
-                continue;
-
-            if(upTrans.isExonic() && downTrans.isExonic())
+            if(upTrans.isExonic() && downTrans.isExonic()) // rare and too complicated for now
                 continue;
 
             boolean isPhased = fusion.phaseMatched()
@@ -76,8 +79,9 @@ public class NeoEpitopeFinder
             int upstreamPhaseOffset = upTrans.ExonUpstreamPhase;
             int downstreamPhaseOffset = upstreamPhaseOffset == 0 || !isPhased ? 0 : 3 - upstreamPhaseOffset;
 
-            LOGGER.debug("fusion({}) phased({}) upPhaseOffset({}) downPhaseOffset({})",
-                    fusion.name(), isPhased, upstreamPhaseOffset, downstreamPhaseOffset);
+            LOGGER.debug("fusion({}) SVs({} & {}) phased({}) upPhaseOffset({}) downPhaseOffset({})",
+                    fusion.name(), fusion.svId(true), fusion.svId(false),
+                    isPhased, upstreamPhaseOffset, downstreamPhaseOffset);
 
             String upstreamBases = getBaseString(upTrans, false, upstreamPhaseOffset);
             String downstreamBases = getBaseString(downTrans, !isPhased, downstreamPhaseOffset);
@@ -151,6 +155,13 @@ public class NeoEpitopeFinder
         }
     }
 
+    private boolean isDuplicate(final GeneFusion fusion)
+    {
+        return mNeoEpitopeResults.stream()
+                .anyMatch(x -> x.fusion().svId(true) == fusion.svId(true)
+                && x.fusion().svId(false) == fusion.svId(false));
+    }
+
     private static String checkTrimBases(final String bases)
     {
         if(bases.length() < 50)
@@ -215,7 +226,7 @@ public class NeoEpitopeFinder
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if (exon.ExonStart < breakPosition)
+                if (exon.ExonStart < breakPosition || exon.ExonStart < codingStart)
                     continue;
 
                 long posStart, posEnd;
@@ -234,11 +245,13 @@ public class NeoEpitopeFinder
                 }
 
                 // stop at end of coding region
+                /*
                 if(posStart < codingStart)
                 {
                     posStart = codingStart;
                     requiredBases = 0;
                 }
+                */
 
                 if(posEnd > codingEnd)
                 {
@@ -261,7 +274,7 @@ public class NeoEpitopeFinder
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if(exon.ExonEnd > breakPosition)
+                if(exon.ExonEnd > breakPosition || exon.ExonEnd > codingEnd)
                     continue;
 
                 long posStart, posEnd;
@@ -282,12 +295,6 @@ public class NeoEpitopeFinder
                 if(posStart < codingStart)
                 {
                     posStart = codingStart;
-                    requiredBases = 0;
-                }
-
-                if(posEnd > codingEnd)
-                {
-                    posEnd = codingEnd;
                     requiredBases = 0;
                 }
 
@@ -319,7 +326,7 @@ public class NeoEpitopeFinder
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Fusion,PhaseMatched");
+                mFileWriter.write("SampleId,Fusion,SameGene");
                 mFileWriter.write(",UpstreamAminoAcids,DownstreamAminoAcids,NovelAminoAcid");
 
                 for(int se = SE_START; se <= SE_END; ++se)
@@ -343,7 +350,7 @@ public class NeoEpitopeFinder
             }
 
             mFileWriter.write(String.format("%s,%s,%s",
-                    sampleId, fusion.name(), fusion.phaseMatched()));
+                    sampleId, fusion.name(), fusion.upstreamTrans().geneName().equals(fusion.downstreamTrans().geneName())));
 
             mFileWriter.write(String.format(",%s,%s,%s",
                     data.upstreamAcids(), data.downstreamAcids(), data.novelAcid()));
