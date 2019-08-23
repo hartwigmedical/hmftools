@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
+import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
@@ -54,7 +55,7 @@ public class CircosDataWriter
     private final SvCircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
     private final CircosData data;
-    private final double maxPloidy;
+    private final Thickness thickness;
 
     public CircosDataWriter(
             @NotNull final ColorPicker colorPicker,
@@ -69,7 +70,7 @@ public class CircosDataWriter
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
-        this.maxPloidy = data.maxPloidy();
+        this.thickness = new Thickness(data.connectors());
     }
 
     public void write() throws IOException
@@ -110,7 +111,7 @@ public class CircosDataWriter
         Files.write(new File(karyotypePath).toPath(), createKaryotypes(data.contigLengths()));
 
         final String connectorPath = filePrefix + ".connector.circos";
-        Files.write(new File(connectorPath).toPath(), createConnectors(segments, links));
+        Files.write(new File(connectorPath).toPath(), createConnectors(data.connectors()));
 
         final String linkPath = filePrefix + ".link.circos";
         Files.write(new File(linkPath).toPath(), createLinks(links));
@@ -438,83 +439,19 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    private List<String> createConnectors(@NotNull final List<Connector> connectors)
     {
         final List<String> result = Lists.newArrayList();
-
-        for (Segment segment : segments)
+        for (Connector connector : connectors)
         {
-
-            final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-
-            final double r1 = configWriter.svTrackRelative(segment.track());
-            double startLinkUsage = Links.linkTraverseCount(startPosition, links);
-
-            if (startLinkUsage > 0)
-            {
-                long segmentsBelow = segments.stream()
-                        .filter(x -> x.chromosome().equals(segment.chromosome()) && x.start() == segment.start()
-                                && x.track() < segment.track())
-                        .count();
-
-                final String start = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                        .add(String.valueOf(segment.start()))
-                        .add(String.valueOf(segment.start()))
-                        .add("r1=" + r1 + "r," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + ","
-                                + thicknessString(startLinkUsage - segmentsBelow))
-                        .toString();
-                result.add(start);
-            }
-
-            final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-
-            double endLinkUsage = Links.linkTraverseCount(endPosition, links);
-
-            if (endLinkUsage > 0)
-            {
-                long segmentsBelow = segments.stream()
-                        .filter(x -> x.chromosome().equals(segment.chromosome()) && x.end() == segment.end() && x.track() < segment.track())
-                        .count();
-                final String end = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
-                        .add(String.valueOf(segment.end()))
-                        .add(String.valueOf(segment.end()))
-                        .add("r1=" + r1 + "r," + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + ","
-                                + thicknessString(endLinkUsage - segmentsBelow))
-                        .toString();
-                result.add(end);
-            }
-
-        }
-
-        double rTrack1 = configWriter.svTrackRelative(0);
-        for (Link link : links)
-        {
-            if (link.connectorsOnly())
-            {
-                if (link.isValidStart())
-                {
-                    final String start = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
-                            .add(String.valueOf(link.startPosition()))
-                            .add(String.valueOf(link.startPosition()))
-                            .add("r1=" + rTrack1 + "r," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + ","
-                                    + thicknessString(link.ploidy()))
-                            .toString();
-                    result.add(start);
-                }
-
-                if (link.isValidEnd())
-                {
-                    final String end = new StringJoiner(DELIMITER).add(circosContig(link.endChromosome()))
-                            .add(String.valueOf(link.endPosition()))
-                            .add(String.valueOf(link.endPosition()))
-                            .add("r1=" + rTrack1 + "r," + colorPicker.transparentColor(link.clusterId(), link.chainId()) + ","
-                                    + thicknessString(link.ploidy()))
-                            .toString();
-                    result.add(end);
-                }
-
-            }
-
+            final double r1 = configWriter.svTrackRelative(connector.track());
+            final String start = new StringJoiner(DELIMITER).add(circosContig(connector.chromosome()))
+                    .add(String.valueOf(connector.position()))
+                    .add(String.valueOf(connector.position()))
+                    .add("r1=" + r1 + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId()) + ","
+                            + thicknessString(connector.ploidy()))
+                    .toString();
+            result.add(start);
         }
 
         return result;
@@ -651,8 +588,7 @@ public class CircosDataWriter
 
     private double thicknessPixels(double ploidy)
     {
-        double scaledUsage = ploidy / Math.max(6, Math.min(60, maxPloidy));
-        return Math.min(12, Math.max(1, Math.pow(2 * scaledUsage, 1)));
+        return thickness.thicknessPixels(ploidy);
     }
 
     @NotNull
