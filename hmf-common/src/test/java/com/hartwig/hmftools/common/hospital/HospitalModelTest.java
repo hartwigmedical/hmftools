@@ -84,10 +84,9 @@ public class HospitalModelTest {
     }
 
     @Test
-    @Ignore
     public void canLookupAddressForCORESample() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("ExtHosp1, Zip City", hospitalModel.queryHospitalDataForSample("CORE18001224T").fullAddresseeString());
+        assertEquals("ExtHosp2, Zip City", hospitalModel.queryHospitalDataForSample("CORE18001224T").fullAddresseeString());
     }
 
     @NotNull
