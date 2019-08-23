@@ -61,10 +61,14 @@ public class FusionRulesTest
         Transcript trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
+        FusionParameters params = new FusionParameters();
+        params.AllowExonSkipping = false;
+        params.RequirePhaseMatch = true;
+
         // up non-coding
         assertTrue(trans1.nonCoding());
         assertTrue(trans2.isCoding());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         codingStart = null;
         codingEnd = null;
@@ -79,7 +83,7 @@ public class FusionRulesTest
         // down non-coding
         assertTrue(trans1.isCoding());
         assertTrue(trans2.nonCoding());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // up / down post coding
         trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
@@ -90,14 +94,14 @@ public class FusionRulesTest
 
         assertTrue(trans1.postCoding());
         assertTrue(trans2.isCoding());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // up promotor
         trans1 = new Transcript(gene1, transId1, transName1, 0, -1, 1, -1,
                 0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(trans1.isPromoter());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // down single exon
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
@@ -107,7 +111,7 @@ public class FusionRulesTest
                 10, getCodingBases(codingStart, codingEnd),1, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(trans1.preCoding());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // up not disruptive
         trans1.setIsDisruptive(false);
@@ -115,7 +119,7 @@ public class FusionRulesTest
         trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // up 5'UTR to down coding
         trans1.setIsDisruptive(true);
@@ -129,7 +133,7 @@ public class FusionRulesTest
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isIntronic());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // unmatched phasing intronic
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
@@ -142,7 +146,7 @@ public class FusionRulesTest
         assertTrue(trans2.isCoding());
         assertTrue(trans1.isIntronic());
         assertTrue(trans2.isIntronic());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // unmatched phasing exon to exon
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
@@ -153,13 +157,13 @@ public class FusionRulesTest
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isExonic());
-        assertTrue(checkFusionLogic(trans1, trans2) == null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
         // valid exonic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
                 11, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2) != null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
         // valid intronic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 1, 3, 2,
@@ -168,7 +172,7 @@ public class FusionRulesTest
         trans2 = new Transcript(gene2, transId2, transName2, 2, 0, 3, 1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2) != null);
+        assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
     }
 

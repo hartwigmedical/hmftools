@@ -12,6 +12,7 @@ public class GeneFusion
     private int mExonsSkippedUp;
     private int mExonsSkippedDown;
     private String mKnownType;
+    private boolean mNeoEpitopeOnly;
 
     // private String mAnnotations;
     private FusionAnnotations mAnnotations;
@@ -32,6 +33,7 @@ public class GeneFusion
         mViable = viable;
         mExonsSkippedUp = 0;
         mExonsSkippedDown = 0;
+        mNeoEpitopeOnly = false;
         mAnnotations = null;
     }
 
@@ -44,6 +46,9 @@ public class GeneFusion
 
     public boolean reportable(){ return mIsReportable; }
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
+
+    public boolean neoEpitopeOnly(){ return mNeoEpitopeOnly; }
+    public void setNeoEpitopeOnly(boolean toggle) { mNeoEpitopeOnly = toggle; }
 
     public final String getKnownType(){ return mKnownType; }
     public void setKnownType(final String type) { mKnownType = type; }

@@ -147,7 +147,7 @@ public class FusionWriter
 
             if(annotations == null)
             {
-                LOGGER.error("annotations not set");
+                LOGGER.error("fusion({}) annotations not set", fusion.name());
                 return;
             }
 

@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.fusion.KnownFusionData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -54,6 +55,7 @@ public class RnaFusionMapper
     private String mOutputDir;
 
     private FusionFinder mFusionFinder;
+    private FusionParameters mFusionParams;
     private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
     private final List<GeneFusion> mDnaFusions;
@@ -69,6 +71,10 @@ public class RnaFusionMapper
         mFusionFinder = fusionFinder;
         mGeneTransCollection = geneTransCollection;
         mDnaFusions = dnaFusions;
+
+        mFusionParams = new FusionParameters();
+        mFusionParams.RequirePhaseMatch = false;
+        mFusionParams.AllowExonSkipping = false;
     }
 
     public void setOutputDir(final String outputDir)
@@ -248,8 +254,7 @@ public class RnaFusionMapper
                     if(downBreakend.getSV().isSglBreakend())
                         continue;
 
-                    GeneFusion possibleFusion = checkFusionLogic(
-                            upTrans, downTrans, false, false, null);
+                    GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, mFusionParams);
 
                     // form one any way but mark it as not meeting standard fusion rules
                     if(possibleFusion == null)

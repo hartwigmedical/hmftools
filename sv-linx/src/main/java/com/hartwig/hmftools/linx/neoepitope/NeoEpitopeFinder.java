@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.isPotentiallyRelevantFusion;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
@@ -15,6 +17,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
@@ -22,6 +25,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
@@ -67,10 +71,7 @@ public class NeoEpitopeFinder
             if(!upTrans.isCanonical() || !downTrans.isCanonical())
                 continue;
 
-            if(upTrans.nonCoding() || downTrans.nonCoding() || upTrans.preCoding() || upTrans.ExonUpstreamPhase == -1)
-                continue;
-
-            if(upTrans.isExonic() && downTrans.isExonic()) // rare and too complicated for now
+            if(!validTranscripts(upTrans, downTrans))
                 continue;
 
             boolean isPhased = fusion.phaseMatched()
@@ -83,8 +84,11 @@ public class NeoEpitopeFinder
                     fusion.name(), fusion.svId(true), fusion.svId(false),
                     isPhased, upstreamPhaseOffset, downstreamPhaseOffset);
 
-            String upstreamBases = getBaseString(upTrans, false, upstreamPhaseOffset);
-            String downstreamBases = getBaseString(downTrans, !isPhased, downstreamPhaseOffset);
+
+            String upstreamBases = getBaseString(upTrans, getTranscriptData(upTrans), false, upstreamPhaseOffset);
+            final TranscriptData downTransData = getTranscriptData(downTrans);
+            String downstreamBases = getBaseString(downTrans, downTransData, !isPhased, downstreamPhaseOffset);
+            int nmdBaseCount = calcNonMediatedDecayBases(downTrans.parent(), downTransData);
 
             // upstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
             // downstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
@@ -126,8 +130,8 @@ public class NeoEpitopeFinder
                 downstreamBases = "";
             }
 
-            LOGGER.debug("fusion({}) upBases({}) novelCodon({}) downBases({})",
-                    fusion.name(), upstreamBases, checkTrimBases(novelCodonBases), checkTrimBases(downstreamBases));
+            LOGGER.debug("fusion({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
+                    fusion.name(), upstreamBases, checkTrimBases(novelCodonBases), checkTrimBases(downstreamBases), nmdBaseCount);
 
             if(upstreamBases.isEmpty() || (downstreamBases.isEmpty() && novelCodonBases.isEmpty()))
                 continue;
@@ -147,6 +151,7 @@ public class NeoEpitopeFinder
                     .upstreamAcids(upstreamRefAminoAcids)
                     .downstreamAcids(downstreamRefAminoAcids)
                     .novelAcid(novelAminoAcids)
+                    .downstreamNmdBases(nmdBaseCount)
                     .build();
 
             mNeoEpitopeResults.add(neoEpData);
@@ -193,27 +198,32 @@ public class NeoEpitopeFinder
         return aminoAcidStr;
     }
 
-    private String getBaseString(final Transcript transcript, boolean collectAllBases, int phaseOffset)
+    private TranscriptData getTranscriptData(final Transcript transcript)
+    {
+        final TranscriptData transData = mGeneTransCache.getTranscriptData(transcript.parent().StableId, transcript.StableId);
+
+        if(transData == null)
+        {
+            LOGGER.error("gene({}) transcript({}) data not found", transcript.parent().GeneName, transcript.StableId);
+            return null;
+        }
+
+        return transData;
+    }
+
+    private String getBaseString(final Transcript transcript, final TranscriptData transData, boolean collectAllBases, int phaseOffset)
     {
         if(transcript.nonCoding())
             return "";
 
         final GeneAnnotation gene = transcript.parent();
-
         long breakPosition = gene.position();
-
-        final TranscriptData transData = mGeneTransCache.getTranscriptData(gene.StableId, transcript.StableId);
-
-        if(transData == null)
-        {
-            LOGGER.error("gene({}) transcript({}) data not found", gene.GeneName, transcript.StableId);
-            return "";
-        }
 
         int requiredBases = AMINO_ACID_REF_COUNT * 3 + phaseOffset;
 
         long codingStart = transcript.CodingStart;
         long codingEnd = transcript.CodingEnd;
+        boolean postCoding = transcript.postCoding();
 
         final List<ExonData> exonDataList = transData.exons();
 
@@ -226,7 +236,7 @@ public class NeoEpitopeFinder
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if (exon.ExonStart < breakPosition || exon.ExonStart < codingStart)
+                if (exon.ExonStart < breakPosition || (!postCoding && exon.ExonStart < codingStart))
                     continue;
 
                 long posStart, posEnd;
@@ -244,16 +254,8 @@ public class NeoEpitopeFinder
                     requiredBases = 0;
                 }
 
-                // stop at end of coding region
-                /*
-                if(posStart < codingStart)
-                {
-                    posStart = codingStart;
-                    requiredBases = 0;
-                }
-                */
-
-                if(posEnd > codingEnd)
+                // stop at end of coding region unless the breakend started past it
+                if(!postCoding && posEnd > codingEnd)
                 {
                     posEnd = codingEnd;
                     requiredBases = 0;
@@ -274,7 +276,7 @@ public class NeoEpitopeFinder
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if(exon.ExonEnd > breakPosition || exon.ExonEnd > codingEnd)
+                if(exon.ExonEnd > breakPosition || (!postCoding && exon.ExonEnd > codingEnd))
                     continue;
 
                 long posStart, posEnd;
@@ -292,7 +294,7 @@ public class NeoEpitopeFinder
                     requiredBases = 0;
                 }
 
-                if(posStart < codingStart)
+                if(!postCoding && posStart < codingStart)
                 {
                     posStart = codingStart;
                     requiredBases = 0;
@@ -313,6 +315,118 @@ public class NeoEpitopeFinder
         return baseString;
     }
 
+    private int calcNonMediatedDecayBases(final GeneAnnotation gene, final TranscriptData transData)
+    {
+        final List<ExonData> exonDataList = transData.exons();
+
+        long breakPosition = gene.position();
+
+        int exonicBaseCount = 0;
+
+        if(gene.orientation() == -1)
+        {
+            // walk forwards through the exons, collecting up the required positions and bases
+            for (int i = 0; i < exonDataList.size(); ++i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(i == exonDataList.size() - 1)
+                    break;
+
+                if (breakPosition > exon.ExonEnd)
+                    continue;
+
+                exonicBaseCount += exon.ExonEnd - max(breakPosition, exon.ExonStart) + 1;
+            }
+        }
+        else
+        {
+            for(int i = exonDataList.size() - 1; i >= 0; --i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(i == 0)
+                    break;
+
+                if(breakPosition < exon.ExonStart)
+                    continue;
+
+                exonicBaseCount += min(breakPosition, exon.ExonEnd) - exon.ExonStart + 1;
+            }
+        }
+
+        return exonicBaseCount;
+    }
+
+    public void checkFusions(List<GeneFusion> existingFusions, List<GeneAnnotation> genesList1,List<GeneAnnotation> genesList2)
+    {
+        for (final GeneAnnotation gene1 : genesList1)
+        {
+            boolean startUpstream = gene1.isUpstream();
+
+            final Transcript trans1 = gene1.transcripts().stream().filter(Transcript::isCanonical).findFirst().orElse(null);
+
+            if (trans1 == null)
+                continue;
+
+            for (final GeneAnnotation gene2 : genesList2)
+            {
+                boolean endUpstream = gene2.isUpstream();
+
+                if (startUpstream == endUpstream)
+                    continue;
+
+                final Transcript trans2 = gene2.transcripts().stream().filter(Transcript::isCanonical).findFirst().orElse(null);
+
+                if (trans2 == null)
+                    continue;
+
+                final Transcript upstreamTrans = startUpstream ? trans1 : trans2;
+                final Transcript downstreamTrans = upstreamTrans == trans1 ? trans2 : trans1;
+
+                if(existingFusions.stream().anyMatch(x -> x.upstreamTrans() == upstreamTrans && x.downstreamTrans() == downstreamTrans))
+                    continue;
+
+                GeneFusion newFusion = checkNeoEpitopeFusion(upstreamTrans, downstreamTrans);
+
+                if(newFusion != null)
+                    existingFusions.add(newFusion);
+            }
+        }
+    }
+
+    private boolean validTranscripts(final Transcript upstreamTrans, final Transcript downstreamTrans)
+    {
+        if(!validFusionTranscript(upstreamTrans))
+            return false;
+
+        if(downstreamTrans.nonCoding() || downstreamTrans.ExonMax == 1)
+            return false;
+
+        if(upstreamTrans.preCoding() || upstreamTrans.ExonUpstreamPhase == -1)
+            return false;
+
+        if(upstreamTrans.isExonic() && downstreamTrans.isExonic()) // rare and too complicated for now
+            return false;
+
+        return true;
+    }
+
+    private GeneFusion checkNeoEpitopeFusion(final Transcript upstreamTrans, final Transcript downstreamTrans)
+    {
+        if(!validTranscripts(upstreamTrans, downstreamTrans))
+            return null;
+
+        if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
+            return null;
+
+        boolean phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
+
+        GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
+        fusion.setNeoEpitopeOnly(true);
+        return fusion;
+    }
+
     private void writeData(final String sampleId, final NeoEpitopeData data, final GeneFusion fusion)
     {
         if(mOutputDir.isEmpty())
@@ -327,7 +441,7 @@ public class NeoEpitopeFinder
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
                 mFileWriter.write("SampleId,Fusion,SameGene");
-                mFileWriter.write(",UpstreamAminoAcids,DownstreamAminoAcids,NovelAminoAcid");
+                mFileWriter.write(",UpstreamAminoAcids,DownstreamAminoAcids,NovelAminoAcid,NMDBases");
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -352,8 +466,8 @@ public class NeoEpitopeFinder
             mFileWriter.write(String.format("%s,%s,%s",
                     sampleId, fusion.name(), fusion.upstreamTrans().geneName().equals(fusion.downstreamTrans().geneName())));
 
-            mFileWriter.write(String.format(",%s,%s,%s",
-                    data.upstreamAcids(), data.downstreamAcids(), data.novelAcid()));
+            mFileWriter.write(String.format(",%s,%s,%s,%d",
+                    data.upstreamAcids(), data.downstreamAcids(), data.novelAcid(), data.downstreamNmdBases()));
 
             for(int se = SE_START; se <= SE_END; ++se)
             {

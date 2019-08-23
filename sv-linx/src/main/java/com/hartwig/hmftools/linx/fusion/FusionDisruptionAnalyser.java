@@ -73,10 +73,10 @@ public class FusionDisruptionAnalyser
     private List<String> mKnownFusionGenes;
     private LinxConfig mConfig;
 
+    private FusionParameters mFusionParams;
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
-    private boolean mSkipUnphasedFusions;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
@@ -116,6 +116,7 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
+        mFusionParams = new FusionParameters();
 
         mVisWriter = null;
         mRnaFusionMapper = null;
@@ -188,7 +189,7 @@ public class FusionDisruptionAnalyser
             }
 
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
-            mSkipUnphasedFusions = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
+            mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
 
             mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
@@ -424,8 +425,10 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(
-                    genesListStart, genesListEnd, mSkipUnphasedFusions, true, null, true);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams, true);
+
+            if(mNeoEpitopeFinder != null)
+                mNeoEpitopeFinder.checkFusions(fusions, genesListStart, genesListEnd);
 
             if (fusions.isEmpty())
                 continue;
@@ -570,8 +573,6 @@ public class FusionDisruptionAnalyser
                 lowerBreakend = prevPair.secondBreakend();
             }
 
-            //isSpecificSV(lowerSV);
-
             if (lowerSV.isSglBreakend())
                 continue;
 
@@ -607,8 +608,6 @@ public class FusionDisruptionAnalyser
                     upperSV = upperBreakend.getSV();
                 }
 
-                // isSpecificSV(upperSV);
-
                 List<GeneAnnotation> genesListUpper = Lists.newArrayList(upperSV.getGenesList(upperBreakend.usesStart()));
                 applyGeneRestrictions(genesListUpper);
 
@@ -636,12 +635,10 @@ public class FusionDisruptionAnalyser
                 */
 
                 // test the fusion between these 2 breakends
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams, false);
 
-                // boolean logFusionReasons = isSpecificSV(lowerBreakend.getSV()) & isSpecificSV(upperBreakend.getSV());
-                // mFusionFinder.setLogInvalidReasons(logFusionReasons);
-
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper,
-                        mSkipUnphasedFusions, true, null, false);
+                if(mNeoEpitopeFinder != null)
+                    mNeoEpitopeFinder.checkFusions(fusions, genesListLower, genesListUpper);
 
                 if(fusions.isEmpty())
                     continue;
@@ -1058,13 +1055,13 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // only add viable fusions for upload
-            if(!fusion.isViable())
+            if(!fusion.isViable() || fusion.neoEpitopeOnly())
                 continue;
 
             // gather up all other candidate fusions for this pairing and take the highest priority
             List<GeneFusion> similarFusions = mFusions.stream()
                     .filter(x -> !x.reportable())
-                    .filter(x -> x.isViable())
+                    .filter(x -> x.isViable() && !x.neoEpitopeOnly())
                     .filter(x -> x != fusion)
                     .filter(x -> x.name().equals(fusion.name()))
                     .collect(Collectors.toList());
@@ -1134,6 +1131,9 @@ public class FusionDisruptionAnalyser
 
     private void writeFusionData(final GeneFusion fusion)
     {
+        if(fusion.neoEpitopeOnly())
+            return;
+
         // write fusions in detail
         if (fusion.reportable() || !mLogReportableOnly)
         {
