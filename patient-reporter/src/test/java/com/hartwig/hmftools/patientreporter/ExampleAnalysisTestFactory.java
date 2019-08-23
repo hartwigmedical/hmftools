@@ -64,7 +64,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
 
         final String sampleId = "PNT00012345T";
-        final SampleReport sampleReport = createCOLO829SampleReport(sampleId);
+        final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
         final String clinicalSummary = "Melanoma sample with an activating BRAF mutation that is associated with "
                 + "response to BRAF-inhibitors (in combination with a MEK-inhibitor). The tumor shows a complete "
@@ -118,7 +118,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
-        final SampleReport sampleReport = createCOLO829SampleReport(sampleId);
+        final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
@@ -165,7 +165,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
-        final SampleReport sampleReport = createCOLO829SampleReport(sampleId);
+        final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
@@ -193,10 +193,10 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static SampleReport createCOLO829SampleReport(@NotNull String sample) {
+    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
         return ImmutableSampleReport.builder()
                 .sampleId(sample)
-                .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
+                .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
                 .refBarcode("FR12123488")
                 .refArrivalDate(LocalDate.parse("01-Jan-2019", DATE_FORMATTER))
                 .tumorBarcode("FR12345678")
@@ -210,7 +210,7 @@ public final class ExampleAnalysisTestFactory {
                 .hospitalName(Strings.EMPTY)
                 .hospitalPIName(Strings.EMPTY)
                 .hospitalPIEmail(Strings.EMPTY)
-                .projectName("COLO")
+                .projectName("TEST")
                 .submissionId("10")
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")

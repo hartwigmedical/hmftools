@@ -37,19 +37,19 @@ public class CFReportWriterTest {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829();
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
-        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath("hmf_test_sequence_report.pdf"));
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath("hmf_colo829_sequence_report.pdf"));
     }
 
     @Test
-    public void canGeneratePatientReportForCompletelyFilledInReport() throws IOException {
+    public void canGeneratePatientReportForCPCTSample() throws IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01000001T");
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
-        writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_full_test_sequence_report.pdf"));
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_cpct_sequence_report.pdf"));
     }
 
     @Test
-    public void canGeneratePatientReportForCoreReport() throws IOException {
+    public void canGeneratePatientReportForCORESample() throws IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CORE01000001T");
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
@@ -57,7 +57,7 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGeneratePatientReportForWIDEReport() throws IOException {
+    public void canGeneratePatientReportForWIDESample() throws IOException {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("WIDE01000001T");
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
@@ -65,8 +65,9 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGeneratePatientReportForBelowDetectionSamples() throws IOException {
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01000001T");
+    public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesForBelowDetectionLimitSample("CPCT01000001T");
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_below_detection_limit_sequence_report.pdf"));
@@ -74,22 +75,35 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLowTumorPercentageReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", "10%", null, QCFailReason.LOW_TUMOR_PERCENTAGE, testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T",
+                "10%",
+                null,
+                QCFailReason.LOW_TUMOR_PERCENTAGE,
+                testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
     }
 
     @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", "60%", null, QCFailReason.LOW_DNA_YIELD, testReportFilePath("hmf_low_dna_yield_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                null,
+                QCFailReason.LOW_DNA_YIELD,
+                testReportFilePath("hmf_low_dna_yield_report.pdf"));
     }
 
     @Test
     public void canGenerateInsufficientTissue() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", "60%", null, QCFailReason.INSUFFICIENT_TISSUE, testReportFilePath("hmf_insufficient_tissue_report.pdf"));
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
+                null,
+                QCFailReason.INSUFFICIENT_TISSUE,
+                testReportFilePath("hmf_insufficient_tissue_report.pdf"));
     }
 
     @Test
     public void canGeneratePostDNAIsolationFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", "60%",
+        generateQCFailCPCTReport("CPCT01000001T",
+                "60%",
                 null,
                 QCFailReason.POST_ANALYSIS_FAIL,
                 testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
@@ -97,7 +111,8 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLowMolecularTumorPercentageCORE() throws IOException {
-        generateQCFailCPCTReport("CORE01000001T", null,
+        generateQCFailCPCTReport("CORE01000001T",
+                null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_core_report.pdf"));
@@ -105,22 +120,24 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateLowMolecularTumorPercentageWIDE() throws IOException {
-        generateQCFailCPCTReport("WIDE01000001T", null,
+        generateQCFailCPCTReport("WIDE01000001T",
+                null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_wide_report.pdf"));
     }
 
     @Test
-    public void canGenerateLowMolecularTumorPercentage() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T", null,
+    public void canGenerateLowMolecularTumorPercentageCPCT() throws IOException {
+        generateQCFailCPCTReport("CPCT01000001T",
+                null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf"));
     }
 
-    private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String pathologyTumorPercentage, @Nullable String shallowSeqPurity,
-            @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
+    private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String pathologyTumorPercentage,
+            @Nullable String shallowSeqPurity, @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId(sampleId)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
