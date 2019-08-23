@@ -124,6 +124,10 @@ public final class ReportResources {
         return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+    public static Style subTextSmallStyle() {
+        return new Style().setFont(fontRegular()).setFontSize(5).setFontColor(ReportResources.PALETTE_BLACK);
+    }
+
     public static Style subTextBoldStyle() {
         return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
     }

@@ -49,10 +49,10 @@ public class CFReportWriter implements ReportWriter {
     }
 
     @Override
-    public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath)
-            throws IOException {
+    public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         writeReport(report,
-                new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report), new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
+                new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
+                        new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
                         new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                         new DetailsAndDisclaimerChapter(report) },
                 outputFilePath);
