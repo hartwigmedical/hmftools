@@ -19,4 +19,6 @@ public abstract class NeoEpitopeData
 
     public abstract String novelAcid();
 
+    public abstract int downstreamNmdBases();
+
 }

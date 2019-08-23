@@ -493,6 +493,7 @@ public class NeoEpitopeTest
         assertTrue(data.upstreamAcids().equals("MS"));
         assertTrue(data.novelAcid().equals("GGGGG"));
         assertTrue(data.downstreamAcids().equals(""));
+        assertEquals(10, data.downstreamNmdBases());
     }
 
 }
