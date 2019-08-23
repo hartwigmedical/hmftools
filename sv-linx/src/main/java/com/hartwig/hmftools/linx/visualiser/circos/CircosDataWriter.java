@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -34,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
+    private static final int MAX_POSITIONS = 60;
     private static final int SCATTER_GLYPH_SIZE = 20;
     private static final int SCATTER_GLYPH_SIZE_INNER = 14;
 
@@ -51,19 +53,26 @@ public class CircosDataWriter
     private final ColorPicker colorPicker;
     private final SvCircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
+    private final CircosData data;
+    private final double maxPloidy;
 
-    public CircosDataWriter(final ColorPicker colorPicker, @NotNull final String sample,
+    public CircosDataWriter(
+            @NotNull final ColorPicker colorPicker,
+            @NotNull final String sample,
             @NotNull final String outputDir,
             @NotNull final SvCircosConfig circosConfig,
-            @NotNull final CircosConfigWriter configWriter)
+            @NotNull final CircosConfigWriter configWriter,
+            @NotNull final CircosData data)
     {
+        this.data = data;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
+        this.maxPloidy = data.maxPloidy();
     }
 
-    public void write(@NotNull final CircosData data) throws IOException
+    public void write() throws IOException
     {
         final Map<String, String> geneColorMap = Maps.newHashMap();
         data.genes().forEach(x -> geneColorMap.put(x.name(), SINGLE_GREEN));
@@ -566,8 +575,32 @@ public class CircosDataWriter
     @NotNull
     private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
-        final Set<String> result = Sets.newHashSet();
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
+        if (circosConfig.exactPosition())
+        {
+            return createPositionText(1, positions, POSITION_FORMAT::format);
+        }
+
+        final List<String> positionsEvery100k = createPositionText(100_000, positions, CircosDataWriter::shorthand);
+        if (positionsEvery100k.size() < MAX_POSITIONS)
+        {
+            return positionsEvery100k;
+        }
+
+        final List<String> positionsEvery1M = createPositionText(1_000_000, positions, CircosDataWriter::shorthand);
+        if (positionsEvery1M.size() < MAX_POSITIONS)
+        {
+            return positionsEvery1M;
+        }
+
+        return createPositionText(10_000_000, positions, CircosDataWriter::shorthand);
+    }
+
+    @NotNull
+    private List<String> createPositionText(int minDistance, @NotNull final List<AdjustedPosition> positions,
+            @NotNull final Function<Long, String> formatter)
+    {
+        final Set<String> result = Sets.newHashSet();
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
 
         for (final String contig : contigs)
@@ -577,14 +610,11 @@ public class CircosDataWriter
             {
                 if (adjustedPosition.chromosome().equals(contig))
                 {
-                    long position = circosConfig.exactPosition()
-                            ? adjustedPosition.unadjustedPosition()
-                            : adjustedPosition.unadjustedPosition() / 100_000;
+                    long newPosition = adjustedPosition.unadjustedPosition();
 
-                    if (position > currentPosition)
+                    if (newPosition - minDistance >= currentPosition)
                     {
-                        String positionLabel = circosConfig.exactPosition() ?
-                                POSITION_FORMAT.format(position) : String.valueOf(position / 10d + "m");
+                        String positionLabel = formatter.apply(adjustedPosition.unadjustedPosition());
 
                         if (circosConfig.showSvId())
                         {
@@ -598,7 +628,7 @@ public class CircosDataWriter
                                 .toString();
 
                         result.add(start);
-                        currentPosition = position;
+                        currentPosition = newPosition;
                     }
                 }
             }
@@ -614,14 +644,15 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private static String thicknessString(double usage)
+    private String thicknessString(double usage)
     {
         return "thickness=" + thicknessPixels(usage);
     }
 
-    static double thicknessPixels(double usage)
+    private double thicknessPixels(double ploidy)
     {
-        return Math.min(12, Math.max(1, Math.pow(2 * usage, 1)));
+        double scaledUsage = ploidy / Math.max(6, Math.min(60, maxPloidy));
+        return Math.min(12, Math.max(1, Math.pow(2 * scaledUsage, 1)));
     }
 
     @NotNull

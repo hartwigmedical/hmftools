@@ -8,3 +8,6 @@ hs16	176	176	3	color=chain_2,glyph=square,glyph_size=90
 
 hs18	60	60	1	color=chain_1,glyph=circle,glyph_size=60
 hs18	176	176	1	color=chain_1,glyph=square,glyph_size=90
+
+hs18	120	120	3	color=chain_2,glyph=circle,glyph_size=60
+hs18	176	176	3	color=chain_2,glyph=square,glyph_size=90

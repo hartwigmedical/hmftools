@@ -250,7 +250,7 @@ public class SvVisualiser implements AutoCloseable
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
         confWrite.writeConfig();
 
-        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite).write(circosData);
+        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData).write();
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),

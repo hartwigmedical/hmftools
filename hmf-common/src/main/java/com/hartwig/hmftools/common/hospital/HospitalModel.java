@@ -28,19 +28,38 @@ public abstract class HospitalModel {
     @NotNull
     abstract Map<String, HospitalSampleMapping> sampleHospitalMapping();
 
+    @NotNull
+    abstract Map<String, HospitalCore> hospitalCoreMap();
+
     public int hospitalCount() {
         return hospitalPerId().values().size();
     }
 
     @NotNull
     public HospitalQuery queryHospitalDataForSample(@NotNull String sample) {
-        HospitalData hospital = findHospitalForSample(sample);
-        return ImmutableHospitalQuery.builder()
-                .hospitalName(hospital != null ? hospital.externalHospitalName() : NA_STRING)
-                .fullAddresseeString(hospital != null ? fullAddresseeString(sample, hospital) : NA_STRING)
-                .principalInvestigatorName(hospital != null ? determinePIName(sample, hospital) : NA_STRING)
-                .principalInvestigatorEmail(hospital != null ? determinePIEmail(sample, hospital) : NA_STRING)
-                .build();
+        if (sample.startsWith("CORE")) {
+            HospitalCore hospitalCore = findHospitalForSampleCore(sample);
+            return ImmutableHospitalQuery.builder()
+                    .hospitalName(hospitalCore != null ? hospitalCore.externalHospitalName() : NA_STRING)
+                    .fullAddresseeString(hospitalCore != null ? fullAddresseeStringCore(hospitalCore) : NA_STRING)
+                    .principalInvestigatorName(NA_STRING)
+                    .principalInvestigatorEmail(NA_STRING)
+                    .build();
+
+        } else {
+            HospitalData hospital = findHospitalForSample(sample);
+            return ImmutableHospitalQuery.builder()
+                    .hospitalName(hospital != null ? hospital.externalHospitalName() : NA_STRING)
+                    .fullAddresseeString(hospital != null ? fullAddresseeString(sample, hospital) : NA_STRING)
+                    .principalInvestigatorName(hospital != null ? determinePIName(sample, hospital) : NA_STRING)
+                    .principalInvestigatorEmail(hospital != null ? determinePIEmail(sample, hospital) : NA_STRING)
+                    .build();
+        }
+    }
+
+    @NotNull
+    private static String fullAddresseeStringCore(@NotNull HospitalCore hospital) {
+        return hospital.externalHospitalName() + ", " + hospital.addressZip() + " " + hospital.addressCity();
     }
 
     @NotNull
@@ -59,8 +78,8 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalData findHospitalForSample(@NotNull String sample) {
-        final HospitalData hospital;
+    private HospitalCore findHospitalForSampleCore(@NotNull String sample) {
+        final HospitalCore hospital;
         if (sample.startsWith("CORE19") || sample.contains("CORE18")) {
             // These are the old core names, we need to manually map them.
             HospitalSampleMapping hospitalSampleMapping = sampleHospitalMapping().get(sample);
@@ -68,7 +87,7 @@ public abstract class HospitalModel {
                 LOGGER.error("Cannot find sample hospital mapping for sample {}.", sample);
                 return null;
             } else {
-                hospital = findByHospital(hospitalSampleMapping.internalHospitalName());
+                hospital = findByHospitalCore(hospitalSampleMapping.internalHospitalName());
                 if (hospital == null) {
                     LOGGER.error("Cannot find hospital details for sample {} using {}.",
                             sample,
@@ -83,7 +102,7 @@ public abstract class HospitalModel {
                 return null;
             }
 
-            hospital = hospitalPerId().get(hospitalId);
+            hospital = hospitalCoreMap().get(hospitalId);
             if (hospital == null) {
                 LOGGER.warn("Hospital model does not contain id {}.", hospitalId);
                 return null;
@@ -94,13 +113,30 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalData findByHospital(@NotNull String hospital) {
-        for (HospitalData hospitalData : hospitalPerId().values()) {
-            if (hospitalData.internalHospitalName().equals(hospital)) {
-                return hospitalData;
+    private HospitalCore findByHospitalCore(@NotNull String hospital) {
+        for (HospitalCore hospitalCore : hospitalCoreMap().values()) {
+            if (hospitalCore.internalHospitalName().equals(hospital)) {
+                return hospitalCore;
             }
         }
         return null;
+    }
+
+    @Nullable
+    private HospitalData findHospitalForSample(@NotNull String sample) {
+        final HospitalData hospital;
+        String hospitalId = extractHospitalIdFromSample(sample);
+        if (hospitalId == null) {
+            LOGGER.warn("Could not find hospital for sample: {}", sample);
+            return null;
+        }
+
+        hospital = hospitalPerId().get(hospitalId);
+        if (hospital == null) {
+            LOGGER.warn("Hospital model does not contain id {}.", hospitalId);
+            return null;
+        }
+        return hospital;
     }
 
     @Nullable
