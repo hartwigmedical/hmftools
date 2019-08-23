@@ -25,4 +25,9 @@ public class ExonData
         return !(ExonStart > other.ExonEnd || ExonEnd < other.ExonStart);
     }
 
+    public String toString()
+    {
+        return String.format("%d: range(%d -> %d) phases(%d -> %d)", ExonRank, ExonStart, ExonEnd, ExonPhase, ExonPhaseEnd);
+    }
+
 }

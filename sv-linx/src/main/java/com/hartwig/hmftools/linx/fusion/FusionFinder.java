@@ -364,7 +364,7 @@ public class FusionFinder
         return transUp.exactCodingBase() == transDown.exactCodingBase();
     }
 
-    private static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
+    public static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
     {
         if(!t1.geneName().equals(t2.geneName()))
             return true;
@@ -509,7 +509,7 @@ public class FusionFinder
 
     public static boolean couldBeReportable(GeneFusion fusion)
     {
-        if(!fusion.phaseMatched())
+        if(!fusion.phaseMatched() || fusion.neoEpitopeOnly())
             return false;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
