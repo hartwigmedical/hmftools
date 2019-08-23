@@ -73,10 +73,10 @@ public class FusionDisruptionAnalyser
     private List<String> mKnownFusionGenes;
     private LinxConfig mConfig;
 
+    private FusionParameters mFusionParams;
     private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
-    private boolean mSkipUnphasedFusions;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
@@ -116,6 +116,7 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
+        mFusionParams = new FusionParameters();
 
         mVisWriter = null;
         mRnaFusionMapper = null;
@@ -188,7 +189,7 @@ public class FusionDisruptionAnalyser
             }
 
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
-            mSkipUnphasedFusions = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
+            mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
 
             mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
@@ -424,8 +425,7 @@ public class FusionDisruptionAnalyser
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
 
-            List<GeneFusion> fusions = mFusionFinder.findFusions(
-                    genesListStart, genesListEnd, mSkipUnphasedFusions, true, null, true);
+            List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams, true);
 
             if (fusions.isEmpty())
                 continue;
@@ -640,8 +640,7 @@ public class FusionDisruptionAnalyser
                 // boolean logFusionReasons = isSpecificSV(lowerBreakend.getSV()) & isSpecificSV(upperBreakend.getSV());
                 // mFusionFinder.setLogInvalidReasons(logFusionReasons);
 
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper,
-                        mSkipUnphasedFusions, true, null, false);
+                List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams, false);
 
                 if(fusions.isEmpty())
                     continue;

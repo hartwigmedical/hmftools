@@ -115,7 +115,12 @@ public class FusionTest
         downGenes.get(2).setPositionalData(chromosome, 10650, negOrient);
         downGenes.get(3).setPositionalData(chromosome, 10850, negOrient);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, true, true, null, false);
+
+        FusionParameters params = new FusionParameters();
+        params.RequirePhaseMatch = true;
+        params.AllowExonSkipping = true;
+
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
         fusions.forEach(x -> x.setKnownType(REPORTABLE_TYPE_KNOWN));
         tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
 

@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeData;
@@ -139,8 +140,10 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        FusionParameters params = new FusionParameters();
+
+        // List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
@@ -162,8 +165,7 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
-        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
@@ -185,8 +187,7 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
-        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
@@ -208,8 +209,7 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
-        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
@@ -332,8 +332,9 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
-        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        FusionParameters params = new FusionParameters();
+
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
@@ -355,8 +356,7 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
-        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
@@ -379,8 +379,7 @@ public class NeoEpitopeTest
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, posOrient);
 
-        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes,
-                false, true, null, false);
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, false);
 
         neoEpFinder.reportNeoEpitopes(tester.SampleId, fusions);
 
