@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import java.net.MalformedURLException;
+
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
@@ -9,8 +11,6 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.net.MalformedURLException;
 
 public final class ReportSignature {
 
@@ -26,7 +26,7 @@ public final class ReportSignature {
     public static Div createSignatureDiv(@NotNull String rvaLogoPath, @NotNull String signaturePath) throws IOException {
         Div div = new Div();
         div.setKeepTogether(true);
-        div.setMarginTop(80);
+        div.setMarginTop(40);
 
         try {
             final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
