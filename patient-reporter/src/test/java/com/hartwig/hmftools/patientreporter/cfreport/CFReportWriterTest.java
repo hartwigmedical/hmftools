@@ -133,7 +133,7 @@ public class CFReportWriterTest {
                 null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
-                testReportFilePath("hmf_low_molecular_tumor_percentage_report.pdf"));
+                testReportFilePath("hmf_low_molecular_tumor_percentage_cpct_report.pdf"));
     }
 
     private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String pathologyTumorPercentage,
