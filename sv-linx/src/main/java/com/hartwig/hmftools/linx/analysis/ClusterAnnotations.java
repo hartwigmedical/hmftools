@@ -11,13 +11,8 @@ import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredReso
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_AFTER;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_AFTER;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_MAP_BEFORE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
@@ -39,6 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -920,7 +916,7 @@ public class ClusterAnnotations
             centromereMinFacingPloidy = netPloidies[1];
 
             // get centromere & telomere data
-            double[] centromereCNData = cnAnalyser.getCentromereCopyNumberData(chromosome, arm.equals(CHROMOSOME_ARM_P));
+            final TelomereCentromereCnData tcData = cnAnalyser.getChrTeleCentroData().get(chromosome);
             double telomereCN = 0;
             double telomereMAP = 0;
 
@@ -1026,10 +1022,9 @@ public class ClusterAnnotations
                     telomereEndPos, centromereEndPos, telomereEndCN, centromereEndCN, telomereEndMap, centromereEndMap,
                     telomereMinFacingPloidy, centromereMinFacingPloidy);
 
-            // TeleCN,TeloMAP,PreCentroCN,PreCentroMAP,PostCentroCN,PostCentroMAP
-            infoStr += String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                    telomereCN, telomereMAP, centromereCNData[CN_SEG_DATA_CN_BEFORE], centromereCNData[CN_SEG_DATA_MAP_BEFORE],
-                    centromereCNData[CN_SEG_DATA_CN_AFTER], centromereCNData[CN_SEG_DATA_MAP_AFTER]);
+            // TeleCN,TeloMAP,PreCentroCN,PostCentroCN
+            infoStr += String.format(",%.2f,%.2f,%.2f,%.2f",
+                    telomereCN, telomereMAP, tcData != null ? tcData.CentromerePArm : 0, tcData != null ? tcData.CentromereQArm : 0);
 
             // MaxFoldbackPloidy,OpposingClusterCount,OpposingClusterInfo
             infoStr += String.format(",%.2f,%d,%s",

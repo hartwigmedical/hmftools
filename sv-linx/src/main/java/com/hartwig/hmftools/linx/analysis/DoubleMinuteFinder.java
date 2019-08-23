@@ -11,9 +11,8 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWrite
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_CENTROMERE;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
@@ -41,8 +40,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.SvCNData;
+import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -339,9 +338,9 @@ public class DoubleMinuteFinder
 
     private boolean hasTelomereOrCentromereAmplication(final String chromosome, final String arm)
     {
-        final double[] cnData = mCnAnalyser.getChrCopyNumberMap().get(chromosome);
+        final TelomereCentromereCnData tcData = mCnAnalyser.getChrTeleCentroData().get(chromosome);
 
-        if(cnData == null)
+        if(tcData == null)
             return false;
 
         //  we want to check telomere / centromere CN < max (8, 3x sample ploidy).
@@ -350,13 +349,14 @@ public class DoubleMinuteFinder
         if(samplePurity == null)
             return false;
 
-        double telomereCN = (arm == CHROMOSOME_ARM_CENTROMERE) ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN];
+        double centromereCopyNumber = arm == CHROMOSOME_ARM_P ? tcData.CentromerePArm : tcData.CentromereQArm;
+        double telomereCopyNumber = arm == CHROMOSOME_ARM_P ? tcData.TelomerePArm : tcData.TelomereQArm;
 
-        if(cnData[CENTROMERE_CN] > PLOIDY_THRESHOLD || telomereCN > PLOIDY_THRESHOLD)
+        if(centromereCopyNumber > PLOIDY_THRESHOLD || telomereCopyNumber > PLOIDY_THRESHOLD)
             return true;
 
-        if(telomereCN > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C
-        || cnData[CENTROMERE_CN] > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C)
+        if(telomereCopyNumber > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C
+        || centromereCopyNumber > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C)
             return true;
 
         return false;

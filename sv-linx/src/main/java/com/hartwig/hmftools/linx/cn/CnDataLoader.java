@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.linx.cn;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
@@ -54,7 +51,7 @@ public class CnDataLoader
 
     private List<LohEvent> mLohEventData;
     private List<HomLossEvent> mHomLossData;
-    private Map<String, double[]> mChrEndsCNMap; // telemore and centromere CN values
+    private Map<String, TelomereCentromereCnData> mChrEndsCNMap; // telemore and centromere CN values
     private CnPloidyCalcs mCnPloidyCalcs;
 
     public static final double MIN_LOH_CN = 0.5;
@@ -90,7 +87,7 @@ public class CnDataLoader
     public final Map<Integer,PloidyCalcData> getSvPloidyCalcMap() { return mCnPloidyCalcs.getSvPloidyCalcMap(); }
     public final List<LohEvent> getLohData() { return mLohEventData; }
     public final List<HomLossEvent> getHomLossData() { return mHomLossData; }
-    public final Map<String, double[]> getChrCopyNumberMap() { return mChrEndsCNMap; }
+    public final Map<String, TelomereCentromereCnData> getChrTeleCentroData() { return mChrEndsCNMap; }
     public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
     public final Map<Integer,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
     public final PurityContext getPurityContext() { return mPurityContext; }
@@ -603,70 +600,35 @@ public class CnDataLoader
     {
         mChrEndsCNMap.clear();
 
-        double[] currentChrData = null;
+        double telomerePArm = 0;
+        double telomereQArm = 0;
+        double centromerePArm = 0;
+        double centromereQArm = 0;
 
         for(final PurpleCopyNumber cnRecord : mCnRecords)
         {
             if(cnRecord.segmentStartSupport().equals(TELOMERE))
             {
-                currentChrData = new double[Q_ARM_TELOMERE_CN+1];
-                mChrEndsCNMap.put(cnRecord.chromosome(), currentChrData);
-                currentChrData[P_ARM_TELOMERE_CN] = cnRecord.averageTumorCopyNumber();
+                telomerePArm = cnRecord.averageTumorCopyNumber();
             }
-            else if(cnRecord.segmentStartSupport().equals(CENTROMERE))
+
+            if(cnRecord.segmentEndSupport().equals(CENTROMERE))
             {
-                currentChrData[CENTROMERE_CN] = cnRecord.averageTumorCopyNumber();
+                centromerePArm = cnRecord.averageTumorCopyNumber();
             }
-            else if(cnRecord.segmentEndSupport().equals(TELOMERE))
+
+            if(cnRecord.segmentStartSupport().equals(CENTROMERE))
             {
-                currentChrData[Q_ARM_TELOMERE_CN] = cnRecord.averageTumorCopyNumber();
+                centromereQArm = cnRecord.averageTumorCopyNumber();
+            }
+
+            if(cnRecord.segmentEndSupport().equals(TELOMERE))
+            {
+                telomereQArm = cnRecord.averageTumorCopyNumber();
+                mChrEndsCNMap.put(
+                        cnRecord.chromosome(), new TelomereCentromereCnData(telomerePArm, telomereQArm, centromerePArm, centromereQArm));
             }
         }
-    }
-
-    public static int CN_SEG_DATA_CN_BEFORE = 0;
-    public static int CN_SEG_DATA_MAP_BEFORE = 1;
-    public static int CN_SEG_DATA_CN_AFTER = 2;
-    public static int CN_SEG_DATA_MAP_AFTER = 3;
-
-    public double[] getCentromereCopyNumberData(final String chromosome, boolean fromPArm)
-    {
-        // get copy number and major allele ploidy for the segment leading up and leading from the centromere
-        List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
-
-        double[] results = new double[CN_SEG_DATA_MAP_AFTER+1];
-
-        if(cnDataList == null || cnDataList.isEmpty())
-            return results;
-
-        for(int i = 0; i < cnDataList.size(); ++i)
-        {
-            SvCNData cnData = cnDataList.get(i);
-
-            if(cnData.matchesSegment(CENTROMERE, false))
-            {
-                SvCNData nextCnData = cnDataList.get(i+1);
-
-                if(fromPArm)
-                {
-                    results[CN_SEG_DATA_CN_BEFORE] = cnData.CopyNumber;
-                    results[CN_SEG_DATA_MAP_BEFORE] = cnData.majorAllelePloidy();
-                    results[CN_SEG_DATA_CN_AFTER] = nextCnData.CopyNumber;
-                    results[CN_SEG_DATA_MAP_AFTER] = nextCnData.majorAllelePloidy();
-                }
-                else
-                {
-                    results[CN_SEG_DATA_CN_BEFORE] = nextCnData.CopyNumber;
-                    results[CN_SEG_DATA_MAP_BEFORE] = nextCnData.majorAllelePloidy();
-                    results[CN_SEG_DATA_CN_AFTER] = cnData.CopyNumber;
-                    results[CN_SEG_DATA_MAP_AFTER] = cnData.majorAllelePloidy();
-                }
-
-                break;
-            }
-        }
-
-        return results;
     }
 
 }

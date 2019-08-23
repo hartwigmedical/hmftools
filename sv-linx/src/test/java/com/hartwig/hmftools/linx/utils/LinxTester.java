@@ -195,6 +195,8 @@ public class LinxTester
         if(includePloidyCalcs)
             CnDataLoader.calculateAdjustedPloidy(SampleId);
 
+        CnDataLoader.createChrCopyNumberMap();
+
         setSvCopyNumberData(
                 AllVariants,
                 CnDataLoader.getSvPloidyCalcMap(),

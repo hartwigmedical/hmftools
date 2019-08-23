@@ -36,7 +36,6 @@ public class AmpDriversTest
     @Test
     public void testAmpDrivers()
     {
-        // test the selection and prioritisation logic from a collection of valid fusions
         LinxTester tester = new LinxTester();
         tester.logVerbose(true);
 

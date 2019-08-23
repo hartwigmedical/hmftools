@@ -24,16 +24,8 @@ public class DriverGeneEvent
     private String mSvInfo;
 
     // types of SVs which caused this event
-    public static final String SV_DRIVER_TYPE_TI = "TI";
-    public static final String SV_DRIVER_TYPE_FOLDBACK = "FOLDBACK";
-    public static final String SV_DRIVER_TYPE_MAX_PLOIDY = "MAX_PLOIDY";
-    public static final String SV_DRIVER_TYPE_NET_PLOIDY = "NET_PLOIDY";
-    public static final String SV_DRIVER_TYPE_DUP = "DUP";
-    public static final String SV_DRIVER_TYPE_DM = "DM";
     public static final String SV_DRIVER_TYPE_DEL = "DEL";
     public static final String SV_DRIVER_TYPE_ARM_SV = "ARM_SV";
-    public static final String SV_DRIVER_TYPE_CENTRO_SV = "CENTRO_SV";
-    public static final String SV_DRIVER_TYPE_COMPLEX_CLUSTER = "COMPLEX";
 
     public DriverGeneEvent(DriverEventType type)
     {

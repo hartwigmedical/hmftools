@@ -11,9 +11,7 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWrite
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CN_SEG_DATA_CN_BEFORE;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
@@ -21,11 +19,7 @@ import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_CHR;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_CENTRO_SV;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -57,6 +51,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
+import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -402,7 +397,7 @@ public class DriverGeneAnnotator
             }
             else if(lohEvent.isSvEvent())
             {
-                DriverGeneEvent event = new DriverGeneEvent(LOH_ARM);
+                DriverGeneEvent event = new DriverGeneEvent(LOH);
                 event.setLohEvent(lohEvent);
                 event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_ARM_SV);
                 dgData.addEvent(event);
@@ -421,20 +416,8 @@ public class DriverGeneAnnotator
                 dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
                 formatPloidy(dgData.GeneCN.minCopyNumber()));
 
-        checkArmAmplification(dgData);
-        checkClusterAmplification(dgData, breakendList, false);
-
-        /*
-        if(dgData.getEvents().isEmpty())
-        {
-            checkClusterAmplification(dgData, breakendList, false);
-        }
-        */
-
-        if(dgData.getEvents().isEmpty())
-        {
-            checkAmpInCentromere(dgData, breakendList);
-        }
+        checkChromosomeAmplification(dgData);
+        checkClusterAmplification(dgData, breakendList);
 
         if(dgData.getEvents().isEmpty())
         {
@@ -446,48 +429,48 @@ public class DriverGeneAnnotator
         }
     }
 
-    private void checkArmAmplification(final DriverGeneData dgData)
+    private void checkChromosomeAmplification(final DriverGeneData dgData)
     {
         // check for an arm or whole chromosome amplified above the sample ploidy
-        double[] cnData = mCopyNumberData.getChrCopyNumberMap().get(dgData.GeneData.Chromosome);
+        final TelomereCentromereCnData tcData = mCopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
 
-        // find the copy number leading into the centromere on the arm for this gene
-        double[] centromereCnData = mCopyNumberData.getCentromereCopyNumberData(
-                dgData.GeneData.Chromosome, dgData.Arm == CHROMOSOME_ARM_P);
-
-        if(cnData == null || centromereCnData == null)
+        if(tcData == null)
             return;
 
-        double centromereCopyNumber = centromereCnData[CN_SEG_DATA_CN_BEFORE];
+        double telomereCopyNumber = min(tcData.TelomerePArm, tcData.TelomereQArm);
 
-        double telomereCopyNumber = min(cnData[P_ARM_TELOMERE_CN], cnData[Q_ARM_TELOMERE_CN]);
-
-        double armCopyNumber = min(centromereCopyNumber,
-                dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]);
+        double centromereCopyNumber = min(tcData.CentromerePArm, tcData.CentromereQArm);
 
         double chromosomeCopyNumber = min(centromereCopyNumber, telomereCopyNumber);
 
         if(chromosomeCopyNumber/mSamplePloidy > 2)
         {
-            LOGGER.debug("gene({}) AMP gain from chromosomeCN({}) vs samplePloidy({})",
-                    dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber), formatPloidy(mSamplePloidy));
+            LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
+                    dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber),
+                    formatPloidy(telomereCopyNumber), formatPloidy(centromereCopyNumber), formatPloidy(mSamplePloidy));
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN_CHR);
             event.setCopyNumberGain(chromosomeCopyNumber - mSamplePloidy);
             dgData.addEvent(event);
         }
 
-        /* won't look for arm-level gains any more since SVs on the other arm are now considered, as is a change within the centromere
-        else if(armCopyNumber/mSamplePloidy > 2)
+        double centromereCNChange = dgData.Arm == CHROMOSOME_ARM_P ?
+                min(tcData.CentromerePArm, tcData.TelomerePArm) - tcData.CentromereQArm
+                : min(tcData.CentromereQArm, tcData.TelomereQArm) - tcData.CentromerePArm;
+
+        // double centromereCNChange = dgData.Arm == CHROMOSOME_ARM_P ?
+        //      tcData.CentromerePArm - tcData.CentromereQArm : tcData.CentromereQArm - tcData.CentromerePArm;
+
+        if (centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
         {
-            LOGGER.debug("gene({}) AMP gain from armCN({}) vs samplePloidy({})",
-                    dgData.GeneData.GeneName, formatPloidy(armCopyNumber), formatPloidy(mSamplePloidy));
+            LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
+                    dgData.GeneData.GeneName, dgData.Arm, formatPloidy(tcData.CentromerePArm), formatPloidy(tcData.CentromereQArm),
+                    formatPloidy(centromereCNChange));
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN_ARM);
-            event.setCopyNumberGain(armCopyNumber - mSamplePloidy);
+            event.setCopyNumberGain(centromereCNChange);
             dgData.addEvent(event);
         }
-        */
     }
 
     private OpposingSegment findOrCreateOpposingSegment(
@@ -665,9 +648,9 @@ public class DriverGeneAnnotator
         return null;
     }
 
-    private static final double MIN_AMP_PERCENT_VS_MAX = 0.25;
+    private static final double MIN_AMP_PERCENT_VS_MAX = 0.33;
 
-    private void checkClusterAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList, boolean restrictToArm)
+    private void checkClusterAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
     {
         if (breakendList == null || breakendList.isEmpty())
             return;
@@ -676,10 +659,8 @@ public class DriverGeneAnnotator
         long transStart = dgData.TransData.TransStart;
         long transEnd = dgData.TransData.TransEnd;
 
-        int centromereIndex = findCentromereBreakendIndex(breakendList, dgData.Arm);
-
-        int startIndex = (dgData.Arm == CHROMOSOME_ARM_P || !restrictToArm) ? 0 : centromereIndex;
-        int endIndex = (dgData.Arm == CHROMOSOME_ARM_P && restrictToArm ) ? centromereIndex : breakendList.size() - 1;
+        int startIndex = 0;
+        int endIndex = breakendList.size() - 1;
 
         Map<SvCluster,DriverAmpData> clusterAmpData = Maps.newHashMap();
 
@@ -735,11 +716,22 @@ public class DriverGeneAnnotator
         // from the identified AMP clusters, find the max and percentage contributions of each
         double maxCnChange = clusterAmpData.values().stream().mapToDouble(x -> x.NetCNChange).max().getAsDouble();
 
-        double chrArmGain = dgData.getEvents().stream()
-                .filter(x -> x.Type.equals(GAIN_ARM) || x.Type.equals(GAIN_CHR))
-                .mapToDouble(x -> x.getCopyNumberGain()).max().orElse(0);
+        int index = 0;
+        while(index < dgData.getEvents().size())
+        {
+            DriverGeneEvent event = dgData.getEvents().get(index);
+            double armChrGain = event.getCopyNumberGain();
 
-        maxCnChange = max(chrArmGain, maxCnChange);
+            if(armChrGain < MIN_AMP_PERCENT_VS_MAX * maxCnChange)
+            {
+                dgData.getEvents().remove(index);
+            }
+            else
+            {
+                maxCnChange = max(maxCnChange, armChrGain);
+                ++index;
+            }
+        }
 
         for(Map.Entry<SvCluster,DriverAmpData> entry : clusterAmpData.entrySet())
         {
@@ -755,41 +747,12 @@ public class DriverGeneAnnotator
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN);
             event.setCluster(cluster);
+            event.setCopyNumberGain(ampData.NetCNChange);
             event.setAmpData(ampData);
 
-            event.setSvInfo(String.format("%s;%d;%d;%.1f;%.1f",
-                    ampData.TraverseUp, ampData.BreakendCount, ampData.SegmentCount, ampData.StartCopyNumber, ampData.NetCNChange));
+            event.setSvInfo(String.format("%s;%d;%d;%.1f",
+                    ampData.TraverseUp, ampData.BreakendCount, ampData.SegmentCount, ampData.StartCopyNumber));
             dgData.addEvent(event);
-        }
-    }
-
-    private void checkAmpInCentromere(final DriverGeneData dgData, final List<SvBreakend> breakendList)
-    {
-        // check for a CN gain across the centromere
-        int centromereIndex = findCentromereBreakendIndex(breakendList, dgData.Arm);
-        int preCentromereIndex = dgData.Arm == CHROMOSOME_ARM_P ?  centromereIndex : centromereIndex - 1;
-        int postCentromereIndex = dgData.Arm == CHROMOSOME_ARM_P ? centromereIndex + 1 : centromereIndex;
-
-        if(preCentromereIndex >= 0 && postCentromereIndex < breakendList.size())
-        {
-            final SvBreakend preCentroBreakend = breakendList.get(preCentromereIndex);
-            final SvBreakend postCentroBreakend = breakendList.get(postCentromereIndex);
-
-            double preCopyNumber = preCentroBreakend.getCopyNumber(false);
-            double postCopyNumber = postCentroBreakend.getCopyNumber(true);
-            double centromereCNChange =
-                    dgData.Arm == CHROMOSOME_ARM_P ? preCopyNumber - postCopyNumber : postCopyNumber - preCopyNumber;
-
-            if (centromereCNChange > 0 && centromereCNChange > mSamplePloidy * 2)
-            {
-                LOGGER.debug("gene({}) copy number change across centromere({} -> {} = {})",
-                        dgData.GeneData.GeneName, formatPloidy(preCopyNumber), formatPloidy(postCopyNumber),
-                        formatPloidy(centromereCNChange));
-
-                DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.setSvInfo(SV_DRIVER_TYPE_CENTRO_SV);
-                dgData.addEvent(event);
-            }
         }
     }
 
@@ -863,8 +826,8 @@ public class DriverGeneAnnotator
 
                 mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod");
                 mFileWriter.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
-                mFileWriter.write(",PosStart,PosEnd,SvIdStart,SvIdEnd,SvMatchType,SvPloidy");
-                mFileWriter.write(",SamplePloidy,Chromosome,Arm,GeneMinCN,CentromereCN,TelomereCN");
+                mFileWriter.write(",Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain");
+                mFileWriter.write(",SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType");
                 mFileWriter.newLine();
             }
 
@@ -873,12 +836,10 @@ public class DriverGeneAnnotator
             final DriverCatalog driverGene = dgData.DriverData;
             final EnsemblGeneData geneData = dgData.GeneData;
 
-            double[] cnData = mCopyNumberData.getChrCopyNumberMap().get(geneData.Chromosome);
+            final TelomereCentromereCnData tcData = mCopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
 
-            double[] centromereCnData = mCopyNumberData.getCentromereCopyNumberData(
-                    dgData.GeneData.Chromosome, dgData.Arm == CHROMOSOME_ARM_P);
-
-            double centromereCopyNumber = centromereCnData[CN_SEG_DATA_CN_BEFORE];
+            double centromereCopyNumber = dgData.Arm == CHROMOSOME_ARM_P ? tcData.CentromerePArm : tcData.CentromereQArm;
+            double telomereCopyNumber = dgData.Arm == CHROMOSOME_ARM_P ? tcData.TelomerePArm : tcData.TelomereQArm;
 
             for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
@@ -901,20 +862,21 @@ public class DriverGeneAnnotator
 
                 // breakend info if present
 
+                // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain
+                // SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
+
+                writer.write(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
+                        geneData.Chromosome, dgData.Arm, mSamplePloidy, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
+                        centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
+
                 long posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
                 long posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
                 String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
                 String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 
-                double svPloidy = breakendPair[SE_START] != null ? breakendPair[SE_START].ploidy()
-                        : (breakendPair[SE_END] != null ? breakendPair[SE_END].ploidy() : 0);
+                writer.write(String.format(",%s,%s,%d,%d,%s",
+                        svIdStart, svIdEnd, posStart, posEnd, driverEvent.getSvInfo()));
 
-                writer.write(String.format(",%d,%d,%s,%s,%s,%.2f",
-                        posStart, posEnd, svIdStart, svIdEnd, driverEvent.getSvInfo(), svPloidy));
-
-                writer.write(String.format(",%.2f,%s,%s,%.2f,%.2f,%.2f",
-                        mSamplePloidy, geneData.Chromosome, dgData.Arm, dgData.GeneCN != null ? dgData.GeneCN.minCopyNumber() : -1,
-                        centromereCopyNumber, dgData.Arm == CHROMOSOME_ARM_P ? cnData[P_ARM_TELOMERE_CN] : cnData[Q_ARM_TELOMERE_CN]));
 
                 writer.newLine();
             }
@@ -1013,202 +975,5 @@ public class DriverGeneAnnotator
             LOGGER.error("Failed to read gene copy number CSV file({}): {}", gcnFileName, e.toString());
         }
     }
-
-    /* OLD AMP SV identification
-
-            /*
-        for(Map.Entry<SvCluster,List<SvBreakend>> entry : clusterBreakendsMap.entrySet())
-        {
-            final List<SvBreakend> clusterBreakends = entry.getValue();
-
-            List<SvLinkedPair> spanningLinks = Lists.newArrayList();
-            List<SvBreakend> facingFoldbacks = Lists.newArrayList();
-
-            SvBreakend maxFacingPloidyBreakend = null;
-            double maxFacingPloidy = 0;
-
-            for(final SvBreakend breakend : clusterBreakends)
-            {
-                boolean breakendFacesGene = (breakend.position() < transStart && breakend.orientation() == -1)
-                        || (breakend.position() > transEnd && breakend.orientation() == 1);
-
-                if (!breakendFacesGene)
-                    continue;
-
-                if(breakend.isFoldback())
-                {
-                    boolean hasFoldback = facingFoldbacks.stream().anyMatch(x -> x.getSV() == breakend.getSV()
-                            || x == breakend || x == breakend.getFoldbackBreakend());
-
-                    if(!hasFoldback)
-                        facingFoldbacks.add(breakend);
-                }
-
-                // make note of any TI which span the gene
-                for(final SvLinkedPair pair : breakend.getSV().getLinkedPairs(breakend.usesStart()))
-                {
-                    if(spanningLinks.contains(pair))
-                        continue;
-
-                    if(pair.getBreakend(true).position() < transStart && pair.getBreakend(false).position() > transEnd)
-                        spanningLinks.add(pair);
-                }
-
-                double breakendPloidy = max(breakend.ploidy(), breakend.copyNumberChange());
-
-                if(breakendPloidy > 1 && (maxFacingPloidyBreakend == null || breakendPloidy > maxFacingPloidyBreakend.ploidy()))
-                {
-                    maxFacingPloidyBreakend = breakend;
-                    maxFacingPloidy = breakendPloidy;
-                }
-            }
-
-            // work out net and max ploidy in each direction
-            double maxNetPloidy = 0;
-
-            for(int i = 0; i <= 1; ++i)
-            {
-                boolean traverseUp = (i == 0);
-
-                double netPloidy = 0;
-
-                int index = traverseUp ? 0 : clusterBreakends.size() - 1;
-                SvBreakend breakend = null;
-
-                while (true)
-                {
-                    if (breakend != null)
-                        index += traverseUp ? 1 : -1;
-
-                    if (index < 0 || index >= clusterBreakends.size())
-                        break;
-
-                    breakend = breakendList.get(index);
-
-                    boolean breakendFacesGene = ((breakend.orientation() != 1) == traverseUp);
-
-                    if((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
-                        break;
-
-                    netPloidy += breakendFacesGene ? breakend.ploidy() : -breakend.ploidy();
-                }
-
-                maxNetPloidy = max(maxNetPloidy, netPloidy);
-            }
-
-            if(spanningLinks.isEmpty() && maxFacingPloidy < mSamplePloidy && maxNetPloidy < mSamplePloidy && facingFoldbacks.isEmpty())
-                continue;
-
-            final SvCluster cluster = entry.getKey();
-
-            // report on type of SV which caused the amp
-            if(cluster.getSvCount() == 1 && cluster.getSV(0).type() == DUP && maxFacingPloidy > mSamplePloidy)
-            {
-                final SvVarData var = cluster.getSV(0);
-                final String matchType = cluster.hasAnnotation(CLUSTER_ANNOT_DM) ? SV_DRIVER_TYPE_DM : SV_DRIVER_TYPE_DUP;
-                DriverGeneEvent event = new DriverGeneEvent(GAIN);
-                event.setCluster(cluster);
-                event.addSvBreakendPair(var.getBreakend(true), var.getBreakend(false), matchType);
-                dgData.addEvent(event);
-
-                LOGGER.debug("gene({}) cluster({}) net ploidy({}) from DUP({}) type({}) sameArm({})",
-                        dgData.GeneData.GeneName, cluster.id(), formatPloidy(maxFacingPloidy), var.toString(), matchType, restrictToArm);
-
-                continue;
-            }
-
-            double spanningLinkPloidy = 0;
-            double maxLinkPloidy = 0;
-
-            if(!spanningLinks.isEmpty())
-            {
-                // calculate the total ploidy for this link from all chains it is in
-                for (final SvLinkedPair pair : spanningLinks)
-                {
-                    for (final SvChain chain : cluster.getChains())
-                    {
-                        int linkRepeats = (int) chain.getLinkedPairs().stream().filter(x -> x.matches(pair)).count();
-
-                        if (linkRepeats > 0)
-                        {
-                            double linkPloidy = linkRepeats * chain.ploidy();
-                            ;
-                            spanningLinkPloidy += linkPloidy;
-                            maxLinkPloidy = max(maxLinkPloidy, linkPloidy);
-                        }
-                    }
-                }
-            }
-
-            DriverGeneEvent event = new DriverGeneEvent(GAIN);
-            event.setCluster(cluster);
-
-            // record results as Type;Count;MaxPloidy;TotalPloidy
-
-            if(spanningLinkPloidy > mSamplePloidy)
-            {
-                String linkInfo = ampSvInfo(
-                        SV_DRIVER_TYPE_TI, clusterBreakends.size(), spanningLinks.size(), maxLinkPloidy, spanningLinkPloidy, !restrictToArm);
-
-                event.setSvInfo(linkInfo);
-
-                LOGGER.debug("gene({}) cluster({}) spanning TIs({}) maxPloidy({}) totalPloidy({}) sameArm({})",
-                        dgData.GeneData.GeneName, cluster.id(), spanningLinks.size(), formatPloidy(maxLinkPloidy),
-                        formatPloidy(spanningLinkPloidy), restrictToArm);
-                dgData.addEvent(event);
-                continue;
-            }
-
-            if(!facingFoldbacks.isEmpty())
-            {
-                double maxFoldbackPloidy = facingFoldbacks.stream().mapToDouble(x -> x.ploidy()).max().getAsDouble();
-
-                double foldbackTotalPloidy = max(
-                        facingFoldbacks.stream().filter(x -> x.orientation() == 1).mapToDouble(x -> x.ploidy()).max().orElse(0),
-                        facingFoldbacks.stream().filter(x -> x.orientation() == -1).mapToDouble(x -> x.ploidy()).max().orElse(0));
-
-                if(maxFoldbackPloidy > mSamplePloidy || foldbackTotalPloidy > mSamplePloidy)
-                {
-                    LOGGER.debug("gene({}) cluster({}) foldbacks({}) maxPloidy({}) totalFacing({}) sameArm({})",
-                            dgData.GeneData.GeneName, cluster.id(), facingFoldbacks.size(), formatPloidy(maxFoldbackPloidy),
-                            formatPloidy(foldbackTotalPloidy), restrictToArm);
-
-                    String linkInfo = ampSvInfo(SV_DRIVER_TYPE_FOLDBACK, clusterBreakends.size(), facingFoldbacks.size(),
-                            maxFoldbackPloidy, foldbackTotalPloidy, !restrictToArm);
-
-                    event.setSvInfo(linkInfo);
-                    dgData.addEvent(event);
-                    continue;
-                }
-            }
-
-            if(maxNetPloidy > mSamplePloidy)
-            {
-                LOGGER.debug("gene({}) cluster({}) max net ploidy({}) sameArm({})",
-                        dgData.GeneData.GeneName, cluster.id(), formatPloidy(maxNetPloidy), restrictToArm);
-
-                String linkInfo = ampSvInfo(
-                        SV_DRIVER_TYPE_NET_PLOIDY, clusterBreakends.size(), 0, maxFacingPloidy, maxNetPloidy, !restrictToArm);
-                event.setSvInfo(linkInfo);
-                dgData.addEvent(event);
-                continue;
-            }
-
-            if(maxFacingPloidy > mSamplePloidy)
-            {
-                LOGGER.debug("gene({}) cluster({}) max facing breakend({}) ploidy({}) sameArm({})",
-                        dgData.GeneData.GeneName, cluster.id(), maxFacingPloidyBreakend, formatPloidy(maxFacingPloidy), restrictToArm);
-
-                String linkInfo = ampSvInfo(
-                        SV_DRIVER_TYPE_MAX_PLOIDY, clusterBreakends.size(), 1, maxFacingPloidy, maxNetPloidy, !restrictToArm);
-                event.setSvInfo(linkInfo);
-                dgData.addEvent(event);
-                continue;
-            }
-
-            LOGGER.debug("gene({}) cluster({}) has breakend({}) without meeting amp criteria",
-                    dgData.GeneData.GeneName, cluster.id(), clusterBreakends.size());
-        }
-     */
 
 }
