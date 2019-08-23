@@ -128,13 +128,7 @@ public class LinkFinder
 
     public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)
     {
-        for(String assemb1 : var1.getTIAssemblies(v1Start))
-        {
-            if(var2.getTIAssemblies(v2Start).contains(assemb1))
-                return true;
-        }
-
-        return false;
+        return var1.getTIAssemblies(v1Start).stream().anyMatch(x -> var2.getTIAssemblies(v2Start).contains(x));
     }
 
     public static boolean haveOverlappingDeletionBridge(final SvBreakend breakend1, final SvBreakend breakend2)

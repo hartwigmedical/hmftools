@@ -279,8 +279,8 @@ public class ChainFinder
 
         if (mSvList.size() >= 4)
         {
-            LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({})",
-                    mClusterId, mAssembledLinks.size(), mSvList.size());
+            LOGGER.debug("cluster({}) starting chaining with assemblyLinks({}) svCount({}) replication({})",
+                    mClusterId, mAssembledLinks.size(), mSvList.size(), mHasReplication);
         }
 
         enableLogVerbose();

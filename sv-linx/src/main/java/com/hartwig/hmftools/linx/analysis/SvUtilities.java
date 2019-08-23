@@ -64,6 +64,12 @@ public class SvUtilities {
         return chrLength - region.end();
     }
 
+    public static boolean isShortArmChromosome(final String chromosome)
+    {
+        return chromosome.equals("13") || chromosome.equals("14") || chromosome.equals("15")
+                || chromosome.equals("20") || chromosome.equals("21");
+    }
+
     public static void addSvToChrBreakendMap(final SvVarData var, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         for(int be = SE_START; be <= SE_END; ++be)

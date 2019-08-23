@@ -6,11 +6,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 
 import java.util.List;

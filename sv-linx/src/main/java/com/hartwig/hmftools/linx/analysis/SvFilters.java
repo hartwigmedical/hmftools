@@ -11,12 +11,14 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_INF;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,8 @@ public class SvFilters
 {
     private Map<SvVarData,ResolvedType> mExcludedSVs; // SV and exclusion reason eg duplicate breakends
 
+    private Map<SvBreakend,SvBreakend> mNonSglDuplicateBreakends;
+
     private final ClusteringState mState;
 
     private static final Logger LOGGER = LogManager.getLogger(SvFilters.class);
@@ -44,6 +48,7 @@ public class SvFilters
     {
         mState = state;
         mExcludedSVs = Maps.newHashMap();
+        mNonSglDuplicateBreakends = Maps.newHashMap();
     }
 
     private static final double LOW_VAF_THRESHOLD = 0.05;
@@ -143,30 +148,27 @@ public class SvFilters
                 if(nextVar == var)
                     continue;
 
-                long distance = nextBreakend.position() - breakend.position();
-
-                if(distance > PERMITED_DUP_BE_DISTANCE || breakend.orientation() != nextBreakend.orientation())
+                if(breakend.orientation() != nextBreakend.orientation())
                     continue;
 
-                if(var.type() == SGL || nextVar.type() == SGL)
-                {
-                    if(distance <= PERMITED_SGL_DUP_BE_DISTANCE)
-                    {
-                        LOGGER.trace("SV({}) filtered proximate duplicate breakend", var.type() == SGL ? var.id() : nextVar.id());
+                long distance = nextBreakend.position() - breakend.position();
 
-                        if(var.type() == SGL)
-                        {
-                            mExcludedSVs.put(var, DUP_BE);
-                            removalList.add(breakend);
-                        }
-                        else if(nextVar.type() == SGL)
-                        {
-                            mExcludedSVs.put(nextVar, DUP_BE);
-                            removalList.add(nextBreakend);
-                        }
+                if(distance <= PERMITED_SGL_DUP_BE_DISTANCE && (var.type() == SGL || nextVar.type() == SGL))
+                {
+                    LOGGER.trace("SV({}) filtered proximate duplicate breakend", var.type() == SGL ? var.id() : nextVar.id());
+
+                    if(var.type() == SGL)
+                    {
+                        mExcludedSVs.put(var, DUP_BE);
+                        removalList.add(breakend);
+                    }
+                    else if(nextVar.type() == SGL)
+                    {
+                        mExcludedSVs.put(nextVar, DUP_BE);
+                        removalList.add(nextBreakend);
                     }
                 }
-                else if(var.type() == nextVar.type() && var.isEquivBreakend())
+                else if(distance <= PERMITED_DUP_BE_DISTANCE && var.type() == nextVar.type() && var.isEquivBreakend())
                 {
                     // 2 non-SGL SVs may be duplicates, so check their other ends
                     SvBreakend otherBe = breakend.getOtherBreakend();
@@ -212,6 +214,11 @@ public class SvFilters
                             }
                         }
                     }
+                }
+                else if(!var.isSglBreakend() && !nextVar.isSglBreakend())
+                {
+                    checkCandidateSpanningVariant(breakend, nextBreakend, removalList, breakendRemovalMap);
+                    checkCandidateSpanningVariant(nextBreakend, breakend, removalList, breakendRemovalMap);
                 }
             }
         }
@@ -304,6 +311,48 @@ public class SvFilters
     private boolean isSingleDuplicateBreakend(final SvVarData var)
     {
         return var.type() == SGL && !var.isInferredSgl() && var.isEquivBreakend();
+    }
+
+    private void checkCandidateSpanningVariant(final SvBreakend breakend, final SvBreakend nextBreakend,
+            List<SvBreakend> removalList, Map<String,List<SvBreakend>> breakendRemovalMap)
+    {
+        // one variant has an insert sequence potentially matching the assembled TI of another
+        if(breakend.getSV().getSvData().insertSequence().length() >= MIN_TEMPLATED_INSERTION_LENGTH
+        && !nextBreakend.getSV().getTIAssemblies(!nextBreakend.usesStart()).isEmpty())
+        {
+            long posLimitDown = nextBreakend.position() - 1; // nextBreakend.getSV().getSvData().startIntervalOffsetEnd()
+            long posLimitUp = nextBreakend.position() + 1;
+
+            if(breakend.position() >= posLimitDown && breakend.position() <= posLimitUp)
+            {
+                final SvBreakend otherBreakend = breakend.getOtherBreakend();
+
+                final SvBreakend nextBreakend2 = mNonSglDuplicateBreakends.get(otherBreakend);
+
+                if(nextBreakend2 == null)
+                {
+                    mNonSglDuplicateBreakends.put(breakend, nextBreakend);
+                    return;
+                }
+
+                if(haveLinkedAssemblies(nextBreakend.getSV(), nextBreakend2.getSV(), !nextBreakend.usesStart(), !nextBreakend2.usesStart()))
+                {
+                    final SvVarData var = breakend.getSV();
+
+                    LOGGER.trace("SV({}) has duplicate breakends with assembled breakends({} & {})",
+                            var.id(), nextBreakend, nextBreakend2);
+
+                    removalList.add(breakend);
+
+                    if(var.type() == BND)
+                        removeRemoteBreakend(otherBreakend, breakendRemovalMap);
+                    else
+                        removalList.add(otherBreakend);
+
+                    mExcludedSVs.put(var, DUP_BE);
+                }
+            }
+        }
     }
 
     private void removeRemoteBreakend(final SvBreakend breakend, Map<String,List<SvBreakend>> breakendRemovalMap)

@@ -25,6 +25,8 @@ public class SvChainState
 
     private final double mExhaustedLevel;
 
+    private final boolean mSinglePloidy;
+
     private double[] mBreakendCount;
 
     // unique connections made to other SVs
@@ -40,12 +42,14 @@ public class SvChainState
 
         if(singlePloidy != null)
         {
+            mSinglePloidy = true;
             Ploidy = singlePloidy;
             MaxPloidy = singlePloidy;
             MinPloidy = singlePloidy;
         }
         else
         {
+            mSinglePloidy = false;
             Ploidy = var.ploidy();
             MinPloidy = var.ploidyMin();
             MaxPloidy = max(var.ploidyMax(), Ploidy);
@@ -104,20 +108,28 @@ public class SvChainState
 
     public String toString()
     {
-        if(Ploidy > 10)
+        if(mSinglePloidy)
         {
-            return String.format("id(%d) ploidy(%.0f-%.0f-%.0f) counts(s=%.0f e=%.0f)",
-                    SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
-        }
-        else if(Ploidy < 0.5)
-        {
-            return String.format("id(%d) ploidy(%.2f-%.2f-%.2f) counts(s=%.2f e=%.2f)",
-                    SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+            return String.format("id(%d) ploidy(%.1f) counts(s=%.1f e=%.1f)",
+                    SV.id(), Ploidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
         }
         else
         {
-            return String.format("id(%d) ploidy(%.1f-%.1f-%.1f) counts(s=%.1f e=%.1f)",
-                    SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+            if (Ploidy > 10)
+            {
+                return String.format("id(%d) ploidy(%.0f-%.0f-%.0f) counts(s=%.0f e=%.0f)",
+                        SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+            }
+            else if (Ploidy < 0.5)
+            {
+                return String.format("id(%d) ploidy(%.2f-%.2f-%.2f) counts(s=%.2f e=%.2f)",
+                        SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+            }
+            else
+            {
+                return String.format("id(%d) ploidy(%.1f-%.1f-%.1f) counts(s=%.1f e=%.1f)",
+                        SV.id(), MinPloidy, Ploidy, MaxPloidy, mBreakendCount[SE_START], mBreakendCount[SE_END]);
+            }
         }
     }
 

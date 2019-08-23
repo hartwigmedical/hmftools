@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
@@ -443,15 +444,18 @@ public class DriverGeneAnnotator
 
         double chromosomeCopyNumber = min(centromereCopyNumber, telomereCopyNumber);
 
-        if(chromosomeCopyNumber/mSamplePloidy > 2)
+        if(!isShortArmChromosome(dgData.GeneData.Chromosome))
         {
-            LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
-                    dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber),
-                    formatPloidy(telomereCopyNumber), formatPloidy(centromereCopyNumber), formatPloidy(mSamplePloidy));
+            if (chromosomeCopyNumber / mSamplePloidy > 2)
+            {
+                LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
+                        dgData.GeneData.GeneName, formatPloidy(chromosomeCopyNumber),
+                        formatPloidy(telomereCopyNumber), formatPloidy(centromereCopyNumber), formatPloidy(mSamplePloidy));
 
-            DriverGeneEvent event = new DriverGeneEvent(GAIN_CHR);
-            event.setCopyNumberGain(chromosomeCopyNumber - mSamplePloidy);
-            dgData.addEvent(event);
+                DriverGeneEvent event = new DriverGeneEvent(GAIN_CHR);
+                event.setCopyNumberGain(chromosomeCopyNumber - mSamplePloidy);
+                dgData.addEvent(event);
+            }
         }
 
         double centromereCNChange = dgData.Arm == CHROMOSOME_ARM_P ?

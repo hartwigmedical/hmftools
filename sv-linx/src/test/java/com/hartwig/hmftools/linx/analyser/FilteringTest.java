@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
 import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
@@ -62,6 +65,33 @@ public class FilteringTest
         assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var5));
+        assertTrue(cluster != null);
+        assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
+
+        tester.clearClustersAndSVs();
+
+        // filter out a spanning variant
+        var1 = createSv(tester.nextVarId(), "1", "1", 1000, 2000, 1, -1, DEL, "1234567890123456789012345678901");
+
+        // equivalent breakends are kept separate
+        var2 = createBnd(tester.nextVarId(), "1", 999, 1, "2", 100, -1);
+        var3 = createBnd(tester.nextVarId(), "1", 2001, -1, "2", 200, 1);
+
+        var2.setAssemblyData(false, "asmn23");
+        var3.setAssemblyData(false, "asmn23");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(2, tester.getClusters().size());
+
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var3)));
+
+        cluster = tester.findClusterWithSVs(Lists.newArrayList(var1));
         assertTrue(cluster != null);
         assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
     }
