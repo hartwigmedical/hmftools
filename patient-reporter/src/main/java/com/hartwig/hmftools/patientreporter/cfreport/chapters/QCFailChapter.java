@@ -58,7 +58,7 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason()));
-        reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
+        reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
 
@@ -169,8 +169,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add((recipientText()));
         divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
-        divColumn2.add(disclaimerTumorLocation());
-        divColumn2.add(sentivityResults());
         divColumn2.add((questionsText()));
         return divColumn2;
     }
@@ -217,8 +215,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
-        divColumn2.add(disclaimerTumorLocation());
-        divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
     }
@@ -268,8 +264,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(recipientText());
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
-        divColumn2.add(disclaimerTumorLocation());
-        divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
     }
@@ -289,19 +283,6 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph sentivityResults() {
-        return createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
-                + "of somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a "
-                + "purity above 20%, the test has a sensitivity of >90%.");
-    }
-
-    @NotNull
-    private Paragraph disclaimerTumorLocation() {
-        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ have influence on the clinical "
-                + "evidence/study matching. No check is performed to verify the received information.");
-    }
-
-    @NotNull
     private static Paragraph versionPatientReport() {
         return createContentParagraph("This report is based by patient reporter ", ReportResources.VERSION_REPORT);
     }
@@ -313,7 +294,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph questionsText() {
-        return createContentParagraph("For questions, please contact us via ", "info@hartwigmedicalfoundation.nl");
+        return createContentParagraph("For questions, please contact ", "info@hartwigmedicalfoundation.nl");
     }
 
     @NotNull
@@ -339,8 +320,8 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph evaluatedAddress() {
-        return createContentParagraph("The biopsies evaluated at ", ReportResources.HARTWIG_ADDRESS);
+    private static Paragraph evaluatedAddress() {
+        return createContentParagraph("The biopsies are evaluated at ", ReportResources.HARTWIG_ADDRESS);
     }
 
     @NotNull
