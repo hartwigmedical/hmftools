@@ -37,7 +37,9 @@ public abstract class HospitalModel {
 
     @NotNull
     public HospitalQuery queryHospitalDataForSample(@NotNull String sample) {
-        if (sample.startsWith("CORE")) {
+        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+
+        if (type == LimsSampleType.CORE) {
             HospitalCore hospitalCore = findHospitalForSampleCore(sample);
             return ImmutableHospitalQuery.builder()
                     .hospitalName(hospitalCore != null ? hospitalCore.externalHospitalName() : NA_STRING)
@@ -45,7 +47,6 @@ public abstract class HospitalModel {
                     .principalInvestigatorName(NA_STRING)
                     .principalInvestigatorEmail(NA_STRING)
                     .build();
-
         } else {
             HospitalData hospital = findHospitalForSample(sample);
             return ImmutableHospitalQuery.builder()
