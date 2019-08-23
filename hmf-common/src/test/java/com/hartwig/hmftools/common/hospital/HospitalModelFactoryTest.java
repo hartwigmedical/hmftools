@@ -18,5 +18,6 @@ public class HospitalModelFactoryTest {
 
         assertEquals(2, hospitalModel.hospitalCount());
         assertEquals(1, hospitalModel.sampleHospitalMapping().size());
+        assertEquals(1, hospitalModel.hospitalCoreMap().size());
     }
 }

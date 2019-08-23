@@ -53,18 +53,18 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
                 failReport.sampleReport().cancerSubTypeString(),
                 contentWidth()));
-        reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' and 'cancer subtype' is based on "
-                + "information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));
+        reportDocument.add(new Paragraph("The information regarding 'primary tumor location' and 'cancer subtype' is based on "
+                + "information received from the originating hospital.").addStyle(ReportResources.subTextSmallStyle()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason()));
-        reportDocument.add(LineDivider.createLineDivider(contentWidth()).setMarginTop(10));
+        reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
 
         switch (type) {
             case CORE:
-                reportDocument.add(createCoreContentBody());
+                reportDocument.add(createCOREContentBody());
                 break;
             case WIDE:
                 reportDocument.add(createWIDEContentBody());
@@ -135,14 +135,14 @@ public class QCFailChapter implements ReportChapter {
     private Table createWIDEContentBody() {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(createWideContentBodyColumn1()));
+        table.addCell(TableUtil.createLayoutCell().add(createWIDEContentBodyColumn1()));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createWideContentBodyColumn2()));
+        table.addCell(TableUtil.createLayoutCell().add(createWIDEContentBodyColumn2()));
         return table;
     }
 
     @NotNull
-    private Div createWideContentBodyColumn1() {
+    private Div createWIDEContentBodyColumn1() {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph(
@@ -162,31 +162,29 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createWideContentBodyColumn2() {
+    private Div createWIDEContentBodyColumn2() {
         Div divColumn2 = new Div();
 
         divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add(versionPatientReport());
         divColumn2.add((accreditationText()));
-        divColumn2.add(disclaimerTumorLocation());
-        divColumn2.add(sentivityResults());
         divColumn2.add((questionsText()));
         return divColumn2;
     }
 
     @NotNull
-    private Table createCoreContentBody() {
+    private Table createCOREContentBody() {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(createCoreContentBodyColumn1()));
+        table.addCell(TableUtil.createLayoutCell().add(createCOREContentBodyColumn1()));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createCoreContentBodyColumn2()));
+        table.addCell(TableUtil.createLayoutCell().add(createCOREContentBodyColumn2()));
         return table;
     }
 
     @NotNull
-    private Div createCoreContentBodyColumn1() {
+    private Div createCOREContentBodyColumn1() {
         Div divColumn1 = new Div();
         divColumn1.add(notSequencedText());
         divColumn1.add(createContentParagraph("If available new tumor material can be provided for a new assessment, "
@@ -210,15 +208,13 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createCoreContentBodyColumn2() {
+    private Div createCOREContentBodyColumn2() {
         Div divColumn2 = new Div();
         divColumn2.add((evaluatedAddress()));
         divColumn2.add((recipientText()));
         divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
-        divColumn2.add(disclaimerTumorLocation());
-        divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
     }
@@ -268,8 +264,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn2.add(recipientText());
         divColumn2.add(versionPatientReport());
         divColumn2.add(accreditationText());
-        divColumn2.add(disclaimerTumorLocation());
-        divColumn2.add(sentivityResults());
         divColumn2.add(questionsText());
         return divColumn2;
     }
@@ -289,19 +283,6 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph sentivityResults() {
-        return createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
-                + "of somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a "
-                + "purity above 20%, the test has a sensitivity of >90%.");
-    }
-
-    @NotNull
-    private Paragraph disclaimerTumorLocation() {
-        return createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ have influence on the clinical "
-                + "evidence/study matching. No check is performed to verify the received information.");
-    }
-
-    @NotNull
     private static Paragraph versionPatientReport() {
         return createContentParagraph("This report is based by patient reporter ", ReportResources.VERSION_REPORT);
     }
@@ -313,7 +294,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph questionsText() {
-        return createContentParagraph("For questions, please contact us via ", "info@hartwigmedicalfoundation.nl");
+        return createContentParagraph("For questions, please contact ", "info@hartwigmedicalfoundation.nl");
     }
 
     @NotNull
@@ -339,8 +320,8 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph evaluatedAddress() {
-        return createContentParagraph("The biopsies evaluated at ", ReportResources.HARTWIG_ADDRESS);
+    private static Paragraph evaluatedAddress() {
+        return createContentParagraph("The biopsies are evaluated at ", ReportResources.HARTWIG_ADDRESS);
     }
 
     @NotNull

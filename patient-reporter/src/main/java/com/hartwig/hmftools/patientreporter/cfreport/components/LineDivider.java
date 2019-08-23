@@ -17,7 +17,7 @@ public final class LineDivider {
         line.setColor(ReportResources.PALETTE_BLUE);
 
         LineSeparator ls = new LineSeparator(line);
-        ls.setMarginTop(20);
+        ls.setMarginTop(10);
         ls.setWidth(width);
         ls.setMarginBottom(4);
 

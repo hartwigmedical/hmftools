@@ -50,6 +50,7 @@ public class HospitalModelTest {
     public void extractHospitalName() {
         HospitalModel hospitalModel = buildTestHospitalModel();
         assertEquals("ExtHosp1", hospitalModel.queryHospitalDataForSample("WIDE01010001").hospitalName());
+        assertEquals("ExtHosp2", hospitalModel.queryHospitalDataForSample("CORE01010001").hospitalName());
     }
 
     @Test
@@ -107,7 +108,7 @@ public class HospitalModelTest {
         hospitalPerId.put("02",
                 ImmutableHospitalData.of("HOSP2", "CPCT Recip2", "*", "", "ExtHosp2", "Zip2", "City2", "CpctPI2", "*", "WidePI2"));
         hospitalPerIdManual.put("CORE18001224T", ImmutableHospitalSampleMapping.of("HOSP1"));
-        hospitalCoreMap.put("01", ImmutableHospitalCore.of("HOSP1", "ExtHosp1", "Zip", "City"));
+        hospitalCoreMap.put("01", ImmutableHospitalCore.of("HOSP1", "ExtHosp2", "Zip", "City"));
 
         return ImmutableHospitalModel.of(hospitalPerId, hospitalPerIdManual, hospitalCoreMap);
     }
