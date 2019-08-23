@@ -651,8 +651,7 @@ public class CircosDataWriter
 
     private double thicknessPixels(double ploidy)
     {
-        // ADD MAX PLOIDY OF 60
-        double scaledUsage = ploidy / Math.max(6, maxPloidy);
+        double scaledUsage = ploidy / Math.max(6, Math.min(60, maxPloidy));
         return Math.min(12, Math.max(1, Math.pow(2 * scaledUsage, 1)));
     }
 
