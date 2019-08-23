@@ -204,16 +204,16 @@ public final class ExampleAnalysisTestFactory {
                 .purityShallowSeq(Strings.EMPTY)
                 .pathologyTumorPercentage("80%")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .requesterName(Strings.EMPTY)
-                .requesterEmail(Strings.EMPTY)
+                .requesterName("C")
+                .requesterEmail("D")
                 .addressee("HMF Testing Center")
                 .hospitalName(Strings.EMPTY)
                 .hospitalPIName(Strings.EMPTY)
                 .hospitalPIEmail(Strings.EMPTY)
                 .projectName("COLO")
-                .submissionId(Strings.EMPTY)
-                .hospitalPatientId(Strings.EMPTY)
-                .hospitalPathologySampleId(Strings.EMPTY)
+                .submissionId("10")
+                .hospitalPatientId("4567")
+                .hospitalPathologySampleId("1234")
                 .build();
     }
 
