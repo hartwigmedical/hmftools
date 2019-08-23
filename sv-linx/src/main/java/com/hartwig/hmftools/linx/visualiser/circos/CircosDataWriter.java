@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -34,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
-    private static final int MAX_POSITIONS = 50;
+    private static final int MAX_POSITIONS = 60;
     private static final int SCATTER_GLYPH_SIZE = 20;
     private static final int SCATTER_GLYPH_SIZE_INNER = 14;
 
@@ -575,23 +576,29 @@ public class CircosDataWriter
     private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
     {
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
+        if (circosConfig.exactPosition())
+        {
+            return createPositionText(1, positions, POSITION_FORMAT::format);
+        }
 
-        final List<String> positionsEvery100k = createPositionText(100_000, positions);
-        if (positionsEvery100k.size() < MAX_POSITIONS) {
+        final List<String> positionsEvery100k = createPositionText(100_000, positions, CircosDataWriter::shorthand);
+        if (positionsEvery100k.size() < MAX_POSITIONS)
+        {
             return positionsEvery100k;
         }
 
-        final List<String> positionsEvery1M = createPositionText(1_000_000, positions);
-        if (positionsEvery1M.size() < MAX_POSITIONS) {
+        final List<String> positionsEvery1M = createPositionText(1_000_000, positions, CircosDataWriter::shorthand);
+        if (positionsEvery1M.size() < MAX_POSITIONS)
+        {
             return positionsEvery1M;
         }
 
-        final List<String> positionsEvery10M = createPositionText(10_000_000, positions);
-        return positionsEvery10M;
+        return createPositionText(10_000_000, positions, CircosDataWriter::shorthand);
     }
 
     @NotNull
-    private List<String> createPositionText(int minDistance, @NotNull final List<AdjustedPosition> positions)
+    private List<String> createPositionText(int minDistance, @NotNull final List<AdjustedPosition> positions,
+            @NotNull final Function<Long, String> formatter)
     {
         final Set<String> result = Sets.newHashSet();
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
@@ -603,14 +610,11 @@ public class CircosDataWriter
             {
                 if (adjustedPosition.chromosome().equals(contig))
                 {
-                    long position = circosConfig.exactPosition()
-                            ? adjustedPosition.unadjustedPosition()
-                            : adjustedPosition.unadjustedPosition() / minDistance;
+                    long newPosition = adjustedPosition.unadjustedPosition();
 
-                    if (position > currentPosition)
+                    if (newPosition - minDistance >= currentPosition)
                     {
-                        String positionLabel = circosConfig.exactPosition() ?
-                                POSITION_FORMAT.format(position) : shorthand(adjustedPosition.unadjustedPosition());
+                        String positionLabel = formatter.apply(adjustedPosition.unadjustedPosition());
 
                         if (circosConfig.showSvId())
                         {
@@ -624,7 +628,7 @@ public class CircosDataWriter
                                 .toString();
 
                         result.add(start);
-                        currentPosition = position;
+                        currentPosition = newPosition;
                     }
                 }
             }
@@ -647,6 +651,7 @@ public class CircosDataWriter
 
     private double thicknessPixels(double ploidy)
     {
+        // ADD MAX PLOIDY OF 60
         double scaledUsage = ploidy / Math.max(6, maxPloidy);
         return Math.min(12, Math.max(1, Math.pow(2 * scaledUsage, 1)));
     }
