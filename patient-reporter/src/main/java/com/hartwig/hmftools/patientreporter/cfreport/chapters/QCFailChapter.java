@@ -73,7 +73,7 @@ public class QCFailChapter implements ReportChapter {
                 reportDocument.add(createCPCTDRUPContentBody());
         }
 
-        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(20));
+        reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
 
@@ -143,34 +143,33 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Div createWIDEContentBodyColumn1() {
-        Div divColumn1 = new Div();
-        divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph(
+        Div divColumn = new Div();
+        divColumn.add(sampleNotAdequateForWGS());
+        divColumn.add(createContentParagraph(
                 "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
                         .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
-        divColumn1.add(createContentParagraphTwice("The HMF sample ID is ",
+        divColumn.add(createContentParagraphTwice("The HMF sample ID is ",
                 failReport.sampleReport().sampleId(),
                 " and the tissue ID of pathology is: ",
                 failReport.sampleReport().hospitalPathologySampleId()));
-        divColumn1.add(obtainedResults());
-        divColumn1.add(tumorSampleDataText());
-        divColumn1.add(bloodSampleDataText());
-        divColumn1.add(relatedSamples());
-        divColumn1.add((shallowSeqText()));
-        return divColumn1;
+        divColumn.add(resultsAreObtainedBetweenDates());
+        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
+        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
+        divColumn.add(sampleHasMolecularTumorPercentage());
+        return divColumn;
     }
 
     @NotNull
     private Div createWIDEContentBodyColumn2() {
-        Div divColumn2 = new Div();
-
-        divColumn2.add((evaluatedAddress()));
-        divColumn2.add((recipientText()));
-        divColumn2.add(versionPatientReport());
-        divColumn2.add((accreditationText()));
-        divColumn2.add((questionsText()));
-        return divColumn2;
+        Div divColumn = new Div();
+        divColumn.add(samplesAreEvaluatedAtHMF());
+        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsBasedOnBloodAndTumorSamples());
+        divColumn.add(reportIsGeneratedByPatientReporterVersion());
+        divColumn.add(testsArePerformedByAccreditedLab());
+        divColumn.add(forQuestionsPleaseContactHMF());
+        return divColumn;
     }
 
     @NotNull
@@ -185,47 +184,38 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Div createCOREContentBodyColumn1() {
-        Div divColumn1 = new Div();
-        divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph("If available new tumor material can be provided for a new assessment, "
+        Div divColumn = new Div();
+        divColumn.add(sampleNotAdequateForWGS());
+        divColumn.add(createContentParagraph("If available new tumor material can be provided for a new assessment, "
                 + "please resubmit using the same DVO with project name " + failReport.sampleReport().projectName() + "."));
-        divColumn1.add(createContentParagraphTwice("The HMF sample ID is ",
+        divColumn.add(createContentParagraphTwice("The HMF sample ID is ",
                 failReport.sampleReport().sampleId(),
                 " and the hospital patient ID is ",
                 failReport.sampleReport().hospitalPatientId()));
-        divColumn1.add(createContentParagraphTwice("The project name of sample is ",
+        divColumn.add(createContentParagraphTwice("The project name of sample is ",
                 failReport.sampleReport().projectName(),
                 " and the submission ID is ",
                 failReport.sampleReport().submissionId()));
-        divColumn1.add(obtainedResults());
-        divColumn1.add(tumorSampleDataText());
-        divColumn1.add(bloodSampleDataText());
-        divColumn1.add(relatedSamples());
-        divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
+        divColumn.add(resultsAreObtainedBetweenDates());
+        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
+        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
+        divColumn.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
                 failReport.sampleReport().pathologyTumorPercentage()));
-        divColumn1.add((shallowSeqText()));
-        return divColumn1;
+        divColumn.add(sampleHasMolecularTumorPercentage());
+        return divColumn;
     }
 
     @NotNull
     private Div createCOREContentBodyColumn2() {
-        Div divColumn2 = new Div();
-        divColumn2.add((evaluatedAddress()));
-        divColumn2.add((recipientText()));
-        divColumn2.add(createContentParagraphRequest(failReport.sampleReport()));
-        divColumn2.add(versionPatientReport());
-        divColumn2.add(accreditationText());
-        divColumn2.add(questionsText());
-        return divColumn2;
-    }
-
-    @NotNull
-    private static Paragraph createContentParagraphRequest(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The requester is : ").add(new Text(sampleReport.requesterName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add("(")
-                .add(new Text(sampleReport.requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(")")
-                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+        Div divColumn = new Div();
+        divColumn.add(samplesAreEvaluatedAtHMF());
+        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsBasedOnBloodAndTumorSamples());
+        divColumn.add(reportIsRequestedBy(failReport.sampleReport()));
+        divColumn.add(reportIsGeneratedByPatientReporterVersion());
+        divColumn.add(testsArePerformedByAccreditedLab());
+        divColumn.add(forQuestionsPleaseContactHMF());
+        return divColumn;
     }
 
     @NotNull
@@ -240,41 +230,50 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Div createCPCTDRUPContentBodyColumn1() {
-        Div divColumn1 = new Div();
-        divColumn1.add(notSequencedText());
-        divColumn1.add(createContentParagraph(
+        Div divColumn = new Div();
+        divColumn.add(sampleNotAdequateForWGS());
+        divColumn.add(createContentParagraph(
                 "If available new tumor material can be provided for a new assessment, please resubmit using the same " + failReport.study()
                         .studyName() + "-number. " + "If additional material cannot be provided the patient will not be "
                         + "evaluable for the " + failReport.study().studyCode() + " study."));
-        divColumn1.add(createContentParagraph("The HMF sample ID is ", failReport.sampleReport().sampleId()));
-        divColumn1.add(obtainedResults());
-        divColumn1.add(tumorSampleDataText());
-        divColumn1.add(bloodSampleDataText());
-        divColumn1.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
+        divColumn.add(createContentParagraph("The HMF sample ID is ", failReport.sampleReport().sampleId()));
+        divColumn.add(resultsAreObtainedBetweenDates());
+        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
+        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
+        divColumn.add(createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
                 failReport.sampleReport().pathologyTumorPercentage()));
-        divColumn1.add(relatedSamples());
-        divColumn1.add(shallowSeqText());
-        return divColumn1;
+        divColumn.add(sampleHasMolecularTumorPercentage());
+        return divColumn;
     }
 
     @NotNull
     private Div createCPCTDRUPContentBodyColumn2() {
-        Div divColumn2 = new Div();
-        divColumn2.add(evaluatedAddress());
-        divColumn2.add(recipientText());
-        divColumn2.add(versionPatientReport());
-        divColumn2.add(accreditationText());
-        divColumn2.add(questionsText());
-        return divColumn2;
+        Div divColumn = new Div();
+        divColumn.add(samplesAreEvaluatedAtHMF());
+        divColumn.add(reportIsVerifiedByAndAddressedAt());
+        divColumn.add(reportIsBasedOnBloodAndTumorSamples());
+        divColumn.add(reportIsGeneratedByPatientReporterVersion());
+        divColumn.add(testsArePerformedByAccreditedLab());
+        divColumn.add(forQuestionsPleaseContactHMF());
+        return divColumn;
     }
 
     @NotNull
-    private static Paragraph relatedSamples() {
+    private static Paragraph reportIsRequestedBy(@NotNull SampleReport sampleReport) {
+        return createContentParagraph("The requester is : ").add(new Text(sampleReport.requesterName()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(" (")
+                .add(new Text(sampleReport.requesterEmail()).addStyle(ReportResources.smallBodyBoldTextStyle()))
+                .add(")")
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    private static Paragraph reportIsBasedOnBloodAndTumorSamples() {
         return createContentParagraph("The results stated in these report are based on the tested tumor and blood sample.");
     }
 
     @NotNull
-    private Paragraph obtainedResults() {
+    private Paragraph resultsAreObtainedBetweenDates() {
         String earliestArrivalDate = failReport.sampleReport().earliestArrivalDate();
         return createContentParagraphTwice("The results in this report have been obtained between ",
                 earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
@@ -283,28 +282,23 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Paragraph versionPatientReport() {
+    private static Paragraph reportIsGeneratedByPatientReporterVersion() {
         return createContentParagraph("This report is based by patient reporter ", ReportResources.VERSION_REPORT);
     }
 
     @NotNull
-    private static Paragraph createContentParagraph(@NotNull String text) {
-        return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
-    }
-
-    @NotNull
-    private static Paragraph questionsText() {
+    private static Paragraph forQuestionsPleaseContactHMF() {
         return createContentParagraph("For questions, please contact ", "info@hartwigmedicalfoundation.nl");
     }
 
     @NotNull
-    private Paragraph shallowSeqText() {
+    private Paragraph sampleHasMolecularTumorPercentage() {
         return createContentParagraph("The tumor percentage based on molecular estimation is ",
                 failReport.sampleReport().purityShallowSeq());
     }
 
     @NotNull
-    private Paragraph tumorSampleDataText() {
+    private Paragraph reportIsBasedOnTumorSampleArrivedAt() {
         return createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().tumorArrivalDate()),
                 " with internal tumor barcode ",
@@ -312,7 +306,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Paragraph bloodSampleDataText() {
+    private Paragraph reportIsBasedOnBloodSampleArrivedAt() {
         return createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().refArrivalDate()),
                 " with internal blood barcode ",
@@ -320,17 +314,17 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Paragraph evaluatedAddress() {
+    private static Paragraph samplesAreEvaluatedAtHMF() {
         return createContentParagraph("The biopsies are evaluated at ", ReportResources.HARTWIG_ADDRESS);
     }
 
     @NotNull
-    private static Paragraph notSequencedText() {
+    private static Paragraph sampleNotAdequateForWGS() {
         return createContentParagraph("The received tumor biopsies were inadequate for whole genome sequencing. ");
     }
 
     @NotNull
-    private Paragraph recipientText() {
+    private Paragraph reportIsVerifiedByAndAddressedAt() {
         String addressee = failReport.sampleReport().addressee();
         assert addressee != null; // Has been checked prior to calling this function.
         return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
@@ -338,9 +332,14 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Paragraph accreditationText() {
+    private static Paragraph testsArePerformedByAccreditedLab() {
         return createContentParagraph(
                 "The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.");
+    }
+
+    @NotNull
+    private static Paragraph createContentParagraph(@NotNull String text) {
+        return new Paragraph(text).addStyle(ReportResources.smallBodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull

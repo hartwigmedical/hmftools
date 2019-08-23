@@ -19,7 +19,7 @@ public final class ReportSignature {
 
     @NotNull
     public static Paragraph createEndOfReportIndication() {
-        return new Paragraph("— End of report —").setMarginTop(50).addStyle(ReportResources.smallBodyTextStyle());
+        return new Paragraph("— End of report —").setMarginTop(40).addStyle(ReportResources.smallBodyTextStyle());
     }
 
     @NotNull
