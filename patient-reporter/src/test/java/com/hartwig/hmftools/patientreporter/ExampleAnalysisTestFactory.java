@@ -63,7 +63,8 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
 
-        final SampleReport sampleReport = createCOLO829SampleReport();
+        final String sampleId = "PNT00012345T";
+        final SampleReport sampleReport = createCOLO829SampleReport(sampleId);
 
         final String clinicalSummary = "Melanoma sample with an activating BRAF mutation that is associated with "
                 + "response to BRAF-inhibitors (in combination with a MEK-inhibitor). The tumor shows a complete "
@@ -98,7 +99,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn() {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId) {
         final boolean hasReliablePurityFit = true;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
@@ -117,7 +118,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
-        final SampleReport sampleReport = createCOLO829SampleReport();
+        final SampleReport sampleReport = createCOLO829SampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
@@ -145,7 +146,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample() {
+    public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample(@NotNull String sampleId) {
         final boolean hasReliablePurityFit = false;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
@@ -164,7 +165,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
 
-        final SampleReport sampleReport = createCOLO829SampleReport();
+        final SampleReport sampleReport = createCOLO829SampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
 
         return ImmutableAnalysedPatientReport.of(sampleReport,
@@ -192,8 +193,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static SampleReport createCOLO829SampleReport() {
-        final String sample = "PNT00012345T";
+    private static SampleReport createCOLO829SampleReport(@NotNull String sample) {
         return ImmutableSampleReport.builder()
                 .sampleId(sample)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of("COLO829", "Skin", "Melanoma"))
