@@ -107,9 +107,8 @@ public final class ReportableGeneFusionFile {
             case TRANS_REGION_TYPE_UPSTREAM:
                 return "Promoter Region";
             case TRANS_REGION_TYPE_EXONIC:
-                return String.format("Exon %d", fusedExon);
             case TRANS_REGION_TYPE_INTRONIC:
-                return String.format("Intron %d", fusedExon);
+                return String.format("Exon %d", fusedExon);
         }
 
         return String.format("ERROR: %s", transcript.regionType());
