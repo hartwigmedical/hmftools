@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
@@ -140,7 +141,7 @@ public class CFReportWriterTest {
             @Nullable String shallowSeqPurity, @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleId(sampleId)
-                .patientTumorLocation(ImmutablePatientTumorLocation.of("CPCT02991111", "Skin", "Melanoma"))
+                .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
                 .refBarcode("FR12123488")
                 .tumorBarcode("FR12345678")
                 .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
@@ -160,9 +161,24 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("A")
                 .build();
 
+        LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
+        QCFailStudy failStudy;
+        switch (sampleType) {
+            case CORE:
+                failStudy = QCFailStudy.CORE;
+                break;
+            case WIDE:
+                failStudy = QCFailStudy.WIDE;
+                break;
+            case DRUP:
+                failStudy = QCFailStudy.DRUP;
+                break;
+            default:
+                failStudy = QCFailStudy.CPCT;
+        }
         QCFailReport patientReport = ImmutableQCFailReport.of(sampleReport,
                 reason,
-                QCFailStudy.CPCT,
+                failStudy,
                 Optional.empty(),
                 Optional.empty(),
                 testReportData().signaturePath(),

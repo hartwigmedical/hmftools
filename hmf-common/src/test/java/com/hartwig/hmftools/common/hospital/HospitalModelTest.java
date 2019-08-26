@@ -9,6 +9,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class HospitalModelTest {
@@ -85,7 +86,7 @@ public class HospitalModelTest {
     @Test
     public void canLookupAddressForCORESample() {
         HospitalModel hospitalModel = buildTestHospitalModel();
-        assertEquals("ExtHosp1, Zip City", hospitalModel.queryHospitalDataForSample("CORE18001224T").fullAddresseeString());
+        assertEquals("ExtHosp2, Zip City", hospitalModel.queryHospitalDataForSample("CORE18001224T").fullAddresseeString());
     }
 
     @NotNull
