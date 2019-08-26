@@ -49,7 +49,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <hmf-bachelor.version>1.7</hmf-bachelor.version>
+        <hmf-bachelor.version>1.8</hmf-bachelor.version>
         <hmf-health-checker.version>3.1</hmf-health-checker.version>
         <hmf-patient-db.version>3.26</hmf-patient-db.version>
         <hmf-patient-reporter.version>7.3</hmf-patient-reporter.version>
