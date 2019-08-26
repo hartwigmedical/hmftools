@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
+import static com.hartwig.hmftools.linx.cn.CnDataLoader.TOTAL_CN_LOSS;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
@@ -38,13 +40,19 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
@@ -57,6 +65,8 @@ import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.types.SvLinkedPair;
+import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -64,6 +74,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class DriverGeneAnnotator
 {
@@ -201,7 +212,6 @@ public class DriverGeneAnnotator
 
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
-
 
         // types handled:
         // - TSG biallelic point mutations
@@ -758,6 +768,103 @@ public class DriverGeneAnnotator
                     ampData.TraverseUp, ampData.BreakendCount, ampData.SegmentCount, ampData.StartCopyNumber));
             dgData.addEvent(event);
         }
+    }
+
+    private void findDisruptiveDelDrivers()
+    {
+        List<String> disruptedGeneIds = Lists.newArrayList();
+
+        mDriverGeneDataList.stream()
+                .filter(x -> x.DriverData.driver() == DriverType.DEL)
+                .forEach(x -> disruptedGeneIds.add(x.GeneData.GeneId));
+
+        for(Map.Entry<String,List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        {
+            for(final SvBreakend breakend : entry.getValue())
+            {
+                if(breakend.orientation() != 1)
+                    continue;
+
+                final SvLinkedPair dbLink = breakend.getDBLink();
+
+                if(dbLink == null || dbLink.length() > 1)
+                    continue;
+
+                List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart());
+
+                if(genesList.isEmpty())
+                    continue;
+
+                // consider any disruptive canonical transcript
+
+                for(final GeneAnnotation gene : genesList)
+                {
+                    if(disruptedGeneIds.contains(gene.StableId))
+                        continue;
+
+                    final Transcript trans = gene.canonical();
+
+                    if(!trans.isDisruptive())
+                        continue;
+
+                    // calculate the copy number over the deletion bridge section
+                    double cnLowSide = breakend.copyNumberLowSide();
+                    double otherSvPloidy = dbLink.getOtherBreakend(breakend).ploidy();
+                    double dbCopyNumber = cnLowSide = otherSvPloidy;
+
+                    if(dbCopyNumber < TOTAL_CN_LOSS)
+                    {
+                        disruptedGeneIds.add(gene.StableId);
+
+                        DriverGeneData dgData = createDriverData(gene);
+                    }
+                }
+            }
+        }
+    }
+
+    private DriverGeneData createDriverData(final GeneAnnotation gene)
+    {
+        if(mDbAccess == null)
+            return null;
+
+        final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.GeneName));
+
+        if(geneCopyNumbers.isEmpty())
+            return null;
+
+        final GeneCopyNumber gcnData = geneCopyNumbers.get(0);
+
+        final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
+                .driver(DriverType.DEL)
+                .category(TSG)
+                .gene(gene.GeneName)
+                .chromosome(gene.chromosome())
+                .chromosomeBand(gene.karyotypeBand())
+                .likelihoodMethod(DEL)
+                .driverLikelihood(1.0)
+                .dndsLikelihood(0)
+                .missense(0)
+                .nonsense(0)
+                .splice(0)
+                .inframe(0)
+                .frameshift(0)
+                .biallelic(false)
+                .minCopyNumber(gcnData.minCopyNumber())
+                .maxCopyNumber(gcnData.maxCopyNumber())
+                .build();
+
+        final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene.GeneName);
+
+        if (geneData == null)
+            return null;
+
+        final TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+
+        DriverGeneData dgData = new DriverGeneData(driverRecord, geneData, canonicalTrans, gcnData);
+        mDriverGeneDataList.add(dgData);
+
+        return dgData;
     }
 
     private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)

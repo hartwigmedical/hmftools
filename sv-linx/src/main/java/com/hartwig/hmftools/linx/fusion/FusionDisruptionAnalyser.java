@@ -273,7 +273,7 @@ public class FusionDisruptionAnalyser
             }
 
             // mark any transcripts as not disruptive prior to running any fusion logic
-            markNonDisruptiveTranscripts(var.getGenesList(true), var.getGenesList(false));
+            markNonDisruptiveTranscripts(var);
 
             // inferred SGLs are always non-disruptive
             if(var.isInferredSgl())
@@ -953,7 +953,7 @@ public class FusionDisruptionAnalyser
                 .build();
     }
 
-    private boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
+    public boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
     {
         // for this pair to not affect the fusion, the section it traverses cannot cross any gene's splice acceptor
         // with the same strand direction unless that is part of a fully traversed non-coding 5' exon
@@ -974,7 +974,7 @@ public class FusionDisruptionAnalyser
             if(upperPos < geneData.GeneStart)
                 break;
 
-            if(geneData.Strand == fusionDirection)
+            if(fusionDirection == 0 || geneData.Strand == fusionDirection)
             {
                 // check whether a splice acceptor is encountered within this window
                 List<TranscriptData> transDataList = mGeneTransCollection.getTranscripts(geneData.GeneId);
@@ -1001,7 +1001,7 @@ public class FusionDisruptionAnalyser
                                     continue;
                             }
 
-                            LOGGER.trace("pair({}) fusionDirection({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
+                            LOGGER.trace("pair({}) direction({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
                                     pair.toString(), fusionDirection, geneData.GeneName, transData.TransName,
                                     exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
 

@@ -27,10 +27,12 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ensembl.database.homo_sapiens_core.tables.Gene;
 
 public class DisruptionFinder
 {
@@ -67,32 +69,43 @@ public class DisruptionFinder
         return mDisruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID));
     }
 
-    public static void markNonDisruptiveTranscripts(List<GeneAnnotation> genesStart, List<GeneAnnotation> genesEnd)
+    public static void markNonDisruptiveTranscripts(final SvVarData var)
     {
+        if(!var.isSimpleType())
+            return;
+
+        final List<GeneAnnotation> genesStart = var.getGenesList(true);
+        final List<GeneAnnotation> genesEnd = var.getGenesList(false);
+
         if(genesStart.isEmpty() || genesEnd.isEmpty())
             return;
 
-        for(final GeneAnnotation startGene : genesStart)
+        for(final GeneAnnotation geneStart : genesStart)
         {
-            for (final Transcript trans1 : startGene.transcripts())
+            final GeneAnnotation geneEnd = genesEnd.stream()
+                    .filter(x -> x.StableId.equals(geneStart.StableId)).findFirst().orElse(null);
+
+            if(geneEnd == null)
+                continue;
+
+            for (final Transcript transStart : geneStart.transcripts())
             {
-                for (final GeneAnnotation endGene : genesEnd)
+                final Transcript transEnd = geneEnd.transcripts().stream()
+                        .filter(x -> x.StableId.equals(transStart.StableId)).findFirst().orElse(null);
+
+                if(transEnd == null)
+                    continue;
+
+                if(transStart.ExonUpstream == transEnd.ExonUpstream)
                 {
-                    for (final Transcript trans2 : endGene.transcripts())
-                    {
-                        if(!areDisruptivePair(trans1, trans2))
-                        {
-                            trans1.setIsDisruptive(false);
-                            trans2.setIsDisruptive(false);
-                        }
-                    }
+                    transStart.setIsDisruptive(false);
+                    transEnd.setIsDisruptive(false);
                 }
             }
         }
     }
 
-
-    public static boolean areDisruptivePair(final Transcript trans1, final Transcript trans2)
+    private static boolean areDisruptivePair(final Transcript trans1, final Transcript trans2)
     {
         if(trans1.parent().id() != trans2.parent().id())
             return true;
