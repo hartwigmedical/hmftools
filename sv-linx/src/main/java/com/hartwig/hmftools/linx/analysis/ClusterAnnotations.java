@@ -1140,7 +1140,7 @@ public class ClusterAnnotations
             return;
 
         // skip if SVs are within range of each other given uncertainty or if ploidy is above the low-support level
-        if(var1.ploidyMin() > LOW_CN_CHANGE_SUPPORT && var2.ploidyMin() > LOW_CN_CHANGE_SUPPORT)
+        if((varLowCns1 && var1.ploidyMin() > LOW_CN_CHANGE_SUPPORT) || (varLowCns2 && var2.ploidyMin() > LOW_CN_CHANGE_SUPPORT))
             return;
 
         if((varLowCns1 && var1.ploidyMax() >= var2.ploidyMin()) || (varLowCns2 && var2.ploidyMax() >= var1.ploidyMin()))
@@ -1175,7 +1175,7 @@ public class ClusterAnnotations
                 var1.copyNumber(true), var2.copyNumber(true),
                 var1.copyNumber(false), var2.copyNumber(false));
 
-        LOGGER.info("INCONS_PLOIDY_CLUSTER_MERGE: {}", output);
+        LOGGER.info("CLONAL_DISCREP_CLUSTERING: {}", output);
     }
 
 

@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
@@ -38,6 +39,8 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,7 +64,9 @@ public class SimpleClustering
     private ClusteringState mState;
     private final LinxConfig mConfig;
     private String mSampleId;
+
     private int mClusteringIndex;
+    private BufferedWriter mClusterHistoryWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(SimpleClustering.class);
 
@@ -69,6 +74,7 @@ public class SimpleClustering
     {
         mState = state;
         mConfig = config;
+        mClusterHistoryWriter = null;
     }
 
     private int getNextClusterId() { return mState.getNextClusterId(); }
@@ -204,7 +210,7 @@ public class SimpleClustering
         var1.addClusterReason(clusterReason, var2.id());
         var2.addClusterReason(clusterReason, var1.id());
 
-        if(mConfig.LogClusteringHistory)
+        if(mConfig.hasMultipleSamples())
         {
             logClusteringDetails(var1, var2, clusterReason);
         }
@@ -214,21 +220,35 @@ public class SimpleClustering
 
     protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
     {
-        long breakendDistance = getProximity(var1, var2);
+        try
+        {
+            if(mClusterHistoryWriter == null)
+            {
+                String outputFileName = mConfig.OutputDataPath + "SVA_CLUSTERING_HISTORY.csv";
 
-        boolean clonalDiscrepancy = hasLowCNChangeSupport(var1) != hasLowCNChangeSupport(var2) && !ploidyMatch(var1, var2);
+                mClusterHistoryWriter = createBufferedWriter(outputFileName, false);
 
-        // [0-9][0-9]:[0-9][0-9]:[0-9][0-9] - \[INFO \] - CLUSTERING:
-        // SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2,Reason,MinDistance,ClonalDiscrepancy
-        String clusteringHistory = String.format("%s,%d", mSampleId, mClusteringIndex);
+                // definitional fields
+                mClusterHistoryWriter.write("SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2");
+                mClusterHistoryWriter.write(",Reason,MinDistance,ClonalDiscrepancy");
+            }
 
-        clusteringHistory += String.format(",%d,%d,%d,%d,%d,%d",
-                var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
-                var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount());
+            long breakendDistance = getProximity(var1, var2);
 
-        clusteringHistory += String.format(",%s,%d,%s", reason, breakendDistance, clonalDiscrepancy);
+            boolean clonalDiscrepancy = hasLowCNChangeSupport(var1) != hasLowCNChangeSupport(var2) && !ploidyMatch(var1, var2);
 
-        LOGGER.info("CLUSTERING: {}", clusteringHistory);
+            mClusterHistoryWriter.write(String.format("%s,%d", mSampleId, mClusteringIndex));
+
+            mClusterHistoryWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
+                    var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
+                    var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount()));
+
+            mClusterHistoryWriter.write(String.format(",%s,%d,%s", reason, breakendDistance, clonalDiscrepancy));
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to open and write output file headers");
+        }
 
         ++mClusteringIndex;
     }
