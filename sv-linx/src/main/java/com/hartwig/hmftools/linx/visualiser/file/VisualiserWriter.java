@@ -194,6 +194,7 @@ public class VisualiserWriter
 
     private void writeVisualSegmentData(final List<SvCluster> clusters)
     {
+        // write out the links from each chain and a link from the chain-end breakends to telomere or centromere
         List<VisSegmentFile> segments = Lists.newArrayList();
 
         for(final SvCluster cluster : clusters)
@@ -210,7 +211,24 @@ public class VisualiserWriter
             // for any linked pair which is repeated in a separate chain, skip writing it for subsequent chains
             List<SvLinkedPair> uniquePairs = Lists.newArrayList();
 
+            // log chains in order of highest to lowest ploidy so that where an SV is is more than 1 chain it will show the max ploidy
+            List<SvChain> chains = Lists.newArrayList();
+
             for (final SvChain chain : cluster.getChains())
+            {
+                int index = 0;
+                while(index < chains.size())
+                {
+                    if(chain.ploidy() > chains.get(index).ploidy())
+                        break;
+                    else
+                        ++index;
+                }
+
+                chains.add(index, chain);
+            }
+
+            for (final SvChain chain : chains)
             {
                 // log the start of the chain
                 boolean startsOnEnd = chain.getFirstSV() == chain.getLastSV(); // closed loop chains eg DMs

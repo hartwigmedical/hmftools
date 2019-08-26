@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.checkClusteringClonalDiscrepancy;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;

@@ -541,7 +541,6 @@ public class SvCluster
     public boolean isSubclonal() { return mIsSubclonal; }
 
     public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
-    public final List<SvVarData> getShortTIRemoteSVs() { return mShortTIRemoteSVs; }
 
     public void setArmLinks()
     {

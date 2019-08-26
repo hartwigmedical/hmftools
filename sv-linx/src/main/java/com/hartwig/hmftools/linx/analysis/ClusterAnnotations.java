@@ -1175,7 +1175,7 @@ public class ClusterAnnotations
                 var1.copyNumber(true), var2.copyNumber(true),
                 var1.copyNumber(false), var2.copyNumber(false));
 
-        LOGGER.info("INCONS_PLOIDY_CLUSTER: {}", output);
+        LOGGER.info("INCONS_PLOIDY_CLUSTER_MERGE: {}", output);
     }
 
 
