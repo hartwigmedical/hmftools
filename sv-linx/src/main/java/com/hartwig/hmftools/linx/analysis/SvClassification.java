@@ -15,12 +15,15 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.ClusterAnalyser.SMALL_CLUSTER_SIZE;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.classifyPairClusters;
 import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterPairType;
+import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterReciprocalType;
+import static com.hartwig.hmftools.linx.analysis.PairResolution.isClusterTemplatedInsertionType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
@@ -52,8 +55,10 @@ public class SvClassification
     // super category for an SV or cluster
     public static final String SUPER_TYPE_SIMPLE = "SIMPLE";
     public static final String SUPER_TYPE_INSERTION = "INSERTION";
-    public static final String SUPER_TYPE_BREAK_PAIR = "BREAK_PAIR";
+    public static final String SUPER_TYPE_RECIPROCAL = "RECIPROCAL";
+    public static final String SUPER_TYPE_TEMPLATED_INSERTION = "TEMPLATED_INSERTION";
     public static final String SUPER_TYPE_COMPLEX = "COMPLEX";
+    public static final String SUPER_TYPE_DOUBLE_MINUTE = "DOUBLE_MINUTE";
     public static final String SUPER_TYPE_INCOMPLETE = "INCOMPLETE";
     public static final String SUPER_TYPE_ARTIFACT = "ARTIFACT";
 
@@ -73,13 +78,17 @@ public class SvClassification
         if(isFilteredResolvedType(resolvedType))
             return SUPER_TYPE_ARTIFACT;
 
-        if(isClusterPairType(resolvedType))
-            return SUPER_TYPE_BREAK_PAIR;
+        if(isClusterReciprocalType(resolvedType))
+            return SUPER_TYPE_RECIPROCAL;
 
-        if(isIncompleteType(resolvedType) || resolvedType == PAIR_OTHER)
-        {
+        if(isClusterTemplatedInsertionType(resolvedType))
+            return SUPER_TYPE_TEMPLATED_INSERTION;
+
+        if(resolvedType == DOUBLE_MINUTE)
+            return SUPER_TYPE_DOUBLE_MINUTE;
+
+        if(isIncompleteType(resolvedType))
             return SUPER_TYPE_INCOMPLETE;
-        }
 
         return SUPER_TYPE_COMPLEX;
     }

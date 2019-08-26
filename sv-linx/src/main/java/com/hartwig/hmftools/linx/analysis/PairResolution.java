@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
@@ -50,10 +51,19 @@ public class PairResolution
 
     public static boolean isClusterPairType(final ResolvedType resolvedType)
     {
+        return isClusterReciprocalType(resolvedType) || isClusterTemplatedInsertionType(resolvedType);
+    }
+
+    public static boolean isClusterReciprocalType(final ResolvedType resolvedType)
+    {
         return (resolvedType == RECIP_TRANS || resolvedType == RECIP_TRANS_DEL_DUP || resolvedType == RECIP_TRANS_DUPS
                 || resolvedType == RECIP_INV || resolvedType == RECIP_INV_DEL_DUP || resolvedType == RECIP_INV_DUPS
-                || resolvedType == DUP_TI || resolvedType == DEL_TI
                 || resolvedType == FB_INV_PAIR || resolvedType == RESOLVED_FOLDBACK || resolvedType == FB_INV_PAIR);
+    }
+
+    public static boolean isClusterTemplatedInsertionType(final ResolvedType resolvedType)
+    {
+        return (resolvedType == DEL_TI || resolvedType == DUP_TI || resolvedType == UNBAL_TRANS_TI);
     }
 
     public static void classifyPairClusters(SvCluster cluster, long longDelThreshold, long longDupThreshold)
@@ -65,8 +75,6 @@ public class PairResolution
 
         if(cluster.hasAnnotation(CLUSTER_ANNOT_DM))
             return;
-
-        // isSpecificCluster(cluster);
 
         // establish the nature of the breakends
         // first reduce SVs and/or chains to a set of breakends and record TI length(s)
@@ -350,7 +358,7 @@ public class PairResolution
         if(startBe1.getChrArm().equals(endBe1.getChrArm()) || startBe2.getChrArm().equals(endBe2.getChrArm()))
         {
             // one chain start and ends on the same arm, the other doesn't
-            cluster.setResolved(false, PAIR_OTHER);
+            cluster.setResolved(false, UNBAL_TRANS_TI);
             return;
         }
 
@@ -372,7 +380,7 @@ public class PairResolution
         }
         else
         {
-            cluster.setResolved(false, PAIR_OTHER);
+            cluster.setResolved(false, UNBAL_TRANS_TI);
             return;
         }
 

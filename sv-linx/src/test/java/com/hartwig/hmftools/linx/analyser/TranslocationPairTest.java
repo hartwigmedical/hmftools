@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
+import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 
@@ -194,7 +195,7 @@ public class TranslocationPairTest
     {
         LinxTester tester = new LinxTester();
 
-        // 2 BNDs - no overlap but 2 deletion bridges - a reciprocal translation
+        // 2 BNDs with 3 arms
         SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 1000, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), "2", 10000, 1, "3", 1000, 1);
 
@@ -204,7 +205,7 @@ public class TranslocationPairTest
         SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertTrue(!cluster.isResolved());
-        assertTrue(cluster.getResolvedType() == PAIR_OTHER);
+        assertTrue(cluster.getResolvedType() == UNBAL_TRANS_TI);
     }
 
 }

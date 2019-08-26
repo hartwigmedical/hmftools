@@ -28,6 +28,7 @@ public enum ResolvedType
     RECIP_INV_DEL_DUP,
     DUP_TI,
     DEL_TI,
+    UNBAL_TRANS_TI,
     PAIR_OTHER,
     RESOLVED_FOLDBACK,
     FB_INV_PAIR,
