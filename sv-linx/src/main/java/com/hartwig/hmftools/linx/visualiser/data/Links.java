@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import static java.lang.Math.round;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -44,9 +42,9 @@ public class Links
 
     public static double linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links)
     {
-        return Links.findStartLink(position, links).map(Link::ploidy).orElse((double)0) + Links.findEndLink(position, links)
+        return Links.findStartLink(position, links).map(Link::ploidy).orElse((double) 0) + Links.findEndLink(position, links)
                 .map(Link::ploidy)
-                .orElse((double)0);
+                .orElse((double) 0);
     }
 
     @NotNull

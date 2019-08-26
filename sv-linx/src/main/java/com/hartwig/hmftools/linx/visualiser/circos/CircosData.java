@@ -9,6 +9,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.data.Connector;
+import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.DisruptedGene;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -32,6 +34,7 @@ public class CircosData
     private final List<GenomeRegion> fragileSites;
     private final List<CopyNumberAlteration> alterations;
     private final List<GenomeRegion> disruptedGeneRegions;
+    private final List<Connector> connectors;
 
     private final List<Link> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
@@ -104,6 +107,12 @@ public class CircosData
         double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
+        connectors = Connectors.createConnectors(segments, links);
+    }
+
+    public List<Connector> connectors()
+    {
+        return connectors;
     }
 
     @NotNull
