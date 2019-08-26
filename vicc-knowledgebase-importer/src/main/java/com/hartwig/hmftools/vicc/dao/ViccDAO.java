@@ -1608,9 +1608,9 @@ public class ViccDAO {
                             evidenceItems.source().isReview(),
                             evidenceItems.source().id(),
                             idEvidenceItems)
-                    .returning(CIVICEVIDENCEITEMSSOURCE.CIVICEVIDENCEITEMSID)
+                    .returning(CIVICEVIDENCEITEMSSOURCE.ID)
                     .fetchOne()
-                    .getValue(CIVICEVIDENCEITEMSSOURCE.CIVICEVIDENCEITEMSID);
+                    .getValue(CIVICEVIDENCEITEMSSOURCE.ID);
 
             context.insertInto(CIVICEVIDENCEITEMSPUBLICATION,
                     CIVICEVIDENCEITEMSPUBLICATION.YEAR,
@@ -1667,18 +1667,17 @@ public class ViccDAO {
                                 source.isReview(),
                                 source.id(),
                                 id)
-                        .returning(CIVICSOURCE.CIVICID)
+                        .returning(CIVICSOURCE.ID)
                         .fetchOne()
-                        .getValue(CIVICSOURCE.CIVICID);
+                        .getValue(CIVICSOURCE.ID);
 
-                //TODO: fix issue with foreign key
-                //                context.insertInto(CIVICPUBLICATION,
-                //                        CIVICPUBLICATION.YEAR,
-                //                        CIVICPUBLICATION.DAY,
-                //                        CIVICPUBLICATION.MONTH,
-                //                        CIVICPUBLICATION.CIVICSOURCEID)
-                //                        .values(source.publicationDate().year(), source.publicationDate().day(), source.publicationDate().month(), idSource)
-                //                        .execute();
+                context.insertInto(CIVICPUBLICATION,
+                        CIVICPUBLICATION.YEAR,
+                        CIVICPUBLICATION.DAY,
+                        CIVICPUBLICATION.MONTH,
+                        CIVICPUBLICATION.CIVICSOURCEID)
+                        .values(source.publicationDate().year(), source.publicationDate().day(), source.publicationDate().month(), idSource)
+                        .execute();
 
                 for (CivicClinicalTrial clinicalTrial : source.clinicalTrials()) {
                     context.insertInto(CIVICCLINICALTRIAL,
@@ -1701,200 +1700,206 @@ public class ViccDAO {
 
         int idLifeActions = context.insertInto(CIVICLIFECYCLEACTIONS, CIVICLIFECYCLEACTIONS.CIVICID)
                 .values(id)
-                .returning(CIVICLIFECYCLEACTIONS.CIVICID)
+                .returning(CIVICLIFECYCLEACTIONS.ID)
                 .fetchOne()
-                .getValue(CIVICLIFECYCLEACTIONS.CIVICID);
+                .getValue(CIVICLIFECYCLEACTIONS.ID);
 
         if (civic.lifecycleActions().lastCommentedOn() != null) {
             int idLastCommendOn =
                     context.insertInto(CIVICLASTCOMMENTEDON, CIVICLASTCOMMENTEDON.TIMESTAMP, CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID)
                             .values(civic.lifecycleActions().lastCommentedOn().timestamp(), idLifeActions)
-                            .returning(CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID)
+                            .returning(CIVICLASTCOMMENTEDON.ID)
                             .fetchOne()
-                            .getValue(CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID);
+                            .getValue(CIVICLASTCOMMENTEDON.ID);
 
             CivicUser userLastCommend = civic.lifecycleActions().lastCommentedOn().user();
-            //TODO fix foreign key
-            //            int idLastCommentUser = context.insertInto(CIVICLASTCOMMENTEDONUSER,
-            //                    CIVICLASTCOMMENTEDONUSER.USERNAME,
-            //                    CIVICLASTCOMMENTEDONUSER.AREAOFEXPERTISE,
-            //                    CIVICLASTCOMMENTEDONUSER.TWITTERHANDLE,
-            //                    CIVICLASTCOMMENTEDONUSER.NAME,
-            //                    CIVICLASTCOMMENTEDONUSER.BIO,
-            //                    CIVICLASTCOMMENTEDONUSER.URL,
-            //                    CIVICLASTCOMMENTEDONUSER.CREATEDAT,
-            //                    CIVICLASTCOMMENTEDONUSER.ACCEPTEDLICENSE,
-            //                    CIVICLASTCOMMENTEDONUSER.AFFILIATION,
-            //                    CIVICLASTCOMMENTEDONUSER.AVATARURL,
-            //                    CIVICLASTCOMMENTEDONUSER.ROLE,
-            //                    CIVICLASTCOMMENTEDONUSER.FACEBOOKPROFILE,
-            //                    CIVICLASTCOMMENTEDONUSER.LINKEDINPROFILE,
-            //                    CIVICLASTCOMMENTEDONUSER.ORCID,
-            //                    CIVICLASTCOMMENTEDONUSER.DISPLAYNAME,
-            //                    CIVICLASTCOMMENTEDONUSER.LASTSEENAT,
-            //                    CIVICLASTCOMMENTEDONUSER.FEATUREDEXPERT,
-            //                    CIVICLASTCOMMENTEDONUSER.IDUSER,
-            //                    CIVICLASTCOMMENTEDONUSER.SIGNUPCOMPLETE,
-            //                    CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID)
-            //                    .values(userLastCommend.username(),
-            //                            userLastCommend.areaOfExpertise(),
-            //                            userLastCommend.twitterHandle(),
-            //                            userLastCommend.name(),
-            //                            userLastCommend.bio(),
-            //                            userLastCommend.url(),
-            //                            userLastCommend.createdAt(),
-            //                            userLastCommend.acceptedLicense(),
-            //                            userLastCommend.affiliation(),
-            //                            userLastCommend.avatarUrl(),
-            //                            userLastCommend.role(),
-            //                            userLastCommend.facebookProfile(),
-            //                            userLastCommend.linkedinProfile(),
-            //                            userLastCommend.orcid(),
-            //                            userLastCommend.displayName(),
-            //                            userLastCommend.lastSeenAt(),
-            //                            userLastCommend.featuredExpert(),
-            //                            userLastCommend.id(),
-            //                            userLastCommend.signupComplete(),
-            //                            idLastCommendOn)
-            //                    .returning(CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID)
-            //                    .fetchOne()
-            //                    .getValue(CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID);
-            //
-            //            context.insertInto(CIVICLASTCOMMENTEDONAVATARS,
-            //                    CIVICLASTCOMMENTEDONAVATARS.X32,
-            //                    CIVICLASTCOMMENTEDONAVATARS.X14,
-            //                    CIVICLASTCOMMENTEDONAVATARS.X64,
-            //                    CIVICLASTCOMMENTEDONAVATARS.X128,
-            //                    CIVICLASTCOMMENTEDONAVATARS.CIVICLASTCOMMENTEDONUSERID)
-            //                    .values(userLastCommend.avatars().x32(), userLastCommend.avatars().x14(), userLastCommend.avatars().x64(), userLastCommend.avatars().x128(), idLastCommentUser)
-            //                    .execute();
-            //
-            //            int idLastCommentOnOrganization = context.insertInto(CIVICLASTCOMMENTEDONORGANIZATION,
-            //                    CIVICLASTCOMMENTEDONORGANIZATION.URL,
-            //                    CIVICLASTCOMMENTEDONORGANIZATION.IDORGANIZATION,
-            //                    CIVICLASTCOMMENTEDONORGANIZATION.DESCRIPTION,
-            //                    CIVICLASTCOMMENTEDONORGANIZATION.NAME,
-            //                    CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID)
-            //                    .values(userLastCommend.organization().url(),
-            //                            userLastCommend.organization().id(),
-            //                            userLastCommend.organization().description(),
-            //                            userLastCommend.organization().name(),
-            //                            idLastCommentUser)
-            //                    .returning(CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID)
-            //                    .fetchOne()
-            //                    .getValue(CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID);
-            //
-            //            context.insertInto(CIVICLASTCOMMENTEDONPROFILEIMAGE,
-            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X32,
-            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X256,
-            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X14,
-            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X64,
-            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X128,
-            //                    CIVICLASTCOMMENTEDONPROFILEIMAGE.CIVICLASTCOMMENTEDONORGANIZATIONID)
-            //                    .values(userLastCommend.organization().profileImage().x32(),
-            //                            userLastCommend.organization().profileImage().x256(),
-            //                            userLastCommend.organization().profileImage().x14(),
-            //                            userLastCommend.organization().profileImage().x64(),
-            //                            userLastCommend.organization().profileImage().x128(),
-            //                            idLastCommentOnOrganization)
-            //                    .execute();
+            int idLastCommentUser = context.insertInto(CIVICLASTCOMMENTEDONUSER,
+                    CIVICLASTCOMMENTEDONUSER.USERNAME,
+                    CIVICLASTCOMMENTEDONUSER.AREAOFEXPERTISE,
+                    CIVICLASTCOMMENTEDONUSER.TWITTERHANDLE,
+                    CIVICLASTCOMMENTEDONUSER.NAME,
+                    CIVICLASTCOMMENTEDONUSER.BIO,
+                    CIVICLASTCOMMENTEDONUSER.URL,
+                    CIVICLASTCOMMENTEDONUSER.CREATEDAT,
+                    CIVICLASTCOMMENTEDONUSER.ACCEPTEDLICENSE,
+                    CIVICLASTCOMMENTEDONUSER.AFFILIATION,
+                    CIVICLASTCOMMENTEDONUSER.AVATARURL,
+                    CIVICLASTCOMMENTEDONUSER.ROLE,
+                    CIVICLASTCOMMENTEDONUSER.FACEBOOKPROFILE,
+                    CIVICLASTCOMMENTEDONUSER.LINKEDINPROFILE,
+                    CIVICLASTCOMMENTEDONUSER.ORCID,
+                    CIVICLASTCOMMENTEDONUSER.DISPLAYNAME,
+                    CIVICLASTCOMMENTEDONUSER.LASTSEENAT,
+                    CIVICLASTCOMMENTEDONUSER.FEATUREDEXPERT,
+                    CIVICLASTCOMMENTEDONUSER.IDUSER,
+                    CIVICLASTCOMMENTEDONUSER.SIGNUPCOMPLETE,
+                    CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID)
+                    .values(userLastCommend.username(),
+                            userLastCommend.areaOfExpertise(),
+                            userLastCommend.twitterHandle(),
+                            userLastCommend.name(),
+                            userLastCommend.bio(),
+                            userLastCommend.url(),
+                            userLastCommend.createdAt(),
+                            userLastCommend.acceptedLicense(),
+                            userLastCommend.affiliation(),
+                            userLastCommend.avatarUrl(),
+                            userLastCommend.role(),
+                            userLastCommend.facebookProfile(),
+                            userLastCommend.linkedinProfile(),
+                            userLastCommend.orcid(),
+                            userLastCommend.displayName(),
+                            userLastCommend.lastSeenAt(),
+                            userLastCommend.featuredExpert(),
+                            userLastCommend.id(),
+                            userLastCommend.signupComplete(),
+                            idLastCommendOn)
+                    .returning(CIVICLASTCOMMENTEDONUSER.ID)
+                    .fetchOne()
+                    .getValue(CIVICLASTCOMMENTEDONUSER.ID);
+
+            context.insertInto(CIVICLASTCOMMENTEDONAVATARS,
+                    CIVICLASTCOMMENTEDONAVATARS.X32,
+                    CIVICLASTCOMMENTEDONAVATARS.X14,
+                    CIVICLASTCOMMENTEDONAVATARS.X64,
+                    CIVICLASTCOMMENTEDONAVATARS.X128,
+                    CIVICLASTCOMMENTEDONAVATARS.CIVICLASTCOMMENTEDONUSERID)
+                    .values(userLastCommend.avatars().x32(),
+                            userLastCommend.avatars().x14(),
+                            userLastCommend.avatars().x64(),
+                            userLastCommend.avatars().x128(),
+                            idLastCommentUser)
+                    .execute();
+
+            int idLastCommentOnOrganization = context.insertInto(CIVICLASTCOMMENTEDONORGANIZATION,
+                    CIVICLASTCOMMENTEDONORGANIZATION.URL,
+                    CIVICLASTCOMMENTEDONORGANIZATION.IDORGANIZATION,
+                    CIVICLASTCOMMENTEDONORGANIZATION.DESCRIPTION,
+                    CIVICLASTCOMMENTEDONORGANIZATION.NAME,
+                    CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID)
+                    .values(userLastCommend.organization().url(),
+                            userLastCommend.organization().id(),
+                            userLastCommend.organization().description(),
+                            userLastCommend.organization().name(),
+                            idLastCommentUser)
+                    .returning(CIVICLASTCOMMENTEDONORGANIZATION.ID)
+                    .fetchOne()
+                    .getValue(CIVICLASTCOMMENTEDONORGANIZATION.ID);
+
+            context.insertInto(CIVICLASTCOMMENTEDONPROFILEIMAGE,
+                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X32,
+                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X256,
+                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X14,
+                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X64,
+                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X128,
+                    CIVICLASTCOMMENTEDONPROFILEIMAGE.CIVICLASTCOMMENTEDONORGANIZATIONID)
+                    .values(userLastCommend.organization().profileImage().x32(),
+                            userLastCommend.organization().profileImage().x256(),
+                            userLastCommend.organization().profileImage().x14(),
+                            userLastCommend.organization().profileImage().x64(),
+                            userLastCommend.organization().profileImage().x128(),
+                            idLastCommentOnOrganization)
+                    .execute();
         }
 
         if (civic.lifecycleActions().lastModified() != null) {
             int idLastModiefied =
                     context.insertInto(CIVICLASTMODIFIED, CIVICLASTMODIFIED.TIMESTAMP, CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID)
                             .values(civic.lifecycleActions().lastModified().timestamp(), idLifeActions)
-                            .returning(CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID)
+                            .returning(CIVICLASTMODIFIED.ID)
                             .fetchOne()
-                            .getValue(CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID);
+                            .getValue(CIVICLASTMODIFIED.ID);
 
             CivicUser userModified = civic.lifecycleActions().lastModified().user();
-            //TODO fix foreign key
-            //            int idLastModiefiedUser = context.insertInto(CIVICLASTMODIFIEDUSER,
-            //                    CIVICLASTMODIFIEDUSER.USERNAME,
-            //                    CIVICLASTMODIFIEDUSER.AREAOFEXPERTISE,
-            //                    CIVICLASTMODIFIEDUSER.TWITTERHANDLE,
-            //                    CIVICLASTMODIFIEDUSER.NAME,
-            //                    CIVICLASTMODIFIEDUSER.BIO,
-            //                    CIVICLASTMODIFIEDUSER.URL,
-            //                    CIVICLASTMODIFIEDUSER.CREATEDAT,
-            //                    CIVICLASTMODIFIEDUSER.ACCEPTEDLICENSE,
-            //                    CIVICLASTMODIFIEDUSER.AFFILIATION,
-            //                    CIVICLASTMODIFIEDUSER.AVATARURL,
-            //                    CIVICLASTMODIFIEDUSER.ROLE,
-            //                    CIVICLASTMODIFIEDUSER.FACEBOOKPROFILE,
-            //                    CIVICLASTMODIFIEDUSER.LINKEDINPROFILE,
-            //                    CIVICLASTMODIFIEDUSER.ORCID,
-            //                    CIVICLASTMODIFIEDUSER.DISPLAYNAME,
-            //                    CIVICLASTMODIFIEDUSER.LASTSEENAT,
-            //                    CIVICLASTMODIFIEDUSER.FEATUREDEXPERT,
-            //                    CIVICLASTMODIFIEDUSER.IDUSER,
-            //                    CIVICLASTMODIFIEDUSER.SIGNUPCOMPLETE,
-            //                    CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID)
-            //                    .values(userModified.username(),
-            //                            userModified.areaOfExpertise(),
-            //                            userModified.twitterHandle(),
-            //                            userModified.name(),
-            //                            userModified.bio(),
-            //                            userModified.url(),
-            //                            userModified.createdAt(),
-            //                            userModified.acceptedLicense(),
-            //                            userModified.affiliation(),
-            //                            userModified.avatarUrl(),
-            //                            userModified.role(),
-            //                            userModified.facebookProfile(),
-            //                            userModified.linkedinProfile(),
-            //                            userModified.orcid(),
-            //                            userModified.displayName(),
-            //                            userModified.lastSeenAt(),
-            //                            userModified.featuredExpert(),
-            //                            userModified.id(),
-            //                            userModified.signupComplete(),
-            //                            idLastModiefied)
-            //                    .returning(CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID)
-            //                    .fetchOne()
-            //                    .getValue(CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID);
-            //
-            //            context.insertInto(CIVICLASTMODIFIEDAVATARS,
-            //                    CIVICLASTMODIFIEDAVATARS.X32,
-            //                    CIVICLASTMODIFIEDAVATARS.X14,
-            //                    CIVICLASTMODIFIEDAVATARS.X64,
-            //                    CIVICLASTMODIFIEDAVATARS.X128,
-            //                    CIVICLASTMODIFIEDAVATARS.CIVICLASTMODIFIEDID)
-            //                    .values(userModified.avatars().x32(), userModified.avatars().x14(), userModified.avatars().x64(), userModified.avatars().x128(), idLastModiefiedUser)
-            //                    .execute();
-            //
-            //            int idLastModiefiedOrganization = context.insertInto(CIVICLASTMODIFIEDORGANIZATION,
-            //                    CIVICLASTMODIFIEDORGANIZATION.URL,
-            //                    CIVICLASTMODIFIEDORGANIZATION.IDORGANIZATION,
-            //                    CIVICLASTMODIFIEDORGANIZATION.DESCRIPTION,
-            //                    CIVICLASTMODIFIEDORGANIZATION.NAME,
-            //                    CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID)
-            //                    .values(userModified.organization().url(),
-            //                            userModified.organization().id(),
-            //                            userModified.organization().description(),
-            //                            userModified.organization().name(),
-            //                            idLastModiefiedUser)
-            //                    .returning(CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID)
-            //                    .fetchOne()
-            //                    .getValue(CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID);
-            //
-            //            if (userModified.organization().profileImage() != null) {
-            //                context.insertInto(CIVICLASTMODIFIEDPROFILEIMAGE,
-            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X32,
-            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X256,
-            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X14,
-            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X64,
-            //                        CIVICLASTMODIFIEDPROFILEIMAGE.X128,
-            //                        CIVICLASTMODIFIEDPROFILEIMAGE.CIVICLASTMODIFIEDORGANIZATIONID)
-            //                        .values(userModified.organization().profileImage().x32(),
-            //                                userModified.organization().profileImage().x256(),
-            //                                userModified.organization().profileImage().x14(),
-            //                                userModified.organization().profileImage().x64(),
-            //                                userModified.organization().profileImage().x128(),
-            //                                idLastModiefiedOrganization)
-            //                        .execute();
-            //            }
+            int idLastModiefiedUser = context.insertInto(CIVICLASTMODIFIEDUSER,
+                    CIVICLASTMODIFIEDUSER.USERNAME,
+                    CIVICLASTMODIFIEDUSER.AREAOFEXPERTISE,
+                    CIVICLASTMODIFIEDUSER.TWITTERHANDLE,
+                    CIVICLASTMODIFIEDUSER.NAME,
+                    CIVICLASTMODIFIEDUSER.BIO,
+                    CIVICLASTMODIFIEDUSER.URL,
+                    CIVICLASTMODIFIEDUSER.CREATEDAT,
+                    CIVICLASTMODIFIEDUSER.ACCEPTEDLICENSE,
+                    CIVICLASTMODIFIEDUSER.AFFILIATION,
+                    CIVICLASTMODIFIEDUSER.AVATARURL,
+                    CIVICLASTMODIFIEDUSER.ROLE,
+                    CIVICLASTMODIFIEDUSER.FACEBOOKPROFILE,
+                    CIVICLASTMODIFIEDUSER.LINKEDINPROFILE,
+                    CIVICLASTMODIFIEDUSER.ORCID,
+                    CIVICLASTMODIFIEDUSER.DISPLAYNAME,
+                    CIVICLASTMODIFIEDUSER.LASTSEENAT,
+                    CIVICLASTMODIFIEDUSER.FEATUREDEXPERT,
+                    CIVICLASTMODIFIEDUSER.IDUSER,
+                    CIVICLASTMODIFIEDUSER.SIGNUPCOMPLETE,
+                    CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID)
+                    .values(userModified.username(),
+                            userModified.areaOfExpertise(),
+                            userModified.twitterHandle(),
+                            userModified.name(),
+                            userModified.bio(),
+                            userModified.url(),
+                            userModified.createdAt(),
+                            userModified.acceptedLicense(),
+                            userModified.affiliation(),
+                            userModified.avatarUrl(),
+                            userModified.role(),
+                            userModified.facebookProfile(),
+                            userModified.linkedinProfile(),
+                            userModified.orcid(),
+                            userModified.displayName(),
+                            userModified.lastSeenAt(),
+                            userModified.featuredExpert(),
+                            userModified.id(),
+                            userModified.signupComplete(),
+                            idLastModiefied)
+                    .returning(CIVICLASTMODIFIEDUSER.ID)
+                    .fetchOne()
+                    .getValue(CIVICLASTMODIFIEDUSER.ID);
+
+            context.insertInto(CIVICLASTMODIFIEDAVATARS,
+                    CIVICLASTMODIFIEDAVATARS.X32,
+                    CIVICLASTMODIFIEDAVATARS.X14,
+                    CIVICLASTMODIFIEDAVATARS.X64,
+                    CIVICLASTMODIFIEDAVATARS.X128,
+                    CIVICLASTMODIFIEDAVATARS.CIVICLASTMODIFIEDID)
+                    .values(userModified.avatars().x32(),
+                            userModified.avatars().x14(),
+                            userModified.avatars().x64(),
+                            userModified.avatars().x128(),
+                            idLastModiefiedUser)
+                    .execute();
+
+            int idLastModiefiedOrganization = context.insertInto(CIVICLASTMODIFIEDORGANIZATION,
+                    CIVICLASTMODIFIEDORGANIZATION.URL,
+                    CIVICLASTMODIFIEDORGANIZATION.IDORGANIZATION,
+                    CIVICLASTMODIFIEDORGANIZATION.DESCRIPTION,
+                    CIVICLASTMODIFIEDORGANIZATION.NAME,
+                    CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID)
+                    .values(userModified.organization().url(),
+                            userModified.organization().id(),
+                            userModified.organization().description(),
+                            userModified.organization().name(),
+                            idLastModiefiedUser)
+                    .returning(CIVICLASTMODIFIEDORGANIZATION.ID)
+                    .fetchOne()
+                    .getValue(CIVICLASTMODIFIEDORGANIZATION.ID);
+
+            if (userModified.organization().profileImage() != null) {
+                context.insertInto(CIVICLASTMODIFIEDPROFILEIMAGE,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X32,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X256,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X14,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X64,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X128,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.CIVICLASTMODIFIEDORGANIZATIONID)
+                        .values(userModified.organization().profileImage().x32(),
+                                userModified.organization().profileImage().x256(),
+                                userModified.organization().profileImage().x14(),
+                                userModified.organization().profileImage().x64(),
+                                userModified.organization().profileImage().x128(),
+                                idLastModiefiedOrganization)
+                        .execute();
+            }
 
         }
 
@@ -1902,97 +1907,100 @@ public class ViccDAO {
             int idLastReviewed =
                     context.insertInto(CIVICLASTREVIEWED, CIVICLASTREVIEWED.TIMESTAMP, CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID)
                             .values(civic.lifecycleActions().lastCommentedOn().timestamp(), idLifeActions)
-                            .returning(CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID)
+                            .returning(CIVICLASTREVIEWED.ID)
                             .fetchOne()
-                            .getValue(CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID);
+                            .getValue(CIVICLASTREVIEWED.ID);
 
             CivicUser userLastReviewed = civic.lifecycleActions().lastReviewed().user();
-            //TODO fix foreign key
-            //            int idLastReviewedUser = context.insertInto(CIVICLASTREVIEWEDUSER,
-            //                    CIVICLASTREVIEWEDUSER.USERNAME,
-            //                    CIVICLASTREVIEWEDUSER.AREAOFEXPERTISE,
-            //                    CIVICLASTREVIEWEDUSER.TWITTERHANDLE,
-            //                    CIVICLASTREVIEWEDUSER.NAME,
-            //                    CIVICLASTREVIEWEDUSER.BIO,
-            //                    CIVICLASTREVIEWEDUSER.URL,
-            //                    CIVICLASTREVIEWEDUSER.CREATEDAT,
-            //                    CIVICLASTREVIEWEDUSER.ACCEPTEDLICENSE,
-            //                    CIVICLASTREVIEWEDUSER.AFFILIATION,
-            //                    CIVICLASTREVIEWEDUSER.AVATARURL,
-            //                    CIVICLASTREVIEWEDUSER.ROLE,
-            //                    CIVICLASTREVIEWEDUSER.FACEBOOKPROFILE,
-            //                    CIVICLASTREVIEWEDUSER.LINKEDINPROFILE,
-            //                    CIVICLASTREVIEWEDUSER.ORCID,
-            //                    CIVICLASTREVIEWEDUSER.DISPLAYNAME,
-            //                    CIVICLASTREVIEWEDUSER.LASTSEENAT,
-            //                    CIVICLASTREVIEWEDUSER.FEATUREDEXPERT,
-            //                    CIVICLASTREVIEWEDUSER.IDUSER,
-            //                    CIVICLASTREVIEWEDUSER.SIGNUPCOMPLETE,
-            //                    CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID)
-            //                    .values(userLastReviewed.username(),
-            //                            userLastReviewed.areaOfExpertise(),
-            //                            userLastReviewed.twitterHandle(),
-            //                            userLastReviewed.name(),
-            //                            userLastReviewed.bio(),
-            //                            userLastReviewed.url(),
-            //                            userLastReviewed.createdAt(),
-            //                            userLastReviewed.acceptedLicense(),
-            //                            userLastReviewed.affiliation(),
-            //                            userLastReviewed.avatarUrl(),
-            //                            userLastReviewed.role(),
-            //                            userLastReviewed.facebookProfile(),
-            //                            userLastReviewed.linkedinProfile(),
-            //                            userLastReviewed.orcid(),
-            //                            userLastReviewed.displayName(),
-            //                            userLastReviewed.lastSeenAt(),
-            //                            userLastReviewed.featuredExpert(),
-            //                            userLastReviewed.id(),
-            //                            userLastReviewed.signupComplete(),
-            //                            idLastReviewed)
-            //                    .returning(CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID)
-            //                    .fetchOne()
-            //                    .getValue(CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID);
-            //
-            //            context.insertInto(CIVICLASTREVIEWEDAVATARS,
-            //                    CIVICLASTREVIEWEDAVATARS.X32,
-            //                    CIVICLASTREVIEWEDAVATARS.X14,
-            //                    CIVICLASTREVIEWEDAVATARS.X64,
-            //                    CIVICLASTREVIEWEDAVATARS.X128,
-            //                    CIVICLASTREVIEWEDAVATARS.CIVICLASTREVIEWEDID)
-            //                    .values(userLastReviewed.avatars().x32(), userLastReviewed.avatars().x14(), userLastReviewed.avatars().x64(), userLastReviewed.avatars().x128(), idLastReviewedUser)
-            //                    .execute();
-            //
-            //            int idLastReviewedOrganization = context.insertInto(CIVICLASTREVIEWEDORGANIZATION,
-            //                    CIVICLASTREVIEWEDORGANIZATION.URL,
-            //                    CIVICLASTREVIEWEDORGANIZATION.IDORGANIZATION,
-            //                    CIVICLASTREVIEWEDORGANIZATION.DESCRIPTION,
-            //                    CIVICLASTREVIEWEDORGANIZATION.NAME,
-            //                    CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID)
-            //                    .values(userLastReviewed.organization().url(),
-            //                            userLastReviewed.organization().id(),
-            //                            userLastReviewed.organization().description(),
-            //                            userLastReviewed.organization().name(),
-            //                            idLastReviewedUser)
-            //                    .returning(CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID)
-            //                    .fetchOne()
-            //                    .getValue(CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID);
-            //
-            //            context.insertInto(CIVICLASTREVIEWEDPROFILEIMAGE,
-            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X32,
-            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X256,
-            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X14,
-            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X64,
-            //                    CIVICLASTREVIEWEDPROFILEIMAGE.X128,
-            //                    CIVICLASTREVIEWEDPROFILEIMAGE.CIVICLASTREVIEWEDORGANIZATIONID)
-            //                    .values(userLastReviewed.organization().profileImage().x32(),
-            //                            userLastReviewed.organization().profileImage().x256(),
-            //                            userLastReviewed.organization().profileImage().x14(),
-            //                            userLastReviewed.organization().profileImage().x64(),
-            //                            userLastReviewed.organization().profileImage().x128(),
-            //                            idLastReviewedOrganization)
-            //                    .execute();
-        }
+            int idLastReviewedUser = context.insertInto(CIVICLASTREVIEWEDUSER,
+                    CIVICLASTREVIEWEDUSER.USERNAME,
+                    CIVICLASTREVIEWEDUSER.AREAOFEXPERTISE,
+                    CIVICLASTREVIEWEDUSER.TWITTERHANDLE,
+                    CIVICLASTREVIEWEDUSER.NAME,
+                    CIVICLASTREVIEWEDUSER.BIO,
+                    CIVICLASTREVIEWEDUSER.URL,
+                    CIVICLASTREVIEWEDUSER.CREATEDAT,
+                    CIVICLASTREVIEWEDUSER.ACCEPTEDLICENSE,
+                    CIVICLASTREVIEWEDUSER.AFFILIATION,
+                    CIVICLASTREVIEWEDUSER.AVATARURL,
+                    CIVICLASTREVIEWEDUSER.ROLE,
+                    CIVICLASTREVIEWEDUSER.FACEBOOKPROFILE,
+                    CIVICLASTREVIEWEDUSER.LINKEDINPROFILE,
+                    CIVICLASTREVIEWEDUSER.ORCID,
+                    CIVICLASTREVIEWEDUSER.DISPLAYNAME,
+                    CIVICLASTREVIEWEDUSER.LASTSEENAT,
+                    CIVICLASTREVIEWEDUSER.FEATUREDEXPERT,
+                    CIVICLASTREVIEWEDUSER.IDUSER,
+                    CIVICLASTREVIEWEDUSER.SIGNUPCOMPLETE,
+                    CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID)
+                    .values(userLastReviewed.username(),
+                            userLastReviewed.areaOfExpertise(),
+                            userLastReviewed.twitterHandle(),
+                            userLastReviewed.name(),
+                            userLastReviewed.bio(),
+                            userLastReviewed.url(),
+                            userLastReviewed.createdAt(),
+                            userLastReviewed.acceptedLicense(),
+                            userLastReviewed.affiliation(),
+                            userLastReviewed.avatarUrl(),
+                            userLastReviewed.role(),
+                            userLastReviewed.facebookProfile(),
+                            userLastReviewed.linkedinProfile(),
+                            userLastReviewed.orcid(),
+                            userLastReviewed.displayName(),
+                            userLastReviewed.lastSeenAt(),
+                            userLastReviewed.featuredExpert(),
+                            userLastReviewed.id(),
+                            userLastReviewed.signupComplete(),
+                            idLastReviewed)
+                    .returning(CIVICLASTREVIEWEDUSER.ID)
+                    .fetchOne()
+                    .getValue(CIVICLASTREVIEWEDUSER.ID);
 
+            context.insertInto(CIVICLASTREVIEWEDAVATARS,
+                    CIVICLASTREVIEWEDAVATARS.X32,
+                    CIVICLASTREVIEWEDAVATARS.X14,
+                    CIVICLASTREVIEWEDAVATARS.X64,
+                    CIVICLASTREVIEWEDAVATARS.X128,
+                    CIVICLASTREVIEWEDAVATARS.CIVICLASTREVIEWEDID)
+                    .values(userLastReviewed.avatars().x32(),
+                            userLastReviewed.avatars().x14(),
+                            userLastReviewed.avatars().x64(),
+                            userLastReviewed.avatars().x128(),
+                            idLastReviewedUser)
+                    .execute();
+
+            int idLastReviewedOrganization = context.insertInto(CIVICLASTREVIEWEDORGANIZATION,
+                    CIVICLASTREVIEWEDORGANIZATION.URL,
+                    CIVICLASTREVIEWEDORGANIZATION.IDORGANIZATION,
+                    CIVICLASTREVIEWEDORGANIZATION.DESCRIPTION,
+                    CIVICLASTREVIEWEDORGANIZATION.NAME,
+                    CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID)
+                    .values(userLastReviewed.organization().url(),
+                            userLastReviewed.organization().id(),
+                            userLastReviewed.organization().description(),
+                            userLastReviewed.organization().name(),
+                            idLastReviewedUser)
+                    .returning(CIVICLASTREVIEWEDORGANIZATION.ID)
+                    .fetchOne()
+                    .getValue(CIVICLASTREVIEWEDORGANIZATION.ID);
+
+            context.insertInto(CIVICLASTREVIEWEDPROFILEIMAGE,
+                    CIVICLASTREVIEWEDPROFILEIMAGE.X32,
+                    CIVICLASTREVIEWEDPROFILEIMAGE.X256,
+                    CIVICLASTREVIEWEDPROFILEIMAGE.X14,
+                    CIVICLASTREVIEWEDPROFILEIMAGE.X64,
+                    CIVICLASTREVIEWEDPROFILEIMAGE.X128,
+                    CIVICLASTREVIEWEDPROFILEIMAGE.CIVICLASTREVIEWEDORGANIZATIONID)
+                    .values(userLastReviewed.organization().profileImage().x32(),
+                            userLastReviewed.organization().profileImage().x256(),
+                            userLastReviewed.organization().profileImage().x14(),
+                            userLastReviewed.organization().profileImage().x64(),
+                            userLastReviewed.organization().profileImage().x128(),
+                            idLastReviewedOrganization)
+                    .execute();
+
+        }
     }
 
     private void writeKbSpecificObject(int viccEntryId, @NotNull KbSpecificObject object) {
@@ -3133,287 +3141,328 @@ public class ViccDAO {
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON1.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon1().start(), info.exonBoundaries().exon1().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon1().start(), info.exonBoundaries().exon1().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon2() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON2.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon2().start(), info.exonBoundaries().exon2().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon2().start(), info.exonBoundaries().exon2().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon3() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON3.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon3().start(), info.exonBoundaries().exon3().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon3().start(), info.exonBoundaries().exon3().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon4() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON4.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon4().start(), info.exonBoundaries().exon4().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon4().start(), info.exonBoundaries().exon4().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon5() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON5.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon5().start(), info.exonBoundaries().exon5().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon5().start(), info.exonBoundaries().exon5().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon6() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON6.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon6().start(), info.exonBoundaries().exon6().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon6().start(), info.exonBoundaries().exon6().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon7() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON7.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon7().start(), info.exonBoundaries().exon7().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon7().start(), info.exonBoundaries().exon7().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon8() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON8.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon8().start(), info.exonBoundaries().exon8().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon8().start(), info.exonBoundaries().exon8().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon9() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON9.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon9().start(), info.exonBoundaries().exon9().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon9().start(), info.exonBoundaries().exon9().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon10() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON10.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon10().start(), info.exonBoundaries().exon10().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon10().start(), info.exonBoundaries().exon10().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon11() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON11.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon11().start(), info.exonBoundaries().exon11().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon11().start(), info.exonBoundaries().exon11().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon12() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON12.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon12().start(), info.exonBoundaries().exon12().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon12().start(), info.exonBoundaries().exon12().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon13() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON13.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon13().start(), info.exonBoundaries().exon13().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon13().start(), info.exonBoundaries().exon13().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon14() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON14.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon14().start(), info.exonBoundaries().exon14().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon14().start(), info.exonBoundaries().exon14().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon15() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON15.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon15().start(), info.exonBoundaries().exon15().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon15().start(), info.exonBoundaries().exon15().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon16() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON16.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon16().start(), info.exonBoundaries().exon16().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon16().start(), info.exonBoundaries().exon16().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon17() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON17.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon17().start(), info.exonBoundaries().exon17().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon17().start(), info.exonBoundaries().exon17().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon18() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON18.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon18().start(), info.exonBoundaries().exon18().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon18().start(), info.exonBoundaries().exon18().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon19() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON19.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon19().start(), info.exonBoundaries().exon19().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon19().start(), info.exonBoundaries().exon19().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon20() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON20.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon20().start(), info.exonBoundaries().exon20().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon20().start(), info.exonBoundaries().exon20().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon21() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON21.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon21().start(), info.exonBoundaries().exon21().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon21().start(), info.exonBoundaries().exon21().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon22() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON22.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon22().start(), info.exonBoundaries().exon22().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon22().start(), info.exonBoundaries().exon22().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon23() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON23.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon23().start(), info.exonBoundaries().exon23().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon23().start(), info.exonBoundaries().exon23().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon24() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON24.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon24().start(), info.exonBoundaries().exon24().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon24().start(), info.exonBoundaries().exon24().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon25() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON25.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon25().start(), info.exonBoundaries().exon25().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon25().start(), info.exonBoundaries().exon25().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon26() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON26.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon26().start(), info.exonBoundaries().exon26().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon26().start(), info.exonBoundaries().exon26().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon27() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON27.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon27().start(), info.exonBoundaries().exon27().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon27().start(), info.exonBoundaries().exon27().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon28() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON28.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon28().start(), info.exonBoundaries().exon28().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon28().start(), info.exonBoundaries().exon28().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon29() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON29.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon29().start(), info.exonBoundaries().exon29().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon29().start(), info.exonBoundaries().exon29().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon30() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON30.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon30().start(), info.exonBoundaries().exon30().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon30().start(), info.exonBoundaries().exon30().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon31() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON31.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon31().start(), info.exonBoundaries().exon31().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon31().start(), info.exonBoundaries().exon31().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon32() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON32.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon32().start(), info.exonBoundaries().exon32().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon32().start(), info.exonBoundaries().exon32().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon33() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON33.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon33().start(), info.exonBoundaries().exon33().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon33().start(), info.exonBoundaries().exon33().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon34() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON34.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon34().start(), info.exonBoundaries().exon34().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon34().start(), info.exonBoundaries().exon34().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon35() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON35.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon35().start(), info.exonBoundaries().exon35().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon35().start(), info.exonBoundaries().exon35().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon36() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON36.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon36().start(), info.exonBoundaries().exon36().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon36().start(), info.exonBoundaries().exon36().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon37() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON37.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon37().start(), info.exonBoundaries().exon37().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon37().start(), info.exonBoundaries().exon37().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon38() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON38.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon38().start(), info.exonBoundaries().exon38().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon38().start(), info.exonBoundaries().exon38().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon39() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon39().start(), info.exonBoundaries().exon39().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon39().start(), info.exonBoundaries().exon39().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon40() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon40().start(), info.exonBoundaries().exon40().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon40().start(), info.exonBoundaries().exon40().stop(), idExonPosities)
+                            .execute();
                 }
                 if (info.exonBoundaries().exon41() != null) {
                     context.insertInto(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41.START,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41.END,
                             MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41.MOLECULARMATCHMUTATIONSEXONPOSITIESID)
-                            .values(info.exonBoundaries().exon41().start(), info.exonBoundaries().exon41().stop(), idExonPosities).execute();
+                            .values(info.exonBoundaries().exon41().start(), info.exonBoundaries().exon41().stop(), idExonPosities)
+                            .execute();
                 }
 
             }
