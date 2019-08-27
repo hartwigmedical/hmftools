@@ -703,7 +703,6 @@ CREATE TABLE germlineVariant
     totalReadCount int NOT NULL,
     adjustedVaf DOUBLE PRECISION NOT NULL,
     adjustedCopyNumber DOUBLE PRECISION NOT NULL,
-    highConfidence BOOLEAN NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
     hgvsProtein varchar(255) NOT NULL,
     hgvsCoding varchar(255) NOT NULL,

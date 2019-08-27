@@ -120,13 +120,22 @@ class RecordAnalyzer(transvarLocation: String, private val reference: IndexedFas
         }
         return when (mutation) {
             is GeneMutations -> listOf(transcript.start()..transcript.end())
-            is ExonMutations -> listOf(transcript.exome()[mutation.exonNumber].start()..transcript.exome()[mutation.exonNumber].end())
+            is ExonMutations -> extractExonNumberRange(transcript, mutation.exonNumber)
             is CodonRangeMutations -> transcript.codonRangeByIndex(mutation.startCodon, mutation.endCodon)?.map { it -> it.start()..it.end() }
                     ?: emptyList()
             is CodonMutations -> transcript.codonByIndex(mutation.codonNumber)?.map { it -> it.start()..it.end() } ?: emptyList()
             is GenericRangeMutations -> transcript.codingRangeByGenomicCoordinates(mutation.startPosition, mutation.endPosition)
                     ?.map { it -> it.start()..it.end() } ?: emptyList()
         }
+    }
+
+    private fun extractExonNumberRange(transcript: HmfTranscriptRegion, exonNumber: Int): List<ClosedRange<Long>> {
+        if (exonNumber > transcript.exome().size) {
+            logger.warn("Requested invalid exon number $exonNumber on gene ${transcript.gene()}")
+            return emptyList()
+        }
+
+        return listOf(transcript.exome()[exonNumber].start()..transcript.exome()[exonNumber].end())
     }
 
     private fun createGeneModel(genericMutations: List<GenericMutation>): Map<String, HmfTranscriptRegion?> {
