@@ -77,15 +77,15 @@ public class RecoverStructuralVariants implements Closeable {
     public Collection<VariantContext> recoverVariants(@NotNull final List<StructuralVariant> currentVariants) throws IOException {
         final Map<String, VariantContext> result = Maps.newHashMap();
 
-        recoverFromUnbalancedVariants(currentVariants).forEach(x -> result.put(x.getID(), x));
         recoverFromUnexplainedSegments().forEach(x -> result.put(x.getID(), x));
+        recoverFromUnbalancedVariants(currentVariants, result.values()).forEach(x -> result.put(x.getID(), x));
 
         return result.values();
     }
 
     @VisibleForTesting
     @NotNull
-    List<VariantContext> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariant> currentVariants) throws IOException {
+    List<VariantContext> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariant> currentVariants, @NotNull final Collection<VariantContext> recovered) throws IOException {
 
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
@@ -106,7 +106,7 @@ public class RecoverStructuralVariants implements Closeable {
                 double expectedCopyNumberChange = leg.averageImpliedPloidy();
                 double unexplainedCopyNumberChange = Math.max(0, expectedCopyNumberChange - copyNumberChange);
 
-                if (isUnbalanced(unexplainedCopyNumberChange, copyNumber)) {
+                if (isUnbalanced(unexplainedCopyNumberChange, copyNumber) && !isCloseToRecoveredVariant(leg, recovered)) {
                     final List<PurpleCopyNumber> chromosomeCopyNumbers = allCopyNumbers.get(HumanChromosome.fromString(leg.chromosome()));
                     int index = indexOf(leg.cnaPosition(), chromosomeCopyNumbers);
 
@@ -146,6 +146,17 @@ public class RecoverStructuralVariants implements Closeable {
         }
 
         return result;
+    }
+
+    private static boolean isCloseToRecoveredVariant(StructuralVariantLegPloidy legPloidy, Collection<VariantContext> recovered) {
+        for (VariantContext other : recovered) {
+            if (legPloidy.chromosome().equals(other.getContig())
+                    && Math.abs(legPloidy.position() - other.getStart()) <= UNBALANCED_MIN_DEPTH_WINDOW_COUNT * 1000) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull

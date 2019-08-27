@@ -7,6 +7,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -87,7 +88,7 @@ public class RecoverStructuralVariantsTest {
         RecoverStructuralVariants victim =
                 new RecoverStructuralVariants(purityAdjuster, recoveredVariantFactory, Lists.newArrayList(first, second, third));
 
-        return victim.recoverFromUnbalancedVariants(Lists.newArrayList(del));
+        return victim.recoverFromUnbalancedVariants(Lists.newArrayList(del), Collections.emptyList());
     }
 
     @NotNull
@@ -102,7 +103,7 @@ public class RecoverStructuralVariantsTest {
         StructuralVariant single = createSingle(position);
         assertEquals(position + 1, single.start().cnaPosition());
 
-        return victim.recoverFromUnbalancedVariants(Lists.newArrayList(single));
+        return victim.recoverFromUnbalancedVariants(Lists.newArrayList(single), Collections.emptyList());
     }
 
     @NotNull
