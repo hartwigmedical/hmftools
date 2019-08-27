@@ -71,7 +71,6 @@ public class FusionDisruptionAnalyser
     private LinxConfig mConfig;
 
     private FusionParameters mFusionParams;
-    private boolean mSkipFusionCheck;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
     private List<String> mRestrictedGenes;
@@ -85,7 +84,6 @@ public class FusionDisruptionAnalyser
     private PerformanceCounter mPerfCounter;
 
     public static final String SAMPLE_RNA_FILE = "sample_rna_file";
-    public static final String SKIP_FUSION_OUTPUT = "skip_fusion_output";
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
@@ -107,7 +105,6 @@ public class FusionDisruptionAnalyser
 
         mOutputDir = "";
         mFusions = Lists.newArrayList();
-        mSkipFusionCheck = false;
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
@@ -126,7 +123,6 @@ public class FusionDisruptionAnalyser
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
-        options.addOption(SKIP_FUSION_OUTPUT, false, "No fusion search or output");
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
@@ -152,16 +148,11 @@ public class FusionDisruptionAnalyser
 
         if(cmdLineArgs != null)
         {
-            mSkipFusionCheck = cmdLineArgs.hasOption(SKIP_FUSION_OUTPUT);
+            String fusionFileName = mConfig.hasMultipleSamples() ? "SVA_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
+            mFusionWriter.initialiseOutputFile(fusionFileName);
 
-            if (!mSkipFusionCheck)
-            {
-                String fusionFileName = mConfig.hasMultipleSamples() ? "SVA_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
-                mFusionWriter.initialiseOutputFile(fusionFileName);
-
-                if(mConfig.hasMultipleSamples())
-                    mDisruptionFinder.initialiseOutputFile("SVA_DISRUPTIONS.csv");
-            }
+            if(mConfig.hasMultipleSamples())
+                mDisruptionFinder.initialiseOutputFile("SVA_DISRUPTIONS.csv");
 
             if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
             {
@@ -329,11 +320,8 @@ public class FusionDisruptionAnalyser
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
-        if(!mSkipFusionCheck)
-        {
-            findFusions(svList, clusters);
-            mDisruptionFinder.findReportableDisruptions(svList);
-        }
+        findFusions(svList, clusters);
+        mDisruptionFinder.findReportableDisruptions(svList);
 
         if(mConfig.isSingleSample())
         {
