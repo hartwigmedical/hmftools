@@ -277,7 +277,7 @@ public class CircosDataWriter
                     final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
                             .add(String.valueOf(adjusted.start()))
                             .add(String.valueOf(adjusted.end()))
-                            .add(shorthand(unadjusted.end() - unadjusted.start()))
+                            .add(shorthand(unadjusted.bases()))
                             .toString();
                     result.add(distance);
                 }
