@@ -30,7 +30,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProte
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class SvGeneTranscriptCollection
 {
@@ -214,7 +213,7 @@ public class SvGeneTranscriptCollection
 
         if(precedingGeneSAPos >= 0)
         {
-            long preDistance = transcript.parent().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
+            long preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
             transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
         }
     }
@@ -655,8 +654,8 @@ public class SvGeneTranscriptCollection
             long position, byte orientation)
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
-        boolean isUpstream = (transcript.parent().Strand * orientation) > 0;
-        boolean forwardStrand = (transcript.parent().Strand == 1);
+        boolean isUpstream = (transcript.gene().Strand * orientation) > 0;
+        boolean forwardStrand = (transcript.gene().Strand == 1);
 
         Map<Integer,Integer> alternativePhasing = Maps.newHashMap();
 

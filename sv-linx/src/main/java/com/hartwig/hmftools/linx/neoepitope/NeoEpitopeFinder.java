@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
@@ -25,7 +24,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
@@ -88,15 +86,15 @@ public class NeoEpitopeFinder
             String upstreamBases = getBaseString(upTrans, getTranscriptData(upTrans), false, upstreamPhaseOffset);
             final TranscriptData downTransData = getTranscriptData(downTrans);
             String downstreamBases = getBaseString(downTrans, downTransData, !isPhased, downstreamPhaseOffset);
-            int nmdBaseCount = calcNonMediatedDecayBases(downTrans.parent(), downTransData);
+            int nmdBaseCount = calcNonMediatedDecayBases(downTrans.gene(), downTransData);
 
             // upstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
             // downstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
             // upstream strand -1, bases will be retreived from left to right (lower to higher), need to reverse and convert
             // downstream strand -1, bases will be retreived from left to right (lower to higher), need to reverse and convert
 
-            int upStrand = upTrans.parent().Strand;
-            int downStrand = downTrans.parent().Strand;
+            int upStrand = upTrans.gene().Strand;
+            int downStrand = downTrans.gene().Strand;
 
             // correct for strand
             if(upStrand == -1)
@@ -200,11 +198,11 @@ public class NeoEpitopeFinder
 
     private TranscriptData getTranscriptData(final Transcript transcript)
     {
-        final TranscriptData transData = mGeneTransCache.getTranscriptData(transcript.parent().StableId, transcript.StableId);
+        final TranscriptData transData = mGeneTransCache.getTranscriptData(transcript.gene().StableId, transcript.StableId);
 
         if(transData == null)
         {
-            LOGGER.error("gene({}) transcript({}) data not found", transcript.parent().GeneName, transcript.StableId);
+            LOGGER.error("gene({}) transcript({}) data not found", transcript.gene().GeneName, transcript.StableId);
             return null;
         }
 
@@ -216,7 +214,7 @@ public class NeoEpitopeFinder
         if(transcript.nonCoding())
             return "";
 
-        final GeneAnnotation gene = transcript.parent();
+        final GeneAnnotation gene = transcript.gene();
         long breakPosition = gene.position();
 
         int requiredBases = AMINO_ACID_REF_COUNT * 3 + phaseOffset;
@@ -473,7 +471,7 @@ public class NeoEpitopeFinder
             {
                 boolean isUpstream = (se == SE_START);
                 final Transcript trans = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                final GeneAnnotation gene = trans.parent();
+                final GeneAnnotation gene = trans.gene();
 
                 mFileWriter.write(String.format(",%d,%s,%d,%d",
                         gene.id(), gene.chromosome(), gene.position(), gene.orientation()));

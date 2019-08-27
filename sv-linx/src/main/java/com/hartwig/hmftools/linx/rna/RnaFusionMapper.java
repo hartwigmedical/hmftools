@@ -373,7 +373,7 @@ public class RnaFusionMapper
                     if(!isViable)
                     {
                         // for non-viable breakends, provide the exons skipped count
-                        String geneId = closestTrans.parent().StableId;
+                        String geneId = closestTrans.gene().StableId;
                         final int rnaExonData[] = mGeneTransCollection.getExonRankings(geneId, rnaPosition);
                         final int svPosExonData[] = mGeneTransCollection.getExonRankings(geneId, closestBreakend.position());
 
@@ -395,8 +395,8 @@ public class RnaFusionMapper
     {
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
-            if(dnaFusion.upstreamTrans().parent().id() == fusion.upstreamTrans().parent().id()
-            && dnaFusion.downstreamTrans().parent().id() == fusion.downstreamTrans().parent().id())
+            if(dnaFusion.upstreamTrans().gene().id() == fusion.upstreamTrans().gene().id()
+            && dnaFusion.downstreamTrans().gene().id() == fusion.downstreamTrans().gene().id())
             {
                 return true;
             }
@@ -414,12 +414,12 @@ public class RnaFusionMapper
 
         // if the RNA boundary is at or before the 2nd exon (which has the first splice acceptor), then the breakend can
         // be upstream as far the previous gene or 100K
-        final TranscriptData transData = mGeneTransCollection.getTranscriptData(trans.parent().StableId, trans.StableId);
+        final TranscriptData transData = mGeneTransCollection.getTranscriptData(trans.gene().StableId, trans.StableId);
 
         if (transData == null || transData.exons().isEmpty())
             return false;
 
-        int strand = trans.parent().Strand;
+        int strand = trans.gene().Strand;
 
         // first find the matching exon boundary for this RNA fusion boundary
         for (int i = 0; i < transData.exons().size(); ++i)
@@ -869,7 +869,7 @@ public class RnaFusionMapper
 
                 if(trans != null)
                 {
-                    final GeneAnnotation gene = trans.parent();
+                    final GeneAnnotation gene = trans.gene();
 
                     writer.write(String.format(",%d,%s,%d,%d,%d,%d,%s,%s",
                             gene.id(), gene.chromosome(), gene.position(),

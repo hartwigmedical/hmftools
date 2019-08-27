@@ -34,7 +34,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusion
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
@@ -349,9 +348,9 @@ public class FusionDisruptionAnalyser
             for(final GeneFusion fusion : uniqueFusions)
             {
                 LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
-                        fusion.upstreamTrans().parent().GeneName, fusion.downstreamTrans().parent().GeneName, fusion.reportable(),
+                        fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
                         fusion.getKnownType(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
-                        fusion.upstreamTrans().parent().id(), fusion.downstreamTrans().parent().id());
+                        fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
             }
         }
 
@@ -442,7 +441,7 @@ public class FusionDisruptionAnalyser
 
                     // look at each gene in turn
                     Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                    GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().parent() : fusion.downstreamTrans().parent();
+                    GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
                     SvBreakend breakend = var.getBreakend(gene.isStart());
 
@@ -498,7 +497,7 @@ public class FusionDisruptionAnalyser
             for(int i = 0; i < chainFusions.size(); ++i)
             {
                 GeneFusion fusion = chainFusions.get(i);
-                String genePair = fusion.upstreamTrans().parent().GeneName + "_" + fusion.downstreamTrans().parent().GeneName;
+                String genePair = fusion.upstreamTrans().gene().GeneName + "_" + fusion.downstreamTrans().gene().GeneName;
 
                 if(genePairings.contains(genePair))
                     continue;
@@ -654,9 +653,9 @@ public class FusionDisruptionAnalyser
                 {
                     // if the fusion from the upstream gene is on the positive strand, then it will have a fusion direction of +1
                     // whenever it goes through a subsequent linked pair by joining to the first (lower) breakend in the pair
-                    int upGeneStrand = fusion.upstreamTrans().parent().Strand;
+                    int upGeneStrand = fusion.upstreamTrans().gene().Strand;
                     boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
-                    boolean fusionLowerToUpper = fusion.upstreamTrans().parent().position() == lowerBreakend.position();
+                    boolean fusionLowerToUpper = fusion.upstreamTrans().gene().position() == lowerBreakend.position();
 
                     // check any traversed genes
                     long totalLinkLength = 0;
@@ -705,7 +704,7 @@ public class FusionDisruptionAnalyser
 
                         // look at each gene in turn
                         Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                        GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().parent() : fusion.downstreamTrans().parent();
+                        GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
                         SvBreakend breakend = lowerBreakend.position() == gene.position() ? lowerBreakend : upperBreakend;
 
@@ -778,10 +777,10 @@ public class FusionDisruptionAnalyser
     {
         for(GeneFusion fusion : fusions)
         {
-            if(newFusion.upstreamTrans().parent().id() != fusion.upstreamTrans().parent().id())
+            if(newFusion.upstreamTrans().gene().id() != fusion.upstreamTrans().gene().id())
                 continue;
 
-            if(newFusion.downstreamTrans().parent().id() != fusion.downstreamTrans().parent().id())
+            if(newFusion.downstreamTrans().gene().id() != fusion.downstreamTrans().gene().id())
                 continue;
 
             if(!newFusion.upstreamTrans().StableId.equals(fusion.upstreamTrans().StableId))
@@ -971,18 +970,18 @@ public class FusionDisruptionAnalyser
         uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
 
         List<Integer> usedSvIds = Lists.newArrayList();
-        uniqueFusions.stream().forEach(x -> usedSvIds.add(x.upstreamTrans().parent().id()));
+        uniqueFusions.stream().forEach(x -> usedSvIds.add(x.upstreamTrans().gene().id()));
 
         uniqueFusions.stream()
-                .filter(x -> !usedSvIds.contains(x.downstreamTrans().parent().id()))
-                .forEach(x -> usedSvIds.add(x.downstreamTrans().parent().id()));
+                .filter(x -> !usedSvIds.contains(x.downstreamTrans().gene().id()))
+                .forEach(x -> usedSvIds.add(x.downstreamTrans().gene().id()));
 
         for(GeneFusion fusion : mFusions)
         {
             if(fusion.reportable() || genePairs.contains(fusion.name()))
                 continue;
 
-            if(usedSvIds.contains(fusion.upstreamTrans().parent().id()) || usedSvIds.contains(fusion.downstreamTrans().parent().id()))
+            if(usedSvIds.contains(fusion.upstreamTrans().gene().id()) || usedSvIds.contains(fusion.downstreamTrans().gene().id()))
                 continue;
 
             // only add viable fusions for upload
@@ -999,10 +998,10 @@ public class FusionDisruptionAnalyser
 
             genePairs.add(fusion.name());
 
-            usedSvIds.add(fusion.upstreamTrans().parent().id());
+            usedSvIds.add(fusion.upstreamTrans().gene().id());
 
-            if(!usedSvIds.contains(fusion.downstreamTrans().parent().id()))
-                usedSvIds.add(fusion.downstreamTrans().parent().id());
+            if(!usedSvIds.contains(fusion.downstreamTrans().gene().id()))
+                usedSvIds.add(fusion.downstreamTrans().gene().id());
 
             GeneFusion topFusion = determineReportableFusion(similarFusions, false);
 
@@ -1076,14 +1075,14 @@ public class FusionDisruptionAnalyser
             int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 
             mVisWriter.addGeneExonData(clusterId,
-                    fusion.upstreamTrans().parent().StableId, fusion.upstreamTrans().parent().GeneName,
+                    fusion.upstreamTrans().gene().StableId, fusion.upstreamTrans().gene().GeneName,
                     fusion.upstreamTrans().StableId, fusion.upstreamTrans().TransId,
-                    fusion.upstreamTrans().parent().chromosome(), "FUSION");
+                    fusion.upstreamTrans().gene().chromosome(), "FUSION");
 
             mVisWriter.addGeneExonData(clusterId,
-                    fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName,
+                    fusion.downstreamTrans().gene().StableId, fusion.downstreamTrans().gene().GeneName,
                     fusion.downstreamTrans().StableId, fusion.downstreamTrans().TransId,
-                    fusion.downstreamTrans().parent().chromosome(), "FUSION");
+                    fusion.downstreamTrans().gene().chromosome(), "FUSION");
         }
     }
 

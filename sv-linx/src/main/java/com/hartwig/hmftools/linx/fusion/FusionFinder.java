@@ -245,7 +245,7 @@ public class FusionFinder
                     return null;
                 }
 
-                if(upstreamTrans.parent().id() != downstreamTrans.parent().id())
+                if(upstreamTrans.gene().id() != downstreamTrans.gene().id())
                 {
                     logInvalidReasonInfo("up coding exonic diff SVs", upstreamTrans, downstreamTrans,
                             INVALID_REASON_CODING_TYPE, params.InvalidReasons);
@@ -621,8 +621,8 @@ public class FusionFinder
         if(mHasValidConfigData && mKnownFusionData == null)
             return REPORTABLE_TYPE_KNOWN;
 
-        final String upGene = upTrans.parent().GeneName;
-        final String downGene = downTrans.parent().GeneName;
+        final String upGene = upTrans.gene().GeneName;
+        final String downGene = downTrans.gene().GeneName;
 
         if(mKnownFusionData.hasKnownFusion(upGene, downGene))
             return REPORTABLE_TYPE_KNOWN;
@@ -652,7 +652,7 @@ public class FusionFinder
 
     private static boolean intragenic(final Transcript upstream, final Transcript downstream)
     {
-        return upstream.parent().synonyms().stream().anyMatch(downstream.parent().synonyms()::contains);
+        return upstream.gene().synonyms().stream().anyMatch(downstream.gene().synonyms()::contains);
     }
 
 }

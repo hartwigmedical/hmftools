@@ -64,7 +64,7 @@ public class Transcript {
 
     private static final int STOP_CODON_LENGTH = 3;
 
-    public Transcript(@NotNull final GeneAnnotation parent, int transId, final String stableId,
+    public Transcript(@NotNull final GeneAnnotation gene, int transId, final String stableId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
             final int codingBases, final int totalCodingBases,
             final int exonMax, final boolean canonical, long transcriptStart, long transcriptEnd,
@@ -83,7 +83,7 @@ public class Transcript {
         ExonDownstream = exonDownstream;
         ExonMax = exonMax;
 
-        mGene = parent;
+        mGene = gene;
 
         mExactCodingBase = -1;
 
@@ -127,7 +127,7 @@ public class Transcript {
     }
 
     @NotNull
-    public GeneAnnotation parent() { return mGene; }
+    public GeneAnnotation gene() { return mGene; }
 
     public long svPosition() { return mGene.position(); }
     public String geneName() { return mGene.GeneName; }
@@ -266,9 +266,9 @@ public class Transcript {
         long codingBases = transcript.calcCodingBases(isUpstream);
 
         // factor in insert sequence for the upstream partner
-        if(isUpstream && !transcript.parent().insertSequence().isEmpty())
+        if(isUpstream && !transcript.gene().insertSequence().isEmpty())
         {
-            codingBases += transcript.parent().insertSequence().length();
+            codingBases += transcript.gene().insertSequence().length();
         }
 
         int adjustedPhase = (int)(codingBases % 3);

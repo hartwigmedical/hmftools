@@ -16,10 +16,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -56,7 +54,7 @@ public class FusionWriter
                         .geneEnd(fusion.downstreamTrans().geneName())
                         .geneTranscriptEnd(fusion.downstreamTrans().StableId)
                         .geneContextEnd(context(fusion.downstreamTrans(), fusion.getFusedExon(false)))
-                        .ploidy(fusionPloidy(fusion.upstreamTrans().parent().ploidy(), fusion.downstreamTrans().parent().ploidy()))
+                        .ploidy(fusionPloidy(fusion.upstreamTrans().gene().ploidy(), fusion.downstreamTrans().gene().ploidy()))
                         .build());
             }
         }
@@ -162,7 +160,7 @@ public class FusionWriter
             {
                 boolean isUpstream = (se == SE_START);
                 final Transcript trans = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                final GeneAnnotation gene = trans.parent();
+                final GeneAnnotation gene = trans.gene();
 
                 writer.write(String.format(",%d,%s,%d,%d,%s,%.6f",
                         gene.id(), gene.chromosome(), gene.position(), gene.orientation(),

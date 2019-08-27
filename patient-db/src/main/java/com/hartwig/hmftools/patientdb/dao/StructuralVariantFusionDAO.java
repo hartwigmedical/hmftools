@@ -87,12 +87,12 @@ public class StructuralVariantFusionDAO
         for (int i = 0; i < transcripts.size(); ++i)
         {
             final Transcript transcript = transcripts.get(i);
-            final GeneAnnotation geneAnnotation = transcript.parent();
+            final GeneAnnotation geneAnnotation = transcript.gene();
             boolean isUpstream = transcript.isUpstream();
 
             inserter.values(timestamp,
                     sampleId,
-                    transcript.parent().id(),
+                    transcript.gene().id(),
                     geneAnnotation.isStart(),
                     geneAnnotation.GeneName,
                     transcript.StableId,

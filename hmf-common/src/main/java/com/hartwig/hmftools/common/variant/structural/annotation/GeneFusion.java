@@ -39,7 +39,7 @@ public class GeneFusion
 
     public String name() { return mUpstreamTrans.geneName() + "_" + mDownstreamTrans.geneName(); }
 
-    public int svId(boolean isUpstream) { return isUpstream ? mUpstreamTrans.parent().id() : mDownstreamTrans.parent().id(); }
+    public int svId(boolean isUpstream) { return isUpstream ? mUpstreamTrans.gene().id() : mDownstreamTrans.gene().id(); }
 
     public Transcript upstreamTrans() { return mUpstreamTrans; }
     public Transcript downstreamTrans() { return mDownstreamTrans; }

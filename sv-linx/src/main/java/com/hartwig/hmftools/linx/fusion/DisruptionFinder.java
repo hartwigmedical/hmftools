@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,12 +36,10 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ensembl.database.homo_sapiens_core.tables.Gene;
 
 public class DisruptionFinder
 {
@@ -451,14 +448,14 @@ public class DisruptionFinder
 
     private static boolean areDisruptivePair(final Transcript trans1, final Transcript trans2)
     {
-        if(trans1.parent().id() != trans2.parent().id())
+        if(trans1.gene().id() != trans2.gene().id())
             return true;
 
         if(!trans1.StableId.equals(trans2.StableId))
             return true;
 
         // only DELs, DUPs and INS
-        if(trans1.parent().orientation() == trans2.parent().orientation())
+        if(trans1.gene().orientation() == trans2.gene().orientation())
             return true;
 
         if(trans1.ExonUpstream != trans2.ExonUpstream)
@@ -539,7 +536,7 @@ public class DisruptionFinder
 
         for(final Transcript transcript : mDisruptions)
         {
-            final GeneAnnotation gene = transcript.parent();
+            final GeneAnnotation gene = transcript.gene();
 
             reportedDisruptions.add(ImmutableReportableDisruption.builder()
                     .svId(gene.id())
@@ -596,7 +593,7 @@ public class DisruptionFinder
         {
             for(final Transcript transcript : mDisruptions)
             {
-                final GeneAnnotation gene = transcript.parent();
+                final GeneAnnotation gene = transcript.gene();
 
                 mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%d",
                         sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
