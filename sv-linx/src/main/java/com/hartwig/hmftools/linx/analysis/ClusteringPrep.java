@@ -209,7 +209,7 @@ public class ClusteringPrep
 
         int missedEvents = 0;
 
-        if(state.getLohEventList() != null && !state.getLohEventList().isEmpty())
+        if(state.getLohEventList() != null)
         {
             for (final LohEvent lohEvent : state.getLohEventList())
             {

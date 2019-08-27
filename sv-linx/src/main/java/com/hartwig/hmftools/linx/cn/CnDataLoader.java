@@ -377,8 +377,7 @@ public class CnDataLoader
                         if (lohOnStartTelomere || totalLoss)
                         {
                             // LOH section invalidated
-                            processLOHData(chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
-                                    lohSegments, false, lohHomLossEvents);
+                            processLOHData(chromosome, lohStartCnData, cnData, lohSegments, false, lohHomLossEvents);
 
                             lohOnStartTelomere = false;
                             totalLoss = false;
@@ -386,8 +385,8 @@ public class CnDataLoader
                         else
                         {
                             // log all relevant data for this completed section
-                            lohSVsMatchedCount += processLOHData(chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
-                                    lohSegments, false, lohHomLossEvents);
+                            lohSVsMatchedCount += processLOHData(
+                                    chromosome, lohStartCnData, cnData, lohSegments, false, lohHomLossEvents);
                             ++lohSectionCount;
                         }
 
@@ -396,8 +395,7 @@ public class CnDataLoader
                     else if (cnData.matchesSegment(TELOMERE, false))
                     {
                         // rest of arm was lost so no linking SV for LOH section - but still record the event
-                        processLOHData(chromosome, lohStartCnData, cnData, priorCN, lohMinCN,
-                                lohSegments, true, lohHomLossEvents);
+                        processLOHData(chromosome, lohStartCnData, cnData, lohSegments, true, lohHomLossEvents);
                         reset = true;
                     }
                     else if (cnData.CopyNumber < TOTAL_CN_LOSS)
@@ -456,8 +454,7 @@ public class CnDataLoader
                             // check for segments ending on telomere
                             if (cnData.matchesSegment(TELOMERE, false))
                             {
-                                processLOHData(chromosome, lohStartCnData, lohStartCnData, priorCN, lohMinCN,
-                                        lohSegments, true, null);
+                                processLOHData(chromosome, lohStartCnData, lohStartCnData, lohSegments, true, null);
                                 reset = true;
                             }
                         }
@@ -513,7 +510,7 @@ public class CnDataLoader
     }
 
     private int processLOHData(final String chr, SvCNData startData, SvCNData endData,
-            double lastMinCN, double lohMinCN, int segCount, boolean incomplete, List<HomLossEvent> lohHomLossEvents)
+            int segCount, boolean incomplete, List<HomLossEvent> lohHomLossEvents)
     {
         StructuralVariantData startSvData = findSvData(startData, 1);
 
@@ -536,6 +533,35 @@ public class CnDataLoader
             // segment has either started and/or finished on the telomere segment
             endData = startData;
             lohLength = startData.EndPos - startData.StartPos + 1;
+        }
+
+        // exclude an LOH if one boundary is a simple non-overlapping SV and the other is another variant
+        if (startData != null && endData != null && startSvData != null && endSvData != null && startSvData.id() != endSvData.id())
+        {
+            if(startData.matchesSegment(SegmentSupport.DEL, true) || startData.matchesSegment(SegmentSupport.DUP, true))
+            {
+                // check if the other segment is neighbouring to this one
+                SvCNData[] cnDataItems = mSvIdCnDataMap.get(startSvData.id());
+
+                if(cnDataItems != null && cnDataItems[SE_END].getIndex() == startData.getIndex() + 1)
+                {
+                    LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
+                            startData, endData, startSvData.id());
+                    return 1;
+                }
+            }
+            else if(endData.matchesSegment(SegmentSupport.DEL, true) || endData.matchesSegment(SegmentSupport.DUP, true))
+            {
+                // check if the other segment is neighbouring to this one
+                SvCNData[] cnDataItems = mSvIdCnDataMap.get(endSvData.id());
+
+                if(cnDataItems != null && cnDataItems[SE_START].getIndex() == endData.getIndex() - 1)
+                {
+                    LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
+                            startData, endData, endSvData.id());
+                    return 1;
+                }
+            }
         }
 
         if(LOGGER.isDebugEnabled())
