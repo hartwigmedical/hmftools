@@ -664,7 +664,7 @@ public class ChainFinder
         if(var.ploidy() < 1) // maintain a minimum to avoid ploidy comparison issues for lower values
             return;
 
-        if(var.isSglBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().type() == SGL)
+        if(var.isSglBreakend() || var.type() == DEL || higherPloidyBreakend.getSV().isSglBreakend())
             return;
 
         if(mComplexDupCandidates.keySet().contains(var))

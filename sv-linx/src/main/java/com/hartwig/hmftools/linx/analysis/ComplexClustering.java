@@ -71,8 +71,6 @@ public class ComplexClustering
         // merge if one cluster has footprints which overlap unresolved complex SVs
         // merge clusters which resolve another's LOH DUP
 
-        long longDelDupCutoffLength = max(mState.getDelCutoffLength(), mState.getDupCutoffLength());
-
         // first collect the clusters for which these complex rules apply
         List<SvCluster> complexClusters = mClusters.stream()
                 .filter(x -> !x.isResolved())

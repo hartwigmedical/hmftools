@@ -128,7 +128,7 @@ public class ClusterAnnotations
 
                 for(final SvLinkedPair pair : chain.getLinkedPairs())
                 {
-                    if(pair.first().type() == SGL || pair.second().type() == SGL)
+                    if(pair.first().isSglBreakend() || pair.second().isSglBreakend())
                         continue;
 
                     SvBreakend pairLowerBe = pair.getBreakend(true);

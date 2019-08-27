@@ -420,7 +420,7 @@ public class SvVarData
 
     public final boolean isCrossArm()
     {
-        return type() != SGL && !isLocal();
+        return !isSglBreakend() && !isLocal();
     }
 
     public final boolean isSimpleType()
