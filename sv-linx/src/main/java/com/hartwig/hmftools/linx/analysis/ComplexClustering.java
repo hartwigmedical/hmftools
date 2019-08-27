@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_C
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_TI_PLOIDY_MATCH;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.skipClusterType;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDifferentPloidy;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
@@ -188,6 +189,9 @@ public class ComplexClustering
                             if (!var1.chromosome(v1Start).equals(var2.chromosome(v2Start)) || !var1.arm(v1Start).equals(var2.arm(v2Start)))
                                 continue;
 
+                            if(variantsHaveDifferentPloidy(var1, var2))
+                                continue;
+
                             LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) have foldbacks on same arm",
                                     cluster1.id(), var1.posId(), cluster2.id(), var2.posId());
 
@@ -203,37 +207,6 @@ public class ComplexClustering
         }
 
         return false;
-    }
-
-    private final SvBreakend getNextUnresolvedBreakend(final SvBreakend foldbackBreakend, final List<SvBreakend> breakendList)
-    {
-        // select the next breakend after this foldback if it's in a different, unresolved cluster
-        boolean traverseUp = foldbackBreakend.orientation() == -1;
-        int startIndex = traverseUp ? foldbackBreakend.getChrPosIndex() + 1 : foldbackBreakend.getChrPosIndex() - 1;
-        final SvCluster fbCluster = foldbackBreakend.getCluster();
-
-        int index = startIndex;
-
-        while(index >= 0 && index < breakendList.size())
-        {
-            final SvBreakend breakend = breakendList.get(index);
-            final SvCluster cluster = breakend.getCluster();
-
-            if(!cluster.isResolved())
-            {
-                if(cluster != fbCluster)
-                    return breakend;
-                else
-                    return null;
-            }
-
-            if(traverseUp)
-                ++index;
-            else
-                --index;
-        }
-
-        return null;
     }
 
     private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2)
@@ -259,6 +232,9 @@ public class ComplexClustering
                     continue;
 
                 if (variantsViolateLohHomLoss(var1, var2))
+                    continue;
+
+                if(variantsHaveDifferentPloidy(var1, var2))
                     continue;
 
                 LOGGER.debug("cluster({}) and cluster({}) have common links with SV({}) and SV({})",
@@ -482,6 +458,9 @@ public class ComplexClustering
 
                         final SvBreakend nextBreakend = fullBreakendList.get(index);
 
+                        if(variantsHaveDifferentPloidy(boundaryBreakend, nextBreakend))
+                            continue;
+
                         if(abs(nextBreakend.position() - boundaryBreakend.position()) > MAX_MERGE_DISTANCE)
                             break;
 
@@ -590,13 +569,17 @@ public class ComplexClustering
                     if(var.sglToSatelliteRepeats() && satelliteChromosomes1.contains(var.chromosome(true)))
                     {
                         final String chromosome = var.chromosome(true);
-                        LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",
-                                srCluster.id(), chromosome, sglCluster.id(), var.id());
 
                         // find the other linking SGL
                         final SvVarData otherSV = srCluster.getSVs().stream()
                                 .filter(x -> x.sglToSatelliteRepeats() && x.chromosome(true).equals(chromosome))
                                 .findFirst().get();
+
+                        if(variantsHaveDifferentPloidy(var, otherSV))
+                            continue;
+
+                        LOGGER.debug("cluster({}) has same chromosome({}) link with satellite cluster({}) SV({})",
+                                srCluster.id(), chromosome, sglCluster.id(), var.id());
 
                         mSimpleClustering.addClusterReasons(otherSV, var, CR_SATELLITE_SGL);
                         srCluster.addClusterReason(CR_SATELLITE_SGL);
