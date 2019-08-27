@@ -10,11 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
@@ -35,8 +31,8 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.NO_DB_MARKER;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

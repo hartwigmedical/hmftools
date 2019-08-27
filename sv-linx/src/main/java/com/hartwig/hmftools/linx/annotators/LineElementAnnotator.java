@@ -6,8 +6,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_DEL_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

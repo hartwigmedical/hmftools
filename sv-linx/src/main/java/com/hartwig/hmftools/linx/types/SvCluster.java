@@ -22,10 +22,9 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_CLUSTER_ID;
-import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_CHAINING_SV_LIMIT;
-import static com.hartwig.hmftools.linx.types.SvaConstants.DEFAULT_PROXIMITY_DISTANCE;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SUBCLONAL_LOW_CNC_PERCENT;
+import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_CHAINING_SV_LIMIT;
+import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -534,7 +533,7 @@ public class SvCluster
     public void markSubclonal()
     {
         long lowCNChangeSupportCount = mSVs.stream().filter(x -> hasLowPloidy(x)).count();
-        mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > SUBCLONAL_LOW_CNC_PERCENT;
+        mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > 0.5;
     }
 
     public boolean isSubclonal() { return mIsSubclonal; }

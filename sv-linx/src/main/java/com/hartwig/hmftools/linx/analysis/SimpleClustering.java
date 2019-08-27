@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
@@ -28,9 +27,9 @@ import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_PLOIDY_THRESHOLD;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
-import static com.hartwig.hmftools.linx.types.SvaConstants.PLOIDY_DIFF_THRESHOLD;
+import static com.hartwig.hmftools.linx.types.SvConstants.LOW_PLOIDY_THRESHOLD;
+import static com.hartwig.hmftools.linx.types.SvConstants.MAX_MERGE_DISTANCE;
+import static com.hartwig.hmftools.linx.types.SvConstants.PLOIDY_DIFF_THRESHOLD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -46,7 +45,6 @@ import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;

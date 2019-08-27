@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
-import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 
 import static org.junit.Assert.assertEquals;
@@ -12,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;

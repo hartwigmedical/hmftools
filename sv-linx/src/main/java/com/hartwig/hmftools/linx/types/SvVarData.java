@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_SV_ID;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_TEMPLATED_INSERTION_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
 import java.util.stream.Collectors;

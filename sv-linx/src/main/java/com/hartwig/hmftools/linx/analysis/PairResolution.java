@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DUPS;
@@ -26,8 +25,8 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
 import java.util.stream.Collectors;

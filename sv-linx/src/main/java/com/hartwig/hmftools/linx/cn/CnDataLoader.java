@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
 import java.io.File;
 import java.io.IOException;

@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInser
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_ASSEMBLY_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.CHAIN_LINK_COUNT;
-import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_FOLDBACK_CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 
 import java.util.List;
 import java.util.Map;
