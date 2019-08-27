@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class ExtendLongArmTest {
 
-    private static final String CHROMOSOME = "1";
+    private static final String CHROMOSOME = "13";
     private static final double EPSILON = 1e-10;
 
     @Test
@@ -29,6 +29,17 @@ public class ExtendLongArmTest {
         assertCombinedRegion(5001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
+    @Test
+    public void testIneligibleChromosome() {
+        final CombinedRegion first = createCombinedRegion("1", 1, 5000, 3, 0.3, SegmentSupport.NONE);
+        final CombinedRegion centromere = createCombinedRegion("1", 5001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
+
+        final List<CombinedRegion> result = ExtendLongArm.extendLongArm(Lists.newArrayList(first, centromere));
+        assertEquals(2, result.size());
+
+        assertCombinedRegion(1, 5000, 3, CopyNumberMethod.UNKNOWN, result.get(0));
+        assertCombinedRegion(5001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(1));
+    }
 
     @Test
     public void testExtendThroughStructuralVariantButKeepBreakIntact() {
@@ -110,13 +121,19 @@ public class ExtendLongArmTest {
     }
 
     @NotNull
-    static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support) {
-        final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
+    static CombinedRegion createCombinedRegion(String chromosome, long start, long end, double copyNumber, double baf,
+            SegmentSupport support) {
+        final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(chromosome, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(baf)
                 .support(support)
                 .build();
 
         return new CombinedRegionImpl(region);
+    }
+
+    @NotNull
+    static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support) {
+        return createCombinedRegion(CHROMOSOME, start, end, copyNumber, baf, support);
     }
 }
