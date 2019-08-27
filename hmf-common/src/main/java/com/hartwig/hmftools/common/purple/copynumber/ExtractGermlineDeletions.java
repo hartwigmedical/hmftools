@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static com.hartwig.hmftools.common.purple.copynumber.ExtractChildren.fillGaps;
-
 import java.util.EnumSet;
 import java.util.List;
 
@@ -11,26 +9,15 @@ import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-class ExtractGermline {
-
-    private static final double AMPLIFICATION_TOLERANCE = 1;
-    private static final double MIN_AMPLIFICATION_COPYNUMBER = 5;
+class ExtractGermlineDeletions {
 
     private final Gender gender;
 
-    ExtractGermline(final Gender gender) {
+    ExtractGermlineDeletions(final Gender gender) {
         this.gender = gender;
-    }
-
-    @NotNull
-    List<CombinedRegion> extendGermlineAmplifications(@NotNull final List<CombinedRegion> regions) {
-        final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.AMPLIFICATION);
-        return extendGermline(eligibleStatus, regions);
     }
 
     @NotNull
@@ -38,53 +25,24 @@ class ExtractGermline {
         final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
 
         final List<CombinedRegion> result = Lists.newArrayList();
-        for (int i = 0; i < regions.size(); i++) {
-            final CombinedRegion parent = regions.get(i);
-            final CombinedRegion neighbour = i + 1 == regions.size() ? null : regions.get(i + 1);
-            result.addAll(extractChildren(eligibleStatus, parent, neighbour));
+        for (final CombinedRegion parent : regions) {
+            result.addAll(extractChildren(eligibleStatus, parent));
         }
 
-        return result;
-    }
-
-    @NotNull
-    private List<CombinedRegion> extendGermline(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
-            @NotNull final List<CombinedRegion> regions) {
-        final List<CombinedRegion> result = Lists.newArrayList();
-        for (int i = 0; i < regions.size(); i++) {
-            final CombinedRegion parent = regions.get(i);
-            final CombinedRegion neighbour = i + 1 == regions.size() ? null : regions.get(i + 1);
-            final List<CombinedRegion> children = extractChildren(eligibleStatus, parent, neighbour);
-            if (children.isEmpty()) {
-                result.add(parent);
-            } else {
-                result.addAll(fillGaps(parent, children));
-            }
-        }
         return result;
     }
 
     @NotNull
     private List<CombinedRegion> extractChildren(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
-            @NotNull final CombinedRegion parent, @Nullable final CombinedRegion neighbour) {
+            @NotNull final CombinedRegion parent) {
         final List<CombinedRegion> children = Lists.newArrayList();
 
         double baf = parent.tumorBAF();
         double copyNumber = parent.tumorCopyNumber();
         for (int i = 0; i < parent.regions().size(); i++) {
             final FittedRegion child = parent.regions().get(i);
-            final FittedRegion next = i + 1 == parent.regions().size()
-                    ? (neighbour == null ? null : neighbour.regions().get(0))
-                    : parent.regions().get(i + 1);
 
             if (eligibleStatus.contains(child.status())) {
-                if (child.status().equals(GermlineStatus.AMPLIFICATION)) {
-                    final double lowerBound = lowerBound(child);
-                    if (isValidAmplification(copyNumber, lowerBound, child, next)) {
-                        children.add(createChild(child, lowerBound, baf));
-                    }
-                }
-
                 if (child.status().equals(GermlineStatus.HET_DELETION)) {
                     final double upperBound = upperBound(child);
                     if (Doubles.lessThan(upperBound, Math.min(0.5, copyNumber))) {
@@ -101,15 +59,6 @@ class ExtractGermline {
         return extendRight(children);
     }
 
-    static boolean isValidAmplification(double parentCopyNumber, double lowerBound, @NotNull final FittedRegion child,
-            @Nullable final FittedRegion next) {
-        boolean adjacentToCentromere =
-                child.support() == SegmentSupport.CENTROMERE || (next != null && next.support() == SegmentSupport.CENTROMERE);
-        boolean adjacentToSV = child.support().isSV() || (next != null && next.support().isSV());
-        return adjacentToSV && !adjacentToCentromere && Doubles.greaterOrEqual(lowerBound, MIN_AMPLIFICATION_COPYNUMBER)
-                && Doubles.greaterOrEqual(lowerBound, parentCopyNumber + AMPLIFICATION_TOLERANCE);
-    }
-
     @NotNull
     private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf) {
         final CombinedRegion result = new CombinedRegionImpl(child);
@@ -121,16 +70,12 @@ class ExtractGermline {
     @NotNull
     private static CopyNumberMethod method(@NotNull final FittedRegion child) {
         switch (child.status()) {
-            case HET_DELETION:
-                return CopyNumberMethod.GERMLINE_HET2HOM_DELETION;
             case HOM_DELETION:
                 return CopyNumberMethod.GERMLINE_HOM_DELETION;
             default:
-                return CopyNumberMethod.GERMLINE_AMPLIFICATION;
+                return CopyNumberMethod.GERMLINE_HET2HOM_DELETION;
         }
     }
-
-
 
     @NotNull
     private static List<CombinedRegion> extendRight(@NotNull final List<CombinedRegion> children) {
@@ -155,12 +100,4 @@ class ExtractGermline {
         return Math.max(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.min(expectedNormalRatio,
                 region.observedNormalRatio()));
     }
-
-    private double lowerBound(@NotNull final FittedRegion region) {
-        double expectedNormalRatio = HumanChromosome.fromString(region.chromosome()).isDiploid(gender) ? 1 : 0.5;
-        return Math.min(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.max(expectedNormalRatio,
-                region.observedNormalRatio()));
-    }
-
-
 }

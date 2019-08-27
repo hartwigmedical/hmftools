@@ -405,20 +405,23 @@ Relative copy number tolerance is 0.12 + 0.8 / sqrt(min depth window count).
 Ref normalised copy number uses the actual germline ratios rather than the typical (1 for autosomes, 0.5 for Y etc.). Again, for tumors with purity < 20% the absolute tolerances are increased.
 4. Start from most confident germline diploid segment (highest tumor depth window count) and extend outwards in both directions until we reach a segment outside of tolerance. Then move on to next most confident unsmoothed germline diploid segment. 
 5. It is possible to merge in (multiple) segments that would otherwise be outside of tolerances if:
-  - The total dubious region is sufficiently small (< 30 depth window count or < 50 depth window count if approaching centromere); and
-  - The dubious region does not end because of a structural variant; and
-  - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
+    - The total dubious region is sufficiently small (< 30 depth window count or < 50 depth window count if approaching centromere); and
+    - The dubious region does not end because of a structural variant; and
+    - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
 
 When merging segments, the depth window count (number of COBALT windows) of each segment is used as a proxy for confidence and is used to calculate a weighted average of the copy number. 
 Similarly, the BAF count is used tom calculated the weighted average BAF. 
 The min and max start of the combined region is the minimum from each segment.  
 
-Any regions that are non-diploid in the germline are smoothed over, thus the copy number profile represents the somatic copy number without influence from the germline. 
-However, PURPLE can sometimes call somatic amplification in germline amplified regions. 
-This feature is supported based on the observation in several samples that double minute amplifications are sometimes detectable as amplifications even in the germline reference sample presumably due to circulating tumor cells in the blood. 
-The somatic amplification is called conservatively and must be amplified in the tumor at least 5 times and with at least one extra copy than the smoothed region containing it. 
-The region must also be directly adjacent to a structural variant. 
+Regions that are non-diploid in the germline are typically smoothed over, thus the copy number profile represents the somatic copy number without influence from the germline. 
+However, where smoothing is otherwise not possible PURPLE can sometimes use the reference normalised copy number for this region, ie, the copy number as adjusted for the actual reference read ratio rather than the ideal read ratio. 
+For this to occur, the non-diploid region must:
+  - Be directly adjacent to a structural variant but not a centromere;
+  - Not be excessively noisy in the germline (reference read ratio < 2.2x expected); 
+  - Have some depth window support from COBALT;
+  - be amplified in the tumor relative to the normal, ie, observed tumor ratio > observed normal ratio.
 
+Consecutive non-diploid regions un-interrupted by a structural variant will be merged together.
 
 ### 5. Inferring copy number for regions without read depth information
 
@@ -951,6 +954,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Removed `GERMLINE_AMPLIFICATION` copy number method.
+  - Added `NON_DIPLOID` copy number method. This uses the ref normalised tumor copy number (adjusted for observed normal ratio rather than ideal).  
+  - Only extend long arm copy numbers to unknown regions of chromosomes 13-15,21,22
 - [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-33)
   - Raised QC segment fail to >220 unsupported segments
   - Infer LOH in simple DUPs between 2 LOH regions 
