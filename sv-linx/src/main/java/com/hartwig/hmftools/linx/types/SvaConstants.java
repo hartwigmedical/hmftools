@@ -19,6 +19,9 @@ public class SvaConstants
 
     public static final double LOW_CN_CHANGE_SUPPORT = 0.5;
 
+    public static final double LOW_PLOIDY_THRESHOLD = 0.75;
+    public static final double PLOIDY_DIFF_THRESHOLD = 0.5;
+
     public static final double SUBCLONAL_LOW_CNC_PERCENT = 0.5;
 
     // exclude clusters with too many SVs from chaining

@@ -38,7 +38,9 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
+import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_PLOIDY_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
+import static com.hartwig.hmftools.linx.types.SvaConstants.PLOIDY_DIFF_THRESHOLD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -294,10 +296,6 @@ public class SimpleClustering
             if(mergeOnOverlappingInvDupDels(clusters))
                 foundMerges = true;
 
-            // to be re-introduced once inferred work is complete
-            // if (mergeOnUnresolvedSingles(clusters))
-            //     foundMerges = true;
-
             ++iterations;
 
             if(iterations >= 10)
@@ -345,17 +343,20 @@ public class SimpleClustering
 
             if (lohClusterStart != lohClusterEnd)
             {
-                if (!lohClusterStart.hasLinkingLineElements() && !lohClusterEnd.hasLinkingLineElements())
-                {
-                    LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
-                            lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(), lohEvent);
+                if (lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
+                    continue;
 
-                    addClusterReasons(lohSvStart, lohSvEnd, CR_LOH);
-                    lohClusterStart.addClusterReason(CR_LOH);
+                if(variantsHaveDifferentPloidy(lohBeStart, lohBeEnd))
+                    continue;
 
-                    lohClusterStart.mergeOtherCluster(lohClusterEnd);
-                    clusters.remove(lohClusterEnd);
-                }
+                LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on LOH event({})",
+                        lohClusterStart.id(), lohClusterStart.getSvCount(), lohClusterEnd.id(), lohClusterEnd.getSvCount(), lohEvent);
+
+                addClusterReasons(lohSvStart, lohSvEnd, CR_LOH);
+                lohClusterStart.addClusterReason(CR_LOH);
+
+                lohClusterStart.mergeOtherCluster(lohClusterEnd);
+                clusters.remove(lohClusterEnd);
             }
         }
 
@@ -386,6 +387,9 @@ public class SimpleClustering
                     SvCluster otherCluster = homLossBeEnd.getCluster();
 
                     if(cluster == otherCluster) // protect against clusters already merged or removed
+                        continue;
+
+                    if(variantsHaveDifferentPloidy(homLossBeStart, homLossBeEnd))
                         continue;
 
                     LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on hom-loss({}: {} -> {}) inside LOH event({} -> {})",
@@ -441,6 +445,9 @@ public class SimpleClustering
                 // all hom-loss events involving more than 1 SV were clustered, so clustered the LOH SVs
                 SvBreakend lohBeStart = lohEvent.getBreakend(true);
                 SvBreakend lohBeEnd = lohEvent.getBreakend(false);
+
+                if(variantsHaveDifferentPloidy(lohBeStart, lohBeEnd))
+                    continue;
 
                 SvCluster cluster = lohBeStart.getCluster();
                 SvCluster otherCluster = lohBeEnd.getCluster();
@@ -519,6 +526,9 @@ public class SimpleClustering
                 lohEvent.setIsValid(true);
 
                 if(cluster == otherCluster)
+                    continue;
+
+                if(variantsHaveDifferentPloidy(breakend1, breakend2))
                     continue;
 
                 LOGGER.debug("cluster({} svs={}) merges in other cluster({} svs={}) on unclustered LOH and hom-loss breakends",
@@ -645,6 +655,9 @@ public class SimpleClustering
                             continue;
                         }
 
+                        if(variantsHaveDifferentPloidy(var1, var2))
+                            continue;
+
                         if(!breakendsInCloseLink(var1, var2))
                             continue;
 
@@ -724,6 +737,36 @@ public class SimpleClustering
             return false;
 
         return lohEvents.stream().anyMatch(x -> otherBreakend.position() > x.PosStart && otherBreakend.position() < x.PosEnd);
+    }
+
+    protected static boolean variantsHaveDifferentPloidy(final SvBreakend breakend1, final SvBreakend breakend2)
+    {
+        return variantsHaveDifferentPloidy(breakend1.getSV(), breakend2.getSV());
+    }
+
+    protected static boolean variantsHaveDifferentPloidy(final SvVarData var1, final SvVarData var2)
+    {
+        // We identify high confidence subclonal variants using the uncertainty bounds, using the threshold of maximum ploidy < 0.75.
+        // Clonal and subclonal variants are unlikely to have occured at the same time and hence all subclonal variants are excluded from
+        // clustering with any variant that does not overlap in ploidy uncertainty and does not have a ploidy within 0.5 of the subclonal
+        // variants. Proximity clustering is still allowed, since the ploidy estimates for proximate variants are more uncertain.
+        boolean var1IsLowPloidy = var1.ploidy() < LOW_PLOIDY_THRESHOLD;
+        boolean var2IsLowPloidy = var2.ploidy() < LOW_PLOIDY_THRESHOLD;
+
+        if(var1IsLowPloidy == var2IsLowPloidy)
+            return false;
+
+        double ploidyDiff = abs(var1.ploidy() - var2.ploidy());
+
+        if(ploidyDiff < PLOIDY_DIFF_THRESHOLD)
+            return false;
+
+        if(var1IsLowPloidy && var1.ploidyMax() < var2.ploidyMin())
+            return true;
+        else if(var2IsLowPloidy && var2.ploidyMax() < var1.ploidyMin())
+            return true;
+        else
+            return false;
     }
 
     protected boolean exceedsDupDelCutoffLength(StructuralVariantType type, long length)
@@ -882,6 +925,9 @@ public class SimpleClustering
                             if(nextBreakend.isAssembledLink())
                                 continue;
 
+                            if(variantsHaveDifferentPloidy(breakend, nextBreakend))
+                                continue;
+
                             opposingBreakends.add(nextBreakend);
 
                             // should this next breakend be merged in?
@@ -943,174 +989,6 @@ public class SimpleClustering
         mergedClusters.forEach(x -> clusters.remove(x));
 
         return true;
-    }
-
-    private boolean mergeOnUnresolvedSingles(List<SvCluster> clusters)
-    {
-        // merge clusters with 1 unresolved single with the following rules:
-        // 2 x cluster-1s with SGLs that are each other's nearest neighbours
-        //
-        // use the chr-breakend map to walk through and find the closest links
-        // only apply a rule between the 2 closest breakends at the exclusions of the cluster on their other end
-        // unless the other breakend is a short, simple SV
-
-        boolean foundMerges = false;
-
-        for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
-        {
-            final List<SvBreakend> breakendList = entry.getValue();
-            int breakendCount = breakendList.size();
-
-            for(int i = 0; i < breakendList.size(); ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-                SvVarData var = breakend.getSV();
-                final SvCluster cluster = var.getCluster();
-
-                // take the point of view of the cluster with the solo single
-                if(cluster.getSvCount() != 1 || cluster.getSV(0).type() != SGL || cluster.isResolved())
-                    continue;
-
-                // now look for a proximate cluster with either another solo single or needing one to be resolved
-                // check previous and next breakend's cluster
-                SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
-                SvBreakend nextBreakend = (i < breakendCount - 1) ? breakendList.get(i + 1) : null;
-
-                if(prevBreakend != null && prevBreakend.getSV().isSimpleType()
-                && !exceedsDupDelCutoffLength(prevBreakend.getSV().type(), prevBreakend.getSV().length()))
-                {
-                    prevBreakend = null;
-                }
-
-                if(nextBreakend != null && nextBreakend.getSV().isSimpleType()
-                && !exceedsDupDelCutoffLength(nextBreakend.getSV().type(), nextBreakend.getSV().length()))
-                {
-                    nextBreakend = null;
-                }
-
-                // additionally check that breakend after the next one isn't a closer SGL to the next breakend,
-                // which would invalidate this one being the nearest neighbour
-                long prevProximity = prevBreakend != null ? abs(breakend.position() - prevBreakend.position()) : -1;
-                long nextProximity = nextBreakend != null ? abs(breakend.position() - nextBreakend.position()) : -1;
-
-                if(nextBreakend != null && i < breakendCount - 2)
-                {
-                    final SvBreakend followingBreakend = breakendList.get(i + 2);
-                    final SvCluster followingCluster = followingBreakend.getCluster();
-
-                    if(followingCluster.getSvCount() == 1 && followingBreakend.getSV().type() == SGL && !followingCluster.isResolved())
-                    {
-                        long followingProximity = abs(nextBreakend.position() - followingBreakend.position());
-
-                        if (followingProximity < nextProximity)
-                            nextBreakend = null;
-                    }
-                }
-
-                if(nextBreakend == null && prevBreakend == null)
-                    continue;
-
-                SvBreakend otherBreakend = null;
-
-                if(nextBreakend != null && prevBreakend != null)
-                {
-                    otherBreakend = nextProximity < prevProximity ? nextBreakend : prevBreakend;
-                }
-                else if(nextBreakend != null)
-                {
-                    otherBreakend = nextBreakend;
-                }
-                else
-                {
-                    otherBreakend = prevBreakend;
-                }
-
-                SvVarData otherVar = otherBreakend.getSV();
-                final SvCluster otherCluster = otherVar.getCluster();
-
-                ResolvedType resolvedType = canResolveWithSoloSingle(otherCluster, cluster);
-
-                if(resolvedType != NONE)
-                {
-                    otherCluster.mergeOtherCluster(cluster);
-                    otherCluster.addClusterReason(CLUSTER_REASON_SOLO_SINGLE);
-                    otherCluster.setResolved(true, resolvedType);
-
-                    clusters.remove(cluster);
-                    foundMerges = true;
-                    break;
-                }
-            }
-        }
-
-        return foundMerges;
-    }
-
-    private final ResolvedType canResolveWithSoloSingle(SvCluster otherCluster, SvCluster soloSingleCluster)
-    {
-        // 3 cases:
-        // - 2 x SGLs could form a simple DEL or DUP
-        // - 2 x SGLs + another SV could form a simple cluster-2 resolved type
-        // - a SGL + another SV could form a simple cluster-2 resolved type
-
-        final SvVarData soloSingle = soloSingleCluster.getSV(0);
-
-        if(otherCluster.getSvCount() == 1)
-        {
-            final SvVarData otherVar = otherCluster.getSV(0);
-
-            if(otherVar.type() == SGL)
-            {
-                // either both must be NONEs or one be a SGL but without centromeric or telomeric support
-                if(otherCluster.isResolved())
-                    return NONE;
-
-                ResolvedType resolvedType = markSinglePairResolvedType(otherVar, soloSingle);
-
-                if(resolvedType == NONE)
-                    return NONE;
-
-                LOGGER.debug("cluster({}) SV({}) and cluster({}) SV({}) syntheticType({})",
-                        soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(), resolvedType);
-
-                addClusterReasons(soloSingle, otherVar, CLUSTER_REASON_SOLO_SINGLE);
-
-                return resolvedType;
-            }
-            else
-            {
-                boolean inconsistentOnStart;
-                if(otherVar.hasInconsistentCopyNumberChange(true) && otherVar.chromosome(false).equals(soloSingle.chromosome(true)))
-                {
-                    inconsistentOnStart = true;
-                }
-                else if(otherVar.hasInconsistentCopyNumberChange(false) && otherVar.chromosome(true).equals(soloSingle.chromosome(true)))
-                {
-                    inconsistentOnStart = false;
-                }
-                else
-                {
-                    return NONE;
-                }
-
-                double cnInconsistency = otherVar.ploidy() - otherVar.copyNumberChange(inconsistentOnStart);
-
-                if(round(cnInconsistency) != round(soloSingle.copyNumberChange(true)))
-                    return NONE;
-
-                LOGGER.debug(String.format("cluster(%s) SV(%s) and cluster(%s) SV(%s) potentially resolve CN inconsistency(%.2f vs %.2f)",
-                        soloSingleCluster.id(), soloSingle.posId(), otherCluster.id(), otherVar.posId(),
-                        cnInconsistency, soloSingle.copyNumberChange(true)));
-
-                addClusterReasons(soloSingle, otherVar, CLUSTER_REASON_SOLO_SINGLE);
-
-                return PAIR_OTHER;
-            }
-        }
-        else
-        {
-            return NONE;
-        }
     }
 
     private boolean mergeLOHResolvingClusters(List<SvCluster> clusters)
@@ -1197,6 +1075,9 @@ public class SimpleClustering
                             continue;
 
                         if(nextBreakend.isAssembledLink())
+                            continue;
+
+                        if(variantsHaveDifferentPloidy(lohBreakend, nextBreakend))
                             continue;
 
                         SvCluster otherCluster = nextBreakend.getCluster();

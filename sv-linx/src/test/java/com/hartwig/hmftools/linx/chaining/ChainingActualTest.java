@@ -344,11 +344,6 @@ public class ChainingActualTest
 
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
-        /* SOLUTION: a closed loop:
-
-
-         */
-
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("DM_SAMPLE2");
 
         tester.AllVariants.addAll(svList);
@@ -359,8 +354,8 @@ public class ChainingActualTest
 
         tester.Analyser.clusterAndAnalyse();
 
-        // check clustering
-        assertEquals(tester.Analyser.getClusters().size(), 1);
+        // check clustering - second cluster is separate due to ploidy diffs
+        assertEquals(2, tester.Analyser.getClusters().size());
 
         final SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));

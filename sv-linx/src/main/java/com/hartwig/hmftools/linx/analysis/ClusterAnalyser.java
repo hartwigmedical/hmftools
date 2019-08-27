@@ -382,10 +382,8 @@ public class ClusterAnalyser {
     {
         annotateChainedClusters(cluster);
 
-        if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
-        {
-            findIncompleteFoldbackCandidates(mSampleId, cluster, mState.getChrBreakendMap(), mCnDataLoader);
-        }
+        // if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
+        //    findIncompleteFoldbackCandidates(mSampleId, cluster, mState.getChrBreakendMap(), mCnDataLoader);
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
             mDmFinder.reportCluster(mSampleId, cluster);
