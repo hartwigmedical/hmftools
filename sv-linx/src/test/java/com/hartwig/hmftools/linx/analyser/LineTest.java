@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
@@ -191,6 +192,26 @@ public class LineTest
         assertEquals(bnd2.getLineElement(false), NO_LINE_ELEMENT);
         assertTrue(cluster.hasLinkingLineElements());
 
+        // 2 proximate breakends with poly A or T
+        tester.clearClustersAndSVs();
+
+        SvVarData dup = createSv(tester.nextVarId(), "1", "1", 1000, 100000,  -1, 1, DUP, POLY_A_MOTIF);
+        del = createSv(tester.nextVarId(), "1", "1", 2000, 200000,  1, -1, DEL, POLY_A_MOTIF);
+
+        cluster = new SvCluster(0);
+        cluster.addVariant(dup);
+        cluster.addVariant(del);
+
+        tester.addClusterAndSVs(cluster);
+        tester.preClusteringInit();
+
+        leAnnotator.markLineCluster(cluster, proximity);
+
+        assertEquals(dup.getLineElement(true), SUSPECTED_LINE_ELEMENT);
+        assertEquals(del.getLineElement(true), SUSPECTED_LINE_ELEMENT);
+        assertEquals(dup.getLineElement(false), NO_LINE_ELEMENT);
+        assertEquals(del.getLineElement(false), NO_LINE_ELEMENT);
+        assertTrue(cluster.hasLinkingLineElements());
     }
 
 }

@@ -119,6 +119,7 @@ public class LineElementAnnotator {
                 AND either the 2 BNDs going to different chromosomes or forming a short DB on their non-line (remote) arm
            - OR at least 1 BND with a remote SGL forming a 30 base DB (ie on the remote arm)
                 AND EITHER at least one SV also within 5kb OR the remote SGL having poly A/T INS sequence
+           - OR there are 2+ breakends within 5kb which both have a polyA insertion sequence
 
            Resolve the cluster as type = Line if:
             -  has a suspected line element
@@ -181,6 +182,8 @@ public class LineElementAnnotator {
                     }
                 }
 
+                int proximatePolyATCount = polyATVar != null ? 1 : 0;
+
                 if(hasRemoteShortBndDB && polyATVar != null)
                 {
                     isSuspectGroup = true;
@@ -196,9 +199,20 @@ public class LineElementAnnotator {
                         if (nextBreakend.position() - breakend.position() > proximityLength)
                             break;
 
-                        if (polyATVar == null && hasPolyAorTMotif(nextBreakend.getSV()))
+                        boolean nextBreakendHasPolyAT = hasPolyAorTMotif(nextBreakend.getSV());
+
+                        if (polyATVar == null && nextBreakendHasPolyAT)
                         {
                             polyATVar = nextBreakend.getSV();
+                        }
+
+                        if(nextBreakendHasPolyAT)
+                            ++proximatePolyATCount;
+
+                        if(proximatePolyATCount >= 2)
+                        {
+                            isSuspectGroup = true;
+                            break;
                         }
 
                         if (nextBreakend.getSV().type() == BND)
@@ -246,8 +260,9 @@ public class LineElementAnnotator {
 
                 final String linkingIdsStr = linkingBnds.stream().map(x -> x.id()).collect(Collectors.toList()).toString();
 
-                LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) linkingSVs({}) hasRemoteShortDB({}) polyAT SV({})",
-                        cluster.id(), breakend.chromosome(), uniqueBndChromosomes.toString(), linkingIdsStr, hasRemoteShortBndDB, polyATVar.id());
+                LOGGER.debug("cluster({}) lineChr({}) uniqueChr({}) linkingSVs({}) remoteShortDB({}) polyAT SV({}) proxiPolyATCount({})",
+                        cluster.id(), breakend.chromosome(), uniqueBndChromosomes.toString(), linkingIdsStr,
+                        hasRemoteShortBndDB, polyATVar.id(), proximatePolyATCount);
 
                 hasSuspected = true;
 
