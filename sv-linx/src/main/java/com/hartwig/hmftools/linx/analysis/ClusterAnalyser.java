@@ -395,6 +395,7 @@ public class ClusterAnalyser {
     {
         mDmFinder.close();
         mChainFinder.getDiagnostics().close();
+        mSimpleClustering.close();
     }
 
     public void logStats()

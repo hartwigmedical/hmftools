@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.setSvGeneData;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 
@@ -121,11 +120,12 @@ public class SvLinxApplication
             sampleAnalyser.setGeneCollection(ensemblDataCache);
             sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
 
+            // always initialise since is used for transcript evaluation
+            fusionAnalyser = new FusionDisruptionAnalyser();
+            fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache);
+
             if(checkFusions)
             {
-                fusionAnalyser = new FusionDisruptionAnalyser();
-
-                fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache);
                 fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
 
                 if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
@@ -157,9 +157,9 @@ public class SvLinxApplication
             List<StructuralVariantData> svRecords = sampleDataFromFile ?
                     loadSampleSvData(svaConfig.SvDataPath, sampleId) : dbAccess.readStructuralVariantData(sampleId);
 
-            List<SvVarData> svVarData = createSvData(svRecords);
+            final List<SvVarData> svDataList = createSvData(svRecords);
 
-            if(svVarData.isEmpty())
+            if(svDataList.isEmpty())
             {
                 LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sampleId, count);
                 continue;
@@ -167,12 +167,12 @@ public class SvLinxApplication
 
             if(svaConfig.hasMultipleSamples())
             {
-                LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svVarData.size(), count - 1);
+                LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
             }
 
             cnDataLoader.loadSampleData(sampleId, svRecords);
 
-            sampleAnalyser.setSampleSVs(sampleId, svVarData);
+            sampleAnalyser.setSampleSVs(sampleId, svDataList);
 
             sampleAnalyser.analyse();
 
@@ -186,7 +186,7 @@ public class SvLinxApplication
             {
                 // when matching RNA, allow all transcripts regardless of their viability for fusions
                 boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
-                setSvGeneData(svVarData, ensemblDataCache, true, selectiveGeneLoading, !keepInvalidTranscripts);
+                fusionAnalyser.setSvGeneData(svDataList, true, selectiveGeneLoading, !keepInvalidTranscripts);
 
                 sampleAnalyser.annotateWithGeneData(ensemblDataCache);
             }
@@ -198,7 +198,7 @@ public class SvLinxApplication
 
             if(checkFusions)
             {
-                fusionAnalyser.run(sampleId, svVarData, dbAccess,
+                fusionAnalyser.run(sampleId, svDataList, dbAccess,
                         sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
             }
 

@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -231,6 +232,7 @@ public class SimpleClustering
                 // definitional fields
                 mClusterHistoryWriter.write("SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2");
                 mClusterHistoryWriter.write(",Reason,MinDistance,ClonalDiscrepancy");
+                mClusterHistoryWriter.newLine();
             }
 
             long breakendDistance = getProximity(var1, var2);
@@ -244,6 +246,8 @@ public class SimpleClustering
                     var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount()));
 
             mClusterHistoryWriter.write(String.format(",%s,%d,%s", reason, breakendDistance, clonalDiscrepancy));
+
+            mClusterHistoryWriter.newLine();
         }
         catch(IOException e)
         {
@@ -251,6 +255,11 @@ public class SimpleClustering
         }
 
         ++mClusteringIndex;
+    }
+
+    public void close()
+    {
+        closeBufferedWriter(mClusterHistoryWriter);
     }
 
     public void mergeClusters(final String sampleId, List<SvCluster> clusters)

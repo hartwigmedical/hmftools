@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProte
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class SvGeneTranscriptCollection
 {
@@ -809,6 +810,7 @@ public class SvGeneTranscriptCollection
     public void createTranscriptPreGenePositionData(final Map<String, List<EnsemblGeneData>> chrGeneDataMap,
             final Map<String, List<TranscriptData>> transcriptDataMap)
     {
+        // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
         try
         {
             final String outputFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;

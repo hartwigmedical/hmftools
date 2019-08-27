@@ -5,7 +5,6 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.DRUP_TSG_GENES_FILE;
-import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.markNonDisruptiveTranscripts;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
@@ -26,8 +25,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionTermination;
@@ -81,7 +78,6 @@ public class FusionDisruptionAnalyser
     private boolean mFindNeoEpitopes;
 
     private List<GeneFusion> mFusions;
-    private List<Transcript> mDisruptions;
 
     private RnaFusionMapper mRnaFusionMapper;
     private VisualiserWriter mVisWriter;
@@ -111,7 +107,6 @@ public class FusionDisruptionAnalyser
 
         mOutputDir = "";
         mFusions = Lists.newArrayList();
-        mDisruptions = Lists.newArrayList();
         mSkipFusionCheck = false;
         mLogReportableOnly = false;
         mLogAllPotentials = false;
@@ -142,7 +137,8 @@ public class FusionDisruptionAnalyser
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
     }
 
-    public void initialise(final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache)
+    public void initialise(
+            final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache)
     {
         mOutputDir = outputDir;
 
@@ -219,9 +215,10 @@ public class FusionDisruptionAnalyser
     // for testing
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
+    public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
 
-    public static void setSvGeneData(final List<SvVarData> svList, SvGeneTranscriptCollection geneCollection,
-            boolean applyPromotorDistance, boolean selectiveLoading, boolean purgeInvalidTranscripts)
+    public void setSvGeneData(
+            final List<SvVarData> svList, boolean applyPromotorDistance, boolean selectiveLoading, boolean purgeInvalidTranscripts)
     {
         int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
 
@@ -240,13 +237,15 @@ public class FusionDisruptionAnalyser
 
                     boolean isStart = isStart(be);
 
-                    geneCollection.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                    mGeneTransCollection.populateGeneIdList(
+                            restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
                 }
             }
 
-            geneCollection.loadEnsemblTranscriptData(restrictedGeneIds);
+            mGeneTransCollection.loadEnsemblTranscriptData(restrictedGeneIds);
         }
 
+        // associate breakends with transcripts
         for(final SvVarData var : svList)
         {
             // isSpecificSV(var);
@@ -258,7 +257,7 @@ public class FusionDisruptionAnalyser
 
                 boolean isStart = isStart(be);
 
-                List<GeneAnnotation> genesList = geneCollection.findGeneAnnotationsBySv(
+                List<GeneAnnotation> genesList = mGeneTransCollection.findGeneAnnotationsBySv(
                         var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
 
                 if (genesList.isEmpty())
@@ -271,16 +270,22 @@ public class FusionDisruptionAnalyser
 
                 var.setGenesList(genesList, isStart);
             }
+        }
 
+        for(final SvVarData var : svList)
+        {
             // mark any transcripts as not disruptive prior to running any fusion logic
-            markNonDisruptiveTranscripts(var);
+            mDisruptionFinder.markTranscriptsDisruptive(var);
 
             // inferred SGLs are always non-disruptive
-            if(var.isInferredSgl())
+            if (var.isInferredSgl())
             {
                 var.getGenesList(true).stream().forEach(x -> x.transcripts().stream().forEach(y -> y.setIsDisruptive(false)));
             }
+        }
 
+        for(final SvVarData var : svList)
+        {
             // now that transcripts have been marked as disruptive it is safe to purge any which cannot make viable fusions
             if (purgeInvalidTranscripts)
             {
@@ -295,8 +300,6 @@ public class FusionDisruptionAnalyser
 
                     for (GeneAnnotation gene : genesList)
                     {
-                        gene.setSvData(var.getSvData());
-
                         int transIndex = 0;
                         while (transIndex < gene.transcripts().size())
                         {
@@ -329,17 +332,17 @@ public class FusionDisruptionAnalyser
         if(!mSkipFusionCheck)
         {
             findFusions(svList, clusters);
-            findDisruptions(svList);
+            mDisruptionFinder.findReportableDisruptions(svList);
         }
 
         if(mConfig.isSingleSample())
         {
             mFusionWriter.writeSampleData(mSampleId, mFusions);
-            mDisruptionFinder.writeSampleData(mSampleId, mDisruptions);
+            mDisruptionFinder.writeSampleData(mSampleId);
         }
         else
         {
-            mDisruptions.forEach(x -> mDisruptionFinder.writeDisruptionData(mSampleId, x));
+            mDisruptionFinder.writeMultiSampleData(mSampleId);
         }
 
         List<GeneFusion> uniqueFusions = extractUniqueFusions();
@@ -694,7 +697,7 @@ public class FusionDisruptionAnalyser
                         }
 
                         // any invalid traversal causes this fusion to be entirely skipped from further analysis
-                        if(pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
+                        if(mDisruptionFinder.pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
                         {
                             validTraversal = false;
                             break;
@@ -953,67 +956,7 @@ public class FusionDisruptionAnalyser
                 .build();
     }
 
-    public boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
-    {
-        // for this pair to not affect the fusion, the section it traverses cannot cross any gene's splice acceptor
-        // with the same strand direction unless that is part of a fully traversed non-coding 5' exon
 
-        long lowerPos = pair.getBreakend(true).position();
-        long upperPos = pair.getBreakend(false).position();
-
-        List<EnsemblGeneData> geneDataList = mGeneTransCollection.getChrGeneDataMap().get(pair.chromosome());
-
-        if(geneDataList == null)
-            return false;
-
-        for(EnsemblGeneData geneData : geneDataList)
-        {
-            if(lowerPos > geneData.GeneEnd)
-                continue;
-
-            if(upperPos < geneData.GeneStart)
-                break;
-
-            if(fusionDirection == 0 || geneData.Strand == fusionDirection)
-            {
-                // check whether a splice acceptor is encountered within this window
-                List<TranscriptData> transDataList = mGeneTransCollection.getTranscripts(geneData.GeneId);
-
-                if(transDataList == null)
-                    continue;
-
-                for(final TranscriptData transData : transDataList)
-                {
-                    for (final ExonData exonData : transData.exons())
-                    {
-                        if (exonData.ExonRank == 1)
-                            continue;
-
-                        if ((geneData.Strand == 1 && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonStart)
-                                || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
-                        {
-                            // allow an exon to be fully traversed if the upstream transcript is pre-coding
-                            if (isPrecodingUpstream && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonEnd)
-                            {
-                                if (geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
-                                    continue;
-                                else if (geneData.Strand == -1 && (transData.CodingEnd == null || lowerPos > transData.CodingEnd))
-                                    continue;
-                            }
-
-                            LOGGER.trace("pair({}) direction({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
-                                    pair.toString(), fusionDirection, geneData.GeneName, transData.TransName,
-                                    exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
-
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
 
     private void populateKnownFusionGenes()
     {
@@ -1153,36 +1096,6 @@ public class FusionDisruptionAnalyser
                     fusion.downstreamTrans().parent().StableId, fusion.downstreamTrans().parent().GeneName,
                     fusion.downstreamTrans().StableId, fusion.downstreamTrans().TransId,
                     fusion.downstreamTrans().parent().chromosome(), "FUSION");
-        }
-    }
-
-    private void findDisruptions(final List<SvVarData> svList)
-    {
-        mDisruptions.clear();
-
-        for (final SvVarData var : svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                if (be == SE_END && var.isSglBreakend())
-                    continue;
-
-                final List<GeneAnnotation> tsgGenesList = var.getGenesList(isStart(be)).stream()
-                        .filter(x -> mDisruptionFinder.matchesDisruptionGene(x)).collect(Collectors.toList());
-
-                for(GeneAnnotation gene : tsgGenesList)
-                {
-                    for(Transcript transcript : gene.transcripts())
-                    {
-                        if(transcript.isDisruptive() && transcript.isCanonical())
-                        {
-                            LOGGER.debug("TSG gene({}) transcript({}) is disrupted", gene.GeneName, transcript.StableId);
-                            transcript.setReportableDisruption(true);
-                            mDisruptions.add(transcript);
-                        }
-                    }
-                }
-            }
         }
     }
 
