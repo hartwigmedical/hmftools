@@ -2400,7 +2400,7 @@ CREATE TABLE molecularMatchTrialsAlterations
 CREATE TABLE molecularMatchTrialsIntervations
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
-    intervention_name varchar(3000),
+    intervention_name varchar(4000),
     description varchar(2000),
     intervention_type varchar(250),
     PRIMARY KEY (id),
@@ -2452,7 +2452,7 @@ CREATE TABLE molecularMatchTrialsTags
     term varchar(1000) NOT NULL,
     custom varchar(250) NOT NULL,
     priority varchar(250) NOT NULL,
-    alias varchar(250),
+    alias varchar(1000),
     manualSuppress varchar(250),
     generatedBy varchar(250),
     generatedByTerm varchar(250),
@@ -2466,8 +2466,8 @@ CREATE TABLE molecularMatchTrialsLocations
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
     status varchar(250) NOT NULL,
-    last_name varchar(250),
-    email varchar(250),
+    last_name varchar(1000),
+    email varchar(1000),
     phone varchar(250),
     phone_backup varchar(250),
     email_backup varchar(250),
@@ -2487,7 +2487,7 @@ CREATE TABLE molecularMatchTrialsLocations
     po_box varchar(250),
     failedGeocode varchar(250),
     validMessage varchar(250),
-    name varchar(250),
+    name varchar(1000),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchTrialsId) REFERENCES molecularMatchTrials(id)
 );

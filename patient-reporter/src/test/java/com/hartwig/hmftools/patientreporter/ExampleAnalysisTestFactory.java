@@ -92,7 +92,7 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
-                Optional.of("AAA"),
+                Optional.empty(),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
@@ -139,7 +139,7 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
-                Optional.of("AAA"),
+                Optional.empty(),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
@@ -186,7 +186,7 @@ public final class ExampleAnalysisTestFactory {
                 disruptions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
-                Optional.of("AAA"),
+                Optional.empty(),
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
