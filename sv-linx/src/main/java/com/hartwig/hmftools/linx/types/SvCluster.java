@@ -10,15 +10,14 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.SvVarData.INF_SV_TYPE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -534,7 +533,7 @@ public class SvCluster
 
     public void markSubclonal()
     {
-        long lowCNChangeSupportCount = mSVs.stream().filter(x -> hasLowCNChangeSupport(x)).count();
+        long lowCNChangeSupportCount = mSVs.stream().filter(x -> hasLowPloidy(x)).count();
         mIsSubclonal = lowCNChangeSupportCount / (double)mSVs.size() > SUBCLONAL_LOW_CNC_PERCENT;
     }
 

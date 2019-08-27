@@ -101,6 +101,8 @@ public class FilteringTest
     {
         LinxTester tester = new LinxTester();
 
+        tester.logVerbose(true);
+
         SvVarData var0 = createDel(tester.nextVarId(), "1", 1000, 1100);
 
         // common arm rule will merge the BNDs except the one which is isolated, not poly-A and has low CNC support
@@ -130,14 +132,15 @@ public class FilteringTest
         tester.AllVariants.add(var5);
         tester.AllVariants.add(var6);
 
+        tester.AllVariants.forEach(x -> x.setPloidyRecalcData(0.1, 0.2));
+
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(6, tester.getClusters().size());
+        assertEquals(5, tester.getClusters().size());
 
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var0)));
-        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2)));
-        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var4, var5)));
+        assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var4, var5)));
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1));
         assertTrue(cluster != null);

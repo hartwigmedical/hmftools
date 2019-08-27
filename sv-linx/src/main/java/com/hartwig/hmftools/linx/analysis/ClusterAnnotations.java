@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -22,7 +21,6 @@ import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.SHORT_TI_LENGTH;
 
@@ -1129,53 +1127,6 @@ public class ClusterAnnotations
 
         double[] results = {telomereMinFacingPloidy, centromereMinFacingPloidy};
         return results;
-    }
-
-    public static void checkClusteringClonalDiscrepancy(final SvVarData var1, final SvVarData var2, final String clusterReason)
-    {
-        boolean varLowCns1 = hasLowCNChangeSupport(var1);
-        boolean varLowCns2 = hasLowCNChangeSupport(var2);
-
-        if(varLowCns1 == varLowCns2)
-            return;
-
-        // skip if SVs are within range of each other given uncertainty or if ploidy is above the low-support level
-        if((varLowCns1 && var1.ploidyMin() > LOW_CN_CHANGE_SUPPORT) || (varLowCns2 && var2.ploidyMin() > LOW_CN_CHANGE_SUPPORT))
-            return;
-
-        if((varLowCns1 && var1.ploidyMax() >= var2.ploidyMin()) || (varLowCns2 && var2.ploidyMax() >= var1.ploidyMin()))
-            return;
-
-        boolean hasAssembledLink = false;
-
-        for(int be1 = SE_START; be1 <= SE_END; ++be1)
-        {
-            for(int be2 = SE_START; be2 <= SE_END; ++be2)
-            {
-                if (haveLinkedAssemblies(var1, var2, isStart(be1), isStart(be2)))
-                {
-                    hasAssembledLink = true;
-                    break;
-                }
-            }
-        }
-
-        // log to CSV for clustering analysis
-
-        // SvId1,SvId2,ClusterReason,HasAssembly,Ploidy1,Ploidy2,PloidyMin1,PloidyMin2,PloidyMax1,PloidyMax2,
-        // CNChgStart1,CNChgStart2,CNChgEnd1,CNChgEnd2,CNStart1,CNStart2,CNEnd1,CNEnd2
-
-        String output = String.format("%s,%s,%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                var1.id(), var2.id(), clusterReason, hasAssembledLink,
-                var1.ploidy(), var2.ploidy(), var1.ploidyMin(), var2.ploidyMin(), var1.ploidyMax(), var2.ploidyMax());
-
-        output += String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-                var1.copyNumberChange(true), var2.copyNumberChange(true),
-                var1.copyNumberChange(false), var2.copyNumberChange(false),
-                var1.copyNumber(true), var2.copyNumber(true),
-                var1.copyNumber(false), var2.copyNumber(false));
-
-        LOGGER.info("CLONAL_DISCREP_CLUSTERING: {}", output);
     }
 
 

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowCNChangeSupport;
+import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowPloidy;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
@@ -268,7 +268,7 @@ public class SvFilters
 
     private boolean isIsolatedLowVafBnd(final SvVarData var)
     {
-        if(!hasLowCNChangeSupport(var))
+        if(!hasLowPloidy(var))
             return false;
 
         // ignore possible LINE insertions
@@ -305,7 +305,7 @@ public class SvFilters
         if(nextBreakend.getSV() != var || nextBreakend.position() - breakend.position() > SHORT_INV_DISTANCE)
             return false;
 
-        return hasLowCNChangeSupport(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
+        return hasLowPloidy(var) || var.calcVaf(true) < LOW_VAF_THRESHOLD;
     }
 
     private boolean isSingleDuplicateBreakend(final SvVarData var)

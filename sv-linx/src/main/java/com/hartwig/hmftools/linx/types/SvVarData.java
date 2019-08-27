@@ -259,11 +259,6 @@ public class SvVarData
         return max(getMaxAssembledBreakend(), (int)getRoundedPloidy(true));
     }
 
-    public boolean hasInconsistentCopyNumberChange(boolean useStart)
-    {
-        return ploidy() - copyNumberChange(useStart) > 0.8;
-    }
-
     public long getNearestSvDistance() { return mNearestSvDistance; }
     public void setNearestSvDistance(long distance) { mNearestSvDistance = distance; }
     public String getNearestSvRelation() { return mNearestSvRelation; }

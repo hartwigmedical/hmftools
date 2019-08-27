@@ -12,32 +12,22 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.checkClusteringClonalDiscrepancy;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP_OR_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CLUSTER_REASON_SOLO_SINGLE;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.markSinglePairResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
-import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
-import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
-import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_CN_CHANGE_SUPPORT;
 import static com.hartwig.hmftools.linx.types.SvaConstants.LOW_PLOIDY_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.SvaConstants.MAX_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvaConstants.PLOIDY_DIFF_THRESHOLD;
@@ -233,13 +223,11 @@ public class SimpleClustering
 
                 // definitional fields
                 mClusterHistoryWriter.write("SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2");
-                mClusterHistoryWriter.write(",Reason,MinDistance,ClonalDiscrepancy");
+                mClusterHistoryWriter.write(",Reason,MinDistance");
                 mClusterHistoryWriter.newLine();
             }
 
             long breakendDistance = getProximity(var1, var2);
-
-            boolean clonalDiscrepancy = hasLowCNChangeSupport(var1) != hasLowCNChangeSupport(var2) && !ploidyMatch(var1, var2);
 
             mClusterHistoryWriter.write(String.format("%s,%d", mSampleId, mClusteringIndex));
 
@@ -247,7 +235,7 @@ public class SimpleClustering
                     var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
                     var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount()));
 
-            mClusterHistoryWriter.write(String.format(",%s,%d,%s", reason, breakendDistance, clonalDiscrepancy));
+            mClusterHistoryWriter.write(String.format(",%s,%d", reason, breakendDistance));
 
             mClusterHistoryWriter.newLine();
         }
@@ -312,15 +300,12 @@ public class SimpleClustering
         }
     }
 
-    public static boolean hasLowCNChangeSupport(final SvVarData var)
+    public static boolean hasLowPloidy(final SvVarData var)
     {
         if(var.type() == INS)
             return false;
 
-        if(var.isSglBreakend())
-            return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT;
-        else
-            return var.copyNumberChange(true) < LOW_CN_CHANGE_SUPPORT && var.copyNumberChange(false) < LOW_CN_CHANGE_SUPPORT;
+        return var.ploidyMax() < LOW_PLOIDY_THRESHOLD;
     }
 
     private void mergeOnLOHEvents(List<SvCluster> clusters)

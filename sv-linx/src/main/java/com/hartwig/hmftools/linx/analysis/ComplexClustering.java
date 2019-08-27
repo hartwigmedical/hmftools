@@ -76,7 +76,6 @@ public class ComplexClustering
         // first collect the clusters for which these complex rules apply
         List<SvCluster> complexClusters = mClusters.stream()
                 .filter(x -> !x.isResolved())
-                .filter(x -> !x.isSubclonal())
                 .collect(Collectors.toList());
 
         int iterations = 1;
