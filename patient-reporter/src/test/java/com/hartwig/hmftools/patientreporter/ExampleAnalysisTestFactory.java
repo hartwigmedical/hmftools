@@ -297,13 +297,23 @@ public final class ExampleAnalysisTestFactory {
 
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.BROAD)
+                .acronym("DRUP")
+                .reference("EXT10299 (NL54757.031.16)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.BROAD)
+                .acronym("EBIN (EORTC-1612-MG)")
+                .reference("EXT11284 (NL67202.031.18)")
+                .build());
+        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
+                .scope(EvidenceScope.BROAD)
                 .acronym("LXH254 in tumors with MAPK pathway alterations")
                 .reference("EXT10453 (NL55506.078.15)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.BROAD)
-                .acronym("Novartis CTMT212X2102")
-                .reference("EXT3437 (NL56240.056.16)")
+                .acronym("POLARIS")
+                .reference("EXT11388 (NL69569.028.19)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
                 .scope(EvidenceScope.SPECIFIC)
@@ -314,6 +324,11 @@ public final class ExampleAnalysisTestFactory {
                 .scope(EvidenceScope.SPECIFIC)
                 .acronym("REDUCTOR")
                 .reference("EXT6690 (NL45261.031.13)")
+                .build());
+        trials.add(iclusionBuilder.event("CDKN2A p.Ala68fs")
+                .scope(EvidenceScope.BROAD)
+                .acronym("DRUP")
+                .reference("EXT10299 (NL54757.031.16)")
                 .build());
 
         return trials;
