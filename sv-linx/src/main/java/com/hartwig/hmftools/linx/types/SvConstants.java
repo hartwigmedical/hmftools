@@ -18,7 +18,6 @@ public class SvConstants
     public static final int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
 
     public static final double LOW_PLOIDY_THRESHOLD = 0.75;
-    public static final double PLOIDY_DIFF_THRESHOLD = 0.5;
 
     // exclude clusters with too many SVs from chaining
     public static int DEFAULT_CHAINING_SV_LIMIT = 2000;

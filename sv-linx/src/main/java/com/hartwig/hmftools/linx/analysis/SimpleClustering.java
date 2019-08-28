@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLO
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
@@ -29,7 +30,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvConstants.LOW_PLOIDY_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.SvConstants.MAX_MERGE_DISTANCE;
-import static com.hartwig.hmftools.linx.types.SvConstants.PLOIDY_DIFF_THRESHOLD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -741,7 +741,7 @@ public class SimpleClustering
 
         double ploidyDiff = abs(var1.ploidy() - var2.ploidy());
 
-        if(ploidyDiff < PLOIDY_DIFF_THRESHOLD)
+        if(ploidyDiff < MAX_COPY_NUM_DIFF)
             return false;
 
         if(var1IsLowPloidy && var1.ploidyMax() < var2.ploidyMin())

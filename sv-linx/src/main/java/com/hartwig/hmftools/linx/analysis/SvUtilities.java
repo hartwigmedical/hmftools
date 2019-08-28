@@ -17,7 +17,6 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 // common utility methods for clustering logic
 
@@ -257,12 +256,12 @@ public class SvUtilities {
         return (breakend.arm() == CHROMOSOME_ARM_P ? 1 : -1) * breakend.orientation() * 1;
     }
 
-    public static double DEFAULT_MAX_COPY_NUM_DIFF = 0.5;
-    public static double DEFAULT_MAX_COPY_NUM_DIFF_PERC = 0.15;
+    public static double MAX_COPY_NUM_DIFF = 0.5;
+    public static double MAX_COPY_NUM_DIFF_PERC = 0.15;
 
     public static boolean copyNumbersEqual(double cn1, double cn2)
     {
-        return copyNumbersEqual(cn1, cn2, DEFAULT_MAX_COPY_NUM_DIFF, DEFAULT_MAX_COPY_NUM_DIFF_PERC);
+        return copyNumbersEqual(cn1, cn2, MAX_COPY_NUM_DIFF, MAX_COPY_NUM_DIFF_PERC);
     }
 
     public static boolean copyNumbersEqual(double cn1, double cn2, double maxDiff, double maxDiffPerc)

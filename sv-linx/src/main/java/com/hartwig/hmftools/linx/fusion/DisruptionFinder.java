@@ -54,6 +54,7 @@ public class DisruptionFinder
     private final String mOutputDir;
 
     public static final String DRUP_TSG_GENES_FILE = "drup_tsg_file";
+    public static final String USE_CHAIN_LOGIC = "disruptions_use_chains";
 
     private static final Logger LOGGER = LogManager.getLogger(DisruptionFinder.class);
 
@@ -78,12 +79,14 @@ public class DisruptionFinder
 
     private void initialise(final CommandLine cmd)
     {
-        mDisruptionGeneIDPanel = tsgDriverGeneIDs();
+        mDisruptionGeneIDPanel = mGeneTransCollection.getTsgDriverGeneIds();
 
-        // TEMP: load DRUP TSGs from file
-        if(cmd != null && cmd.hasOption(DRUP_TSG_GENES_FILE))
+        if(cmd != null)
         {
-            loadDrupTSGs(cmd.getOptionValue(DRUP_TSG_GENES_FILE));
+            if(cmd.hasOption(DRUP_TSG_GENES_FILE))
+                loadDrupTSGs(cmd.getOptionValue(DRUP_TSG_GENES_FILE));
+
+            mNewDisruptionLogic = cmd.hasOption(USE_CHAIN_LOGIC);
         }
     }
 
@@ -462,19 +465,6 @@ public class DisruptionFinder
             return true;
 
         return false;
-    }
-
-    private static Set<String> tsgDriverGeneIDs()
-    {
-        Set<String> tsgDriverGeneIDs = Sets.newHashSet();
-        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap37();
-
-        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
-        {
-            tsgDriverGeneIDs.add(allGenes.get(gene).geneID());
-        }
-
-        return tsgDriverGeneIDs;
     }
 
     private void loadDrupTSGs(final String filename)

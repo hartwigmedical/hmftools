@@ -2,5 +2,8 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 public enum DriverType
 {
-    AMP, DEL, MUTATION;
+    AMP,
+    DEL,
+    HOM_DISRUPTION,
+    MUTATION;
 }

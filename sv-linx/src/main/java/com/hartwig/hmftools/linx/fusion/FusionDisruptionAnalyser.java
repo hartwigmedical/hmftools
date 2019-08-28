@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.DRUP_TSG_GENES_FILE;
+import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.USE_CHAIN_LOGIC;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
@@ -128,6 +129,7 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
+        options.addOption(USE_CHAIN_LOGIC, false, "Use chains to determine disruptions");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
     }

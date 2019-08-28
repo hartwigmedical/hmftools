@@ -73,17 +73,4 @@ public class ClusteringState
         mDelCutoffLength = delLength;
         mDupCutoffLength = dupLength;
     }
-
-    public void clearCopyNumberData()
-    {
-        if(mLohEventList != null)
-        {
-            mLohEventList.forEach(x -> x.clearBreakends());
-        }
-
-        if(mHomLossList != null)
-        {
-            mHomLossList.forEach(x -> x.clearBreakends());
-        }
-    }
 }

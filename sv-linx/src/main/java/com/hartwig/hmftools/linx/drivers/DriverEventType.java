@@ -9,5 +9,7 @@ public enum DriverEventType
     LOH,
     LOH_ARM,
     LOH_CHR,
-    DEL;
+    DEL,
+    HOM_DEL_DISRUPTION,
+    HOM_DUP_DISRUPTION;
 }

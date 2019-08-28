@@ -10,7 +10,10 @@ import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF_PERC;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
@@ -18,6 +21,8 @@ import static com.hartwig.hmftools.linx.cn.CnDataLoader.TOTAL_CN_LOSS;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.GAIN_CHR;
+import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DEL_DISRUPTION;
+import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_CHR;
@@ -35,18 +40,16 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -66,7 +69,6 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
-import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -74,7 +76,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class DriverGeneAnnotator
 {
@@ -258,7 +259,9 @@ public class DriverGeneAnnotator
             writeDriverData(dgData);
         }
 
-        cacheSampleDriverData();
+        findDisruptiveDelDrivers();
+
+        writeSampleDriverData();
 
         mChrBreakendMap = null;
 
@@ -772,71 +775,115 @@ public class DriverGeneAnnotator
 
     private void findDisruptiveDelDrivers()
     {
-        List<String> disruptedGeneIds = Lists.newArrayList();
+        final Set<String> tsgGeneIds = mGeneTransCache.getTsgDriverGeneIds();
 
-        mDriverGeneDataList.stream()
+        final List<String> delDriverGeneIds = mDriverGeneDataList.stream()
                 .filter(x -> x.DriverData.driver() == DriverType.DEL)
-                .forEach(x -> disruptedGeneIds.add(x.GeneData.GeneId));
+                .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+
+        List<DriverGeneData> disDelDrivers = Lists.newArrayList();
 
         for(Map.Entry<String,List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             for(final SvBreakend breakend : entry.getValue())
             {
-                if(breakend.orientation() != 1)
+                boolean delType = breakend.orientation() == 1 && breakend.getDBLink() != null;
+                boolean dupType = breakend.orientation() == -1 && breakend.getSV().type() == DUP;
+
+                if(!delType && !dupType)
                     continue;
 
-                final SvLinkedPair dbLink = breakend.getDBLink();
-
-                if(dbLink == null || dbLink.length() > 1)
-                    continue;
-
-                List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart());
+                List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
+                        .filter(x -> !delDriverGeneIds.contains(x.StableId))
+                        .filter(x -> tsgGeneIds.contains(x.StableId))
+                        .collect(Collectors.toList());
 
                 if(genesList.isEmpty())
                     continue;
 
                 // consider any disruptive canonical transcript
-
                 for(final GeneAnnotation gene : genesList)
                 {
-                    if(disruptedGeneIds.contains(gene.StableId))
-                        continue;
-
                     final Transcript trans = gene.canonical();
 
-                    if(!trans.isDisruptive())
+                    if(trans == null || !trans.isDisruptive())
                         continue;
 
-                    // calculate the copy number over the deletion bridge section
-                    double cnLowSide = breakend.copyNumberLowSide();
-                    double otherSvPloidy = dbLink.getOtherBreakend(breakend).ploidy();
-                    double dbCopyNumber = cnLowSide = otherSvPloidy;
-
-                    if(dbCopyNumber < TOTAL_CN_LOSS)
+                    if(delType)
                     {
-                        disruptedGeneIds.add(gene.StableId);
+                        final SvLinkedPair dbLink = breakend.getDBLink();
 
-                        DriverGeneData dgData = createDriverData(gene);
+                        // calculate the copy number over the deletion bridge section
+                        double cnLowSide = breakend.copyNumberLowSide();
+
+                        double otherSvPloidy = dbLink.getOtherBreakend(breakend).ploidy();
+
+                        // account for an overlapping DB by subtracting the ploidy of the overlap
+                        if(dbLink.length() < 0)
+                            cnLowSide -= otherSvPloidy;
+
+                        if(cnLowSide < TOTAL_CN_LOSS)
+                        {
+                            delDriverGeneIds.add(gene.StableId);
+
+                            LOGGER.debug("breakend({}) cause homozyous disruption for gene({}): cnLowSide({}) dbLength({}) otherSvPloidy({})",
+                                    breakend, trans.geneName(), formatPloidy(cnLowSide), dbLink.length(), formatPloidy(otherSvPloidy));
+
+                            DriverGeneData dgData = createDriverData(gene);
+                            DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
+                            event.addSvBreakendPair(dbLink.firstBreakend(), dbLink.secondBreakend(), "DB");
+                            event.setCluster(breakend.getCluster());
+                            dgData.addEvent(event);
+                            disDelDrivers.add(dgData);
+                        }
+                    }
+                    else
+                    {
+                        // DUP must be wholy contained within the same gene and
+                        if(!breakend.getSV().getGenesList(!breakend.usesStart()).stream().anyMatch(x -> x.StableId == gene.StableId))
+                            continue;
+
+                        final SvBreakend otherBreakend = breakend.getOtherBreakend();
+
+                        double cnLowSideStart = breakend.copyNumberLowSide();
+                        double cnLowSideEnd = otherBreakend.copyNumberLowSide();
+                        double ploidy = breakend.ploidy();
+                        double ploidyThreshold = max(ploidy * (1 + MAX_COPY_NUM_DIFF_PERC), ploidy + MAX_COPY_NUM_DIFF);
+
+                        if(cnLowSideStart < ploidyThreshold && cnLowSideEnd < ploidyThreshold)
+                        {
+                            delDriverGeneIds.add(gene.StableId);
+
+                            LOGGER.debug("DUP({}) cause homozygous disruption for gene({}): cnLowSide({} & {}) ploidy({})",
+                                    breakend.getSV().id(), trans.geneName(), formatPloidy(cnLowSideStart), formatPloidy(cnLowSideEnd), formatPloidy(ploidy));
+
+                            DriverGeneData dgData = createDriverData(gene);
+                            DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);
+                            event.addSvBreakendPair(breakend, otherBreakend, "DUP");
+                            event.setCluster(breakend.getCluster());
+                            dgData.addEvent(event);
+                            disDelDrivers.add(dgData);
+                        }
                     }
                 }
             }
         }
+
+        disDelDrivers.forEach(x -> writeDriverData(x));
     }
 
     private DriverGeneData createDriverData(final GeneAnnotation gene)
     {
-        if(mDbAccess == null)
-            return null;
+        GeneCopyNumber gcnData = null;
 
-        final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.GeneName));
-
-        if(geneCopyNumbers.isEmpty())
-            return null;
-
-        final GeneCopyNumber gcnData = geneCopyNumbers.get(0);
+        if(mDbAccess != null)
+        {
+            final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.GeneName));
+            gcnData = !geneCopyNumbers.isEmpty() ? geneCopyNumbers.get(0) : null;
+        }
 
         final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
-                .driver(DriverType.DEL)
+                .driver(DriverType.HOM_DISRUPTION)
                 .category(TSG)
                 .gene(gene.GeneName)
                 .chromosome(gene.chromosome())
@@ -850,8 +897,8 @@ public class DriverGeneAnnotator
                 .inframe(0)
                 .frameshift(0)
                 .biallelic(false)
-                .minCopyNumber(gcnData.minCopyNumber())
-                .maxCopyNumber(gcnData.maxCopyNumber())
+                .minCopyNumber(gcnData != null ? gcnData.minCopyNumber() : 0)
+                .maxCopyNumber(gcnData != null ? gcnData.maxCopyNumber() : 0)
                 .build();
 
         final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene.GeneName);
@@ -878,7 +925,7 @@ public class DriverGeneAnnotator
         return null;
     }
 
-    private void cacheSampleDriverData()
+    private void writeSampleDriverData()
     {
         if(mConfig.hasMultipleSamples())
             return;

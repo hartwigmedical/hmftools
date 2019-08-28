@@ -18,9 +18,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -41,7 +46,9 @@ public class SvGeneTranscriptCollection
     private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
     private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
     private Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
+    private Set<String> mTsgDriverGeneIds;
 
+    // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireCodingInfo;
 
     // the distance upstream of a gene for a breakend to be consider a fusion candidate
@@ -57,6 +64,7 @@ public class SvGeneTranscriptCollection
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
         mGeneNameIdMap = Maps.newHashMap();
+        initialiseTsgDriverGenes();
         mRequireCodingInfo = true;
     }
 
@@ -132,6 +140,20 @@ public class SvGeneTranscriptCollection
             }
         }
     }
+
+    private void initialiseTsgDriverGenes()
+    {
+        mTsgDriverGeneIds = Sets.newHashSet();
+
+        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap37();
+
+        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
+        {
+            mTsgDriverGeneIds.add(allGenes.get(gene).geneID());
+        }
+    }
+
+    public final Set<String> getTsgDriverGeneIds() { return mTsgDriverGeneIds; }
 
     public List<TranscriptData> getTranscripts(final String geneId)
     {
@@ -776,7 +798,7 @@ public class SvGeneTranscriptCollection
                 }
                 else
                 {
-                    // createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap());
+                    // createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap(), PRE_GENE_PROMOTOR_DISTANCE);
                 }
             }
         }
@@ -807,7 +829,7 @@ public class SvGeneTranscriptCollection
     }
 
     public void createTranscriptPreGenePositionData(final Map<String, List<EnsemblGeneData>> chrGeneDataMap,
-            final Map<String, List<TranscriptData>> transcriptDataMap)
+            final Map<String, List<TranscriptData>> transcriptDataMap, long preGenePromotorDistance)
     {
         // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
         try
@@ -839,14 +861,14 @@ public class SvGeneTranscriptCollection
 
                         if (gene.Strand == 1)
                         {
-                            if (otherGene.GeneStart >= gene.GeneStart || otherGene.GeneEnd < gene.GeneStart - PRE_GENE_PROMOTOR_DISTANCE)
+                            if (otherGene.GeneStart >= gene.GeneStart || otherGene.GeneEnd < gene.GeneStart - preGenePromotorDistance)
                                 continue;
 
                             proximateGenes.add(otherGene.GeneId);
                         }
                         else
                         {
-                            if (otherGene.GeneEnd <= gene.GeneEnd || otherGene.GeneStart > gene.GeneEnd + PRE_GENE_PROMOTOR_DISTANCE)
+                            if (otherGene.GeneEnd <= gene.GeneEnd || otherGene.GeneStart > gene.GeneEnd + preGenePromotorDistance)
                                 continue;
 
                             proximateGenes.add(otherGene.GeneId);
