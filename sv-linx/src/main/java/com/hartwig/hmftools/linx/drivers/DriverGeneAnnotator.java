@@ -45,6 +45,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
@@ -89,6 +91,7 @@ public class DriverGeneAnnotator
     private String mOutputDir;
     private double mSamplePloidy;
     private List<DriverGeneData> mDriverGeneDataList;
+    final List<String> mReportableDelGeneIds;
 
     private List<LinxDriver> mDriverOutputList;
 
@@ -125,6 +128,17 @@ public class DriverGeneAnnotator
 
         mGeneTransCache.createGeneNameIdMap();
         mVisWriter = null;
+
+        mReportableDelGeneIds = Lists.newArrayList();
+        Set<String> reportableDelGenes = CNADrivers.reportableGeneDeletions();
+
+        for(String geneName : reportableDelGenes)
+        {
+            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(geneName);
+
+            if(geneData != null)
+                mReportableDelGeneIds.add(geneData.GeneId);
+        }
 
         mPerfCounter = new PerformanceCounter("Drivers");
     }
@@ -205,10 +219,10 @@ public class DriverGeneAnnotator
 
             loadDriverCatalog(sampleId);
 
-            if (mDriverCatalog.isEmpty())
-                return;
-
-            loadGeneCopyNumberData(sampleId);
+            if (!mDriverCatalog.isEmpty())
+            {
+                loadGeneCopyNumberData(sampleId);
+            }
         }
 
         mSampleId = sampleId;
@@ -775,8 +789,6 @@ public class DriverGeneAnnotator
 
     private void findDisruptiveDelDrivers()
     {
-        final Set<String> tsgGeneIds = mGeneTransCache.getTsgDriverGeneIds();
-
         final List<String> delDriverGeneIds = mDriverGeneDataList.stream()
                 .filter(x -> x.DriverData.driver() == DriverType.DEL)
                 .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
@@ -795,7 +807,7 @@ public class DriverGeneAnnotator
 
                 List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.StableId))
-                        .filter(x -> tsgGeneIds.contains(x.StableId))
+                        .filter(x -> mReportableDelGeneIds.contains(x.StableId))
                         .collect(Collectors.toList());
 
                 if(genesList.isEmpty())
@@ -826,8 +838,9 @@ public class DriverGeneAnnotator
                         {
                             delDriverGeneIds.add(gene.StableId);
 
-                            LOGGER.debug("breakend({}) cause homozyous disruption for gene({}): cnLowSide({}) dbLength({}) otherSvPloidy({})",
-                                    breakend, trans.geneName(), formatPloidy(cnLowSide), dbLink.length(), formatPloidy(otherSvPloidy));
+                            LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
+                                    trans.geneName(), breakend.getCluster().id(), breakend,
+                                    formatPloidy(cnLowSide), dbLink.length(), formatPloidy(otherSvPloidy));
 
                             DriverGeneData dgData = createDriverData(gene);
                             DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
@@ -854,8 +867,9 @@ public class DriverGeneAnnotator
                         {
                             delDriverGeneIds.add(gene.StableId);
 
-                            LOGGER.debug("DUP({}) cause homozygous disruption for gene({}): cnLowSide({} & {}) ploidy({})",
-                                    breakend.getSV().id(), trans.geneName(), formatPloidy(cnLowSideStart), formatPloidy(cnLowSideEnd), formatPloidy(ploidy));
+                            LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) ploidy({})",
+                                    trans.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
+                                    formatPloidy(cnLowSideStart), formatPloidy(cnLowSideEnd), formatPloidy(ploidy));
 
                             DriverGeneData dgData = createDriverData(gene);
                             DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);

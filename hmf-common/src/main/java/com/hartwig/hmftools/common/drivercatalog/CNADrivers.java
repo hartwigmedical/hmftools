@@ -26,6 +26,11 @@ public class CNADrivers {
     private final Map<String, String> deletionBandMap;
 
     @NotNull
+    public static Set<String> reportableGeneDeletions() {
+        return deletionTargets().keySet();
+    }
+
+    @NotNull
     private static Set<String> amplificationTargets() {
         final InputStream inputStream = DndsDriverGeneLikelihoodSupplier.class.getResourceAsStream("/cna/AmplificationTargets.tsv");
         return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toSet());

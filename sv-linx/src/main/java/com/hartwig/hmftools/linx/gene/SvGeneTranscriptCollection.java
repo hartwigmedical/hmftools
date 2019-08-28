@@ -46,7 +46,6 @@ public class SvGeneTranscriptCollection
     private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
     private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
     private Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
-    private Set<String> mTsgDriverGeneIds;
 
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireCodingInfo;
@@ -64,7 +63,6 @@ public class SvGeneTranscriptCollection
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
         mGeneNameIdMap = Maps.newHashMap();
-        initialiseTsgDriverGenes();
         mRequireCodingInfo = true;
     }
 
@@ -140,20 +138,6 @@ public class SvGeneTranscriptCollection
             }
         }
     }
-
-    private void initialiseTsgDriverGenes()
-    {
-        mTsgDriverGeneIds = Sets.newHashSet();
-
-        Map<String, HmfTranscriptRegion> allGenes = HmfGenePanelSupplier.allGenesMap37();
-
-        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
-        {
-            mTsgDriverGeneIds.add(allGenes.get(gene).geneID());
-        }
-    }
-
-    public final Set<String> getTsgDriverGeneIds() { return mTsgDriverGeneIds; }
 
     public List<TranscriptData> getTranscripts(final String geneId)
     {

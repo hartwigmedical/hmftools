@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Logger;
 public class DisruptionFinder
 {
     private final SvGeneTranscriptCollection mGeneTransCollection;
-    private Set<String> mDisruptionGeneIDPanel;
+    private Set<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
 
@@ -61,7 +61,9 @@ public class DisruptionFinder
     public DisruptionFinder(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache, final String outputDir)
     {
         mGeneTransCollection = geneTransCache;
-        mDisruptionGeneIDPanel = null;
+        mDisruptionGeneIds = null;
+
+        initialiseTsgDriverGenes();
 
         mDisruptions = Lists.newArrayList();
 
@@ -73,14 +75,26 @@ public class DisruptionFinder
         initialise(cmd);
     }
 
+    private void initialiseTsgDriverGenes()
+    {
+        mDisruptionGeneIds = Sets.newHashSet();
+
+        for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
+        {
+            final EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(gene);
+
+            if(geneData != null)
+                mDisruptionGeneIds.add(geneData.GeneId);
+        }
+    }
+
+
     public final List<Transcript> getDisruptions() { return mDisruptions; }
 
     public void setNewDisruptionLogic(boolean toggle) { mNewDisruptionLogic = toggle; }
 
     private void initialise(final CommandLine cmd)
     {
-        mDisruptionGeneIDPanel = mGeneTransCollection.getTsgDriverGeneIds();
-
         if(cmd != null)
         {
             if(cmd.hasOption(DRUP_TSG_GENES_FILE))
@@ -92,13 +106,13 @@ public class DisruptionFinder
 
     public boolean matchesDisruptionGene(final GeneAnnotation gene)
     {
-        return mDisruptionGeneIDPanel.stream().anyMatch(geneID -> gene.synonyms().contains(geneID));
+        return mDisruptionGeneIds.stream().anyMatch(geneID -> gene.synonyms().contains(geneID));
     }
 
     public void addDisruptionGene(final String geneId)
     {
-        if(!mDisruptionGeneIDPanel.contains(geneId))
-            mDisruptionGeneIDPanel.add(geneId);
+        if(!mDisruptionGeneIds.contains(geneId))
+            mDisruptionGeneIds.add(geneId);
     }
 
     public void findReportableDisruptions(final List<SvVarData> svList)
@@ -332,6 +346,9 @@ public class DisruptionFinder
                 // does it return to the same intron and correct orientation for any transcripts
                 final SvBreakend nextBreakend = traverseUp ?
                         nextPair.secondBreakend().getOtherBreakend() : nextPair.firstBreakend().getOtherBreakend();
+
+                if(nextBreakend == null)
+                    continue;
 
                 if(nextBreakend.orientation() == breakend.orientation() || !nextBreakend.chromosome().equals(breakend.chromosome()))
                     continue;
