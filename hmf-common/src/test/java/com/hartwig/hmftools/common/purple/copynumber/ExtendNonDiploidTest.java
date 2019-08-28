@@ -54,7 +54,7 @@ public class ExtendNonDiploidTest {
         final CombinedRegion rightMost = createCombinedRegion(6001, 7000, 7,1, SegmentSupport.BND);
 
         final List<CombinedRegion> regions = Lists.newArrayList(leftMost, middle1, middle2, middle3, rightMost);
-        final List<CombinedRegion> result = ExtendNonDiploid.extendNonDiploid(regions);
+        final List<CombinedRegion> result = ExtendNonDiploid.nonDiploid(regions);
 
         assertEquals(2, result.size());
         assertCombinedRegion(2001, 6000, 4.25, CopyNumberMethod.NON_DIPLOID, result.get(0));
@@ -70,7 +70,7 @@ public class ExtendNonDiploidTest {
         final CombinedRegion rightMost = createCombinedRegion(6001, 7000, 7, 1, SegmentSupport.BND);
 
         final List<CombinedRegion> regions = Lists.newArrayList(leftMost, middle1, middle2, middle3, rightMost);
-        final List<CombinedRegion> result = ExtendNonDiploid.extendNonDiploid(regions);
+        final List<CombinedRegion> result = ExtendNonDiploid.nonDiploid(regions);
 
         assertEquals(2, result.size());
         assertCombinedRegion(2001, 6000, 4.25, CopyNumberMethod.NON_DIPLOID, result.get(0));
@@ -86,10 +86,10 @@ public class ExtendNonDiploidTest {
         final CombinedRegion rightMost = createCombinedRegion(6001, 7000, 7, 1, SegmentSupport.BND);
 
         final List<CombinedRegion> regions = Lists.newArrayList(leftMost, middle1, middle2, middle3, rightMost);
-        final List<CombinedRegion> result = ExtendNonDiploid.extendNonDiploid(regions);
+        final List<CombinedRegion> result = ExtendNonDiploid.nonDiploid(regions);
 
-        assertEquals(3, result.size());
-        assertCombinedRegion(2001, 5000, 4, CopyNumberMethod.NON_DIPLOID, result.get(0));
+        assertEquals(2, result.size());
+        assertCombinedRegion(2001, 6000, 4, CopyNumberMethod.NON_DIPLOID, result.get(0));
     }
 
     @NotNull

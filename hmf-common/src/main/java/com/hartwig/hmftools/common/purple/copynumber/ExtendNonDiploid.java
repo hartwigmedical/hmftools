@@ -10,10 +10,20 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class ExtendNonDiploid {
+class ExtendNonDiploid extends ExtendRegion {
 
     @NotNull
-    static List<CombinedRegion> nonDiploid(@NotNull final List<CombinedRegion> regions) {
+    static List<CombinedRegion> nonDiploid(final List<CombinedRegion> regions) {
+        return new ExtendNonDiploid().extend(regions);
+    }
+
+    private ExtendNonDiploid() {
+        super(CopyNumberMethod.NON_DIPLOID);
+    }
+
+    @NotNull
+    @Override
+    public List<CombinedRegion> extend(@NotNull final List<CombinedRegion> regions) {
 
         for (int i = 0; i < regions.size(); i++) {
             CombinedRegion region = regions.get(i);
@@ -22,7 +32,7 @@ class ExtendNonDiploid {
                 region.setTumorCopyNumber(CopyNumberMethod.NON_DIPLOID, region.region().refNormalisedCopyNumber());
             }
         }
-        return extendNonDiploid(regions);
+        return super.extend(regions);
     }
 
     static boolean isEligible(@NotNull final FittedRegion region, @Nullable final FittedRegion neighbour) {
@@ -40,65 +50,10 @@ class ExtendNonDiploid {
         return region.support().isSV() || (neighbour != null && neighbour.support().isSV());
     }
 
-    @NotNull
-    static List<CombinedRegion> extendNonDiploid(@NotNull final List<CombinedRegion> regions) {
-
-        for (int i = 0; i < regions.size(); i++) {
-
-            CombinedRegion region = regions.get(i);
-            if (region.copyNumberMethod() == CopyNumberMethod.NON_DIPLOID) {
-                extendRight(i, regions);
-                i -= extendLeft(i, regions);
-            }
-        }
-
-        return regions;
+    @Override
+    protected void extend(final CombinedRegion target, final CombinedRegion neighbour) {
+        target.extendWithWeightedAverage(neighbour.region());
     }
 
-    private static void extendRight(int startIndex, @NotNull final List<CombinedRegion> regions) {
-        assert (startIndex < regions.size());
-        final CombinedRegion target = regions.get(startIndex);
-        int targetIndex = startIndex + 1;
-
-        while (targetIndex < regions.size()) {
-            final CombinedRegion neighbour = regions.get(targetIndex);
-
-            if (Extend.doNotExtend(target, neighbour.region())) {
-                break;
-            }
-
-            if (neighbour.copyNumberMethod() == CopyNumberMethod.NON_DIPLOID) {
-                target.extendWithWeightedAverage(neighbour.region());
-            } else {
-                break;
-            }
-
-            regions.remove(targetIndex);
-        }
-    }
-
-    private static int extendLeft(int startIndex, @NotNull final List<CombinedRegion> regions) {
-        assert (startIndex < regions.size());
-        final CombinedRegion target = regions.get(startIndex);
-
-        int targetIndex = startIndex - 1;
-        while (targetIndex >= 0) {
-            final CombinedRegion neighbour = regions.get(targetIndex);
-            if (Extend.doNotExtend(target, neighbour.region())) {
-                break;
-            }
-
-            if (neighbour.copyNumberMethod() == CopyNumberMethod.NON_DIPLOID) {
-                target.extendWithWeightedAverage(neighbour.region());
-            } else {
-                break;
-            }
-
-            regions.remove(targetIndex);
-            targetIndex--;
-        }
-
-        return startIndex - targetIndex - 1;
-    }
 
 }
