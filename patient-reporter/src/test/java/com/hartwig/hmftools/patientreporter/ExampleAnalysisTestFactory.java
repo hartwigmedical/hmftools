@@ -50,7 +50,7 @@ public final class ExampleAnalysisTestFactory {
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 180;
         final double tumorMutationalBurden = 13.6;
-        final double microsatelliteIndelsPerMb = 0.12;
+        final double microsatelliteIndelsPerMb = 0.11;
 
         final ReportData reportData = testReportData();
 
@@ -486,11 +486,11 @@ public final class ExampleAnalysisTestFactory {
                 .gDNA("9:21971153")
                 .hgvsCodingImpact("c.203_204delCG")
                 .hgvsProteinImpact("p.Ala68fs")
-                .alleleReadCount(94)
-                .totalReadCount(94)
+                .alleleReadCount(95)
+                .totalReadCount(95)
                 .allelePloidy(2D)
                 .totalPloidy(2D)
-                .hotspot(Hotspot.NON_HOTSPOT)
+                .hotspot(Hotspot.NEAR_HOTSPOT)
                 .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.9)
@@ -630,7 +630,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static ChordAnalysis createCOLO829ChordAnalysis() {
         double brca1Value = 0D;
-        double brca2Value = 0D;
+        double brca2Value = 0.014;
 
         return ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
