@@ -70,6 +70,12 @@ public class RecoverStructuralVariantsTest {
     }
 
     @Test
+    public void testDelBothEndsUnbalancedButWithInsufficientDepthWindowCountInOneEnd() throws IOException {
+        final List<VariantContext> result = delTest(3, 3, 3, UNBALANCED_MIN_DEPTH_WINDOW_COUNT - 1);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     public void testDelAlreadyBalanced() throws IOException {
         final List<VariantContext> result = delTest(3, 0.8, 3);
         assertTrue(result.isEmpty());
@@ -77,11 +83,17 @@ public class RecoverStructuralVariantsTest {
 
     @NotNull
     private List<VariantContext> delTest(double startCopyNumber, double middleCopyNumber, double endCopyNumber) throws IOException {
+        return delTest(startCopyNumber, middleCopyNumber, endCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+    }
+
+    @NotNull
+    private List<VariantContext> delTest(double startCopyNumber, double middleCopyNumber, double endCopyNumber, int startDepthWindowCount)
+            throws IOException {
         StructuralVariant del = createDel();
         assertEquals(10001, del.start().cnaPosition());
         assertEquals(20000, del.end().cnaPosition());
 
-        PurpleCopyNumber first = create(1, 10000, startCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+        PurpleCopyNumber first = create(1, 10000, startCopyNumber, startDepthWindowCount);
         PurpleCopyNumber second = create(10001, 19999, middleCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
         PurpleCopyNumber third = create(20000, 39999, endCopyNumber, UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
 
