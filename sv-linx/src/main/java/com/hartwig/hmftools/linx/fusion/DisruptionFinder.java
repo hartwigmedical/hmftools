@@ -1,27 +1,24 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -47,13 +44,13 @@ public class DisruptionFinder
     private Set<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
+    private final Map<Transcript,String> mRemovedDisruptions; // temporary
 
     private boolean mNewDisruptionLogic;
 
     private BufferedWriter mWriter;
     private final String mOutputDir;
 
-    public static final String DRUP_TSG_GENES_FILE = "drup_tsg_file";
     public static final String USE_CHAIN_LOGIC = "disruptions_use_chains";
 
     private static final Logger LOGGER = LogManager.getLogger(DisruptionFinder.class);
@@ -66,6 +63,7 @@ public class DisruptionFinder
         initialiseTsgDriverGenes();
 
         mDisruptions = Lists.newArrayList();
+        mRemovedDisruptions = Maps.newHashMap();
 
         mNewDisruptionLogic = false;
 
@@ -84,10 +82,11 @@ public class DisruptionFinder
             final EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(gene);
 
             if(geneData != null)
+            {
                 mDisruptionGeneIds.add(geneData.GeneId);
+            }
         }
     }
-
 
     public final List<Transcript> getDisruptions() { return mDisruptions; }
 
@@ -97,56 +96,19 @@ public class DisruptionFinder
     {
         if(cmd != null)
         {
-            if(cmd.hasOption(DRUP_TSG_GENES_FILE))
-                loadDrupTSGs(cmd.getOptionValue(DRUP_TSG_GENES_FILE));
-
             mNewDisruptionLogic = cmd.hasOption(USE_CHAIN_LOGIC);
         }
     }
 
     public boolean matchesDisruptionGene(final GeneAnnotation gene)
     {
-        return mDisruptionGeneIds.stream().anyMatch(geneID -> gene.synonyms().contains(geneID));
+        return mDisruptionGeneIds.stream().anyMatch(geneId -> gene.StableId.equals(geneId));
     }
 
     public void addDisruptionGene(final String geneId)
     {
         if(!mDisruptionGeneIds.contains(geneId))
             mDisruptionGeneIds.add(geneId);
-    }
-
-    public void findReportableDisruptions(final List<SvVarData> svList)
-    {
-        mDisruptions.clear();
-
-        for (final SvVarData var : svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                if (be == SE_END && var.isSglBreakend())
-                    continue;
-
-                final List<GeneAnnotation> tsgGenesList = var.getGenesList(isStart(be)).stream()
-                        .filter(x -> matchesDisruptionGene(x)).collect(Collectors.toList());
-
-                for(GeneAnnotation gene : tsgGenesList)
-                {
-                    List<Transcript> reportableDisruptions = gene.transcripts().stream()
-                            .filter(Transcript::isCanonical)
-                            .filter(Transcript::isDisruptive)
-                            .collect(Collectors.toList());
-
-                    for(Transcript transcript : reportableDisruptions)
-                    {
-                        LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted",
-                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId);
-
-                        transcript.setReportableDisruption(true);
-                        mDisruptions.add(transcript);
-                    }
-                }
-            }
-        }
     }
 
     // to be deprecated
@@ -186,7 +148,26 @@ public class DisruptionFinder
         }
     }
 
-    public void markTranscriptsDisruptive(final SvVarData var)
+    public void markTranscriptsDisruptive(final List<SvVarData> svList)
+    {
+        mRemovedDisruptions.clear();
+
+        for(final SvVarData var : svList)
+        {
+            // mark any transcripts as not disruptive prior to running any fusion logic
+            markTranscriptsDisruptive(var);
+
+            // inferred SGLs are always non-disruptive
+            if (var.isInferredSgl())
+            {
+                var.getGenesList(true).stream().forEach(x -> x.transcripts().stream().forEach(y -> y.setIsDisruptive(false)));
+            }
+        }
+    }
+
+    private static final String NON_DISRUPT_REASON_SIMPLE_SV = "SimpleSV";
+
+    private void markTranscriptsDisruptive(final SvVarData var)
     {
         if(!mNewDisruptionLogic)
         {
@@ -216,7 +197,7 @@ public class DisruptionFinder
 
         if(isSimpleSV)
         {
-            markNonDisruptiveGeneTranscripts(genesStart, genesEnd);
+            markNonDisruptiveGeneTranscripts(genesStart, genesEnd, NON_DISRUPT_REASON_SIMPLE_SV);
         }
 
         final List<SvChain> chains = cluster.findChains(var);
@@ -250,8 +231,11 @@ public class DisruptionFinder
 
                 if(otherBreakendNonGenic && otherSvOtherBreakendNonGenic)
                 {
-                    markNonDisruptiveTranscripts(transList, otherTransList);
-                    removeNonDisruptedTranscripts(transList);
+                    if(markNonDisruptiveTranscripts(transList, otherTransList, "IntronicSection"))
+                    {
+                        LOGGER.debug("pair({}) length({}) fully intronic)", pair, pair.length());
+                        removeNonDisruptedTranscripts(transList);
+                    }
                 }
             }
 
@@ -303,28 +287,31 @@ public class DisruptionFinder
 
         for(int i = 0; i < links.size(); ++i)
         {
-            int index = 0;
+            int startIndex = 0;
             boolean traverseUp = false;
 
             if(i == 0 && chain.getOpenBreakend(true) == breakend)
             {
-                index = -1;
+                startIndex = -1;
                 traverseUp = true;
             }
             else if(i == links.size() - 1 && chain.getOpenBreakend(false) == breakend)
             {
-                index = links.size();
+                startIndex = links.size();
                 traverseUp = false;
             }
             else if(links.get(i).hasBreakend(breakend))
             {
-                index = i;
+                startIndex = i;
                 traverseUp = links.get(i).secondBreakend() == breakend;
             }
             else
             {
                 continue;
             }
+
+            int index = startIndex;
+            long chainLength = 0;
 
             while(true)
             {
@@ -340,6 +327,8 @@ public class DisruptionFinder
 
                 if(traversesGene)
                     return;
+
+                chainLength += nextPair.length();
 
                 // no need to chain this breakend any further as soon as any of its chains have crossed another splice acceptor
 
@@ -362,17 +351,22 @@ public class DisruptionFinder
 
                 if(!otherTransList.isEmpty())
                 {
-                    markNonDisruptiveTranscripts(transList, otherTransList);
-                    removeNonDisruptedTranscripts(transList);
+                    if (markNonDisruptiveTranscripts(transList, otherTransList, "SameIntronNoSPA"))
+                    {
+                        removeNonDisruptedTranscripts(transList);
 
-                    if(transList.isEmpty())
-                        return;
+                        LOGGER.debug("breakends({} & {}) return to same intron, chain({}) links({}) length({})",
+                                breakend, nextBreakend, chain.id(), abs(index - startIndex), chainLength);
+
+                        if (transList.isEmpty())
+                            return;
+                    }
                 }
             }
         }
     }
 
-    private static void markNonDisruptiveGeneTranscripts(final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd)
+    private void markNonDisruptiveGeneTranscripts(final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd, final String context)
     {
         for(final GeneAnnotation geneStart : genesStart)
         {
@@ -382,26 +376,48 @@ public class DisruptionFinder
             if(geneEnd == null)
                 continue;
 
-            markNonDisruptiveTranscripts(geneStart.transcripts(), geneEnd.transcripts());
+            markNonDisruptiveTranscripts(geneStart.transcripts(), geneEnd.transcripts(), context);
         }
     }
 
-    private static void markNonDisruptiveTranscripts(final List<Transcript> transList1, final List<Transcript> transList2)
+    private boolean markNonDisruptiveTranscripts(final List<Transcript> transList1, final List<Transcript> transList2, final String context)
     {
+        boolean foundMatchingTrans = false;
+
         for (final Transcript trans1 : transList1)
         {
-            final Transcript transEnd = transList2.stream()
+            final Transcript trans2 = transList2.stream()
                     .filter(x -> x.StableId.equals(trans1.StableId)).findFirst().orElse(null);
 
-            if(transEnd == null)
+            if(trans2 == null)
                 continue;
 
-            if(trans1.ExonUpstream == transEnd.ExonUpstream)
+            if(trans1.ExonUpstream == trans2.ExonUpstream && trans1.isIntronic() && trans2.isIntronic())
             {
+                foundMatchingTrans = true;
+
                 trans1.setIsDisruptive(false);
-                transEnd.setIsDisruptive(false);
+                trans2.setIsDisruptive(false);
+
+                registerNonDisruptedTranscript(trans1, context);
+                registerNonDisruptedTranscript(trans2, context);
             }
         }
+
+        return foundMatchingTrans;
+    }
+
+    private void registerNonDisruptedTranscript(final Transcript transcript, final String context)
+    {
+        if(mRemovedDisruptions.containsKey(transcript))
+            return;
+
+        if(!transcript.isCanonical() || !matchesDisruptionGene(transcript.gene()))
+            return;
+
+        LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.gene().id(), context);
+
+        mRemovedDisruptions.put(transcript, context);
     }
 
     public boolean pairTraversesGene(SvLinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
@@ -484,55 +500,37 @@ public class DisruptionFinder
         return false;
     }
 
-    private void loadDrupTSGs(final String filename)
+    public void findReportableDisruptions(final List<SvVarData> svList)
     {
-        if (filename.isEmpty() || !Files.exists(Paths.get(filename)))
-            return;
+        mDisruptions.clear();
 
-        try
+        for (final SvVarData var : svList)
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
+            for (int be = SE_START; be <= SE_END; ++be)
             {
-                LOGGER.error("empty DRUP TSG file({})", filename);
-                return;
+                if (be == SE_END && var.isSglBreakend())
+                    continue;
+
+                final List<GeneAnnotation> tsgGenesList = var.getGenesList(isStart(be)).stream()
+                        .filter(x -> matchesDisruptionGene(x)).collect(Collectors.toList());
+
+                for(GeneAnnotation gene : tsgGenesList)
+                {
+                    List<Transcript> reportableDisruptions = gene.transcripts().stream()
+                            .filter(Transcript::isCanonical)
+                            .filter(Transcript::isDisruptive)
+                            .collect(Collectors.toList());
+
+                    for(Transcript transcript : reportableDisruptions)
+                    {
+                        LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted",
+                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId);
+
+                        transcript.setReportableDisruption(true);
+                        mDisruptions.add(transcript);
+                    }
+                }
             }
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                final String[] items = line.split(",");
-
-                if(items.length < 2)
-                {
-                    LOGGER.error("invalid DRUP TSG record: {}", line);
-                    return;
-                }
-
-                final String geneName = items[0];
-
-                final EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(geneName);
-                if(geneData != null)
-                {
-                    addDisruptionGene(geneData.GeneId);
-                }
-                else
-                {
-                    LOGGER.error("gene data not found for gene({})", geneName);
-                }
-
-                line = fileReader.readLine();
-            }
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load DRUP TSG file({}): {}", filename, e.toString());
-            return;
         }
     }
 
@@ -580,8 +578,8 @@ public class DisruptionFinder
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
-                mWriter.write("SampleId,Reportable,SvId,IsStart,Chromosome,Position,Orientation");
-                mWriter.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
+                mWriter.write("SampleId,Reportable,SvId,IsStart,Type,ClusterId,Chromosome,Position,Orientation");
+                mWriter.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType,ExcludedReason");
                 mWriter.newLine();
             }
         }
@@ -591,7 +589,7 @@ public class DisruptionFinder
         }
     }
 
-    public void writeMultiSampleData(final String sampleId)
+    public void writeMultiSampleData(final String sampleId, final List<SvVarData> svList)
     {
         if(mWriter == null)
             return;
@@ -601,17 +599,43 @@ public class DisruptionFinder
             for(final Transcript transcript : mDisruptions)
             {
                 final GeneAnnotation gene = transcript.gene();
+                final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
 
-                mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%d",
+                mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
                         sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
+                        var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
                         gene.chromosome(), gene.position(), gene.orientation()));
 
-                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s",
+                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,",
                         gene.StableId, gene.GeneName, gene.Strand, transcript.StableId,
                         transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType()));
+
+                mWriter.newLine();
             }
 
-            mWriter.newLine();
+            for(Map.Entry<Transcript,String> entry : mRemovedDisruptions.entrySet())
+            {
+                final String reason = entry.getValue();
+
+                if(reason.equals(NON_DISRUPT_REASON_SIMPLE_SV))
+                    continue;
+
+                final Transcript transcript = entry.getKey();
+                final GeneAnnotation gene = transcript.gene();
+                final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
+
+                mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
+                    sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
+                    var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
+                    gene.chromosome(), gene.position(), gene.orientation()));
+
+                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%s",
+                        gene.StableId, gene.GeneName, gene.Strand, transcript.StableId,
+                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
+                        transcript.regionType(), reason));
+
+                mWriter.newLine();
+            }
         }
         catch (final IOException e)
         {

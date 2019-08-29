@@ -37,7 +37,6 @@ public class ChainingSimpleTest
         var3.setAssemblyData(false, "asmb34");
         var4.setAssemblyData(true, "asmb34");
 
-        // add them out of order which will require partial chain reconciliation
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);

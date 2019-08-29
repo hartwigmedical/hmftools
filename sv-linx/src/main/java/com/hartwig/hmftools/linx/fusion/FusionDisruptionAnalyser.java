@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.DRUP_TSG_GENES_FILE;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.USE_CHAIN_LOGIC;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
@@ -128,7 +127,6 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
-        options.addOption(DRUP_TSG_GENES_FILE, true, "List of DRUP TSG genes");
         options.addOption(USE_CHAIN_LOGIC, false, "Use chains to determine disruptions");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
@@ -264,17 +262,8 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        for(final SvVarData var : svList)
-        {
-            // mark any transcripts as not disruptive prior to running any fusion logic
-            mDisruptionFinder.markTranscriptsDisruptive(var);
-
-            // inferred SGLs are always non-disruptive
-            if (var.isInferredSgl())
-            {
-                var.getGenesList(true).stream().forEach(x -> x.transcripts().stream().forEach(y -> y.setIsDisruptive(false)));
-            }
-        }
+        // mark any transcripts as not disruptive prior to running any fusion logic
+        mDisruptionFinder.markTranscriptsDisruptive(svList);
 
         for(final SvVarData var : svList)
         {
@@ -331,7 +320,7 @@ public class FusionDisruptionAnalyser
         }
         else
         {
-            mDisruptionFinder.writeMultiSampleData(mSampleId);
+            mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
         }
 
         List<GeneFusion> uniqueFusions = extractUniqueFusions();

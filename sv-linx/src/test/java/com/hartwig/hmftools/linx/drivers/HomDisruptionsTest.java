@@ -44,9 +44,6 @@ public class HomDisruptionsTest
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
         tester.initialiseFusions(geneTransCache);
 
-        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
-        driverAnnotator.setSamplePloidy(2);
-
         // must be a known TSG driver
         String geneName = "TP53";
         String geneId = "ENSG00000141510";
@@ -70,6 +67,9 @@ public class HomDisruptionsTest
 
         addTransExonData(geneTransCache, geneId, transDataList);
         addGeneData(geneTransCache, chromosome, geneList);
+
+        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        driverAnnotator.setSamplePloidy(2);
 
         // make a chain of SVs which contain one or more deletion bridges affecting the gene
         SvVarData var1 = createInv(tester.nextVarId(), chromosome, 15000, 25000, 1);
@@ -138,9 +138,6 @@ public class HomDisruptionsTest
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
         tester.initialiseFusions(geneTransCache);
 
-        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
-        driverAnnotator.setSamplePloidy(2);
-
         // must be a known TSG driver
         String geneName = "TP53";
         String geneId = "ENSG00000141510";
@@ -164,6 +161,9 @@ public class HomDisruptionsTest
 
         addTransExonData(geneTransCache, geneId, transDataList);
         addGeneData(geneTransCache, chromosome, geneList);
+
+        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        driverAnnotator.setSamplePloidy(2);
 
         // the DUP must be disruptive, ie duplicating at least 1 exon
         SvVarData var1 = createDup(tester.nextVarId(), chromosome, 15000, 35000);
