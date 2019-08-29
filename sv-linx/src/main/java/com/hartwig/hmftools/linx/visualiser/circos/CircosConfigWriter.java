@@ -40,15 +40,17 @@ public class CircosConfigWriter
     private final double mapOuterRadius;
     private final double mapMiddleRadius;
     private final double mapInnerRadius;
+    private final double labelSize;
 
     public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data,
-            @NotNull final SvCircosConfig config)
+            @NotNull final SvCircosConfig config, final double labelSize)
     {
         this.sample = sample;
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
         this.circosData = data;
         this.config = config;
         this.outputDir = outputDir;
+        this.labelSize = labelSize;
 
         double gapSize = config.gapRadius();
         double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
@@ -121,8 +123,6 @@ public class CircosConfigWriter
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.maxCopyNumber() - 2)));
 
         int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.maxMinorAllelePloidy() - 1)));
-
-        double labelSize = config.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
         double distanceLabelOffset = Math.ceil(4 * labelSize);
 
         final Charset charset = StandardCharsets.UTF_8;

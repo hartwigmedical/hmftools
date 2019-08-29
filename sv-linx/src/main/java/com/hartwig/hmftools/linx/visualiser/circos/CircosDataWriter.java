@@ -56,14 +56,11 @@ public class CircosDataWriter
     private final CircosConfigWriter configWriter;
     private final CircosData data;
     private final Thickness thickness;
+    private final double labelSize;
 
-    public CircosDataWriter(
-            @NotNull final ColorPicker colorPicker,
-            @NotNull final String sample,
-            @NotNull final String outputDir,
-            @NotNull final SvCircosConfig circosConfig,
-            @NotNull final CircosConfigWriter configWriter,
-            @NotNull final CircosData data)
+    public CircosDataWriter(@NotNull final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
+            @NotNull final SvCircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data,
+            final double labelSize)
     {
         this.data = data;
         this.colorPicker = colorPicker;
@@ -71,6 +68,7 @@ public class CircosDataWriter
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
         this.thickness = new Thickness(data.connectors());
+        this.labelSize = labelSize;
     }
 
     public void write() throws IOException
@@ -208,12 +206,20 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
         for (final Gene gene : genes)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
+
+            final StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
-                    .add(gene.name())
-                    .toString();
-            result.add(exonString);
+                    .add(gene.name());
+
+            int geneNameLength = gene.name().length();
+            if (geneNameLength > circosConfig.maxLabelCharacters())
+            {
+                double size = 0.9d * circosConfig.maxLabelCharacters() / geneNameLength  * labelSize;
+                exonStringJoiner.add("label_size=" + size + "p");
+            }
+
+            result.add(exonStringJoiner.toString());
         }
 
         return result;
@@ -266,7 +272,7 @@ public class CircosDataWriter
     {
         final List<String> result = Lists.newArrayList();
         long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
-        if (unadjustedSegments <= circosConfig.maxDistanceLabels())
+        if (unadjustedSegments <= circosConfig.maxNumberOfDistanceLabels())
         {
             for (int i = 0; i < unadjustedSegment.size(); i++)
             {

@@ -81,25 +81,42 @@ public interface SvCircosConfig
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size [" + DEFAULT_MAX_LABEL_SIZE + "]");
     }
 
+    // ----------------------- Fusion Parameters
     int fusionLegendRows();
 
     int fusionLegendHeightPerRow();
 
     int fusionHeight();
 
+    // ----------------------- Chromosome Parameters
     int chromosomeRangeHeight();
 
     int chromosomeRangeColumns();
 
-    boolean exactPosition();
+    // ----------------------- Label Size Parameters
+    int minLabelSize();
 
-    boolean showSvId();
+    int maxLabelSize();
 
+    int maxLabelCharacters();
+
+    default int maxNumberOfDistanceLabels()
+    {
+        return 100;
+    }
+
+    // ----------------------- Relative Size Parameters
     double geneRelativeSize();
 
     double segmentRelativeSize();
 
     double copyNumberRelativeSize();
+
+
+    // ----------------------- Other
+    boolean exactPosition();
+
+    boolean showSvId();
 
     double outerRadius();
 
@@ -110,23 +127,14 @@ public interface SvCircosConfig
 
     double innerRadius();
 
-    int minLabelSize();
-
-    int maxLabelSize();
-
-    default int maxDistanceLabels()
-    {
-        return 100;
-    }
-
     default long labelSize(long count)
     {
-        if (count > maxDistanceLabels())
+        if (count > maxNumberOfDistanceLabels())
         {
             return minLabelSize();
         }
 
-        return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minLabelSize()) / maxDistanceLabels());
+        return Math.round(maxLabelSize() - 1d * count * (maxLabelSize() - minLabelSize()) / maxNumberOfDistanceLabels());
     }
 
     @NotNull
@@ -161,6 +169,7 @@ public interface SvCircosConfig
                 .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
                 .minLabelSize(minLabelSize)
                 .maxLabelSize(maxLabelSize)
+                .maxLabelCharacters(5)
                 .build();
     }
 

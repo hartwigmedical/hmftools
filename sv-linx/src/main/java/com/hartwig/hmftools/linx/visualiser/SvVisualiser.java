@@ -247,10 +247,11 @@ public class SvVisualiser implements AutoCloseable
         final ColorPicker color = colorPickerFactory.create(links);
 
         final CircosData circosData = new CircosData(segments, links, alterations, filteredExons, filteredFusions);
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
+        double labelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig, labelSize);
         confWrite.writeConfig();
 
-        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData).write();
+        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData, labelSize).write();
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
@@ -258,10 +259,10 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
-        double rLabelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount()) * 1.2;
 
         if(!config.debug())
         {
+            double rLabelSize = 1.2 * labelSize;
             new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
 
             final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
