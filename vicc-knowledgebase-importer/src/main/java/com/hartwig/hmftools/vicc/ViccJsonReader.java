@@ -70,6 +70,7 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRightLeft;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchBreg;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableMolecularMatchClassification;
@@ -122,6 +123,7 @@ import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRightLeft;
+import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchBreg;
 import com.hartwig.hmftools.vicc.datamodel.MolecularMatchClassification;
@@ -267,6 +269,7 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES = Lists.newArrayList(3, 29, 30, 31);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES = Lists.newArrayList(8, 9, 12, 13);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES = Lists.newArrayList(9);
@@ -1805,6 +1808,7 @@ public final class ViccJsonReader {
                 .build();
     }
 
+
     @NotNull
     private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
         Set<String> keysRight = objectRight.keySet();
@@ -1817,7 +1821,23 @@ public final class ViccJsonReader {
                 .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
                 .type(objectRight.getAsJsonPrimitive("type").getAsString())
                 .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
-                .left(!objectRight.has("left") ? null : createRight(objectRight.getAsJsonObject("left")))
+                .right(!objectRight.has("right") ? null : createRightLeftRight(objectRight.getAsJsonObject("right")))
+                .left(!objectRight.has("left") ? null : createLeft(objectRight.getAsJsonObject("left")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightLeftRight createRightLeftRight(@NotNull JsonObject objectRight) {
+        Set<String> keysRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysRight.size())) {
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match right right rather than the expected "
+                    + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
+            LOGGER.warn(keysRight);
+        }
+        return ImmutableMolecularMatchAstRightLeftRight.builder()
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
                 .build();
     }
 
