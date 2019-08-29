@@ -22,23 +22,24 @@ public class Connectors
                     .chromosome(segment.chromosome())
                     .clusterId(segment.clusterId())
                     .chainId(segment.chainId())
-                    .ploidy(segment.ploidy())
                     .track(segment.track());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-            double startLinkUsage = Links.linkTraverseCount(startPosition, links);
+            double startLinkPloidy = Links.linkPloidy(startPosition, links);
+            double startLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), startPosition, segments);
 
-            if (startLinkUsage > 0)
+            if (startLinkPloidy > 0)
             {
-                result.add(builder.position(segment.start()).build());
+                result.add(builder.position(segment.start()).ploidy(Math.max(0, startLinkPloidy - startLinkPloidyBeforeSegment)).build());
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            double endLinkUsage = Links.linkTraverseCount(endPosition, links);
+            double endLinkPloidy = Links.linkPloidy(endPosition, links);
+            double endLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), endPosition, segments);
 
-            if (endLinkUsage > 0)
+            if (endLinkPloidy > 0)
             {
-                result.add(builder.position(segment.end()).build());
+                result.add(builder.position(segment.end()).ploidy(Math.max(0, endLinkPloidy - endLinkPloidyBeforeSegment)).build());
             }
 
         }

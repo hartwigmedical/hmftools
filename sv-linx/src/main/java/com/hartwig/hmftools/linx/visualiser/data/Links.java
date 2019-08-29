@@ -40,7 +40,7 @@ public class Links
         return result.isPresent() ? result : findEndLink(position, links);
     }
 
-    public static double linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links)
+    public static double linkPloidy(@NotNull final GenomePosition position, @NotNull final List<Link> links)
     {
         return Links.findStartLink(position, links).map(Link::ploidy).orElse((double) 0) + Links.findEndLink(position, links)
                 .map(Link::ploidy)

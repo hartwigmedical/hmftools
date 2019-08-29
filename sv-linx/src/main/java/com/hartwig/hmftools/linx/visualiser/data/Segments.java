@@ -29,6 +29,16 @@ public class Segments
 
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
+    public static double segmentPloidyBefore(final int track, @NotNull final GenomePosition position, @NotNull final List<Segment> segments)
+    {
+        return segments.stream()
+                .filter(x -> x.track() < track)
+                .filter(x -> x.chromosome().equals(position.chromosome()) && (x.start() == position.position()
+                        || x.end() == position.position()))
+                .mapToDouble(Segment::ploidy)
+                .sum();
+    }
+
     @NotNull
     public static Segment entireChromosome(@NotNull final String sampleId, @NotNull final String chromosome)
     {
