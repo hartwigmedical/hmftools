@@ -605,7 +605,19 @@ public class DriverGeneAnnotator
                 if(inSegment)
                 {
                     // record details of this segment
-                    double endCopyNumber = breakend.getCopyNumber(traverseUp);
+                    double endCopyNumber = 0;
+                    if(breakend.arm().equals(segStartBreakend.arm()))
+                    {
+                        endCopyNumber = breakend.getCopyNumber(traverseUp);
+                    }
+                    else
+                    {
+                        // take the end copy number from the centromere
+                        int prevIndex = index + (traverseUp ? -1 : 1);
+                        final SvBreakend prevBreakend = breakendList.get(prevIndex);
+                        endCopyNumber = prevBreakend.getCopyNumber(!traverseUp);
+                    }
+
                     double segmentCNChange = endCopyNumber - segmentStartCopyNumber;
                     netClusterCNChange += segmentCNChange;
 
