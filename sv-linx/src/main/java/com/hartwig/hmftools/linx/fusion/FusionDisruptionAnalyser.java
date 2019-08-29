@@ -1024,7 +1024,7 @@ public class FusionDisruptionAnalyser
                 for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
                 {
                     transcriptsToUpload.addAll(geneAnnotation.transcripts().stream()
-                            .filter(x -> x.isCanonical() || x.isDisruptive())
+                            .filter(x -> x.isCanonical())
                             .collect(Collectors.toList()));
                 }
             }
