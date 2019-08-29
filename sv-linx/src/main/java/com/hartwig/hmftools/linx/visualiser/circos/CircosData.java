@@ -49,7 +49,9 @@ public class CircosData
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
 
-    public CircosData(@NotNull final List<Segment> unadjustedSegments,
+    public CircosData(
+            boolean showSimpleSvSegments,
+            @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons,
@@ -107,7 +109,7 @@ public class CircosData
         double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
-        connectors = Connectors.createConnectors(segments, links);
+        connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
     }
 
     public List<Connector> connectors()

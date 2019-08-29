@@ -227,7 +227,7 @@ public class SvVisualiser implements AutoCloseable
             @NotNull final List<Exon> filteredExons,
             @NotNull final List<ProteinDomain> filteredProteinDomains,
             @NotNull final List<Fusion> filteredFusions,
-            boolean extendSimpleSVs)
+            boolean showSimpleSvSegments)
             throws IOException, InterruptedException
     {
 
@@ -242,11 +242,11 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, extendSimpleSVs);
+        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, showSimpleSvSegments);
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData = new CircosData(segments, links, alterations, filteredExons, filteredFusions);
+        final CircosData circosData = new CircosData(showSimpleSvSegments, segments, links, alterations, filteredExons, filteredFusions);
         double labelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig, labelSize);
         confWrite.writeConfig();
@@ -259,8 +259,7 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
-
-        if(!config.debug())
+        if (!config.debug())
         {
             double rLabelSize = 1.2 * labelSize;
             new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);

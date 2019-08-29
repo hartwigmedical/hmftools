@@ -82,7 +82,7 @@ public class Segments
 
     @NotNull
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions, boolean extendSimpleSVs)
+            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions, boolean showSimpleSvSegments)
     {
         final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
@@ -119,7 +119,7 @@ public class Segments
             result.add(segment);
         }
 
-        return incrementOnChromosome(addCentromeres(result), links, extendSimpleSVs);
+        return incrementOnChromosome(addCentromeres(result), links, showSimpleSvSegments);
     }
 
     @NotNull
@@ -210,13 +210,13 @@ public class Segments
     }
 
     @NotNull
-    private static List<Segment> incrementOnChromosome(
-            @NotNull final List<Segment> segments, @NotNull final List<Link> links, boolean extendSimpleSVs)
+    private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links,
+            boolean showSimpleSvSegments)
     {
 
         final Set<Integer> clustersWithoutSegments =
                 links.stream()
-                        .filter(x -> (x.connectorsOnly() && !extendSimpleSVs))
+                        .filter(x -> (x.connectorsOnly(showSimpleSvSegments)))
                         .map(Link::clusterId).collect(Collectors.toSet());
 
         final Map<String, Integer> trackMap = Maps.newHashMap();

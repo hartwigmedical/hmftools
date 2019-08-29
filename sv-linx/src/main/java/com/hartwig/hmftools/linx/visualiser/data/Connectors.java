@@ -11,8 +11,15 @@ import org.jetbrains.annotations.NotNull;
 public class Connectors
 {
 
+    private final boolean showSimpleSvSegments;
+
+    public Connectors(final boolean showSimpleSvSegments)
+    {
+        this.showSimpleSvSegments = showSimpleSvSegments;
+    }
+
     @NotNull
-    public static List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    public List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
     {
         final List<Connector> result = Lists.newArrayList();
 
@@ -50,12 +57,12 @@ public class Connectors
     }
 
     @NotNull
-    private static List<Connector> create(@NotNull final Link link)
+    private List<Connector> create(@NotNull final Link link)
     {
         @NotNull
         final List<Connector> result = Lists.newArrayList();
 
-        if (link.connectorsOnly())
+        if (link.connectorsOnly(showSimpleSvSegments))
         {
             final ImmutableConnector.Builder builder = ImmutableConnector.builder()
                     .clusterId(link.clusterId())
