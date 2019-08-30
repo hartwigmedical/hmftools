@@ -20,8 +20,6 @@ public interface SvCircosConfig
     String CNA_RELATIVE_SIZE = "cna_relative_size";
     String SEGMENT_RELATIVE_SIZE = "segment_relative_size";
 
-    String MIN_LABEL_SIZE = "min_label_size";
-    String MAX_LABEL_SIZE = "max_label_size";
     String OUTER_RADIUS = "outer_radius";
     String INNER_RADIUS = "inner_radius";
     String EXACT_POSITION = "exact_position";
@@ -35,6 +33,11 @@ public interface SvCircosConfig
     String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
 
     String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
+
+    String MIN_LABEL_SIZE = "min_label_size";
+    String MAX_LABEL_SIZE = "max_label_size";
+    String MIN_LINE_SIZE = "min_line_size";
+    String MAX_LINE_SIZE = "max_line_size";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -53,6 +56,9 @@ public interface SvCircosConfig
 
     int DEFAULT_MIN_LABEL_SIZE = 35;
     int DEFAULT_MAX_LABEL_SIZE = 40;
+
+    int DEFAULT_MIN_LINE_SIZE = 1;
+    int DEFAULT_MAX_LINE_SIZE = 12;
 
     static void addOptions(@NotNull Options options)
     {
@@ -79,8 +85,11 @@ public interface SvCircosConfig
         options.addOption(OUTER_RADIUS, true, "Set outer radius [" + DEFAULT_OUTER_RADIUS + "]");
         options.addOption(INNER_RADIUS, true, "Set inner radius [" + DEFAULT_INNER_RADIUS + "]");
 
-        options.addOption(MIN_LABEL_SIZE, true, "Minimum label size [" + DEFAULT_MIN_LABEL_SIZE + "]");
-        options.addOption(MAX_LABEL_SIZE, true, "Maximum label size [" + DEFAULT_MAX_LABEL_SIZE + "]");
+        options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
+        options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
+
+        options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
+        options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
         options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
     }
 
@@ -116,6 +125,10 @@ public interface SvCircosConfig
     double copyNumberRelativeSize();
 
     // ----------------------- Other
+    int minLineSize();
+
+    int maxLineSize();
+
     boolean exactPosition();
 
     boolean showSvId();
@@ -151,9 +164,21 @@ public interface SvCircosConfig
         }
 
         int maxLabelSize = defaultIntValue(cmd, MAX_LABEL_SIZE, DEFAULT_MAX_LABEL_SIZE);
-        if (maxLabelSize <= 0)
+        if (maxLabelSize < minLabelSize)
         {
-            throw new ParseException("Parameter " + MAX_LABEL_SIZE + " should be > 0");
+            throw new ParseException("Parameter " + MAX_LABEL_SIZE + " should be > " + MIN_LABEL_SIZE);
+        }
+
+        int minLineSize = defaultIntValue(cmd, MIN_LINE_SIZE, DEFAULT_MIN_LINE_SIZE);
+        if (minLineSize <= 0)
+        {
+            throw new ParseException("Parameter " + MIN_LINE_SIZE + " should be > 0");
+        }
+
+        int maxLineSize = defaultIntValue(cmd, MAX_LINE_SIZE, DEFAULT_MAX_LINE_SIZE);
+        if (maxLineSize < minLineSize)
+        {
+            throw new ParseException("Parameter " + MAX_LINE_SIZE + " should be > " + MIN_LINE_SIZE);
         }
 
         // TODO: Add validation on ideogram radius etc
@@ -174,6 +199,8 @@ public interface SvCircosConfig
                 .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
                 .minLabelSize(minLabelSize)
                 .maxLabelSize(maxLabelSize)
+                .minLineSize(minLineSize)
+                .maxLineSize(maxLineSize)
                 .maxLabelCharacters(5)
                 .build();
     }

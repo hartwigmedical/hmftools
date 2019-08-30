@@ -66,7 +66,7 @@ public class CircosDataWriter
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
-        this.thickness = new Thickness(data.connectors());
+        this.thickness = new Thickness(circosConfig.minLineSize(), circosConfig.maxLineSize(), data.connectors());
         this.labelSize = data.labelSize();
     }
 
@@ -161,7 +161,8 @@ public class CircosDataWriter
     private List<String> genes(@NotNull final Map<String, String> geneColours, @NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes()) {
+        if (!data.displayGenes())
+        {
             return result;
         }
 
@@ -184,7 +185,8 @@ public class CircosDataWriter
     private List<String> exonRank(int totalContigLength, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes()) {
+        if (!data.displayGenes())
+        {
             return result;
         }
 
@@ -211,7 +213,8 @@ public class CircosDataWriter
     private List<String> geneName(@NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes()) {
+        if (!data.displayGenes())
+        {
             return result;
         }
 
@@ -225,7 +228,7 @@ public class CircosDataWriter
             int geneNameLength = gene.name().length();
             if (geneNameLength > circosConfig.maxLabelCharacters())
             {
-                double size = 0.9d * circosConfig.maxLabelCharacters() / geneNameLength  * labelSize;
+                double size = 0.9d * circosConfig.maxLabelCharacters() / geneNameLength * labelSize;
                 exonStringJoiner.add("label_size=" + size + "p");
             }
 
@@ -240,7 +243,8 @@ public class CircosDataWriter
             @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes()) {
+        if (!data.displayGenes())
+        {
             return result;
         }
 

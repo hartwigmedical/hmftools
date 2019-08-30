@@ -80,8 +80,8 @@ public class SvVisualiser implements AutoCloseable
     {
         final CommandLine cmd = createCommandLine(args, options);
         LOGGER.info("Loading data");
-        config = SvVisualiserConfig.createConfig(cmd);
         circosConfig = SvCircosConfig.createConfig(cmd);
+        config = SvVisualiserConfig.createConfig(cmd);
         executorService = Executors.newFixedThreadPool(config.threads());
     }
 

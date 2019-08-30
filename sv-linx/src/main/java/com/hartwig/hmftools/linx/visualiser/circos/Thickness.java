@@ -12,20 +12,22 @@ public class Thickness
 
     private static final double MAX_TOTAL_PLOIDY = 1000;
 
-    private static final double MIN_PIXELS = 1;
-    private static final double MAX_PIXELS = 12;
-
+    private final double minPixels;
+    private final double maxPixels;
     private final double gradient;
 
-    public Thickness(@NotNull final List<Connector> connectors)
+    public Thickness(final double minPixels, final double maxPixels, @NotNull final List<Connector> connectors)
     {
-        double maxPloidy = bound(connectors.stream().mapToDouble(Connector::ploidy).max().orElse(0), 6, 60);
+        this.minPixels = minPixels;
+        this.maxPixels = maxPixels;
 
-        double maxPixelGradient = (MAX_PIXELS - MIN_PIXELS) / (maxPloidy - 1);
-        double totalPloidy = connectors.stream().mapToDouble(x -> thicknessPixels(x.ploidy(), maxPixelGradient)).sum();
+        double maxPloidy = bound(connectors.stream().mapToDouble(Connector::ploidy).max().orElse(0), 6, 60);
+        double unadjustedGradient = (maxPixels - minPixels) / (maxPloidy - 1);
+
+        double totalPloidy = connectors.stream().mapToDouble(x -> thicknessPixels(x.ploidy(), unadjustedGradient)).sum();
         gradient = Doubles.greaterThan(totalPloidy, MAX_TOTAL_PLOIDY) ?
-                (MAX_TOTAL_PLOIDY - connectors.size()) / (totalPloidy - connectors.size()) * maxPixelGradient
-                : maxPixelGradient;
+                (MAX_TOTAL_PLOIDY - connectors.size()) / (totalPloidy - connectors.size()) * unadjustedGradient
+                : unadjustedGradient;
 
     }
 
@@ -34,9 +36,9 @@ public class Thickness
         return thicknessPixels(ploidy, gradient);
     }
 
-    private static double thicknessPixels(double ploidy, double gradient)
+    private double thicknessPixels(double ploidy, double gradient)
     {
-        return Math.round(bound(gradient * ploidy + (1 - gradient), MIN_PIXELS, MAX_PIXELS));
+        return Math.round(bound(gradient * ploidy + (minPixels - gradient), minPixels, maxPixels));
     }
 
     private static double bound(double value, double min, double max)
