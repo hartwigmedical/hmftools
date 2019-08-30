@@ -38,6 +38,7 @@ public interface SvCircosConfig
     String MAX_LABEL_SIZE = "max_label_size";
     String MIN_LINE_SIZE = "min_line_size";
     String MAX_LINE_SIZE = "max_line_size";
+    String GLYPH_SIZE = "glyph_size";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -59,6 +60,8 @@ public interface SvCircosConfig
 
     int DEFAULT_MIN_LINE_SIZE = 1;
     int DEFAULT_MAX_LINE_SIZE = 12;
+
+    int DEFAULT_GLYPH_SIZE = 20;
 
     static void addOptions(@NotNull Options options)
     {
@@ -88,6 +91,7 @@ public interface SvCircosConfig
         options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
         options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
 
+        options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
         options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
@@ -128,6 +132,8 @@ public interface SvCircosConfig
     int minLineSize();
 
     int maxLineSize();
+
+    int glyphSize();
 
     boolean exactPosition();
 
@@ -197,6 +203,7 @@ public interface SvCircosConfig
                 .segmentRelativeSize(defaultValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
                 .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
                 .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
+                .glyphSize(defaultIntValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE))
                 .minLabelSize(minLabelSize)
                 .maxLabelSize(maxLabelSize)
                 .minLineSize(minLineSize)

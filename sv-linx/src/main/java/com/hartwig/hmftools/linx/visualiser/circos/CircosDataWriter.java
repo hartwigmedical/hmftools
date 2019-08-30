@@ -37,8 +37,6 @@ import org.jetbrains.annotations.NotNull;
 public class CircosDataWriter
 {
     private static final int MAX_POSITIONS = 60;
-    private static final int SCATTER_GLYPH_SIZE = 20;
-    private static final int SCATTER_GLYPH_SIZE_INNER = 14;
 
     private static DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
@@ -350,6 +348,9 @@ public class CircosDataWriter
     @NotNull
     private List<String> createScatter(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
     {
+        int glyphSize = circosConfig.glyphSize();
+        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d/20d);
+
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments)
         {
@@ -361,17 +362,17 @@ public class CircosDataWriter
 
             final String colorOption = colorPicker.transparentColor(segment.clusterId(), segment.chainId());
             final String startGlyph = scatterGlyph(true, segment, links);
-            result.add(scatterEntry(true, segment, colorOption, startGlyph, SCATTER_GLYPH_SIZE));
+            result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize));
             if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(true, segment, "color=white", startGlyph, SCATTER_GLYPH_SIZE_INNER));
+                result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner));
             }
 
             final String endGlyph = scatterGlyph(false, segment, links);
-            result.add(scatterEntry(false, segment, colorOption, endGlyph, SCATTER_GLYPH_SIZE));
+            result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize));
             if (segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(false, segment, "color=white", endGlyph, SCATTER_GLYPH_SIZE_INNER));
+                result.add(scatterEntry(false, segment, "color=white", endGlyph, glyphSizeInner));
             }
         }
 
@@ -381,6 +382,9 @@ public class CircosDataWriter
     @NotNull
     private List<String> createSglScatter(@NotNull final List<Link> links)
     {
+        int glyphSize = circosConfig.glyphSize();
+        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d/20d);
+
         final List<String> result = Lists.newArrayList();
 
         // Draw open circles at SGL ends
@@ -389,8 +393,8 @@ public class CircosDataWriter
             if (link.isValidStart() && !link.isValidEnd())
             {
                 final String colorOption = colorPicker.transparentColor(link.clusterId(), link.chainId());
-                result.add(scatterSGLEntry(link, colorOption, SCATTER_GLYPH_SIZE));
-                result.add(scatterSGLEntry(link, "color=white", SCATTER_GLYPH_SIZE_INNER));
+                result.add(scatterSGLEntry(link, colorOption, glyphSize));
+                result.add(scatterSGLEntry(link, "color=white", glyphSizeInner));
             }
         }
 
