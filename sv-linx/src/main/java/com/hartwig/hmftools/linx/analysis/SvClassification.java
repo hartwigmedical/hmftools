@@ -139,8 +139,6 @@ public class SvClassification
         if(cluster.getResolvedType() != NONE)
             return;
 
-        // isSpecificCluster(cluster);
-
         if(cluster.hasLinkingLineElements())
         {
             // skip further classification for now

@@ -839,8 +839,6 @@ public class SimpleClustering
                 continue;
             }
 
-            // isSpecificCluster(cluster);
-
             boolean mergedOtherClusters = false;
 
             for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
@@ -1115,7 +1113,6 @@ public class SimpleClustering
         for(int i = 0; i < clusters.size(); ++i)
         {
             SvCluster cluster1 = clusters.get(i);
-            // isSpecificCluster(cluster1);
 
             // check all SVs in this cluster reference it
             for(SvVarData var : cluster1.getSVs())

@@ -178,8 +178,6 @@ public class SvCluster
             mResolvedType = NONE;
         }
 
-        // isSpecificSV(var.id())
-
         ++mTypeCounts[typeAsInt(var.type())];
 
         if (var.type() == BND || var.isCrossArm())
@@ -594,8 +592,6 @@ public class SvCluster
         int svCalcPloidyCount = 0;
         Map<Integer,Integer> ploidyFrequency = new HashMap();
 
-        // isSpecificCluster(this);
-
         double tightestMinPloidy = 0;
         double tightestMaxPloidy = -1;
         int countHalfToOnePloidy = 0;
@@ -796,8 +792,6 @@ public class SvCluster
 
     public void buildArmClusters()
     {
-        // isSpecificCluster(this);
-
         for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
@@ -862,7 +856,6 @@ public class SvCluster
             }
         }
 
-        // isSpecificCluster(this);
         mArmClusters.forEach(x -> x.setFeatures());
     }
 
@@ -952,9 +945,6 @@ public class SvCluster
             return;
 
         // use the relative copy number change to replicate some SVs within a cluster
-        // isSpecificCluster(this);
-
-        // first establish the lowest copy number change
         double clusterMinPloidy = getMinPloidy();
         double clusterMaxPloidy = getMaxPloidy();
 

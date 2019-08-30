@@ -254,8 +254,6 @@ public class LinkFinder
     {
         List<SvLinkedPair> linkedPairs = Lists.newArrayList();
 
-        // isSpecificCluster(cluster);
-
         for (int i = 0; i < svList.size(); ++i)
         {
             SvVarData var1 = svList.get(i);

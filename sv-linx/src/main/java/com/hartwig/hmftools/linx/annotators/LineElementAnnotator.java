@@ -128,8 +128,6 @@ public class LineElementAnnotator {
         if(isFilteredResolvedType(cluster.getResolvedType()))
             return;
 
-        // isSpecificCluster(cluster);
-
         boolean hasSuspected = false;
         boolean hasPolyAorT = false;
         long knownCount = cluster.getSVs().stream().filter(SvVarData::inLineElement).count();

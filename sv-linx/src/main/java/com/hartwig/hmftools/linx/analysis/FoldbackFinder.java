@@ -129,8 +129,6 @@ public class FoldbackFinder
         if(varEnd.type() == INS || varStart.type() == INS)
             return false;
 
-        // isSpecificSV(varStart);
-
         final SvCluster cluster = varEnd.getCluster();
 
         boolean singleSV = varEnd.equals(varStart);

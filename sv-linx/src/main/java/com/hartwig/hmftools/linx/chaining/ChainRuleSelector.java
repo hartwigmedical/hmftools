@@ -240,8 +240,6 @@ public class ChainRuleSelector
 
             SvBreakend limitingBreakend = entry.getKey();
 
-            // isSpecificSV(limitingBreakend.getSV());
-
             final SvLinkedPair newPair;
 
             if(entry.getValue().size() == 2)

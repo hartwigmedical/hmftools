@@ -357,8 +357,6 @@ public class SvSampleAnalyser {
     {
         for(final SvCluster cluster : getClusters())
         {
-            // isSpecificCluster(cluster);
-
             GeneAnnotation pseudoGene = null;
             String transcriptId = "";
 
@@ -693,8 +691,6 @@ public class SvSampleAnalyser {
             for(final SvCluster cluster : getClusters())
             {
                 int clusterSvCount = cluster.getSvCount();
-
-                // isSpecificCluster(cluster);
 
                 ResolvedType resolvedType = cluster.getResolvedType();
 

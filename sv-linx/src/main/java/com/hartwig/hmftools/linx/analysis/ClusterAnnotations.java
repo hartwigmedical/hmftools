@@ -79,8 +79,6 @@ public class ClusterAnnotations
             if(cluster.getChains().isEmpty())
                 continue;
 
-            // isSpecificCluster(cluster);
-
             // gather up start and end arms from each chain, to determine origin arms for the cluster
             List<String> startEndArms = Lists.newArrayList();
 
@@ -521,8 +519,6 @@ public class ClusterAnnotations
         int shortTiCount = 0;
         int longTiCount = 0;
 
-        // isSpecificCluster(cluster);
-
         List<String> chainEndArms = Lists.newArrayList();
 
         for (final SvChain chain : cluster.getChains())
@@ -663,8 +659,6 @@ public class ClusterAnnotations
 
                 for(final SvBreakend breakend : entry.getValue())
                 {
-                    // isSpecificSV(breakend.getSV());
-
                     if(!breakend.getSV().isFoldback())
                         continue;
 

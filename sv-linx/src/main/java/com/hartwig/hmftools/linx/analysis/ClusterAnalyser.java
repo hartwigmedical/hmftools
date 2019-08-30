@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.findIncomple
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
@@ -225,8 +224,6 @@ public class ClusterAnalyser {
             cluster.cacheLinkedPairs();
             cluster.buildArmClusters();
 
-            // isSpecificCluster(cluster);
-
             reportClusterFeatures(cluster);
         }
 
@@ -276,8 +273,6 @@ public class ClusterAnalyser {
     {
         for (SvCluster cluster : mClusters)
         {
-            // isSpecificCluster(cluster);
-
             if (cluster.getResolvedType() == LINE) // only simple assembly links for LINE clusters
                 continue;
 

@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.File;
@@ -225,7 +224,6 @@ public class FusionDisruptionAnalyser
 
             for (final SvVarData var : svList)
             {
-                // isSpecificSV(var);
                 for (int be = SE_START; be <= SE_END; ++be)
                 {
                     if (be == SE_END && var.isSglBreakend())
@@ -244,8 +242,6 @@ public class FusionDisruptionAnalyser
         // associate breakends with transcripts
         for(final SvVarData var : svList)
         {
-            isSpecificSV(var);
-
             for (int be = SE_START; be <= SE_END; ++be)
             {
                 if (be == SE_END && var.isSglBreakend())
@@ -467,8 +463,6 @@ public class FusionDisruptionAnalyser
 
             if (cluster.getChains().isEmpty())
                 continue;
-
-            // isSpecificCluster(cluster);
 
             List<GeneFusion> chainFusions = Lists.newArrayList();
 
@@ -1185,8 +1179,6 @@ public class FusionDisruptionAnalyser
                     if(cluster.findSameChainForSVs(be1.getSV(), be2.getSV()) != null)
                         continue;
                 }
-
-                // isSpecificSV(be1.getSV());
 
                 List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2,
                         true, true, null, true);

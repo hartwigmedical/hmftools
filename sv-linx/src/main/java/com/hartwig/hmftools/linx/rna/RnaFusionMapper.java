@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_ONLY_R
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
@@ -178,8 +177,6 @@ public class RnaFusionMapper
 
                 if(var.isInferredSgl())
                     continue;
-
-                isSpecificSV(var);
 
                 // check whether breakend falls in genic region
                 List<GeneAnnotation> genesList = var.getGenesList(breakend.usesStart())
