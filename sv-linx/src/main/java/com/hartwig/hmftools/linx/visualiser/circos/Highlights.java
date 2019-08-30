@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
-import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,15 +20,14 @@ public class Highlights
     private static final String DELIMITER = ",";
 
     @NotNull
-    public static List<GenomeRegion> limitHighlightsToSegments(@NotNull final List<GenomeRegion> highlights,
-            @NotNull final List<Segment> segments)
+    public static List<GenomeRegion> limitHighlightsToRegions(final List<GenomeRegion> highlights, final List<GenomeRegion> segments)
     {
         final List<GenomeRegion> result = Lists.newArrayList();
 
         for (final GenomeRegion highlight : highlights)
         {
             final String contig = highlight.chromosome();
-            final List<Segment> chromosomeSegments =
+            final List<GenomeRegion> chromosomeSegments =
                     segments.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeSegments.isEmpty())
             {
@@ -41,12 +39,9 @@ public class Highlights
                     result.add(GenomeRegions.create(contig,
                             Math.max(minTrackPosition, highlight.start()),
                             Math.min(maxTrackPosition, highlight.end())));
-
                 }
             }
-
         }
-
         return result;
     }
 

@@ -43,14 +43,14 @@ public class CircosConfigWriter
     private final double labelSize;
 
     public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data,
-            @NotNull final SvCircosConfig config, final double labelSize)
+            @NotNull final SvCircosConfig config)
     {
         this.sample = sample;
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
         this.circosData = data;
         this.config = config;
         this.outputDir = outputDir;
-        this.labelSize = labelSize;
+        this.labelSize = data.labelSize();
 
         double gapSize = config.gapRadius();
         double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
@@ -82,8 +82,8 @@ public class CircosConfigWriter
         }
 
         double exonDistance = exonOuterRadius - exonInnerRadius;
-        geneOuterRadius = exonOuterRadius - 9d/20d * exonDistance;
-        geneInnerRadius = exonInnerRadius + 9d/20d * exonDistance;
+        geneOuterRadius = exonOuterRadius - 9d / 20d * exonDistance;
+        geneInnerRadius = exonInnerRadius + 9d / 20d * exonDistance;
 
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
@@ -150,7 +150,8 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(copyNumberOuterRadius + "r -" + distanceLabelOffset + "p"))
+                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(
+                                copyNumberOuterRadius + "r -" + distanceLabelOffset + "p"))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))

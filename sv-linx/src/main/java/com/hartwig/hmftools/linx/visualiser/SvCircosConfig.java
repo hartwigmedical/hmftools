@@ -34,6 +34,8 @@ public interface SvCircosConfig
     String FUSION_LEGEND_ROWS = "fusion_legend_rows";
     String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
 
+    String INTERPOLATE_CNA_POSITIONS = "interpolate_copy_number_positions";
+
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
     int DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW = 35;
@@ -79,6 +81,7 @@ public interface SvCircosConfig
 
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size [" + DEFAULT_MAX_LABEL_SIZE + "]");
+        options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
     }
 
     // ----------------------- Fusion Parameters
@@ -112,7 +115,6 @@ public interface SvCircosConfig
 
     double copyNumberRelativeSize();
 
-
     // ----------------------- Other
     boolean exactPosition();
 
@@ -120,12 +122,14 @@ public interface SvCircosConfig
 
     double outerRadius();
 
+    double innerRadius();
+
+    boolean interpolateCopyNumberPositions();
+
     default double gapRadius()
     {
         return DEFAULT_GAP_RADIUS;
     }
-
-    double innerRadius();
 
     default long labelSize(long count)
     {
@@ -167,6 +171,7 @@ public interface SvCircosConfig
                 .geneRelativeSize(defaultValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
                 .segmentRelativeSize(defaultValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
                 .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
+                .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
                 .minLabelSize(minLabelSize)
                 .maxLabelSize(maxLabelSize)
                 .maxLabelCharacters(5)

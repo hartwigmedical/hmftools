@@ -59,8 +59,7 @@ public class CircosDataWriter
     private final double labelSize;
 
     public CircosDataWriter(@NotNull final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
-            @NotNull final SvCircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data,
-            final double labelSize)
+            @NotNull final SvCircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data)
     {
         this.data = data;
         this.colorPicker = colorPicker;
@@ -68,7 +67,7 @@ public class CircosDataWriter
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
         this.thickness = new Thickness(data.connectors());
-        this.labelSize = labelSize;
+        this.labelSize = data.labelSize();
     }
 
     public void write() throws IOException

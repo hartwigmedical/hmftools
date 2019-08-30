@@ -16,6 +16,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
@@ -214,11 +215,6 @@ public class Segments
             boolean showSimpleSvSegments)
     {
 
-        final Set<Integer> clustersWithoutSegments =
-                links.stream()
-                        .filter(x -> (x.connectorsOnly(showSimpleSvSegments)))
-                        .map(Link::clusterId).collect(Collectors.toSet());
-
         final Map<String, Integer> trackMap = Maps.newHashMap();
         final List<Segment> result = Lists.newArrayList();
 
@@ -229,7 +225,7 @@ public class Segments
             {
                 result.add(ImmutableSegment.builder().from(segment).track(0).build());
             }
-            else if (!clustersWithoutSegments.contains(segment.clusterId()))
+            else if (showSegment(showSimpleSvSegments, segment, links))
             {
                 final String chromosome = segment.chromosome();
                 if (!trackMap.containsKey(chromosome))
@@ -263,6 +259,30 @@ public class Segments
         }
 
         return result;
+    }
+
+    private static boolean showSegment(boolean showSimpleSvSegments, @NotNull final Segment segment, @NotNull final List<Link> links)
+    {
+        if (segment.startTerminal() == SegmentTerminal.NONE && segment.endTerminal() == SegmentTerminal.NONE)
+        {
+            return true;
+        }
+
+        GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
+        if (segment.startTerminal() == SegmentTerminal.NONE && showSegment(showSimpleSvSegments, startPosition, links))
+        {
+            return true;
+        }
+
+        GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.start());
+        return segment.endTerminal() == SegmentTerminal.NONE && showSegment(showSimpleSvSegments, endPosition, links);
+
+    }
+
+    private static boolean showSegment(boolean showSimpleSvSegments, @NotNull final GenomePosition position,
+            @NotNull final List<Link> links)
+    {
+        return Links.findLink(position, links).filter(x -> !x.connectorsOnly(showSimpleSvSegments)).isPresent();
     }
 
 }

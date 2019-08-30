@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
@@ -48,9 +49,11 @@ public class CircosData
     private final double maxPloidy;
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
+    private final double labelSize;
 
     public CircosData(
             boolean showSimpleSvSegments,
+            @NotNull final SvCircosConfig config,
             @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
@@ -68,37 +71,34 @@ public class CircosData
             unadjustedDisruptedGeneRegions.addAll(DisruptedGene.disruptedGeneRegions(fusion, unadjustedExons));
         }
 
-        final List<GenomeRegion> unadjustedFragileSites =
-                Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
-
-        final List<GenomeRegion> unadjustedLineElements =
-                Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
-
         final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
         final List<Exon> unadjustedGeneExons = Exons.geneExons(unadjustedGenes, unadjustedExons);
 
-        final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
-        unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
-        unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
-        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
+        final List<GenomePosition> positionsToScale = Lists.newArrayList();
+        positionsToScale.addAll(Links.allPositions(unadjustedLinks));
+        positionsToScale.addAll(Span.allPositions(unadjustedSegments));
+        unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(positionsToScale::add);
+        positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
+        positionsToScale.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
+        positionsToScale.addAll(config.interpolateCopyNumberPositions()
+                ? Span.minMaxPositions(unadjustedAlterations)
+                : Span.allPositions(unadjustedAlterations));
 
-        final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
+        final List<GenomeRegion> unadjustedFragileSites =
+                Highlights.limitHighlightsToRegions(Highlights.fragileSites(), Span.spanPositions(positionsToScale));
+
+        final List<GenomeRegion> unadjustedLineElements =
+                Highlights.limitHighlightsToRegions(Highlights.lineElements(), Span.spanPositions(positionsToScale));
+
+        final ScalePosition scalePosition = new ScalePosition(positionsToScale);
         contigLengths = scalePosition.contigLengths();
-
         segments = scalePosition.scaleSegments(unadjustedSegments);
         links = scalePosition.scaleLinks(unadjustedLinks);
-        alterations = scalePosition.scaleAlterations(unadjustedAlterations);
-        fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
-        lineElements = scalePosition.scaleRegions(unadjustedLineElements);
+        alterations = scalePosition.interpolateAlterations(unadjustedAlterations);
+        fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
+        lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
         genes = scalePosition.scaleGene(unadjustedGenes);
         disruptedGeneRegions = scalePosition.scaleRegions(unadjustedDisruptedGeneRegions);
-
-        // Note the following *might* be interpolated
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
@@ -110,6 +110,7 @@ public class CircosData
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
         connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
+        labelSize = config.labelSize(untruncatedCopyNumberAlterationsCount());
     }
 
     public List<Connector> connectors()
@@ -230,4 +231,8 @@ public class CircosData
         return alterations.stream().filter(x -> !x.truncated()).count();
     }
 
+    public double labelSize()
+    {
+        return labelSize;
+    }
 }

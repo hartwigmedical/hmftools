@@ -238,7 +238,7 @@ public class SvVisualiser implements AutoCloseable
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
         final List<CopyNumberAlteration> alterations =
-                CopyNumberAlterations.copyNumbers(config.copyNumberAlterations(), Span.span(positionsToCover));
+                CopyNumberAlterations.copyNumbers(config.copyNumberAlterations(), Span.spanPositions(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
@@ -246,12 +246,12 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData = new CircosData(showSimpleSvSegments, segments, links, alterations, filteredExons, filteredFusions);
-        double labelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
-        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig, labelSize);
+        final CircosData circosData =
+                new CircosData(showSimpleSvSegments, circosConfig, segments, links, alterations, filteredExons, filteredFusions);
+        final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
         confWrite.writeConfig();
 
-        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData, labelSize).write();
+        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData).write();
 
         final String outputPlotName = sample + ".png";
         final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
@@ -261,7 +261,7 @@ public class SvVisualiser implements AutoCloseable
 
         if (!config.debug())
         {
-            double rLabelSize = 1.2 * labelSize;
+            double rLabelSize = 1.2 * circosData.labelSize();
             new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
 
             final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);

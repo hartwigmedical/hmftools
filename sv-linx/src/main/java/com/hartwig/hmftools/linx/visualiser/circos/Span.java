@@ -32,7 +32,7 @@ public class Span
     }
 
     @NotNull
-    public static List<GenomeRegion> span(@NotNull final List<GenomePosition> positions)
+    public static List<GenomeRegion> spanPositions(@NotNull final Collection<? extends GenomePosition> positions)
     {
         final List<GenomeRegion> result = Lists.newArrayList();
 
@@ -50,7 +50,7 @@ public class Span
     }
 
     @NotNull
-    public static List<GenomeRegion> spanRegions(@NotNull final List<? extends GenomeRegion> regions)
+    public static List<GenomeRegion> spanRegions(@NotNull final Collection<? extends GenomeRegion> regions)
     {
         final List<GenomeRegion> result = Lists.newArrayList();
 
@@ -64,6 +64,19 @@ public class Span
         }
 
         Collections.sort(result);
+        return result;
+    }
+
+    @NotNull
+    public static List<GenomePosition> minMaxPositions(@NotNull final Collection<? extends GenomeRegion> regions)
+    {
+        final List<GenomePosition> result = Lists.newArrayList();
+        for (GenomeRegion genomeRegion : spanRegions(regions))
+        {
+            result.add(GenomePositions.create(genomeRegion.chromosome(), genomeRegion.start()));
+            result.add(GenomePositions.create(genomeRegion.chromosome(), genomeRegion.end()));
+        }
+
         return result;
     }
 
