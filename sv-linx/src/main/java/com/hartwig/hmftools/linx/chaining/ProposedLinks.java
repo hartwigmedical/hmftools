@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyOverlap;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.COMP_DUP_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
@@ -152,8 +153,13 @@ public class ProposedLinks
 
         mBreakendPloidy.put(foldbackStart, foldbackPloidy);
         mBreakendPloidy.put(foldbackEnd, foldbackPloidy);
-        mExhaustBreakend.put(foldbackStart, true);
-        mExhaustBreakend.put(foldbackEnd, true);
+
+        if(foldbackStart.getSV() == foldbackEnd.getSV() && copyNumbersEqual(foldbackStart.ploidy(), foldbackPloidy))
+        {
+            // mark the foldback breakends as exhausted only if clear that they are fully used in this pair of links
+            mExhaustBreakend.put(foldbackStart, true);
+            mExhaustBreakend.put(foldbackEnd, true);
+        }
 
         mBreakendPloidy.put(otherBreakend, otherPloidy);
     }

@@ -552,11 +552,16 @@ public class SvChain {
 
                         if(useChainEndPloidies && !ploidyMatched)
                         {
-                            // even if the chains don't have a match, check the breakends themselves
-                            if(ploidyMatch(breakend1, breakend2))
+                            // even if the chains don't have a match, check the breakends themselves vs the chains
+                            if(ploidyMatch(chain1.ploidy(), chain1.ploidyUncertainty(), breakend1.ploidy(), breakend1.ploidyUncertainty())
+                            && ploidyMatch(chain2.ploidy(), chain2.ploidyUncertainty(), breakend1.ploidy(), breakend1.ploidyUncertainty()))
+                            {
                                 ploidyMatched = true;
+                            }
                             else if(!checkChainSplits)
+                            {
                                 continue;
+                            }
                         }
 
                         if(!ploidyMatched)
@@ -629,7 +634,6 @@ public class SvChain {
             }
         }
     }
-
 
     public static boolean checkIsValid(final SvChain chain)
     {

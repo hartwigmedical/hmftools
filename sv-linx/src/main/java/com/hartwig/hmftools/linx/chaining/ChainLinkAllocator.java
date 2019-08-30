@@ -823,7 +823,7 @@ public class ChainLinkAllocator
 
         targetChain.addLink(proposedLinks.Links.get(0), addToStart);
 
-        LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} un=c{}) match({})",
+        LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
                 mLinkIndex, proposedLinks.topRule(), newPair.toString(), formatPloidy(proposedLinks.ploidy()), targetChain.id(),
                 formatPloidy(targetChain.ploidy()), formatPloidy(targetChain.ploidyUncertainty()), proposedLinks.ploidyMatchType());
     }

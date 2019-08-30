@@ -334,6 +334,9 @@ public class ChainRuleSelector
 
     private void updateFoldbackBreakends()
     {
+        // start with previously identified foldbacks - from a single INV, a single-breakend foldback or a chained foldback
+        // and then re-evaluate them as they are added to chains
+        // eg if a foldback is used to split another SV, then the next chain itself continues to function as a foldback
         List<FoldbackBreakendPair> existingChainedPairs = Lists.newArrayList();
 
         if(!mFoldbacksInitialised)
@@ -368,13 +371,33 @@ public class ChainRuleSelector
             {
                 final FoldbackBreakendPair fbPair = mFoldbackBreakendPairs.get(index);
 
-                double minUnlinkedPloidy = min(
-                        mLinkAllocator.getUnlinkedBreakendCount(fbPair.BreakendStart, true),
-                        mLinkAllocator.getUnlinkedBreakendCount(fbPair.BreakendEnd, true));
+                final BreakendPloidy bpStart = mLinkAllocator.getBreakendPloidyData(fbPair.BreakendStart);
+                final BreakendPloidy bpEnd = mLinkAllocator.getBreakendPloidyData(fbPair.BreakendEnd);
 
-                if(minUnlinkedPloidy == 0)
+                double minUnlinkedPloidy = 0;
+                boolean chainHasSimpleFoldback = false;
+
+                if(fbPair.isChained())
                 {
-                    LOGGER.debug("foldback pair({}) removed from consideration", fbPair);
+                    // if this foldback is still the open ends of a chain then it will have unexhausted ploidy and will be re-checked below
+                    minUnlinkedPloidy = min(bpStart.unlinkedPloidy(), bpEnd.unlinkedPloidy());
+                }
+                else
+                {
+                    // a single-SV foldback must have unchained ploidy on both breakends
+                    minUnlinkedPloidy = min(bpStart.UnchainedPloidy, bpEnd.UnchainedPloidy);
+
+                    // and cannot have already been used as a foldback
+                    if(!bpStart.Chains.isEmpty() && bpEnd.Chains.isEmpty())
+                    {
+                        chainHasSimpleFoldback = bpStart.Chains.stream().anyMatch(x -> chainHasFoldback(x, fbPair.BreakendStart.getSV()));
+                    }
+                }
+
+                if(minUnlinkedPloidy == 0 || chainHasSimpleFoldback)
+                {
+                    LOGGER.debug("foldback pair({}) removed from consideration: minUnlinkedPloidy({}) chainHasSimpleFoldback({})",
+                            fbPair, formatPloidy(minUnlinkedPloidy), chainHasSimpleFoldback);
                     mFoldbackBreakendPairs.remove(index);
                     continue;
                 }
@@ -444,6 +467,20 @@ public class ChainRuleSelector
 
         // remove any chained foldbacks no longer supported by the current set of chains
         existingChainedPairs.stream().forEach(x -> removeBreakendPair(mFoldbackBreakendPairs, x));
+    }
+
+    private static boolean chainHasFoldback(final SvChain chain, final SvVarData var)
+    {
+        for(int i = 0; i < chain.getLinkedPairs().size() - 1; ++i)
+        {
+            final SvLinkedPair pair = chain.getLinkedPairs().get(i);
+            final SvLinkedPair nextPair = chain.getLinkedPairs().get(i + 1);
+
+            if(pair.second() == var && nextPair.first() == var && pair.firstBreakend() == nextPair.secondBreakend())
+                return true;
+        }
+
+        return false;
     }
 
     private static final int FOLDBACK_A_PRIORITY = 5;
@@ -536,11 +573,11 @@ public class ChainRuleSelector
                 && !nonFbPloidyData.multiConnections())
                 {
                     // a 2:1 splitting event
-                    if (linkScore < FOLDBACK_A_PRIORITY) // 3
+                    if (linkScore < FOLDBACK_A_PRIORITY)
                     {
                         // highest priority foldback type link, so clear any existing ones
                         newProposedLinks.clear();
-                        linkScore = FOLDBACK_A_PRIORITY; // 3
+                        linkScore = FOLDBACK_A_PRIORITY;
                     }
 
                     ProposedLinks proposedLink = new ProposedLinks(
@@ -569,12 +606,10 @@ public class ChainRuleSelector
                 if (!nonFbPloidyData.multiConnections()
                 && ploidyMatch(foldbackPloidy, foldbackUncertainty, nonFbPloidy, nonFbVar.ploidyUncertainty()))
                 {
-                    // int newPriority = otherFbPair != null ? FOLDBACK_B_FB_PRIORITY : FOLDBACK_B_PRIORITY;
-
-                    if (linkScore < FOLDBACK_B_PRIORITY) // 3
+                    if (linkScore < FOLDBACK_B_PRIORITY)
                     {
                         newProposedLinks.clear();
-                        linkScore = FOLDBACK_B_PRIORITY; // 3
+                        linkScore = FOLDBACK_B_PRIORITY;
                     }
 
                     // where there is a choice to be made between which breakends are used as is usually the case of foldbacks,
