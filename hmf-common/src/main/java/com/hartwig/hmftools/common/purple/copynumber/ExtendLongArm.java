@@ -11,8 +11,13 @@ import org.jetbrains.annotations.NotNull;
 
 final class ExtendLongArm {
 
-    private static final Set<HumanChromosome> ELIGIBLE_CHROMOSOMES =
-            EnumSet.of(HumanChromosome._13, HumanChromosome._14, HumanChromosome._15, HumanChromosome._21, HumanChromosome._22);
+    private static final Set<HumanChromosome> ELIGIBLE_CHROMOSOMES = EnumSet.of(
+            HumanChromosome._13,
+            HumanChromosome._14,
+            HumanChromosome._15,
+            HumanChromosome._21,
+            HumanChromosome._22,
+            HumanChromosome._Y);
 
     @NotNull
     static List<CombinedRegion> extendLongArm(@NotNull final List<CombinedRegion> regions) {

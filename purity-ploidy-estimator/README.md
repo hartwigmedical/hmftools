@@ -478,7 +478,7 @@ variant break that has a ploidy not supported by the copy number change.
 A structural variant is considered unbalanced if the unexplained copy number change (ie. the ploidy - copy number change) is 
 greater than 20% of the copy number at the breakpoint and > 0.5. 
 An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.
-If only one leg of a structural variant is unbalanced but suitable candidate was found, a single ended breakpoint will be inferred at that position. 
+If only one leg of a structural variant is unbalanced but no suitable candidate was found, a single ended breakpoint will be inferred at that position. 
 
 Eligible recovery candidates must:
 
@@ -958,6 +958,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Removed `GERMLINE_AMPLIFICATION` copy number method.
   - Added `NON_DIPLOID` copy number method. This uses the ref normalised tumor copy number (adjusted for observed normal ratio rather than ideal).  
   - Only extend long arm copy numbers to unknown regions of chromosomes 13-15,21,22
+  - Use read count structural variant inferring logic when VAF = 1
 - [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-33)
   - Raised QC segment fail to >220 unsupported segments
   - Infer LOH in simple DUPs between 2 LOH regions 

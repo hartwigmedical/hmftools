@@ -120,7 +120,6 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         return modiyable.setAverageImpliedPloidy(modiyable.unweightedImpliedPloidy());
     }
 
-
     @VisibleForTesting
     @NotNull
     Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg, @NotNull Optional<Double> leftCopyNumber,
@@ -156,13 +155,10 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         } else {
             double copyNumber = smallerCopyNumber.get();
             double reciprocalVAF = reciprocalVAF(observedVaf);
-            if (!Double.isFinite(reciprocalVAF)) {
-                return Optional.empty();
-            }
-
             adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), reciprocalVAF);
 
-            if (averageReadDepth > 0 && Doubles.greaterThan(adjustedVaf, RECIPROCAL_VAF_TO_USE_READ_DEPTH)) {
+            if (averageReadDepth > 0 && (Double.isInfinite(adjustedVaf) || Doubles.greaterThan(adjustedVaf,
+                    RECIPROCAL_VAF_TO_USE_READ_DEPTH))) {
                 final Integer tumorVariantFragmentCount = leg.tumorVariantFragmentCount();
                 if (tumorVariantFragmentCount != null && tumorVariantFragmentCount > 0) {
                     ploidy = readDepthImpliedPloidy(tumorVariantFragmentCount);
@@ -170,6 +166,8 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
                     return Optional.empty();
                 }
 
+            } else if (!Double.isFinite(reciprocalVAF)) {
+                return Optional.empty();
             } else {
                 ploidy = adjustedVaf * copyNumber;
             }
