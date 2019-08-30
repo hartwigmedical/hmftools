@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.util.StringJoiner;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 
 import org.apache.logging.log4j.core.util.IOUtils;
@@ -42,8 +41,7 @@ public class CircosConfigWriter
     private final double mapInnerRadius;
     private final double labelSize;
 
-    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data,
-            @NotNull final SvCircosConfig config)
+    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data, @NotNull final SvCircosConfig config)
     {
         this.sample = sample;
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
@@ -53,13 +51,14 @@ public class CircosConfigWriter
         this.labelSize = data.labelSize();
 
         double gapSize = config.gapRadius();
-        double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
+        boolean displayGenes = data.displayGenes();
+
+        double geneRelativeSize = displayGenes ? config.geneRelativeSize() : 0;
         double segmentRelativeSize = config.segmentRelativeSize();
         double copyNumberRelativeSize = config.copyNumberRelativeSize();
 
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
-        boolean displayGenes = Doubles.greaterThan(geneRelativeSize, 0);
         int numberOfGaps = displayGenes ? 5 : 3;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.innerRadius();

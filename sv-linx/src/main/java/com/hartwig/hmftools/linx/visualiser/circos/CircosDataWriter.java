@@ -161,6 +161,10 @@ public class CircosDataWriter
     private List<String> genes(@NotNull final Map<String, String> geneColours, @NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes()) {
+            return result;
+        }
+
         for (final Gene gene : genes)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
@@ -180,6 +184,10 @@ public class CircosDataWriter
     private List<String> exonRank(int totalContigLength, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes()) {
+            return result;
+        }
+
         if (totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
         {
             for (final Exon exon : exons)
@@ -203,9 +211,12 @@ public class CircosDataWriter
     private List<String> geneName(@NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes()) {
+            return result;
+        }
+
         for (final Gene gene : genes)
         {
-
             final StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
@@ -229,6 +240,10 @@ public class CircosDataWriter
             @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes()) {
+            return result;
+        }
+
         for (final Exon exon : exons)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))

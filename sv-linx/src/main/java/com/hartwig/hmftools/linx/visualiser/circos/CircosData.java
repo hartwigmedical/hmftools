@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -45,6 +46,8 @@ public class CircosData
     private final Set<String> upstreamGenes;
     private final Set<String> downstreamGenes;
 
+    private final SvCircosConfig config;
+
     private final int maxTracks;
     private final double maxPloidy;
     private final double maxCopyNumber;
@@ -64,6 +67,7 @@ public class CircosData
         this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
+        this.config = config;
 
         final List<GenomeRegion> unadjustedDisruptedGeneRegions = Lists.newArrayList();
         for (Fusion fusion : fusions)
@@ -138,7 +142,7 @@ public class CircosData
 
     public boolean displayGenes()
     {
-        return !exons.isEmpty();
+        return !exons.isEmpty() && Doubles.positive(config.geneRelativeSize());
     }
 
     public int maxTracks()
@@ -226,7 +230,7 @@ public class CircosData
         return contigLengths().stream().mapToInt(x -> (int) x.position()).sum();
     }
 
-    public long untruncatedCopyNumberAlterationsCount()
+    private long untruncatedCopyNumberAlterationsCount()
     {
         return alterations.stream().filter(x -> !x.truncated()).count();
     }

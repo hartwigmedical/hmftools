@@ -34,7 +34,7 @@ public interface SvCircosConfig
     String FUSION_LEGEND_ROWS = "fusion_legend_rows";
     String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
 
-    String INTERPOLATE_CNA_POSITIONS = "interpolate_copy_number_positions";
+    String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
