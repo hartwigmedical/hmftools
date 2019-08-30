@@ -1123,10 +1123,10 @@ CREATE TABLE molecularmatch
 CREATE TABLE molecularmatchAst
 (   id int NOT NULL AUTO_INCREMENT,
     molecularmatchId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    operator varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    operator varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchId) REFERENCES molecularmatch(id)
 );
@@ -1134,10 +1134,10 @@ CREATE TABLE molecularmatchAst
 CREATE TABLE molecularmatchAstLeft
 (   id int NOT NULL AUTO_INCREMENT,
     molecularmatchAstId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    operator varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    operator varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchAstId) REFERENCES molecularmatchAst(id)
 );
@@ -1145,10 +1145,10 @@ CREATE TABLE molecularmatchAstLeft
 CREATE TABLE molecularmatchAstRight
 (   id int NOT NULL AUTO_INCREMENT,
     molecularmatchAstId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    operator varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    raw varchar(1000),
+    value varchar(1000),
+    operator varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchAstId) REFERENCES molecularmatchAst(id)
 );
@@ -1156,9 +1156,9 @@ CREATE TABLE molecularmatchAstRight
 CREATE TABLE molecularmatchAstRightRight
 (   id int NOT NULL AUTO_INCREMENT,
     molecularmatchAstRightId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchAstRightId) REFERENCES molecularmatchAstRight(id)
 );
@@ -1166,32 +1166,32 @@ CREATE TABLE molecularmatchAstRightRight
 CREATE TABLE molecularmatchAstRightLeft
 (   id int NOT NULL AUTO_INCREMENT,
     molecularmatchAstRightId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularmatchAstRightId) REFERENCES molecularmatchAstRight(id)
 );
 
 CREATE TABLE molecularmatchAstRightLeftRight
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularmatchAstRightId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    molecularmatchAstRightLeftId int NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularmatchAstRightId) REFERENCES molecularmatchAstRight(id)
+    FOREIGN KEY (molecularmatchAstRightLeftId) REFERENCES molecularmatchAstRightLeft(id)
 );
 
 CREATE TABLE molecularmatchAstRightLeftLeft
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularmatchAstRightId int NOT NULL,
-    raw varchar(255) NOT NULL,
-    operator varchar(255) NOT NULL,
-    value varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
+    molecularmatchAstRightLeftId int NOT NULL,
+    raw varchar(255),
+    operator varchar(255),
+    value varchar(255),
+    type varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularmatchAstRightId) REFERENCES molecularmatchAstRight(id)
+    FOREIGN KEY (molecularmatchAstRightLeftId) REFERENCES molecularmatchAstRightLeft(id)
 );
 
 CREATE TABLE molecularmatchInstutition

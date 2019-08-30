@@ -72,6 +72,13 @@ import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSTHERAPIES;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSVARIANTREQUIREMENTDETAILS;
 import static com.hartwig.hmftools.vicc.database.Tables.LINK;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCH;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHAST;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHASTLEFT;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHASTRIGHT;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHASTRIGHTLEFT;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHASTRIGHTLEFTLEFT;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHASTRIGHTLEFTRIGHT;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHASTRIGHTRIGHT;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATION;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONALT;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHCLASSIFICATIONCHR;
@@ -2090,6 +2097,113 @@ public class ViccDAO {
                 .fetchOne()
                 .getValue(MOLECULARMATCH.ID);
 
+        if (molecularMatch.asts() != null) {
+            int idAst = context.insertInto(MOLECULARMATCHAST,
+                    MOLECULARMATCHAST.RAW,
+                    MOLECULARMATCHAST.VALUE,
+                    MOLECULARMATCHAST.OPERATOR,
+                    MOLECULARMATCHAST.TYPE,
+                    MOLECULARMATCHAST.MOLECULARMATCHID)
+                    .values(molecularMatch.asts().raw(),
+                            molecularMatch.asts().value(),
+                            molecularMatch.asts().operator(),
+                            molecularMatch.asts().type(),
+                            id)
+                    .returning(MOLECULARMATCHAST.ID)
+                    .fetchOne()
+                    .getValue(MOLECULARMATCHAST.ID);
+
+            if (molecularMatch.asts().left() != null) {
+                context.insertInto(MOLECULARMATCHASTLEFT,
+                        MOLECULARMATCHASTLEFT.RAW,
+                        MOLECULARMATCHASTLEFT.VALUE,
+                        MOLECULARMATCHASTLEFT.OPERATOR,
+                        MOLECULARMATCHASTLEFT.TYPE,
+                        MOLECULARMATCHASTLEFT.MOLECULARMATCHASTID)
+                        .values(molecularMatch.asts().left().raw(),
+                                molecularMatch.asts().left().value(),
+                                molecularMatch.asts().left().operator(),
+                                molecularMatch.asts().left().type(),
+                                idAst)
+                        .execute();
+            }
+
+
+            if (molecularMatch.asts().right() != null) {
+                int idAstRight = context.insertInto(MOLECULARMATCHASTRIGHT,
+                        MOLECULARMATCHASTRIGHT.RAW,
+                        MOLECULARMATCHASTRIGHT.VALUE,
+                        MOLECULARMATCHASTRIGHT.OPERATOR,
+                        MOLECULARMATCHASTRIGHT.TYPE,
+                        MOLECULARMATCHASTRIGHT.MOLECULARMATCHASTID)
+                        .values(molecularMatch.asts().right().raw(),
+                                molecularMatch.asts().right().value(),
+                                molecularMatch.asts().right().operator(),
+                                molecularMatch.asts().right().type(),
+                                idAst)
+                        .returning(MOLECULARMATCHASTRIGHT.ID)
+                        .fetchOne()
+                        .getValue(MOLECULARMATCHASTRIGHT.ID);
+
+                if (molecularMatch.asts().right().right() != null) {
+                    context.insertInto(MOLECULARMATCHASTRIGHTRIGHT,
+                            MOLECULARMATCHASTRIGHTRIGHT.RAW,
+                            MOLECULARMATCHASTRIGHTRIGHT.VALUE,
+                            MOLECULARMATCHASTRIGHTRIGHT.TYPE,
+                            MOLECULARMATCHASTRIGHTRIGHT.MOLECULARMATCHASTRIGHTID)
+                            .values(molecularMatch.asts().right().right().raw(),
+                                    molecularMatch.asts().right().right().value(),
+                                    molecularMatch.asts().right().right().type(),
+                                    idAstRight);
+                }
+
+
+                if (molecularMatch.asts().right().left() != null) {
+                    int idRightLeft = context.insertInto(MOLECULARMATCHASTRIGHTLEFT,
+                            MOLECULARMATCHASTRIGHTLEFT.RAW,
+                            MOLECULARMATCHASTRIGHTLEFT.VALUE,
+                            MOLECULARMATCHASTRIGHTLEFT.TYPE,
+                            MOLECULARMATCHASTRIGHTLEFT.MOLECULARMATCHASTRIGHTID)
+                            .values(molecularMatch.asts().right().left().raw(),
+                                    molecularMatch.asts().right().left().value(),
+                                    molecularMatch.asts().right().left().type(),
+                                    idAstRight).returning(MOLECULARMATCHASTRIGHTLEFT.ID).fetchOne().getValue(MOLECULARMATCHASTRIGHTLEFT.ID);
+
+                    if (molecularMatch.asts().right().left().right() != null) {
+                        context.insertInto(MOLECULARMATCHASTRIGHTLEFTRIGHT,
+                                MOLECULARMATCHASTRIGHTLEFTRIGHT.RAW,
+                                MOLECULARMATCHASTRIGHTLEFTRIGHT.VALUE,
+                                MOLECULARMATCHASTRIGHTLEFTRIGHT.TYPE,
+                                MOLECULARMATCHASTRIGHTLEFTRIGHT.MOLECULARMATCHASTRIGHTLEFTID)
+                                .values(molecularMatch.asts().right().left().right().raw(),
+                                        molecularMatch.asts().right().left().right().value(),
+                                        molecularMatch.asts().right().left().right().type(),
+                                        idRightLeft)
+                                .execute();
+                    }
+
+                    if (molecularMatch.asts().right().left().left() != null) {
+                        context.insertInto(MOLECULARMATCHASTRIGHTLEFTLEFT,
+                                MOLECULARMATCHASTRIGHTLEFTLEFT.RAW,
+                                MOLECULARMATCHASTRIGHTLEFTLEFT.OPERATOR,
+                                MOLECULARMATCHASTRIGHTLEFTLEFT.VALUE,
+                                MOLECULARMATCHASTRIGHTLEFTLEFT.TYPE,
+                                MOLECULARMATCHASTRIGHTLEFTLEFT.MOLECULARMATCHASTRIGHTLEFTID)
+                                .values(molecularMatch.asts().right().left().left().raw(),
+                                        molecularMatch.asts().right().left().left().operator(),
+                                        molecularMatch.asts().right().left().left().value(),
+                                        molecularMatch.asts().right().left().left().type(),
+                                        idRightLeft)
+                                .execute();
+                    }
+
+                }
+
+            }
+
+        }
+
+
         if (molecularMatch.institution() != null) {
             for (String institution : molecularMatch.institution()) {
                 context.insertInto(MOLECULARMATCHINSTUTITION,
@@ -3978,6 +4092,12 @@ public class ViccDAO {
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON39).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON40).execute();
         context.deleteFrom(MOLECULARMATCHMUTATIONSEXONPOSITIESEXON41).execute();
-        //TODO: adding object asts of molecular match
+        context.deleteFrom(MOLECULARMATCHAST).execute();
+        context.deleteFrom(MOLECULARMATCHASTLEFT).execute();
+        context.deleteFrom(MOLECULARMATCHASTRIGHT).execute();
+        context.deleteFrom(MOLECULARMATCHASTRIGHTRIGHT).execute();
+        context.deleteFrom(MOLECULARMATCHASTRIGHTLEFT).execute();
+        context.deleteFrom(MOLECULARMATCHASTRIGHTLEFTRIGHT).execute();
+        context.deleteFrom(MOLECULARMATCHASTRIGHTLEFTLEFT).execute();
     }
 }
