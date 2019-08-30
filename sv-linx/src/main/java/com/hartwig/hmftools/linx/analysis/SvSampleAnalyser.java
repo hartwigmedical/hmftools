@@ -783,7 +783,7 @@ public class SvSampleAnalyser {
 
             mLinksFileWriter = createBufferedWriter(outputFileName, false);
 
-            mLinksFileWriter.write("SampleId,ClusterId,ClusterDesc,ClusterCount,ResolvedType");
+            mLinksFileWriter.write("SampleId,ClusterId,ClusterCount,ResolvedType");
             mLinksFileWriter.write(",ChainId,ChainCount,ChainConsistent,LinkReason,LinkIndex,ChainIndex,Ploidy,PloidyUncertainty");
             mLinksFileWriter.write(",IsAssembled,TILength,NextSvDist,NextClusteredSvDist,TraversedSVCount");
             mLinksFileWriter.write(",LocationType,OverlapCount,CopyNumberGain");
@@ -839,8 +839,8 @@ public class SvSampleAnalyser {
 
                         if(mLinksFileWriter != null)
                         {
-                            mLinksFileWriter.write(String.format("%s,%d,%s,%d,%s",
-                                    mSampleId, cluster.id(), cluster.getDesc(), clusterSvCount, cluster.getResolvedType()));
+                            mLinksFileWriter.write(String.format("%s,%d,%d,%s",
+                                    mSampleId, cluster.id(), clusterSvCount, cluster.getResolvedType()));
 
                             mLinksFileWriter.write(String.format(",%d,%d,%s,%s,%d,%s,%s,%.3f",
                                     chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex(),

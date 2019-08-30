@@ -465,7 +465,7 @@ public class RnaFusionMapper
                 if((strand == 1 && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
                 || (strand == -1 && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
                 {
-                    int distanceUp = trans.exonDistanceUp();
+                    int distanceUp = trans.prevSpliceAcceptorDistance();
                     long breakendDistance = abs(breakendPosition - rnaPosition);
 
                     if(breakendDistance > MAX_PROMOTOR_DISTANCE_UP || distanceUp < 0)
@@ -881,7 +881,7 @@ public class RnaFusionMapper
                             rnaFusion.isTransViable(isUpstream), rnaFusion.isTransCorrectLocation(isUpstream),
                             trans.StableId, rnaFusion.getExonsSkipped(isUpstream),
                             trans.regionType(), trans.codingType(),
-                            isUpstream ? trans.ExonUpstream : trans.ExonDownstream, trans.isDisruptive(), trans.exonDistanceUp()));
+                            isUpstream ? trans.ExonUpstream : trans.ExonDownstream, trans.isDisruptive(), trans.prevSpliceAcceptorDistance()));
                 }
                 else
                 {

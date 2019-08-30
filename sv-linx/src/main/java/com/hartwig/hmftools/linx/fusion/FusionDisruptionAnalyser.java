@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.File;
@@ -87,6 +88,7 @@ public class FusionDisruptionAnalyser
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     public static final String LOG_ALL_POTENTIALS = "log_potential_fusions";
+    public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String NEO_EPITOPES = "neo_epitopes";
     public static final String REF_GENOME_FILE = "ref_genome";
@@ -124,12 +126,13 @@ public class FusionDisruptionAnalyser
         options.addOption(SAMPLE_RNA_FILE, true, "Sample RNA data to match");
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
-        options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
-        options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(USE_CHAIN_LOGIC, false, "Use chains to determine disruptions");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
+        options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
+        options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
+        options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
     }
 
     public void initialise(
@@ -177,6 +180,9 @@ public class FusionDisruptionAnalyser
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
             mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
+
+            if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
+                mFusionFinder.setLogInvalidReasons(true);
 
             mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
 
@@ -238,7 +244,7 @@ public class FusionDisruptionAnalyser
         // associate breakends with transcripts
         for(final SvVarData var : svList)
         {
-            // isSpecificSV(var);
+            isSpecificSV(var);
 
             for (int be = SE_START; be <= SE_END; ++be)
             {
@@ -394,9 +400,6 @@ public class FusionDisruptionAnalyser
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
                 continue;
 
-            // isSpecificSV(var);
-            // mFusionFinder.setLogInvalidReasons(isSpecificSV(var));
-
             List<GeneAnnotation> genesListStart = Lists.newArrayList(var.getGenesList(true));
             List<GeneAnnotation> genesListEnd = Lists.newArrayList(var.getGenesList(false));
 
@@ -452,8 +455,6 @@ public class FusionDisruptionAnalyser
                 mFusions.add(fusion);
             }
         }
-
-        mFusionFinder.setLogInvalidReasons(false);
     }
 
     private void findChainedFusions(final List<SvCluster> clusters)
@@ -760,8 +761,6 @@ public class FusionDisruptionAnalyser
                 }
             }
         }
-
-        mFusionFinder.setLogInvalidReasons(false);
     }
 
     private boolean hasIdenticalFusion(final GeneFusion newFusion, final List<GeneFusion> fusions)

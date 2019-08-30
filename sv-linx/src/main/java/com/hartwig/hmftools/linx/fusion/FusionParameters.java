@@ -6,14 +6,14 @@ import com.google.common.collect.Lists;
 
 public class FusionParameters
 {
-    public boolean CheckInvalidReasons;
+    public boolean LogInvalidReasons;
     public List<String> InvalidReasons;
     public boolean AllowExonSkipping;
     public boolean RequirePhaseMatch;
 
     public FusionParameters()
     {
-        CheckInvalidReasons = false;
+        LogInvalidReasons = false;
         InvalidReasons = Lists.newArrayList();
         AllowExonSkipping = true;
         RequirePhaseMatch = false;

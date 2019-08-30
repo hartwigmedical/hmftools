@@ -630,7 +630,7 @@ public class SvVarData
 
     public static boolean isSpecificSV(final SvVarData var)
     {
-        if(var.idStr().equals(SPECIFIC_SV_ID))
+        if(var.id() == SPECIFIC_SV_ID)
             return true;
 
         return false;

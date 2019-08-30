@@ -42,8 +42,8 @@ public class Transcript {
     private String mCodingType;
     private final String mRegionType;
 
-    private int mExonDistanceUp;
-    private int mExonDistanceDown;
+    private Integer mPrevSpliceAcceptorDistance;
+    private int mNextSpliceAcceptorDistance;
 
     private Map<Integer,Integer> mAlternativePhasing;
 
@@ -88,8 +88,8 @@ public class Transcript {
         mExactCodingBase = -1;
 
         mBioType = "";
-        mExonDistanceUp = 0;
-        mExonDistanceDown = 0;
+        mPrevSpliceAcceptorDistance = null;
+        mNextSpliceAcceptorDistance = 0;
         mAlternativePhasing = Maps.newHashMap();
 
         if(totalCodingBases > STOP_CODON_LENGTH)
@@ -237,14 +237,15 @@ public class Transcript {
     public final Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
     public void setAlternativePhasing(final Map<Integer,Integer> phasings) { mAlternativePhasing = phasings; }
 
-    public void setExonDistances(int up, int down)
+    public void setSpliceAcceptorDistances(Integer up, int down)
     {
-        mExonDistanceUp = up;
-        mExonDistanceDown = down;
+        mPrevSpliceAcceptorDistance = up;
+        mNextSpliceAcceptorDistance = down;
     }
 
-    public int exonDistanceUp() { return mExonDistanceUp; }
-    public int exonDistanceDown() { return mExonDistanceDown; }
+    public boolean hasPrevSpliceAcceptorDistance() { return mPrevSpliceAcceptorDistance != null; }
+    public int prevSpliceAcceptorDistance() { return mPrevSpliceAcceptorDistance != null ? mPrevSpliceAcceptorDistance : -1; }
+    public int nextSpliceAcceptorDistance() { return mNextSpliceAcceptorDistance; }
 
     public void setBioType(final String type) { mBioType = type; }
     public final String bioType() { return mBioType; }

@@ -135,7 +135,7 @@ public class GeneAnnotation {
         // return true if the gene has a transcript such that the breakend falls into its pre-gene region
         for(final Transcript trans : mTranscripts)
         {
-            if(trans.exonDistanceUp() < 0) // exclude if the position is interupted by another splice acceptor
+            if(trans.prevSpliceAcceptorDistance() < 0) // exclude if the position is interupted by another splice acceptor
                 continue;
 
             long distance = Strand == 1 ? trans.TranscriptStart - mPosition : mPosition - trans.TranscriptEnd;

@@ -106,7 +106,7 @@ public class StructuralVariantFusionDAO
                     transcript.exactCodingBase(),
                     transcript.nextSpliceExonRank(),
                     transcript.nextSpliceExonPhase(),
-                    isUpstream ? transcript.exonDistanceUp() : transcript.exonDistanceDown(),
+                    isUpstream ? transcript.prevSpliceAcceptorDistance() : transcript.nextSpliceAcceptorDistance(),
                     transcript.ExonMax);
 
             transcriptsList.add(transcript);

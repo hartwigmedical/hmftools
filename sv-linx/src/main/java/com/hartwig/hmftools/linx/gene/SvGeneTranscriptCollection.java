@@ -4,28 +4,19 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -50,7 +41,7 @@ public class SvGeneTranscriptCollection
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireCodingInfo;
 
-    // the distance upstream of a gene for a breakend to be consider a fusion candidate
+    // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
     private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
@@ -199,7 +190,7 @@ public class SvGeneTranscriptCollection
                     setAlternativeTranscriptPhasings(transcript, transData.exons(), position, orientation);
 
                     // annotate with preceding gene info if the up distance isn't set
-                    if(transcript.exonDistanceUp() == -1)
+                    if(!transcript.hasPrevSpliceAcceptorDistance())
                     {
                         setPrecedingGeneDistance(transcript, position);
                     }
@@ -219,8 +210,14 @@ public class SvGeneTranscriptCollection
 
         if(precedingGeneSAPos >= 0)
         {
+            // if the breakend is after (higher for +ve strand) the nearest splice acceptor, then the distance will be positve
+            // and mean that the transcript isn't interupted when used in a downstream fusion - otherwise a negative will make it invalid
             long preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
-            transcript.setExonDistances((int)preDistance, transcript.exonDistanceDown());
+            transcript.setSpliceAcceptorDistances((int)preDistance, transcript.nextSpliceAcceptorDistance());
+        }
+        else
+        {
+            transcript.setSpliceAcceptorDistances(PRE_GENE_PROMOTOR_DISTANCE, transcript.nextSpliceAcceptorDistance());
         }
     }
 
@@ -545,7 +542,9 @@ public class SvGeneTranscriptCollection
                 transData.CodingStart, transData.CodingEnd);
 
         transcript.setBioType(transData.BioType);
-        transcript.setExonDistances((int)nextUpDistance, (int)nextDownDistance);
+
+        // if not set, leave the previous exon null and it will be taken from the closest upstream gene
+        transcript.setSpliceAcceptorDistances(nextUpDistance >= 0 ? (int)nextUpDistance : null, (int)nextDownDistance);
 
         if(isCodingTypeOverride)
             transcript.setCodingType(TRANS_CODING_TYPE_CODING);
@@ -780,10 +779,6 @@ public class SvGeneTranscriptCollection
                     if (!EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
                         return false;
                 }
-                else
-                {
-                    // createTranscriptPreGenePositionData(getChrGeneDataMap(), getGeneExonDataMap(), PRE_GENE_PROMOTOR_DISTANCE);
-                }
             }
         }
 
@@ -810,128 +805,6 @@ public class SvGeneTranscriptCollection
             return false;
 
         return EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds);
-    }
-
-    public void createTranscriptPreGenePositionData(final Map<String, List<EnsemblGeneData>> chrGeneDataMap,
-            final Map<String, List<TranscriptData>> transcriptDataMap, long preGenePromotorDistance)
-    {
-        // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
-        try
-        {
-            final String outputFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
-
-            BufferedWriter writer = createBufferedWriter(outputFile, false);
-
-            writer.write("GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance");
-            writer.newLine();
-
-            // for each gene, collect up any gene which overlaps it or is within the specified distance upstream from it
-            for (Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneDataMap.entrySet())
-            {
-                final String chromosome = entry.getKey();
-
-                LOGGER.info("calculating pre-gene positions for chromosome({})", chromosome);
-
-                final List<EnsemblGeneData> geneList = entry.getValue();
-
-                for (final EnsemblGeneData gene : geneList)
-                {
-                    List<String> proximateGenes = Lists.newArrayList();
-
-                    for (final EnsemblGeneData otherGene : geneList)
-                    {
-                        if (otherGene.Strand != gene.Strand || otherGene.GeneId.equals(gene.GeneId))
-                            continue;
-
-                        if (gene.Strand == 1)
-                        {
-                            if (otherGene.GeneStart >= gene.GeneStart || otherGene.GeneEnd < gene.GeneStart - preGenePromotorDistance)
-                                continue;
-
-                            proximateGenes.add(otherGene.GeneId);
-                        }
-                        else
-                        {
-                            if (otherGene.GeneEnd <= gene.GeneEnd || otherGene.GeneStart > gene.GeneEnd + preGenePromotorDistance)
-                                continue;
-
-                            proximateGenes.add(otherGene.GeneId);
-                        }
-                    }
-
-                    if(proximateGenes.isEmpty())
-                        continue;
-
-                    // now set the preceding splice acceptor position for each transcript in this gene
-                    final List<TranscriptData> transDataList = transcriptDataMap.get(gene.GeneId);
-
-                    if (transDataList == null || transDataList.isEmpty())
-                        continue;
-
-
-                    for(final TranscriptData transData : transDataList)
-                    {
-                        long transStartPos = gene.Strand == 1 ? transData.TransStart : transData.TransEnd;
-
-                        long firstSpliceAcceptorPos = findFirstSpliceAcceptor(transStartPos, gene.Strand, proximateGenes, transcriptDataMap);
-
-                        long distance = -1;
-
-                        if(firstSpliceAcceptorPos >= 0)
-                            distance = gene.Strand == 1 ? transStartPos - firstSpliceAcceptorPos : firstSpliceAcceptorPos - transStartPos;
-
-                        // cache value and continue
-                        writer.write(String.format("%s,%d,%s,%d,%d,%d",
-                                gene.GeneId, transData.TransId, transData.TransName, transStartPos, firstSpliceAcceptorPos, distance));
-
-                        writer.newLine();
-
-                        mTransSpliceAcceptorPosDataMap.put(transData.TransId, firstSpliceAcceptorPos);
-                    }
-                }
-            }
-
-            LOGGER.info("pre-gene positions written to file: {}", outputFile);
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("error writing Ensembl trans splice data file: {}", e.toString());
-        }
-    }
-
-    private long findFirstSpliceAcceptor(
-            long transStartPos, int strand, final List<String> proximateGenes, final Map<String, List<TranscriptData>> transDataMap)
-    {
-        long closestPosition = -1;
-
-        for(final String geneId : proximateGenes)
-        {
-            final List<TranscriptData> transDataList = transDataMap.get(geneId);
-
-            if(transDataList.isEmpty())
-                continue;
-
-            for(final TranscriptData transData : transDataList)
-            {
-                for (final ExonData exonData : transData.exons())
-                {
-                    // check if exon is upstream and if so record its position
-                    if (strand == 1 && exonData.ExonEnd < transStartPos)
-                    {
-                        if (closestPosition == -1 || exonData.ExonStart > closestPosition)
-                            closestPosition = exonData.ExonStart;
-                    }
-                    else if (strand == -1 && exonData.ExonStart > transStartPos)
-                    {
-                        if (closestPosition == -1 || exonData.ExonEnd < closestPosition)
-                            closestPosition = exonData.ExonEnd;
-                    }
-                }
-            }
-        }
-
-        return closestPosition;
     }
 
     public static Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final TranscriptData transData)

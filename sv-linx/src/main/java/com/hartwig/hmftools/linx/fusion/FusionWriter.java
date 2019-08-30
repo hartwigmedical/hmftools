@@ -179,7 +179,7 @@ public class FusionWriter
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
                         trans.exactCodingBase(), trans.calcCodingBases(true), trans.totalCodingBases(),
                         trans.codingStart(), trans.codingEnd(), trans.TranscriptStart, trans.TranscriptEnd,
-                        trans.exonDistanceUp(), trans.isCanonical(), trans.bioType()));
+                        trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
             }
 
             writer.write(String.format(",%s,%s",

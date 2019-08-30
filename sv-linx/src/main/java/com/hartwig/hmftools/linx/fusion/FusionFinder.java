@@ -30,7 +30,6 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class FusionFinder
 {
@@ -148,20 +147,16 @@ public class FusionFinder
         return potentialFusions;
     }
 
-    private static void logInvalidReasonInfo(final String reason, final Transcript trans1, final Transcript trans2,
-            final String reasonType, @Nullable List<String> invalidReasons)
+    private static void logInvalidReasonInfo(final Transcript trans1, final Transcript trans2, final String reasonType, final String reason)
     {
-        if(invalidReasons != null && !invalidReasons.contains(reasonType))
-            invalidReasons.add(reasonType);
-
         if(!mLogInvalidReasons)
             return;
 
         if(trans2 == null)
-            LOGGER.debug("transcript({}:{}) invalid({})", trans1.geneName(), trans1.StableId, reason);
+            LOGGER.trace("transcript({}:{}) invalid({}: {})", trans1.geneName(), trans1.StableId, reasonType, reason);
         else
-            LOGGER.debug("transcripts({}:{} and {}:{}) invalid({})",
-                    trans1.geneName(), trans1.StableId, trans2.geneName(), trans2.StableId, reason);
+            LOGGER.trace("transcripts({}:{} and {}:{}) invalid({}: {})",
+                    trans1.geneName(), trans1.StableId, trans2.geneName(), trans2.StableId, reasonType, reason);
     }
 
     public static boolean validFusionTranscript(final Transcript transcript)
@@ -208,7 +203,7 @@ public class FusionFinder
 
         if(!validFusionTranscript(upstreamTrans) || !validFusionTranscript(downstreamTrans))
         {
-            logInvalidReasonInfo("invalid trans", upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid trans");
             return null;
         }
 
@@ -216,14 +211,12 @@ public class FusionFinder
         {
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
             {
-                logInvalidReasonInfo("precoding exonic to non-exonic", upstreamTrans, downstreamTrans,
-                        INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "precoding exonic to non-exonic");
                 return null;
             }
             else if(downstreamTrans.isCoding())
             {
-                logInvalidReasonInfo("pre-coding to coding", upstreamTrans, downstreamTrans,
-                        INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
                 return null;
             }
         }
@@ -231,8 +224,7 @@ public class FusionFinder
         {
             if(!downstreamTrans.isCoding())
             {
-                logInvalidReasonInfo("coding to non-coding", upstreamTrans, downstreamTrans,
-                        INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding to non-coding");
                 return null;
             }
 
@@ -240,15 +232,13 @@ public class FusionFinder
             {
                 if(!downstreamTrans.isExonic() && (!params.AllowExonSkipping || !downstreamTrans.isIntronic()))
                 {
-                    logInvalidReasonInfo("coding exonic to non-exonic", upstreamTrans, downstreamTrans,
-                            INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                    logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "coding exonic to non-exonic");
                     return null;
                 }
 
                 if(upstreamTrans.gene().id() != downstreamTrans.gene().id())
                 {
-                    logInvalidReasonInfo("up coding exonic diff SVs", upstreamTrans, downstreamTrans,
-                            INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                    logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up coding exonic diff SVs");
                     return null;
                 }
 
@@ -260,21 +250,19 @@ public class FusionFinder
         {
             if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
             {
-                logInvalidReasonInfo("up non-coding exonic to down non-exonic", upstreamTrans, downstreamTrans,
-                        INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding exonic to down non-exonic");
                 return null;
             }
             else if(downstreamTrans.isCoding())
             {
-                logInvalidReasonInfo("up non-coding to down-coding", upstreamTrans, downstreamTrans,
-                        INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up non-coding to down-coding");
                 return null;
             }
         }
 
         if (!isPotentiallyRelevantFusion(upstreamTrans, downstreamTrans))
         {
-            logInvalidReasonInfo("irrelevant fusion", upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+            logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "irrelevant fusion");
             return null;
         }
 
@@ -287,8 +275,7 @@ public class FusionFinder
             // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
             if(downstreamTrans.isExonic() && downstreamTrans.ExonDownstream == downstreamTrans.ExonMax && !downstreamTrans.preCoding())
             {
-                logInvalidReasonInfo("downstream last exon", upstreamTrans, downstreamTrans,
-                        INVALID_REASON_CODING_TYPE, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "downstream last exon");
                 return null;
             }
         }
@@ -299,7 +286,7 @@ public class FusionFinder
 
             if(!phaseMatched)
             {
-                logInvalidReasonInfo("exact phase match", upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "exon-exon inexact phasing");
             }
 
             if(phaseMatched || !params.RequirePhaseMatch)
@@ -341,7 +328,7 @@ public class FusionFinder
 
             if(!phaseMatched)
             {
-                logInvalidReasonInfo("inexact unphased", upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, params.InvalidReasons);
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "inexact unphased");
             }
 
             if(phaseMatched || !params.RequirePhaseMatch)
@@ -529,7 +516,7 @@ public class FusionFinder
         if(downTrans.bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
             return false;
 
-        if(downTrans.exonDistanceUp() < 0)
+        if(downTrans.prevSpliceAcceptorDistance() < 0)
             return false;
 
         if(fusion.getKnownType() != REPORTABLE_TYPE_KNOWN

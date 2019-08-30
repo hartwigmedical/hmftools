@@ -126,7 +126,7 @@ public class GeneFusion
 
     public boolean isViable()
     {
-        return mPhaseMatched && validChainTraversal() && !isTerminated() && mDownstreamTrans.exonDistanceUp() > 0;
+        return validChainTraversal() && !isTerminated() && mDownstreamTrans.prevSpliceAcceptorDistance() >= 0;
     }
 
 }
