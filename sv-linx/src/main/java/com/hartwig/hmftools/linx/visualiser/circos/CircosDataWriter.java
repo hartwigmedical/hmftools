@@ -40,6 +40,7 @@ public class CircosDataWriter
     private static final int SCATTER_GLYPH_SIZE = 20;
     private static final int SCATTER_GLYPH_SIZE_INNER = 14;
 
+    private static DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
@@ -358,7 +359,7 @@ public class CircosDataWriter
                 continue;
             }
 
-            final String colorOption = colorPicker.color(segment.clusterId(), segment.chainId());
+            final String colorOption = colorPicker.transparentColor(segment.clusterId(), segment.chainId());
             final String startGlyph = scatterGlyph(true, segment, links);
             result.add(scatterEntry(true, segment, colorOption, startGlyph, SCATTER_GLYPH_SIZE));
             if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
@@ -387,7 +388,7 @@ public class CircosDataWriter
         {
             if (link.isValidStart() && !link.isValidEnd())
             {
-                final String colorOption = colorPicker.color(link.clusterId(), link.chainId());
+                final String colorOption = colorPicker.transparentColor(link.clusterId(), link.chainId());
                 result.add(scatterSGLEntry(link, colorOption, SCATTER_GLYPH_SIZE));
                 result.add(scatterSGLEntry(link, "color=white", SCATTER_GLYPH_SIZE_INNER));
             }
@@ -472,7 +473,7 @@ public class CircosDataWriter
             final String start = new StringJoiner(DELIMITER).add(circosContig(connector.chromosome()))
                     .add(String.valueOf(connector.position()))
                     .add(String.valueOf(connector.position()))
-                    .add("r1=" + r1 + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId()) + ","
+                    .add("r1=" + RATIO_FORMAT.format(r1) + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId()) + ","
                             + thicknessString(connector.ploidy()))
                     .toString();
             result.add(start);
@@ -514,16 +515,16 @@ public class CircosDataWriter
             if (segment.track() > 0)
             {
 
-                double r0 = configWriter.svTrackRelative(segment.track());
-                String r0String = "r0=" + r0 + "r";
                 double thickness = thicknessPixels(segment.ploidy());
-                String r1String = "r1=" + r0 + "r+" + thickness + "p";
+                double r0 = configWriter.svTrackRelative(segment.track());
+                String r0String = "r0=" + RATIO_FORMAT.format(r0) + "r-" + thickness / 2d + "p";
+                String r1String = "r1=" + RATIO_FORMAT.format(r0) + "r+" + thickness / 2d + "p";
 
                 final String entry = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.track()))
-                        .add("fill_" + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + r0String + "," + r1String)
+                        .add("fill_" + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + r0String + "," + r1String)
                         .toString();
                 result.add(entry);
 
