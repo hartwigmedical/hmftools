@@ -311,7 +311,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsBasedOnBloodAndTumorSamples() {
-        return createContentParagraph("The results stated in these report are based on the tested tumor and blood sample.");
+        return createContentParagraph("The results stated in this report are based on the tested tumor and blood sample.");
     }
 
     @NotNull
