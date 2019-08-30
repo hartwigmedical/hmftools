@@ -274,7 +274,7 @@ public class Segments
             return true;
         }
 
-        GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.start());
+        GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
         return segment.endTerminal() == SegmentTerminal.NONE && showSegment(showSimpleSvSegments, endPosition, links);
 
     }
