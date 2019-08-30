@@ -28,7 +28,6 @@ import org.junit.Test;
 public class HomDisruptionsTest
 {
     @Test
-    @Ignore
     public void testDelDisruption()
     {
         LinxTester tester = new LinxTester();
@@ -123,7 +122,6 @@ public class HomDisruptionsTest
     }
 
     @Test
-    @Ignore
     public void testDupDisruption()
     {
         LinxTester tester = new LinxTester();
