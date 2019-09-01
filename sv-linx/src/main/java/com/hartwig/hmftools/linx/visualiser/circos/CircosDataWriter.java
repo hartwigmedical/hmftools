@@ -222,14 +222,8 @@ public class CircosDataWriter
             final StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
-                    .add(gene.name());
-
-            int geneNameLength = gene.name().length();
-            if (geneNameLength > circosConfig.maxLabelCharacters())
-            {
-                double size = 0.9d * circosConfig.maxLabelCharacters() / geneNameLength * labelSize;
-                exonStringJoiner.add("label_size=" + size + "p");
-            }
+                    .add(gene.name())
+                    .add("label_size=" + data.geneLabelSize() + "p");
 
             result.add(exonStringJoiner.toString());
         }
@@ -349,7 +343,7 @@ public class CircosDataWriter
     private List<String> createScatter(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
     {
         int glyphSize = circosConfig.glyphSize();
-        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d/20d);
+        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
 
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments)
@@ -383,7 +377,7 @@ public class CircosDataWriter
     private List<String> createSglScatter(@NotNull final List<Link> links)
     {
         int glyphSize = circosConfig.glyphSize();
-        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d/20d);
+        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
 
         final List<String> result = Lists.newArrayList();
 
@@ -477,7 +471,8 @@ public class CircosDataWriter
             final String start = new StringJoiner(DELIMITER).add(circosContig(connector.chromosome()))
                     .add(String.valueOf(connector.position()))
                     .add(String.valueOf(connector.position()))
-                    .add("r1=" + RATIO_FORMAT.format(r1) + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId()) + ","
+                    .add("r1=" + RATIO_FORMAT.format(r1) + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId())
+                            + ","
                             + thicknessString(connector.ploidy()))
                     .toString();
             result.add(start);
@@ -528,7 +523,8 @@ public class CircosDataWriter
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.track()))
-                        .add("fill_" + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + r0String + "," + r1String)
+                        .add("fill_" + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + r0String + ","
+                                + r1String)
                         .toString();
                 result.add(entry);
 

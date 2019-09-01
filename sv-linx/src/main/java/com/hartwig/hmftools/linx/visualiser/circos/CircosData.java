@@ -53,6 +53,7 @@ public class CircosData
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
     private final double labelSize;
+    private final double geneLabelSize;
 
     public CircosData(
             boolean showSimpleSvSegments,
@@ -115,6 +116,12 @@ public class CircosData
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
         connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
         labelSize = config.labelSize(untruncatedCopyNumberAlterationsCount());
+
+        int maxGeneLabelCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
+        geneLabelSize = maxGeneLabelCharacters > config.maxLabelCharacters()
+                ? 0.9d * config.maxLabelCharacters() / maxGeneLabelCharacters * labelSize
+                : labelSize;
+
     }
 
     public List<Connector> connectors()
@@ -238,5 +245,10 @@ public class CircosData
     public double labelSize()
     {
         return labelSize;
+    }
+
+    public double geneLabelSize()
+    {
+        return geneLabelSize;
     }
 }
