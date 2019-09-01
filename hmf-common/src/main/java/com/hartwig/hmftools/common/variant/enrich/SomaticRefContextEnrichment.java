@@ -12,7 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
@@ -112,7 +114,14 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
     @NotNull
     static Pair<Integer, String> relativePositionAndRef(@NotNull final IndexedFastaSequenceFile reference, @NotNull final VariantContext variant) {
         final int refLength = variant.getReference().getBaseString().length();
-        final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.getContig()).getSequenceLength();
+        @Nullable
+        final SAMSequenceRecord samSequenceRecord = reference.getSequenceDictionary().getSequence(variant.getContig());
+        if (samSequenceRecord == null) {
+            LOGGER.warn("Unable to locate contig {} in ref genome", variant.getContig());
+            return new Pair<>(0, Strings.EMPTY);
+        }
+
+        final int chromosomeLength = samSequenceRecord.getSequenceLength();
         long positionBeforeEvent = variant.getStart();
 
         long start = Math.max(positionBeforeEvent - 100, 1);
