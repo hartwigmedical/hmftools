@@ -36,8 +36,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
-    private static final int MAX_POSITIONS = 60;
-
     private static DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
@@ -55,7 +53,6 @@ public class CircosDataWriter
     private final CircosConfigWriter configWriter;
     private final CircosData data;
     private final Thickness thickness;
-    private final double labelSize;
 
     public CircosDataWriter(@NotNull final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
             @NotNull final SvCircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data)
@@ -66,7 +63,6 @@ public class CircosDataWriter
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
         this.thickness = new Thickness(circosConfig.minLineSize(), circosConfig.maxLineSize(), data.connectors());
-        this.labelSize = data.labelSize();
     }
 
     public void write() throws IOException
@@ -544,13 +540,13 @@ public class CircosDataWriter
         }
 
         final List<String> positionsEvery100k = createPositionText(100_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery100k.size() < MAX_POSITIONS)
+        if (positionsEvery100k.size() < circosConfig.maxNumberOfPositionLabels())
         {
             return positionsEvery100k;
         }
 
         final List<String> positionsEvery1M = createPositionText(1_000_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery1M.size() < MAX_POSITIONS)
+        if (positionsEvery1M.size() < circosConfig.maxNumberOfPositionLabels())
         {
             return positionsEvery1M;
         }

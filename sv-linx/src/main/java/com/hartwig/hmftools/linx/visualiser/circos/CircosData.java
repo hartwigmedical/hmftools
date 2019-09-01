@@ -117,9 +117,9 @@ public class CircosData
         connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
         labelSize = config.labelSize(untruncatedCopyNumberAlterationsCount());
 
-        int maxGeneLabelCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
-        geneLabelSize = maxGeneLabelCharacters > config.maxLabelCharacters()
-                ? 0.9d * config.maxLabelCharacters() / maxGeneLabelCharacters * labelSize
+        int actualMaxGeneCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
+        geneLabelSize = actualMaxGeneCharacters > config.maxGeneCharacters()
+                ? 0.9d * config.maxGeneCharacters() / actualMaxGeneCharacters * labelSize
                 : labelSize;
 
     }

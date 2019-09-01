@@ -39,6 +39,7 @@ public interface SvCircosConfig
     String MIN_LINE_SIZE = "min_line_size";
     String MAX_LINE_SIZE = "max_line_size";
     String GLYPH_SIZE = "glyph_size";
+    String MAX_GENE_CHARACTERS = "max_gene_characters";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -62,6 +63,7 @@ public interface SvCircosConfig
     int DEFAULT_MAX_LINE_SIZE = 12;
 
     int DEFAULT_GLYPH_SIZE = 20;
+    int DEFAULT_MAX_GENE_CHARACTERS = 5;
 
     static void addOptions(@NotNull Options options)
     {
@@ -95,6 +97,8 @@ public interface SvCircosConfig
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
         options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
+        options.addOption(MAX_GENE_CHARACTERS, true,
+                "Maximum number of character in gene allowed before scaling [" + DEFAULT_MAX_GENE_CHARACTERS + "]");
     }
 
     // ----------------------- Fusion Parameters
@@ -114,7 +118,12 @@ public interface SvCircosConfig
 
     int maxLabelSize();
 
-    int maxLabelCharacters();
+    int maxGeneCharacters();
+
+    default int maxNumberOfPositionLabels()
+    {
+        return 60;
+    }
 
     default int maxNumberOfDistanceLabels()
     {
@@ -208,7 +217,7 @@ public interface SvCircosConfig
                 .maxLabelSize(maxLabelSize)
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
-                .maxLabelCharacters(5)
+                .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
                 .build();
     }
 
