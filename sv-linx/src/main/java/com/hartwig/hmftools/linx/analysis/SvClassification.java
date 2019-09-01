@@ -338,7 +338,6 @@ public class SvClassification
 
         // test the chain for short TIs only
         int totalChainLength = 0;
-        int longTICount = 0;
         long longestTILength = 0;
         for (SvLinkedPair pair : chain.getLinkedPairs())
         {

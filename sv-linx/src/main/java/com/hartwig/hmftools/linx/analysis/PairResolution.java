@@ -67,7 +67,7 @@ public class PairResolution
 
     public static void classifyPairClusters(SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
-        // classifies 2-event clusters based on the types of breakends and their orientations
+        // classifies 2-event clusters based on the types of breakends and their orientations, and whether a long TI exists
         // treat existing chains as SVs - ie with 2 breakends from the open ends
         if(cluster.getChains().size() > 2 || cluster.getSglBreakendCount() > 0)
             return;
@@ -85,7 +85,10 @@ public class PairResolution
         SvLinkedPair longTiLink = null;
         boolean uniformPloidy = false;
 
-        // 2x translocations can exist in the form of 2 BNDs,
+        // establish the characteristics of this cluster:
+        // - how many chains - 0, 1 or 2
+        // - does it have a long TI
+        // - what are the orientations and arms of its open breakends (from unlinked SVs or chain ends)
 
         List<SvChain> clusterChains = Lists.newArrayList(cluster.getChains());
         SvVarData unchainedSv = !cluster.getUnlinkedSVs().isEmpty() ? cluster.getUnlinkedSVs().get(0) : null;
@@ -112,8 +115,7 @@ public class PairResolution
 
         boolean isSingleChain = cluster.isFullyChained(false) && clusterChains.size() == 1;
 
-        // first handle the single chain case either handling it as a synthetic with only short external TIs, or by splitting it
-        // at the location of the long (or non-external) TI
+        // first look for a single chain with only short external TIs - this can be classiied as a synthetic DEL or DUP
         if(isSingleChain && longTiLink == null)
         {
             final SvChain chain = cluster.getChains().get(0);
@@ -164,6 +166,7 @@ public class PairResolution
             }
         }
 
+        // otherwise test whether a single chain be split at the long TI to make 2 chains and a balance translocation
         if(isSingleChain && longTiLink != null)
         {
             // go into regular 2 break logic after first breaking the chain at this long or internal TI
@@ -353,33 +356,35 @@ public class PairResolution
             return;
 
         // reciprocal translocations require each of the breakend pairs to start and end on the same pair of arms
-
-        if(startBe1.getChrArm().equals(endBe1.getChrArm()) || startBe2.getChrArm().equals(endBe2.getChrArm()))
-        {
-            // one chain start and ends on the same arm, the other doesn't
-            cluster.setResolved(false, UNBAL_TRANS_TI);
-            return;
-        }
-
-        // assign to arms for easier comparison
-        SvBreakend arm1Be1 = startBe1;
-        SvBreakend arm2Be1 = endBe1;
+        SvBreakend arm1Be1 = null;
+        SvBreakend arm2Be1 = null;
         SvBreakend arm1Be2 = null;
         SvBreakend arm2Be2 = null;
 
-        if(startBe2.getChrArm().equals(arm1Be1.getChrArm()) && endBe2.getChrArm().equals(arm2Be1.getChrArm()))
+        if(!startBe1.getChrArm().equals(endBe1.getChrArm()) && !startBe2.getChrArm().equals(endBe2.getChrArm()))
         {
-            arm1Be2 = startBe2;
-            arm2Be2 = endBe2;
+            arm1Be1 = startBe1;
+            arm2Be1 = endBe1;
+
+            if (startBe2.getChrArm().equals(arm1Be1.getChrArm()) && endBe2.getChrArm().equals(arm2Be1.getChrArm()))
+            {
+                arm1Be2 = startBe2;
+                arm2Be2 = endBe2;
+            }
+            else if (endBe2.getChrArm().equals(arm1Be1.getChrArm()) && startBe2.getChrArm().equals(arm2Be1.getChrArm()))
+            {
+                arm1Be2 = endBe2;
+                arm2Be2 = startBe2;
+            }
         }
-        else if(endBe2.getChrArm().equals(arm1Be1.getChrArm()) && startBe2.getChrArm().equals(arm2Be1.getChrArm()))
+
+        if(arm1Be1 == null || arm1Be2 == null || arm2Be1 == null || arm2Be2 == null)
         {
-            arm1Be2 = endBe2;
-            arm2Be2 = startBe2;
-        }
-        else
-        {
-            cluster.setResolved(false, UNBAL_TRANS_TI);
+            if(longestTiPair != null)
+            {
+                cluster.setResolved(false, UNBAL_TRANS_TI);
+            }
+
             return;
         }
 
