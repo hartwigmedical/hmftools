@@ -260,6 +260,9 @@ public class PseudoGeneFinder
         final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                 .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
 
+        if(pseudoMatch == null)
+            return false;
+
         if(pseudoMatch.isHomologyMatch(true) && pseudoMatch.isHomologyMatch(false))
             return true;
 
@@ -267,6 +270,9 @@ public class PseudoGeneFinder
         {
             final SvBreakend breakend = pair.getBreakend(se);
             final SvBreakend otherBreakend = breakend.getOtherBreakend();
+
+            if(otherBreakend == null)
+                continue;
 
             if(findPseudoMatch(otherBreakend, pairMatchesMap, selectedTransId) != null)
                 return true;
