@@ -356,7 +356,7 @@ public class SvSampleAnalyser {
         }
     }
 
-    public void annotateWithGeneData(SvGeneTranscriptCollection geneTransCache)
+    public void annotateWithGeneData()
     {
         mPseudoGeneFinder.checkPseudoGeneAnnotations(getClusters());
     }

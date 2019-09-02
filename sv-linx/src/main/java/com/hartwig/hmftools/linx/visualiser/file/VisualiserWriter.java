@@ -56,8 +56,6 @@ public class VisualiserWriter
     private BufferedWriter mGeneFileWriter;
     private BufferedWriter mProteinDomainFileWriter;
 
-    private final Map<SvBreakend,Long> mShiftedPositionsMap;
-
     public final static String GENE_TYPE_DRIVER = "DRIVER";
     public final static String GENE_TYPE_FUSION = "FUSION";
     public final static String GENE_TYPE_PSEUDOGENE = "PSEUDO";
@@ -78,7 +76,6 @@ public class VisualiserWriter
         }
 
         mGeneTranscriptCollection = null;
-        mShiftedPositionsMap = Maps.newHashMap();
 
         mGeneData = Lists.newArrayList();
     }
@@ -131,7 +128,6 @@ public class VisualiserWriter
     {
         mSampleId = sampleId;
         mGeneData.clear();
-        mShiftedPositionsMap.clear();
     }
 
     public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
@@ -141,22 +137,11 @@ public class VisualiserWriter
     }
 
     public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final String annotationType, final List<Integer> exonRanks)
+            final String chromosome, final String annotationType, final Map<Integer,int[]> exonRanks)
     {
         VisGeneData geneData = new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType);
-        geneData.SpecificExons.addAll(exonRanks);
+        geneData.ExonPositionOffsets.putAll(exonRanks);
         mGeneData.add(geneData);
-    }
-
-    public void addShiftedPosition(final SvBreakend breakend, long position)
-    {
-        mShiftedPositionsMap.put(breakend, position);
-    }
-
-    private long getBreakendPosition(final SvBreakend breakend)
-    {
-        Long shiftedPosition = mShiftedPositionsMap.get(breakend);
-        return shiftedPosition != null ? shiftedPosition : breakend.position();
     }
 
     public void writeOutput(final List<SvCluster> clusters, final List<SvVarData> variants, final Map<String,List<SvCNData>> chrCnDataMap)
@@ -194,7 +179,7 @@ public class VisualiserWriter
                 svDataList.add(new VisSvDataFile(mSampleId, cluster.id(), chainId, var.id(),
                         var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
-                        getBreakendPosition(beStart), beEnd != null ? getBreakendPosition(beEnd) : 0,
+                        beStart.position(), beEnd != null ? beEnd.position() : 0,
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
                         beStart.getSV().getFoldbackBreakend(beStart.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
                         beEnd!= null ? (beEnd.getSV().getFoldbackBreakend(beEnd.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
@@ -304,7 +289,7 @@ public class VisualiserWriter
                     final SvBreakend beEnd = pair.getBreakend(false);
 
                     segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), beStart.chromosome(),
-                            Long.toString(getBreakendPosition(beStart)), Long.toString(getBreakendPosition(beEnd)), linkPloidy));
+                            Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy));
                 }
 
                 if(!chain.isClosedLoop())
@@ -361,7 +346,7 @@ public class VisualiserWriter
 
     private final String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
     {
-        long position = getBreakendPosition(breakend);
+        long position = breakend.position();
 
         if(breakend.orientation() == 1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
@@ -401,11 +386,22 @@ public class VisualiserWriter
 
             for (final ExonData exonData : transData.exons())
             {
-                final String annotation = geneData.SpecificExons.isEmpty() || geneData.SpecificExons.contains(exonData.ExonRank) ?
-                        geneData.AnnotationType : GENE_TYPE_UNMATCHED;
+                if(geneData.ExonPositionOffsets.isEmpty())
+                {
+                    geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
+                            geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+                }
+                else
+                {
+                    final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.ExonRank);
 
-                geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                        geneData.Chromosome, annotation, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+                    final String annotation = exonPosOffsets != null ? geneData.AnnotationType : GENE_TYPE_UNMATCHED;
+
+                    geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
+                            geneData.Chromosome, annotation, exonData.ExonRank,
+                            exonData.ExonStart + (exonPosOffsets != null ? exonPosOffsets[SE_START] : 0),
+                            exonData.ExonEnd + (exonPosOffsets != null ? exonPosOffsets[SE_END] : 0)));
+                }
             }
 
             int transId = geneData.TransId > 0 ? geneData.TransId : transData.TransId;

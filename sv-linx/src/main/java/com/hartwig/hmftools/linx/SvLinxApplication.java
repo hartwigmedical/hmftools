@@ -194,7 +194,7 @@ public class SvLinxApplication
                 boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
                 fusionAnalyser.setSvGeneData(svDataList, true, selectiveGeneLoading, !keepInvalidTranscripts);
 
-                sampleAnalyser.annotateWithGeneData(ensemblDataCache);
+                sampleAnalyser.annotateWithGeneData();
             }
 
             if(checkDrivers)

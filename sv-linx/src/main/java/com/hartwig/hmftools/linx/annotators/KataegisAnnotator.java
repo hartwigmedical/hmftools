@@ -28,7 +28,7 @@ public class KataegisAnnotator
 
     private static int PROXIMITY_THRESHOLD = 100000;
 
-    private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
+    private static final Logger LOGGER = LogManager.getLogger(KataegisAnnotator.class);
 
     public KataegisAnnotator(final String outputDir)
     {
@@ -223,27 +223,5 @@ public class KataegisAnnotator
     {
         closeBufferedWriter(mFileWriter);
     }
-
-
-    /*
-    public boolean isFragileSite(final SvVarData svData, final boolean useStart)
-    {
-        if(mFragileSites.isEmpty())
-            return false;
-
-        for(final GenomeRegion genomeRegion : mFragileSites)
-        {
-            if(genomeRegion.chromosome().equals(svData.chromosome(useStart))
-                    && genomeRegion.start() <= svData.position(useStart) && genomeRegion.end() >= svData.position(useStart))
-            {
-                LOGGER.debug("var({}) found in known fragile site",
-                        svData.posId(), genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
-                return true;
-            }
-        }
-
-        return false;
-    }
-    */
 
 }

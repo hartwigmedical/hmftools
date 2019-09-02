@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_PSEUDOGENE;
 
 import java.util.List;
@@ -114,7 +116,7 @@ public class PseudoGeneFinder
                         if(matchedPairs.isEmpty())
                             continue;
 
-                        List<Integer> exonRanks = Lists.newArrayList();
+                        Map<Integer,int[]> exonPositionOffsets = Maps.newHashMap();
 
                         final int selectedTransId = maxTrans.TransId;
 
@@ -126,40 +128,34 @@ public class PseudoGeneFinder
 
                             if(pseudoMatch != null)
                             {
-                                exonRanks.add(pseudoMatch.ExonRank);
-
-                                final SvBreakend lowerBreakend = pair.getBreakend(true);
-                                final SvBreakend upperBreakend = pair.getBreakend(false);
-
-                                if(pseudoMatch.isHomologyMatch(true) && pseudoMatch.StartHomologyOffset != 0)
-                                {
-                                    mVisWriter.addShiftedPosition(lowerBreakend,
-                                            lowerBreakend.position() - pseudoMatch.StartHomologyOffset);
-                                }
-
-                                if(pseudoMatch.isHomologyMatch(false) && pseudoMatch.EndHomologyOffset != 0)
-                                {
-                                    mVisWriter.addShiftedPosition(upperBreakend,
-                                            upperBreakend.position() - pseudoMatch.EndHomologyOffset);
-                                }
+                                int[] exonPosOffsets = new int[SE_PAIR];
 
                                 String exonMatchData = String.format("%s;%s;%d;%d",
                                         gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
 
-                                boolean homMismatchStart = hasHomologyMismatch(lowerBreakend.getSV(), pairMatchesMap, selectedTransId);
-                                boolean homMismatchEnd = hasHomologyMismatch(upperBreakend.getSV(), pairMatchesMap, selectedTransId);
+                                for(int se = SE_START; se <= SE_END; ++se)
+                                {
+                                    final SvBreakend breakend = pair.getBreakend(se);
 
-                                exonMatchData += String.format(";%d;%d;%d;%d;%s;%s",
-                                        pseudoMatch.StartHomologyOffset, pseudoMatch.EndHomologyOffset,
-                                        pseudoMatch.StartPositionMismatch, pseudoMatch.EndPositionMismatch,
-                                        homMismatchStart, homMismatchEnd);
+                                    if (pseudoMatch.isHomologyMatch(isStart(se)))
+                                    {
+                                        exonPosOffsets[se] = pseudoMatch.HomologyOffset[se];
+                                    }
+
+                                    boolean homMismatch = hasHomologyMismatch(breakend.getSV(), pairMatchesMap, selectedTransId);
+
+                                    exonMatchData += String.format(";%d;%d;%s",
+                                            pseudoMatch.HomologyOffset[se], pseudoMatch.PositionMismatch[se], homMismatch);
+                                }
 
                                 pair.setExonMatchData(exonMatchData);
+
+                                exonPositionOffsets.put(pseudoMatch.ExonRank, exonPosOffsets);
                             }
                         }
 
                         mVisWriter.addGeneExonData(cluster.id(), gene.StableId, gene.GeneName,
-                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), GENE_TYPE_PSEUDOGENE, exonRanks);
+                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), GENE_TYPE_PSEUDOGENE, exonPositionOffsets);
                     }
                 }
             }
@@ -199,21 +195,21 @@ public class PseudoGeneFinder
 
                 if(startWithinHomology)
                 {
-                    pseudoMatch.StartHomologyOffset = (int)(posStart - exonData.ExonStart);
+                    pseudoMatch.HomologyOffset[SE_START] = (int)(posStart - exonData.ExonStart);
                 }
                 else
                 {
                     // record a position within the exon as negative
-                    pseudoMatch.StartPositionMismatch = (int)(exonData.ExonStart - posStart);
+                    pseudoMatch.PositionMismatch[SE_START] = (int)(exonData.ExonStart - posStart);
                 }
 
                 if(endWithinHomology)
                 {
-                    pseudoMatch.EndHomologyOffset = (int)(posEnd - exonData.ExonEnd);
+                    pseudoMatch.HomologyOffset[SE_END] = (int)(posEnd - exonData.ExonEnd);
                 }
                 else
                 {
-                    pseudoMatch.EndPositionMismatch = (int)(posEnd - exonData.ExonEnd);
+                    pseudoMatch.PositionMismatch[SE_END] = (int)(posEnd - exonData.ExonEnd);
                 }
 
                 pseudoMatches.add(pseudoMatch);
@@ -227,13 +223,38 @@ public class PseudoGeneFinder
         if(var.isSglBreakend())
             return false;
 
-        final PseudoGeneMatch matchStart = findPseudoMatch(var.getBreakend(true), pairMatchesMap, selectedTransId);
-        final PseudoGeneMatch matchEnd = findPseudoMatch(var.getBreakend(false), pairMatchesMap, selectedTransId);
+        final Integer homOffsetStart = getHomologyOffset(var.getBreakend(true), pairMatchesMap, selectedTransId);
+        final Integer homOffsetEnd = getHomologyOffset(var.getBreakend(false), pairMatchesMap, selectedTransId);
 
-        if(matchStart == null || matchEnd == null || !matchStart.isHomologyMatch(true) || !matchEnd.isHomologyMatch(false))
+        if(homOffsetStart == null || homOffsetEnd == null)
             return false;
 
-        return matchStart.StartHomologyOffset == matchEnd.EndHomologyOffset;
+        return homOffsetStart == homOffsetEnd;
+    }
+
+    private Integer getHomologyOffset(
+            final SvBreakend breakend, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
+    {
+        for (Map.Entry<SvLinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
+        {
+            final SvLinkedPair pair = entry.getKey();
+
+            if (pair.hasBreakend(breakend))
+            {
+                final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
+                        .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
+
+                if(pseudoMatch != null)
+                {
+                    if(pair.getBreakend(true) == breakend)
+                        return pseudoMatch.isHomologyMatch(true) ? pseudoMatch.HomologyOffset[SE_START] : null;
+                    else
+                        return pseudoMatch.isHomologyMatch(false) ? pseudoMatch.HomologyOffset[SE_END] : null;
+                }
+            }
+        }
+
+        return null;
     }
 
     private PseudoGeneMatch findPseudoMatch(

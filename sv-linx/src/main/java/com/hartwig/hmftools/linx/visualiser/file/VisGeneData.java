@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class VisGeneData
 {
@@ -14,7 +16,8 @@ public class VisGeneData
     public final String Chromosome;
     public final String AnnotationType;
 
-    public final List<Integer> SpecificExons;
+    // optional list of exons by rank and any adjustments to their positions for display
+    public final Map<Integer,int[]> ExonPositionOffsets;
 
     public VisGeneData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final String annotationType)
@@ -27,6 +30,6 @@ public class VisGeneData
         Chromosome = chromosome;
         AnnotationType = annotationType;
 
-        SpecificExons = Lists.newArrayList();
+        ExonPositionOffsets = Maps.newHashMap();
     }
 }

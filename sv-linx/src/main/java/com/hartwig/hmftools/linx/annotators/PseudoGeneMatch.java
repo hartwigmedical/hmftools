@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.annotators;
 
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
+import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
+
 public class PseudoGeneMatch
 {
     public final String Gene;
@@ -7,10 +10,8 @@ public class PseudoGeneMatch
     public final String TransName;
     public final int ExonRank;
     public final int ExonLength;
-    public int StartHomologyOffset;
-    public int EndHomologyOffset;
-    public int StartPositionMismatch;
-    public int EndPositionMismatch;
+    public int[] HomologyOffset;
+    public int[] PositionMismatch;
 
     public PseudoGeneMatch(final String gene, final int transId, final String transName, int exonRank, int exonLength)
     {
@@ -19,15 +20,13 @@ public class PseudoGeneMatch
         TransName = transName;
         ExonRank = exonRank;
         ExonLength = exonLength;
-        StartHomologyOffset = 0;
-        EndHomologyOffset = 0;
-        StartPositionMismatch = 0;
-        EndPositionMismatch = 0;
+        HomologyOffset = new int[SE_PAIR];
+        PositionMismatch = new int[SE_PAIR];
     }
 
     public boolean isHomologyMatch(boolean isStart)
     {
-        return isStart ? StartPositionMismatch == 0 : EndPositionMismatch == 0;
+        return PositionMismatch[seIndex(isStart)] == 0;
     }
 
 }

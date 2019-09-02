@@ -292,15 +292,4 @@ public class SvUtilities {
 
     public static final String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
 
-    public static final String getChrFromChrArm(final String chrArm)
-    {
-        return chrArm.split("_")[0];
-    }
-
-    public static final String getArmFromChrArm(final String chrArm)
-    {
-        return chrArm.split("_")[1];
-    }
-
-
 }
