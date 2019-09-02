@@ -65,6 +65,51 @@ and a small slither of chromosome 15 on the Q arm:
     <img src="src/main/resources/readme/chr7.png" width="600" alt="Chromosome View">
 </p>
 
+# Fusion View
+
+The fusion view is added for reportable fusions only in LINX. It’s purpose is to show the predicted structure of the fused gene. 
+The fusion includes the fused segments of both the 5’ and 3’ partner in blue and red and always reads from left to right. 
+The gene representation for each genes and follows the standard conventions of thick bands for coding regions, 
+thinner bands for 5’ UTR and 3’ UTR exonic regions and thin lines to represent the intronic sections. 
+Protein domains are shown in coloured bands across the exons which they include and are labeled in the accompanying legend. 
+As with the CIRCOS view the lengths of exonic gene segments in the fusion view are scaled by a log scale to improve readability. 
+The intronic segments are set to a fixed segment length regardless of the length. 
+
+The fused gene is shown up to and including the breakend on either side that is connected either directly in the case of a simple fusion 
+or via a chain in a chained fusion. If LINX predicts that one or more exons are skipped, then the skipped exonic segments and 
+protein domain sections are faded. 
+
+For example in the following TMPRSS2-ERG fusion, exons 3, 4 & 5 are faded and the LDL domain is also faded, indicating that LINX predicts 
+these exons are skipped in order to make a viable in frame protein, despite the break end occuring after the 5th exon:
+
+<p align="center">
+    <img src="src/main/resources/readme/fusion1.png" width="600" alt="Fusion">
+</p>
+
+
+A similar case can be seen in this example where the 5’UTR region of NDRG1 is fused upstream of the 1st exon in PLAG1. 
+Since the 1st exon of a gene has no splice acceptor, LINX predicts the 1st exon is skipped and it is faded on the chart with the fusion 
+connecting to the start of exon 2 which also begins in the 5’UTR region of PLAG1:
+
+<p align="center">
+    <img src="src/main/resources/readme/fusion2.png" width="600" alt="Fusion">
+</p>
+
+Even when no exons are skipped, a protein domain may be partially disrupted if it extends to an exon the other side of the breakpoint. 
+In the below example, you can see the SH2 protein domain extends before exon 16 and is faded and disrupted:
+
+<p align="center">
+    <img src="src/main/resources/readme/fusion3.png" width="600" alt="Fusion">
+</p>
+
+Whilst fusions are normally intronic, rare exonic to exonic fusions do occur. The below figure shows a CIC-FOX04 example where the 2 exons
+are directly fused:
+
+<p align="center">
+    <img src="src/main/resources/readme/fusion4.png" width="600" alt="Fusion">
+</p>
+
+
 # Parameterization
 //TODO: max_distance_labels
 
