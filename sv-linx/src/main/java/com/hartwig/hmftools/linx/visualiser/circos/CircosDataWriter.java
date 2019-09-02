@@ -36,10 +36,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
-    private static final int MAX_POSITIONS = 60;
-    private static final int SCATTER_GLYPH_SIZE = 20;
-    private static final int SCATTER_GLYPH_SIZE_INNER = 14;
-
+    private static DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
     private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
@@ -57,20 +54,15 @@ public class CircosDataWriter
     private final CircosData data;
     private final Thickness thickness;
 
-    public CircosDataWriter(
-            @NotNull final ColorPicker colorPicker,
-            @NotNull final String sample,
-            @NotNull final String outputDir,
-            @NotNull final SvCircosConfig circosConfig,
-            @NotNull final CircosConfigWriter configWriter,
-            @NotNull final CircosData data)
+    public CircosDataWriter(@NotNull final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
+            @NotNull final SvCircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data)
     {
         this.data = data;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
-        this.thickness = new Thickness(data.connectors());
+        this.thickness = new Thickness(circosConfig.minLineSize(), circosConfig.maxLineSize(), data.connectors());
     }
 
     public void write() throws IOException
@@ -164,6 +156,11 @@ public class CircosDataWriter
     private List<String> genes(@NotNull final Map<String, String> geneColours, @NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes())
+        {
+            return result;
+        }
+
         for (final Gene gene : genes)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
@@ -183,6 +180,11 @@ public class CircosDataWriter
     private List<String> exonRank(int totalContigLength, @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes())
+        {
+            return result;
+        }
+
         if (totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
         {
             for (final Exon exon : exons)
@@ -206,14 +208,20 @@ public class CircosDataWriter
     private List<String> geneName(@NotNull final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes())
+        {
+            return result;
+        }
+
         for (final Gene gene : genes)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
+            final StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(String.valueOf(gene.namePosition()))
                     .add(gene.name())
-                    .toString();
-            result.add(exonString);
+                    .add("label_size=" + data.geneLabelSize() + "p");
+
+            result.add(exonStringJoiner.toString());
         }
 
         return result;
@@ -224,6 +232,11 @@ public class CircosDataWriter
             @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
+        if (!data.displayGenes())
+        {
+            return result;
+        }
+
         for (final Exon exon : exons)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
@@ -266,7 +279,7 @@ public class CircosDataWriter
     {
         final List<String> result = Lists.newArrayList();
         long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
-        if (unadjustedSegments <= circosConfig.maxDistanceLabels())
+        if (unadjustedSegments <= circosConfig.maxNumberOfDistanceLabels())
         {
             for (int i = 0; i < unadjustedSegment.size(); i++)
             {
@@ -325,6 +338,9 @@ public class CircosDataWriter
     @NotNull
     private List<String> createScatter(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
     {
+        int glyphSize = circosConfig.glyphSize();
+        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
+
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments)
         {
@@ -334,19 +350,19 @@ public class CircosDataWriter
                 continue;
             }
 
-            final String colorOption = colorPicker.color(segment.clusterId(), segment.chainId());
+            final String colorOption = colorPicker.transparentColor(segment.clusterId(), segment.chainId());
             final String startGlyph = scatterGlyph(true, segment, links);
-            result.add(scatterEntry(true, segment, colorOption, startGlyph, SCATTER_GLYPH_SIZE));
+            result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize));
             if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(true, segment, "color=white", startGlyph, SCATTER_GLYPH_SIZE_INNER));
+                result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner));
             }
 
             final String endGlyph = scatterGlyph(false, segment, links);
-            result.add(scatterEntry(false, segment, colorOption, endGlyph, SCATTER_GLYPH_SIZE));
+            result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize));
             if (segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(false, segment, "color=white", endGlyph, SCATTER_GLYPH_SIZE_INNER));
+                result.add(scatterEntry(false, segment, "color=white", endGlyph, glyphSizeInner));
             }
         }
 
@@ -356,6 +372,9 @@ public class CircosDataWriter
     @NotNull
     private List<String> createSglScatter(@NotNull final List<Link> links)
     {
+        int glyphSize = circosConfig.glyphSize();
+        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
+
         final List<String> result = Lists.newArrayList();
 
         // Draw open circles at SGL ends
@@ -363,9 +382,9 @@ public class CircosDataWriter
         {
             if (link.isValidStart() && !link.isValidEnd())
             {
-                final String colorOption = colorPicker.color(link.clusterId(), link.chainId());
-                result.add(scatterSGLEntry(link, colorOption, SCATTER_GLYPH_SIZE));
-                result.add(scatterSGLEntry(link, "color=white", SCATTER_GLYPH_SIZE_INNER));
+                final String colorOption = colorPicker.transparentColor(link.clusterId(), link.chainId());
+                result.add(scatterSGLEntry(link, colorOption, glyphSize));
+                result.add(scatterSGLEntry(link, "color=white", glyphSizeInner));
             }
         }
 
@@ -448,7 +467,8 @@ public class CircosDataWriter
             final String start = new StringJoiner(DELIMITER).add(circosContig(connector.chromosome()))
                     .add(String.valueOf(connector.position()))
                     .add(String.valueOf(connector.position()))
-                    .add("r1=" + r1 + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId()) + ","
+                    .add("r1=" + RATIO_FORMAT.format(r1) + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId())
+                            + ","
                             + thicknessString(connector.ploidy()))
                     .toString();
             result.add(start);
@@ -490,16 +510,17 @@ public class CircosDataWriter
             if (segment.track() > 0)
             {
 
-                double r0 = configWriter.svTrackRelative(segment.track());
-                String r0String = "r0=" + r0 + "r";
                 double thickness = thicknessPixels(segment.ploidy());
-                String r1String = "r1=" + r0 + "r+" + thickness + "p";
+                double r0 = configWriter.svTrackRelative(segment.track());
+                String r0String = "r0=" + RATIO_FORMAT.format(r0) + "r-" + thickness / 2d + "p";
+                String r1String = "r1=" + RATIO_FORMAT.format(r0) + "r+" + thickness / 2d + "p";
 
                 final String entry = new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                         .add(String.valueOf(segment.start()))
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.track()))
-                        .add("fill_" + colorPicker.color(segment.clusterId(), segment.chainId()) + "," + r0String + "," + r1String)
+                        .add("fill_" + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + r0String + ","
+                                + r1String)
                         .toString();
                 result.add(entry);
 
@@ -519,13 +540,13 @@ public class CircosDataWriter
         }
 
         final List<String> positionsEvery100k = createPositionText(100_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery100k.size() < MAX_POSITIONS)
+        if (positionsEvery100k.size() < circosConfig.maxNumberOfPositionLabels())
         {
             return positionsEvery100k;
         }
 
         final List<String> positionsEvery1M = createPositionText(1_000_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery1M.size() < MAX_POSITIONS)
+        if (positionsEvery1M.size() < circosConfig.maxNumberOfPositionLabels())
         {
             return positionsEvery1M;
         }

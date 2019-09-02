@@ -129,8 +129,8 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                 .setPaddingTop(10)
                 .add(new Paragraph("Potential eligibility for the DRUP study does not include tumor-type specific matching. Also "
-                        + "mutational signature readouts (e.g. MSI, TMB) are not yet included for clinical/evidence/study "
-                        + "matching.").addStyle(ReportResources.subTextStyle())));
+                        + "clinical (study) annotation does not yet include the results that are based on mutational signature"
+                        + " readouts, e.g. microsatellite instability and mutational load.").addStyle(ReportResources.subTextStyle())));
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 

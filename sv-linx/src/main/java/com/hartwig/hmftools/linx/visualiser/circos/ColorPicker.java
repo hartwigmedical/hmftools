@@ -68,20 +68,19 @@ public class ColorPicker
 
     private static final Color BLACK = new Color(5, 5, 5);
 
-    private static final Color COLOR6 = new Color(31, 120, 180);
-    private static final Color COLOR7 = new Color(227, 26, 28);
-    private static final Color COLOR8 = new Color(51, 160, 44);
-    private static final Color COLOR5 = new Color(212, 193, 23);
-
     private static final Color COLOR1 = new Color(106, 61, 154);
     private static final Color COLOR2 = new Color(140, 81, 10);
     private static final Color COLOR3 = new Color(1, 102, 94);
     private static final Color COLOR4 = new Color(255, 127, 0);
+    private static final Color COLOR5 = new Color(212, 193, 23);
+    private static final Color COLOR6 = new Color(31, 120, 180);
+    private static final Color COLOR7 = new Color(227, 26, 28);
+    private static final Color COLOR8 = new Color(51, 160, 44);
 
     private static final Color DEL = new Color(251, 154, 153);
     private static final Color DUP = new Color(178, 223, 138);
     private static final Color INS = new Color(255, 255, 153);
-    private static final Color LINE = new Color(166, 206, 227);
+    private static final Color LINE = new Color(97, 171, 227);
 
     private static final Color[] COLOURS = new Color[] { COLOR1, COLOR2, COLOR3, COLOR4, COLOR5, COLOR6, COLOR7, COLOR8 };
 
@@ -232,17 +231,17 @@ public class ColorPicker
     {
         if (links < 10)
         {
-            return 0.7;
+            return 1;
         }
 
         if (links < 50)
         {
-            return 0.6;
+            return 0.8;
         }
 
         if (links < 100)
         {
-            return 0.5;
+            return 0.6;
         }
 
         if (links < 200)
@@ -252,7 +251,7 @@ public class ColorPicker
 
         if (links < 400)
         {
-            return 0.3;
+            return 0.2;
         }
 
         return 0.1;

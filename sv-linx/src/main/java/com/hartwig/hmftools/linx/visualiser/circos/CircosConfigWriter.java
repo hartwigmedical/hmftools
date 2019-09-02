@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.util.StringJoiner;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 
 import org.apache.logging.log4j.core.util.IOUtils;
@@ -40,24 +39,26 @@ public class CircosConfigWriter
     private final double mapOuterRadius;
     private final double mapMiddleRadius;
     private final double mapInnerRadius;
+    private final double labelSize;
 
-    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data,
-            @NotNull final SvCircosConfig config)
+    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data, @NotNull final SvCircosConfig config)
     {
         this.sample = sample;
         this.configPath = outputDir + File.separator + sample + ".circos.conf";
         this.circosData = data;
         this.config = config;
         this.outputDir = outputDir;
+        this.labelSize = data.labelSize();
 
-        double gapSize = config.gapRadius();
-        double geneRelativeSize = data.exons().isEmpty() ? 0 : config.geneRelativeSize();
+        double gapSize = config.gapSize();
+        boolean displayGenes = data.displayGenes();
+
+        double geneRelativeSize = displayGenes ? config.geneRelativeSize() : 0;
         double segmentRelativeSize = config.segmentRelativeSize();
         double copyNumberRelativeSize = config.copyNumberRelativeSize();
 
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
-        boolean displayGenes = Doubles.greaterThan(geneRelativeSize, 0);
         int numberOfGaps = displayGenes ? 5 : 3;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.innerRadius();
@@ -68,7 +69,7 @@ public class CircosConfigWriter
 
         if (displayGenes)
         {
-            exonOuterRadius = 1 - 2 * gapSize;
+            exonOuterRadius = 1 - gapSize - config.exonRankSize();
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
             segmentOuterRadius = exonInnerRadius - gapSize;
         }
@@ -80,8 +81,8 @@ public class CircosConfigWriter
         }
 
         double exonDistance = exonOuterRadius - exonInnerRadius;
-        geneOuterRadius = exonOuterRadius - 9d/20d * exonDistance;
-        geneInnerRadius = exonInnerRadius + 9d/20d * exonDistance;
+        geneOuterRadius = exonOuterRadius - 9d / 20d * exonDistance;
+        geneInnerRadius = exonInnerRadius + 9d / 20d * exonDistance;
 
         segmentInnerRadius = segmentOuterRadius - segmentRelativeSize / totalRelativeSize * totalSpaceAvailable;
 
@@ -121,8 +122,6 @@ public class CircosConfigWriter
         int cnaMaxTracks = Math.max(2, (int) Math.round(Math.ceil(circosData.maxCopyNumber() - 2)));
 
         int mapMaxTracks = Math.max(1, (int) Math.round(Math.ceil(circosData.maxMinorAllelePloidy() - 1)));
-
-        double labelSize = config.labelSize(circosData.untruncatedCopyNumberAlterationsCount());
         double distanceLabelOffset = Math.ceil(4 * labelSize);
 
         final Charset charset = StandardCharsets.UTF_8;
@@ -150,7 +149,8 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(copyNumberOuterRadius + "r -" + distanceLabelOffset + "p"))
+                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(
+                                copyNumberOuterRadius + "r -" + distanceLabelOffset + "p"))
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))

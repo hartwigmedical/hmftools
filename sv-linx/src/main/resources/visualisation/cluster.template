@@ -28,20 +28,6 @@ show_tick_labels    = no
 <highlights>
     z = 0
 
-	<highlight>
-		file       = SUBSTITUTE_SAMPLE.fragile.circos
-		r0         = SUBSTITUTE_CNA_INNER_RADIUSr
-		r1         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		fill_color = black_a5
-	</highlight>
-
-	<highlight>
-		file       = SUBSTITUTE_SAMPLE.line_element.circos
-		r0         = SUBSTITUTE_CNA_MIDDLE_RADIUSr
-		r1         = SUBSTITUTE_CNA_OUTER_RADIUSr
-		fill_color = black_a5
-	</highlight>
-
     <highlight>
         file       = SUBSTITUTE_SAMPLE.gene.circos
         r0         = SUBSTITUTE_GENE_INNER_RADIUSr
@@ -347,6 +333,30 @@ chromosomes_display_default = yes
         min              = 0
         max              = 1
 
+	</plot>
+
+	# -----------------------------------------------------------
+	# Line Elements
+	<plot>
+		type             = highlight
+		file             = SUBSTITUTE_SAMPLE.line_element.circos
+		r0               = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		r1               = SUBSTITUTE_CNA_OUTER_RADIUSr
+		fill_color       = black_a5
+		color            = transparent
+		stroke_thickness = 0
+	</plot>
+
+	# -----------------------------------------------------------
+	# Fragile Sites
+	<plot>
+		type             = highlight
+		file             = SUBSTITUTE_SAMPLE.fragile.circos
+		r0               = SUBSTITUTE_CNA_INNER_RADIUSr
+		r1               = SUBSTITUTE_CNA_MIDDLE_RADIUSr
+		fill_color       = black_a5
+		color            = transparent
+		stroke_thickness = 0
 	</plot>
 
 </plots>

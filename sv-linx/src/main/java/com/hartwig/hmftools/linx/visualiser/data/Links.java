@@ -36,11 +36,23 @@ public class Links
     @NotNull
     public static Optional<Link> findLink(@NotNull final GenomePosition position, @NotNull final List<Link> links)
     {
-        final Optional<Link> result = findStartLink(position, links);
-        return result.isPresent() ? result : findEndLink(position, links);
+        for (final Link link : links)
+        {
+            if (link.startChromosome().equals(position.chromosome()) && link.startPosition() == position.position())
+            {
+                return Optional.of(link);
+            }
+
+            if (link.endChromosome().equals(position.chromosome()) && link.endPosition() == position.position())
+            {
+                return Optional.of(link);
+            }
+        }
+
+        return Optional.empty();
     }
 
-    public static double linkTraverseCount(@NotNull final GenomePosition position, @NotNull final List<Link> links)
+    public static double linkPloidy(@NotNull final GenomePosition position, @NotNull final List<Link> links)
     {
         return Links.findStartLink(position, links).map(Link::ploidy).orElse((double) 0) + Links.findEndLink(position, links)
                 .map(Link::ploidy)

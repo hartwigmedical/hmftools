@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
@@ -44,12 +46,19 @@ public class CircosData
     private final Set<String> upstreamGenes;
     private final Set<String> downstreamGenes;
 
+    private final SvCircosConfig config;
+
     private final int maxTracks;
     private final double maxPloidy;
     private final double maxCopyNumber;
     private final double maxMinorAllelePloidy;
+    private final double labelSize;
+    private final double geneLabelSize;
 
-    public CircosData(@NotNull final List<Segment> unadjustedSegments,
+    public CircosData(
+            boolean showSimpleSvSegments,
+            @NotNull final SvCircosConfig config,
+            @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<Link> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons,
@@ -59,6 +68,7 @@ public class CircosData
         this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
         this.unadjustedAlterations = unadjustedAlterations;
+        this.config = config;
 
         final List<GenomeRegion> unadjustedDisruptedGeneRegions = Lists.newArrayList();
         for (Fusion fusion : fusions)
@@ -66,37 +76,34 @@ public class CircosData
             unadjustedDisruptedGeneRegions.addAll(DisruptedGene.disruptedGeneRegions(fusion, unadjustedExons));
         }
 
-        final List<GenomeRegion> unadjustedFragileSites =
-                Highlights.limitHighlightsToSegments(Highlights.fragileSites(), unadjustedSegments);
-
-        final List<GenomeRegion> unadjustedLineElements =
-                Highlights.limitHighlightsToSegments(Highlights.lineElements(), unadjustedSegments);
-
         final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
         final List<Exon> unadjustedGeneExons = Exons.geneExons(unadjustedGenes, unadjustedExons);
 
-        final List<GenomePosition> unadjustedPositions = Lists.newArrayList();
-        unadjustedPositions.addAll(Links.allPositions(unadjustedLinks));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedSegments));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedAlterations));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedFragileSites));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedLineElements));
-        unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(unadjustedPositions::add);
-        unadjustedPositions.addAll(Span.allPositions(unadjustedGeneExons));
-        unadjustedPositions.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
+        final List<GenomePosition> positionsToScale = Lists.newArrayList();
+        positionsToScale.addAll(Links.allPositions(unadjustedLinks));
+        positionsToScale.addAll(Span.allPositions(unadjustedSegments));
+        unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(positionsToScale::add);
+        positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
+        positionsToScale.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
+        positionsToScale.addAll(config.interpolateCopyNumberPositions()
+                ? Span.minMaxPositions(unadjustedAlterations)
+                : Span.allPositions(unadjustedAlterations));
 
-        final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
+        final List<GenomeRegion> unadjustedFragileSites =
+                Highlights.limitHighlightsToRegions(Highlights.fragileSites(), Span.spanPositions(positionsToScale));
+
+        final List<GenomeRegion> unadjustedLineElements =
+                Highlights.limitHighlightsToRegions(Highlights.lineElements(), Span.spanPositions(positionsToScale));
+
+        final ScalePosition scalePosition = new ScalePosition(positionsToScale);
         contigLengths = scalePosition.contigLengths();
-
         segments = scalePosition.scaleSegments(unadjustedSegments);
         links = scalePosition.scaleLinks(unadjustedLinks);
-        alterations = scalePosition.scaleAlterations(unadjustedAlterations);
-        fragileSites = scalePosition.scaleRegions(unadjustedFragileSites);
-        lineElements = scalePosition.scaleRegions(unadjustedLineElements);
+        alterations = scalePosition.interpolateAlterations(unadjustedAlterations);
+        fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
+        lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
         genes = scalePosition.scaleGene(unadjustedGenes);
         disruptedGeneRegions = scalePosition.scaleRegions(unadjustedDisruptedGeneRegions);
-
-        // Note the following *might* be interpolated
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;
@@ -107,7 +114,14 @@ public class CircosData
         double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
-        connectors = Connectors.createConnectors(segments, links);
+        connectors = new Connectors(showSimpleSvSegments).createConnectors(segments, links);
+        labelSize = config.labelSize(untruncatedCopyNumberAlterationsCount());
+
+        int actualMaxGeneCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
+        geneLabelSize = actualMaxGeneCharacters > config.maxGeneCharacters()
+                ? 0.9d * config.maxGeneCharacters() / actualMaxGeneCharacters * labelSize
+                : labelSize;
+
     }
 
     public List<Connector> connectors()
@@ -135,7 +149,7 @@ public class CircosData
 
     public boolean displayGenes()
     {
-        return !exons.isEmpty();
+        return !exons.isEmpty() && Doubles.positive(config.geneRelativeSize());
     }
 
     public int maxTracks()
@@ -223,9 +237,18 @@ public class CircosData
         return contigLengths().stream().mapToInt(x -> (int) x.position()).sum();
     }
 
-    public long untruncatedCopyNumberAlterationsCount()
+    private long untruncatedCopyNumberAlterationsCount()
     {
         return alterations.stream().filter(x -> !x.truncated()).count();
     }
 
+    public double labelSize()
+    {
+        return labelSize;
+    }
+
+    public double geneLabelSize()
+    {
+        return geneLabelSize;
+    }
 }

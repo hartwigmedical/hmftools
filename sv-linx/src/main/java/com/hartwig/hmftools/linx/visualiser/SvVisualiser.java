@@ -80,8 +80,8 @@ public class SvVisualiser implements AutoCloseable
     {
         final CommandLine cmd = createCommandLine(args, options);
         LOGGER.info("Loading data");
-        config = SvVisualiserConfig.createConfig(cmd);
         circosConfig = SvCircosConfig.createConfig(cmd);
+        config = SvVisualiserConfig.createConfig(cmd);
         executorService = Executors.newFixedThreadPool(config.threads());
     }
 
@@ -227,7 +227,7 @@ public class SvVisualiser implements AutoCloseable
             @NotNull final List<Exon> filteredExons,
             @NotNull final List<ProteinDomain> filteredProteinDomains,
             @NotNull final List<Fusion> filteredFusions,
-            boolean extendSimpleSVs)
+            boolean showSimpleSvSegments)
             throws IOException, InterruptedException
     {
 
@@ -238,15 +238,16 @@ public class SvVisualiser implements AutoCloseable
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
         final List<CopyNumberAlteration> alterations =
-                CopyNumberAlterations.copyNumbers(config.copyNumberAlterations(), Span.span(positionsToCover));
+                CopyNumberAlterations.copyNumbers(config.copyNumberAlterations(), Span.spanPositions(positionsToCover));
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, extendSimpleSVs);
+        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, showSimpleSvSegments);
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData = new CircosData(segments, links, alterations, filteredExons, filteredFusions);
+        final CircosData circosData =
+                new CircosData(showSimpleSvSegments, circosConfig, segments, links, alterations, filteredExons, filteredFusions);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
         confWrite.writeConfig();
 
@@ -258,10 +259,9 @@ public class SvVisualiser implements AutoCloseable
                 outputPlotName,
                 config.outputConfPath());
 
-        double rLabelSize = circosConfig.labelSize(circosData.untruncatedCopyNumberAlterationsCount()) * 1.2;
-
-        if(!config.debug())
+        if (!config.debug())
         {
+            double rLabelSize = 1.2 * circosData.labelSize();
             new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
 
             final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);

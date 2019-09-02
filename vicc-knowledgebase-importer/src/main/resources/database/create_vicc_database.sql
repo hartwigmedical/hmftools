@@ -233,6 +233,13 @@ DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon38;
 DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon39;
 DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon40;
 DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon41;
+DROP TABLE IF EXISTS molecularmatchAst;
+DROP TABLE IF EXISTS molecularmatchAstLeft;
+DROP TABLE IF EXISTS molecularmatchAstRight;
+DROP TABLE IF EXISTS molecularmatchAstRightRight;
+DROP TABLE IF EXISTS molecularmatchAstRightLeft;
+DROP TABLE IF EXISTS molecularmatchAstRightLeftRight;
+DROP TABLE IF EXISTS molecularmatchAstRightLeftLeft;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -1111,6 +1118,80 @@ CREATE TABLE molecularmatch
     biomarkerClass varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE molecularmatchAst
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchId int NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    operator varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchId) REFERENCES molecularmatch(id)
+);
+
+CREATE TABLE molecularmatchAstLeft
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchAstId int NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    operator varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchAstId) REFERENCES molecularmatchAst(id)
+);
+
+CREATE TABLE molecularmatchAstRight
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchAstId int NOT NULL,
+    raw varchar(1000),
+    value varchar(1000),
+    operator varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchAstId) REFERENCES molecularmatchAst(id)
+);
+
+CREATE TABLE molecularmatchAstRightRight
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchAstRightId int NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchAstRightId) REFERENCES molecularmatchAstRight(id)
+);
+
+CREATE TABLE molecularmatchAstRightLeft
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchAstRightId int NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchAstRightId) REFERENCES molecularmatchAstRight(id)
+);
+
+CREATE TABLE molecularmatchAstRightLeftRight
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchAstRightLeftId int NOT NULL,
+    raw varchar(255),
+    value varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchAstRightLeftId) REFERENCES molecularmatchAstRightLeft(id)
+);
+
+CREATE TABLE molecularmatchAstRightLeftLeft
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularmatchAstRightLeftId int NOT NULL,
+    raw varchar(255),
+    operator varchar(255),
+    value varchar(255),
+    type varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularmatchAstRightLeftId) REFERENCES molecularmatchAstRightLeft(id)
 );
 
 CREATE TABLE molecularmatchInstutition
