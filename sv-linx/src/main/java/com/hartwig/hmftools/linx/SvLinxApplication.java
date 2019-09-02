@@ -193,9 +193,9 @@ public class SvLinxApplication
                 // when matching RNA, allow all transcripts regardless of their viability for fusions
                 boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
                 fusionAnalyser.setSvGeneData(svDataList, true, selectiveGeneLoading, !keepInvalidTranscripts);
-
-                sampleAnalyser.annotateWithGeneData();
             }
+
+            sampleAnalyser.annotate();
 
             if(checkDrivers)
             {

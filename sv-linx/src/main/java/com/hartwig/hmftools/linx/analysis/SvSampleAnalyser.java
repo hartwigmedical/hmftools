@@ -106,6 +106,7 @@ public class SvSampleAnalyser {
 
     private PerformanceCounter mPcPrep;
     private PerformanceCounter mPcClusterAnalyse;
+    PerformanceCounter mPcAnnotation;
     private PerformanceCounter mPcWrite;
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
@@ -146,6 +147,7 @@ public class SvSampleAnalyser {
 
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
+        mPcAnnotation = new PerformanceCounter("Annotation");
         mPcWrite = new PerformanceCounter("WriteCSV");
 
         createOutputFiles();
@@ -255,7 +257,7 @@ public class SvSampleAnalyser {
         if(mAllVariants.isEmpty())
             return;
 
-        LOGGER.debug("sample({}) clustering {} variants", mSampleId, mAllVariants.size());
+        LOGGER.debug("sample({}) analysing {} variants", mSampleId, mAllVariants.size());
 
         mPcPrep.start();
 
@@ -275,6 +277,17 @@ public class SvSampleAnalyser {
         mIsValid = mAnalyser.clusterAndAnalyse();
 
         mPcClusterAnalyse.stop();
+    }
+
+    public void annotate()
+    {
+        mPcAnnotation.start();
+
+        mAnalyser.annotateClusters();
+
+        mPseudoGeneFinder.checkPseudoGeneAnnotations(getClusters());
+
+        mPcAnnotation.stop();
     }
 
     public void writeOutput(final DatabaseAccess dbAccess)
@@ -354,11 +367,6 @@ public class SvSampleAnalyser {
 
             ++currentIndex;
         }
-    }
-
-    public void annotateWithGeneData()
-    {
-        mPseudoGeneFinder.checkPseudoGeneAnnotations(getClusters());
     }
 
     private void createOutputFiles()
@@ -869,23 +877,21 @@ public class SvSampleAnalyser {
 
     public void close()
     {
-        closeBufferedWriter(mSvFileWriter);
-        closeBufferedWriter(mClusterFileWriter);
-        closeBufferedWriter(mLinksFileWriter);
-        mKataegisAnnotator.close();
-
-        mVisWriter.close();
-
         if(mConfig.hasMultipleSamples() || LOGGER.isDebugEnabled())
         {
             // log perf stats
             mPcPrep.logStats();
             mPcClusterAnalyse.logStats();
-            mPcWrite.logStats();
-
             mAnalyser.logStats();
+            mPcAnnotation.logStats();
+            mPcWrite.logStats();
         }
 
+        closeBufferedWriter(mSvFileWriter);
+        closeBufferedWriter(mClusterFileWriter);
+        closeBufferedWriter(mLinksFileWriter);
+        mKataegisAnnotator.close();
+        mVisWriter.close();
         mAnalyser.close();
     }
 }

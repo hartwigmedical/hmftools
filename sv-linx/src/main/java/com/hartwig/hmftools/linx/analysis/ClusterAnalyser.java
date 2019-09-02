@@ -63,7 +63,6 @@ public class ClusterAnalyser {
 
     PerformanceCounter mPcClustering;
     PerformanceCounter mPcChaining;
-    PerformanceCounter mPcAnnotation;
 
     public static int SMALL_CLUSTER_SIZE = 3;
 
@@ -100,7 +99,6 @@ public class ClusterAnalyser {
 
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");
-        mPcAnnotation = new PerformanceCounter("Annotation");
     }
 
     public final ClusteringState getState() { return mState; }
@@ -209,7 +207,6 @@ public class ClusterAnalyser {
             }
         }
 
-        mPcAnnotation.start();
 
         // final clean-up and analysis
         for(SvCluster cluster : mClusters)
@@ -223,13 +220,8 @@ public class ClusterAnalyser {
 
             cluster.cacheLinkedPairs();
             cluster.buildArmClusters();
-
-            reportClusterFeatures(cluster);
         }
 
-        reportOtherFeatures();
-
-        mPcAnnotation.stop();
         return true;
     }
 
@@ -363,8 +355,11 @@ public class ClusterAnalyser {
         mChainFinder.clear(); // release any refs to clusters and SVs
     }
 
-    private void reportOtherFeatures()
+    public void annotateClusters()
     {
+        // final clean-up and analysis
+        mClusters.forEach(this::reportClusterFeatures);
+
         annotateTemplatedInsertions(mClusters, mState.getChrBreakendMap());
 
         if(runAnnotation(mConfig.RequiredAnnotations, UNDER_CLUSTERING))
@@ -395,7 +390,6 @@ public class ClusterAnalyser {
     {
         mPcClustering.logStats();
         mPcChaining.logStats();
-        mPcAnnotation.logStats();
     }
 
 }

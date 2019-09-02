@@ -229,7 +229,7 @@ public class PseudoGeneFinder
         if(homOffsetStart == null || homOffsetEnd == null)
             return false;
 
-        return homOffsetStart == homOffsetEnd;
+        return homOffsetStart != homOffsetEnd;
     }
 
     private Integer getHomologyOffset(
