@@ -102,7 +102,7 @@ public class CircosData
         alterations = scalePosition.interpolateAlterations(unadjustedAlterations);
         fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
         lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
-        genes = scalePosition.scaleGene(unadjustedGenes);
+        genes = scalePosition.interpolateGene(unadjustedGenes);
         disruptedGeneRegions = scalePosition.scaleRegions(unadjustedDisruptedGeneRegions);
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
