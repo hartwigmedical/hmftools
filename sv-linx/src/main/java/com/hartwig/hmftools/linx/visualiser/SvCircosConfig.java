@@ -22,6 +22,9 @@ public interface SvCircosConfig
 
     String OUTER_RADIUS = "outer_radius";
     String INNER_RADIUS = "inner_radius";
+    String GAP_RADIUS = "gap_size";
+    String EXON_RANK_RADIUS = "exon_rank_size";
+
     String EXACT_POSITION = "exact_position";
     String SHOW_SV_ID = "show_sv_id";
 
@@ -41,6 +44,8 @@ public interface SvCircosConfig
     String GLYPH_SIZE = "glyph_size";
     String MAX_GENE_CHARACTERS = "max_gene_characters";
 
+
+
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
     int DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW = 35;
@@ -55,6 +60,7 @@ public interface SvCircosConfig
     double DEFAULT_OUTER_RADIUS = 0.88;
     double DEFAULT_INNER_RADIUS = 0.20;
     double DEFAULT_GAP_RADIUS = 0.025;
+    double DEFAULT_EXON_RANK_RADIUS = 0.025;
 
     int DEFAULT_MIN_LABEL_SIZE = 35;
     int DEFAULT_MAX_LABEL_SIZE = 40;
@@ -70,9 +76,9 @@ public interface SvCircosConfig
 
         options.addOption(FUSION_HEIGHT, true, "Height of each fusion in pixels [" + DEFAULT_FUSION_HEIGHT + "]");
         options.addOption(FUSION_LEGEND_ROWS, true, "Number of rows in protein domain legend  [" + DEFAULT_FUSION_LEGEND_ROWS + "]");
-        options.addOption(FUSION_LEGEND_HEIGHT_PER_ROW, true,
-                "Height of each row in protein domain legend [" + DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW
-                        + "]");
+        options.addOption(FUSION_LEGEND_HEIGHT_PER_ROW,
+                true,
+                "Height of each row in protein domain legend [" + DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW + "]");
 
         options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
         options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
@@ -80,15 +86,20 @@ public interface SvCircosConfig
         options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
         options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
 
-        options.addOption(GENE_RELATIVE_SIZE, true,
+        options.addOption(GENE_RELATIVE_SIZE,
+                true,
                 "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
-        options.addOption(SEGMENT_RELATIVE_SIZE, true,
+        options.addOption(SEGMENT_RELATIVE_SIZE,
+                true,
                 "Size of segment track relative to copy number alterations and genes[" + DEFAULT_SEGMENT_RELATIVE_SIZE + "]");
-        options.addOption(CNA_RELATIVE_SIZE, true,
+        options.addOption(CNA_RELATIVE_SIZE,
+                true,
                 "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
 
-        options.addOption(OUTER_RADIUS, true, "Set outer radius [" + DEFAULT_OUTER_RADIUS + "]");
-        options.addOption(INNER_RADIUS, true, "Set inner radius [" + DEFAULT_INNER_RADIUS + "]");
+        options.addOption(OUTER_RADIUS, true, "Outer radius [" + DEFAULT_OUTER_RADIUS + "]");
+        options.addOption(INNER_RADIUS, true, "Inner radius [" + DEFAULT_INNER_RADIUS + "]");
+        options.addOption(GAP_RADIUS, true, "Size of gap between tracks relative to radius [" + DEFAULT_GAP_RADIUS + "]");
+        options.addOption(EXON_RANK_RADIUS, true, "Size of gap for exon ranks relative to radius [" + DEFAULT_EXON_RANK_RADIUS + "]");
 
         options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
         options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
@@ -97,7 +108,8 @@ public interface SvCircosConfig
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
         options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
-        options.addOption(MAX_GENE_CHARACTERS, true,
+        options.addOption(MAX_GENE_CHARACTERS,
+                true,
                 "Maximum number of character in gene allowed before scaling [" + DEFAULT_MAX_GENE_CHARACTERS + "]");
     }
 
@@ -154,10 +166,9 @@ public interface SvCircosConfig
 
     boolean interpolateCopyNumberPositions();
 
-    default double gapRadius()
-    {
-        return DEFAULT_GAP_RADIUS;
-    }
+    double gapSize();
+
+    double exonRankSize();
 
     default long labelSize(long count)
     {
@@ -218,6 +229,8 @@ public interface SvCircosConfig
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
                 .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
+                .gapSize(defaultValue(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
+                .exonRankSize(defaultValue(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
                 .build();
     }
 

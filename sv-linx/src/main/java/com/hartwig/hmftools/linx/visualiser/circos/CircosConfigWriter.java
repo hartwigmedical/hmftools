@@ -50,7 +50,7 @@ public class CircosConfigWriter
         this.outputDir = outputDir;
         this.labelSize = data.labelSize();
 
-        double gapSize = config.gapRadius();
+        double gapSize = config.gapSize();
         boolean displayGenes = data.displayGenes();
 
         double geneRelativeSize = displayGenes ? config.geneRelativeSize() : 0;
@@ -69,7 +69,7 @@ public class CircosConfigWriter
 
         if (displayGenes)
         {
-            exonOuterRadius = 1 - 2 * gapSize;
+            exonOuterRadius = 1 - gapSize - config.exonRankSize();
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
             segmentOuterRadius = exonInnerRadius - gapSize;
         }
