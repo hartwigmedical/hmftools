@@ -21,7 +21,7 @@ The CIRCOS view demonstrated below has 6 tracks showing from innermost to outerm
 
 
 <p align="center">
-    <img src="src/main/resources/readme/legend.png" width="400" alt="Visualisation Guide">
+    <img src="src/main/resources/readme/legend.png" width="500" alt="Visualisation Guide">
 </p>
 
 The scaling of both distances and ploidies in the figure has been modified to make the figure readable.
@@ -51,7 +51,19 @@ the copy number regions in the 3rd track. For known LINE source elements the gre
 fragile sites the red copy number section is shaded light grey. 
 
 
+# Chromosome View
 
+Since the CIRCOS only represents a part of the genome, the chromosome view is provided to indicate which parts of the genome is shown. 
+Each of the chromosomes included in the cluster(s) shown is displayed. 
+The part of the chromosome that is included in the figure is highlighted in the colour matching the colour used in the outer ring of the CIRCOS. 
+The banding and location of the centromere on each chromosome is also shown.
+
+An example of the chromosome view is shown below indicating the cluster includes a large section of chromosome 7 including the centromere 
+and a small slither of chromosome 15 on the Q arm:
+
+<p align="center">
+    <img src="src/main/resources/readme/chr7.png" width="600" alt="Chromosome View">
+</p>
 
 # Parameterization
 //TODO: max_distance_labels
