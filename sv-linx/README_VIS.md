@@ -1,7 +1,7 @@
 # LINX Visualisation
 
-LINX provides functionality to present detailed visualisation of genomic rearrangements including genic impact in CIRCOS [CITE] format. 
-LINX writes a set of ‘VIS' files in a specific format which form the base data to generate the visualisation. 
+LINX provides functionality to present detailed visualisation of genomic rearrangements including genic impact in [CIRCOS](http://circos.ca/]format). 
+LINX writes a set of 'VIS' files in a specific format which form the base data to generate the visualisation. 
 The visualisation tool only depends on these files and so in principle any tool could provide SV & CN data in this format.
 
 There are 3 components in the output of the LINX visualisation:
@@ -110,7 +110,21 @@ are directly fused:
 </p>
 
 
-# Parameterization
+# Dependencies
+
+LINX visualisation requires CIRCOS to be installed as well as a number of R dependencies that can be installed with the commands:
+```
+    install.packages("tidyr")
+    install.packages("dplyr")
+    install.packages("ggplot2")
+    install.packages("cowplot")
+    install.packages("magick") 
+    
+    library(BiocManager)
+    BiocManager::install("Gviz")   
+```
+
+# Arguments
 //TODO: max_distance_labels
 
 ## Relative Track Sizes
