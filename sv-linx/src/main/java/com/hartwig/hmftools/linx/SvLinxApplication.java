@@ -65,6 +65,12 @@ public class SvLinxApplication
 
         LinxConfig svaConfig = new LinxConfig(cmd);
 
+        if(!svaConfig.hasValidPaths())
+        {
+            LOGGER.warn("invalid config paths");
+            return;
+        }
+
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
         List<String> samplesList = svaConfig.getSampleIds();

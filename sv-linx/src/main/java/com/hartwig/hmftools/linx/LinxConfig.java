@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -173,6 +175,11 @@ public class LinxConfig
         WriteVisualisationData = false;
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
         WriteSvData = false;
+    }
+
+    public boolean hasValidPaths()
+    {
+        return Files.exists(Paths.get(OutputDataPath));
     }
 
     public static void addCmdLineArgs(Options options)

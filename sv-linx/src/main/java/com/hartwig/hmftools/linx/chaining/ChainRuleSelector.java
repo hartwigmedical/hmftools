@@ -644,8 +644,12 @@ public class ChainRuleSelector
                         linkScore = FOLDBACK_C_PRIORITY; // 1
                     }
 
+                    final SvChain targetChain =
+                            nonFbPloidyData.MaxPloidyChain != null && nonFbPloidy == nonFbPloidyData.MaxPloidyChain.ploidy() ?
+                            nonFbPloidyData.MaxPloidyChain : null;
+
                     ProposedLinks proposedLink = new ProposedLinks(
-                            Lists.newArrayList(pairStart, pairEnd), FOLDBACK_SPLIT, nonFbPloidyData.MaxPloidyChain, foldbackChain);
+                            Lists.newArrayList(pairStart, pairEnd), FOLDBACK_SPLIT, targetChain, foldbackChain);
 
                     proposedLink.addFoldbackBreakends(
                             foldbackStart, foldbackEnd, foldbackPloidy,

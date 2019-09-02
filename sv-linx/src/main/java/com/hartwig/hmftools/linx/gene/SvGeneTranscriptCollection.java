@@ -717,15 +717,10 @@ public class SvGeneTranscriptCollection
         transcript.setAlternativePhasing(alternativePhasing);
     }
 
-    public static int PSEUDO_GENE_DATA_TRANS_ID = 0;
-    public static int PSEUDO_GENE_DATA_EXON_RANK = 1;
-    public static int PSEUDO_GENE_DATA_EXON_MAX = 2;
-    public static int PSEUDO_GENE_DATA_EXON_LENGTH = 3;
-
-    public String[] getExonDetailsForPosition(final GeneAnnotation gene, long posStart, long posEnd)
+    public List<PseudoGeneMatch> findPseudoGeneExonMatches(
+            final GeneAnnotation gene, long posStart, long posEnd, int startHomologyLength, int endHomologyLength)
     {
-        String[] exonMatchData = new String[PSEUDO_GENE_DATA_EXON_LENGTH +1];
-        exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = null;
+        List<PseudoGeneMatch> pseudoMatches = Lists.newArrayList();
 
         List<TranscriptData> transDataList = getTranscripts(gene.StableId);
 
@@ -737,24 +732,46 @@ public class SvGeneTranscriptCollection
             {
                 final ExonData exonData = transData.exons().get(i);
 
-                if(abs(exonData.ExonStart - posStart) > 1 || abs(exonData.ExonEnd - posEnd) > 1)
+                boolean startWithinHomology = abs(exonData.ExonStart - posStart) <= startHomologyLength;
+                boolean endWithinHomology = abs(exonData.ExonEnd - posEnd) <= endHomologyLength;
+
+                if(!startWithinHomology && !endWithinHomology)
                     continue;
 
-                // found a match
-                if (exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] == null || transData.IsCanonical)
-                {
-                    exonMatchData[PSEUDO_GENE_DATA_TRANS_ID] = transData.TransName;
-                    exonMatchData[PSEUDO_GENE_DATA_EXON_RANK] = Integer.toString(exonData.ExonRank);
-                    exonMatchData[PSEUDO_GENE_DATA_EXON_MAX] = Integer.toString(exonCount);
-                    exonMatchData[PSEUDO_GENE_DATA_EXON_LENGTH] = Long.toString(exonData.ExonEnd - exonData.ExonStart);
+                // skip if the non-matching end is outside the transcript
+                if(!startWithinHomology && posStart < transData.TransStart)
+                        continue;
 
-                    if (transData.IsCanonical)
-                        break;
+                if(!endWithinHomology && posEnd > transData.TransEnd)
+                    continue;
+
+                PseudoGeneMatch pseudoMatch = new PseudoGeneMatch(
+                        gene.GeneName, transData.TransId, transData.TransName, exonData.ExonRank, exonData.length());
+
+                if(startWithinHomology)
+                {
+                    pseudoMatch.StartHomologyOffset = (int)(posStart - exonData.ExonStart);
                 }
+                else
+                {
+                    // record a position within the exon as negative
+                    pseudoMatch.StartPositionMismatch = (int)(exonData.ExonStart - posStart);
+                }
+
+                if(endWithinHomology)
+                {
+                    pseudoMatch.EndHomologyOffset = (int)(posEnd - exonData.ExonEnd);
+                }
+                else
+                {
+                    pseudoMatch.EndPositionMismatch = (int)(posEnd - exonData.ExonEnd);
+                }
+
+                pseudoMatches.add(pseudoMatch);
             }
         }
 
-        return exonMatchData;
+        return pseudoMatches;
     }
 
     public boolean loadEnsemblData(boolean delayTranscriptLoading)

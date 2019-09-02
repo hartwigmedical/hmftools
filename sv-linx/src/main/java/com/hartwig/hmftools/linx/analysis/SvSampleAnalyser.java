@@ -16,8 +16,6 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_EXON_RANK;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PSEUDO_GENE_DATA_TRANS_ID;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
@@ -40,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -62,6 +61,7 @@ import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
+import com.hartwig.hmftools.linx.gene.PseudoGeneMatch;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
@@ -357,8 +357,8 @@ public class SvSampleAnalyser {
     {
         for(final SvCluster cluster : getClusters())
         {
-            GeneAnnotation pseudoGene = null;
-            String transcriptId = "";
+            Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap = Maps.newHashMap();
+            List<GeneAnnotation> matchedGenes = Lists.newArrayList();
 
             for(final SvLinkedPair pair : cluster.getLinkedPairs())
             {
@@ -372,6 +372,12 @@ public class SvSampleAnalyser {
                 if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
                     continue;
 
+                final String lowerHomology = lower.usesStart() ?
+                        lower.getSV().getSvData().startHomologySequence() : lower.getSV().getSvData().endHomologySequence();
+
+                final String upperHomology = lower.usesStart() ?
+                        upper.getSV().getSvData().startHomologySequence() : upper.getSV().getSvData().endHomologySequence();
+
                 for(final GeneAnnotation gene1 : lower.getSV().getGenesList(lower.usesStart()))
                 {
                     for(final GeneAnnotation gene2 : upper.getSV().getGenesList(upper.usesStart()))
@@ -379,27 +385,80 @@ public class SvSampleAnalyser {
                         if(!gene1.GeneName.equals(gene2.GeneName))
                             continue;
 
-                        final String exonData[] = geneTransCache.getExonDetailsForPosition(gene1, lower.position(), upper.position());
+                        final List<PseudoGeneMatch> pseudoMatches = geneTransCache.findPseudoGeneExonMatches(
+                                gene1, lower.position(), upper.position(), lowerHomology.length(), upperHomology.length());
 
-                        if(exonData[PSEUDO_GENE_DATA_TRANS_ID] != null)
+                        if(!pseudoMatches.isEmpty())
                         {
-                            pseudoGene = gene1;
-                            transcriptId = exonData[PSEUDO_GENE_DATA_TRANS_ID];
+                            pairMatchesMap.put(pair, pseudoMatches);
 
-                            String exonMatchData = String.format("%s:%s;%s",
-                                    gene1.GeneName, transcriptId, exonData[PSEUDO_GENE_DATA_EXON_RANK]);
-
-
-                            pair.setExonMatchData(exonMatchData);
+                            if(!matchedGenes.stream().anyMatch(x -> x.GeneName.matches(gene1.GeneName)))
+                            {
+                                matchedGenes.add(gene1);
+                            }
                         }
                     }
                 }
             }
 
-            if(pseudoGene != null)
+            if(!pairMatchesMap.isEmpty())
             {
-                mVisWriter.addGeneExonData(cluster.id(), pseudoGene.StableId, pseudoGene.GeneName,
-                        transcriptId, 0, pseudoGene.chromosome(), "PSEUDO");
+                // select the most common transcript and report it for visualisation
+                for (final GeneAnnotation gene : matchedGenes)
+                {
+                    // find the most frequent transcript
+                    Map<Integer, Integer> transcriptMatches = Maps.newHashMap();
+                    PseudoGeneMatch maxTrans = null;
+                    int maxTransIdCount = 0;
+
+                    for (Map.Entry<SvLinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
+                    {
+                        for (PseudoGeneMatch pseudoMatch : entry.getValue())
+                        {
+                            if(!pseudoMatch.Gene.equals(gene.GeneName))
+                                continue;
+
+                            int count = transcriptMatches.containsKey(pseudoMatch.TransId) ? transcriptMatches.get(pseudoMatch.TransId) : 0;
+                            ++count;
+
+                            transcriptMatches.put(pseudoMatch.TransId, count);
+
+                            if(count > maxTransIdCount)
+                            {
+                                maxTransIdCount = count;
+                                maxTrans = pseudoMatch;
+                            }
+                        }
+                    }
+
+                    if(maxTrans != null)
+                    {
+                        mVisWriter.addGeneExonData(cluster.id(), gene.StableId, gene.GeneName,
+                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), "PSEUDO");
+
+                        final int selectedTransId = maxTrans.TransId;
+
+                        for(Map.Entry<SvLinkedPair,List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
+                        {
+                            SvLinkedPair pair = entry.getKey();
+
+                            final PseudoGeneMatch pseudoMatch = entry.getValue().stream()
+                                    .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
+
+                            if(pseudoMatch != null)
+                            {
+                                String exonMatchData = String.format("%s;%s;%d;%d",
+                                        gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
+
+                                exonMatchData += String.format(";%d;%d;%d;%d",
+                                        pseudoMatch.StartHomologyOffset, pseudoMatch.EndHomologyOffset,
+                                        pseudoMatch.StartPositionMismatch, pseudoMatch.EndPositionMismatch);
+
+                                pair.setExonMatchData(exonMatchData);
+                            }
+                        }
+                    }
+                }
             }
         }
     }

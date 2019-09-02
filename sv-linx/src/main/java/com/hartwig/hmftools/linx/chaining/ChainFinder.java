@@ -746,7 +746,9 @@ public class ChainFinder
         if(mDoubleMinuteSVs.isEmpty())
             return;
 
-        reconcileChains(mChains, true, mLinkAllocator.getNextChainId(), true);
+        // at the moment this logic is problematic and can divide chains repeatedly
+
+        // reconcileChains(mChains, true, mLinkAllocator.getNextChainId(), true);
 
         // search for a chain which can be closed if it contains all the DM SVs
 
