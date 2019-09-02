@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
 import java.io.File;
 import java.io.IOException;
@@ -1065,12 +1066,12 @@ public class FusionDisruptionAnalyser
             mVisWriter.addGeneExonData(clusterId,
                     fusion.upstreamTrans().gene().StableId, fusion.upstreamTrans().gene().GeneName,
                     fusion.upstreamTrans().StableId, fusion.upstreamTrans().TransId,
-                    fusion.upstreamTrans().gene().chromosome(), "FUSION");
+                    fusion.upstreamTrans().gene().chromosome(), GENE_TYPE_FUSION);
 
             mVisWriter.addGeneExonData(clusterId,
                     fusion.downstreamTrans().gene().StableId, fusion.downstreamTrans().gene().GeneName,
                     fusion.downstreamTrans().StableId, fusion.downstreamTrans().TransId,
-                    fusion.downstreamTrans().gene().chromosome(), "FUSION");
+                    fusion.downstreamTrans().gene().chromosome(), GENE_TYPE_FUSION);
         }
     }
 

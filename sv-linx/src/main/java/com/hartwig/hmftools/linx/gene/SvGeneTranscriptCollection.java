@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
+import com.hartwig.hmftools.linx.annotators.PseudoGeneMatch;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -715,63 +716,6 @@ public class SvGeneTranscriptCollection
         }
 
         transcript.setAlternativePhasing(alternativePhasing);
-    }
-
-    public List<PseudoGeneMatch> findPseudoGeneExonMatches(
-            final GeneAnnotation gene, long posStart, long posEnd, int startHomologyLength, int endHomologyLength)
-    {
-        List<PseudoGeneMatch> pseudoMatches = Lists.newArrayList();
-
-        List<TranscriptData> transDataList = getTranscripts(gene.StableId);
-
-        for(final TranscriptData transData : transDataList)
-        {
-            int exonCount = transData.exons().size();
-
-            for (int i = 0; i < exonCount; ++i)
-            {
-                final ExonData exonData = transData.exons().get(i);
-
-                boolean startWithinHomology = abs(exonData.ExonStart - posStart) <= startHomologyLength;
-                boolean endWithinHomology = abs(exonData.ExonEnd - posEnd) <= endHomologyLength;
-
-                if(!startWithinHomology && !endWithinHomology)
-                    continue;
-
-                // skip if the non-matching end is outside the transcript
-                if(!startWithinHomology && posStart < transData.TransStart)
-                        continue;
-
-                if(!endWithinHomology && posEnd > transData.TransEnd)
-                    continue;
-
-                PseudoGeneMatch pseudoMatch = new PseudoGeneMatch(
-                        gene.GeneName, transData.TransId, transData.TransName, exonData.ExonRank, exonData.length());
-
-                if(startWithinHomology)
-                {
-                    pseudoMatch.StartHomologyOffset = (int)(posStart - exonData.ExonStart);
-                }
-                else
-                {
-                    // record a position within the exon as negative
-                    pseudoMatch.StartPositionMismatch = (int)(exonData.ExonStart - posStart);
-                }
-
-                if(endWithinHomology)
-                {
-                    pseudoMatch.EndHomologyOffset = (int)(posEnd - exonData.ExonEnd);
-                }
-                else
-                {
-                    pseudoMatch.EndPositionMismatch = (int)(posEnd - exonData.ExonEnd);
-                }
-
-                pseudoMatches.add(pseudoMatch);
-            }
-        }
-
-        return pseudoMatches;
     }
 
     public boolean loadEnsemblData(boolean delayTranscriptLoading)

@@ -55,13 +55,14 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
 import com.hartwig.hmftools.linx.annotators.KataegisAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
-import com.hartwig.hmftools.linx.gene.PseudoGeneMatch;
+import com.hartwig.hmftools.linx.annotators.PseudoGeneMatch;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
@@ -91,14 +92,15 @@ public class SvSampleAnalyser {
     private BufferedWriter mSvFileWriter;
     private BufferedWriter mClusterFileWriter;
     private BufferedWriter mLinksFileWriter;
-    private VisualiserWriter mVisWriter;
+    private final VisualiserWriter mVisWriter;
 
-    private FragileSiteAnnotator mFragileSiteAnnotator;
-    private LineElementAnnotator mLineElementAnnotator;
-    private ReplicationOriginAnnotator mReplicationOriginAnnotator;
-    private ViralInsertAnnotator mViralInsertAnnotator;
-    private KataegisAnnotator mKataegisAnnotator;
+    private final FragileSiteAnnotator mFragileSiteAnnotator;
+    private final LineElementAnnotator mLineElementAnnotator;
+    private final ReplicationOriginAnnotator mReplicationOriginAnnotator;
+    private final ViralInsertAnnotator mViralInsertAnnotator;
+    private final KataegisAnnotator mKataegisAnnotator;
     private CnDataLoader mCnDataLoader;
+    private final PseudoGeneFinder mPseudoGeneFinder;
 
     private boolean mIsValid;
 
@@ -140,6 +142,8 @@ public class SvSampleAnalyser {
         mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
 
+        mPseudoGeneFinder = new PseudoGeneFinder(mVisWriter);
+
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
         mPcWrite = new PerformanceCounter("WriteCSV");
@@ -159,7 +163,11 @@ public class SvSampleAnalyser {
         mAnalyser.setCnDataLoader(cnAnalyser);
     }
 
-    public void setGeneCollection(SvGeneTranscriptCollection geneCollection) { mAnalyser.setGeneCollection(geneCollection); }
+    public void setGeneCollection(final SvGeneTranscriptCollection geneCollection)
+    {
+        mAnalyser.setGeneCollection(geneCollection);
+        mPseudoGeneFinder.setGeneTransCache(geneCollection);
+    }
 
     private void clearState()
     {
@@ -350,117 +358,7 @@ public class SvSampleAnalyser {
 
     public void annotateWithGeneData(SvGeneTranscriptCollection geneTransCache)
     {
-        checkPseudoGeneAnnotations(geneTransCache);
-    }
-
-    private void checkPseudoGeneAnnotations(SvGeneTranscriptCollection geneTransCache)
-    {
-        for(final SvCluster cluster : getClusters())
-        {
-            Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap = Maps.newHashMap();
-            List<GeneAnnotation> matchedGenes = Lists.newArrayList();
-
-            for(final SvLinkedPair pair : cluster.getLinkedPairs())
-            {
-                if(pair.length() > SHORT_TI_LENGTH * 8)
-                    continue;
-
-                final SvBreakend lower = pair.getBreakend(true);
-                final SvBreakend upper = pair.getBreakend(false);
-
-                // for any TI falling within the same gene, check for an exon boundary match
-                if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
-                    continue;
-
-                final String lowerHomology = lower.usesStart() ?
-                        lower.getSV().getSvData().startHomologySequence() : lower.getSV().getSvData().endHomologySequence();
-
-                final String upperHomology = lower.usesStart() ?
-                        upper.getSV().getSvData().startHomologySequence() : upper.getSV().getSvData().endHomologySequence();
-
-                for(final GeneAnnotation gene1 : lower.getSV().getGenesList(lower.usesStart()))
-                {
-                    for(final GeneAnnotation gene2 : upper.getSV().getGenesList(upper.usesStart()))
-                    {
-                        if(!gene1.GeneName.equals(gene2.GeneName))
-                            continue;
-
-                        final List<PseudoGeneMatch> pseudoMatches = geneTransCache.findPseudoGeneExonMatches(
-                                gene1, lower.position(), upper.position(), lowerHomology.length(), upperHomology.length());
-
-                        if(!pseudoMatches.isEmpty())
-                        {
-                            pairMatchesMap.put(pair, pseudoMatches);
-
-                            if(!matchedGenes.stream().anyMatch(x -> x.GeneName.matches(gene1.GeneName)))
-                            {
-                                matchedGenes.add(gene1);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if(!pairMatchesMap.isEmpty())
-            {
-                // select the most common transcript and report it for visualisation
-                for (final GeneAnnotation gene : matchedGenes)
-                {
-                    // find the most frequent transcript
-                    Map<Integer, Integer> transcriptMatches = Maps.newHashMap();
-                    PseudoGeneMatch maxTrans = null;
-                    int maxTransIdCount = 0;
-
-                    for (Map.Entry<SvLinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
-                    {
-                        for (PseudoGeneMatch pseudoMatch : entry.getValue())
-                        {
-                            if(!pseudoMatch.Gene.equals(gene.GeneName))
-                                continue;
-
-                            int count = transcriptMatches.containsKey(pseudoMatch.TransId) ? transcriptMatches.get(pseudoMatch.TransId) : 0;
-                            ++count;
-
-                            transcriptMatches.put(pseudoMatch.TransId, count);
-
-                            if(count > maxTransIdCount)
-                            {
-                                maxTransIdCount = count;
-                                maxTrans = pseudoMatch;
-                            }
-                        }
-                    }
-
-                    if(maxTrans != null)
-                    {
-                        mVisWriter.addGeneExonData(cluster.id(), gene.StableId, gene.GeneName,
-                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), "PSEUDO");
-
-                        final int selectedTransId = maxTrans.TransId;
-
-                        for(Map.Entry<SvLinkedPair,List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
-                        {
-                            SvLinkedPair pair = entry.getKey();
-
-                            final PseudoGeneMatch pseudoMatch = entry.getValue().stream()
-                                    .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
-
-                            if(pseudoMatch != null)
-                            {
-                                String exonMatchData = String.format("%s;%s;%d;%d",
-                                        gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
-
-                                exonMatchData += String.format(";%d;%d;%d;%d",
-                                        pseudoMatch.StartHomologyOffset, pseudoMatch.EndHomologyOffset,
-                                        pseudoMatch.StartPositionMismatch, pseudoMatch.EndPositionMismatch);
-
-                                pair.setExonMatchData(exonMatchData);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        mPseudoGeneFinder.checkPseudoGeneAnnotations(getClusters());
     }
 
     private void createOutputFiles()

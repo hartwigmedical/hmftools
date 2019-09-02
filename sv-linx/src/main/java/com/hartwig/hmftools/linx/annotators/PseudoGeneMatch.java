@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.gene;
+package com.hartwig.hmftools.linx.annotators;
 
 public class PseudoGeneMatch
 {
@@ -12,7 +12,6 @@ public class PseudoGeneMatch
     public int StartPositionMismatch;
     public int EndPositionMismatch;
 
-
     public PseudoGeneMatch(final String gene, final int transId, final String transName, int exonRank, int exonLength)
     {
         Gene = gene;
@@ -24,6 +23,11 @@ public class PseudoGeneMatch
         EndHomologyOffset = 0;
         StartPositionMismatch = 0;
         EndPositionMismatch = 0;
+    }
+
+    public boolean isHomologyMatch(boolean isStart)
+    {
+        return isStart ? StartPositionMismatch == 0 : EndPositionMismatch == 0;
     }
 
 }

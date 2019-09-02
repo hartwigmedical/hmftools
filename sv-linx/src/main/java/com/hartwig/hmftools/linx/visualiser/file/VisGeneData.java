@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class VisGeneData
 {
     public final int ClusterId;
@@ -10,6 +14,7 @@ public class VisGeneData
     public final String Chromosome;
     public final String AnnotationType;
 
+    public final List<Integer> SpecificExons;
 
     public VisGeneData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final String annotationType)
@@ -21,5 +26,7 @@ public class VisGeneData
         TransId = transId;
         Chromosome = chromosome;
         AnnotationType = annotationType;
+
+        SpecificExons = Lists.newArrayList();
     }
 }

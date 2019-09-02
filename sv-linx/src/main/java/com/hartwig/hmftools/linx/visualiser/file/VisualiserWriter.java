@@ -5,15 +5,12 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_FIVE_PRIME_UTR;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_NON_CODING;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_THREE_PRIME_UTR;
@@ -26,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
@@ -58,8 +56,14 @@ public class VisualiserWriter
     private BufferedWriter mGeneFileWriter;
     private BufferedWriter mProteinDomainFileWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
+    private final Map<SvBreakend,Long> mShiftedPositionsMap;
 
+    public final static String GENE_TYPE_DRIVER = "DRIVER";
+    public final static String GENE_TYPE_FUSION = "FUSION";
+    public final static String GENE_TYPE_PSEUDOGENE = "PSEUDO";
+    public final static String GENE_TYPE_UNMATCHED = "UNMATCHED";
+
+    private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
 
     public VisualiserWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
     {
@@ -74,6 +78,7 @@ public class VisualiserWriter
         }
 
         mGeneTranscriptCollection = null;
+        mShiftedPositionsMap = Maps.newHashMap();
 
         mGeneData = Lists.newArrayList();
     }
@@ -126,6 +131,32 @@ public class VisualiserWriter
     {
         mSampleId = sampleId;
         mGeneData.clear();
+        mShiftedPositionsMap.clear();
+    }
+
+    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
+            final String chromosome, final String annotationType)
+    {
+        mGeneData.add(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
+    }
+
+    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
+            final String chromosome, final String annotationType, final List<Integer> exonRanks)
+    {
+        VisGeneData geneData = new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType);
+        geneData.SpecificExons.addAll(exonRanks);
+        mGeneData.add(geneData);
+    }
+
+    public void addShiftedPosition(final SvBreakend breakend, long position)
+    {
+        mShiftedPositionsMap.put(breakend, position);
+    }
+
+    private long getBreakendPosition(final SvBreakend breakend)
+    {
+        Long shiftedPosition = mShiftedPositionsMap.get(breakend);
+        return shiftedPosition != null ? shiftedPosition : breakend.position();
     }
 
     public void writeOutput(final List<SvCluster> clusters, final List<SvVarData> variants, final Map<String,List<SvCNData>> chrCnDataMap)
@@ -163,7 +194,7 @@ public class VisualiserWriter
                 svDataList.add(new VisSvDataFile(mSampleId, cluster.id(), chainId, var.id(),
                         var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
-                        beStart.position(),beEnd != null ? beEnd.position() : 0,
+                        getBreakendPosition(beStart), beEnd != null ? getBreakendPosition(beEnd) : 0,
                         beStart.orientation(), beEnd != null ? beEnd.orientation() : 0,
                         beStart.getSV().getFoldbackBreakend(beStart.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK,
                         beEnd!= null ? (beEnd.getSV().getFoldbackBreakend(beEnd.usesStart()) == null ? INFO_TYPE_NORMAL : INFO_TYPE_FOLDBACK) : "",
@@ -272,8 +303,8 @@ public class VisualiserWriter
                     final SvBreakend beStart = pair.getBreakend(true);
                     final SvBreakend beEnd = pair.getBreakend(false);
 
-                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(),
-                            beStart.chromosome(), Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy));
+                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), beStart.chromosome(),
+                            Long.toString(getBreakendPosition(beStart)), Long.toString(getBreakendPosition(beEnd)), linkPloidy));
                 }
 
                 if(!chain.isClosedLoop())
@@ -328,31 +359,26 @@ public class VisualiserWriter
         }
     }
 
-    private static final String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
+    private final String getPositionValue(final SvBreakend breakend, boolean isChainEnd)
     {
+        long position = getBreakendPosition(breakend);
+
         if(breakend.orientation() == 1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
-            return isChainEnd ? DIRECTION_TELOMERE : Long.toString(breakend.position());
+            return isChainEnd ? DIRECTION_TELOMERE : Long.toString(position);
         }
         else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_P))
         {
-            return isChainEnd ? Long.toString(breakend.position()) : DIRECTION_CENTROMERE;
+            return isChainEnd ? Long.toString(position) : DIRECTION_CENTROMERE;
         }
         else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_Q))
         {
-            return isChainEnd ? Long.toString(breakend.position()) : DIRECTION_TELOMERE;
+            return isChainEnd ? Long.toString(position) : DIRECTION_TELOMERE;
         }
         else
         {
-            return isChainEnd ? DIRECTION_CENTROMERE : Long.toString(breakend.position());
+            return isChainEnd ? DIRECTION_CENTROMERE : Long.toString(position);
         }
-    }
-
-
-    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final String annotationType)
-    {
-        mGeneData.add(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
     }
 
     private void writeGeneData()
@@ -375,8 +401,11 @@ public class VisualiserWriter
 
             for (final ExonData exonData : transData.exons())
             {
+                final String annotation = geneData.SpecificExons.isEmpty() || geneData.SpecificExons.contains(exonData.ExonRank) ?
+                        geneData.AnnotationType : GENE_TYPE_UNMATCHED;
+
                 geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                        geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+                        geneData.Chromosome, annotation, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
             }
 
             int transId = geneData.TransId > 0 ? geneData.TransId : transData.TransId;

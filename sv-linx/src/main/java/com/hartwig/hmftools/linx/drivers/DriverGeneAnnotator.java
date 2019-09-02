@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_A
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_DRIVER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -991,7 +992,7 @@ public class DriverGeneAnnotator
                         .build());
 
                 mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
-                        "", 0, dgData.GeneData.Chromosome, "DRIVER");
+                        "", 0, dgData.GeneData.Chromosome, GENE_TYPE_DRIVER);
             }
         }
 

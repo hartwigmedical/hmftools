@@ -38,7 +38,7 @@ public class LineElementAnnotator {
     public static String POLY_A_MOTIF = "AAAAAAAAAAA";
     public static String POLY_T_MOTIF = "TTTTTTTTTTT";
 
-    private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
+    private static final Logger LOGGER = LogManager.getLogger(LineElementAnnotator.class);
 
     public LineElementAnnotator()
     {
