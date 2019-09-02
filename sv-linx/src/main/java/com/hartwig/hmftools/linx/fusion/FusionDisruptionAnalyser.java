@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.USE_CHAIN_LOGIC;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
@@ -340,6 +341,9 @@ public class FusionDisruptionAnalyser
         {
             for(final GeneFusion fusion : uniqueFusions)
             {
+                if(fusion.getKnownType() == REPORTABLE_TYPE_NONE)
+                    continue;
+
                 LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
                         fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
                         fusion.getKnownType(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
@@ -475,7 +479,7 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // now all fusions have been gathered from this chain, set the reportable one (if any)
-            LOGGER.debug("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
+            LOGGER.trace("cluster({}) found {} chained fusions", cluster.id(), chainFusions.size());
 
             // consider fusions from amongst unique gene-pairings
             List<String> genePairings = Lists.newArrayList();

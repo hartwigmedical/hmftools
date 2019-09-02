@@ -338,7 +338,7 @@ public class ChainLinkAllocator
 
                 if(iterations > bothMultiPairs.size() * 3)
                 {
-                    LOGGER.warn("cluster({}) assembly multi-connection breakends missed", mClusterId);
+                    LOGGER.debug("cluster({}) assembly multi-connection breakends missed", mClusterId);
                     break;
                 }
 

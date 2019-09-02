@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
+import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 
 import static org.junit.Assert.assertEquals;
@@ -16,6 +17,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -205,6 +207,21 @@ public class TranslocationPairTest
 
         assertTrue(!cluster.isResolved());
         assertTrue(cluster.getResolvedType() == UNBAL_TRANS_TI);
+
+        // BNDs not forming any TIs and not a balanced translation aren't classified
+        tester.clearClustersAndSVs();
+
+        var1 = createBnd(tester.nextVarId(), "1", 1000, -1, "2", 1000, -1);
+        var2 = createBnd(tester.nextVarId(), "2", 5000, -1, "3", 1000, 1);
+
+        tester.addAndCluster(var1, var2);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertTrue(!cluster.isResolved());
+        assertTrue(cluster.getResolvedType() == PAIR_OTHER);
+
     }
 
 }

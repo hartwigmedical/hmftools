@@ -139,8 +139,14 @@ public class DisruptionFinder
                 if(transEnd == null)
                     continue;
 
-                if(transStart.ExonUpstream == transEnd.ExonUpstream)
+                if(!transEnd.isExonic() && !transStart.isExonic() && transStart.ExonUpstream == transEnd.ExonUpstream)
                 {
+                    if(transEnd.isCanonical() && matchesDisruptionGene(transEnd.gene()))
+                    {
+                        LOGGER.debug("SV({}) gene({}:{}) intronic section({}-{}) marked non-disruptive",
+                                var.id(), transStart.geneName(), transStart.StableId, transStart.ExonUpstream, transStart.ExonDownstream);
+                    }
+
                     transStart.setIsDisruptive(false);
                     transEnd.setIsDisruptive(false);
                 }
@@ -392,7 +398,7 @@ public class DisruptionFinder
             if(trans2 == null)
                 continue;
 
-            if(trans1.ExonUpstream == trans2.ExonUpstream && trans1.isIntronic() && trans2.isIntronic())
+            if(trans1.ExonUpstream == trans2.ExonUpstream && !trans1.isExonic() && !trans2.isExonic())
             {
                 foundMatchingTrans = true;
 

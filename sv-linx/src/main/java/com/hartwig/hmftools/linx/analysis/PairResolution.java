@@ -380,7 +380,7 @@ public class PairResolution
 
         if(arm1Be1 == null || arm1Be2 == null || arm2Be1 == null || arm2Be2 == null)
         {
-            if(longestTiPair != null)
+            if(longestTiPair != null && cluster.getChains().size() == 1)
             {
                 cluster.setResolved(false, UNBAL_TRANS_TI);
             }
