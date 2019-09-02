@@ -83,7 +83,7 @@ For example in the following TMPRSS2-ERG fusion, exons 3, 4 & 5 are faded and th
 these exons are skipped in order to make a viable in frame protein, despite the break end occuring after the 5th exon:
 
 <p align="center">
-    <img src="src/main/resources/readme/fusion1.png" width="600" alt="Fusion">
+    <img src="src/main/resources/readme/fusion1.png" width="700" alt="Fusion">
 </p>
 
 
@@ -92,21 +92,21 @@ Since the 1st exon of a gene has no splice acceptor, LINX predicts the 1st exon 
 connecting to the start of exon 2 which also begins in the 5’UTR region of PLAG1:
 
 <p align="center">
-    <img src="src/main/resources/readme/fusion2.png" width="600" alt="Fusion">
+    <img src="src/main/resources/readme/fusion2.png" width="700" alt="Fusion">
 </p>
 
 Even when no exons are skipped, a protein domain may be partially disrupted if it extends to an exon the other side of the breakpoint. 
 In the below example, you can see the SH2 protein domain extends before exon 16 and is faded and disrupted:
 
 <p align="center">
-    <img src="src/main/resources/readme/fusion3.png" width="600" alt="Fusion">
+    <img src="src/main/resources/readme/fusion3.png" width="700" alt="Fusion">
 </p>
 
 Whilst fusions are normally intronic, rare exonic to exonic fusions do occur. The below figure shows a CIC-FOX04 example where the 2 exons
 are directly fused:
 
 <p align="center">
-    <img src="src/main/resources/readme/fusion4.png" width="600" alt="Fusion">
+    <img src="src/main/resources/readme/fusion4.png" width="700" alt="Fusion">
 </p>
 
 
