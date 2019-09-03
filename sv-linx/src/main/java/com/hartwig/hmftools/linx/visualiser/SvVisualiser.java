@@ -262,14 +262,14 @@ public class SvVisualiser implements AutoCloseable
         if (!config.debug())
         {
             double rLabelSize = 1.2 * circosData.labelSize();
-            new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
-
             final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
             if (!fusionDataWriter.finalExons().isEmpty())
             {
                 fusionDataWriter.write(sample, config.outputConfPath());
-                return new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
+                new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
             }
+
+            return new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
         }
 
         return circosResult;

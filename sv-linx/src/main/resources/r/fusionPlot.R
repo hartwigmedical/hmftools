@@ -142,10 +142,10 @@ circosHeight = image_info(imgCircos)$height
 
 if (is.na(pLegend)) {
   totalHeight = (circosHeight + fusionHeight) 
-  pCombined = plot_grid(pFusions, pCircos, ncol = 1, rel_heights = c(fusionHeight, circosHeight))
+  pCombined = plot_grid(pCircos, pFusions, ncol = 1, rel_heights = c(circosHeight, fusionHeight))
 } else {
   totalHeight = (circosHeight + fusionLegendHeight + fusionHeight) 
-  pCombined = plot_grid(pFusions, pLegend, pCircos, ncol = 1, rel_heights = c(fusionHeight, fusionLegendHeight, circosHeight))
+  pCombined = plot_grid(pCircos, pFusions, pLegend, ncol = 1, rel_heights = c(circosHeight, fusionHeight, fusionLegendHeight))
 }
 ggsave(circosPicturePath, pCombined, width = circosWidth / 300, height =  totalHeight/ 300, units = "in", dpi = 300, pointsize = 300)
 
