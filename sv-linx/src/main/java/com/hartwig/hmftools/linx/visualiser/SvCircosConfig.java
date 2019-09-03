@@ -48,8 +48,9 @@ public interface SvCircosConfig
     String MAX_LINE_SIZE = "max_line_size";
     String GLYPH_SIZE = "glyph_size";
 
-    // Other
+    // Interpolation
     String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
+    String INTERPOLATE_EXON_POSITIONS = "interpolate_exon_positions";
 
     // Debug
     String EXACT_POSITION = "exact_position";
@@ -122,6 +123,7 @@ public interface SvCircosConfig
         options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
 
         options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
+        options.addOption(INTERPOLATE_EXON_POSITIONS, false, "Interpolate exon positions rather than adjust scale");
 
         options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
         options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
@@ -135,12 +137,10 @@ public interface SvCircosConfig
 
     int fusionHeight();
 
-    // ----------------------- Chromosome Parameters
     int chromosomeRangeHeight();
 
     int chromosomeRangeColumns();
 
-    // ----------------------- Label Size Parameters
     int minLabelSize();
 
     int maxLabelSize();
@@ -151,14 +151,12 @@ public interface SvCircosConfig
 
     int maxNumberOfDistanceLabels();
 
-    // ----------------------- Relative Size Parameters
     double geneRelativeSize();
 
     double segmentRelativeSize();
 
     double copyNumberRelativeSize();
 
-    // ----------------------- Other
     int minLineSize();
 
     int maxLineSize();
@@ -173,11 +171,13 @@ public interface SvCircosConfig
 
     double innerRadius();
 
+    double gapRadius();
+
+    double exonRankRadius();
+
     boolean interpolateCopyNumberPositions();
 
-    double gapSize();
-
-    double exonRankSize();
+    boolean interpolateExonPositions();
 
     default long labelSize(long count)
     {
@@ -220,8 +220,8 @@ public interface SvCircosConfig
 
                 .outerRadius(radialParameter(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
                 .innerRadius(radialParameter(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
-                .gapSize(radialParameter(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
-                .exonRankSize(radialParameter(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
+                .gapRadius(radialParameter(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
+                .exonRankRadius(radialParameter(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
 
                 .geneRelativeSize(relativeParameter(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
                 .segmentRelativeSize(relativeParameter(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
@@ -240,13 +240,16 @@ public interface SvCircosConfig
                 .chromosomeRangeColumns(defaultIntValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS))
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
 
-                .exactPosition(cmd.hasOption(EXACT_POSITION))
-                .showSvId(cmd.hasOption(SHOW_SV_ID))
-                .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
-                .glyphSize(defaultIntValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE))
-
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
+                .glyphSize(defaultIntValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE))
+
+                .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
+                .interpolateExonPositions(cmd.hasOption(INTERPOLATE_EXON_POSITIONS))
+
+                .exactPosition(cmd.hasOption(EXACT_POSITION))
+                .showSvId(cmd.hasOption(SHOW_SV_ID))
+
                 .build();
     }
 
@@ -266,7 +269,7 @@ public interface SvCircosConfig
             throws ParseException
     {
         double value = defaultValue(cmd, opt, defaultValue);
-        if (!Doubles.greaterOrEqual(value, 0) || Doubles.lessOrEqual(value, 1))
+        if (Doubles.lessThan(value, 0) || Doubles.greaterThan(value, 1))
         {
             throw new ParseException("Radial parameter " + opt + " should be between 0 and 1");
         }
