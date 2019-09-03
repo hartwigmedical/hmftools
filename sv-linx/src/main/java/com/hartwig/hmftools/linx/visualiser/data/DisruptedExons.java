@@ -57,6 +57,7 @@ public class DisruptedExons
     {
         return fusion.strandDown() < 0 ?
                 ImmutableGene.builder()
+                        .type(ExonType.DISRUPTED)
                         .chromosome(firstExcludedDownExon.chromosome())
                         .end(firstExcludedDownExon.end())
                         .start(Math.min(fusion.positionDown(), firstIncludedDoneExon.end()))
@@ -66,6 +67,7 @@ public class DisruptedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
+                        .type(ExonType.DISRUPTED)
                         .chromosome(firstExcludedDownExon.chromosome())
                         .start(firstExcludedDownExon.start())
                         .end(Math.max(fusion.positionDown(), firstIncludedDoneExon.start()))
@@ -81,7 +83,9 @@ public class DisruptedExons
             @NotNull final Exon finalExcludedUpExon)
     {
         return fusion.strandUp() < 0 ?
-                ImmutableGene.builder().chromosome(finalExcludedUpExon.chromosome())
+                ImmutableGene.builder()
+                        .type(ExonType.DISRUPTED)
+                        .chromosome(finalExcludedUpExon.chromosome())
                         .start(finalExcludedUpExon.start())
                         .end(Math.max(fusion.positionUp(), finalIncludedExon.start()))
                         .strand(fusion.strandDown())
@@ -90,6 +94,7 @@ public class DisruptedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
+                        .type(ExonType.DISRUPTED)
                         .chromosome(finalExcludedUpExon.chromosome())
                         .start(Math.min(fusion.positionUp(), finalIncludedExon.end()))
                         .end(finalExcludedUpExon.end())

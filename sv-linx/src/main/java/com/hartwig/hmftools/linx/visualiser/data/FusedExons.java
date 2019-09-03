@@ -152,7 +152,9 @@ public class FusedExons
     private static Gene upGeneRegion(@NotNull final Fusion fusion, @NotNull final Exon firstUpExon)
     {
         return fusion.strandUp() < 0 ?
-                ImmutableGene.builder().chromosome(firstUpExon.chromosome())
+                ImmutableGene.builder()
+                        .type(firstUpExon.type())
+                        .chromosome(firstUpExon.chromosome())
                         .start(fusion.positionUp())
                         .end(firstUpExon.end())
                         .strand(fusion.strandUp())
@@ -161,6 +163,7 @@ public class FusedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
+                        .type(firstUpExon.type())
                         .chromosome(firstUpExon.chromosome())
                         .start(firstUpExon.start())
                         .end(fusion.positionUp())
@@ -176,6 +179,7 @@ public class FusedExons
     {
         return fusion.strandDown() < 0 ?
                 ImmutableGene.builder()
+                        .type(finalDownGene.type())
                         .chromosome(finalDownGene.chromosome())
                         .start(finalDownGene.start())
                         .end(fusion.positionDown())
@@ -185,6 +189,7 @@ public class FusedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
+                        .type(finalDownGene.type())
                         .chromosome(finalDownGene.chromosome())
                         .start(fusion.positionDown())
                         .end(finalDownGene.end())

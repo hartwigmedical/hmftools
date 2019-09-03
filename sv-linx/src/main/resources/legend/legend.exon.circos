@@ -5,19 +5,25 @@ hs2	140	150	1	fill_color=(107,214,148)
 hs2	170	190	1	fill_color=(107,214,148)
 
 
+hs7	160	170	1	fill_color=driver_gene,r0=0.95r,r1=0.99r
+hs7	180	190	1	fill_color=driver_gene,r0=0.95r,r1=0.99r
+hs7	160	170	1	fill_color=fused_5_gene,r0=0.90r,r1=0.94r
+hs7	180	190	1	fill_color=fused_5_gene,r0=0.90r,r1=0.94r
+hs7	160	170	1	fill_color=fused_5_gene,r0=0.85r,r1=0.89r
+hs7	180	190	1	fill_color=fused_5_gene,r0=0.85r,r1=0.89r
+hs7	160	170	1	fill_color=fused_3_gene,r0=0.80r,r1=0.84r
+hs7	180	190	1	fill_color=fused_3_gene,r0=0.80r,r1=0.84r
+hs7	160	170	1	fill_color=fused_3_gene,r0=0.75r,r1=0.79r
+hs7	180	190	1	fill_color=fused_3_gene,r0=0.75r,r1=0.79r
+hs7	160	170	1	fill_color=pseudo_gene,r0=0.70r,r1=0.74r
+hs7	180	190	1	fill_color=pseudo_gene,r0=0.70r,r1=0.74r
+hs7	160	170	1	fill_color=pseudo_gene,r0=0.65r,r1=0.69r
+hs7	180	190	1	fill_color=pseudo_gene,r0=0.65r,r1=0.69r
 
-hs7	160	170	1	fill_color=(107,214,148),r0=0.90r,r1=0.94r
-hs7	180	190	1	fill_color=(107,214,148),r0=0.90r,r1=0.94r
-hs7	160	170	1	fill_color=(107,174,214),r0=0.85r,r1=0.89r
-hs7	180	190	1	fill_color=(107,174,214),r0=0.85r,r1=0.89r
-hs7	160	170	1	fill_color=(107,174,214),r0=0.80r,r1=0.84r
-hs7	180	190	1	fill_color=(107,174,214),r0=0.80r,r1=0.84r
-hs7	160	170	1	fill_color=(214,144,107),r0=0.75r,r1=0.79r
-hs7	180	190	1	fill_color=(214,144,107),r0=0.75r,r1=0.79r
-hs7	160	170	1	fill_color=(214,144,107),r0=0.70r,r1=0.74r
-hs7	180	190	1	fill_color=(214,144,107),r0=0.70r,r1=0.74r
-hs7	160	190	1	fill_color=(255,255,255,0.6),r0=0.80r,r1=0.84r
-hs7	160	190	1	fill_color=(255,255,255,0.6),r0=0.70r,r1=0.74r
+
+hs7	160	190	1	fill_color=disrupted_gene,r0=0.85r,r1=0.89r
+hs7	160	190	1	fill_color=disrupted_gene,r0=0.75r,r1=0.79r
+hs7	160	190	1	fill_color=disrupted_gene,r0=0.65r,r1=0.69r
 
 
 hs8	160	190	2	fill_color=copy_gain,r0=0.90r,r1=0.94r

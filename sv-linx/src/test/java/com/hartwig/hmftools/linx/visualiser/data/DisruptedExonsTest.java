@@ -110,6 +110,7 @@ public class DisruptedExonsTest
     static Exon create(String chr, long start, long end, int rank)
     {
         return ImmutableExon.builder()
+                .type(ExonType.DISRUPTED)
                 .clusterId(1)
                 .chromosome(chr)
                 .transcript(chr)
