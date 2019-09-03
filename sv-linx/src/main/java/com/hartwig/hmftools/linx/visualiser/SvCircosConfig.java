@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -43,8 +45,6 @@ public interface SvCircosConfig
     String MAX_LINE_SIZE = "max_line_size";
     String GLYPH_SIZE = "glyph_size";
     String MAX_GENE_CHARACTERS = "max_gene_characters";
-
-
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -183,6 +183,16 @@ public interface SvCircosConfig
     @NotNull
     static SvCircosConfig createConfig(@NotNull final CommandLine cmd) throws ParseException
     {
+        double gapSize = defaultValue(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS);
+        if (Doubles.lessThan(gapSize, 0) || Doubles.greaterThan(gapSize, 1)) {
+            throw new ParseException("Parameter " + GAP_RADIUS + " should be between 0 and 1");
+        }
+
+        double exonRankSize = defaultValue(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS);
+        if (Doubles.lessThan(exonRankSize, 0) || Doubles.greaterThan(gapSize, 1)) {
+            throw new ParseException("Parameter " + EXON_RANK_RADIUS + " should be between 0 and 1");
+        }
+
         int minLabelSize = defaultIntValue(cmd, MIN_LABEL_SIZE, DEFAULT_MIN_LABEL_SIZE);
         if (minLabelSize <= 0)
         {
@@ -229,8 +239,8 @@ public interface SvCircosConfig
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
                 .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
-                .gapSize(defaultValue(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
-                .exonRankSize(defaultValue(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
+                .gapSize(gapSize)
+                .exonRankSize(exonRankSize)
                 .build();
     }
 

@@ -130,15 +130,32 @@ LINX visualisation requires CIRCOS to be installed as well as a number of R depe
 # Arguments
 //TODO: max_distance_labels
 
+## Inner and Outer radius
+
+
 ## Relative Track Sizes
 
-The relative sizes of the gene, segment and copy number tracks are controller with the following parameters:
+It is possible to adjust the relative sizes of the gene, segment (derivative chromosome), and copy number (and major/minor allele) tracks 
+in the CIRCOS panel with the following parameters:
 
 Argument | Default | Description 
 ---|---|---
 gene_relative_size| 0.3 | Size of gene track relative to segments and copy number alterations
-segment_relative_size | 1 | Size of segment track relative to copy number alterations and genes
-cna_relative_size | 2 | Size of gene copy number alteration relative to genes and segments
+segment_relative_size | 1 | Size of segment (derivative chromosome) track relative to copy number alterations and genes
+cna_relative_size | 2 | Size of gene copy number alterations (including major/minor allele) relative to genes and segments
+
+The gene track will not be displayed if `gene_relative` is 0 or if there are no genes to be displayed on the visualisation.
+
+## Gaps Between Tracks
+
+The size of the gaps between each track on the CIRCOS panel can be controlled with the `gap_size` parameter. Additionally, the 
+`exon_rank_size` controls the spacing allowed for the exon rank labels. Both parameters should be between 0 and 1 and are relative to the
+size of the CIRCOS panel radius. 
+
+Argument | Default | Description 
+---|---|---
+gap_size| 0.025 | Size of gap between tracks relative to radius
+exon_rank_size | 0.025 | Size of gap for exon ranks relative to radius
 
 
 ## Font Size
