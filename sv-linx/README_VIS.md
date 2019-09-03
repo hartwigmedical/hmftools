@@ -177,8 +177,11 @@ fusion_legend_height_per_row| 35 | Height of each row in protein domain legend
 
 ## Default
 
-The default parameters are configured to produce an image that is suitable for a single page. 
+The default parameters are configured to produce an image that is suitable for a single page as shown in this SS18-SSX1 fusion example:
 
+<p align="center">
+    <img src="src/main/resources/readme/default.png" width="800" alt="default">
+</p>
 
 ## Smaller
 
