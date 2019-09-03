@@ -204,10 +204,15 @@ Impact of the `interpolate_cna_positions` flag is illustrated in the [line event
 
 ## Chromosome Range Panel
 
+Chromosomes on the chromosome range panel are ordered and then scaled for size. As a single chromosome cannot be less than 10% of the row 
+(otherwise it becomes un-viewable) their may be fewer columns and more rows than might be expected for a given `chr_range_columns`. 
+
 Argument | Default | Description 
 ---|---|---
-chr_range_height| 150 | Chromosome range row height in pixels
+chr_range_height| 150 | Chromosome range height in pixels per row
 chr_range_columns| 6 | Maximum chromosomes per row
+
+Note the CIRCOS panel is 3000 pixels in heigh and width.
 
 ## Fusion Panel
 
