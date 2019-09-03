@@ -177,14 +177,22 @@ fusion_legend_height_per_row| 35 | Height of each row in protein domain legend
 
 ## Default
 
-The default parameters are configured to produce an image that is suitable to be on a single page. 
+The default parameters are configured to produce an image that is suitable for a single page. 
 
 
 ## Smaller
 
-The following figures were constructed with the parameters:
-```
+In order to make the image clear at smaller sizes, we have increased the size of the font and the thickness of the lines. To make room, 
+for the larger font, we have reduced the relative size of the segment track and increased the space allowed for the exons as shown:
 
+```
+-fusion_legend_height_per_row 70
+-segment_relative_size 0.5
+-outer_radius 0.85
+-min_line_size 4 -max_line_size 18
+-min_label_size 45 -max_label_size 50
+-glyph_size 25
+-exon_rank_size 0.04
 
 ```
 
@@ -195,11 +203,16 @@ The following figures were constructed with the parameters:
     <img src="src/main/resources/readme/small4.png" width="400" alt="Small">
 </p>
 
+Starting at the top-left corner and going clockwise, the figures shows 
+**a)** a double minute with a significantly amplified AR gene, 
+**b)** a chromothripsis event,
+**c)** a pseudo-gene insertion, and
+**d)** a bi-allelic disruption of TP53
 
 ## TMPRESS2-ERG
 
-To accommodate the extra room required for the TMPRESS2 gene, this configuration increases the relative size of the gene track, decreases
-the relative size of the segment track and increases the max number of characters in a gene before scaling: 
+To accommodate the extra room required for the TMPRESS2 gene, this TMPRESS2-EFG fusion configuration increases the relative size of the gene 
+track, decreases the relative size of the segment track and increases the max number of characters in a gene before scaling: 
 
 ```
 -gene_relative_size 0.6 -segment_relative_size 0.7 -cna_relative_size 2
