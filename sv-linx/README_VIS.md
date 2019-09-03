@@ -165,9 +165,10 @@ Argument | Default | Description
 ---|---|---
 min_label_size| 35 | Minimum size of labels in pixels
 max_label_size | 40 | Maximum size of labels in pixels
+max_gene_characters | 5 | Maximum allowed gene length before applying scaling them
 max_distance_labels | 100 | Maximum number of distance labels before removing them
 max_position_labels | 60 | Maximum number of position labels before increasing distance between labels
-max_gene_characters | 5 | Maximum allowed gene length before applying scaling them
+exact_position | NA | Display exact positions at all break ends
 
 The label size scales linearly from the min to the max label size as an inverse function of the number of distance labels to be plotted. 
 If the number of distance labels exceeds `max_distance_labels`, no distance labels will be shown and all labels will be sized with `min_label_size`.
@@ -177,7 +178,7 @@ will be scaled down to prevent the gene labels from going outside the gene track
 the `gene_relative_size` parameter.
 
 By default, position labels will be shown every 100k bases. However, if the number of labels exceeds `max_position_labels` then this will be reduced
-to every 1M or 10M bases.
+to every 1M or 10M bases. This setting is ignored if the `exact_position` flag in included and every break end to the base will be displayed.
 
 ## Line Size
 
