@@ -204,10 +204,25 @@ for the larger font, we have reduced the relative size of the segment track and 
 </p>
 
 Starting at the top-left corner and going clockwise, the figures shows 
-**a)** a double minute with a significantly amplified AR gene, 
-**b)** a chromothripsis event,
-**c)** a pseudo-gene insertion, and
-**d)** a bi-allelic disruption of TP53
+a) a double minute with a significantly amplified AR gene, 
+b) a chromothripsis event,
+c) a pseudo-gene insertion, and
+d) a bi-allelic disruption of TP53
+
+## Line Insertions
+
+The following examples have similar configurations to the smaller images above but the second has the additional flag set:
+
+```
+-interpolate_cna_positions
+```
+<p align="center">
+    <img src="src/main/resources/readme/line1.png" width="400" alt="Line">
+    <img src="src/main/resources/readme/line2.png" width="400" alt="Line">
+</p>
+
+In the second picture, we have not scaled the copy number positions to the log scale but have interpolated them instead. This frees up
+more room for the area of interest on chromosome 14.
 
 ## TMPRESS2-ERG
 
