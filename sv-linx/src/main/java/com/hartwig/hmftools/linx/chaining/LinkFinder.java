@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -56,6 +58,8 @@ public class LinkFinder
         boolean hasMultiBreakendLinks = false;
         final Map<String,List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();
 
+        List<SvBreakend> multiConnectionBreakends = Lists.newArrayList();
+
         for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
@@ -100,8 +104,17 @@ public class LinkFinder
                     // eg the replicated breakend scenario in COLO829's BND from chr 3-6
                     // but allow this if its ploidy supports this
 
-                    if(lowerBreakend.isAssembledLink() || upperBreakend.isAssembledLink())
+                    if(lowerBreakend.isAssembledLink() && !multiConnectionBreakends.contains(lowerBreakend))
+                    {
+                        multiConnectionBreakends.add(lowerBreakend);
                         hasMultiBreakendLinks = true;
+                    }
+
+                    if(upperBreakend.isAssembledLink() && !multiConnectionBreakends.contains(upperBreakend))
+                    {
+                        multiConnectionBreakends.add(upperBreakend);
+                        hasMultiBreakendLinks = true;
+                    }
 
                     // form a new TI from these 2 BEs
                     SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1Start, v2Start);
@@ -121,9 +134,97 @@ public class LinkFinder
         }
 
         if(hasMultiBreakendLinks)
-            cluster.setRequiresReplication();
+        {
+            hasMultiBreakendLinks = analyseMultiConnectionBreakends(cluster, multiConnectionBreakends, linkedPairs);
+
+            if(hasMultiBreakendLinks)
+                cluster.setRequiresReplication();
+        }
 
         return linkedPairs;
+    }
+
+    private static boolean analyseMultiConnectionBreakends(
+            final SvCluster cluster, final List<SvBreakend> multiConnectionBreakends, List<SvLinkedPair> linkedPairs)
+    {
+        // check for the scenario where one link A-B is made but also A-C and B-C, where B is a short simple SV
+        boolean reassessMultiConnection = false;
+
+        for(final SvBreakend breakend : multiConnectionBreakends)
+        {
+            final List<SvLinkedPair> links = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
+
+            if(links.size() < 2)
+                continue;
+
+            List<SvLinkedPair> spanningLinks = Lists.newArrayList();
+
+            for(final SvLinkedPair pair : links)
+            {
+                if(spanningLinks.contains(pair))
+                    continue;
+
+                final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+                final SvVarData otherSv = otherBreakend.getSV();
+
+                if(otherSv.type() != DEL && otherSv.type() != DUP)
+                    continue;
+
+                // now look for a common breakend partner
+                final List<SvLinkedPair> otherLinks = otherSv.getAssembledLinkedPairs(!otherBreakend.usesStart());
+
+                if(otherLinks.isEmpty())
+                    continue;
+
+                for(final SvLinkedPair otherPair : links)
+                {
+                    if(otherPair == pair)
+                        continue;
+
+                    final SvBreakend otherBreakend1 = otherPair.getOtherBreakend(breakend);
+
+                    if(otherLinks.stream().anyMatch(x -> x.hasBreakend(otherBreakend1)))
+                    {
+                        LOGGER.debug("cluster({}) breakends({} & {} type={}) both assemble to breakend({}), removing outer link({})",
+                                cluster.id(), breakend, otherBreakend, otherSv.type(), otherBreakend1, otherPair);
+
+                        spanningLinks.add(otherPair);
+                        reassessMultiConnection = true;
+                    }
+                }
+            }
+
+            for(SvLinkedPair pair : spanningLinks)
+            {
+                breakend.getSV().getLinkedPairs(breakend.usesStart()).remove(pair);
+                final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+                otherBreakend.getSV().getLinkedPairs(otherBreakend.usesStart()).remove(pair);
+                linkedPairs.remove(pair);
+            }
+        }
+
+        boolean hasMultiConnection = true;
+
+        if(reassessMultiConnection)
+        {
+            hasMultiConnection = false;
+
+            for(final SvLinkedPair pair : linkedPairs)
+            {
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    final SvBreakend breakend = pair.getBreakend(se);
+
+                    if(linkedPairs.stream().filter(x -> x != pair).anyMatch(x -> x.hasBreakend(breakend)))
+                    {
+                        hasMultiConnection = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return hasMultiConnection;
     }
 
     public static boolean haveLinkedAssemblies(final SvVarData var1, final SvVarData var2, boolean v1Start, boolean v2Start)

@@ -938,7 +938,6 @@ public class SvCluster
 
     public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (";")); }
 
-
     public void setPloidyReplication(int chainingSvLimit)
     {
         if(!hasVariedPloidy() && !requiresReplication())

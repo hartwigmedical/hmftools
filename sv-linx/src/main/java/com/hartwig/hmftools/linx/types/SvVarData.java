@@ -292,7 +292,6 @@ public class SvVarData
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
     public final String getLineElement(boolean useStart) { return mLineElement[seIndex(useStart)]; }
 
-
     public final List<SvLinkedPair> getLinkedPairs(boolean isStart)
     {
         return mTiLinks.get(seIndex(isStart));
@@ -316,6 +315,11 @@ public class SvVarData
         int index = 0;
         while(index < links.size())
         {
+            final SvLinkedPair otherPair = links.get(index);
+
+            if(otherPair.matches(link))
+                return;
+
             if(link.length() < links.get(index).length())
                 break;
 
