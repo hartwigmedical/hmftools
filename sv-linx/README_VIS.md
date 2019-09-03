@@ -212,7 +212,7 @@ b) a chromothripsis event,
 c) a pseudo-gene insertion, and
 d) a bi-allelic disruption of TP53
 
-## Line Insertions
+## Line Events
 
 The following examples have similar configurations to the smaller images above but the second has an additional flag:
 
