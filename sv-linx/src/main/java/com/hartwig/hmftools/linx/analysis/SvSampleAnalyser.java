@@ -429,7 +429,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost,AFStart,AFEnd");
 
                 // SV table info
-                mSvFileWriter.write(",Homology,InexactHOStart,InexactHOEnd,InsertSeq,Imprecise,QualScore");
+                mSvFileWriter.write(",HomologyStart,HomologyEnd,InsertSeq,Imprecise,QualScore");
                 mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
                 mSvFileWriter.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
             }
@@ -578,9 +578,8 @@ public class SvSampleAnalyser {
 
                         final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
-                        mSvFileWriter.write(String.format(",%s,%d,%d,%s,%s,%.0f,%s,%s,%s",
-                                dbData.insertSequence().isEmpty() && var.type() != INS ? dbData.startHomologySequence() : "",
-                                dbData.inexactHomologyOffsetStart(), dbData.inexactHomologyOffsetEnd(),
+                        mSvFileWriter.write(String.format(",%s,%s,%s,%s,%.0f,%s,%s,%s",
+                                dbData.startHomologySequence(), dbData.endHomologySequence(),
                                 dbData.insertSequence(), dbData.imprecise(), dbData.qualityScore(),
                                 dbData.startRefContext(), dbData.endRefContext(), insSeqAlignments));
 
