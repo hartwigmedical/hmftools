@@ -16,7 +16,8 @@ public class Genes
 {
 
     @NotNull
-    public static List<Gene> uniqueGenes(@NotNull final List<Exon> exons) {
+    public static List<Gene> uniqueGenes(@NotNull final List<Exon> exons)
+    {
         return unique(genes(exons));
     }
 
@@ -45,7 +46,11 @@ public class Genes
     {
         final List<Gene> result = Lists.newArrayList();
 
-        final Set<String> transcripts = exons.stream().map(Exon::transcript).collect(Collectors.toSet());
+        final Set<String> transcripts = exons.stream()
+                .filter(x -> !x.type().equals(ExonType.DISRUPTED))
+                .map(Exon::transcript)
+                .collect(Collectors.toSet());
+
         for (final String transcript : transcripts)
         {
             final List<Exon> transcriptExons = exons.stream().filter(x -> x.transcript().equals(transcript)).sorted().collect(toList());
@@ -56,14 +61,14 @@ public class Genes
 
             final Gene gene = ImmutableGene.builder()
                     .from(first)
-                    .transcript(transcript)
+                    .type(first.type())
+                    .transcript(first.transcript())
                     .name(first.gene())
                     .end(last.end())
                     .namePosition(namePosition)
                     .strand(first.rank() <= last.rank() ? 1 : -1)
                     .build();
             result.add(gene);
-
         }
 
         return result;

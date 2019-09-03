@@ -1,17 +1,12 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.region.Strand;
@@ -28,7 +23,9 @@ public class Exons
     public static List<Exon> geneExons(@NotNull final List<Gene> gene, @NotNull final List<Exon> exons)
     {
         final Set<String> transcripts = gene.stream().map(Gene::transcript).collect(Collectors.toSet());
-        return exons.stream().filter(x -> transcripts.contains(x.transcript())).collect(Collectors.toList());
+        return exons.stream()
+                .filter(x -> transcripts.contains(x.transcript()) && !x.type().equals(ExonType.DISRUPTED))
+                .collect(Collectors.toList());
     }
 
     @NotNull
@@ -60,6 +57,7 @@ public class Exons
             int rank = transcript.strand().equals(Strand.FORWARD) ? i + 1 : transcript.exome().size() - i;
 
             Exon exon = ImmutableExon.builder()
+                    .type(ExonType.DRIVER)
                     .sampleId(sampleId)
                     .clusterId(clusterId)
                     .gene(transcript.gene())
@@ -76,24 +74,6 @@ public class Exons
         return result;
     }
 
-    public static Collection<GenomeRegion> geneSpanPerChromosome(@NotNull final List<Exon> exons)
-    {
-        final Map<String, GenomeRegion> resultMap = Maps.newHashMap();
-        for (Exon exon : exons)
-        {
-            final String contig = exon.chromosome();
-
-            final GenomeRegion currentGene = resultMap.computeIfAbsent(contig, x -> exon);
-            final GenomeRegion newGene =
-                    GenomeRegions.create(contig, Math.min(currentGene.start(), exon.start()), Math.max(currentGene.end(), exon
-                            .end()));
-            resultMap.put(contig, newGene);
-
-        }
-
-        return resultMap.values();
-    }
-
     @NotNull
     public static List<Exon> readExons(@NotNull final String fileName) throws IOException
     {
@@ -104,6 +84,7 @@ public class Exons
     private static Exon fromVis(@NotNull final VisGeneExonFile file)
     {
         return ImmutableExon.builder()
+                .type(ExonType.fromString(file.AnnotationType))
                 .sampleId(file.SampleId)
                 .clusterId(file.ClusterId)
                 .gene(file.Gene)

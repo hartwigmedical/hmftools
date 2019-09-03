@@ -114,6 +114,10 @@ class ExtendDiploidBAF {
             secondarySource = regions.get(inferRegion.leftSourceIndex).region();
         }
 
+        if (minCopyNumberLessThanSourceMajorAllelePloidys(inferRegion, regions)) {
+            return primarySource.minorAllelePloidy();
+        }
+
         if (isMinorAlleleDifferent(primarySource, secondarySource) || isMajorAlleleDifferent(primarySource, secondarySource)) {
             return minorOrMajorMovedTargetPloidy(primarySource, primarySource, secondarySource);
         }
@@ -185,6 +189,11 @@ class ExtendDiploidBAF {
 
     private void inferBetween(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isValid());
+
+        CombinedRegion region = regions.get(inferRegion.leftTargetIndex);
+        if (region.start() == 13030137) {
+                        System.out.println("sdf");
+        }
 
         // Exactly one source available (XOR)
         final double targetPloidy = inferRegion.isLeftValid() ^ inferRegion.isRightValid()
@@ -341,6 +350,28 @@ class ExtendDiploidBAF {
         return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && regions.get(inferRegion.leftTargetIndex).bases() <= maxSize;
     }
 
+    private static boolean minCopyNumberLessThanSourceMajorAllelePloidys(@NotNull InferRegion inferRegion,
+            @NotNull final List<CombinedRegion> regions) {
+        assert (inferRegion.isRightValid());
+        assert (inferRegion.isLeftValid());
+
+        double minCopyNumber = minTargetCopyNumber(inferRegion, regions);
+        return Doubles.greaterThan(regions.get(inferRegion.leftSourceIndex).region().majorAllelePloidy() - minCopyNumber,
+                MIN_COPY_NUMBER_CHANGE) && Doubles.greaterThan(
+                regions.get(inferRegion.rightSourceIndex).region().majorAllelePloidy() - minCopyNumber, MIN_COPY_NUMBER_CHANGE);
+
+    }
+
+    private static double minTargetCopyNumber(@NotNull InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
+        double result = Double.MAX_VALUE;
+
+        for (int i = inferRegion.leftTargetIndex; i <= inferRegion.rightTargetIndex; i++) {
+            result = Math.min(result, regions.get(i).tumorCopyNumber());
+        }
+
+        return result;
+    }
+
     @VisibleForTesting
     boolean isSimpleDupSurroundedByLOH(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
 
@@ -363,7 +394,6 @@ class ExtendDiploidBAF {
         }
 
         FittedRegion left = regions.get(inferRegion.leftSourceIndex).region();
-
 
         return Doubles.lessThan(left.minorAllelePloidy(), 0.5) && Doubles.lessThan(right.minorAllelePloidy(), 0.5);
     }

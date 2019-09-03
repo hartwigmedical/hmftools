@@ -4,14 +4,20 @@ LINX provides functionality to present detailed visualisation of genomic rearran
 LINX writes a set of 'VIS' files in a specific format which form the base data to generate the visualisation. 
 The visualisation tool only depends on these files and so in principle any tool could provide SV & CN data in this format.
 
-There are 3 components in the output of the LINX visualisation:
+There are 3 panels in the output of the LINX visualisation:
 
-# Circos View
+## Circos Panel
 
-The CIRCOS view shows either the complete set of rearrangements in a cluster or set of clusters if 1 or more cluster ids are specified 
+The CIRCOS panel shows either the complete set of rearrangements in a cluster or set of clusters if 1 or more cluster ids are specified 
 (‘cluster mode’) or all clusters that touch a chromosome if a chromosome is specified (‘chromosome mode’). 
 
-The CIRCOS view demonstrated below has 6 tracks showing from innermost to outermost:
+A visualisation guide is shown below:
+
+<p align="center">
+    <img src="src/main/resources/readme/legend.png" width="500" alt="Visualisation Guide">
+</p>
+
+There are 6 tracks showing from innermost to outermost:
   - Break junctions
   - Minor allele ploidy profile
   - Copy number profile
@@ -19,18 +25,13 @@ The CIRCOS view demonstrated below has 6 tracks showing from innermost to outerm
   - Impacted genes (if any)
   - Affected chromosomes
 
-
-<p align="center">
-    <img src="src/main/resources/readme/legend.png" width="500" alt="Visualisation Guide">
-</p>
-
 The scaling of both distances and ploidies in the figure has been modified to make the figure readable.
 Specifically, the distances between each feature in the chart (either breakend or gene exon start or end) are modified to a log based scale,
 so that the entire genomic rearrangement spanning millions of bases and multiple chromosomes can be viewed, but that local topology of 
 regions with high densities of breakpoints can be introspected. 
 Ploidy is set with a linear scale but is scaled down if the maximum cluster ploidy exceeds 6 or if the total density of events exceeds a 
-certain maximum to ensure that even the most complex clusters can be introspected. Additionally, if the total number of breakends displayed 
-exceeds **XX** then the break junctions become increasingly transparent such that other features on the plot don’t become obscured.
+certain maximum to ensure that even the most complex clusters can be introspected. Additionally, as the total number of breakends displayed 
+increases then the break junctions become increasingly transparent such that other features on the plot don’t become obscured.
 
 Another key feature of the CIRCOS plot is the ability to trace the derivative chromosome(s). 
 Each segment in the 4th track represents a segment of the derivative chromosome and is linked on both ends either to a centromeric or 
@@ -50,29 +51,14 @@ Additionally, 2 types of genomic regions which are frequently disrupted in tumor
 the copy number regions in the 3rd track. For known LINE source elements the green copy number section is shaded and for known 
 fragile sites the red copy number section is shaded light grey. 
 
+## Fusion Panel
 
-# Chromosome View
-
-Since the CIRCOS only represents a part of the genome, the chromosome view is provided to indicate which parts of the genome is shown. 
-Each of the chromosomes included in the cluster(s) shown is displayed. 
-The part of the chromosome that is included in the figure is highlighted in the colour matching the colour used in the outer ring of the CIRCOS. 
-The banding and location of the centromere on each chromosome is also shown.
-
-An example of the chromosome view is shown below indicating the cluster includes a large section of chromosome 7 including the centromere 
-and a small slither of chromosome 15 on the Q arm:
-
-<p align="center">
-    <img src="src/main/resources/readme/chr7.png" width="600" alt="Chromosome View">
-</p>
-
-# Fusion View
-
-The fusion view is added for reportable fusions only in LINX. It’s purpose is to show the predicted structure of the fused gene. 
+The fusion view is added only for reportable fusions. It’s purpose is to show the predicted structure of the fused gene. 
 The fusion includes the fused segments of both the 5’ and 3’ partner in blue and red and always reads from left to right. 
 The gene representation for each genes and follows the standard conventions of thick bands for coding regions, 
 thinner bands for 5’ UTR and 3’ UTR exonic regions and thin lines to represent the intronic sections. 
 Protein domains are shown in coloured bands across the exons which they include and are labeled in the accompanying legend. 
-As with the CIRCOS view the lengths of exonic gene segments in the fusion view are scaled by a log scale to improve readability. 
+As with the CIRCOS panel the lengths of exonic gene segments in the fusion panel are scaled by a log scale to improve readability. 
 The intronic segments are set to a fixed segment length regardless of the length. 
 
 The fused gene is shown up to and including the breakend on either side that is connected either directly in the case of a simple fusion 
@@ -80,7 +66,7 @@ or via a chain in a chained fusion. If LINX predicts that one or more exons are 
 protein domain sections are faded. 
 
 For example in the following TMPRSS2-ERG fusion, exons 3, 4 & 5 are faded and the LDL domain is also faded, indicating that LINX predicts 
-these exons are skipped in order to make a viable in frame protein, despite the break end occuring after the 5th exon:
+these exons are skipped in order to make a viable in frame protein, despite the break end occurring after the 5th exon:
 
 <p align="center">
     <img src="src/main/resources/readme/fusion1.png" width="700" alt="Fusion">
@@ -108,6 +94,23 @@ are directly fused:
 <p align="center">
     <img src="src/main/resources/readme/fusion4.png" width="700" alt="Fusion">
 </p>
+
+
+
+## Chromosome Range Panel
+
+Since the CIRCOS only represents a part of the genome, the chromosome panel is provided to indicate which parts of the genome is shown. 
+Each of the chromosomes included in the cluster(s) shown is displayed. 
+The part of the chromosome that is included in the figure is highlighted in the colour matching the colour used in the outer ring of the CIRCOS. 
+The banding and location of the centromere on each chromosome is also shown.
+
+An example of the chromosome view is shown below indicating the cluster includes a large section of chromosome 7 including the centromere 
+and a small slither of chromosome 15 on the Q arm:
+
+<p align="center">
+    <img src="src/main/resources/readme/chr7.png" width="600" alt="Chromosome View">
+</p>
+
 
 
 # Dependencies
@@ -173,3 +176,71 @@ fusion_height| 250 | Height of each fusion in pixels
 fusion_legend_rows| 1 | Number of rows in protein domain legend
 fusion_legend_height_per_row| 35 | Height of each row in protein domain legend 
 
+# Example Configurations
+
+## Default
+
+The default parameters are configured to produce an image that is suitable for display on a single page as shown in this SS18-SSX1 fusion example:
+
+<p align="center">
+    <img src="src/main/resources/readme/default.png" width="800" alt="default">
+</p>
+
+## Smaller
+
+In order to make the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
+for the larger font, we reduce the relative size of the segment track and increase the space allowed for the exons as shown:
+
+```
+-fusion_legend_height_per_row 70
+-segment_relative_size 0.5
+-outer_radius 0.85
+-min_line_size 4 -max_line_size 18
+-min_label_size 45 -max_label_size 50
+-glyph_size 25
+-exon_rank_size 0.04
+
+```
+
+<p align="center">
+    <img src="src/main/resources/readme/small1.png" width="400" alt="Small">
+    <img src="src/main/resources/readme/small2.png" width="400" alt="Small">
+    <img src="src/main/resources/readme/small3.png" width="400" alt="Small">
+    <img src="src/main/resources/readme/small4.png" width="400" alt="Small">
+</p>
+
+Starting at the top-left corner and going clockwise, the figures shows 
+a) a double minute with a significantly amplified AR gene, 
+b) a chromothripsis event,
+c) a pseudo-gene insertion, and
+d) a bi-allelic disruption of TP53
+
+## Line Events
+
+The following examples have similar configurations to the smaller images above but the second has an additional flag:
+
+```
+-interpolate_cna_positions
+```
+<p align="center">
+    <img src="src/main/resources/readme/line1.png" width="400" alt="Line">
+    <img src="src/main/resources/readme/line2.png" width="400" alt="Line">
+</p>
+
+In the second picture, we have reduced the emphasis on the copy number alternation by interpolating their positions rather than including 
+them in the log scale. This frees up more room for the area of interest on chromosome 14.
+
+## TMPRSS2-ERG
+
+To accommodate the extra room required for the TMPRSS2 gene label, this configuration increases the relative size of the gene 
+track, decreases the relative size of the segment track and increases the max number of characters in a gene before scaling: 
+
+```
+-gene_relative_size 0.6 -segment_relative_size 0.7 -cna_relative_size 2
+-max_gene_characters 7
+-min_line_size 3
+```
+
+<p align="center">
+    <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRSS2-ERG">
+</p>

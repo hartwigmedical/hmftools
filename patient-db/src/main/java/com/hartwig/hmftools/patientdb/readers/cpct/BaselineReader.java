@@ -136,7 +136,6 @@ class BaselineReader {
 
         final String primaryTumorLocation = primaryTumorLocationSelcrit != null ? primaryTumorLocationSelcrit : primaryTumorLocationCarcinoma;
         builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
-
     }
 
     private static void setRegistrationAndBirthData(@NotNull final ImmutableBaselineData.Builder builder,

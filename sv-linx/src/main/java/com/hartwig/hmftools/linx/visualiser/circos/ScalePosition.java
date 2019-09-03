@@ -88,11 +88,6 @@ class ScalePosition
         return scale(segments, x -> ImmutableSegment.builder().from(x));
     }
 
-    @NotNull
-    public List<CopyNumberAlteration> scaleAlterations(@NotNull final List<CopyNumberAlteration> segments)
-    {
-        return scale(segments, x -> ImmutableCopyNumberAlteration.builder().from(x));
-    }
 
     @NotNull
     public List<CopyNumberAlteration> interpolateAlterations(@NotNull final List<CopyNumberAlteration> segments)
@@ -114,15 +109,15 @@ class ScalePosition
     }
 
     @NotNull
-    public List<Gene> scaleGene(@NotNull final List<Gene> genes)
+    public List<Gene> interpolateGene(@NotNull final List<Gene> genes)
     {
         double geneNameDistance = GENE_NAME_DISTANCE * totalLength;
 
         return genes.stream().map(x ->
         {
             ScaleContig positionMap = contigMap.get(x.chromosome());
-            final int scaledGeneStart = positionMap.scale(x.start());
-            final int scaledGeneEnd = positionMap.scale(x.end());
+            final int scaledGeneStart = positionMap.interpolate(x.start());
+            final int scaledGeneEnd = positionMap.interpolate(x.end());
             int geneNamePosition = (int) Math.round(x.strand() > 0
                     ? scaledGeneStart - geneNameDistance
                     : scaledGeneEnd + geneNameDistance);
@@ -141,6 +136,7 @@ class ScalePosition
             return ImmutableGene.builder().from(x).start(scaledGeneStart).end(scaledGeneEnd).namePosition(geneNamePosition).build();
         }).collect(Collectors.toList());
     }
+
 
     @NotNull
     public List<FusedExon> scaleFusedExon(@NotNull final List<FusedExon> exons)

@@ -99,9 +99,9 @@ chromosomeLengths = chromosomeLengths %>%
 chromosomeLengths = data.frame(chromosomeLengths)
 
 # Height is per row
-chromosomeHeightPerRow = chromosomeHeightPerRow * max(chromosomeLengths$row)
+chromosomeHeight = chromosomeHeightPerRow * max(chromosomeLengths$row)
 
-png(file = circosPicturePath, width = circosWidth, height = chromosomeHeightPerRow, units = "px")
+png(file = circosPicturePath, width = 0.85 * circosWidth, height = chromosomeHeight, units = "px")
 
 for (i in 1:nrow(chromosomeLengths)) {
   x = chromosomeLengths[i, "x"]
@@ -118,5 +118,5 @@ dev.off()
 
 
 pChr <- ggdraw() + draw_image(circosPicturePath)
-pCombined = plot_grid(pCircos, pChr, ncol = 1, rel_heights = c(circosWidth, chromosomeHeightPerRow - 0.1 * chromosomeHeightPerRow))
-ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeightPerRow)/300.0, units = "in", dpi = 300)
+pCombined = plot_grid(pCircos, pChr, ncol = 1, rel_heights = c(circosWidth, chromosomeHeight))
+ggsave(circosPicturePath, pCombined, width = circosWidth/300.0, height = (circosWidth + chromosomeHeight)/300.0, units = "in", dpi = 300)
