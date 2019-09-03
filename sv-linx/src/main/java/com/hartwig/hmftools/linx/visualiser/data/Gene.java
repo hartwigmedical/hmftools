@@ -19,6 +19,9 @@ public abstract class Gene implements GenomeRegion
     public abstract String name();
 
     @NotNull
+    public abstract ExonType type();
+
+    @NotNull
     public abstract String transcript();
 
     public abstract long namePosition();

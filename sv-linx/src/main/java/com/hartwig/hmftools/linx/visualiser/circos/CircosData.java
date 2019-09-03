@@ -14,7 +14,7 @@ import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualiser.data.DisruptedGene;
+import com.hartwig.hmftools.linx.visualiser.data.DisruptedExons;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Exons;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
@@ -70,11 +70,7 @@ public class CircosData
         this.unadjustedAlterations = unadjustedAlterations;
         this.config = config;
 
-        final List<GenomeRegion> unadjustedDisruptedGeneRegions = Lists.newArrayList();
-        for (Fusion fusion : fusions)
-        {
-            unadjustedDisruptedGeneRegions.addAll(DisruptedGene.disruptedGeneRegions(fusion, unadjustedExons));
-        }
+        final List<GenomeRegion> unadjustedDisruptedGeneRegions = DisruptedExons.disruptedGeneRegions(fusions, unadjustedExons);
 
         final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
         final List<Exon> unadjustedGeneExons = Exons.geneExons(unadjustedGenes, unadjustedExons);
@@ -84,7 +80,6 @@ public class CircosData
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
         unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(positionsToScale::add);
         positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
-        positionsToScale.addAll(Span.allPositions(unadjustedDisruptedGeneRegions));
         positionsToScale.addAll(config.interpolateCopyNumberPositions()
                 ? Span.minMaxPositions(unadjustedAlterations)
                 : Span.allPositions(unadjustedAlterations));
@@ -103,7 +98,7 @@ public class CircosData
         fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
         lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
         genes = scalePosition.interpolateGene(unadjustedGenes);
-        disruptedGeneRegions = scalePosition.scaleRegions(unadjustedDisruptedGeneRegions);
+        disruptedGeneRegions = scalePosition.interpolateRegions(unadjustedDisruptedGeneRegions);
         exons = scalePosition.interpolateExons(unadjustedGeneExons);
 
         maxTracks = segments.stream().mapToInt(Segment::track).max().orElse(0) + 1;

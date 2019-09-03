@@ -20,6 +20,8 @@ public abstract class Exon implements GenomeRegion
 
     public abstract int clusterId();
 
+    public abstract ExonType type();
+
     @NotNull
     public abstract String gene();
 

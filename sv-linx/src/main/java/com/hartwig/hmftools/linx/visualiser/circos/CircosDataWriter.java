@@ -41,6 +41,7 @@ public class CircosDataWriter
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
+    private static final String SINGLE_YELLOW = "(214,210,107)";
 
     private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
@@ -68,7 +69,22 @@ public class CircosDataWriter
     public void write() throws IOException
     {
         final Map<String, String> geneColorMap = Maps.newHashMap();
-        data.genes().forEach(x -> geneColorMap.put(x.name(), SINGLE_GREEN));
+        data.genes().forEach(x ->
+        {
+            switch (x.type())
+            {
+                case PSEUDO:
+                    geneColorMap.put(x.name(), SINGLE_YELLOW);
+                    break;
+                case DRIVER:
+                    geneColorMap.put(x.name(), SINGLE_GREEN);
+                    break;
+                case FUSION:
+                    geneColorMap.put(x.name(), SINGLE_BLUE);
+                    break;
+            }
+        });
+
         data.upstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_BLUE));
         data.downstreamGenes().forEach(x -> geneColorMap.put(x, SINGLE_RED));
 

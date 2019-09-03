@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DisruptedGeneTest
+public class DisruptedExonsTest
 {
     private static final String UP = "UP";
     private static final String DOWN = "DOWN";
@@ -46,7 +46,7 @@ public class DisruptedGeneTest
         exons.addAll(normalDown);
 
         final Fusion fusion = create(1, 150, 1, 1, 150, 2);
-        final List<GenomeRegion> victim = DisruptedGene.disruptedGeneRegions(fusion, exons);
+        final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
         assertRegion(UP, 100, 300, victim.get(0));
@@ -61,7 +61,7 @@ public class DisruptedGeneTest
         exons.addAll(normalDown);
 
         final Fusion fusion = create(1, 50, 1, 1, 250, 2);
-        final List<GenomeRegion> victim = DisruptedGene.disruptedGeneRegions(fusion, exons);
+        final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
         assertRegion(UP, 50, 300, victim.get(0));
@@ -76,7 +76,7 @@ public class DisruptedGeneTest
         exons.addAll(reverseDown);
 
         final Fusion fusion = create(-1, 150, 1, -1, 150, 2);
-        final List<GenomeRegion> victim = DisruptedGene.disruptedGeneRegions(fusion, exons);
+        final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
         assertRegion(UP, 1, 201, victim.get(0));
@@ -91,7 +91,7 @@ public class DisruptedGeneTest
         exons.addAll(reverseDown);
 
         final Fusion fusion = create(-1, 250, 1, -1, 50, 2);
-        final List<GenomeRegion> victim = DisruptedGene.disruptedGeneRegions(fusion, exons);
+        final List<GenomeRegion> victim = DisruptedExons.disruptedGeneRegions(fusion, exons);
 
         assertEquals(2, victim.size());
         assertRegion(UP, 1, 250, victim.get(0));
