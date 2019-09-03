@@ -130,8 +130,20 @@ LINX visualisation requires CIRCOS to be installed as well as a number of R depe
 # Arguments
 //TODO: max_distance_labels
 
-## Inner and Outer radius
+## Radial Arguments
 
+The following arguments are all relative to the total radius of the CIRCOS panel and must be between 0 and 1. 
+
+Argument | Default | Description 
+---|---|---
+inner_radius| 0.20| Innermost starting radius of minor-allele ploidy track
+outer_radius | 0.88 | Outermost ending radius of chromosome track
+gap_radius| 0.025 | Radial gap between tracks
+exon_rank_radius | 0.025 | Radial gap left for exon rank labels
+
+If you significantly increase the [font size](#font-size) it is likely that you will need to reduce the `outer_radius` and increase the
+`exon_rank_radius` otherwise labels may get clipped or removed entirely. This is demonstrated in the [reduced footprint](#Reduced-Footprint)
+examples.
 
 ## Relative Track Sizes
 
@@ -145,17 +157,6 @@ segment_relative_size | 1 | Size of segment (derivative chromosome) track relati
 cna_relative_size | 2 | Size of gene copy number alterations (including major/minor allele) relative to genes and segments
 
 The gene track will not be displayed if `gene_relative` is 0 or if there are no genes to be displayed on the visualisation.
-
-## Gaps Between Tracks
-
-The size of the gaps between each track on the CIRCOS panel can be controlled with the `gap_size` parameter. Additionally, the 
-`exon_rank_size` controls the spacing allowed for the exon rank labels. Both parameters should be between 0 and 1 and are relative to the
-size of the CIRCOS panel radius. 
-
-Argument | Default | Description 
----|---|---
-gap_size| 0.025 | Size of gap between tracks relative to radius
-exon_rank_size | 0.025 | Size of gap for exon ranks relative to radius
 
 
 ## Font Size
@@ -203,7 +204,7 @@ The default parameters are configured to produce an image that is suitable for d
     <img src="src/main/resources/readme/default.png" width="800" alt="default">
 </p>
 
-## Smaller
+## Reduced Footprint
 
 In order to make the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
 for the larger font, we reduce the relative size of the segment track and increase the space allowed for the exons as shown:
@@ -215,7 +216,7 @@ for the larger font, we reduce the relative size of the segment track and increa
 -min_line_size 4 -max_line_size 18
 -min_label_size 45 -max_label_size 50
 -glyph_size 25
--exon_rank_size 0.04
+-exon_rank_radius 0.04
 
 ```
 
@@ -261,3 +262,6 @@ track, decreases the relative size of the segment track and increases the max nu
 <p align="center">
     <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRSS2-ERG">
 </p>
+
+
+#Version History

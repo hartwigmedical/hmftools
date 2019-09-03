@@ -17,22 +17,21 @@ public interface SvCircosConfig
 {
     Logger LOGGER = LogManager.getLogger(SvCircosConfig.class);
 
-    String DISPLAY_POSITION = "displayPosition";
     String GENE_RELATIVE_SIZE = "gene_relative_size";
     String CNA_RELATIVE_SIZE = "cna_relative_size";
     String SEGMENT_RELATIVE_SIZE = "segment_relative_size";
 
-    String OUTER_RADIUS = "outer_radius";
+    // Radial Arguments
     String INNER_RADIUS = "inner_radius";
-    String GAP_RADIUS = "gap_size";
-    String EXON_RANK_RADIUS = "exon_rank_size";
+    String OUTER_RADIUS = "outer_radius";
+    String GAP_RADIUS = "gap_radius";
+    String EXON_RANK_RADIUS = "exon_rank_radius";
 
-    String EXACT_POSITION = "exact_position";
-    String SHOW_SV_ID = "show_sv_id";
-
+    // Chromosome Range Panel Arguments
     String CHR_RANGE_HEIGHT = "chr_range_height";
     String CHR_RANGE_COLUMNS = "chr_range_columns";
 
+    // Fusion Panel Arguments
     String FUSION_HEIGHT = "fusion_height";
     String FUSION_LEGEND_ROWS = "fusion_legend_rows";
     String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
@@ -45,6 +44,10 @@ public interface SvCircosConfig
     String MAX_LINE_SIZE = "max_line_size";
     String GLYPH_SIZE = "glyph_size";
     String MAX_GENE_CHARACTERS = "max_gene_characters";
+
+    // Debug
+    String EXACT_POSITION = "exact_position";
+    String SHOW_SV_ID = "show_sv_id";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -74,6 +77,11 @@ public interface SvCircosConfig
     static void addOptions(@NotNull Options options)
     {
 
+        options.addOption(OUTER_RADIUS, true, "Outermost ending radius of chromosome track [" + DEFAULT_OUTER_RADIUS + "]");
+        options.addOption(INNER_RADIUS, true, "Innermost starting radius of minor-allele ploidy track [" + DEFAULT_INNER_RADIUS + "]");
+        options.addOption(GAP_RADIUS, true, "Radial gap between tracks [" + DEFAULT_GAP_RADIUS + "]");
+        options.addOption(EXON_RANK_RADIUS, true, "Radial gap left for exon rank labels [" + DEFAULT_EXON_RANK_RADIUS + "]");
+
         options.addOption(FUSION_HEIGHT, true, "Height of each fusion in pixels [" + DEFAULT_FUSION_HEIGHT + "]");
         options.addOption(FUSION_LEGEND_ROWS, true, "Number of rows in protein domain legend  [" + DEFAULT_FUSION_LEGEND_ROWS + "]");
         options.addOption(FUSION_LEGEND_HEIGHT_PER_ROW,
@@ -95,11 +103,6 @@ public interface SvCircosConfig
         options.addOption(CNA_RELATIVE_SIZE,
                 true,
                 "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
-
-        options.addOption(OUTER_RADIUS, true, "Outer radius [" + DEFAULT_OUTER_RADIUS + "]");
-        options.addOption(INNER_RADIUS, true, "Inner radius [" + DEFAULT_INNER_RADIUS + "]");
-        options.addOption(GAP_RADIUS, true, "Size of gap between tracks relative to radius [" + DEFAULT_GAP_RADIUS + "]");
-        options.addOption(EXON_RANK_RADIUS, true, "Size of gap for exon ranks relative to radius [" + DEFAULT_EXON_RANK_RADIUS + "]");
 
         options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
         options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
@@ -183,16 +186,6 @@ public interface SvCircosConfig
     @NotNull
     static SvCircosConfig createConfig(@NotNull final CommandLine cmd) throws ParseException
     {
-        double gapSize = defaultValue(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS);
-        if (Doubles.lessThan(gapSize, 0) || Doubles.greaterThan(gapSize, 1)) {
-            throw new ParseException("Parameter " + GAP_RADIUS + " should be between 0 and 1");
-        }
-
-        double exonRankSize = defaultValue(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS);
-        if (Doubles.lessThan(exonRankSize, 0) || Doubles.greaterThan(gapSize, 1)) {
-            throw new ParseException("Parameter " + EXON_RANK_RADIUS + " should be between 0 and 1");
-        }
-
         int minLabelSize = defaultIntValue(cmd, MIN_LABEL_SIZE, DEFAULT_MIN_LABEL_SIZE);
         if (minLabelSize <= 0)
         {
@@ -220,6 +213,12 @@ public interface SvCircosConfig
         // TODO: Add validation on ideogram radius etc
 
         return ImmutableSvCircosConfig.builder()
+
+                .outerRadius(radialParameter(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
+                .innerRadius(radialParameter(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
+                .gapSize(radialParameter(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
+                .exonRankSize(radialParameter(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
+
                 .fusionLegendRows(defaultIntValue(cmd, FUSION_LEGEND_ROWS, DEFAULT_FUSION_LEGEND_ROWS))
                 .fusionLegendHeightPerRow(defaultIntValue(cmd, FUSION_LEGEND_HEIGHT_PER_ROW, DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW))
                 .fusionHeight(defaultIntValue(cmd, FUSION_HEIGHT, DEFAULT_FUSION_HEIGHT))
@@ -227,8 +226,6 @@ public interface SvCircosConfig
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
                 .showSvId(cmd.hasOption(SHOW_SV_ID))
-                .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
-                .innerRadius(defaultValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
                 .geneRelativeSize(defaultValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
                 .segmentRelativeSize(defaultValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
                 .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
@@ -239,9 +236,18 @@ public interface SvCircosConfig
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
                 .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
-                .gapSize(gapSize)
-                .exonRankSize(exonRankSize)
                 .build();
+    }
+
+    static double radialParameter(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) throws ParseException
+    {
+        double value = defaultValue(cmd, opt, defaultValue);
+        if (!Doubles.greaterOrEqual(value, 0) || Doubles.lessOrEqual(value, 1))
+        {
+            throw new ParseException("Radial parameter " + opt + " should be between 0 and 1");
+        }
+
+        return value;
     }
 
     static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
@@ -267,5 +273,4 @@ public interface SvCircosConfig
 
         return defaultValue;
     }
-
 }
