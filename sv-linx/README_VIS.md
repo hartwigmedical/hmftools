@@ -189,6 +189,18 @@ min_line_size| 1 | Minimum size of lines in pixels
 max_line_size | 12 | Maximum size of lines in pixels
 glyph_size | 20 | Size of glyphs in pixels
 
+## Interpolate Positions
+
+By default, copy number alteration transitions and exons will be emphasised on the CIRCOS panel according to the log scale described above.
+This functionality can be disabled with the following flags:  
+
+Argument |  Description 
+---|---|---
+interpolate_cna_positions| Interpolate copy number positions rather than adjust scale
+interpolate_exon_positions | Interpolate exon positions rather than adjust scale
+
+Impact of the `interpolate_cna_positions` flag is illustrated in the [line event](#line-event) example. 
+
 ## Chromosome Range Panel
 
 Argument | Default | Description 
@@ -243,7 +255,7 @@ b) a chromothripsis event,
 c) a pseudo-gene insertion, and
 d) a bi-allelic disruption of TP53
 
-## Line Events
+## Line Event
 
 The following examples have similar configurations to the smaller images above but the second has an additional flag:
 
