@@ -454,6 +454,7 @@ If only one side of the unknown region is available then we determine which of t
 - Failing everything else, keep the minor allele constant. 
 
 If there is neighbouring information on both sides of the unknown region, then the following rules apply to determine which allele ploidy to hold constant:
+- If the minimum copy number of the unknown region is significantly less (> 0.5) than the major allele of both sides, then keep the minor allele constant.
 - If both the major and minor allele of the neighbours are significantly different (> 0.5) but the minor allele of one matches the major allele of the other ( < 0.5) then choose the matching allele ploidy as the constant ploidy.
 - Else, if the major allele of the neighbours is significantly different keep the minor allele constant.
 - Else, if the minor allele of the neighbours is significantly different keep the major allele constant.
@@ -955,6 +956,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Additional BAF inferring rule
   - Removed `GERMLINE_AMPLIFICATION` copy number method.
   - Added `NON_DIPLOID` copy number method. This uses the ref normalised tumor copy number (adjusted for observed normal ratio rather than ideal).  
   - Only extend long arm copy numbers to unknown regions of chromosomes 13-15,21,22
