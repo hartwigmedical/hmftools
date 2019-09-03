@@ -227,9 +227,9 @@ The following examples have similar configurations to the smaller images above b
 In the second picture, we have reduced the emphasis on the copy number alternation by interpolating their positions rather than including 
 them in the log scale. This frees up more room for the area of interest on chromosome 14.
 
-## TMPRESS2-ERG
+## TMPRSS2-ERG
 
-To accommodate the extra room required for the TMPRESS2 gene label, this configuration increases the relative size of the gene 
+To accommodate the extra room required for the TMPRSS2 gene label, this configuration increases the relative size of the gene 
 track, decreases the relative size of the segment track and increases the max number of characters in a gene before scaling: 
 
 ```
@@ -239,5 +239,5 @@ track, decreases the relative size of the segment track and increases the max nu
 ```
 
 <p align="center">
-    <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRESS2-ERG">
+    <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRSS2-ERG">
 </p>
