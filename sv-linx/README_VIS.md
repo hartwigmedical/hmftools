@@ -195,7 +195,7 @@ By default, copy number alteration transitions and exons will be emphasised on t
 This functionality can be disabled with the following flags:  
 
 Argument |  Description 
----|---|---
+---|---
 interpolate_cna_positions| Interpolate copy number positions rather than adjust scale
 interpolate_exon_positions | Interpolate exon positions rather than adjust scale
 
