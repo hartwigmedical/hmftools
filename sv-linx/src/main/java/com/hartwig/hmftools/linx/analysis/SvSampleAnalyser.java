@@ -133,6 +133,10 @@ public class SvSampleAnalyser {
 
         mLineElementAnnotator = new LineElementAnnotator();
         mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
+        mAnalyser.setLineAnnotator(mLineElementAnnotator);
+
+        mPseudoGeneFinder = new PseudoGeneFinder(mVisWriter);
+        mLineElementAnnotator.setPseudoGeneFinder(mPseudoGeneFinder);
 
         mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
         mReplicationOriginAnnotator.loadReplicationOrigins(mConfig.ReplicationOriginsFile);
@@ -142,8 +146,6 @@ public class SvSampleAnalyser {
 
         mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
-
-        mPseudoGeneFinder = new PseudoGeneFinder(mVisWriter);
 
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");

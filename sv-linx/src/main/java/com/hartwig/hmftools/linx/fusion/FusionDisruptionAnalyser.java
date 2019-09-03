@@ -214,58 +214,8 @@ public class FusionDisruptionAnalyser
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
     public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
 
-    public void setSvGeneData(
-            final List<SvVarData> svList, boolean applyPromotorDistance, boolean selectiveLoading, boolean purgeInvalidTranscripts)
+    public void annotateTranscripts(final List<SvVarData> svList, boolean purgeInvalidTranscripts)
     {
-        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
-
-        if(selectiveLoading)
-        {
-            // only load transcript info for the genes covered
-            List<String> restrictedGeneIds = Lists.newArrayList();
-
-            for (final SvVarData var : svList)
-            {
-                for (int be = SE_START; be <= SE_END; ++be)
-                {
-                    if (be == SE_END && var.isSglBreakend())
-                        continue;
-
-                    boolean isStart = isStart(be);
-
-                    mGeneTransCollection.populateGeneIdList(
-                            restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
-                }
-            }
-
-            mGeneTransCollection.loadEnsemblTranscriptData(restrictedGeneIds);
-        }
-
-        // associate breakends with transcripts
-        for(final SvVarData var : svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                if (be == SE_END && var.isSglBreakend())
-                    continue;
-
-                boolean isStart = isStart(be);
-
-                List<GeneAnnotation> genesList = mGeneTransCollection.findGeneAnnotationsBySv(
-                        var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
-
-                if (genesList.isEmpty())
-                    continue;
-
-                for (GeneAnnotation gene : genesList)
-                {
-                    gene.setSvData(var.getSvData());
-                }
-
-                var.setGenesList(genesList, isStart);
-            }
-        }
-
         // mark any transcripts as not disruptive prior to running any fusion logic
         mDisruptionFinder.markTranscriptsDisruptive(svList);
 

@@ -6,11 +6,9 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_DB;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 
@@ -119,8 +117,6 @@ public class LinkFinder
                     // form a new TI from these 2 BEs
                     SvLinkedPair newPair = new SvLinkedPair(lowerSV, upperSV, LINK_TYPE_TI, v1Start, v2Start);
                     newPair.setIsAssembled();
-                    lowerSV.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v1Start);
-                    upperSV.setAssemblyMatchType(ASSEMBLY_MATCH_MATCHED, v2Start);
                     lowerSV.addLinkedPair(newPair, v1Start);
                     upperSV.addLinkedPair(newPair, v2Start);
 
@@ -197,8 +193,10 @@ public class LinkFinder
             for(SvLinkedPair pair : spanningLinks)
             {
                 breakend.getSV().getLinkedPairs(breakend.usesStart()).remove(pair);
+
                 final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
                 otherBreakend.getSV().getLinkedPairs(otherBreakend.usesStart()).remove(pair);
+
                 linkedPairs.remove(pair);
             }
         }
@@ -370,7 +368,7 @@ public class LinkFinder
                     continue;
 
                 // if an assembly linked pair has already been created for this breakend, look no further
-                if(var1.isAssemblyMatched(v1Start))
+                if(var1.hasAssemblyLink(v1Start))
                     continue;
 
                 for (int j = i+1; j < svList.size(); ++j)
@@ -390,7 +388,7 @@ public class LinkFinder
                         if(var1.isSglBreakend() && !v1Start)
                             continue;
 
-                        if(var2.isAssemblyMatched(v2Start))
+                        if(var2.hasAssemblyLink(v2Start))
                             continue;
 
                         long distance = abs(var1.position(v1Start) - var2.position(v2Start));

@@ -106,6 +106,8 @@ public class SvLinxApplication
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
         boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
+        boolean applyPromotorDistance = checkFusions;
+        boolean purgeInvalidTranscripts = !fusionAnalyser.hasRnaSampleData();
 
         SvGeneTranscriptCollection ensemblDataCache = null;
 
@@ -180,6 +182,11 @@ public class SvLinxApplication
 
             sampleAnalyser.setSampleSVs(sampleId, svDataList);
 
+            if(ensemblDataCache != null)
+            {
+                ensemblDataCache.setSvGeneData(svDataList, applyPromotorDistance, selectiveGeneLoading);
+            }
+
             sampleAnalyser.analyse();
 
             if(!sampleAnalyser.inValidState())
@@ -188,11 +195,10 @@ public class SvLinxApplication
                 break;
             }
 
-            if(ensemblDataCache != null)
+            if(checkDrivers || checkFusions)
             {
                 // when matching RNA, allow all transcripts regardless of their viability for fusions
-                boolean keepInvalidTranscripts = fusionAnalyser != null && fusionAnalyser.hasRnaSampleData();
-                fusionAnalyser.setSvGeneData(svDataList, true, selectiveGeneLoading, !keepInvalidTranscripts);
+                fusionAnalyser.annotateTranscripts(svDataList, purgeInvalidTranscripts);
             }
 
             sampleAnalyser.annotate();
@@ -204,8 +210,7 @@ public class SvLinxApplication
 
             if(checkFusions)
             {
-                fusionAnalyser.run(sampleId, svDataList, dbAccess,
-                        sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                fusionAnalyser.run(sampleId, svDataList, dbAccess, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
             }
 
             sampleAnalyser.writeOutput(dbAccess);

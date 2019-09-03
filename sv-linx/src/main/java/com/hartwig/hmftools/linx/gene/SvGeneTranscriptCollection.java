@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.Transcri
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneMatch;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -150,6 +152,57 @@ public class SvGeneTranscriptCollection
         {
             if(!uniqueGeneIds.contains(geneData.GeneId))
                 uniqueGeneIds.add(geneData.GeneId);
+        }
+    }
+
+    public void setSvGeneData(final List<SvVarData> svList, boolean applyPromotorDistance, boolean selectiveLoading)
+    {
+        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
+
+        if (selectiveLoading)
+        {
+            // only load transcript info for the genes covered
+            List<String> restrictedGeneIds = Lists.newArrayList();
+
+            for (final SvVarData var : svList)
+            {
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    if (be == SE_END && var.isSglBreakend())
+                        continue;
+
+                    boolean isStart = isStart(be);
+
+                    populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                }
+            }
+
+            loadEnsemblTranscriptData(restrictedGeneIds);
+        }
+
+        // associate breakends with transcripts
+        for (final SvVarData var : svList)
+        {
+            for (int be = SE_START; be <= SE_END; ++be)
+            {
+                if (be == SE_END && var.isSglBreakend())
+                    continue;
+
+                boolean isStart = isStart(be);
+
+                List<GeneAnnotation> genesList = findGeneAnnotationsBySv(
+                        var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
+
+                if (genesList.isEmpty())
+                    continue;
+
+                for (GeneAnnotation gene : genesList)
+                {
+                    gene.setSvData(var.getSvData());
+                }
+
+                var.setGenesList(genesList, isStart);
+            }
         }
     }
 

@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.findIncomple
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.markLineCluster;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
@@ -46,12 +46,13 @@ public class ClusterAnalyser {
     private final LinxConfig mConfig;
     private final ClusteringState mState;
 
-    private SvFilters mFilters;
-    private SimpleClustering mSimpleClustering;
-    private ComplexClustering mComplexClustering;
+    private final SvFilters mFilters;
+    private final SimpleClustering mSimpleClustering;
+    private final ComplexClustering mComplexClustering;
 
     private CnDataLoader mCnDataLoader;
     private DoubleMinuteFinder mDmFinder;
+    private LineElementAnnotator mLineElementAnnotator;
 
     private String mSampleId;
     private final List<SvCluster> mClusters;
@@ -79,6 +80,7 @@ public class ClusterAnalyser {
         mComplexClustering = new ComplexClustering(mState, mClusters, mSimpleClustering);
 
         mCnDataLoader = null;
+        mLineElementAnnotator = null;
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
         mLinkFinder = new LinkFinder();
@@ -102,6 +104,11 @@ public class ClusterAnalyser {
     }
 
     public final ClusteringState getState() { return mState; }
+
+    public void setLineAnnotator(final LineElementAnnotator lineAnnotator)
+    {
+        mLineElementAnnotator = lineAnnotator;
+    }
 
     public void setCnDataLoader(CnDataLoader cnDataLoader)
     {
@@ -159,7 +166,7 @@ public class ClusterAnalyser {
         mPcClustering.pause();
 
         // mark line clusters since these are excluded from most subsequent logic
-        mClusters.forEach(x -> markLineCluster(x, mConfig.ProximityDistance));
+        mClusters.forEach(x -> mLineElementAnnotator.markLineCluster(x, mConfig.ProximityDistance));
 
         associateBreakendCnEvents(mSampleId, mState);
 

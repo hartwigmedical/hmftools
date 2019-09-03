@@ -272,6 +272,7 @@ public class PseudoGeneFinder
 
         return pseudoMatches;
     }
+
     private boolean hasHomologyMismatch(final SvVarData var, final Map<SvLinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
         if(var.isSglBreakend())
@@ -384,4 +385,51 @@ public class PseudoGeneFinder
 
         return maxTrans;
     }
+
+    public boolean variantMatchesPseudogeneExons(final SvVarData var)
+    {
+        if(mGeneTransCache == null)
+            return false;
+
+        if(var.isSglBreakend())
+            return false;
+
+        final List<GeneAnnotation> genesStart = var.getGenesList(true);
+        final List<GeneAnnotation> genesEnd = var.getGenesList(true);
+
+        if(genesStart.isEmpty() || genesEnd.isEmpty())
+            return false;
+
+        long posStart = var.position(true);
+        long posEnd = var.position(false);
+
+        int startHomologyLength = var.getSvData().startHomologySequence().length();
+        int endHomologyLength = var.getSvData().endHomologySequence().length();
+
+        for(final GeneAnnotation gene : genesStart)
+        {
+            if(!genesEnd.stream().anyMatch(x -> x.GeneName.equals(gene.GeneName)))
+                continue;
+
+            List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(gene.StableId);
+
+            for(final TranscriptData transData : transDataList)
+            {
+                if(!transData.exons().stream().anyMatch(x ->
+                        abs(x.ExonStart - posStart) <= startHomologyLength || abs(x.ExonEnd - posStart) <= startHomologyLength))
+                {
+                    continue;
+                }
+
+                if(transData.exons().stream().anyMatch(x ->
+                        abs(x.ExonStart - posEnd) <= endHomologyLength || abs(x.ExonEnd - posEnd) <= endHomologyLength))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 }

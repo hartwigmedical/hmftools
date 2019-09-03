@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.types;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
 
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
@@ -111,8 +110,9 @@ public class SvBreakend {
 
     public boolean isAssembledLink()
     {
-        return mSV.getAssemblyMatchType(mUsesStart) == ASSEMBLY_MATCH_MATCHED;
+        return mSV.hasAssemblyLink(mUsesStart);
     }
+
     public final SvLinkedPair getDBLink() { return mSV.getDBLink(mUsesStart); }
 
     public boolean isFoldback()

@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDi
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
-import static com.hartwig.hmftools.linx.types.SvCluster.areSpecificClusters;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
@@ -206,8 +205,6 @@ public class ComplexClustering
     private boolean canMergeClustersOnCommonArms(final SvCluster cluster1, final SvCluster cluster2)
     {
         // merge if the 2 clusters have BNDs linking the same 2 inconsistent or long arms
-        areSpecificClusters(cluster1, cluster2);
-
         // re-check which BNDs may link arms
         cluster1.setArmLinks();
         cluster2.setArmLinks();

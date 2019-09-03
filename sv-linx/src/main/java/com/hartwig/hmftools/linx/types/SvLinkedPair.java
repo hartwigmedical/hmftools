@@ -33,10 +33,6 @@ public class SvLinkedPair {
     public static final String LINK_TYPE_TI = "TI";
     public static final String LINK_TYPE_DB = "DB";
 
-    public static String ASSEMBLY_MATCH_MATCHED = "MATCH";
-    public static String ASSEMBLY_MATCH_INFER_ONLY = "INFER_ONLY";
-    public static String ASSEMBLY_MATCH_NONE = "NONE";
-
     public static String LOCATION_TYPE_UNCLEAR = "Unclear";
     public static String LOCATION_TYPE_REMOTE = "Remote"; // TI is not on arm with any chain end
     public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds

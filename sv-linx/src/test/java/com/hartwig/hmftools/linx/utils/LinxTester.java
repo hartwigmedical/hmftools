@@ -19,6 +19,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
+import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
@@ -42,6 +43,7 @@ public class LinxTester
     public LinxConfig Config;
     public ClusterAnalyser Analyser;
     public CnDataLoader CnDataLoader;
+    public LineElementAnnotator LineAnnotator;
     public FusionDisruptionAnalyser FusionAnalyser;
 
     private int mNextVarId;
@@ -59,6 +61,9 @@ public class LinxTester
         Analyser = new ClusterAnalyser(Config);
         CnDataLoader = new CnDataLoader( "", null);
         Analyser.setCnDataLoader(CnDataLoader);
+
+        LineAnnotator = new LineElementAnnotator();
+        Analyser.setLineAnnotator(LineAnnotator);
 
         Analyser.setRunValidationChecks(true);
 

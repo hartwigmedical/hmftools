@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_MATCHED;
-import static com.hartwig.hmftools.linx.types.SvLinkedPair.ASSEMBLY_MATCH_NONE;
 import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
@@ -54,7 +52,6 @@ public class SvVarData
 
     private SvLinkedPair[] mDbLink; // deletion bridge formed from this breakend to another
     private List<List<String>> mTIAssemblies;
-    private String[] mAssemblyMatchType;
 
     private List<List<GeneAnnotation>> mGenes;
 
@@ -126,7 +123,6 @@ public class SvVarData
 
         mReplicationOrigin = new double[SE_PAIR];
 
-        mAssemblyMatchType = new String[SE_PAIR];
         mAssemblyData = new String[SE_PAIR];
         mTIAssemblies = Lists.newArrayListWithExpectedSize(2);
 
@@ -481,12 +477,9 @@ public class SvVarData
         return genesStr;
     }
 
-    public final String getAssemblyMatchType(boolean isStart) { return mAssemblyMatchType[seIndex(isStart)]; }
-    public boolean isAssemblyMatched(boolean isStart) { return getAssemblyMatchType(isStart).equals(ASSEMBLY_MATCH_MATCHED); }
-
-    public void setAssemblyMatchType(String type, boolean isStart)
+    public boolean hasAssemblyLink(boolean isStart)
     {
-        mAssemblyMatchType[seIndex(isStart)] = type;
+        return mTiLinks.get(seIndex(isStart)).stream().anyMatch(SvLinkedPair::isAssembled);
     }
 
     private void setAssemblyData(boolean useExisting)
@@ -500,8 +493,6 @@ public class SvVarData
         for(int se = SE_START; se <= SE_END; ++se)
         {
             List<String> tiAssemblies = mTIAssemblies.get(se);
-
-            mAssemblyMatchType[se] = ASSEMBLY_MATCH_NONE;
 
             if(!useExisting)
             {

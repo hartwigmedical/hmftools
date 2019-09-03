@@ -912,18 +912,6 @@ public class SvCluster
         return false;
     }
 
-    // private static int SPECIFIC_CLUSTER_ID_2 = 186;
-    private static int SPECIFIC_CLUSTER_ID_2 = -1;
-
-    public static boolean areSpecificClusters(final SvCluster cluster1, final SvCluster cluster2)
-    {
-        if((cluster1.id() == SPECIFIC_CLUSTER_ID && cluster2.id() == SPECIFIC_CLUSTER_ID_2)
-        || (cluster2.id() == SPECIFIC_CLUSTER_ID && cluster1.id() == SPECIFIC_CLUSTER_ID_2))
-            return true;
-
-        return false;
-    }
-
     public final List<String> getAnnotationList() { return mAnnotationList; }
 
     public final void addAnnotation(final String annotation)
