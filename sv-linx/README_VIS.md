@@ -173,9 +173,14 @@ fusion_height| 250 | Height of each fusion in pixels
 fusion_legend_rows| 1 | Number of rows in protein domain legend
 fusion_legend_height_per_row| 35 | Height of each row in protein domain legend 
 
-# Examples
+# Example Configurations
 
-## 4 to a page
+## Default
+
+The default parameters are configured to produce an image that is suitable to be on a single page. 
+
+
+## Smaller
 
 The following figures were constructed with the parameters:
 ```
@@ -184,8 +189,24 @@ The following figures were constructed with the parameters:
 ```
 
 <p align="center">
-    <img src="src/main/resources/readme/small1.png" width="400" alt="Fusion">
-    <img src="src/main/resources/readme/small2.png" width="400" alt="Fusion">
-    <img src="src/main/resources/readme/small3.png" width="400" alt="Fusion">
-    <img src="src/main/resources/readme/small4.png" width="400" alt="Fusion">
+    <img src="src/main/resources/readme/small1.png" width="400" alt="Small">
+    <img src="src/main/resources/readme/small2.png" width="400" alt="Small">
+    <img src="src/main/resources/readme/small3.png" width="400" alt="Small">
+    <img src="src/main/resources/readme/small4.png" width="400" alt="Small">
+</p>
+
+
+## TMPRESS2-ERG
+
+To accommodate the extra room required for the TMPRESS2 gene, this configuration increases the relative size of the gene track, decreases
+the relative size of the segment track and increases the max number of characters in a gene before scaling: 
+
+```
+-gene_relative_size 0.6 -segment_relative_size 0.7 -cna_relative_size 2
+-max_gene_characters 7
+-min_line_size 3
+```
+
+<p align="center">
+    <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRESS2-ERG">
 </p>
