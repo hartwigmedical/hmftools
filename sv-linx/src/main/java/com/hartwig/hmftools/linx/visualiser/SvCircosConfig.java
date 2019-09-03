@@ -36,14 +36,20 @@ public interface SvCircosConfig
     String FUSION_LEGEND_ROWS = "fusion_legend_rows";
     String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
 
-    String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
-
+    // Font Parameters
     String MIN_LABEL_SIZE = "min_label_size";
     String MAX_LABEL_SIZE = "max_label_size";
+    String MAX_GENE_CHARACTERS = "max_gene_characters";
+    String MAX_DISTANCE_LABELS = "max_distance_labels";
+    String MAX_POSITION_LABELS = "max_position_labels";
+
+    // Line Size
     String MIN_LINE_SIZE = "min_line_size";
     String MAX_LINE_SIZE = "max_line_size";
     String GLYPH_SIZE = "glyph_size";
-    String MAX_GENE_CHARACTERS = "max_gene_characters";
+
+    // Other
+    String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
 
     // Debug
     String EXACT_POSITION = "exact_position";
@@ -74,9 +80,11 @@ public interface SvCircosConfig
     int DEFAULT_GLYPH_SIZE = 20;
     int DEFAULT_MAX_GENE_CHARACTERS = 5;
 
+    int DEFAULT_MAX_DISTANCE_LABELS = 100;
+    int DEFAULT_MAX_POSITION_LABELS = 60;
+
     static void addOptions(@NotNull Options options)
     {
-
         options.addOption(OUTER_RADIUS, true, "Outermost ending radius of chromosome track [" + DEFAULT_OUTER_RADIUS + "]");
         options.addOption(INNER_RADIUS, true, "Innermost starting radius of minor-allele ploidy track [" + DEFAULT_INNER_RADIUS + "]");
         options.addOption(GAP_RADIUS, true, "Radial gap between tracks [" + DEFAULT_GAP_RADIUS + "]");
@@ -91,9 +99,6 @@ public interface SvCircosConfig
         options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
         options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
 
-        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
-        options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
-
         options.addOption(GENE_RELATIVE_SIZE,
                 true,
                 "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
@@ -104,16 +109,23 @@ public interface SvCircosConfig
                 true,
                 "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
 
-        options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
-        options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
-
-        options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
-        options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
+        options.addOption(MAX_DISTANCE_LABELS, true, "Maximum number of distance labels before removing them [" + DEFAULT_MAX_DISTANCE_LABELS + "]");
+        options.addOption(MAX_POSITION_LABELS, true, "Maximum number of position labels before increasing distance between labels [" + DEFAULT_MAX_POSITION_LABELS + "]");
         options.addOption(MAX_GENE_CHARACTERS,
                 true,
                 "Maximum number of character in gene allowed before scaling [" + DEFAULT_MAX_GENE_CHARACTERS + "]");
+
+        options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
+        options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
+        options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
+
+        options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
+
+        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
+        options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
+
     }
 
     // ----------------------- Fusion Parameters
@@ -135,15 +147,9 @@ public interface SvCircosConfig
 
     int maxGeneCharacters();
 
-    default int maxNumberOfPositionLabels()
-    {
-        return 60;
-    }
+    int maxNumberOfPositionLabels();
 
-    default int maxNumberOfDistanceLabels()
-    {
-        return 100;
-    }
+    int maxNumberOfDistanceLabels();
 
     // ----------------------- Relative Size Parameters
     double geneRelativeSize();
@@ -210,8 +216,6 @@ public interface SvCircosConfig
             throw new ParseException("Parameter " + MAX_LINE_SIZE + " should be > " + MIN_LINE_SIZE);
         }
 
-        // TODO: Add validation on ideogram radius etc
-
         return ImmutableSvCircosConfig.builder()
 
                 .outerRadius(radialParameter(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
@@ -219,27 +223,47 @@ public interface SvCircosConfig
                 .gapSize(radialParameter(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
                 .exonRankSize(radialParameter(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
 
+                .geneRelativeSize(relativeParameter(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
+                .segmentRelativeSize(relativeParameter(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
+                .copyNumberRelativeSize(relativeParameter(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
+
+                .minLabelSize(minLabelSize)
+                .maxLabelSize(maxLabelSize)
+                .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
+                .maxNumberOfDistanceLabels(defaultIntValue(cmd, MAX_DISTANCE_LABELS, DEFAULT_MAX_DISTANCE_LABELS))
+                .maxNumberOfPositionLabels(defaultIntValue(cmd, MAX_POSITION_LABELS, DEFAULT_MAX_POSITION_LABELS))
+
                 .fusionLegendRows(defaultIntValue(cmd, FUSION_LEGEND_ROWS, DEFAULT_FUSION_LEGEND_ROWS))
                 .fusionLegendHeightPerRow(defaultIntValue(cmd, FUSION_LEGEND_HEIGHT_PER_ROW, DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW))
                 .fusionHeight(defaultIntValue(cmd, FUSION_HEIGHT, DEFAULT_FUSION_HEIGHT))
+
                 .chromosomeRangeColumns(defaultIntValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS))
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
+
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
                 .showSvId(cmd.hasOption(SHOW_SV_ID))
-                .geneRelativeSize(defaultValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
-                .segmentRelativeSize(defaultValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
-                .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
                 .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
                 .glyphSize(defaultIntValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE))
-                .minLabelSize(minLabelSize)
-                .maxLabelSize(maxLabelSize)
+
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
-                .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
                 .build();
     }
 
-    static double radialParameter(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) throws ParseException
+    static double relativeParameter(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
+            throws ParseException
+    {
+        double value = defaultValue(cmd, opt, defaultValue);
+        if (!Doubles.greaterOrEqual(value, 0))
+        {
+            throw new ParseException("Relative parameter " + opt + " should be > 0");
+        }
+
+        return value;
+    }
+
+    static double radialParameter(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
+            throws ParseException
     {
         double value = defaultValue(cmd, opt, defaultValue);
         if (!Doubles.greaterOrEqual(value, 0) || Doubles.lessOrEqual(value, 1))

@@ -128,7 +128,6 @@ LINX visualisation requires CIRCOS to be installed as well as a number of R depe
 ```
 
 # Arguments
-//TODO: max_distance_labels
 
 ## Radial Arguments
 
@@ -158,7 +157,6 @@ cna_relative_size | 2 | Size of gene copy number alterations (including major/mi
 
 The gene track will not be displayed if `gene_relative` is 0 or if there are no genes to be displayed on the visualisation.
 
-
 ## Font Size
 
 The following parameters control the font size. 
@@ -167,8 +165,9 @@ Argument | Default | Description
 ---|---|---
 min_label_size| 35 | Minimum size of labels in pixels
 max_label_size | 40 | Maximum size of labels in pixels
-max_distance_labels | 100 | Maximum allowed number of distance labels
-max_gene_characters | 5 | Maximum allowed gene length before applying scaling
+max_distance_labels | 100 | Maximum number of distance labels before removing them
+max_position_labels | 60 | Maximum number of position labels before increasing distance between labels
+max_gene_characters | 5 | Maximum allowed gene length before applying scaling them
 
 The label size scales linearly from the min to the max label size as an inverse function of the number of distance labels to be plotted. 
 If the number of distance labels exceeds `max_distance_labels`, no distance labels will be shown and all labels will be sized with `min_label_size`.
@@ -177,6 +176,18 @@ The same label size will be applied genes unless there is a gene which exceeds `
 will be scaled down to prevent the gene labels from going outside the gene track. Adjusting this parameter is best done in conjuction with
 the `gene_relative_size` parameter.
 
+By default, position labels will be shown every 100k bases. However, if the number of labels exceeds `max_position_labels` then this will be reduced
+to every 1M or 10M bases.
+
+## Line Size
+
+The following parameters control the line and glyph sizes. The glyphs are used to represent the segment breaks, ie centromere, telomere, foldback etc.
+
+Argument | Default | Description 
+---|---|---
+min_line_size| 1 | Minimum size of lines in pixels
+max_line_size | 12 | Maximum size of lines in pixels
+glyph_size | 20 | Size of glyphs in pixels
 
 ## Chromosome Range Panel
 
@@ -184,7 +195,6 @@ Argument | Default | Description
 ---|---|---
 chr_range_height| 150 | Chromosome range row height in pixels
 chr_range_columns| 6 | Maximum chromosomes per row
-
 
 ## Fusion Panel
 
@@ -206,7 +216,7 @@ The default parameters are configured to produce an image that is suitable for d
 
 ## Reduced Footprint
 
-In order to make the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
+In order to keep the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
 for the larger font, we reduce the relative size of the segment track and increase the space allowed for the exons as shown:
 
 ```
