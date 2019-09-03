@@ -177,7 +177,7 @@ fusion_legend_height_per_row| 35 | Height of each row in protein domain legend
 
 ## Default
 
-The default parameters are configured to produce an image that is suitable for a single page as shown in this SS18-SSX1 fusion example:
+The default parameters are configured to produce an image that is suitable for display on a single page as shown in this SS18-SSX1 fusion example:
 
 <p align="center">
     <img src="src/main/resources/readme/default.png" width="800" alt="default">
@@ -185,8 +185,8 @@ The default parameters are configured to produce an image that is suitable for a
 
 ## Smaller
 
-In order to make the image clear at smaller sizes, we have increased the size of the font and the thickness of the lines. To make room, 
-for the larger font, we have reduced the relative size of the segment track and increased the space allowed for the exons as shown:
+In order to make the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
+for the larger font, we reduce the relative size of the segment track and increase the space allowed for the exons as shown:
 
 ```
 -fusion_legend_height_per_row 70
@@ -214,7 +214,7 @@ d) a bi-allelic disruption of TP53
 
 ## Line Insertions
 
-The following examples have similar configurations to the smaller images above but the second has the additional flag set:
+The following examples have similar configurations to the smaller images above but the second has an additional flag:
 
 ```
 -interpolate_cna_positions
@@ -229,7 +229,7 @@ more room for the area of interest on chromosome 14.
 
 ## TMPRESS2-ERG
 
-To accommodate the extra room required for the TMPRESS2 gene, this TMPRESS2-EFG fusion configuration increases the relative size of the gene 
+To accommodate the extra room required for the TMPRESS2 gene label, this configuration increases the relative size of the gene 
 track, decreases the relative size of the segment track and increases the max number of characters in a gene before scaling: 
 
 ```
