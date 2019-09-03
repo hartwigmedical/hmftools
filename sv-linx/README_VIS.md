@@ -224,8 +224,8 @@ The following examples have similar configurations to the smaller images above b
     <img src="src/main/resources/readme/line2.png" width="400" alt="Line">
 </p>
 
-In the second picture, we have not scaled the copy number positions to the log scale but have interpolated them instead. This frees up
-more room for the area of interest on chromosome 14.
+In the second picture, we have reduced the emphasis on the copy number alternation by interpolating their positions rather than including 
+them in the log scale. This frees up more room for the area of interest on chromosome 14.
 
 ## TMPRESS2-ERG
 
