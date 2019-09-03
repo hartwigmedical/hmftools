@@ -186,4 +186,6 @@ The following figures were constructed with the parameters:
 <p align="center">
     <img src="src/main/resources/readme/small1.png" width="400" alt="Fusion">
     <img src="src/main/resources/readme/small2.png" width="400" alt="Fusion">
+    <img src="src/main/resources/readme/small3.png" width="400" alt="Fusion">
+    <img src="src/main/resources/readme/small4.png" width="400" alt="Fusion">
 </p>
