@@ -19,6 +19,9 @@ public class VisGeneData
     // optional list of exons by rank and any adjustments to their positions for display
     public final Map<Integer,int[]> ExonPositionOffsets;
 
+    // exons by rank and their adjusted positions for exons not retained in this cluster
+    public final Map<Integer,int[]> ExonsLostOffsets;
+
     public VisGeneData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final String annotationType)
     {
@@ -31,5 +34,6 @@ public class VisGeneData
         AnnotationType = annotationType;
 
         ExonPositionOffsets = Maps.newHashMap();
+        ExonsLostOffsets = Maps.newHashMap();
     }
 }

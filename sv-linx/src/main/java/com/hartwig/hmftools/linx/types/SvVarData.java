@@ -430,6 +430,7 @@ public class SvVarData
 
     public static boolean isStart(int svIter) { return svIter == SE_START; }
     public static int seIndex(boolean isStart) { return isStart ? SE_START : SE_END; }
+    public static int switchIndex(int svIter) { return svIter == SE_START ? SE_END : SE_START; }
 
     public String getAssemblyData(boolean isStart) { return mAssemblyData[seIndex(isStart)]; }
 

@@ -59,7 +59,7 @@ public class VisualiserWriter
     public final static String GENE_TYPE_DRIVER = "DRIVER";
     public final static String GENE_TYPE_FUSION = "FUSION";
     public final static String GENE_TYPE_PSEUDOGENE = "PSEUDO";
-    public final static String GENE_TYPE_UNMATCHED = "UNMATCHED";
+    public final static String GENE_TYPE_EXON_LOST = "EXON_LOST";
 
     private static final Logger LOGGER = LogManager.getLogger(VisualiserWriter.class);
 
@@ -136,11 +136,8 @@ public class VisualiserWriter
         mGeneData.add(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
     }
 
-    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final String annotationType, final Map<Integer,int[]> exonRanks)
+    public void addGeneExonData(final VisGeneData geneData)
     {
-        VisGeneData geneData = new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType);
-        geneData.ExonPositionOffsets.putAll(exonRanks);
         mGeneData.add(geneData);
     }
 
@@ -394,13 +391,20 @@ public class VisualiserWriter
                 else
                 {
                     final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.ExonRank);
+                    final int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.ExonRank);
 
-                    final String annotation = exonPosOffsets != null ? geneData.AnnotationType : GENE_TYPE_UNMATCHED;
+                    long exonStart = exonData.ExonStart + exonPosOffsets[SE_START];
+                    long exonEnd = exonData.ExonEnd + exonPosOffsets[SE_END];
 
                     geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                            geneData.Chromosome, annotation, exonData.ExonRank,
-                            exonData.ExonStart + (exonPosOffsets != null ? exonPosOffsets[SE_START] : 0),
-                            exonData.ExonEnd + (exonPosOffsets != null ? exonPosOffsets[SE_END] : 0)));
+                            geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonStart, exonEnd));
+
+                    if(exonsLost != null)
+                    {
+                        geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
+                                geneData.Chromosome, GENE_TYPE_EXON_LOST, exonData.ExonRank,
+                                exonStart + exonsLost[SE_START], exonEnd + exonsLost[SE_END]));
+                    }
                 }
             }
 

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.types.SvVarData.switchIndex;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_PSEUDOGENE;
 
 import java.util.List;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 
 import org.apache.logging.log4j.LogManager;
@@ -116,7 +118,8 @@ public class PseudoGeneFinder
                         if(matchedPairs.isEmpty())
                             continue;
 
-                        Map<Integer,int[]> exonPositionOffsets = Maps.newHashMap();
+                        VisGeneData geneData = new VisGeneData(cluster.id(), gene.StableId, gene.GeneName,
+                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), GENE_TYPE_PSEUDOGENE);
 
                         final int selectedTransId = maxTrans.TransId;
 
@@ -129,6 +132,7 @@ public class PseudoGeneFinder
                             if(pseudoMatch != null)
                             {
                                 int[] exonPosOffsets = new int[SE_PAIR];
+                                int[] exonsLost = new int[SE_PAIR];
 
                                 String exonMatchData = String.format("%s;%s;%d;%d",
                                         gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
@@ -141,6 +145,11 @@ public class PseudoGeneFinder
                                     {
                                         exonPosOffsets[se] = pseudoMatch.HomologyOffset[se];
                                     }
+                                    else if(pseudoMatch.PositionMismatch[se] < 0)
+                                    {
+                                        exonPosOffsets[se] = 0;
+                                        exonsLost[se] = pseudoMatch.PositionMismatch[se];
+                                    }
 
                                     boolean homMismatch = hasHomologyMismatch(breakend.getSV(), pairMatchesMap, selectedTransId);
 
@@ -150,12 +159,57 @@ public class PseudoGeneFinder
 
                                 pair.setExonMatchData(exonMatchData);
 
-                                exonPositionOffsets.put(pseudoMatch.ExonRank, exonPosOffsets);
+                                geneData.ExonPositionOffsets.put(pseudoMatch.ExonRank, exonPosOffsets);
+
+                                if(exonsLost[SE_START] != 0 || exonsLost[SE_END] != 0)
+                                    geneData.ExonsLostOffsets.put(pseudoMatch.ExonRank, exonsLost);
                             }
                         }
 
-                        mVisWriter.addGeneExonData(cluster.id(), gene.StableId, gene.GeneName,
-                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), GENE_TYPE_PSEUDOGENE, exonPositionOffsets);
+                        final TranscriptData transData = mGeneTransCache.getTranscriptData(geneData.GeneId, geneData.TransName);
+
+                        if(transData == null || transData.exons().isEmpty())
+                            continue;
+
+                        for (final ExonData exonData : transData.exons())
+                        {
+                            boolean hasPosOffsets = geneData.ExonPositionOffsets.containsKey(exonData.ExonRank);
+
+                            int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.ExonRank);
+
+                            if(hasPosOffsets && exonsLost == null)
+                                continue;
+
+                            // every exon will have an entry to show the full set of exons
+                            if(!hasPosOffsets)
+                            {
+                                geneData.ExonPositionOffsets.put(exonData.ExonRank, new int[] { 0, 0 });
+                            }
+
+                            // now work out position adjustments for the exons lost
+                            if(exonsLost == null)
+                            {
+                                geneData.ExonsLostOffsets.put(exonData.ExonRank, new int[] { 0, 0});
+                            }
+                            else
+                            {
+                                long exonLength = exonData.ExonEnd - exonData.ExonStart;
+
+                                // if say X bases have been lost from the start, then set the end to factor this in
+                                if(exonsLost[SE_START] < 0)
+                                {
+                                    exonsLost[SE_END] = -(int)(exonLength + exonsLost[SE_START]);
+                                    exonsLost[SE_START] = 0;
+                                }
+                                else if(exonsLost[SE_END] < 0)
+                                {
+                                    exonsLost[SE_START] = (int)(exonLength + exonsLost[SE_END]);
+                                    exonsLost[SE_END] = 0;
+                                }
+                            }
+                        }
+
+                        mVisWriter.addGeneExonData(geneData);
                     }
                 }
             }
