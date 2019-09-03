@@ -51,7 +51,7 @@ the copy number regions in the 3rd track. For known LINE source elements the gre
 fragile sites the red copy number section is shaded light grey. 
 
 
-# Chromosome View
+# Chromosome Range Panel
 
 Since the CIRCOS only represents a part of the genome, the chromosome view is provided to indicate which parts of the genome is shown. 
 Each of the chromosomes included in the cluster(s) shown is displayed. 
@@ -65,7 +65,7 @@ and a small slither of chromosome 15 on the Q arm:
     <img src="src/main/resources/readme/chr7.png" width="600" alt="Chromosome View">
 </p>
 
-# Fusion View
+# Fusion Panel
 
 The fusion view is added for reportable fusions only in LINX. It’s purpose is to show the predicted structure of the fused gene. 
 The fusion includes the fused segments of both the 5’ and 3’ partner in blue and red and always reads from left to right. 
@@ -173,3 +173,17 @@ fusion_height| 250 | Height of each fusion in pixels
 fusion_legend_rows| 1 | Number of rows in protein domain legend
 fusion_legend_height_per_row| 35 | Height of each row in protein domain legend 
 
+# Examples
+
+## 4 to a page
+
+The following figures were constructed with the parameters:
+```
+
+
+```
+
+<p align="center">
+    <img src="src/main/resources/readme/small1.png" width="500" alt="Fusion">
+    <img src="src/main/resources/readme/small2.png" width="500" alt="Fusion">
+</p>
