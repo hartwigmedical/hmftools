@@ -8,7 +8,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
@@ -78,11 +77,13 @@ public class CircosData
         final List<GenomePosition> positionsToScale = Lists.newArrayList();
         positionsToScale.addAll(Links.allPositions(unadjustedLinks));
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
-        unadjustedGenes.stream().map(x -> GenomePositions.create(x.chromosome(), x.namePosition())).forEach(positionsToScale::add);
-        positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
         positionsToScale.addAll(config.interpolateCopyNumberPositions()
                 ? Span.minMaxPositions(unadjustedAlterations)
                 : Span.allPositions(unadjustedAlterations));
+        if (!config.interpolateExonPositions())
+        {
+            positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
+        }
 
         final List<GenomeRegion> unadjustedFragileSites =
                 Highlights.limitHighlightsToRegions(Highlights.fragileSites(), Span.spanPositions(positionsToScale));
