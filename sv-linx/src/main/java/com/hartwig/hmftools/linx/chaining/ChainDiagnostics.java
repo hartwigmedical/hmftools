@@ -249,7 +249,7 @@ public class ChainDiagnostics
             {
                 String outputFileName = mOutputDir;
 
-                outputFileName += "SVA_CHAINS.csv";
+                outputFileName += "LNX_CHAINS.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 

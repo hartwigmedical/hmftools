@@ -389,7 +389,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            String outputFileName = mConfig.OutputDataPath + "SVA_SVS.csv";
+            String outputFileName = mConfig.OutputDataPath + "LNX_SVS.csv";
 
             mSvFileWriter = createBufferedWriter(outputFileName, false);
 
@@ -629,7 +629,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            String outputFileName = mConfig.OutputDataPath + "SVA_CLUSTERS.csv";
+            String outputFileName = mConfig.OutputDataPath + "LNX_CLUSTERS.csv";
 
             mClusterFileWriter = createBufferedWriter(outputFileName, false);
 
@@ -741,7 +741,7 @@ public class SvSampleAnalyser {
     {
         try
         {
-            String outputFileName = mConfig.OutputDataPath + "SVA_LINKS.csv";
+            String outputFileName = mConfig.OutputDataPath + "LNX_LINKS.csv";
 
             mLinksFileWriter = createBufferedWriter(outputFileName, false);
 

@@ -74,7 +74,7 @@ public class MultipleBiopsyAnalyser
     {
         final Options options = new Options();
         options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
-        options.addOption(SVA_INPUT_FILE, true, "SVA SVs file");
+        options.addOption(SVA_INPUT_FILE, true, "LINX SVs file");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         return options;
     }
@@ -491,7 +491,7 @@ public class MultipleBiopsyAnalyser
         {
             if (mSvWriter == null)
             {
-                String outputFileName = mOutputDir + "SVA_MB_SV_DATA.csv";
+                String outputFileName = mOutputDir + "LNX_MB_SV_DATA.csv";
 
                 mSvWriter = createBufferedWriter(outputFileName, false);
 
@@ -548,7 +548,7 @@ public class MultipleBiopsyAnalyser
         {
             if (mMergeWriter == null)
             {
-                String outputFileName = mOutputDir + "SVA_MB_MERGE_DATA.csv";
+                String outputFileName = mOutputDir + "LNX_MB_MERGE_DATA.csv";
 
                 mMergeWriter = createBufferedWriter(outputFileName, false);
 
@@ -574,7 +574,7 @@ public class MultipleBiopsyAnalyser
         {
             if (mClusterOverlapWriter == null)
             {
-                String outputFileName = mOutputDir + "SVA_MB_CLUSTER_DATA.csv";
+                String outputFileName = mOutputDir + "LNX_MB_CLUSTER_DATA.csv";
 
                 mClusterOverlapWriter = createBufferedWriter(outputFileName, false);
 

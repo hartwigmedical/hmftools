@@ -151,11 +151,11 @@ public class FusionDisruptionAnalyser
 
         if(cmdLineArgs != null)
         {
-            String fusionFileName = mConfig.hasMultipleSamples() ? "SVA_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
+            String fusionFileName = mConfig.hasMultipleSamples() ? "LNX_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
             mFusionWriter.initialiseOutputFile(fusionFileName);
 
             if(mConfig.hasMultipleSamples())
-                mDisruptionFinder.initialiseOutputFile("SVA_DISRUPTIONS.csv");
+                mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
 
             if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
             {

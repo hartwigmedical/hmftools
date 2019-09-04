@@ -1005,7 +1005,7 @@ public class DriverGeneAnnotator
             {
                 String outputFileName = mOutputDir;
 
-                outputFileName += "SVA_DRIVERS.csv";
+                outputFileName += "LNX_DRIVERS.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 

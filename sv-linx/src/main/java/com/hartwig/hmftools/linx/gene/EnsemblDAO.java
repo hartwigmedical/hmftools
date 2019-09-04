@@ -43,8 +43,6 @@ public class EnsemblDAO
     private static String DB_PASS = "ensembl_pass";
 
     public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
-    public static String ENSEMBL_TRANSCRIPT_DATA_FILE = "ensembl_transcript_data.csv";
-    public static String ENSEMBL_EXON_DATA_FILE = "ensembl_exon_data.csv";
     public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
     public static String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
     public static String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";

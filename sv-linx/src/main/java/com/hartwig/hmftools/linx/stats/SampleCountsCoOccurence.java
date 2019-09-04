@@ -66,7 +66,7 @@ public class SampleCountsCoOccurence
         loadDriverGeneData(driverDataFile);
         loadSampleCountsData(sampleCountsFile);
 
-        final String outputFile = outputDir + "SVA_STATS_2VAR.csv";
+        final String outputFile = outputDir + "LNX_STATS_2VAR.csv";
         return initialiseTwoVariableOutput(outputFile);
     }
 

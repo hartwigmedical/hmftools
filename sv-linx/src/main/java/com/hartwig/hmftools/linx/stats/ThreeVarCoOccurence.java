@@ -208,7 +208,7 @@ public class ThreeVarCoOccurence
     {
         loadSampleGenericData(filename);
 
-        final String outputFile = outputDir + "SVA_STATS_3VAR.csv";
+        final String outputFile = outputDir + "LNX_STATS_3VAR.csv";
         return initialiseOutput(outputFile);
     }
 

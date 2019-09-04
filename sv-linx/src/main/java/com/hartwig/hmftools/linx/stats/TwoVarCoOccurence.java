@@ -174,7 +174,7 @@ public class TwoVarCoOccurence
     {
         loadSampleGenericData(filename);
 
-        final String outputFile = outputDir + "SVA_STATS_2VAR.csv";
+        final String outputFile = outputDir + "LNX_STATS_2VAR.csv";
         return initialiseOutput(outputFile);
     }
 

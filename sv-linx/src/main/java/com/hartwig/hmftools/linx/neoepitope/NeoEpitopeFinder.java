@@ -434,7 +434,7 @@ public class NeoEpitopeFinder
         {
             if(mFileWriter == null)
             {
-                String outputFileName = mOutputDir + "SVA_NEO_EPITOPES.csv";
+                String outputFileName = mOutputDir + "LNX_NEO_EPITOPES.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 

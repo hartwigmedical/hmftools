@@ -120,7 +120,7 @@ public class KataegisAnnotator
         {
             if(mFileWriter == null)
             {
-                String outputFileName = mOutputDir + "SVA_KATAEGIS.csv";
+                String outputFileName = mOutputDir + "LNX_KATAEGIS.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 

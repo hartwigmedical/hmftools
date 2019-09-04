@@ -215,7 +215,7 @@ public class SimpleClustering
         {
             if(mClusterHistoryWriter == null)
             {
-                String outputFileName = mConfig.OutputDataPath + "SVA_CLUSTERING_HISTORY.csv";
+                String outputFileName = mConfig.OutputDataPath + "LNX_CLUSTERING_HISTORY.csv";
 
                 mClusterHistoryWriter = createBufferedWriter(outputFileName, false);
 

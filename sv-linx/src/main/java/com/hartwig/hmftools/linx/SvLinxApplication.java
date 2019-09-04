@@ -153,7 +153,7 @@ public class SvLinxApplication
             }
         }
 
-        PerformanceCounter prefCounter = new PerformanceCounter("SVA Total");
+        PerformanceCounter prefCounter = new PerformanceCounter("Total");
 
         int count = 0;
         for (final String sampleId : samplesList)

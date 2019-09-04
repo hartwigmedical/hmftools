@@ -808,7 +808,7 @@ public class RnaFusionMapper
             {
                 String outputFilename = mOutputDir;
 
-                outputFilename += "SVA_RNA_DATA.csv";
+                outputFilename += "LNX_RNA_DATA.csv";
 
                 mWriter = createBufferedWriter(outputFilename, false);
 

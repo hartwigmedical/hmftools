@@ -475,7 +475,7 @@ public class DoubleMinuteFinder
             {
                 String outputFileName = mOutputDir;
 
-                outputFileName += "SVA_DM.csv";
+                outputFileName += "LNX_DOUBLE_MINUTES.csv";
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 

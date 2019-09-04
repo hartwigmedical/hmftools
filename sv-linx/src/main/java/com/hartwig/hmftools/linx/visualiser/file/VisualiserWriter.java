@@ -84,23 +84,23 @@ public class VisualiserWriter
     {
         try
         {
-            mSvFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SVS.tsv", false);
+            mSvFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_SVS.tsv", false);
             mSvFileWriter.write(VisSvDataFile.header());
             mSvFileWriter.newLine();
 
-            mSegmentFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_SEGMENTS.tsv", false);
+            mSegmentFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_SEGMENTS.tsv", false);
             mSegmentFileWriter.write(VisSegmentFile.header());
             mSegmentFileWriter.newLine();
 
-            mCnFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_COPY_NUMBER.tsv", false);
+            mCnFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_COPY_NUMBER.tsv", false);
             mCnFileWriter.write(VisCopyNumberFile.header());
             mCnFileWriter.newLine();
 
-            mGeneFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_GENE_EXONS.tsv", false);
+            mGeneFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_GENE_EXONS.tsv", false);
             mGeneFileWriter.write(VisGeneExonFile.header());
             mGeneFileWriter.newLine();
 
-            mProteinDomainFileWriter = createBufferedWriter(mOutputDir + "SVA_VIS_PROTEIN_DOMAINS.tsv", false);
+            mProteinDomainFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_PROTEIN_DOMAINS.tsv", false);
             mProteinDomainFileWriter.write(VisProteinDomainFile.header());
             mProteinDomainFileWriter.newLine();
         }
