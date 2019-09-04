@@ -5,55 +5,26 @@ LINX is an annotation, interpretation and visualisation tool for structural vari
 ## Contents
 
 * [Configuration](#configuration)
-* [Definitions and Key Classes](#definitions-and-key-classes)
-* [Pre-Clustering Routines](#pre-clustering-routines)
-* [Clustering](#clustering)
-* [Chaining](#chaining)
-* [Fusion Detection](#fusions-analysis)
-* [Driver Gene Analysis](#driver-gene-annotation)
+  + [Example Usage](#example-usage)
+* [Dependencies](#dependencies)
+* [Key Concepts in LINX](#key-concepts-in-linx)
+  + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
+  + [Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
+* [LINX ALGORITHM](#linx-algorithm)
+  + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
+  + [Clustering of SVs into events](#clustering-of-svs-into-events)
+  + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
+  + [Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
 * [Version History](#version-history)
-
-## Dependencies
-
-LINX reads sample data from the following HMF tables:
-* copyNumber
-* structuralVariant
-* purity
-* geneCopyNumber and driverCatalog - if running driver annotation
-
-LINX uploads samples data to the following HMF tables:
-* svAnnotation, svCluster and svLink, viralInsertion
-* svBreakend, svFusio and svDriver
 
 ## Configuration
 All values are optional unless otherwise specified.
 
-Example command and arguments:
-
-```
-java -jar sv-linx.jar 
-    -sample SAMPLE_ID 
-    -db_url [db_url] -db_user [username] -db_pass [password] 
-    -output_dir /path_to_sample_data/ 
-    -fragile_site_file fragile_sites.csv 
-    -line_element_file line_elements.csv 
-    -replication_origins_file heli_rep_origins.bed 
-    -viral_hosts_file viral_host_ref.csv 
-    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
-    -check_fusions 
-    -fusion_pairs_csv knownFusionPairs.csv 
-    -promiscuous_five_csv knownPromiscuousFive.csv 
-    -promiscuous_three_csv knownPromiscuousThree.csv 
-    -write_vis_data 
-    -log_debug
-```
-
-
 ### Core
 Argument  | Description
 ---|---
-sample  | Options: a specific sample
-output_dir | Required, directory where all output files are written
+sample  | Required: Specific sample ID
+output_dir | Required: directory where all output files are written
 database connectivity | db_user, db_pass and db_url
 
 #### Multi-sample batch mode
@@ -101,6 +72,28 @@ Argument  | Description
 write_vis_data | write output to for generation of Circos clustering and chaining plots
 log_debug | logs in debug mode
 
+### Example usages
+
+Example command and arguments:
+
+```
+java -jar sv-linx.jar 
+    -sample SAMPLE_ID 
+    -db_url [db_url] -db_user [username] -db_pass [password] 
+    -output_dir /path_to_sample_data/ 
+    -fragile_site_file fragile_sites.csv 
+    -line_element_file line_elements.csv 
+    -replication_origins_file heli_rep_origins.bed 
+    -viral_hosts_file viral_host_ref.csv 
+    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -check_fusions 
+    -fusion_pairs_csv knownFusionPairs.csv 
+    -promiscuous_five_csv knownPromiscuousFive.csv 
+    -promiscuous_three_csv knownPromiscuousThree.csv 
+    -write_vis_data 
+    -log_debug
+```
+
 ### Generating cached Ensembl data files
 To annotate SVs with gene information and to support fusion detection, LINX uses gene, transcript, exon and protein domain information from the Ensembl database. 
 To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time LINX runs.
@@ -113,6 +106,18 @@ java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
     -ensembl_db [db_url] -ensembl_user [username] -ensembl_pass [password] 
     -output_dir /path_to_write_data_files/ 
 ```
+
+## Dependencies
+
+LINX reads sample data from the following HMF tables:
+* copyNumber
+* structuralVariant
+* purity
+* geneCopyNumber and driverCatalog - if running driver annotation
+
+LINX uploads samples data to the following HMF tables:
+* svAnnotation, svCluster and svLink, viralInsertion
+* svBreakend, svFusio and svDriver
 
 
 ## Key Concepts in LINX
@@ -488,7 +493,7 @@ Consecutive breakends with no more than 5kb between them or which are part of th
 * COMPLEX_OTHER - Any other cluster
 
 
-### 2.4 Gene impact & fusion prediction
+### 2.4 Gene impact and fusion prediction
 
 #### Annotation of breakends with potential gene impact
 For each breakend we search for genes that could be potentially disrupted or fused by the structural variant. 
