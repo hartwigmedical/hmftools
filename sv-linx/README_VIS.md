@@ -129,6 +129,21 @@ LINX visualisation requires CIRCOS to be installed as well as a number of R depe
 
 # Arguments
 
+## Required Arguments
+
+Argument |  Description 
+---|---
+sample| Sample name
+plot_out | Plot output directory
+data_out | Data output directory
+segment | Path to segment file
+link | Path to link file
+protein_domain | Path to protein domain file
+fusion | Path to fusion file
+cna | Path to copy number alteration file
+exon | Path to exon file
+circos |Path to circos binary
+
 ## Radial Arguments
 
 The following arguments are all relative to the total radius of the CIRCOS panel and must be between 0 and 1. 
@@ -222,6 +237,34 @@ fusion_height| 250 | Height of each fusion in pixels
 fusion_legend_rows| 1 | Number of rows in protein domain legend
 fusion_legend_height_per_row| 35 | Height of each row in protein domain legend 
 
+## Other Arguments
+
+Argument |  Description 
+---|---
+clusterId | Only generate image for specified comma separated clusters
+chromosome | Only generate images for specified comma separated chromosomes
+threads | Number of threads to use
+include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
+
+If neither `chromosome` nor `clusterId` are included, separate visualisations of all chromosomes and clusterIds in the provided files will be created.
+
+# Example Usage
+
+```
+java -cp sv-linx.jar com.hartwig.hmftools.linx.visualiser.SvVisualiser \
+    -sample COLO829T \
+    -plot_out ~/linx/plot \
+    -data_out ~/linx/data \
+    -segment ~/linx/COLO829T.linx.vis_segments.tsv \
+    -link ~/linx/COLO829T.linx.vis_sv_data.tsv \
+    -exon ~/linx/COLO829T.linx.vis_gene_exon.tsv \
+    -cna ~/linx/COLO829T.linx.vis_copy_number.tsv \
+    -protein_domain ~/linx/COLO829T.linx.vis_protein_domain.tsv \
+    -fusion ~/linx/COLO829T.linx.fusions.tsv \
+    -circos ~tools/circos-0.69-6/bin/circos \
+    -threads 8
+```
+
 # Example Configurations
 
 ## Default
@@ -292,4 +335,3 @@ track, decreases the relative size of the segment track and increases the max nu
 </p>
 
 
-#Version History

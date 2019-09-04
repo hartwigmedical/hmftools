@@ -48,13 +48,13 @@ public interface SvVisualiserConfig
     String FUSION = "fusion";
     String LINK = "link";
     String CIRCOS = "circos";
-    String THREADS = "threads";
     String DEBUG = "debug";
     String CLUSTERS = "clusterId";
     String CHROMOSOMES = "chromosome";
     String CNA = "cna";
     String EXON = "exon";
-    String SCALE_EXON = "scale_exons";
+
+    String THREADS = "threads";
     String INCLUDE_LINE_ELEMENTS = "include_line_elements";
     String GENE = "gene";
 
@@ -92,8 +92,6 @@ public interface SvVisualiserConfig
 
     boolean debug();
 
-    boolean scaleExons();
-
     boolean includeLineElements();
 
     @NotNull
@@ -109,20 +107,20 @@ public interface SvVisualiserConfig
         options.addOption(PLOT_OUT, true, "Plot output directory");
         options.addOption(DATA_OUT, true, "Data output directory");
         options.addOption(SAMPLE, true, "Sample name");
-        options.addOption(SEGMENT, true, "Path to track file");
+        options.addOption(SEGMENT, true, "Path to segment file");
         options.addOption(LINK, true, "Path to link file");
         options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file");
         options.addOption(FUSION, true, "Path to fusion file");
         options.addOption(CIRCOS, true, "Path to circos binary");
-        options.addOption(THREADS, true, "Number of threads to use");
-        options.addOption(DEBUG, false, "Enabled debug mode");
 
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
-        options.addOption(CNA, true, "Path to copy number alterations");
-        options.addOption(EXON, true, "Path to exons");
-        options.addOption(SCALE_EXON, false, "Scale exon positions instead of interpolating them");
+        options.addOption(CNA, true, "Path to copy number alteration file");
+        options.addOption(EXON, true, "Path to exon file");
+
+        options.addOption(DEBUG, false, "Enabled debug mode");
+        options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(INCLUDE_LINE_ELEMENTS, false, "Include line elements in chromosome plots");
 
         return options;
@@ -200,7 +198,6 @@ public interface SvVisualiserConfig
                 .debug(cmd.hasOption(DEBUG))
                 .clusters(clusterIds)
                 .chromosomes(chromosomes(cmd))
-                .scaleExons(cmd.hasOption(SCALE_EXON))
                 .includeLineElements(cmd.hasOption(INCLUDE_LINE_ELEMENTS))
                 .build();
     }
