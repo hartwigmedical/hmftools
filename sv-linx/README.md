@@ -15,14 +15,15 @@ LINX is an annotation, interpretation and visualisation tool for structural vari
 
 ## Dependencies
 
-Required DB tables:
+LINX reads sample data from the following HMF tables:
 * copyNumber
 * structuralVariant
-* svAnnotation, svCluster and svLink
-* svBreakend and svFusion
-* purity - can be empty but needs to exist (but see note about QC below)
-* geneCopyNumber - can be empty but needs to exist 
-* driverCatalog - can be empty but needs to exist
+* purity
+* geneCopyNumber and driverCatalog - if running driver annotation
+
+LINX uploads samples data to the following HMF tables:
+* svAnnotation, svCluster and svLink, viralInsertion
+* svBreakend, svFusio and svDriver
 
 ## Configuration
 All values are optional unless otherwise specified.
@@ -48,13 +49,14 @@ java -jar sv-linx.jar
 ```
 
 
-#### Core
+### Core
 Argument  | Description
 ---|---
 sample  | Options: a specific sample
 output_dir | Required, directory where all output files are written
 database connectivity | db_user, db_pass and db_url
 
+#### Multi-sample batch mode
 LINX can run in a batch mode where it processes multiple samples at once. In this case it downloads SV and copy number data for each sample from the HMF database.
 
 The set of samples to be processed is specified in the 'sample' config value in 1 of 3 ways:
@@ -62,13 +64,13 @@ The set of samples to be processed is specified in the 'sample' config value in 
 * a CSV containing sample IDs with file header SampleId
 * an '*' to process all samples in the HMF purity table. If the config option 'filter_qc_pass' is present then only samples passing QC are processed.
 
-#### Modes and Routines
+### Modes and Routines
 Argument  | Description
 ---|---
 check_drivers | run driver annotation logic
 check_fusions | discover and annotate gene fusions
 
-#### Reference files
+### Reference files
 Argument  | Description
 ---|---
 fragile_site_file | list of known fragile sites
@@ -79,13 +81,13 @@ gene_transcripts_dir | directory for Ensembl reference files
 sv_data_dir | directory for SV flat-file when not using database
 purple_dir | directory for purple and purity data files when not using database
 
-#### Clustering
+### Clustering
 Argument  | Description
 ---|---
 proximity_distance | (default = 5000), minimum distance to cluster SVs 
 chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 2000)
 
-#### Fusions Analysis
+### Fusions Analysis
 Argument  | Description
 ---|---
 log_reportable_fusion | only log reportable fusions
@@ -93,13 +95,13 @@ fusion_pairs_csv, promiscuous_five_csv, promiscuous_three_csv | reference files 
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 
-#### Logging
+### Logging
 Argument  | Description
 ---|---
 write_vis_data | write output to for generation of Circos clustering and chaining plots
 log_debug | logs in debug mode
 
-#### Generating cached Ensembl data files
+### Generating cached Ensembl data files
 To annotate SVs with gene information and to support fusion detection, LINX uses gene, transcript, exon and protein domain information from the Ensembl database. 
 To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time LINX runs.
 
