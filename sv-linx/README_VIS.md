@@ -1,9 +1,32 @@
 # LINX Visualisation
 
 LINX provides functionality to present detailed visualisation of genomic rearrangements including genic impact in [CIRCOS](http://circos.ca/]format). 
-LINX writes a set of 'VIS' files in a specific format which form the base data to generate the visualisation. 
-The visualisation tool only depends on these files and so in principle any tool could provide SV & CN data in this format.
 
+# Contents
+
+* [Visualisation](#visualisation)
+  + [Circos Panel](#circos-panel)
+  + [Fusion Panel](#fusion-panel)
+  + [Chromosome Range Panel](#chromosome-range-panel)
+* [Dependencies](#dependencies)
+* [Usage](#usage)
+  + [Required Arguments](#required-arguments)
+  + [Radial Arguments](#radial-arguments)
+  + [Relative Track Sizes](#relative-track-sizes)
+  + [Font Size](#font-size)
+  + [Line Size](#line-size)
+  + [Interpolate Positions](#interpolate-positions)
+  + [Chromosome Range Panel](#chromosome-range-panel)
+  + [Fusion Panel](#fusion-panel)
+  + [Other Arguments](#other-arguments)
+  + [Example Usage](#example-usage)
+* [Example Configurations](#example-configurations)
+  + [Default](#default)  
+  + [Reduced Footprint](#reduced-footprint)  
+  + [Line Event](#line-event)  
+  + [TMPRSS2-ERG Fusion](#tmprss2-erg-fusion)  
+
+# Visualisation
 There are 3 panels in the output of the LINX visualisation:
 
 ## Circos Panel
@@ -114,8 +137,10 @@ and a small slither of chromosome 15 on the Q arm:
 
 
 # Dependencies
+LINX writes a set of 'VIS' files in a specific format which form the base data to generate the visualisation. 
+The visualisation tool only depends on these files for data and so in principle any tool could provide SV & CNA data in this format.
 
-LINX visualisation requires CIRCOS to be installed as well as a number of R dependencies that can be installed with the commands:
+Additionally, LINX visualisation requires CIRCOS to be installed as well as a number of R dependencies that can be installed with the commands:
 ```
     install.packages("tidyr")
     install.packages("dplyr")
@@ -127,9 +152,11 @@ LINX visualisation requires CIRCOS to be installed as well as a number of R depe
     BiocManager::install("Gviz")   
 ```
 
-# Arguments
+# Usage
 
 ## Required Arguments
+
+The following mandatory arguments must always be provided to the application.
 
 Argument |  Description 
 ---|---
@@ -248,7 +275,7 @@ include_line_elements | Include line elements in chromosome visualisations (excl
 
 If neither `chromosome` nor `clusterId` are included, separate visualisations of all chromosomes and clusterIds in the provided files will be created.
 
-# Example Usage
+## Example Usage
 
 ```
 java -cp sv-linx.jar com.hartwig.hmftools.linx.visualiser.SvVisualiser \
@@ -319,7 +346,7 @@ The following examples have similar configurations to the smaller images above b
 In the second picture, we have reduced the emphasis on the copy number alternation by interpolating their positions rather than including 
 them in the log scale. This frees up more room for the area of interest on chromosome 14.
 
-## TMPRSS2-ERG
+## TMPRSS2-ERG Fusion
 
 To accommodate the extra room required for the TMPRSS2 gene label, this configuration increases the relative size of the gene 
 track, decreases the relative size of the segment track and increases the max number of characters in a gene before scaling: 
