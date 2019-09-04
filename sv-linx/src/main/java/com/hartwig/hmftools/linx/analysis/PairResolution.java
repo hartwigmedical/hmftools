@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticGapLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
@@ -27,6 +26,8 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -380,9 +381,15 @@ public class PairResolution
 
         if(arm1Be1 == null || arm1Be2 == null || arm2Be1 == null || arm2Be2 == null)
         {
-            if(longestTiPair != null && cluster.getChains().size() == 1)
+            // check for a synthetic BND with a long TI
+            if(longestTiPair != null && cluster.getChains().size() == 1 && cluster.getUnlinkedSVs().isEmpty())
             {
-                cluster.setResolved(false, UNBAL_TRANS_TI);
+                final SvChain chain = cluster.getChains().get(0);
+
+                if(!chain.getOpenBreakend(SE_START).getChrArm().equals(chain.getOpenBreakend(SE_END).getChrArm()))
+                {
+                    cluster.setResolved(false, UNBAL_TRANS_TI);
+                }
             }
 
             return;
