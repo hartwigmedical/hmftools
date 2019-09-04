@@ -55,7 +55,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", hospitalName));
             }
 
-            final String hospitalPatientId = sampleReport.hospitalPatientId();
+            final String hospitalPatientId = type == LimsSampleType.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
             if (!hospitalPatientId.isEmpty()) {
                 cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", hospitalPatientId));
             }
