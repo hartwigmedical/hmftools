@@ -276,7 +276,7 @@ gene | Add canonical transcriptions of supplied comma separated genes to image
 
 If neither `chromosome` nor `clusterId` are included, separate visualisations of all chromosomes and clusterIds in the provided files will be created.
 
-Additional genes to add to image only possible if they are included in the [hmf gene panel](https://github.com/hartwigmedical/hmftools/blob/master/hmf-common/src/main/resources/genepanel/all_genes.37.tsv).
+Additional genes can only be added to visualisation if they are included in the [hmf gene panel](https://github.com/hartwigmedical/hmftools/blob/master/hmf-common/src/main/resources/genepanel/all_genes.37.tsv).
 
 ## Example Usage
 
