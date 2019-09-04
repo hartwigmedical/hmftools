@@ -49,6 +49,7 @@ public class Transcript {
 
     private boolean mIsDisruptive;
     private boolean mReportableDisruption;
+    private double mUndisruptedCopyNumber;
 
     private String mProteinFeaturesKept;
     private String mProteinFeaturesLost;
@@ -121,6 +122,7 @@ public class Transcript {
             mIsDisruptive = true;
 
         mReportableDisruption = false;
+        mUndisruptedCopyNumber = 0;
 
         mProteinFeaturesKept = "";
         mProteinFeaturesLost = "";
@@ -288,6 +290,8 @@ public class Transcript {
     public boolean reportableDisruption() { return mReportableDisruption; }
     public void setReportableDisruption(boolean toggle) { mReportableDisruption = toggle; }
 
+    public double undisruptedCopyNumber() { return mUndisruptedCopyNumber; }
+    public void setUndisruptedCopyNumber(double copyNumber) { mUndisruptedCopyNumber = copyNumber; }
 
     public long codingStart() { return CodingStart != null ? CodingStart : 0; }
     public long codingEnd() { return CodingEnd != null ? CodingEnd : 0; }

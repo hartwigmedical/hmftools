@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -44,7 +45,7 @@ public class DisruptionFinder
     private Set<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
-    private final Map<Transcript,String> mRemovedDisruptions; // temporary
+    private final Map<Transcript,String> mRemovedDisruptions; // temporary until switch to new method
 
     private boolean mNewDisruptionLogic;
 
@@ -198,6 +199,27 @@ public class DisruptionFinder
         */
 
         final SvCluster cluster = var.getCluster();
+
+        // set the undisrupted copy number against all canonical transcripts
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(se == SE_END && var.isSglBreakend())
+                continue;
+
+            final SvBreakend breakend = var.getBreakend(se);
+            double undisruptedCopyNumber = getUndisruptedCopyNumber(breakend);
+
+            final List<GeneAnnotation> svGenes = se == SE_START ? genesStart : genesEnd;
+
+            for(GeneAnnotation gene : svGenes)
+            {
+                Transcript canonicalTrans = gene.canonical();
+
+                if(canonicalTrans != null)
+                    canonicalTrans.setUndisruptedCopyNumber(undisruptedCopyNumber);
+            }
+        }
 
         boolean isSimpleSV = var.isSimpleType();
 
@@ -357,7 +379,9 @@ public class DisruptionFinder
 
                 if(!otherTransList.isEmpty())
                 {
-                    if (markNonDisruptiveTranscripts(transList, otherTransList, "SameIntronNoSPA"))
+                    String contextInfo = String.format("SameIntronNoSPA;%d-%d", abs(index - startIndex), chainLength);
+
+                    if (markNonDisruptiveTranscripts(transList, otherTransList, contextInfo))
                     {
                         removeNonDisruptedTranscripts(transList);
 
@@ -372,7 +396,8 @@ public class DisruptionFinder
         }
     }
 
-    private void markNonDisruptiveGeneTranscripts(final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd, final String context)
+    private void markNonDisruptiveGeneTranscripts(
+            final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd, final String context)
     {
         for(final GeneAnnotation geneStart : genesStart)
         {
@@ -488,6 +513,7 @@ public class DisruptionFinder
         return false;
     }
 
+    // to be deprecated
     private static boolean areDisruptivePair(final Transcript trans1, final Transcript trans2)
     {
         if(trans1.gene().id() != trans2.gene().id())
@@ -520,6 +546,11 @@ public class DisruptionFinder
                 final List<GeneAnnotation> tsgGenesList = var.getGenesList(isStart(be)).stream()
                         .filter(x -> matchesDisruptionGene(x)).collect(Collectors.toList());
 
+                if(tsgGenesList.isEmpty())
+                    continue;
+
+                final SvBreakend breakend = var.getBreakend(be);
+
                 for(GeneAnnotation gene : tsgGenesList)
                 {
                     List<Transcript> reportableDisruptions = gene.transcripts().stream()
@@ -529,8 +560,8 @@ public class DisruptionFinder
 
                     for(Transcript transcript : reportableDisruptions)
                     {
-                        LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted",
-                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId);
+                        LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
+                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId, transcript.undisruptedCopyNumber());
 
                         transcript.setReportableDisruption(true);
                         mDisruptions.add(transcript);
@@ -538,6 +569,20 @@ public class DisruptionFinder
                 }
             }
         }
+    }
+
+    private static double getUndisruptedCopyNumber(final SvBreakend breakend)
+    {
+        double cnLowSide = breakend.copyNumberLowSide();
+
+        final SvLinkedPair dbLink = breakend.getDBLink();
+        if(dbLink != null && dbLink.length() < 0)
+        {
+            double otherSvPloidy = dbLink.getOtherBreakend(breakend).ploidy();
+            cnLowSide -= otherSvPloidy;
+        }
+
+        return cnLowSide;
     }
 
     public void writeSampleData(final String sampleId)
@@ -585,7 +630,8 @@ public class DisruptionFinder
                 mWriter = createBufferedWriter(outputFilename, false);
 
                 mWriter.write("SampleId,Reportable,SvId,IsStart,Type,ClusterId,Chromosome,Position,Orientation");
-                mWriter.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType,ExcludedReason");
+                mWriter.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
+                mWriter.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
                 mWriter.newLine();
             }
         }
@@ -612,18 +658,19 @@ public class DisruptionFinder
                         var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
                         gene.chromosome(), gene.position(), gene.orientation()));
 
-                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,",
+                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,,",
                         gene.StableId, gene.GeneName, gene.Strand, transcript.StableId,
-                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType()));
+                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType(),
+                        transcript.undisruptedCopyNumber()));
 
                 mWriter.newLine();
             }
 
             for(Map.Entry<Transcript,String> entry : mRemovedDisruptions.entrySet())
             {
-                final String reason = entry.getValue();
+                final String exclusionInfo = entry.getValue();
 
-                if(reason.equals(NON_DISRUPT_REASON_SIMPLE_SV))
+                if(exclusionInfo.equals(NON_DISRUPT_REASON_SIMPLE_SV))
                     continue;
 
                 final Transcript transcript = entry.getKey();
@@ -635,10 +682,22 @@ public class DisruptionFinder
                     var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
                     gene.chromosome(), gene.position(), gene.orientation()));
 
-                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%s",
+
+                String exclusionReason = exclusionInfo;
+                String extraInfo = "";
+
+                String[] contextInfo = exclusionInfo.split(";");
+
+                if(contextInfo.length == 2)
+                {
+                    exclusionReason = contextInfo[0];
+                    extraInfo = contextInfo[1];
+                }
+
+                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
                         gene.StableId, gene.GeneName, gene.Strand, transcript.StableId,
                         transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
-                        transcript.regionType(), reason));
+                        transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
 
                 mWriter.newLine();
             }

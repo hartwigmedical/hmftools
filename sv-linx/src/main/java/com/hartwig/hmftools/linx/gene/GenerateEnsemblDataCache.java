@@ -35,10 +35,10 @@ public class GenerateEnsemblDataCache
     {
         final String outputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
-        // EnsemblDAO ensemblData = new EnsemblDAO(cmd);
-        // ensemblData.writeDataCacheFiles(outputDir);
+        EnsemblDAO ensemblData = new EnsemblDAO(cmd);
+        ensemblData.writeDataCacheFiles(outputDir);
 
-        LOGGER.info("reloading transcript data to generate splice acceptor positions");
+        LOGGER.debug("reloading transcript data to generate splice acceptor positions");
 
         // create the trasnscript splice acceptor position data
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
@@ -68,7 +68,7 @@ public class GenerateEnsemblDataCache
             {
                 final String chromosome = entry.getKey();
 
-                LOGGER.info("calculating pre-gene positions for chromosome({})", chromosome);
+                LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
 
                 final List<EnsemblGeneData> geneList = entry.getValue();
 

@@ -107,7 +107,7 @@ public class SvLinxApplication
 
         boolean selectiveGeneLoading = (samplesList.size() == 1) && !checkDrivers;
         boolean applyPromotorDistance = checkFusions;
-        boolean purgeInvalidTranscripts = !fusionAnalyser.hasRnaSampleData();
+        boolean purgeInvalidTranscripts = true;
 
         SvGeneTranscriptCollection ensemblDataCache = null;
 
@@ -135,6 +135,7 @@ public class SvLinxApplication
             if(checkFusions)
             {
                 fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
+                purgeInvalidTranscripts = !fusionAnalyser.hasRnaSampleData();
 
                 if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
                 {
