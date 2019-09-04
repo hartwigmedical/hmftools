@@ -8,13 +8,13 @@ LINX is an annotation, interpretation and visualisation tool for structural vari
   + [Example Usage](#example-usage)
 * [Dependencies](#dependencies)
 * [Key Concepts in LINX](#key-concepts-in-linx)
-  + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
-  + [Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
+  + [1.1 LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
+  + [1.2 Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
 * [LINX ALGORITHM](#linx-algorithm)
-  + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
-  + [Clustering of SVs into events](#clustering-of-svs-into-events)
-  + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
-  + [Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
+  + [2.1 Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
+  + [2.2 Clustering of SVs into events](#clustering-of-svs-into-events)
+  + [2.3 Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
+  + [2.4 Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
 * [Version History](#version-history)
 
 ## Configuration
@@ -72,7 +72,7 @@ Argument  | Description
 write_vis_data | write output to for generation of Circos clustering and chaining plots
 log_debug | logs in debug mode
 
-### Example usages
+### Example Usage
 
 Example command and arguments:
 
