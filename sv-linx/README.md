@@ -8,13 +8,13 @@ LINX is an annotation, interpretation and visualisation tool for structural vari
   + [Example Usage](#example-usage)
 * [Dependencies](#dependencies)
 * [Key Concepts in LINX](#key-concepts-in-linx)
-  + [1.1 LINX terminology and conventions for linking proximate breakends](#1-1-linx-terminology-and-conventions-for-linking-proximate-breakends)
-  + [1.2 Overview of event classification system in LINX](#1.2-overview-of-event-classification-system-in-linx)
+  + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
+  + [Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
 * [LINX ALGORITHM](#linx-algorithm)
-  + [2.1 Annotation of genomic properties and features](#2.1-annotation-of-genomic-properties-and-features)
-  + [2.2 Clustering of SVs into events](#2.2-clustering-of-svs-into-events)
-  + [2.3 Chaining of Derivative Chromosomes](#2.3-chaining-of-derivative-chromosomes)
-  + [2.4 Gene impact and fusion prediction](#2.4-gene-impact-and-fusion-prediction)
+  + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
+  + [Clustering of SVs into events](#clustering-of-svs-into-events)
+  + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
+  + [Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
 * [Version History](#version-history)
 
 ## Configuration
@@ -122,7 +122,7 @@ LINX uploads samples data to the following HMF tables:
 
 ## Key Concepts in LINX
 
-### 1.1 LINX terminology and conventions for linking proximate breakends
+### LINX terminology and conventions for linking proximate breakends
 
 #### Assembled vs Inferred links
 In LINX, links are chromosomal segments connected by break junctions which are predicted to form part of a derivative chromosome. Assembled links are those that were linked by in a single assembly by GRIDSS as being and are very high confidence somatically phased. All other links are inferred, based on proximity, topology and ploidy characteristics using the chaining logic described below.
@@ -147,7 +147,7 @@ Any other breakend that falls within this anchor distance cannot be ‘cis’ ph
  
 Trans breakends within this distance are common. One possibility is that the breakends could occur on the other chromatid, but this highly unlikely as there is no reason to expect 2 different chromatids to both be damaged within a few hundred base region. Much more likely is that when the double stranded break occurred, that there was significant overlap between the break locations on the 2 strands and the overlapping break ends have been replicated prior to fusing with other genome. This is highly analogous to a deletion bridge except with small sections of replication of DNA instead of loss. LINX uses the term ‘overlapping deletion bridge’ to describe this break topology.
 
-### 1.2 Overview of event classification system in LINX
+### Overview of event classification system in LINX
 LINX attempts to classify all variants into a set of consistent events, ie events that transform the genome from one stable configuration into another. The 4 basic categories of events that we have are simple deletions, tandem duplications, insertions and two break events (including both reciprocal events and unbalanced translocations). For events with 3 or more variants that cannot be simplified into the above types, the number of possible configurations quickly explodes so we group these together in COMPLEX and analyse them via topological features rather than as distinct classes.
 
 A key assumption in LINX is that each derivative chromosome arm in a stable configuration must connect a telomere to a centromere (since centromere to centromere joins will cause unstable breakage fusion bridge and telomere to telomere joins will have no centromere and will be ultimately lost during stochastic mitosis processes). A special case is allowed in highly restricted circumstances for double minute chromosomes which are circular and have no telomere or centromere but are highly positively selected for. This assumption means that variants such as a lone head to head or tail to tail inversion are considered incomplete, and in these cases we intensively search for other variants which may have occurred concurrently and could restore a stable configuration. Because of limitations of both input data accuracy and completeness and our clustering and chaining algorithm, many COMPLEX clusters will not be fully resolved to a stable configuration although it is assumed that such a resolution exists. Furthermore, we have a number of residual 1 and 2 clusters (eg. a lone inversion) which are inconsistent cannot be accurately clustered and hence we classify them as INCOMPLETE. 
@@ -229,7 +229,7 @@ The following schematic outlines the overall workflow in the LINX algorithm. Eac
 ![LINX Routine](src/main/resources/readme/linx_routine_steps.png)
 
 
-### 2.1 Annotation of genomic properties and features
+### Annotation of genomic properties and features
 To help resolve and characterise events, LINX first annotates a number of genomic properties.
 
 #### Externally sourced genomic annotations
@@ -327,7 +327,7 @@ consolidatedUncertainty = SQRT( countObservations / (countObervations-1) * SUM[1
 We identify high confidence subclonal variants using the uncertainty bounds, using the threshold of maximum ploidy < 0.75. Clonal and subclonal variants are unlikely to have occured at the same time and hence all subclonal variants are excluded from clustering with any variant that does not overlap in ploidy uncertainty and does not have a ploidy within 0.5 of the subclonal variants. Proximity clustering is still allowed, since the ploidy estimates for proximate variants are more uncertain.
 
 
-### 2.2 Clustering of SVs into events 
+### Clustering of SVs into events 
 LINX uses a clustering routine to classify events. All SVs within a sample are grouped into clusters in a set of 6 substeps
 * Proximity Clustering
 * Resolution of LINE Clusters 
@@ -411,7 +411,7 @@ Merge any non resolved breakend into a cluster which has 2 different foldbacks s
 Merge any neighbouring non resolved clusters that are within 5M bases and which have facing flanking breakends on each cluster which could form a templated insertion with matching ploidy. In the case of a foldback the ploidy of the facing breakend is also permitted to match 2x the ploidy.
 
 
-### 2.3 Chaining of Derivative Chromosomes
+### Chaining of Derivative Chromosomes
 
 A chaining algorithm is used to predict the local structure of the derivative chromosome within each cluster. The chaining algorithm examines each cluster independently and considers all possible paths that could be made to connect facing breakends into a set of continuous derivative chromosomes. LINE insertion type clusters are excluded from chaining.
 
@@ -493,7 +493,7 @@ Consecutive breakends with no more than 5kb between them or which are part of th
 * COMPLEX_OTHER - Any other cluster
 
 
-### 2.4 Gene impact and fusion prediction
+### Gene impact and fusion prediction
 
 #### Annotation of breakends with potential gene impact
 For each breakend we search for genes that could be potentially disrupted or fused by the structural variant. 
