@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser;
 
+import com.hartwig.hmftools.common.numeric.Doubles;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -15,36 +17,44 @@ public interface SvCircosConfig
 {
     Logger LOGGER = LogManager.getLogger(SvCircosConfig.class);
 
-    String DISPLAY_POSITION = "displayPosition";
     String GENE_RELATIVE_SIZE = "gene_relative_size";
     String CNA_RELATIVE_SIZE = "cna_relative_size";
     String SEGMENT_RELATIVE_SIZE = "segment_relative_size";
 
-    String OUTER_RADIUS = "outer_radius";
+    // Radial Arguments
     String INNER_RADIUS = "inner_radius";
-    String GAP_RADIUS = "gap_size";
-    String EXON_RANK_RADIUS = "exon_rank_size";
+    String OUTER_RADIUS = "outer_radius";
+    String GAP_RADIUS = "gap_radius";
+    String EXON_RANK_RADIUS = "exon_rank_radius";
 
-    String EXACT_POSITION = "exact_position";
-    String SHOW_SV_ID = "show_sv_id";
-
+    // Chromosome Range Panel Arguments
     String CHR_RANGE_HEIGHT = "chr_range_height";
     String CHR_RANGE_COLUMNS = "chr_range_columns";
 
+    // Fusion Panel Arguments
     String FUSION_HEIGHT = "fusion_height";
     String FUSION_LEGEND_ROWS = "fusion_legend_rows";
     String FUSION_LEGEND_HEIGHT_PER_ROW = "fusion_legend_height_per_row";
 
-    String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
-
+    // Font Parameters
     String MIN_LABEL_SIZE = "min_label_size";
     String MAX_LABEL_SIZE = "max_label_size";
+    String MAX_GENE_CHARACTERS = "max_gene_characters";
+    String MAX_DISTANCE_LABELS = "max_distance_labels";
+    String MAX_POSITION_LABELS = "max_position_labels";
+
+    // Line Size
     String MIN_LINE_SIZE = "min_line_size";
     String MAX_LINE_SIZE = "max_line_size";
     String GLYPH_SIZE = "glyph_size";
-    String MAX_GENE_CHARACTERS = "max_gene_characters";
 
+    // Interpolation
+    String INTERPOLATE_CNA_POSITIONS = "interpolate_cna_positions";
+    String INTERPOLATE_EXON_POSITIONS = "interpolate_exon_positions";
 
+    // Debug
+    String EXACT_POSITION = "exact_position";
+    String SHOW_SV_ID = "show_sv_id";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -71,8 +81,15 @@ public interface SvCircosConfig
     int DEFAULT_GLYPH_SIZE = 20;
     int DEFAULT_MAX_GENE_CHARACTERS = 5;
 
+    int DEFAULT_MAX_DISTANCE_LABELS = 100;
+    int DEFAULT_MAX_POSITION_LABELS = 60;
+
     static void addOptions(@NotNull Options options)
     {
+        options.addOption(OUTER_RADIUS, true, "Outermost ending radius of chromosome track [" + DEFAULT_OUTER_RADIUS + "]");
+        options.addOption(INNER_RADIUS, true, "Innermost starting radius of minor-allele ploidy track [" + DEFAULT_INNER_RADIUS + "]");
+        options.addOption(GAP_RADIUS, true, "Radial gap between tracks [" + DEFAULT_GAP_RADIUS + "]");
+        options.addOption(EXON_RANK_RADIUS, true, "Radial gap left for exon rank labels [" + DEFAULT_EXON_RANK_RADIUS + "]");
 
         options.addOption(FUSION_HEIGHT, true, "Height of each fusion in pixels [" + DEFAULT_FUSION_HEIGHT + "]");
         options.addOption(FUSION_LEGEND_ROWS, true, "Number of rows in protein domain legend  [" + DEFAULT_FUSION_LEGEND_ROWS + "]");
@@ -82,9 +99,6 @@ public interface SvCircosConfig
 
         options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
         options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
-
-        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
-        options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
 
         options.addOption(GENE_RELATIVE_SIZE,
                 true,
@@ -96,21 +110,24 @@ public interface SvCircosConfig
                 true,
                 "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
 
-        options.addOption(OUTER_RADIUS, true, "Outer radius [" + DEFAULT_OUTER_RADIUS + "]");
-        options.addOption(INNER_RADIUS, true, "Inner radius [" + DEFAULT_INNER_RADIUS + "]");
-        options.addOption(GAP_RADIUS, true, "Size of gap between tracks relative to radius [" + DEFAULT_GAP_RADIUS + "]");
-        options.addOption(EXON_RANK_RADIUS, true, "Size of gap for exon ranks relative to radius [" + DEFAULT_EXON_RANK_RADIUS + "]");
-
-        options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
-        options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
-
-        options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
         options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
         options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
-        options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
+        options.addOption(MAX_DISTANCE_LABELS, true, "Maximum number of distance labels before removing them [" + DEFAULT_MAX_DISTANCE_LABELS + "]");
+        options.addOption(MAX_POSITION_LABELS, true, "Maximum number of position labels before increasing distance between labels [" + DEFAULT_MAX_POSITION_LABELS + "]");
         options.addOption(MAX_GENE_CHARACTERS,
                 true,
                 "Maximum number of character in gene allowed before scaling [" + DEFAULT_MAX_GENE_CHARACTERS + "]");
+
+        options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
+        options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
+        options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
+
+        options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
+        options.addOption(INTERPOLATE_EXON_POSITIONS, false, "Interpolate exon positions rather than adjust scale");
+
+        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
+        options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
+
     }
 
     // ----------------------- Fusion Parameters
@@ -120,36 +137,26 @@ public interface SvCircosConfig
 
     int fusionHeight();
 
-    // ----------------------- Chromosome Parameters
     int chromosomeRangeHeight();
 
     int chromosomeRangeColumns();
 
-    // ----------------------- Label Size Parameters
     int minLabelSize();
 
     int maxLabelSize();
 
     int maxGeneCharacters();
 
-    default int maxNumberOfPositionLabels()
-    {
-        return 60;
-    }
+    int maxNumberOfPositionLabels();
 
-    default int maxNumberOfDistanceLabels()
-    {
-        return 100;
-    }
+    int maxNumberOfDistanceLabels();
 
-    // ----------------------- Relative Size Parameters
     double geneRelativeSize();
 
     double segmentRelativeSize();
 
     double copyNumberRelativeSize();
 
-    // ----------------------- Other
     int minLineSize();
 
     int maxLineSize();
@@ -164,11 +171,13 @@ public interface SvCircosConfig
 
     double innerRadius();
 
+    double gapRadius();
+
+    double exonRankRadius();
+
     boolean interpolateCopyNumberPositions();
 
-    double gapSize();
-
-    double exonRankSize();
+    boolean interpolateExonPositions();
 
     default long labelSize(long count)
     {
@@ -207,31 +216,65 @@ public interface SvCircosConfig
             throw new ParseException("Parameter " + MAX_LINE_SIZE + " should be > " + MIN_LINE_SIZE);
         }
 
-        // TODO: Add validation on ideogram radius etc
-
         return ImmutableSvCircosConfig.builder()
+
+                .outerRadius(radialParameter(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
+                .innerRadius(radialParameter(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
+                .gapRadius(radialParameter(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
+                .exonRankRadius(radialParameter(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
+
+                .geneRelativeSize(relativeParameter(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
+                .segmentRelativeSize(relativeParameter(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
+                .copyNumberRelativeSize(relativeParameter(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
+
+                .minLabelSize(minLabelSize)
+                .maxLabelSize(maxLabelSize)
+                .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
+                .maxNumberOfDistanceLabels(defaultIntValue(cmd, MAX_DISTANCE_LABELS, DEFAULT_MAX_DISTANCE_LABELS))
+                .maxNumberOfPositionLabels(defaultIntValue(cmd, MAX_POSITION_LABELS, DEFAULT_MAX_POSITION_LABELS))
+
                 .fusionLegendRows(defaultIntValue(cmd, FUSION_LEGEND_ROWS, DEFAULT_FUSION_LEGEND_ROWS))
                 .fusionLegendHeightPerRow(defaultIntValue(cmd, FUSION_LEGEND_HEIGHT_PER_ROW, DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW))
                 .fusionHeight(defaultIntValue(cmd, FUSION_HEIGHT, DEFAULT_FUSION_HEIGHT))
+
                 .chromosomeRangeColumns(defaultIntValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS))
                 .chromosomeRangeHeight(defaultIntValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT))
-                .exactPosition(cmd.hasOption(EXACT_POSITION))
-                .showSvId(cmd.hasOption(SHOW_SV_ID))
-                .outerRadius(defaultValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS))
-                .innerRadius(defaultValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS))
-                .geneRelativeSize(defaultValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE))
-                .segmentRelativeSize(defaultValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE))
-                .copyNumberRelativeSize(defaultValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE))
-                .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
-                .glyphSize(defaultIntValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE))
-                .minLabelSize(minLabelSize)
-                .maxLabelSize(maxLabelSize)
+
                 .minLineSize(minLineSize)
                 .maxLineSize(maxLineSize)
-                .maxGeneCharacters(defaultIntValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS))
-                .gapSize(defaultValue(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS))
-                .exonRankSize(defaultValue(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS))
+                .glyphSize(defaultIntValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE))
+
+                .interpolateCopyNumberPositions(cmd.hasOption(INTERPOLATE_CNA_POSITIONS))
+                .interpolateExonPositions(cmd.hasOption(INTERPOLATE_EXON_POSITIONS))
+
+                .exactPosition(cmd.hasOption(EXACT_POSITION))
+                .showSvId(cmd.hasOption(SHOW_SV_ID))
+
                 .build();
+    }
+
+    static double relativeParameter(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
+            throws ParseException
+    {
+        double value = defaultValue(cmd, opt, defaultValue);
+        if (!Doubles.greaterOrEqual(value, 0))
+        {
+            throw new ParseException("Relative parameter " + opt + " should be > 0");
+        }
+
+        return value;
+    }
+
+    static double radialParameter(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
+            throws ParseException
+    {
+        double value = defaultValue(cmd, opt, defaultValue);
+        if (Doubles.lessThan(value, 0) || Doubles.greaterThan(value, 1))
+        {
+            throw new ParseException("Radial parameter " + opt + " should be between 0 and 1");
+        }
+
+        return value;
     }
 
     static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue)
@@ -257,5 +300,4 @@ public interface SvCircosConfig
 
         return defaultValue;
     }
-
 }

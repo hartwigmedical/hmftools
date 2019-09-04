@@ -128,18 +128,34 @@ LINX visualisation requires CIRCOS to be installed as well as a number of R depe
 ```
 
 # Arguments
-//TODO: max_distance_labels
+
+## Radial Arguments
+
+The following arguments are all relative to the total radius of the CIRCOS panel and must be between 0 and 1. 
+
+Argument | Default | Description 
+---|---|---
+inner_radius| 0.20| Innermost starting radius of minor-allele ploidy track
+outer_radius | 0.88 | Outermost ending radius of chromosome track
+gap_radius| 0.025 | Radial gap between tracks
+exon_rank_radius | 0.025 | Radial gap left for exon rank labels
+
+If you significantly increase the [font size](#font-size) it is likely that you will need to reduce the `outer_radius` and increase the
+`exon_rank_radius` otherwise labels may get clipped or removed entirely. This is demonstrated in the [reduced footprint](#Reduced-Footprint)
+examples.
 
 ## Relative Track Sizes
 
-The relative sizes of the gene, segment and copy number tracks are controller with the following parameters:
+It is possible to adjust the relative sizes of the gene, segment (derivative chromosome), and copy number (and major/minor allele) tracks 
+in the CIRCOS panel with the following parameters:
 
 Argument | Default | Description 
 ---|---|---
 gene_relative_size| 0.3 | Size of gene track relative to segments and copy number alterations
-segment_relative_size | 1 | Size of segment track relative to copy number alterations and genes
-cna_relative_size | 2 | Size of gene copy number alteration relative to genes and segments
+segment_relative_size | 1 | Size of segment (derivative chromosome) track relative to copy number alterations and genes
+cna_relative_size | 2 | Size of gene copy number alterations (including major/minor allele) relative to genes and segments
 
+The gene track will not be displayed if `gene_relative` is 0 or if there are no genes to be displayed on the visualisation.
 
 ## Font Size
 
@@ -149,8 +165,10 @@ Argument | Default | Description
 ---|---|---
 min_label_size| 35 | Minimum size of labels in pixels
 max_label_size | 40 | Maximum size of labels in pixels
-max_distance_labels | 100 | Maximum allowed number of distance labels
-max_gene_characters | 5 | Maximum allowed gene length before applying scaling
+max_gene_characters | 5 | Maximum allowed gene length before applying scaling them
+max_distance_labels | 100 | Maximum number of distance labels before removing them
+max_position_labels | 60 | Maximum number of position labels before increasing distance between labels
+exact_position | NA | Display exact positions at all break ends
 
 The label size scales linearly from the min to the max label size as an inverse function of the number of distance labels to be plotted. 
 If the number of distance labels exceeds `max_distance_labels`, no distance labels will be shown and all labels will be sized with `min_label_size`.
@@ -159,14 +177,42 @@ The same label size will be applied genes unless there is a gene which exceeds `
 will be scaled down to prevent the gene labels from going outside the gene track. Adjusting this parameter is best done in conjuction with
 the `gene_relative_size` parameter.
 
+By default, position labels will be shown every 100k bases. However, if the number of labels exceeds `max_position_labels` then this will be reduced
+to every 1M or 10M bases. This setting is ignored if the `exact_position` flag in included and every break end to the base will be displayed.
 
-## Chromosome Range Panel
+## Line Size
+
+The following parameters control the line and glyph sizes. The glyphs are used to represent the segment breaks, ie centromere, telomere, foldback etc.
 
 Argument | Default | Description 
 ---|---|---
-chr_range_height| 150 | Chromosome range row height in pixels
+min_line_size| 1 | Minimum size of lines in pixels
+max_line_size | 12 | Maximum size of lines in pixels
+glyph_size | 20 | Size of glyphs in pixels
+
+## Interpolate Positions
+
+By default, copy number alteration transitions and exons will be emphasised on the CIRCOS panel according to the log scale described above.
+This functionality can be disabled with the following flags:  
+
+Argument |  Description 
+---|---
+interpolate_cna_positions| Interpolate copy number positions rather than adjust scale
+interpolate_exon_positions | Interpolate exon positions rather than adjust scale
+
+Impact of the `interpolate_cna_positions` flag is illustrated in the [line event](#line-event) example. 
+
+## Chromosome Range Panel
+
+Chromosomes on the chromosome range panel are ordered and then scaled for size. As a single chromosome cannot be less than 10% of the row 
+(otherwise it becomes un-viewable) their may be fewer columns and more rows than might be expected for a given `chr_range_columns`. 
+
+Argument | Default | Description 
+---|---|---
+chr_range_height| 150 | Chromosome range height in pixels per row
 chr_range_columns| 6 | Maximum chromosomes per row
 
+Note the CIRCOS panel is 3000 pixels in heigh and width.
 
 ## Fusion Panel
 
@@ -186,9 +232,9 @@ The default parameters are configured to produce an image that is suitable for d
     <img src="src/main/resources/readme/default.png" width="800" alt="default">
 </p>
 
-## Smaller
+## Reduced Footprint
 
-In order to make the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
+In order to keep the image clear at smaller sizes, we can increase the size of the font and the thickness of the lines. To make room, 
 for the larger font, we reduce the relative size of the segment track and increase the space allowed for the exons as shown:
 
 ```
@@ -198,7 +244,7 @@ for the larger font, we reduce the relative size of the segment track and increa
 -min_line_size 4 -max_line_size 18
 -min_label_size 45 -max_label_size 50
 -glyph_size 25
--exon_rank_size 0.04
+-exon_rank_radius 0.04
 
 ```
 
@@ -215,7 +261,7 @@ b) a chromothripsis event,
 c) a pseudo-gene insertion, and
 d) a bi-allelic disruption of TP53
 
-## Line Events
+## Line Event
 
 The following examples have similar configurations to the smaller images above but the second has an additional flag:
 
@@ -244,3 +290,6 @@ track, decreases the relative size of the segment track and increases the max nu
 <p align="center">
     <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRSS2-ERG">
 </p>
+
+
+#Version History
