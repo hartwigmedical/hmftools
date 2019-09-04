@@ -8,7 +8,7 @@ LINX is an annotation, interpretation and visualisation tool for structural vari
   + [Example Usage](#example-usage)
 * [Dependencies](#dependencies)
 * [Key Concepts in LINX](#key-concepts-in-linx)
-  + [1.1 LINX terminology and conventions for linking proximate breakends](#1.1-linx-terminology-and-conventions-for-linking-proximate-breakends)
+  + [1.1 LINX terminology and conventions for linking proximate breakends](#1-1-linx-terminology-and-conventions-for-linking-proximate-breakends)
   + [1.2 Overview of event classification system in LINX](#1.2-overview-of-event-classification-system-in-linx)
 * [LINX ALGORITHM](#linx-algorithm)
   + [2.1 Annotation of genomic properties and features](#2.1-annotation-of-genomic-properties-and-features)
