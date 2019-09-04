@@ -12,11 +12,11 @@ LINX provides functionality to present detailed visualisation of genomic rearran
 * [Usage](#usage)
   + [Required Arguments](#required-arguments)
   + [Radial Arguments](#radial-arguments)
-  + [Relative Track Sizes](#relative-track-sizes)
+  + [Relative Track Size](#relative-track-size)
   + [Font Size](#font-size)
   + [Line Size](#line-size)
   + [Interpolate Positions](#interpolate-positions)
-  + [Chromosome Range Panel](#chromosome-range-panel)
+  + [Chromosome Panel](#chromosome-panel)
   + [Fusion Panel](#fusion-panel)
   + [Other Arguments](#other-arguments)
   + [Example Usage](#example-usage)
@@ -186,7 +186,7 @@ If you significantly increase the [font size](#font-size) it is likely that you 
 `exon_rank_radius` otherwise labels may get clipped or removed entirely. This is demonstrated in the [reduced footprint](#Reduced-Footprint)
 examples.
 
-## Relative Track Sizes
+## Relative Track Size
 
 It is possible to adjust the relative sizes of the gene, segment (derivative chromosome), and copy number (and major/minor allele) tracks 
 in the CIRCOS panel with the following parameters:
@@ -244,7 +244,7 @@ interpolate_exon_positions | Interpolate exon positions rather than adjust scale
 
 Impact of the `interpolate_cna_positions` flag is illustrated in the [line event](#line-event) example. 
 
-## Chromosome Range Panel
+## Chromosome Panel
 
 Chromosomes on the chromosome range panel are ordered and then scaled for size. As a single chromosome cannot be less than 10% of the row 
 (otherwise it becomes un-viewable) their may be fewer columns and more rows than might be expected for a given `chr_range_columns`. 
@@ -272,8 +272,11 @@ clusterId | Only generate image for specified comma separated clusters
 chromosome | Only generate images for specified comma separated chromosomes
 threads | Number of threads to use
 include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
+gene | Add canonical transcriptions of supplied comma separated genes to image
 
 If neither `chromosome` nor `clusterId` are included, separate visualisations of all chromosomes and clusterIds in the provided files will be created.
+
+Additional genes to add to image only possible if they are included in the [hmf gene panel](https://github.com/hartwigmedical/hmftools/blob/master/hmf-common/src/main/resources/genepanel/all_genes.37.tsv).
 
 ## Example Usage
 
