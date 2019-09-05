@@ -45,14 +45,12 @@ public class DisruptionFinder
     private Set<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
-    private final Map<Transcript,String> mRemovedDisruptions; // temporary until switch to new method
-
-    private boolean mNewDisruptionLogic;
+    private final Map<Transcript,String> mRemovedDisruptions; // cached for diagnostic purposes
 
     private BufferedWriter mWriter;
     private final String mOutputDir;
 
-    public static final String USE_CHAIN_LOGIC = "disruptions_use_chains";
+    public static final int MAX_NON_DISRUPTED_CHAIN_LENGTH = 5000;
 
     private static final Logger LOGGER = LogManager.getLogger(DisruptionFinder.class);
 
@@ -65,8 +63,6 @@ public class DisruptionFinder
 
         mDisruptions = Lists.newArrayList();
         mRemovedDisruptions = Maps.newHashMap();
-
-        mNewDisruptionLogic = false;
 
         mOutputDir = outputDir;
         mWriter = null;
@@ -91,14 +87,8 @@ public class DisruptionFinder
 
     public final List<Transcript> getDisruptions() { return mDisruptions; }
 
-    public void setNewDisruptionLogic(boolean toggle) { mNewDisruptionLogic = toggle; }
-
     private void initialise(final CommandLine cmd)
     {
-        if(cmd != null)
-        {
-            mNewDisruptionLogic = cmd.hasOption(USE_CHAIN_LOGIC);
-        }
     }
 
     public boolean matchesDisruptionGene(final GeneAnnotation gene)
@@ -110,49 +100,6 @@ public class DisruptionFinder
     {
         if(!mDisruptionGeneIds.contains(geneId))
             mDisruptionGeneIds.add(geneId);
-    }
-
-    // to be deprecated
-    public void markNonDisruptiveTranscripts(final SvVarData var)
-    {
-        if(!var.isSimpleType())
-            return;
-
-        final List<GeneAnnotation> genesStart = var.getGenesList(true);
-        final List<GeneAnnotation> genesEnd = var.getGenesList(false);
-
-        if(genesStart.isEmpty() || genesEnd.isEmpty())
-            return;
-
-        for(final GeneAnnotation geneStart : genesStart)
-        {
-            final GeneAnnotation geneEnd = genesEnd.stream()
-                    .filter(x -> x.StableId.equals(geneStart.StableId)).findFirst().orElse(null);
-
-            if(geneEnd == null)
-                continue;
-
-            for (final Transcript transStart : geneStart.transcripts())
-            {
-                final Transcript transEnd = geneEnd.transcripts().stream()
-                        .filter(x -> x.StableId.equals(transStart.StableId)).findFirst().orElse(null);
-
-                if(transEnd == null)
-                    continue;
-
-                if(!transEnd.isExonic() && !transStart.isExonic() && transStart.ExonUpstream == transEnd.ExonUpstream)
-                {
-                    if(transEnd.isCanonical() && matchesDisruptionGene(transEnd.gene()))
-                    {
-                        LOGGER.debug("SV({}) gene({}:{}) intronic section({}-{}) marked non-disruptive",
-                                var.id(), transStart.geneName(), transStart.StableId, transStart.ExonUpstream, transStart.ExonDownstream);
-                    }
-
-                    transStart.setIsDisruptive(false);
-                    transEnd.setIsDisruptive(false);
-                }
-            }
-        }
     }
 
     public void markTranscriptsDisruptive(final List<SvVarData> svList)
@@ -176,12 +123,6 @@ public class DisruptionFinder
 
     private void markTranscriptsDisruptive(final SvVarData var)
     {
-        if(!mNewDisruptionLogic)
-        {
-            markNonDisruptiveTranscripts(var);
-            return;
-        }
-
         if(var.isSglBreakend())
             return;
 
@@ -357,6 +298,9 @@ public class DisruptionFinder
                     return;
 
                 chainLength += nextPair.length();
+
+                if(chainLength > MAX_NON_DISRUPTED_CHAIN_LENGTH)
+                    return;
 
                 // no need to chain this breakend any further as soon as any of its chains have crossed another splice acceptor
 
@@ -605,6 +549,7 @@ public class DisruptionFinder
                     .ploidy(gene.ploidy())
                     .exonUp(transcript.ExonUpstream)
                     .exonDown(transcript.ExonDownstream)
+                    .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
                     .build());
         }
 
@@ -713,5 +658,49 @@ public class DisruptionFinder
         closeBufferedWriter(mWriter);
     }
 
+    // simple disruption routine - now deprecated
+    /*
+    public void markNonDisruptiveTranscripts(final SvVarData var)
+    {
+        if(!var.isSimpleType())
+            return;
+
+        final List<GeneAnnotation> genesStart = var.getGenesList(true);
+        final List<GeneAnnotation> genesEnd = var.getGenesList(false);
+
+        if(genesStart.isEmpty() || genesEnd.isEmpty())
+            return;
+
+        for(final GeneAnnotation geneStart : genesStart)
+        {
+            final GeneAnnotation geneEnd = genesEnd.stream()
+                    .filter(x -> x.StableId.equals(geneStart.StableId)).findFirst().orElse(null);
+
+            if(geneEnd == null)
+                continue;
+
+            for (final Transcript transStart : geneStart.transcripts())
+            {
+                final Transcript transEnd = geneEnd.transcripts().stream()
+                        .filter(x -> x.StableId.equals(transStart.StableId)).findFirst().orElse(null);
+
+                if(transEnd == null)
+                    continue;
+
+                if(!transEnd.isExonic() && !transStart.isExonic() && transStart.ExonUpstream == transEnd.ExonUpstream)
+                {
+                    if(transEnd.isCanonical() && matchesDisruptionGene(transEnd.gene()))
+                    {
+                        LOGGER.debug("SV({}) gene({}:{}) intronic section({}-{}) marked non-disruptive",
+                                var.id(), transStart.geneName(), transStart.StableId, transStart.ExonUpstream, transStart.ExonDownstream);
+                    }
+
+                    transStart.setIsDisruptive(false);
+                    transEnd.setIsDisruptive(false);
+                }
+            }
+        }
+    }
+    */
 
 }

@@ -25,7 +25,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep17;
-import org.jooq.InsertValuesStep18;
+import org.jooq.InsertValuesStep19;
 import org.jooq.Record;
 import org.jooq.Record2;
 import org.jooq.Result;
@@ -47,7 +47,7 @@ public class StructuralVariantFusionDAO
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
     }
 
-    private InsertValuesStep18 createBreakendInserter()
+    private InsertValuesStep19 createBreakendInserter()
     {
         return context.insertInto(SVBREAKEND,
                 SVBREAKEND.MODIFIED,
@@ -60,6 +60,7 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.GENEORIENTATION,
                 SVBREAKEND.DISRUPTIVE,
                 SVBREAKEND.REPORTEDDISRUPTION,
+                SVBREAKEND.UNDISRUPTEDCOPYNUMBER,
                 SVBREAKEND.REGIONTYPE,
                 SVBREAKEND.CODINGCONTEXT,
                 SVBREAKEND.BIOTYPE,
@@ -81,7 +82,7 @@ public class StructuralVariantFusionDAO
         // a map of breakend DB Ids to transcripts for the fusion DB record foreign key to the breakend table
         final Map<Transcript, Integer> transcriptToDatabaseIdMap = Maps.newHashMap();
 
-        InsertValuesStep18 inserter = createBreakendInserter();
+        InsertValuesStep19 inserter = createBreakendInserter();
         List<Transcript> transcriptsList = Lists.newArrayList();
 
         for (int i = 0; i < transcripts.size(); ++i)
@@ -100,6 +101,7 @@ public class StructuralVariantFusionDAO
                     isUpstream ? "Upstream" : "Downstream",
                     transcript.isDisruptive(),
                     transcript.reportableDisruption(),
+                    DatabaseUtil.decimal(transcript.undisruptedCopyNumber()),
                     transcript.regionType(),
                     transcript.codingType(),
                     transcript.bioType(),

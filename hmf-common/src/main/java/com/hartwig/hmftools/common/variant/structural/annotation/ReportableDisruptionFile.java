@@ -63,6 +63,7 @@ public final class ReportableDisruptionFile
                 .add("ploidy")
                 .add("exonUp")
                 .add("exonDown")
+                .add("undisruptedCopyNumber")
                 .toString();
     }
 
@@ -79,6 +80,7 @@ public final class ReportableDisruptionFile
                 .add(DECIMAL_FORMAT.format(disruption.ploidy()))
                 .add(String.valueOf(disruption.exonUp()))
                 .add(String.valueOf(disruption.exonDown()))
+                .add(DECIMAL_FORMAT.format(disruption.undisruptedCopyNumber()))
                 .toString();
     }
 
@@ -100,6 +102,7 @@ public final class ReportableDisruptionFile
                 .ploidy(Double.valueOf(values[index++]))
                 .exonUp(Integer.valueOf(values[index++]))
                 .exonDown(Integer.valueOf(values[index++]))
+                .undisruptedCopyNumber(Double.valueOf(values[index++]))
                 .build();
     }
 }

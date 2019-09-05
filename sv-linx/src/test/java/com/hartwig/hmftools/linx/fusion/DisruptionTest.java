@@ -144,7 +144,6 @@ public class DisruptionTest
         addTestGeneData(geneTransCache, chromosome2, geneId2);
 
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
-        disruptionFinder.setNewDisruptionLogic(true);
 
         // scenarios (TRUE - disruptive, FALSE - not disruptive)
         // - FALSE: chain which goes out and back without traversing another splice acceptor, ends on correct orientation
@@ -285,7 +284,6 @@ public class DisruptionTest
         addTestGeneData(geneTransCache, chromosome2, geneId2);
 
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
-        disruptionFinder.setNewDisruptionLogic(true);
 
         // scenarios (TRUE - disruptive, FALSE - not disruptive)
         // - FALSE: chain which starts outside genic regions and only has short TI inside same intron

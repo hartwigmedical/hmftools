@@ -34,4 +34,6 @@ public abstract class ReportableDisruption
 
     public abstract int exonDown();
 
+    public abstract double undisruptedCopyNumber();
+
 }

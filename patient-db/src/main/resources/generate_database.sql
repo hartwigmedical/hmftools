@@ -597,6 +597,7 @@ CREATE TABLE svBreakend
     geneOrientation VARCHAR(20) NOT NULL,
     disruptive BOOLEAN NOT NULL,
     reportedDisruption BOOLEAN NOT NULL,
+    undisruptedCopyNumber DOUBLE PRECISION,
     regionType VARCHAR(20) NOT NULL,
     codingContext VARCHAR(20),
     biotype VARCHAR(255),
