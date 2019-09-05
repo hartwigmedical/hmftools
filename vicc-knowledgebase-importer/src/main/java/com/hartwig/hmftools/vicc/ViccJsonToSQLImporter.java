@@ -27,7 +27,7 @@ public class ViccJsonToSQLImporter {
 
         final String baseDir =
                 System.getProperty("user.home") + File.separator + "hmf" + File.separator + "projects" + File.separator + "vicc";
-        final String inputFile = baseDir + File.separator + "molecularmatch.json";
+        final String inputFile = baseDir + File.separator + "molecularmatch_trials_tail.json";
 
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(inputFile);
         analyzeViccEntries(viccEntries);
@@ -38,7 +38,7 @@ public class ViccJsonToSQLImporter {
 
         viccDAO.deleteAll();
         int count = 0;
-        for (ViccEntry viccEntry : viccEntries) {
+        for (ViccEntry viccEntry : viccEntries) { //.subList(10000, viccEntries.size())
             viccDAO.writeViccEntry(viccEntry);
             count++;
             if (count % 1000 == 0) {

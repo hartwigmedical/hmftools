@@ -2128,7 +2128,6 @@ public class ViccDAO {
                         .execute();
             }
 
-
             if (molecularMatch.asts().right() != null) {
                 int idAstRight = context.insertInto(MOLECULARMATCHASTRIGHT,
                         MOLECULARMATCHASTRIGHT.RAW,
@@ -2157,7 +2156,6 @@ public class ViccDAO {
                                     idAstRight);
                 }
 
-
                 if (molecularMatch.asts().right().left() != null) {
                     int idRightLeft = context.insertInto(MOLECULARMATCHASTRIGHTLEFT,
                             MOLECULARMATCHASTRIGHTLEFT.RAW,
@@ -2167,7 +2165,10 @@ public class ViccDAO {
                             .values(molecularMatch.asts().right().left().raw(),
                                     molecularMatch.asts().right().left().value(),
                                     molecularMatch.asts().right().left().type(),
-                                    idAstRight).returning(MOLECULARMATCHASTRIGHTLEFT.ID).fetchOne().getValue(MOLECULARMATCHASTRIGHTLEFT.ID);
+                                    idAstRight)
+                            .returning(MOLECULARMATCHASTRIGHTLEFT.ID)
+                            .fetchOne()
+                            .getValue(MOLECULARMATCHASTRIGHTLEFT.ID);
 
                     if (molecularMatch.asts().right().left().right() != null) {
                         context.insertInto(MOLECULARMATCHASTRIGHTLEFTRIGHT,
@@ -2202,7 +2203,6 @@ public class ViccDAO {
             }
 
         }
-
 
         if (molecularMatch.institution() != null) {
             for (String institution : molecularMatch.institution()) {
