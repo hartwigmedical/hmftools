@@ -136,7 +136,7 @@ A special and very common case of templated insertions we observe are very small
 The following figure shows a number examples of synthetic events with the shards marked.
 
 <p align="center">
-    <img src="src/main/resources/readme/one_break_events.png" width="500" alt="One Break Events">
+    <img src="src/main/resources/readme/one_break_events.png" width="600" alt="One Break Events">
 </p>
 
 #### Deletion Bridges, Anchor Distance & Overlapping Deletion Bridges
@@ -180,7 +180,7 @@ Concurrent tandem duplications | RECIP_INV_DUPS - 2 facing inversion with inner 
 Tandem Duplication + Double Stranded Break | RECIP_INV_DEL_DUP - inversion enclosing inversion with opposite orientation | RECIP_TRANS_DEL_DUP - 2 translocations forming a deletion bridge on one arm and and facing breakends on other arm
 
 <p align="center">
-    <img src="src/main/resources/readme/two_break_events.png" width="800" alt="Two Break Events">
+    <img src="src/main/resources/readme/two_break_events.png" width="860" alt="Two Break Events">
 </p>
 
 
@@ -194,7 +194,7 @@ A deletion and duplication can together also form either a duplication or deleti
 Unlike inversions, simple deletions and tandem duplications are consistent standalone events and are common genomic events so some of these structures may be clustered incorrectly where separate DEL and DUP events are highly proximate or overlapping by chance
 
 <p align="center">
-    <img src="src/main/resources/readme/del_dup_ti_event.png" width="250" alt="Del-Dup Events">
+    <img src="src/main/resources/readme/del_dup_ti_event.png" width="300" alt="Del-Dup Events">
 </p>
 
 
