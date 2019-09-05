@@ -125,7 +125,7 @@ public interface SvCircosConfig
         options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
         options.addOption(INTERPOLATE_EXON_POSITIONS, false, "Interpolate exon positions rather than adjust scale");
 
-        options.addOption(EXACT_POSITION, false, "Display exact position of structural variants");
+        options.addOption(EXACT_POSITION, false, "Display exact positions at all break ends");
         options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
 
     }

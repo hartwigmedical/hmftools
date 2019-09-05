@@ -135,7 +135,9 @@ A special and very common case of templated insertions we observe are very small
 
 The following figure shows a number examples of synthetic events with the shards marked.
 
-![One Break Events](src/main/resources/readme/one_break_events.png)
+<p align="center">
+    <img src="src/main/resources/readme/one_break_events.png" width="600" alt="One Break Events">
+</p>
 
 #### Deletion Bridges, Anchor Distance & Overlapping Deletion Bridges
 We use the term ‘deletion bridge’ as defined previously [CITE Chromoplexy paper] to refer to sections of DNA loss between 2 breakpoints on the same chromatid that are fused to other segments of the genome. 
@@ -144,7 +146,7 @@ GRIDSS provides an anchor support distance for each structural variant breakend 
 Any other breakend that falls within this anchor distance cannot be ‘cis’ phased with the variant as the contig was able to be mapped past the breakend and the 2 breakends are ‘trans’.
 
 ![GRIDSS Cis Trans](src/main/resources/readme/gridss_cis_trans.png)
- 
+  
 Trans breakends within this distance are common. One possibility is that the breakends could occur on the other chromatid, but this highly unlikely as there is no reason to expect 2 different chromatids to both be damaged within a few hundred base region. Much more likely is that when the double stranded break occurred, that there was significant overlap between the break locations on the 2 strands and the overlapping break ends have been replicated prior to fusing with other genome. This is highly analogous to a deletion bridge except with small sections of replication of DNA instead of loss. LINX uses the term ‘overlapping deletion bridge’ to describe this break topology.
 
 ### Overview of event classification system in LINX
@@ -177,7 +179,11 @@ Concurrent double stranded breaks | RECIP_INV - 2 facing inversions with outer b
 Concurrent tandem duplications | RECIP_INV_DUPS - 2 facing inversion with inner breakends overlapping | RECIP_TRANS_DUPS - 2 translocations with facing breakends on both arms
 Tandem Duplication + Double Stranded Break | RECIP_INV_DEL_DUP - inversion enclosing inversion with opposite orientation | RECIP_TRANS_DEL_DUP - 2 translocations forming a deletion bridge on one arm and and facing breakends on other arm
 
-![Two Break Events](src/main/resources/readme/two_break_events.png)
+<p align="center">
+    <img src="src/main/resources/readme/two_break_events.png" width="860" alt="Two Break Events">
+</p>
+
+
 
 A facing pair of foldback inversions (FB_INV_PAIR) is also classified as a reciprocal, although the mechanism for forming this structure is unclear.   It is possible that many of these events are formed from a breakage fusion bridge event but have not been properly clustered with a resolving break junction which may be distant in a breakage fusion bridge scenario.
 
@@ -187,7 +193,10 @@ For the 4 reciprocal event cases above involving duplication (ie. RECIP_INV_DUPS
 A deletion and duplication can together also form either a duplication or deletion with templated insertion structure (as shown below) identical to the 2 inversion case but with the inserted segment in the opposite orientation. 
 Unlike inversions, simple deletions and tandem duplications are consistent standalone events and are common genomic events so some of these structures may be clustered incorrectly where separate DEL and DUP events are highly proximate or overlapping by chance
 
-![Del-Dup Events](src/main/resources/readme/del_dup_ti_event.png)
+<p align="center">
+    <img src="src/main/resources/readme/del_dup_ti_event.png" width="300" alt="Del-Dup Events">
+</p>
+
 
 #### Insertions
 An insertion event is modelled by LINX as a pair of structural variants which inserts a section of templated sequence from either another part of the genome WITHOUT disruption to the chromatid at the source location OR from an external sequence such as an insertion from a viral genome. 
