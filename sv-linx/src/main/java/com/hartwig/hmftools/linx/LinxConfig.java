@@ -9,16 +9,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class LinxConfig
 {
@@ -51,12 +54,17 @@ public class LinxConfig
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 
+    public static final String DB_USER = "db_user";
+    public static final String DB_PASS = "db_pass";
+    public static final String DB_URL = "db_url";
+
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
     // reference files
+    public static final String REF_GENOME_FILE = "ref_genome";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
@@ -205,6 +213,16 @@ public class LinxConfig
         options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
         options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
         options.addOption(WRITE_SV_DATA, false, "Optional: include all SV table fields in cohort output");
+    }
+
+    @NotNull
+    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
+    {
+        final String userName = cmd.getOptionValue(DB_USER);
+        final String password = cmd.getOptionValue(DB_PASS);
+        final String databaseUrl = cmd.getOptionValue(DB_URL);
+        final String jdbcUrl = "jdbc:" + databaseUrl;
+        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
     private List<String> loadSampleListFile(final String filename)

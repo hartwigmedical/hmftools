@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
@@ -91,7 +92,6 @@ public class FusionDisruptionAnalyser
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String NEO_EPITOPES = "neo_epitopes";
-    public static final String REF_GENOME_FILE = "ref_genome";
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 

@@ -1,7 +1,15 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
+import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
+import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
+import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
+import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
+import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
@@ -40,11 +48,6 @@ public class SvLinxApplication
 
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
-
     private static final String FILTER_QC_PASS = "filter_qc_pass";
 
     private static final Logger LOGGER = LogManager.getLogger(SvLinxApplication.class);
@@ -164,7 +167,7 @@ public class SvLinxApplication
             prefCounter.start();
 
             List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                    loadSampleSvData(svaConfig.SvDataPath, sampleId) : dbAccess.readStructuralVariantData(sampleId);
+                    loadSampleSvDataFromFile(svaConfig.SvDataPath, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
 
             final List<SvVarData> svDataList = createSvData(svRecords);
 
@@ -241,17 +244,15 @@ public class SvLinxApplication
         LOGGER.info("SV analysis complete");
     }
 
-    private static List<StructuralVariantData> loadSampleSvData(final String samplePath, final String sampleId)
+    private static List<StructuralVariantData> loadSampleSvDataFromFile(final String samplePath, final String sampleId, final CommandLine cmd)
     {
-        try
+        if(cmd.hasOption(VCF_FILE) && cmd.hasOption(REF_GENOME_FILE))
         {
-            final String svDataFile = StructuralVariantFile.generateFilename(samplePath, sampleId);
-            return StructuralVariantFile.read(svDataFile);
+            return loadSvDataFromVcf(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(REF_GENOME_FILE));
         }
-        catch(IOException e)
+        else
         {
-            LOGGER.error("failed to load SV data: {}", e.toString());
-            return Lists.newArrayList();
+            return loadSvDataFromSvFile(sampleId, samplePath);
         }
     }
 
@@ -303,18 +304,9 @@ public class SvLinxApplication
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }
