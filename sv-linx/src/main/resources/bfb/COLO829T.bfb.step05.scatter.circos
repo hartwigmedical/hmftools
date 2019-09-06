@@ -1,0 +1,8 @@
+hs3	38	38	1	color=(106,61,154,1.0),glyph=triangle,glyph_size=25
+hs3	75	75	2	color=(106,61,154,1.0),glyph=triangle,glyph_size=25
+
+hs3	861	861	2	color=(106,61,154,1.0),glyph=circle,glyph_size=25
+hs3	861	861	2	color=white,glyph=circle,glyph_size=17
+
+hs3	898	898	1	color=(106,61,154,1.0),glyph=square,glyph_size=25
+hs3	898	898	1	color=white,glyph=square,glyph_size=17
