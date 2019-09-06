@@ -619,7 +619,6 @@ public final class ViccJsonReader {
         } else {
             return ImmutableCivicDescription.builder().revision_id("").value("").build();
         }
-
     }
 
     @NotNull
@@ -1209,7 +1208,6 @@ public final class ViccJsonReader {
         } else {
             return jsonArrayToStringList(otherNameObject.getAsJsonArray("other_name"));
         }
-
     }
 
     @NotNull
@@ -1534,10 +1532,8 @@ public final class ViccJsonReader {
                             ? null
                             : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("transcripts")))
                     .build());
-
         }
         return classificationList;
-
     }
 
     @NotNull
@@ -1561,7 +1557,6 @@ public final class ViccJsonReader {
                             : parents.getAsJsonObject().getAsJsonPrimitive("actionableParent").getAsString())
                     .build());
         }
-
         return parentsList;
     }
 
@@ -1790,7 +1785,6 @@ public final class ViccJsonReader {
                 .type(objectRight.getAsJsonPrimitive("type").getAsString())
                 .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
                 .build();
-
     }
 
     @NotNull
@@ -2013,7 +2007,6 @@ public final class ViccJsonReader {
                     .cDNA(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
                     .name(mutation.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
-
         }
         return mutationList;
     }
@@ -2238,7 +2231,6 @@ public final class ViccJsonReader {
                     .Transcript(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Transcript").getAsString())
                     .build());
         }
-
         return molecularMatchWGSaMapList;
     }
 
@@ -2365,7 +2357,6 @@ public final class ViccJsonReader {
                             ? null
                             : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("GWAS_SNP").getAsString())
                     .build());
-
         }
         return molecularMatchWGSadataLocationList;
     }
@@ -2405,7 +2396,6 @@ public final class ViccJsonReader {
                     .build());
         }
         return gRch37LocationList;
-
     }
 
     @NotNull
@@ -3159,7 +3149,6 @@ public final class ViccJsonReader {
                     .description(objectFeatures.has("description") ? objectFeatures.getAsJsonPrimitive("description").getAsString() : null)
                     .build());
         }
-
         return featureList;
     }
 
@@ -3274,7 +3263,6 @@ public final class ViccJsonReader {
                             ? environmentContextObject.getAsJsonPrimitive("id").getAsString()
                             : null)
                     .build());
-
         }
         return environmentalContexts;
     }
