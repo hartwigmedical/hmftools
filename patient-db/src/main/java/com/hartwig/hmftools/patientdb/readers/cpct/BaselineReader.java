@@ -134,6 +134,7 @@ class BaselineReader {
                 if (primaryTumorLocationCarcinoma != null && primaryTumorLocationCarcinoma.trim().toLowerCase().startsWith("other")) {
                     primaryTumorLocationCarcinoma = primaryTumorLocationOther;
                 } else if (primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
+                    // TODO See DEV-906
                     LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
                             patientId,
                             primaryTumorLocationCarcinoma,
@@ -147,6 +148,7 @@ class BaselineReader {
         String primaryTumorLocation = useCarcinomaForm ? primaryTumorLocationCarcinoma : primaryTumorLocationSelcrit;
         FormStatus primaryTumorFormStatus = useCarcinomaForm ? primaryTumorLocationCarcinomaStatus : primaryTumorLocationSelcritStatus;
 
+        // See DEV-540
         if (primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty() && primaryTumorLocationSelcrit != null
                 && !primaryTumorLocationSelcrit.isEmpty() && !primaryTumorLocationCarcinoma.equals(primaryTumorLocationSelcrit)) {
             LOGGER.warn("Selcrit primary tumor location ({}) does not match carcinoma primary tumor location ({}) for {}",
