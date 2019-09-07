@@ -135,7 +135,6 @@ public class CnDataLoader
                 LOGGER.error("failed to load purity context: {}", e.toString());
                 return;
             }
-
         }
         else
         {

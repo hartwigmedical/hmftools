@@ -44,16 +44,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -152,7 +156,6 @@ public class DriverGeneAnnotator
     public boolean loadConfig(final CommandLine cmd)
     {
         initialiseGeneData(cmd.getOptionValue(GCN_DATA_FILE,""));
-
         return true;
     }
 
@@ -169,65 +172,74 @@ public class DriverGeneAnnotator
         loadGeneCopyNumberDataFile(geneCopyNumberFile);
     }
 
-    private void loadDriverCatalog(final String sampleId)
+    private void loadDataFromDatabase()
     {
+        final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId);
+
+        if(purityContext != null)
+            setSamplePloidy(purityContext.bestFit().ploidy());
+
         mDriverCatalog.clear();
-        mDriverCatalog.addAll(mDbAccess.readDriverCatalog(sampleId));
+        mDriverCatalog.addAll(mDbAccess.readDriverCatalog(mSampleId));
 
         LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
-    }
 
-    public void addDriverGene(final DriverCatalog driver, final GeneCopyNumber geneCopyNumber)
-    {
-        mDriverCatalog.clear();
-        mDriverCatalog.add(driver);
-
-        mGeneCopyNumberData.clear();
-        mGeneCopyNumberData.add(geneCopyNumber);
-    }
-
-    private void loadGeneCopyNumberData(final String sampleId)
-    {
-        mGeneCopyNumberData.clear();
-
-        if(!mSampleGeneCopyNumberMap.isEmpty())
+        if (!mDriverCatalog.isEmpty())
         {
-            final List<GeneCopyNumber> gcnDataList = mSampleGeneCopyNumberMap.get(sampleId);
+            mGeneCopyNumberData.clear();
 
-            if(gcnDataList != null)
-                mGeneCopyNumberData.addAll(gcnDataList);
+            if(!mSampleGeneCopyNumberMap.isEmpty())
+            {
+                final List<GeneCopyNumber> gcnDataList = mSampleGeneCopyNumberMap.get(mSampleId);
 
+                if(gcnDataList != null)
+                    mGeneCopyNumberData.addAll(gcnDataList);
+
+                return;
+            }
+
+            final List<String> driverGenes = mDriverCatalog.stream().map(x -> x.gene()).collect(Collectors.toList());
+
+            mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(mSampleId, driverGenes);
+        }
+    }
+
+    private void loadDataFromFile()
+    {
+        try
+        {
+            final PurityContext purityContext = FittedPurityFile.read(mConfig.PurpleDataPath, mSampleId);
+            setSamplePloidy(purityContext.bestFit().ploidy());
+
+            mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateFilename(mConfig.PurpleDataPath, mSampleId)));
+
+            mGeneCopyNumberData.addAll(
+                    GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(mConfig.PurpleDataPath, mSampleId)));
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load purity context: {}", e.toString());
             return;
         }
-
-        final List<String> driverGenes = mDriverCatalog.stream().map(x -> x.gene()).collect(Collectors.toList());
-
-        mGeneCopyNumberData = mDbAccess.readGeneCopynumbers(sampleId, driverGenes);
     }
 
     public void annotateSVs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        mDriverGeneDataList.clear();
-
         mPerfCounter.start();
-
-        if(mDbAccess != null)
-        {
-            final PurityContext purityContext = mDbAccess.readPurityContext(sampleId);
-
-            if(purityContext != null)
-                setSamplePloidy(purityContext.bestFit().ploidy());
-
-            loadDriverCatalog(sampleId);
-
-            if (!mDriverCatalog.isEmpty())
-            {
-                loadGeneCopyNumberData(sampleId);
-            }
-        }
 
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
+
+        mDriverGeneDataList.clear();
+
+        if(mDbAccess != null)
+        {
+            loadDataFromDatabase();
+        }
+        else if(!mConfig.PurpleDataPath.isEmpty())
+        {
+            loadDataFromFile();
+        }
 
         // types handled:
         // - TSG biallelic point mutations
@@ -249,7 +261,7 @@ public class DriverGeneAnnotator
 
             final TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
 
-            GeneCopyNumber geneCN = findGeneCopyNumber(driverGene);
+            GeneCopyNumber geneCN = findGeneCopyNumber(driverGene.gene());
 
             DriverGeneData dgData = new DriverGeneData(driverGene, geneData, canonicalTrans, geneCN);
             mDriverGeneDataList.add(dgData);
@@ -908,6 +920,10 @@ public class DriverGeneAnnotator
             final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.GeneName));
             gcnData = !geneCopyNumbers.isEmpty() ? geneCopyNumbers.get(0) : null;
         }
+        else
+        {
+            gcnData = findGeneCopyNumber(gene.GeneName);
+        }
 
         final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
                 .driver(DriverType.HOM_DISRUPTION)
@@ -928,6 +944,8 @@ public class DriverGeneAnnotator
                 .maxCopyNumber(gcnData != null ? gcnData.maxCopyNumber() : 0)
                 .build();
 
+        mDriverCatalog.add(driverRecord);
+
         final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene.GeneName);
 
         if (geneData == null)
@@ -941,11 +959,11 @@ public class DriverGeneAnnotator
         return dgData;
     }
 
-    private final GeneCopyNumber findGeneCopyNumber(final DriverCatalog driverGene)
+    private final GeneCopyNumber findGeneCopyNumber(final String geneName)
     {
         for(GeneCopyNumber geneCN : mGeneCopyNumberData)
         {
-            if(driverGene.gene().equals(geneCN.gene()))
+            if(geneCN.gene().equals(geneName))
                 return geneCN;
         }
 
@@ -960,13 +978,16 @@ public class DriverGeneAnnotator
         if(mDriverOutputList.isEmpty())
             return;
 
-        if(mConfig.UploadToDB)
+        if(mConfig.UploadToDB && mDbAccess != null)
         {
             mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
         }
 
         try
         {
+            final String driverCatalogFile = DriverCatalogFile.generateFilename(mOutputDir, mSampleId);
+            DriverCatalogFile.write(driverCatalogFile, mDriverCatalog);
+
             final String driversFile = LinxDriverFile.generateFilename(mOutputDir, mSampleId);
             LinxDriverFile.write(driversFile, mDriverOutputList);
         }
@@ -1070,6 +1091,16 @@ public class DriverGeneAnnotator
         {
             LOGGER.error("error writing driver data to outputFile: {}", e.toString());
         }
+    }
+
+    @VisibleForTesting
+    public void addDriverGene(final DriverCatalog driver, final GeneCopyNumber geneCopyNumber)
+    {
+        mDriverCatalog.clear();
+        mDriverCatalog.add(driver);
+
+        mGeneCopyNumberData.clear();
+        mGeneCopyNumberData.add(geneCopyNumber);
     }
 
     public void close()

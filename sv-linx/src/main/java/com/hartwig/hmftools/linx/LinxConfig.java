@@ -112,7 +112,7 @@ public class LinxConfig
             }
         }
 
-        if(cmd.hasOption(UPLOAD_TO_DB))
+        if(cmd.hasOption(UPLOAD_TO_DB) && cmd.hasOption(DB_URL))
         {
             UploadToDB = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB));
         }
