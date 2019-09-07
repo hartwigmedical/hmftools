@@ -80,7 +80,7 @@ class BaselineReader {
 
         for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setDemographyData(baselineBuilder, studyEvent);
-            setPrimaryTumorData(baselineBuilder, studyEvent);
+            setPrimaryTumorData(baselineBuilder, studyEvent, patient.patientId());
             setRegistrationAndBirthData(baselineBuilder, studyEvent);
             setInformedConsent(baselineBuilder, studyEvent);
         }
@@ -113,29 +113,52 @@ class BaselineReader {
         }
     }
 
-    private void setPrimaryTumorData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
+    private void setPrimaryTumorData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
+            @NotNull String patientId) {
         String primaryTumorLocationSelcrit = null;
+        FormStatus primaryTumorLocationSelcritStatus = null;
         String primaryTumorLocationCarcinoma = null;
+        FormStatus primaryTumorLocationCarcinomaStatus = null;
 
         for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
             for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
                 primaryTumorLocationSelcrit = selcritItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT);
-                builder.primaryTumorStatus(selcritForm.status());
+                primaryTumorLocationSelcritStatus = selcritForm.status();
             }
         }
 
         for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
             for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
+                String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 if (primaryTumorLocationCarcinoma != null && primaryTumorLocationCarcinoma.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
+                    primaryTumorLocationCarcinoma = primaryTumorLocationOther;
+                } else if (primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
+                    // TODO See DEV-906
+                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
+                            patientId,
+                            primaryTumorLocationCarcinoma,
+                            primaryTumorLocationOther);
                 }
-                builder.primaryTumorStatus(carcinomaForm.status());
+                primaryTumorLocationCarcinomaStatus = carcinomaForm.status();
             }
         }
 
-        final String primaryTumorLocation = primaryTumorLocationSelcrit != null ? primaryTumorLocationSelcrit : primaryTumorLocationCarcinoma;
+        boolean useCarcinomaForm = primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty();
+        String primaryTumorLocation = useCarcinomaForm ? primaryTumorLocationCarcinoma : primaryTumorLocationSelcrit;
+        FormStatus primaryTumorFormStatus = useCarcinomaForm ? primaryTumorLocationCarcinomaStatus : primaryTumorLocationSelcritStatus;
+
+        // See DEV-540
+        if (primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty() && primaryTumorLocationSelcrit != null
+                && !primaryTumorLocationSelcrit.isEmpty() && !primaryTumorLocationCarcinoma.equals(primaryTumorLocationSelcrit)) {
+            LOGGER.warn("Selcrit primary tumor location ({}) does not match carcinoma primary tumor location ({}) for {}",
+                    primaryTumorLocationSelcrit,
+                    primaryTumorLocationCarcinoma,
+                    patientId);
+        }
+
         builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
+        builder.primaryTumorStatus(primaryTumorFormStatus != null ? primaryTumorFormStatus : FormStatus.undefined());
     }
 
     private static void setRegistrationAndBirthData(@NotNull final ImmutableBaselineData.Builder builder,
