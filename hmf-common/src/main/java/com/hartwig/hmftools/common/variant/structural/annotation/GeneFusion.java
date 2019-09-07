@@ -106,12 +106,12 @@ public class GeneFusion
     }
 
     // convenience functions
-    public long getChainLength()
+    public int getChainLength()
     {
         return mAnnotations != null && mAnnotations.chainInfo() != null ? mAnnotations.chainInfo().chainLength() : 0;
     }
 
-    public long getChainLinks()
+    public int getChainLinks()
     {
         return mAnnotations != null && mAnnotations.chainInfo() != null ? mAnnotations.chainInfo().chainLinks() : 0;
     }

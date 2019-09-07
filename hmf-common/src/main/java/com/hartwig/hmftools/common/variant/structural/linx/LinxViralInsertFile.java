@@ -21,7 +21,6 @@ public class LinxViralInsertFile
     public final String VirusId;
     public final String VirusName;
 
-
     public LinxViralInsertFile(final String sampleId, int svId, final String virusId, final String virusName)
     {
         SampleId = sampleId;
@@ -99,6 +98,4 @@ public class LinxViralInsertFile
                 values[index++],
                 values[index++]);
     }
-
-
 }

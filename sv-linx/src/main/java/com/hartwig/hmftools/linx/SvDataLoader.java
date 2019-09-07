@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -23,14 +25,19 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvDataFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -52,7 +59,7 @@ public class SvDataLoader
     private static final String LOAD_SV_DATA = "load_sv_data";
     private static final String LOAD_LINX_DATA = "load_linx_data";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
@@ -88,24 +95,45 @@ public class SvDataLoader
         try
         {
             List<LinxSvData> linxSvData = LinxSvDataFile.read(LinxSvDataFile.generateFilename(svDataOutputDir, sampleId));
-            LOGGER.info("sample({}) loading {} SV annotation records");
+            LOGGER.info("sample({}) loading {} SV annotation records", sampleId, linxSvData.size());
             dbAccess.writeSvLinxData(sampleId, linxSvData);
 
             List<LinxCluster> clusterData = LinxClusterFile.read(LinxClusterFile.generateFilename(svDataOutputDir, sampleId));
-            LOGGER.info("sample({}) loading {} SV cluster records");
+            LOGGER.info("sample({}) loading {} SV cluster records", sampleId, clusterData.size());
             dbAccess.writeSvClusters(sampleId, clusterData);
 
             List<LinxLink> linksData = LinxLinkFile.read(LinxLinkFile.generateFilename(svDataOutputDir, sampleId));
-            LOGGER.info("sample({}) loading {} SV links records");
+            LOGGER.info("sample({}) loading {} SV links records", sampleId, linksData.size());
             dbAccess.writeSvLinks(sampleId, linksData);
 
-            List<LinxViralInsertFile> viralInserts = LinxViralInsertFile.read(LinxViralInsertFile.generateFilename(svDataOutputDir, sampleId));
-
-            if(!viralInserts.isEmpty())
+            String viralInsertFilename = LinxViralInsertFile.generateFilename(svDataOutputDir, sampleId);
+            if(Files.exists(Paths.get(viralInsertFilename)))
             {
-                LOGGER.info("sample({}) loading {} SV viral inserts records");
-                dbAccess.writeSvViralInserts(sampleId, viralInserts);
+                List<LinxViralInsertFile> viralInserts = LinxViralInsertFile.read(viralInsertFilename);
+
+                if (!viralInserts.isEmpty())
+                {
+                    LOGGER.info("sample({}) loading {} SV viral inserts records", sampleId, viralInserts.size());
+                    dbAccess.writeSvViralInserts(sampleId, viralInserts);
+                }
             }
+
+            final String fusionsFilename = LinxFusionFile.generateFilename(svDataOutputDir, sampleId);
+            final String breakendsFilename = LinxBreakendFile.generateFilename(svDataOutputDir, sampleId);
+
+            if(Files.exists(Paths.get(breakendsFilename)))
+            {
+                List<LinxBreakend> breakends = LinxBreakendFile.read(breakendsFilename);
+
+                List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
+                        LinxFusionFile.read(fusionsFilename) : Lists.newArrayList();
+
+                LOGGER.info("sample({}) loading {} breakends and {} fusion records", sampleId, breakends.size(), fusions.size());
+
+                final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
+                annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+            }
+
         }
         catch(IOException e)
         {

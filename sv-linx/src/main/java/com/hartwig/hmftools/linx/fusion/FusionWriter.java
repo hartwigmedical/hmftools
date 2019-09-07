@@ -11,8 +11,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -21,6 +23,12 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,12 +46,70 @@ public class FusionWriter
         mFusionWriter = null;
     }
 
-    public void writeSampleData(final String sampleId, final List<GeneFusion> fusions)
+    public static void convertBreakendsAndFusions(
+            final List<GeneFusion> geneFusions, final List<Transcript> transcripts,
+            final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
+    {
+        int breakendId = 0;
+        Map<Transcript,Integer> transIdMap = Maps.newHashMap();
+
+        for(final Transcript transcript : transcripts)
+        {
+            transIdMap.put(transcript, breakendId);
+
+            breakends.add(ImmutableLinxBreakend.builder()
+                    .id(breakendId++)
+                    .svId(transcript.gene().id())
+                    .isStart(transcript.gene().isStart())
+                    .gene(transcript.geneName())
+                    .transcriptId(transcript.StableId)
+                    .canonical(transcript.isCanonical())
+                    .isUpstream(transcript.isUpstream())
+                    .disruptive(transcript.isDisruptive())
+                    .reportedDisruption(transcript.reportableDisruption())
+                    .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
+                    .regionType(transcript.regionType())
+                    .codingContext(transcript.codingType())
+                    .biotype(transcript.bioType())
+                    .exonBasePhase(transcript.exactCodingBase())
+                    .nextSpliceExonRank(transcript.nextSpliceExonRank())
+                    .nextSpliceExonPhase(transcript.nextSpliceExonPhase())
+                    .nextSpliceDistance(transcript.isUpstream() ? transcript.prevSpliceAcceptorDistance() : transcript.nextSpliceAcceptorDistance())
+                    .totalExonCount(transcript.ExonMax)
+                    .build());
+        }
+
+        for(final GeneFusion geneFusion : geneFusions)
+        {
+            int upBreakendId = transIdMap.get(geneFusion.upstreamTrans());
+            int downBreakendId = transIdMap.get(geneFusion.downstreamTrans());
+
+            fusions.add(ImmutableLinxFusion.builder()
+                    .fivePrimeBreakendId(upBreakendId)
+                    .threePrimeBreakendId(downBreakendId)
+                    .name(geneFusion.name())
+                    .reported(geneFusion.reportable())
+                    .reportedType(geneFusion.getKnownType())
+                    .phased(geneFusion.phaseMatched())
+                    .chainLength(geneFusion.getChainLength())
+                    .chainLinks(geneFusion.getChainLinks())
+                    .chainTerminated(geneFusion.isTerminated())
+                    .domainsKept(geneFusion.downstreamTrans().getProteinFeaturesKept())
+                    .domainsLost(geneFusion.downstreamTrans().getProteinFeaturesLost())
+                    .skippedExonsUp(geneFusion.getExonsSkipped(true))
+                    .skippedExonsDown(geneFusion.getExonsSkipped(false))
+                    .fusedExonUp(geneFusion.getFusedExon(true))
+                    .fusedExonDown(geneFusion.getFusedExon(false))
+                    .build());
+        }
+    }
+
+    public void writeSampleData(
+            final String sampleId, final List<GeneFusion> geneFusions, final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         // write sample files for patient reporter
         List<ReportableGeneFusion> reportedFusions = Lists.newArrayList();
-        List<ReportableDisruption> reportedDisruptions = Lists.newArrayList();
-        for(final GeneFusion fusion : fusions)
+        for(final GeneFusion fusion : geneFusions)
         {
             if(fusion.reportable())
             {
@@ -61,8 +127,14 @@ public class FusionWriter
 
         try
         {
-            final String fusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, sampleId);
-            ReportableGeneFusionFile.write(fusionsFile, reportedFusions);
+            final String reportedFusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, sampleId);
+            ReportableGeneFusionFile.write(reportedFusionsFile, reportedFusions);
+
+            final String breakendsFile = LinxBreakendFile.generateFilename(mOutputDir, sampleId);
+            LinxBreakendFile.write(breakendsFile, breakends);
+
+            final String fusionsFile = LinxFusionFile.generateFilename(mOutputDir, sampleId);
+            LinxFusionFile.write(fusionsFile, fusions);
         }
         catch(IOException e)
         {

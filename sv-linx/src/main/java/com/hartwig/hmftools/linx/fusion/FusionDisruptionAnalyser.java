@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInser
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
+import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
@@ -26,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
@@ -36,6 +38,10 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusion
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
@@ -265,17 +271,22 @@ public class FusionDisruptionAnalyser
         findFusions(svList, clusters);
         mDisruptionFinder.findReportableDisruptions(svList);
 
+        final List<GeneFusion> uniqueFusions = extractUniqueFusions();
+        final List<Transcript> transcripts = getTranscriptList(svList, uniqueFusions);
+
+        final List<LinxBreakend> breakends = Lists.newArrayList();
+        final List<LinxFusion> fusions = Lists.newArrayList();
+        convertBreakendsAndFusions(uniqueFusions, transcripts, fusions, breakends);
+
         if(mConfig.isSingleSample())
         {
-            mFusionWriter.writeSampleData(mSampleId, mFusions);
+            mFusionWriter.writeSampleData(mSampleId, mFusions, fusions, breakends);
             mDisruptionFinder.writeSampleData(mSampleId);
         }
         else
         {
             mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
         }
-
-        List<GeneFusion> uniqueFusions = extractUniqueFusions();
 
         if(mLogAllPotentials)
         {
@@ -302,7 +313,10 @@ public class FusionDisruptionAnalyser
 
         if(dbAccess != null && mConfig.UploadToDB)
         {
-            uploadData(svList, uniqueFusions, dbAccess);
+            LOGGER.debug("persisting {} breakends and {} fusions to database", breakends.size(), fusions.size());
+
+            final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
+            annotationDAO.writeBreakendsAndFusions(mSampleId, breakends, fusions);
         }
 
         if(mRnaFusionMapper != null)
@@ -667,7 +681,7 @@ public class FusionDisruptionAnalyser
                     FusionChainInfo chainInfo = ImmutableFusionChainInfo.builder()
                             .chainId(chain.id())
                             .chainLinks(linksCount)
-                            .chainLength(totalLinkLength)
+                            .chainLength((int)totalLinkLength)
                             .traversalAssembled(allTraversalAssembled)
                             .validTraversal(validTraversal)
                             .build();
@@ -897,7 +911,7 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private List<GeneFusion> extractUniqueFusions()
+    private final List<GeneFusion> extractUniqueFusions()
     {
         // from the list of all potential fusions, collect up all reportable ones, and then the highest priority fusion
         // from amongst the those with the same gene-pairing and/or SV Id
@@ -954,14 +968,11 @@ public class FusionDisruptionAnalyser
         return uniqueFusions;
     }
 
-    private void uploadData(final List<SvVarData> svList, List<GeneFusion> fusionsToUpload, final DatabaseAccess dbAccess)
+    public final List<Transcript> getTranscriptList(final List<SvVarData> svList, final List<GeneFusion> fusions)
     {
-        if (dbAccess == null)
-            return;
-
         // upload every reportable fusion and if a gene-pair has no reportable fusion then upload the top-priority fusion
         // upload every breakend in a fusion to be uploaded, and any other disrupted or canonical transcripts
-        List<Transcript> transcriptsToUpload = Lists.newArrayList();
+        List<Transcript> transcripts = Lists.newArrayList();
 
         for (SvVarData var : svList)
         {
@@ -969,29 +980,26 @@ public class FusionDisruptionAnalyser
             {
                 for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
                 {
-                    transcriptsToUpload.addAll(geneAnnotation.transcripts().stream()
+                    transcripts.addAll(geneAnnotation.transcripts().stream()
                             .filter(x -> x.isCanonical())
                             .collect(Collectors.toList()));
                 }
             }
         }
 
-        for(GeneFusion fusion : fusionsToUpload)
+        for(GeneFusion fusion : fusions)
         {
-            if(!transcriptsToUpload.contains(fusion.upstreamTrans()))
-                transcriptsToUpload.add(fusion.upstreamTrans());
+            if(!transcripts.contains(fusion.upstreamTrans()))
+                transcripts.add(fusion.upstreamTrans());
 
-            if(!transcriptsToUpload.contains(fusion.downstreamTrans()))
-                transcriptsToUpload.add(fusion.downstreamTrans());
+            if(!transcripts.contains(fusion.downstreamTrans()))
+                transcripts.add(fusion.downstreamTrans());
         }
 
         // transcripts not used in fusions won't have the exact exonic base set
-        transcriptsToUpload.stream().filter(Transcript::isExonic).forEach(x -> x.setExonicCodingBase());
+        transcripts.stream().filter(Transcript::isExonic).forEach(x -> x.setExonicCodingBase());
 
-        LOGGER.debug("persisting {} breakends and {} fusions to database", transcriptsToUpload.size(), fusionsToUpload.size());
-
-        final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-        annotationDAO.writeBreakendsAndFusions(mSampleId, transcriptsToUpload, fusionsToUpload);
+        return transcripts;
     }
 
     private void writeFusionData(final GeneFusion fusion)

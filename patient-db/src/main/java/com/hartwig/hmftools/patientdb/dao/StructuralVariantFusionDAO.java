@@ -19,6 +19,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Svbreakend;
 
 import org.apache.logging.log4j.util.Strings;
@@ -71,6 +73,7 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.TOTALEXONCOUNT);
     }
 
+    /*
     public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<Transcript> transcripts,
             @NotNull List<GeneFusion> fusions)
     {
@@ -177,6 +180,112 @@ public class StructuralVariantFusionDAO
             fusionInserter.execute();
         }
     }
+    */
+
+    public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<LinxBreakend> breakends, @NotNull List<LinxFusion> fusions)
+    {
+        context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
+        context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
+
+        final Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        // a map of breakend DB Ids to transcripts for the fusion DB record foreign key to the breakend table
+        final Map<Integer, Integer> breakendIdToDbIdMap = Maps.newHashMap();
+
+        InsertValuesStep19 inserter = createBreakendInserter();
+        int breakendsInsertedCount = 0;
+
+        for (int i = 0; i < breakends.size(); ++i)
+        {
+            final LinxBreakend breakend = breakends.get(i);
+
+            inserter.values(timestamp,
+                    sampleId,
+                    breakend.svId(),
+                    breakend.isStart(),
+                    breakend.gene(),
+                    breakend.transcriptId(),
+                    breakend.canonical(),
+                    breakend.isUpstream() ? "Upstream" : "Downstream",
+                    breakend.disruptive(),
+                    breakend.reportedDisruption(),
+                    DatabaseUtil.decimal(breakend.undisruptedCopyNumber()),
+                    breakend.regionType(),
+                    breakend.codingContext(),
+                    breakend.biotype(),
+                    breakend.exonBasePhase(),
+                    breakend.nextSpliceExonRank(),
+                    breakend.nextSpliceExonPhase(),
+                    breakend.nextSpliceDistance(),
+                    breakend.totalExonCount());
+
+            ++breakendsInsertedCount;
+
+            // batch-insert transcripts since there can be many more than the batch size per sample
+            if (breakends.size() >= DB_BATCH_INSERT_SIZE || i == breakends.size() - 1)
+            {
+                @SuppressWarnings("unchecked")
+                final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
+
+                if (ids.size() != breakendsInsertedCount)
+                {
+                    throw new RuntimeException("Not all transcripts were inserted successfully");
+                }
+
+                for (int j = 0; j < ids.size(); j++)
+                {
+                    breakendIdToDbIdMap.put(breakends.get(j).id(), ids.get(j).intValue());
+                }
+
+                inserter = createBreakendInserter();
+                breakendsInsertedCount = 0;
+            }
+        }
+
+        for (List<LinxFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE))
+        {
+            final InsertValuesStep17 fusionInserter = context.insertInto(SVFUSION,
+                    SVFUSION.MODIFIED,
+                    SVFUSION.SAMPLEID,
+                    SVFUSION.FIVEPRIMEBREAKENDID,
+                    SVFUSION.THREEPRIMEBREAKENDID,
+                    SVFUSION.NAME,
+                    SVFUSION.REPORTED,
+                    SVFUSION.REPORTEDTYPE,
+                    SVFUSION.PHASED,
+                    SVFUSION.CHAINLENGTH,
+                    SVFUSION.CHAINLINKS,
+                    SVFUSION.CHAINTERMINATED,
+                    SVFUSION.DOMAINSKEPT,
+                    SVFUSION.DOMAINSLOST,
+                    SVFUSION.SKIPPEDEXONSUP,
+                    SVFUSION.SKIPPEDEXONSDOWN,
+                    SVFUSION.FUSEDEXONUP,
+                    SVFUSION.FUSEDEXONDOWN);
+
+            //noinspection unchecked
+            batch.forEach(fusion -> fusionInserter.values(timestamp,
+                    sampleId,
+                    breakendIdToDbIdMap.get(fusion.fivePrimeBreakendId()),
+                    breakendIdToDbIdMap.get(fusion.threePrimeBreakendId()),
+                    fusion.name(),
+                    fusion.reported(),
+                    fusion.reportedType(),
+                    fusion.phased(),
+                    fusion.chainLength(),
+                    fusion.chainLinks(),
+                    fusion.chainTerminated(),
+                    DatabaseUtil.checkStringLength(fusion.domainsKept(), SVFUSION.DOMAINSKEPT),
+                    DatabaseUtil.checkStringLength(fusion.domainsLost(), SVFUSION.DOMAINSLOST),
+                    fusion.skippedExonsUp(),
+                    fusion.skippedExonsDown(),
+                    fusion.fusedExonUp(),
+                    fusion.fusedExonDown()));
+
+            fusionInserter.execute();
+        }
+    }
+
 
     @NotNull
     public final List<ReportableGeneFusion> readGeneFusions(@NotNull final String sample)

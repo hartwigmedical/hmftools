@@ -73,7 +73,8 @@ public class LinxLinkFile
     }
 
     @NotNull
-    private static String toString(@NotNull final LinxLink svData) {
+    private static String toString(@NotNull final LinxLink svData)
+    {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.clusterId()))
                 .add(String.valueOf(svData.chainId()))
@@ -115,9 +116,9 @@ public class LinxLinkFile
                 .assembled(Boolean.valueOf(values[index++]))
                 .traversedSVCount(Integer.valueOf(values[index++]))
                 .length(Long.valueOf(values[index++]))
-                .ploidy(Integer.valueOf(values[index++]))
-                .ploidyUncertainty(Integer.valueOf(values[index++]))
-                .pseudogeneInfo(values[index++])
+                .ploidy(Double.valueOf(values[index++]))
+                .ploidyUncertainty(Double.valueOf(values[index++]))
+                .pseudogeneInfo(index < values.length ? values[index++] : "")
                 .build();
     }
 }

@@ -53,7 +53,8 @@ public class LinxClusterFile
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER)
                 .add("clusterId")
                 .add("resolvedType")

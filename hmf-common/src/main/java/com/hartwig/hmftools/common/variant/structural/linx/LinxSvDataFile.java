@@ -52,7 +52,8 @@ public class LinxSvDataFile
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER)
                 .add("svId")
                 .add("clusterId")
