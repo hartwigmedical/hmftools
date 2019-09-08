@@ -25,6 +25,7 @@ LINX provides functionality to present detailed visualisation of genomic rearran
   + [Reduced Footprint](#reduced-footprint)  
   + [Line Event](#line-event)  
   + [TMPRSS2-ERG Fusion](#tmprss2-erg-fusion)  
+* [Breakage Fusion Bridge Demonstration](#breakage-fusion-bridge-demonstration)
 
 # Dependencies
 
@@ -366,4 +367,9 @@ track, decreases the relative size of the segment track and increases the max nu
     <img src="src/main/resources/readme/tmpress2erg.png" width="600" alt="TMPRSS2-ERG">
 </p>
 
+# Breakage Fusion Bridge Demonstration
+The following animation demonstrates the cycle of breaks, replications, fusions and deletes that can lead to a breakage fusion bridge.
 
+ <p align="center">
+     <img src="src/main/resources/readme/bfb.gif" width="600" alt="BreakageFusionBridge">
+ </p>
