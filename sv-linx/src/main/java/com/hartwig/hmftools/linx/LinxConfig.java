@@ -96,7 +96,7 @@ public class LinxConfig
 
         if(configSampleStr != null && !configSampleStr.equals("*"))
         {
-            if (configSampleStr.contains(","))
+            if(configSampleStr.contains(","))
             {
                 String[] tumorList = configSampleStr.split(",");
                 mSampleIds = Arrays.stream(tumorList).collect(Collectors.toList());
