@@ -841,7 +841,6 @@ public class ViccDAO {
                     JAXTRIALSTHERAPIES.THERAPYNAME,
                     JAXTRIALSTHERAPIES.JAXTRIALSID).values(therapies.id(), therapies.therapyName(), id).execute();
         }
-
     }
 
     private void importPmkbinSQL(int viccEntryId, @NotNull KbSpecificObject object) {
@@ -1118,9 +1117,7 @@ public class ViccDAO {
                         ONCOKBGENEALIASESCLINICAL.GENEALIASES,
                         ONCOKBGENEALIASESCLINICAL.ONCOKBGENECLINICALID).values(geneAliasesClinical, idGeneClinical).execute();
             }
-
         }
-
     }
 
     private void importMolecularMatchTrials(int viccEntryId, @NotNull KbSpecificObject object) {
@@ -1339,7 +1336,6 @@ public class ViccDAO {
                             id)
                     .execute();
         }
-
     }
 
     private void importCivic(int viccEntryId, @NotNull KbSpecificObject object) {
@@ -1575,6 +1571,7 @@ public class ViccDAO {
                         .values(drugs.pubchemId(), drugs.id(), drugs.name(), idEvidenceItems)
                         .execute();
             }
+
             context.insertInto(CIVICDISEASE,
                     CIVICDISEASE.DOID,
                     CIVICDISEASE.URL,
@@ -1644,7 +1641,6 @@ public class ViccDAO {
                                 idEvidenceItemsSource)
                         .execute();
             }
-
         }
 
         if (civic.sources() != null) {
