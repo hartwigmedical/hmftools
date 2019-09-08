@@ -8,7 +8,7 @@ hs3	75	75	2	color=(106,61,154,1.0),glyph=triangle,glyph_size=25
 hs3	75	75	5	color=(106,61,154,1.0),glyph=triangle,glyph_size=25
 
 hs3	439	439	3	color=(106,61,154,1.0),glyph=circle,glyph_size=25
-hs3	411	411	4	color=(106,61,154,1.0),glyph=circle,glyph_size=25
+hs3	411	411	4	color=(106,117,184),glyph=circle,glyph_size=25
 
 hs3	666	666	3	color=(106,61,154,1.0),glyph=circle,glyph_size=25
 hs3	666	666	4	color=(106,61,154,1.0),glyph=circle,glyph_size=25
@@ -37,5 +37,5 @@ hs3	898	898	6	color=white,glyph=square,glyph_size=17
 
 hs10	13	13	1	color=(106,61,154,1.0),glyph=circle,glyph_size=25
 hs10	35	35	1	color=(106,61,154,1.0),glyph=circle,glyph_size=25
-hs12	12	12	1	color=(106,61,154,1.0),glyph=circle,glyph_size=25
+hs12	12	12	1	color=(106,117,184),glyph=circle,glyph_size=25
 hs12	33	33	1	color=(106,61,154,1.0),glyph=circle,glyph_size=25
