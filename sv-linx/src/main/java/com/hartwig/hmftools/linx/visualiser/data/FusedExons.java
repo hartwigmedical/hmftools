@@ -29,8 +29,9 @@ public class FusedExons
     {
         final List<FusedExon> result = Lists.newArrayList();
 
-        final List<Exon> upStreamExons = sortedUpstreamExons(fusion, exons);
-        final List<Exon> downStreamExons = sortedDownstreamExons(fusion, exons);
+        final List<Exon> fusionExons = Exons.fusionExons(fusion, exons);
+        final List<Exon> upStreamExons = sortedUpstreamExons(fusion, fusionExons);
+        final List<Exon> downStreamExons = sortedDownstreamExons(fusion, fusionExons);
         if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
         {
             return result;

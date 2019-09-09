@@ -3,10 +3,11 @@ package com.hartwig.hmftools.linx.visualiser.data;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.HmfExonRegion;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.region.Strand;
@@ -20,12 +21,47 @@ public class Exons
     private static final Comparator<Exon> RANKED = Comparator.comparingInt(Exon::rank);
 
     @NotNull
-    public static List<Exon> geneExons(@NotNull final List<Gene> gene, @NotNull final List<Exon> exons)
+    public static List<Exon> fusionExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
     {
-        final Set<String> transcripts = gene.stream().map(Gene::transcript).collect(Collectors.toSet());
-        return exons.stream()
-                .filter(x -> transcripts.contains(x.transcript()) && !x.type().equals(ExonType.DISRUPTED))
-                .collect(Collectors.toList());
+        final List<Exon> result = Lists.newArrayList();
+
+        result.addAll(transcriptExons(fusion.transcriptUp(), exons));
+        result.addAll(transcriptExons(fusion.transcriptDown(), exons));
+
+        return result;
+    }
+
+    @NotNull
+    public static List<Exon> geneExons(@NotNull final List<Gene> genes, @NotNull final List<Exon> exons)
+    {
+        final List<Exon> result = Lists.newArrayList();
+
+        for (Gene gene : genes)
+        {
+            result.addAll(transcriptExons(gene.transcript(), exons));
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private static List<Exon> transcriptExons(@NotNull final String transcript, @NotNull final List<Exon> exons)
+    {
+        // The same exon might appear more than once so need to remove duplicates
+        final Map<Integer, Exon> dedup = Maps.newLinkedHashMap();
+
+        for (Exon exon : exons)
+        {
+            if (exon.transcript().equals(transcript))
+            {
+                if (!dedup.containsKey(exon.rank()))
+                {
+                    dedup.put(exon.rank(), exon);
+                }
+            }
+        }
+
+        return Lists.newArrayList(dedup.values());
     }
 
     @NotNull
