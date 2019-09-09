@@ -12,10 +12,10 @@ plotDir   <- args[3]
 #purpleDir = "~/hmf/analysis/COLO829T/purple"
 #plotDir = "~/hmf/analysis/COLO829T/purple/plot"
 
-purity_ploidy_range_plot <- function(range) {
+purity_ploidy_range_plot <- function(bestFit, range) {
 
-    bestPurity = range[1, "purity"]
-    bestPloidy = range[1, "ploidy"]
+    bestPurity = bestFit[1, "purity"]
+    bestPloidy = bestFit[1, "ploidy"]
 
     range =  range %>%
         arrange(purity, ploidy) %>%
@@ -162,9 +162,10 @@ if (nrow(copyNumbers) > 0) {
 }
 
 
+bestFitDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.tsv"), sep = "\t", header = T, comment.char = "!") %>% select(purity, ploidy)
 rangeDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.purity.range.tsv"), sep = "\t", header = T, comment.char = "!") %>%
     select(purity, ploidy, score)
-rangePlot = purity_ploidy_range_plot(rangeDF)
+rangePlot = purity_ploidy_range_plot(bestFitDF, rangeDF)
 ggsave(filename = paste0(plotDir, "/", sample, ".purity.range.png"), rangePlot, units = "in", height = 4, width = 4.8, scale = 1)
 
 fittedSegmentsDF = read.table(file = paste0(purpleDir, "/", sample, ".purple.segment.tsv"), sep = "\t", header = T, comment.char = "!")

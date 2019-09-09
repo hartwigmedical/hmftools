@@ -956,6 +956,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Purity sunrise plot now supports somatic inferred purity 
   - Additional BAF inferring rule
   - Removed `GERMLINE_AMPLIFICATION` copy number method.
   - Added `NON_DIPLOID` copy number method. This uses the ref normalised tumor copy number (adjusted for observed normal ratio rather than ideal).  
