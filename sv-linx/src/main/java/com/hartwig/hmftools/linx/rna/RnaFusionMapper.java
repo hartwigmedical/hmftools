@@ -542,7 +542,7 @@ public class RnaFusionMapper
 
         if(currentSameCluster != candidateSameCluster)
         {
-            LOGGER.debug("current pair({} & {}) clusters({} & {}), candidate pair({} & {}) clusters({} & {})",
+            LOGGER.trace("current pair({} & {}) clusters({} & {}), candidate pair({} & {}) clusters({} & {})",
                     currentStartSV.id(), currentEndSV.id(), currentStartSV.getCluster().id(), currentEndSV.getCluster().id(),
                     candidateStartSV.id(), candidateEndSV.id(), candidateStartSV.getCluster().id(), candidateEndSV.getCluster().id());
 
@@ -556,7 +556,7 @@ public class RnaFusionMapper
 
             SvChain candidateMatchingChain = candidateStartSV.getCluster().findSameChainForSVs(candidateStartSV, candidateEndSV);
 
-            LOGGER.debug("current pair({} & {}) clusters({} chain={}), candidate pair({} & {}) clusters({} chain={})",
+            LOGGER.trace("current pair({} & {}) clusters({} chain={}), candidate pair({} & {}) clusters({} chain={})",
                     currentStartSV.id(), currentEndSV.id(), currentStartSV.getCluster().id(),
                     currentMatchingChain != null ? currentMatchingChain.id() : "diff",
                     candidateStartSV.id(), candidateEndSV.id(), candidateStartSV.getCluster().id(),
