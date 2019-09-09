@@ -225,11 +225,16 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_FEATURES_ELEMENT_SIZES = Lists.newArrayList(2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16);
     private static final List<Integer> EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES = Lists.newArrayList(4, 5);
     private static final List<Integer> EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES = Lists.newArrayList(3);
+    private static final List<Integer> EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES = Lists.newArrayList(3);
+
     private static final List<Integer> EXPECTED_EVIDENCE_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES = Lists.newArrayList(1);
     private static final List<Integer> EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES = Lists.newArrayList(1, 2);
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
+
+    private static final List<Integer> EXPECTED_TAXONOMY = Lists.newArrayList(1,2,3,4,5);
+    private static final List<Integer> EXPECTED_ENVIRONMENTCONTEXT = Lists.newArrayList(1,2,3,4,5,6,7);
 
     private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
 
@@ -627,7 +632,7 @@ public final class ViccJsonReader {
         for (JsonElement variantGroup : arrayVariantsGroup) {
             Set<String> keysVariantGroup = variantGroup.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTGROUPS_SIZES.contains(keysVariantGroup.size())) {
-                LOGGER.warn("Found " + keysVariantGroup.size() + " in civic variant group rather than the expected "
+                LOGGER.warn("Found " + keysVariantGroup.size() + " in civic variant groups rather than the expected "
                         + EXPECTED_CIVIC_VARIANTGROUPS_SIZES);
                 LOGGER.warn(keysVariantGroup);
             }
@@ -677,7 +682,7 @@ public final class ViccJsonReader {
     private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
         Set<String> keysCoordinates = objectCoordinates.keySet();
         if (!EXPECTED_CIVIC_COORDINATES_SIZES.contains(keysCoordinates.size())) {
-            LOGGER.warn("Found " + keysCoordinates.size() + " in civic coordinates rather than the expectedd "
+            LOGGER.warn("Found " + keysCoordinates.size() + " in civic coordinates rather than the expected "
                     + EXPECTED_CIVIC_COORDINATES_SIZES);
             LOGGER.warn(keysCoordinates);
         }
@@ -792,7 +797,7 @@ public final class ViccJsonReader {
         for (JsonElement clinicalTrial : arrayClinicalTrial) {
             Set<String> keysClinicalTrials = clinicalTrial.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_CLINICALTRIAL_SIZES.contains(keysClinicalTrials.size())) {
-                LOGGER.warn("Found " + keysClinicalTrials.size() + " in civic clinial trial rather than the expected "
+                LOGGER.warn("Found " + keysClinicalTrials.size() + " in civic clinial trials rather than the expected "
                         + EXPECTED_CIVIC_CLINICALTRIAL_SIZES);
                 LOGGER.warn(keysClinicalTrials);
             }
@@ -827,7 +832,7 @@ public final class ViccJsonReader {
     private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
         Set<String> keysDisease = objectDisease.keySet();
         if (!EXPECTED_CIVIC_DISEASES_SIZES.contains(keysDisease.size())) {
-            LOGGER.warn("Found " + keysDisease.size() + " in civic disease rather than the expected " + EXPECTED_CIVIC_DISEASES_SIZES);
+            LOGGER.warn("Found " + keysDisease.size() + " in civic diseases rather than the expected " + EXPECTED_CIVIC_DISEASES_SIZES);
             LOGGER.warn(keysDisease);
         }
 
@@ -1666,7 +1671,7 @@ public final class ViccJsonReader {
         for (JsonElement fusions : arrayFusions) {
             Set<String> keysFusions = fusions.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_FUSIONS_SIZES.contains(keysFusions.size())) {
-                LOGGER.warn("Found " + keysFusions.size() + " in molecular match variant info rather than the expected "
+                LOGGER.warn("Found " + keysFusions.size() + " in molecular match fusions rather than the expected "
                         + EXPECTED_MOLECULARMATCH_FUSIONS_SIZES);
                 LOGGER.warn(keysFusions);
             }
@@ -1791,7 +1796,7 @@ public final class ViccJsonReader {
     private static MolecularMatchAstRightRight createRightRight(@NotNull JsonObject objectRight) {
         Set<String> keysRight = objectRight.keySet();
         if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match right right rather than the expected "
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right right rather than the expected "
                     + EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
             LOGGER.warn(keysRight);
         }
@@ -1807,7 +1812,7 @@ public final class ViccJsonReader {
     private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
         Set<String> keysRight = objectRight.keySet();
         if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match right left rather than the expected "
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right left rather than the expected "
                     + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
             LOGGER.warn(keysRight);
         }
@@ -1824,7 +1829,7 @@ public final class ViccJsonReader {
     private static MolecularMatchAstRightLeftRight createRightLeftRight(@NotNull JsonObject objectRight) {
         Set<String> keysRight = objectRight.keySet();
         if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match right right rather than the expected "
+            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right left right rather than the expected "
                     + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
             LOGGER.warn(keysRight);
         }
@@ -2122,7 +2127,7 @@ public final class ViccJsonReader {
     private static MolecularMatchExonInfo createExonsInfo(@NotNull JsonObject objectExonsInfo) {
         Set<String> keysExonsInfo = objectExonsInfo.keySet();
         if (!EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES.contains(keysExonsInfo.size())) {
-            LOGGER.warn("Found " + keysExonsInfo.size() + " in molecular match exons info rather than the expected "
+            LOGGER.warn("Found " + keysExonsInfo.size() + " in molecular match exon info rather than the expected "
                     + EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES);
             LOGGER.warn(keysExonsInfo);
         }
@@ -2155,7 +2160,7 @@ public final class ViccJsonReader {
     private static MolecularMatchExonsBoundries createExonBoundries(@NotNull JsonObject objectExonsBoundries) {
         Set<String> keysExonsBoundries = objectExonsBoundries.keySet();
         if (!EXPECTED_MOLECULARMATCH_EXONSBOUNDRIES_SIZES.contains(keysExonsBoundries.size())) {
-            LOGGER.warn("Found " + keysExonsBoundries.size() + " in molecular match boundries rather than the expected "
+            LOGGER.warn("Found " + keysExonsBoundries.size() + " in molecular match exons boundries rather than the expected "
                     + EXPECTED_MOLECULARMATCH_EXONSBOUNDRIES_SIZES);
             LOGGER.warn(keysExonsBoundries);
         }
@@ -2247,7 +2252,7 @@ public final class ViccJsonReader {
         for (JsonElement wgsDataLocation : objectWgsaData.get("locations").getAsJsonArray()) {
             Set<String> keysWgsaDataLocation = wgsDataLocation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES.contains(keysWgsaDataLocation.size())) {
-                LOGGER.warn("Found " + keysWgsaDataLocation.size() + " in molecular match wgsa data location rather than the expected "
+                LOGGER.warn("Found " + keysWgsaDataLocation.size() + " in molecular match wgsa data locations rather than the expected "
                         + EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES);
                 LOGGER.warn(keysWgsaDataLocation);
             }
@@ -2530,7 +2535,7 @@ public final class ViccJsonReader {
         for (JsonElement variantRequirementDetails : arrarVariantRequirementDetails) {
             Set<String> keysRequirementDetails = variantRequirementDetails.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES.contains(keysRequirementDetails.size())) {
-                LOGGER.warn("Found " + keysRequirementDetails.size() + " in jax trials requirement details rather than the expected "
+                LOGGER.warn("Found " + keysRequirementDetails.size() + " in jax trials variant requirement details rather than the expected "
                         + EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES);
                 LOGGER.warn(keysRequirementDetails);
             }
@@ -3180,7 +3185,7 @@ public final class ViccJsonReader {
         for (JsonElement elementGeneIdentifier : geneIdentifiers) {
             Set<String> keysGeneIdentifier = elementGeneIdentifier.getAsJsonObject().keySet();
             if (!EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
-                LOGGER.warn("Found " + keysGeneIdentifier.size() + " in gene identifier rather than the expected "
+                LOGGER.warn("Found " + keysGeneIdentifier.size() + " in gene identifiers rather than the expected "
                         + EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES);
                 LOGGER.warn(keysGeneIdentifier);
             }
@@ -3191,6 +3196,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static GeneIdentifier toGeneIdentifier(@NotNull JsonObject geneIdentifierObject) {
+        Set<String> keysGeneIdentifier = geneIdentifierObject.keySet();
+        if (!EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
+            LOGGER.warn("Found " + keysGeneIdentifier.size() + " in gene identifier rather than the expected "
+                    + EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES);
+            LOGGER.warn(keysGeneIdentifier);
+        }
+
         return ImmutableGeneIdentifier.builder()
                 .symbol(geneIdentifierObject.getAsJsonPrimitive("symbol").getAsString())
                 .entrezId(geneIdentifierObject.getAsJsonPrimitive("entrez_id").getAsString())
@@ -3239,6 +3251,13 @@ public final class ViccJsonReader {
 
         for (JsonElement elementEnvironmentContext : arrayEnvironmentalContexts) {
             JsonObject environmentContextObject = elementEnvironmentContext.getAsJsonObject();
+            Set<String> keysEnvironmentContext = environmentContextObject.keySet();
+
+            if (!EXPECTED_ENVIRONMENTCONTEXT.contains(keysEnvironmentContext.size())) {
+                LOGGER.warn("Found " + keysEnvironmentContext.size() + " in environmental context rather than the expected "
+                        + EXPECTED_ENVIRONMENTCONTEXT);
+                LOGGER.warn(keysEnvironmentContext);
+            }
 
             List<String> approvedCountries = Lists.newArrayList();
             if (environmentContextObject.has("approved_countries")) {
@@ -3269,6 +3288,12 @@ public final class ViccJsonReader {
 
     @NotNull
     private static Taxonomy createTaxonomy(@NotNull JsonObject environmentContextObject) {
+        if (!EXPECTED_TAXONOMY.contains(environmentContextObject.keySet().size())) {
+            LOGGER.warn("Found " + environmentContextObject.keySet().size() + " in taxonomy rather than the expected "
+                    + EXPECTED_TAXONOMY);
+            LOGGER.warn(environmentContextObject);
+        }
+
         return ImmutableTaxonomy.builder()
                 .kingdom(environmentContextObject.getAsJsonPrimitive("kingdom").getAsString())
                 .directParent(environmentContextObject.getAsJsonPrimitive("direct-parent").getAsString())

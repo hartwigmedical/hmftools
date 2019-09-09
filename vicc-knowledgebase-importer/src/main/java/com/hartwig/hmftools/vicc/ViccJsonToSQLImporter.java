@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.vicc;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -8,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-
-import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
