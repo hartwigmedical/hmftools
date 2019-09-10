@@ -16,7 +16,7 @@ public class DriverCatalogFile {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     static final String HEADER_PREFIX = "chromosome";
     private static final String DELIMITER = "\t";
-    private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
+    private static final String DRIVER_CATALOG_EXTENSION = ".purple.driver.catalog.tsv";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + DRIVER_CATALOG_EXTENSION;
@@ -89,8 +89,8 @@ public class DriverCatalogFile {
                 .add(String.valueOf(ratio.inframe()))
                 .add(String.valueOf(ratio.frameshift()))
                 .add(String.valueOf(ratio.biallelic()))
-                .add(String.valueOf(ratio.minCopyNumber()))
-                .add(String.valueOf(ratio.maxCopyNumber()))
+                .add(FORMAT.format(ratio.minCopyNumber()))
+                .add(FORMAT.format(ratio.maxCopyNumber()))
                 .toString();
     }
 

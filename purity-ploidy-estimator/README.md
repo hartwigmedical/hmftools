@@ -956,6 +956,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
+  - Added driver catalog to file output\
   - Purity sunrise plot now supports somatic inferred purity 
   - Additional BAF inferring rule
   - Removed `GERMLINE_AMPLIFICATION` copy number method.
