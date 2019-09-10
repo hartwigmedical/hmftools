@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
+import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_GENES;
+import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_NONE;
+import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_SVS;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_UNKONWN;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -234,6 +237,7 @@ public class RnaFusionMapper
             GeneFusion topCandidateFusion = null;
             SvBreakend topUpBreakend = null;
             SvBreakend topDownBreakend = null;
+            boolean topCandidateFusionViable = false;
 
             for (int i = 0; i < viableUpBreakends.size(); ++i)
             {
@@ -252,23 +256,22 @@ public class RnaFusionMapper
                         continue;
 
                     GeneFusion possibleFusion = checkFusionLogic(upTrans, downTrans, mFusionParams);
+                    boolean viableFusion = possibleFusion != null;
 
                     // form one any way but mark it as not meeting standard fusion rules
                     if(possibleFusion == null)
                     {
-                        possibleFusion = new GeneFusion(upTrans, downTrans, false, false);
-                    }
-                    else if(!matchesDnaFusion(possibleFusion))
-                    {
-                        possibleFusion.setViable(false);
+                        possibleFusion = new GeneFusion(upTrans, downTrans, false);
                     }
 
                     if (topCandidateFusion == null
-                    || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend, rnaFusion))
+                    || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend,
+                            rnaFusion, topCandidateFusionViable, viableFusion))
                     {
                         topCandidateFusion = possibleFusion;
                         topUpBreakend = upBreakend;
                         topDownBreakend = downBreakend;
+                        topCandidateFusionViable = viableFusion;
 
                         LOGGER.debug("rnaFusion({}) first pair({} & {})", rnaFusion.Name, upBreakend.toString(), downBreakend.toString());
                     }
@@ -285,7 +288,7 @@ public class RnaFusionMapper
                         false, topCandidateFusion.downstreamTrans(), topDownBreakend,
                         true, true,0);
 
-                rnaFusion.setViableFusion(topCandidateFusion.viable(), topCandidateFusion.phaseMatched());
+                rnaFusion.setViableFusion(topCandidateFusionViable, topCandidateFusion.phaseMatched());
             }
         }
         else
@@ -385,21 +388,35 @@ public class RnaFusionMapper
             }
         }
 
+        rnaFusion.setCalledFusionMatch(getDNAMatchType(rnaFusion));
         rnaFusion.setFusionClusterChainInfo();
     }
 
-    private boolean matchesDnaFusion(final GeneFusion fusion)
+    private final String getDNAMatchType(final RnaFusionData rnaFusionData)
     {
+        String matchType = DNA_MATCH_TYPE_NONE;
+
+        final Transcript transUp = rnaFusionData.getTrans(true);
+        final Transcript transDown = rnaFusionData.getTrans(false);
+
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
-            if(dnaFusion.upstreamTrans().gene().id() == fusion.upstreamTrans().gene().id()
-            && dnaFusion.downstreamTrans().gene().id() == fusion.downstreamTrans().gene().id())
+            if(!dnaFusion.upstreamTrans().geneName().equals(rnaFusionData.GeneUp)
+            || !dnaFusion.downstreamTrans().geneName().equals(rnaFusionData.GeneDown))
             {
-                return true;
+                continue;
+            }
+
+            matchType = DNA_MATCH_TYPE_GENES;
+
+            if(transUp != null && dnaFusion.upstreamTrans().gene().id() == transUp.gene().id()
+            && transDown != null && dnaFusion.downstreamTrans().gene().id() == transDown.gene().id())
+            {
+                return DNA_MATCH_TYPE_SVS;
             }
         }
 
-        return false;
+        return matchType;
     }
 
     private static int MAX_PROMOTOR_DISTANCE_UP = 100000;
@@ -505,15 +522,17 @@ public class RnaFusionMapper
         return false;
     }
 
-    private boolean isCandidateBetter(final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,
-            final GeneFusion candidateFusion, final SvBreakend beCandidateStart, final SvBreakend beCandidateEnd, final RnaFusionData rnaFusion)
+    private boolean isCandidateBetter(
+            final GeneFusion currentFusion, final SvBreakend beCurrentStart, final SvBreakend beCurrentEnd,
+            final GeneFusion candidateFusion, final SvBreakend beCandidateStart, final SvBreakend beCandidateEnd,
+            final RnaFusionData rnaFusion, boolean currentFusionViable, boolean candidateFusionViable)
     {
         // if all else is equal, take a viable fusion over one that isn't
         if(beCurrentStart == beCandidateStart && beCurrentEnd == beCandidateEnd)
         {
-            if (currentFusion.viable() != candidateFusion.viable())
+            if (currentFusionViable != candidateFusionViable)
             {
-                return candidateFusion.viable();
+                return candidateFusionViable;
             }
 
             if (currentFusion.phaseMatched() != candidateFusion.phaseMatched())
@@ -812,7 +831,7 @@ public class RnaFusionMapper
 
                 mWriter = createBufferedWriter(outputFilename, false);
 
-                mWriter.write("SampleId,FusionName,GeneNameUp,GeneNameDown,ViableFusion,PhaseMatched,KnownType");
+                mWriter.write("SampleId,FusionName,GeneNameUp,GeneNameDown,ViableFusion,PhaseMatched,DnaMatchType,KnownType");
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -841,12 +860,6 @@ public class RnaFusionMapper
                     mWriter.write(fieldsStr);
                 }
 
-                // mWriter.write(",SvIdUp,ChrUp,PosUp,RnaPosUp,OrientUp,StrandUp,TypeUp,ClusterInfoUp");
-                // mWriter.write(",TransViableUp,TransValidLocUp,TransIdUp,ExonsSkippedUp,RegionTypeUp,CodingTypeUp,ExonUp,DisruptiveUp,DistancePrevUp");
-
-                // mWriter.write(",SvIdDown,ChrDown,PosDown,RnaPosDown,OrientDown,StrandDown,TypeDown,ClusterInfoDown");
-                // mWriter.write(",TransViableDown,TransValidLocDown,TransIdDown,ExonsSkippedDown,RegionTypeDown,CodingTypeDown,ExonDown,DisruptiveDown,DistancePrevDown");
-
                 mWriter.write(",ChainInfo,JunctionReadCount,SpanningFragCount,SpliceType");
                 mWriter.write(",RnaPhaseMatched,RnaTransIdUp,RnaTransIdDown");
 
@@ -855,9 +868,9 @@ public class RnaFusionMapper
 
             BufferedWriter writer = mWriter;
 
-            writer.write(String.format("%s,%s,%s,%s,%s,%s,%s",
-                    sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown,
-                    rnaFusion.isViableFusion(), rnaFusion.isPhaseMatchedFusion(), rnaFusion.getKnownType()));
+            writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s",
+                    sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown, rnaFusion.isViableFusion(),
+                    rnaFusion.isPhaseMatchedFusion(), rnaFusion.getCalledFusionMatch(), rnaFusion.getKnownType()));
 
             for(int se = SE_START; se <= SE_END; ++se)
             {

@@ -69,9 +69,15 @@ public class RnaFusionData
     private SvBreakend mBreakendUp;
     private SvBreakend mBreakendDown;
 
+    private String mCalledFusionMatch; // no match, match on gene, match on exact SVs
+
     private String mClusterInfoUp;
     private String mClusterInfoDown;
     private String mChainInfo;
+
+    public static final String DNA_MATCH_TYPE_NONE = "NONE";
+    public static final String DNA_MATCH_TYPE_GENES = "GENES";
+    public static final String DNA_MATCH_TYPE_SVS = "SV";
 
     public RnaFusionData(final String name, final String geneUp, final String geneDown, final String chrUp, final String chrDown,
             long posUp, long posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
@@ -115,6 +121,8 @@ public class RnaFusionData
         mTransCorrectLocationDown = false;
         mExonsSkippedUp = 0;
         mExonsSkippedDown = 0;
+
+        mCalledFusionMatch = DNA_MATCH_TYPE_NONE;
 
         mClusterInfoUp = "";
         mClusterInfoDown = "";
@@ -173,6 +181,13 @@ public class RnaFusionData
         mViableFusion = viable;
         mPhaseMatchedFusion = phaseMatched;
     }
+
+    public void setCalledFusionMatch(final String matchType)
+    {
+        mCalledFusionMatch = matchType;
+    }
+
+    public final String getCalledFusionMatch() { return mCalledFusionMatch; }
 
     public void setTranscriptData(boolean isUpstream, final Transcript trans, final SvBreakend breakend,
             boolean matchedRnaBoundary, boolean correctLocation, int exonsSkipped)

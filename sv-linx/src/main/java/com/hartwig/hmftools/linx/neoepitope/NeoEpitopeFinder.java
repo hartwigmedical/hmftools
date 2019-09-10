@@ -420,7 +420,7 @@ public class NeoEpitopeFinder
 
         boolean phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
 
-        GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
+        GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
         fusion.setNeoEpitopeOnly(true);
         return fusion;
     }

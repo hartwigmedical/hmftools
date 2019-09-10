@@ -8,7 +8,6 @@ public class GeneFusion
 
     private boolean mIsReportable;
     private boolean mPhaseMatched;
-    private boolean mViable; // passes fusion rules
     private int mExonsSkippedUp;
     private int mExonsSkippedDown;
     private String mKnownType;
@@ -23,14 +22,13 @@ public class GeneFusion
     public static String REPORTABLE_TYPE_5P_PROM = "5P-Prom";
     public static String REPORTABLE_TYPE_3P_PROM = "3P-Prom";
 
-    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, boolean phaseMatched, boolean viable)
+    public GeneFusion(final Transcript upstreamTrans, final Transcript downstream, boolean phaseMatched)
     {
         mUpstreamTrans = upstreamTrans;
         mDownstreamTrans = downstream;
         mIsReportable = false;
         mKnownType = REPORTABLE_TYPE_NONE;
         mPhaseMatched = phaseMatched;
-        mViable = viable;
         mExonsSkippedUp = 0;
         mExonsSkippedDown = 0;
         mNeoEpitopeOnly = false;
@@ -54,8 +52,6 @@ public class GeneFusion
     public void setKnownType(final String type) { mKnownType = type; }
 
     public boolean phaseMatched(){ return mPhaseMatched; }
-    public boolean viable(){ return mViable; }
-    public void setViable(boolean viable){ mViable = viable; }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {

@@ -291,7 +291,7 @@ public class FusionFinder
 
             if(phaseMatched || !params.RequirePhaseMatch)
             {
-                return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
+                return new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
             }
         }
         else
@@ -333,7 +333,7 @@ public class FusionFinder
 
             if(phaseMatched || !params.RequirePhaseMatch)
             {
-                GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched, true);
+                GeneFusion fusion = new GeneFusion(upstreamTrans, downstreamTrans, phaseMatched);
                 fusion.setExonsSkipped(phaseExonsSkippedUp, phaseExonsSkippedDown);
                 return fusion;
             }
