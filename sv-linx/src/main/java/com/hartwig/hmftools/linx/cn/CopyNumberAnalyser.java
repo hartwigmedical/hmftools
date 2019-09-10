@@ -8,14 +8,21 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
+import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
+import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import java.sql.SQLException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,9 +39,12 @@ import org.jetbrains.annotations.NotNull;
 public class CopyNumberAnalyser
 {
 
-    private boolean mWriteAdjustedPloidyToFile;
     private boolean mWriteVerbosePloidyData;
-    private boolean mWriteLohData;
+
+    private final String mOutputPath;
+    private final DatabaseAccess mDbAccess;
+
+    private final CnDataLoader mCnDataLoader;
 
     private List<String> mSampleIds;
     private BufferedWriter mFileWriter;
@@ -47,15 +57,17 @@ public class CopyNumberAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyser.class);
 
-    public CopyNumberAnalyser(final String purpleDataPath, final String outputPath, DatabaseAccess dbAccess)
+    public CopyNumberAnalyser(final String outputPath, DatabaseAccess dbAccess)
     {
+        mDbAccess = dbAccess;
+        mOutputPath = outputPath;
+
+        mCnDataLoader = new CnDataLoader("", dbAccess);
+
         mFileWriter = null;
         mRecalcPloidyFileWriter = null;
 
-        mWriteLohData = false;
-        mWriteAdjustedPloidyToFile = false;
         mWriteVerbosePloidyData = false;
-
     }
 
     public static void addCmdLineArgs(Options options)
@@ -68,74 +80,34 @@ public class CopyNumberAnalyser
     {
         mSampleIds.addAll(sampleIds);
 
-        mWriteLohData = true;
-        mWriteAdjustedPloidyToFile = cmd.hasOption(WRITE_PLOIDY_TO_FILE);
         mWriteVerbosePloidyData = cmd.hasOption(WRITE_VERBOSE_PLOIDY_DATA);
-
         return true;
-    }
-
-
-    private void loadSVData(final String sampleId)
-    {
-        /*
-        mSvDataList = mDbAccess.readStructuralVariantData(sampleId);
-
-        if(mSvDataList.isEmpty())
-        {
-            LOGGER.warn("sample({}) no SV records found", sampleId);
-        }
-        */
     }
 
     public void runAnalysis()
     {
-        /*
-
-                if (mWriteAdjustedPloidyToFile)
-        {
-            initialisePloidyWriter();
-        }
-
-
-        // mode for CN analyis in isolation from SV analysis
-        if(mDbAccess == null)
-        {
-            LOGGER.warn("batch mode requires DB connection");
-            return;
-        }
+        final List<String> samplesList = mDbAccess.getSampleIds();
 
         int sampleCount = 0;
-
-        for(final String sampleId : mSampleIds)
+        for (final String sampleId : samplesList)
         {
+            List<StructuralVariantData> svRecords = mDbAccess.readStructuralVariantData(sampleId);
+
+            if (svRecords.isEmpty())
+            {
+                continue;
+            }
+
             LOGGER.info("analysing sample({}), totalProcessed({})", sampleId, sampleCount);
 
-            loadSVData(sampleId);
+            mCnDataLoader.loadSampleData(sampleId, svRecords);
 
-            loadCopyNumberData(sampleId);
-
-            processSampleData(sampleId);
+            writeLohData(sampleId);
             ++sampleCount;
         }
-
-        */
     }
 
     /*
-    private void processSampleData(final String sampleId)
-    {
-        linkCopyNumberAndSvData(sampleId);
-
-        findLohEvents(sampleId);
-
-        if(mWriteAdjustedPloidyToFile)
-            calculateAdjustedPloidy(sampleId);
-    }
-    */
-
-    /*
-
             try
         {
             BufferedWriter writer = mRecalcPloidyFileWriter;
@@ -175,50 +147,38 @@ public class CopyNumberAnalyser
      */
 
 
-    private void writeLohData()
+    private void writeLohData(final String sampleId)
     {
-        /*
-                try
+        try
         {
-            if(mWriteLohData)
+            if (mFileWriter == null)
             {
-                if (mFileWriter == null)
-                {
-                    String outputFileName = mOutputPath;
+                String outputFileName = mOutputPath + "CN_LOH_EVENTS.csv";
 
-                    outputFileName += "CN_LOH_EVENTS.csv";
+                mFileWriter = createBufferedWriter(outputFileName, false);
 
-                    mFileWriter = createBufferedWriter(outputFileName, false);
-
-                    // SV info
-                    mFileWriter.write("SampleId,Chromosome,CnIdStart,CnIdEnd,PosStart,PosEnd,SegStart,SegEnd,");
-                    mFileWriter.write("PrevCN,StartCN,EndCN,MinCN,SegCount,Length,StartSV,EndSV,Skipped,IsValid");
-                    mFileWriter.newLine();
-                }
+                mFileWriter.write("SampleId,Chromosome,PosStart,PosEnd,SegStart,SegEnd");
+                mFileWriter.write(",SegCount,Length,StartSV,EndSV");
+                mFileWriter.newLine();
             }
 
+            final List<LohEvent> lohEvents = mCnDataLoader.getLohData();
 
-                   if(mWriteLohData && mFileWriter != null)
-        {
-            mFileWriter.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
-                    sampleId, lohData.Chromosome, lohData.CnIdStart, lohData.CnIdEnd,
-                    lohData.PosStart, lohData.PosEnd, lohData.SegStart, lohData.SegEnd));
+            for(final LohEvent lohData : lohEvents)
+            {
+                mFileWriter.write(String.format("%s,%s,%d,%d,%s,%s",
+                        sampleId, lohData.Chromosome, lohData.PosStart, lohData.PosEnd, lohData.SegStart, lohData.SegEnd));
 
-            mFileWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f,%d,%d,%s,%s,%s,%s",
-                    lohData.PrevCN, lohData.StartCN, lohData.EndCN, lohData.MinCN,
-                    lohData.SegCount, lohData.Length, lohData.StartSV, lohData.EndSV, lohData.Skipped, lohData.IsValid));
+                mFileWriter.write(String.format(",%d,%d,%s,%s",
+                        lohData.SegCount, lohData.length(), lohData.StartSV, lohData.EndSV));
 
-            mFileWriter.newLine();
-        }
-
+                mFileWriter.newLine();
+            }
         }
         catch (final IOException e)
         {
             LOGGER.error("error writing to copy number LOH outputFile: {}", e.toString());
-            return 0;
         }
-
-         */
     }
 
     private void initialisePloidyWriter()
@@ -259,13 +219,15 @@ public class CopyNumberAnalyser
     public void close()
     {
         closeBufferedWriter(mFileWriter);
-        closeBufferedWriter(mRecalcPloidyFileWriter);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
         final Options options = new Options();
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(DB_USER, true, "Database user name.");
+        options.addOption(DB_PASS, true, "Database password.");
+        options.addOption(DB_URL, true, "Database url.");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
@@ -277,10 +239,11 @@ public class CopyNumberAnalyser
 
         String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
 
-        CopyNumberAnalyser cnAnalyser = new CopyNumberAnalyser("", outputDir, null);
+        final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+
+        CopyNumberAnalyser cnAnalyser = new CopyNumberAnalyser(outputDir, dbAccess);
         // cnAnalyser.loadConfig(cmd, samplesList);
 
-        // run CN analysis, which will write a bunch of cohort-wide sample data, then exit
         cnAnalyser.runAnalysis();
         cnAnalyser.close();
 
