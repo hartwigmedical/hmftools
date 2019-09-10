@@ -89,8 +89,8 @@ public class DriverCatalogFile {
                 .add(String.valueOf(ratio.inframe()))
                 .add(String.valueOf(ratio.frameshift()))
                 .add(String.valueOf(ratio.biallelic()))
-                .add(String.valueOf(ratio.minCopyNumber()))
-                .add(String.valueOf(ratio.maxCopyNumber()))
+                .add(FORMAT.format(ratio.minCopyNumber()))
+                .add(FORMAT.format(ratio.maxCopyNumber()))
                 .toString();
     }
 
