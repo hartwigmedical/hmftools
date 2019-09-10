@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -32,19 +33,27 @@ public final class TsgDrivers {
     @NotNull
     public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants,
             @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(), variants, geneCopyNumbers);
-    }
-
-    @NotNull
-    private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
-            @NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList) {
-        final Map<String, GeneCopyNumber> geneCopyNumbers =
-                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         final Map<VariantType, Long> variantTypeCountsBiallelic = variantTypeCount(SomaticVariant::biallelic, variants);
         final Map<VariantType, Long> variantTypeCountsNonBiallelic = variantTypeCount(x -> !x.biallelic(), variants);
+
+        return drivers(DndsDriverGeneLikelihoodSupplier.tsgLikelihood(),
+                variants,
+                geneCopyNumbers,
+                variantTypeCounts,
+                variantTypeCountsBiallelic,
+                variantTypeCountsNonBiallelic);
+    }
+
+    @NotNull
+    static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene,
+            @NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList,
+            final Map<VariantType, Long> variantTypeCounts, final Map<VariantType, Long> variantTypeCountsBiallelic,
+            final Map<VariantType, Long> variantTypeCountsNonBiallelic) {
+        final Map<String, GeneCopyNumber> geneCopyNumbers =
+                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
+        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<String, List<SomaticVariant>> codingVariants = codingVariantsByGene(likelihoodsByGene.keySet(), variants);
 
@@ -151,13 +160,19 @@ public final class TsgDrivers {
     @NotNull
     private static <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final Set<String> genes,
             @NotNull final List<T> variants) {
-        Set<CodingEffect> suitableCodingEffects =
+
+        final Predicate<SomaticVariant> tsgPredicate = tsgVariant(genes);
+
+        return variants.stream().filter(tsgPredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
+    }
+
+    @NotNull
+    static Predicate<SomaticVariant> tsgVariant(@NotNull final Set<String> genes) {
+        final Set<CodingEffect> suitableCodingEffects =
                 EnumSet.of(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
-        return variants.stream()
-                .filter(x -> genes.contains(x.gene()))
-                .filter(x -> suitableCodingEffects.contains(x.canonicalCodingEffect()) || x.hotspot() == Hotspot.HOTSPOT)
-                .collect(Collectors.groupingBy(SomaticVariant::gene));
+        return x -> genes.contains(x.gene()) && (suitableCodingEffects.contains(x.canonicalCodingEffect())
+                || x.hotspot() == Hotspot.HOTSPOT);
     }
 
     private static long variantCount(boolean useBiallelic, @NotNull final SomaticVariant variant,

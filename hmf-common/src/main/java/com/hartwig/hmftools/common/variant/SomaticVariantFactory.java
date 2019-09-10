@@ -165,7 +165,7 @@ public class SomaticVariantFactory {
 
     @NotNull
     @VisibleForTesting
-    Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
 
         if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
@@ -205,8 +205,6 @@ public class SomaticVariantFactory {
                 .adjustedVAF(context.getAttributeAsDouble(PURPLE_AF_INFO, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
                 .ploidy(context.getAttributeAsDouble(PURPLE_PLOIDY_INFO, 0))
-                .recovered(context.hasAttribute(RECOVERED_FLAG))
-                .biallelic(context.hasAttribute(PURPLE_BIALLELIC_FLAG))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .trinucleotideContext(context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY))
@@ -214,7 +212,10 @@ public class SomaticVariantFactory {
                 .repeatCount(context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0))
                 .repeatSequence(context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY))
                 .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .highConfidenceRegion(context.hasAttribute(HIGH_CONFIDENCE_FLAG));
+                // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
+                .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
+                .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false))
+                .highConfidenceRegion(context.getAttributeAsBoolean(HIGH_CONFIDENCE_FLAG, false));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
         attachSnpEffAnnotations(builder, context, canonicalAnnotationFactory);

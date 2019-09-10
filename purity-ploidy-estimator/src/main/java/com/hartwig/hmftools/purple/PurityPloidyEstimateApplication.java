@@ -21,6 +21,9 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -67,7 +70,7 @@ import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.Charts;
-import com.hartwig.hmftools.purple.somatic.SomaticVCF;
+import com.hartwig.hmftools.purple.somatic.SomaticStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -152,7 +155,7 @@ public class PurityPloidyEstimateApplication {
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
                     configSupplier.amberData().averageTumorDepth(),
-                    bestFit.fit().ploidy(),
+                    fittedPurity.ploidy(),
                     purityAdjuster);
 
             LOGGER.info("Calculating copy number");
@@ -192,8 +195,8 @@ public class PurityPloidyEstimateApplication {
             final List<PeakModel> somaticPeaks = modelSomaticPeaks(configSupplier.somaticConfig(), enrichedSomatics);
 
             LOGGER.info("Enriching somatic variants");
-            final SomaticVCF somaticVCF = new SomaticVCF(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig());
-            somaticVCF.write(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
+            final SomaticStream somaticStream = new SomaticStream(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig());
+            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .version(version.version())
@@ -203,9 +206,16 @@ public class PurityPloidyEstimateApplication {
                     .score(bestFit.score())
                     .polyClonalProportion(polyclonalProportion(copyNumbers))
                     .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
-                    .microsatelliteIndelsPerMb(somaticVCF.microsatelliteIndelsPerMb())
-                    .microsatelliteStatus(somaticVCF.microsatelliteStatus())
+                    .microsatelliteIndelsPerMb(somaticStream.microsatelliteIndelsPerMb())
+                    .microsatelliteStatus(somaticStream.microsatelliteStatus())
                     .build();
+
+            LOGGER.info("Generating driver catalog");
+            final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+            final CNADrivers cnaDrivers = new CNADrivers();
+            driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+            driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
+            driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
@@ -220,6 +230,7 @@ public class PurityPloidyEstimateApplication {
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(outputDirectory, tumorSample), somaticPeaks);
+            DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.var
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -32,17 +33,18 @@ public final class OncoDrivers {
     @NotNull
     public static List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants,
             @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants, geneCopyNumbers);
+        final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
+        return drivers(DndsDriverGeneLikelihoodSupplier.oncoLikelihood(), variants, geneCopyNumbers, variantTypeCounts);
     }
 
     @NotNull
-    private static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverImpactLikelihood> likelihoodsByGene,
-            @NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList) {
+    static List<DriverCatalog> drivers(@NotNull final Map<String, DndsDriverImpactLikelihood> likelihoodsByGene,
+            @NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList,
+            final Map<VariantType, Long> variantTypeCounts) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<String, GeneCopyNumber> geneCopyNumbers =
                 geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
-        final Map<VariantType, Long> variantTypeCounts = variantTypeCount(variants);
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
 
         final Map<String, List<SomaticVariant>> codingVariants = oncogenicVariantsByGene(likelihoodsByGene.keySet(), variants);
@@ -60,10 +62,13 @@ public final class OncoDrivers {
     @NotNull
     private static Map<String, List<SomaticVariant>> oncogenicVariantsByGene(@NotNull final Set<String> genes,
             @NotNull final List<SomaticVariant> variants) {
-        return variants.stream()
-                .filter(x -> genes.contains(x.gene()))
-                .filter(x -> isMissense(x) || isInframeIndel(x) || x.hotspot() == Hotspot.HOTSPOT)
-                .collect(Collectors.groupingBy(SomaticVariant::gene));
+        final Predicate<SomaticVariant> oncoPredicate = oncoVariant(genes);
+        return variants.stream().filter(oncoPredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
+    }
+
+    @NotNull
+    static Predicate<SomaticVariant> oncoVariant(@NotNull final Set<String> genes) {
+        return x -> genes.contains(x.gene()) && (isMissense(x) || isInframeIndel(x) || x.hotspot() == Hotspot.HOTSPOT);
     }
 
     @NotNull
