@@ -3617,12 +3617,14 @@ public class ViccDAO {
                         ENVIRONMENTALCONTEXT.DESCRIPTION,
                         ENVIRONMENTALCONTEXT.SOURCE,
                         ENVIRONMENTALCONTEXT.USANSTEM,
+                        ENVIRONMENTALCONTEXT.TOXICITY,
                         ENVIRONMENTALCONTEXT.IDENVIRONMENTALCONTEXT,
                         ENVIRONMENTALCONTEXT.ASSOCIATIONID)
                         .values(environmentalContext.term(),
                                 environmentalContext.description(),
                                 environmentalContext.source(),
                                 environmentalContext.usanStem(),
+                                environmentalContext.toxicity(),
                                 environmentalContext.id(),
                                 associationId)
                         .returning(ENVIRONMENTALCONTEXT.ID)

@@ -25,6 +25,9 @@ public abstract class EnvironmentalContext {
     @Nullable
     public abstract String usanStem();
 
+    @Nullable
+    public abstract String toxicity();
+
     @NotNull
     public abstract List<String> approvedCountries();
 
