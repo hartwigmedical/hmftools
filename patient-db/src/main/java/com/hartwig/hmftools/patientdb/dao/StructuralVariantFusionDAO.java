@@ -193,7 +193,7 @@ public class StructuralVariantFusionDAO
         final Map<Integer, Integer> breakendIdToDbIdMap = Maps.newHashMap();
 
         InsertValuesStep19 inserter = createBreakendInserter();
-        int breakendsInsertedCount = 0;
+        List<LinxBreakend> insertedBreakends = Lists.newArrayList();
 
         for (int i = 0; i < breakends.size(); ++i)
         {
@@ -219,26 +219,26 @@ public class StructuralVariantFusionDAO
                     breakend.nextSpliceDistance(),
                     breakend.totalExonCount());
 
-            ++breakendsInsertedCount;
+            insertedBreakends.add(breakend);
 
             // batch-insert transcripts since there can be many more than the batch size per sample
-            if (breakends.size() >= DB_BATCH_INSERT_SIZE || i == breakends.size() - 1)
+            if (insertedBreakends.size() >= DB_BATCH_INSERT_SIZE || i == breakends.size() - 1)
             {
                 @SuppressWarnings("unchecked")
                 final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
-                if (ids.size() != breakendsInsertedCount)
+                if (ids.size() != insertedBreakends.size())
                 {
                     throw new RuntimeException("Not all transcripts were inserted successfully");
                 }
 
                 for (int j = 0; j < ids.size(); j++)
                 {
-                    breakendIdToDbIdMap.put(breakends.get(j).id(), ids.get(j).intValue());
+                    breakendIdToDbIdMap.put(insertedBreakends.get(j).id(), ids.get(j).intValue());
                 }
 
                 inserter = createBreakendInserter();
-                breakendsInsertedCount = 0;
+                insertedBreakends.clear();
             }
         }
 
@@ -263,29 +263,39 @@ public class StructuralVariantFusionDAO
                     SVFUSION.FUSEDEXONUP,
                     SVFUSION.FUSEDEXONDOWN);
 
-            //noinspection unchecked
-            batch.forEach(fusion -> fusionInserter.values(timestamp,
-                    sampleId,
-                    breakendIdToDbIdMap.get(fusion.fivePrimeBreakendId()),
-                    breakendIdToDbIdMap.get(fusion.threePrimeBreakendId()),
-                    fusion.name(),
-                    fusion.reported(),
-                    fusion.reportedType(),
-                    fusion.phased(),
-                    fusion.chainLength(),
-                    fusion.chainLinks(),
-                    fusion.chainTerminated(),
-                    DatabaseUtil.checkStringLength(fusion.domainsKept(), SVFUSION.DOMAINSKEPT),
-                    DatabaseUtil.checkStringLength(fusion.domainsLost(), SVFUSION.DOMAINSLOST),
-                    fusion.skippedExonsUp(),
-                    fusion.skippedExonsDown(),
-                    fusion.fusedExonUp(),
-                    fusion.fusedExonDown()));
+
+            for(final LinxFusion fusion : batch)
+            {
+                Integer fivePrimeId = breakendIdToDbIdMap.get(fusion.fivePrimeBreakendId());
+                Integer threePrimeId = breakendIdToDbIdMap.get(fusion.threePrimeBreakendId());
+
+                if(fivePrimeId == null || threePrimeId == null)
+                {
+                    return;
+                }
+
+                fusionInserter.values(timestamp,
+                        sampleId,
+                        fivePrimeId,
+                        threePrimeId,
+                        fusion.name(),
+                        fusion.reported(),
+                        fusion.reportedType(),
+                        fusion.phased(),
+                        fusion.chainLength(),
+                        fusion.chainLinks(),
+                        fusion.chainTerminated(),
+                        DatabaseUtil.checkStringLength(fusion.domainsKept(), SVFUSION.DOMAINSKEPT),
+                        DatabaseUtil.checkStringLength(fusion.domainsLost(), SVFUSION.DOMAINSLOST),
+                        fusion.skippedExonsUp(),
+                        fusion.skippedExonsDown(),
+                        fusion.fusedExonUp(),
+                        fusion.fusedExonDown());
+            }
 
             fusionInserter.execute();
         }
     }
-
 
     @NotNull
     public final List<ReportableGeneFusion> readGeneFusions(@NotNull final String sample)
