@@ -1158,7 +1158,7 @@ public class ViccDAO {
                     MOLECULARMATCHTRIALSINTERVATIONS.DESCRIPTION,
                     MOLECULARMATCHTRIALSINTERVATIONS.INTERVENTION_TYPE,
                     MOLECULARMATCHTRIALSINTERVATIONS.MOLECULARMATCHTRIALSID)
-                    .values(intervation.intervention_name(), intervation.description(), intervation.intervention_type(), viccEntryId)
+                    .values(intervation.intervention_name(), intervation.description(), intervation.intervention_type(), id)
                     .returning(MOLECULARMATCHTRIALSINTERVATIONS.ID)
                     .fetchOne()
                     .getValue(MOLECULARMATCHTRIALSINTERVATIONS.ID);
