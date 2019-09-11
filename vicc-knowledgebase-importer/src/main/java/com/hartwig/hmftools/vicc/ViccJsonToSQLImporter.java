@@ -42,7 +42,7 @@ public class ViccJsonToSQLImporter {
         final CommandLine cmd = createCommandLine(args, options);
 
         if (validInput(cmd)) {
-            List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(VICC_FILE);
+            List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(cmd.getOptionValue(VICC_FILE));
             analyzeViccEntries(viccEntries);
 
             LOGGER.info("DONE!");
