@@ -162,9 +162,6 @@ public class FusionFinder
     public static boolean validFusionTranscript(final Transcript transcript)
     {
         // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
-        if(transcript.postCoding())
-            return false;
-
         if(transcript.isUpstream())
         {
             if(transcript.isPromoter())
@@ -175,6 +172,9 @@ public class FusionFinder
         }
         else
         {
+            if(transcript.postCoding())
+                return false;
+
             if(transcript.nonCoding())
                 return false;
 
@@ -185,17 +185,6 @@ public class FusionFinder
         return true;
     }
 
-    /*
-    public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans)
-    {
-        FusionParameters parameters = new FusionParameters();
-
-        // was passing in requirePhaseMatch = true, allowExonSkipping = false, invalidReasons = null
-        return checkFusionLogic(upstreamTrans, downstreamTrans, true, false, null);
-    }
-    */
-
-    // old args: boolean requirePhaseMatch, boolean allowExonSkipping, @Nullable List<String> invalidReasons
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params)
     {
         // see SV Fusions document for permitted combinations

@@ -24,9 +24,11 @@ public class Transcript {
     public final long TranscriptEnd;
 
     public final int ExonUpstream;
-    public final int ExonUpstreamPhase;
     public final int ExonDownstream;
+
     public final int ExonDownstreamPhase;
+    public final int ExonUpstreamPhase;
+
     public final int ExonMax;
 
     @NotNull
@@ -63,6 +65,8 @@ public class Transcript {
     public static final String TRANS_CODING_TYPE_3P_UTR = "3P_UTR";
     public static final String TRANS_CODING_TYPE_NON_CODING = "NonCoding";
 
+    public static final int POST_CODING_PHASE = -2;
+
     private static final int STOP_CODON_LENGTH = 3;
 
     public Transcript(@NotNull final GeneAnnotation gene, int transId, final String stableId,
@@ -78,8 +82,6 @@ public class Transcript {
         CodingEnd = codingEnd;
         TranscriptStart = transcriptStart;
         TranscriptEnd = transcriptEnd;
-        ExonDownstreamPhase = exonDownstreamPhase;
-        ExonUpstreamPhase = exonUpstreamPhase;
         ExonUpstream = exonUpstream;
         ExonDownstream = exonDownstream;
         ExonMax = exonMax;
@@ -115,6 +117,17 @@ public class Transcript {
 
         mCodingType = calcCodingType();
         mRegionType = calcRegionType();
+
+        if(mCodingType == TRANS_CODING_TYPE_3P_UTR)
+        {
+            ExonUpstreamPhase = POST_CODING_PHASE;
+            ExonDownstreamPhase = POST_CODING_PHASE;
+        }
+        else
+        {
+            ExonDownstreamPhase = exonDownstreamPhase;
+            ExonUpstreamPhase = exonUpstreamPhase;
+        }
 
         if(isDownstream(mGene) && mRegionType == TRANS_REGION_TYPE_UPSTREAM)
             mIsDisruptive = false;

@@ -676,14 +676,17 @@ public class RnaFusionMapper
             {
                 for(final TranscriptData transData : transDataList)
                 {
-                    // skip any 3'UTR or downstream non-coding transcripts for this position
-                    if(!isUpstream && transData.CodingStart == null)
-                        continue;
+                    // skip any downstream gene 3'UTR or non-coding transcripts for this position
+                    if(!isUpstream)
+                    {
+                        if (transData.CodingStart == null)
+                            continue;
 
-                    if(transData.Strand == 1 && transData.CodingEnd != null && rnaPosition >= transData.CodingEnd)
-                        continue;
-                    else if(transData.Strand == -1 && transData.CodingStart != null && rnaPosition <= transData.CodingStart)
-                        continue;
+                        if (transData.Strand == 1 && transData.CodingEnd != null && rnaPosition >= transData.CodingEnd)
+                            continue;
+                        else if (transData.Strand == -1 && transData.CodingStart != null && rnaPosition <= transData.CodingStart)
+                            continue;
+                    }
 
                     int[] exonMatchData = findExonMatch(transData.exons(), transData.Strand, rnaPosition);
 
