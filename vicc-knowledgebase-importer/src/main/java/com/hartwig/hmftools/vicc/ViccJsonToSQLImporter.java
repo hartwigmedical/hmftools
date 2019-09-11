@@ -58,6 +58,7 @@ public class ViccJsonToSQLImporter {
                     LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
                 }
             }
+            LOGGER.info("DONE" + viccEntries.size());
         } else {
             printUsageAndExit(options);
         }
