@@ -352,7 +352,6 @@ public class ViccDAO {
                 .returning(VICCENTRY.ID)
                 .fetchOne()
                 .getValue(VICCENTRY.ID);
-        LOGGER.info("vicc entry id: " + id);
         writeTags(id, viccEntry.tags());
         writeDevTags(id, viccEntry.devTags());
         writeGeneIdentifiers(id, viccEntry.geneIdentifiers());
