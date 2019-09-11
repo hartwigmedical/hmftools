@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.vicc;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +19,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -38,23 +41,50 @@ public class ViccJsonToSQLImporter {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(VICC_FILE);
-        analyzeViccEntries(viccEntries);
+        if (validInput(cmd)) {
+            List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(VICC_FILE);
+            analyzeViccEntries(viccEntries);
 
-        LOGGER.info("DONE!");
-
-        ViccDAO viccDAO =
-                ViccDAO.connectToViccDAO(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), "jdbc:" + cmd.getOptionValue(DB_URL));
-
-        viccDAO.deleteAll();
-        int count = 0;
-        for (ViccEntry viccEntry : viccEntries) {
-            viccDAO.writeViccEntry(viccEntry);
-            count++;
-            if (count % 1000 == 0) {
-                LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
+            LOGGER.info("DONE!");
+            ViccDAO viccDAO =
+                    ViccDAO.connectToViccDAO(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), "jdbc:" + cmd.getOptionValue(DB_URL));
+            viccDAO.deleteAll();
+            int count = 0;
+            for (ViccEntry viccEntry : viccEntries) {
+                viccDAO.writeViccEntry(viccEntry);
+                count++;
+                if (count % 1000 == 0) {
+                    LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
+                }
             }
+        } else {
+            printUsageAndExit(options);
         }
+    }
+
+    private static void printUsageAndExit(@NotNull final Options options) {
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("vicc-knowledgebase-importer", options);
+        System.exit(1);
+    }
+
+    private static boolean validInput(@NotNull CommandLine cmd) {
+        return fileExists(cmd, VICC_FILE);
+    }
+
+    private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null || !pathExists(value)) {
+            LOGGER.warn(param + " has to be an existing file: " + value);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean pathExists(@NotNull String path) {
+        return Files.exists(new File(path).toPath());
     }
 
     @NotNull
