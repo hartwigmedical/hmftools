@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MIN;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
@@ -251,8 +252,8 @@ public class GeneCollectionTest
 
         assertEquals(4, trans.ExonUpstream);
         assertEquals(5, trans.ExonDownstream);
-        assertEquals(-1, trans.ExonUpstreamPhase);
-        assertEquals(-1, trans.ExonDownstreamPhase);
+        assertEquals(POST_CODING_PHASE, trans.ExonUpstreamPhase);
+        assertEquals(POST_CODING_PHASE, trans.ExonDownstreamPhase);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, negOrientation);
         assertEquals(3, trans.getAlternativePhasing().size());
