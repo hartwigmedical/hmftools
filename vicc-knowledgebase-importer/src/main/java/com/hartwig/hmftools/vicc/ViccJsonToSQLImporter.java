@@ -46,8 +46,9 @@ public class ViccJsonToSQLImporter {
             analyzeViccEntries(viccEntries);
 
             LOGGER.info("DONE!");
-            ViccDAO viccDAO =
-                    ViccDAO.connectToViccDAO(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), "jdbc:" + cmd.getOptionValue(DB_URL));
+            ViccDAO viccDAO = ViccDAO.connectToViccDAO(cmd.getOptionValue(DB_USER),
+                    cmd.getOptionValue(DB_PASS),
+                    "jdbc:" + cmd.getOptionValue(DB_URL));
             viccDAO.deleteAll();
             int count = 0;
             for (ViccEntry viccEntry : viccEntries) {
