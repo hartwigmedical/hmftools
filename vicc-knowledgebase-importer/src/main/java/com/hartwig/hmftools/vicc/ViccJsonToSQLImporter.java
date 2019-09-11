@@ -63,12 +63,6 @@ public class ViccJsonToSQLImporter {
         }
     }
 
-    private static void printUsageAndExit(@NotNull final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("vicc-knowledgebase-importer", options);
-        System.exit(1);
-    }
-
     private static boolean validInput(@NotNull CommandLine cmd) {
         return fileExists(cmd, VICC_FILE);
     }
@@ -142,5 +136,11 @@ public class ViccJsonToSQLImporter {
                 }
             }
         }
+    }
+
+    private static void printUsageAndExit(@NotNull final Options options) {
+        final HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("vicc-knowledgebase-importer", options);
+        System.exit(1);
     }
 }
