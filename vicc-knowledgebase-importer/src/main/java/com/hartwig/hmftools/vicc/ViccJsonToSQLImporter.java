@@ -64,14 +64,14 @@ public class ViccJsonToSQLImporter {
     }
 
     private static boolean validInput(@NotNull CommandLine cmd) {
-        return fileExists(cmd, VICC_FILE);
+        return fileExists(cmd);
     }
 
-    private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
+    private static boolean fileExists(@NotNull CommandLine cmd) {
+        String value = cmd.getOptionValue(VICC_FILE);
 
         if (value == null || !pathExists(value)) {
-            LOGGER.warn(param + " has to be an existing file: " + value);
+            LOGGER.warn(VICC_FILE + " has to be an existing file: " + value);
             return false;
         }
 
