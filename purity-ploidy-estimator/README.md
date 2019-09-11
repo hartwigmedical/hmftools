@@ -956,23 +956,23 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History
 - Upcoming
-  - Added driver catalog to file output\
+  - Added driver catalog to file output
   - Purity sunrise plot now supports somatic inferred purity 
   - Additional BAF inferring rule
   - Removed `GERMLINE_AMPLIFICATION` copy number method.
   - Added `NON_DIPLOID` copy number method. This uses the ref normalised tumor copy number (adjusted for observed normal ratio rather than ideal).  
   - Only extend long arm copy numbers to unknown regions of chromosomes 13-15,21,22
   - Use read count structural variant inferring logic when VAF = 1
-- [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-33)
+- [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.33)
   - Raised QC segment fail to >220 unsupported segments
   - Infer LOH in simple DUPs between 2 LOH regions 
   - Fixed HG38 regression bug
   - Added new logic to structural variant recovery to create inferred variant if unable to find suitable candidate in file.  
   - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 
   - Fixed bug in subclonal plot
-- [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-32)
+- [2.32](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.32)
   - Fixed bug in subclonal modelling when somatic peak is close to max 
-- [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-31)
+- [2.31](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.31)
   - Added microsatellite status
   - Added subclonal likelihood model and figure
   - Consistent file headers
@@ -982,17 +982,17 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Added REP_S, REP_C, MH, TNC, KT fields to somatic vcf output 
   - Added REF_G to structural vcf output
   - Added variant rainfall plot
-- [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-30)
+- [2.30](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.30)
   - Removed FittedSegment file and db table
   - Added wholeGenomeDuplication field to purity output (true if more than 10 autosomes have major allele ploidy > 1.5)
   - Improved logging of missing arguments
   - Added support for new AMBER and COBALT file names and formats
-- [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-29)
+- [2.29](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.29)
   - Add biallelic status to somatic VCF
   - Removed low VAF SGL filtering logic
   - Create plot directory before writing to it
   - Allow plotting of negative copy numbers
-- [2.28](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2-28)
+- [2.28](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.28)
   - Fixed exception when no SV vcf supplied
 - 2.27 
   - Fixed missing ploidy when loading somatics
