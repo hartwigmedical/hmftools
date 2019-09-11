@@ -52,8 +52,8 @@ public class RnaFusionData
     private int mExonPhaseDown;
 
     // transcripts matching RNA positions if in a phased fusion
-    private String mRnaTransNameUp;
-    private String mRnaTransNameDown;
+    private String mRnaTransIdUp;
+    private String mRnaTransIdDown;
 
     private boolean mViableFusion; // the pair of transcripts satisfied standard fusion rules
     private boolean mPhaseMatchedFusion;
@@ -109,8 +109,8 @@ public class RnaFusionData
         mBreakendUp = null;
         mBreakendDown = null;
 
-        mRnaTransNameUp = "";
-        mRnaTransNameDown = "";
+        mRnaTransIdUp = "";
+        mRnaTransIdDown = "";
 
         mViableFusion = false;
         mPhaseMatchedFusion = false;
@@ -164,16 +164,16 @@ public class RnaFusionData
     public int exonRank(boolean isUpstream) { return isUpstream ? mExonRankUp : mExonRankDown; }
     public int exonPhase(boolean isUpstream) {return isUpstream ? mExonPhaseUp : mExonPhaseDown; }
 
-    public void setRnaPhasedFusionData(final String transNameUp, final String transNameDown)
+    public void setRnaPhasedFusionData(final String transIdUp, final String transIdDown)
     {
-        mRnaTransNameUp = transNameUp;
-        mRnaTransNameDown = transNameDown;
+        mRnaTransIdUp = transIdUp;
+        mRnaTransIdDown = transIdDown;
     }
 
-    public boolean hasRnaPhasedFusion() { return !mRnaTransNameUp.isEmpty() && !mRnaTransNameDown.isEmpty(); }
-    public String getRnaPhasedFusionTransName(boolean isUpstream)
+    public boolean hasRnaPhasedFusion() { return !mRnaTransIdUp.isEmpty() && !mRnaTransIdDown.isEmpty(); }
+    public String getRnaPhasedFusionTransId(boolean isUpstream)
     {
-        return isUpstream ? mRnaTransNameUp : mRnaTransNameDown;
+        return isUpstream ? mRnaTransIdUp : mRnaTransIdDown;
     }
 
     public void setViableFusion(boolean viable, boolean phaseMatched)

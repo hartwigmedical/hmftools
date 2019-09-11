@@ -84,7 +84,7 @@ public class LinxTester
     public void initialiseFusions(SvGeneTranscriptCollection geneTranscriptCollection)
     {
         FusionAnalyser = new FusionDisruptionAnalyser();
-        FusionAnalyser.initialise(null, "", Config, geneTranscriptCollection);
+        FusionAnalyser.initialise(null, "", Config, geneTranscriptCollection, null);
         FusionAnalyser.setHasValidConfigData(true);
     }
 

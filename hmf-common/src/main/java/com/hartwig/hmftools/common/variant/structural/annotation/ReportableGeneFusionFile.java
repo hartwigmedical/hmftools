@@ -22,7 +22,7 @@ public final class ReportableGeneFusionFile {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
 
-    public static final String FILE_EXTENSION = ".linx.fusions.tsv";
+    public static final String FILE_EXTENSION = ".linx.reported_fusion.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)

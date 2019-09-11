@@ -16,7 +16,7 @@ public class DriverCatalogFile {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     static final String HEADER_PREFIX = "chromosome";
     private static final String DELIMITER = "\t";
-    private static final String DRIVER_CATALOG_EXTENSION = ".purple.driver.catalog.tsv";
+    private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + DRIVER_CATALOG_EXTENSION;

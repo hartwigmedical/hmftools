@@ -133,11 +133,10 @@ public class SvLinxApplication
 
             // always initialise since is used for transcript evaluation
             fusionAnalyser = new FusionDisruptionAnalyser();
-            fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache);
+            fusionAnalyser.initialise(cmd, svaConfig.OutputDataPath, svaConfig, ensemblDataCache, sampleAnalyser.getVisWriter());
 
             if(checkFusions)
             {
-                fusionAnalyser.setVisWriter(sampleAnalyser.getVisWriter());
                 purgeInvalidTranscripts = !fusionAnalyser.hasRnaSampleData();
 
                 if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)

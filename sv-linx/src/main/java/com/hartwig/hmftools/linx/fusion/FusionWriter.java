@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +38,7 @@ public class FusionWriter
 {
     private final String mOutputDir;
     private BufferedWriter mFusionWriter;
+    private BufferedWriter mVisFusionWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionWriter.class);
 
@@ -44,6 +46,7 @@ public class FusionWriter
     {
         mOutputDir = outputDir;
         mFusionWriter = null;
+        mVisFusionWriter = null;
     }
 
     public static void convertBreakendsAndFusions(
@@ -127,9 +130,11 @@ public class FusionWriter
 
         try
         {
+            // write file of reportable fusions for for patient reporter
             final String reportedFusionsFile = ReportableGeneFusionFile.generateFilename(mOutputDir, sampleId);
             ReportableGeneFusionFile.write(reportedFusionsFile, reportedFusions);
 
+            // write flat files for database loading
             final String breakendsFile = LinxBreakendFile.generateFilename(mOutputDir, sampleId);
             LinxBreakendFile.write(breakendsFile, breakends);
 
@@ -142,20 +147,13 @@ public class FusionWriter
         }
     }
 
-    public void initialiseOutputFile(final String fileName)
+    public void initialiseOutputFiles(boolean addVisWriter)
     {
         try
         {
             if(mFusionWriter == null)
             {
-                String outputFilename = mOutputDir;
-
-                if (!outputFilename.endsWith(File.separator))
-                    outputFilename += File.separator;
-
-                outputFilename += fileName;
-
-                mFusionWriter = createBufferedWriter(outputFilename, false);
+                mFusionWriter = createBufferedWriter(mOutputDir + "LNX_FUSIONS.csv", false);
 
                 mFusionWriter.write("SampleId,Reportable,KnownType,PhaseMatched,ClusterId,ClusterCount,ResolvedType");
 
@@ -197,6 +195,14 @@ public class FusionWriter
                 mFusionWriter.write(",ProteinsKept,ProteinsLost,OverlapUp,OverlapDown,ChainInfo");
                 mFusionWriter.newLine();
             }
+
+            if(addVisWriter)
+            {
+                mVisFusionWriter = createBufferedWriter(mOutputDir + "LNX_VIS_FUSIONS.tsv", false);
+
+                mVisFusionWriter.write(VisFusionFile.header());
+                mVisFusionWriter.newLine();
+            }
         }
         catch (final IOException e)
         {
@@ -204,7 +210,31 @@ public class FusionWriter
         }
     }
 
-    public void writeFusionData(final GeneFusion fusion, final String sampleId)
+    public void writeVisualisationData(final String sampleId, final List<VisFusionFile> visFusions)
+    {
+        try
+        {
+            if (mVisFusionWriter == null)
+            {
+                // write out fusions file for visualisations
+                VisFusionFile.write(VisFusionFile.generateFilename(mOutputDir, sampleId), visFusions);
+            }
+            else
+            {
+                for (final VisFusionFile visFusion : visFusions)
+                {
+                    mVisFusionWriter.write(VisFusionFile.toString(visFusion));
+                    mVisFusionWriter.newLine();
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to write fusions vis file: {}", e.toString());
+        }
+    }
+
+    public void writeMultiSampleData(final GeneFusion fusion, final String sampleId)
     {
         if(mFusionWriter == null)
             return;
@@ -308,5 +338,6 @@ public class FusionWriter
     public void close()
     {
         closeBufferedWriter(mFusionWriter);
+        closeBufferedWriter(mVisFusionWriter);
     }
 }

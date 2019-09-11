@@ -13,10 +13,8 @@ import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndF
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
@@ -29,7 +27,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
@@ -40,8 +37,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusion
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -54,6 +49,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
@@ -143,7 +139,8 @@ public class FusionDisruptionAnalyser
     }
 
     public void initialise(
-            final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache)
+            final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache,
+            VisualiserWriter writer)
     {
         mOutputDir = outputDir;
 
@@ -152,16 +149,17 @@ public class FusionDisruptionAnalyser
         mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
         mFusionWriter = new FusionWriter(mOutputDir);
         mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
+        mVisWriter = writer;
 
         populateKnownFusionGenes();
 
         if(cmdLineArgs != null)
         {
-            String fusionFileName = mConfig.hasMultipleSamples() ? "LNX_FUSIONS.csv" : mConfig.getSampleIds().get(0) + ".linx.fusions_detailed.csv";
-            mFusionWriter.initialiseOutputFile(fusionFileName);
-
             if(mConfig.hasMultipleSamples())
+            {
+                mFusionWriter.initialiseOutputFiles(mConfig.WriteVisualisationData);
                 mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
+            }
 
             if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
             {
@@ -213,7 +211,6 @@ public class FusionDisruptionAnalyser
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
     public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
-    public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
 
     // for testing
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
@@ -282,22 +279,24 @@ public class FusionDisruptionAnalyser
 
         if(mConfig.isSingleSample())
         {
-            mFusionWriter.writeSampleData(mSampleId, mFusions, fusions, breakends);
+            mFusionWriter.writeSampleData(mSampleId, uniqueFusions, fusions, breakends);
             mDisruptionFinder.writeSampleData(mSampleId);
         }
         else
         {
+            // write fusions in detail when in batch mode
+            final List<GeneFusion> fusionList = mLogAllPotentials ? mFusions : uniqueFusions;
+
+            for(final GeneFusion fusion : fusionList)
+            {
+                if(fusion.reportable() || !mLogReportableOnly)
+                    mFusionWriter.writeMultiSampleData(fusion, mSampleId);
+            }
+
             mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
         }
 
-        if(mLogAllPotentials)
-        {
-            mFusions.forEach(x -> writeFusionData(x));
-        }
-        else
-        {
-            uniqueFusions.forEach(x -> writeFusionData(x));
-        }
+        addVisualisationData(uniqueFusions);
 
         if(LOGGER.isDebugEnabled())
         {
@@ -1004,31 +1003,41 @@ public class FusionDisruptionAnalyser
         return transcripts;
     }
 
-    private void writeFusionData(final GeneFusion fusion)
+    private void addVisualisationData(final List<GeneFusion> fusionList)
     {
-        if(fusion.neoEpitopeOnly())
+        if(mVisWriter == null || !mConfig.WriteVisualisationData)
             return;
 
-        // write fusions in detail
-        if (fusion.reportable() || !mLogReportableOnly)
+        final List<VisFusionFile> visFusions = Lists.newArrayList();
+
+        for(final GeneFusion fusion : fusionList)
         {
-            mFusionWriter.writeFusionData(fusion, mSampleId);
+            if (fusion.neoEpitopeOnly())
+                return;
+
+            if (fusion.reportable())
+            {
+                int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
+
+                final Transcript transUp = fusion.upstreamTrans();
+                final Transcript transDown = fusion.downstreamTrans();
+
+                mVisWriter.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
+                        transUp.StableId, transUp.TransId, transUp.gene().chromosome(), GENE_TYPE_FUSION);
+
+                mVisWriter.addGeneExonData(clusterId, transDown.gene().StableId, transDown.gene().GeneName,
+                        transDown.StableId, transDown.TransId, transDown.gene().chromosome(), GENE_TYPE_FUSION);
+
+                visFusions.add(new VisFusionFile(
+                        mSampleId, clusterId, fusion.reportable(),
+                        transUp.geneName(), transUp.StableId, transUp.gene().chromosome(), transUp.gene().position(),
+                        transUp.gene().Strand, transUp.regionType(), fusion.getFusedExon(true),
+                        transDown.geneName(), transDown.StableId, transDown.gene().chromosome(), transDown.gene().position(),
+                        transDown.gene().Strand, transDown.regionType(), fusion.getFusedExon(false)));
+            }
         }
 
-        if(fusion.reportable() && mVisWriter != null)
-        {
-            int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
-
-            mVisWriter.addGeneExonData(clusterId,
-                    fusion.upstreamTrans().gene().StableId, fusion.upstreamTrans().gene().GeneName,
-                    fusion.upstreamTrans().StableId, fusion.upstreamTrans().TransId,
-                    fusion.upstreamTrans().gene().chromosome(), GENE_TYPE_FUSION);
-
-            mVisWriter.addGeneExonData(clusterId,
-                    fusion.downstreamTrans().gene().StableId, fusion.downstreamTrans().gene().GeneName,
-                    fusion.downstreamTrans().StableId, fusion.downstreamTrans().TransId,
-                    fusion.downstreamTrans().gene().chromosome(), GENE_TYPE_FUSION);
-        }
+        mFusionWriter.writeVisualisationData(mSampleId, visFusions);
     }
 
     public void close()

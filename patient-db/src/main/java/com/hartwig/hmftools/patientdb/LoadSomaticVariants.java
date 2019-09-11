@@ -45,7 +45,6 @@ public class LoadSomaticVariants {
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String PURPLE_DIR = "purple_dir";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -104,11 +103,6 @@ public class LoadSomaticVariants {
             driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
         }
 
-        if(cmd.hasOption(PURPLE_DIR))
-        {
-            DriverCatalogFile.write(DriverCatalogFile.generateFilename(cmd.getOptionValue(PURPLE_DIR), sample), driverCatalog);
-        }
-
         LOGGER.info("Persisting driver catalog");
         dbAccess.writeDriverCatalog(sample, driverCatalog);
 
@@ -127,7 +121,6 @@ public class LoadSomaticVariants {
         options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
         options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
         options.addOption(HOTSPOT, true, "Location of hotspot file");
-        options.addOption(PURPLE_DIR, true, "Location of purple output files");
 
         return options;
     }
