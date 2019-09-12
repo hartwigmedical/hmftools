@@ -19,7 +19,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
-import com.hartwig.hmftools.linx.stats.FisherExactTest;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -111,24 +110,6 @@ public class MiscTest
 
         assertEquals(-1, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_P));
         assertEquals(0, findCentromereBreakendIndex(breakendList, CHROMOSOME_ARM_Q));
-    }
-
-
-    @Test
-    public void testStatsRoutines()
-    {
-        FisherExactTest fetCalc = new FisherExactTest();
-        fetCalc.initialise(1000);
-
-        int withAwithB = 11;
-        int withANoB = 27;
-        int noAWithB = 2;
-        int noAnoB = 170;
-        double expectedCount = 5;
-
-        double fisherProb = fetCalc.getLeftTailedP(withAwithB, noAWithB, withANoB, noAnoB);
-        fisherProb = fetCalc.getRightTailedP(withAwithB, noAWithB, withANoB, noAnoB);
-
     }
 
 }

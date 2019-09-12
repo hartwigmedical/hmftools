@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.stats;
+package com.hartwig.hmftools.stat_calcs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.io.FileWriterUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,7 +114,7 @@ public class SampleCountsCoOccurence
         // repeat for all cancers combined
         analyseCancerType("All", allSampleDataList);
 
-        closeBufferedWriter(mWriter);
+        FileWriterUtils.closeBufferedWriter(mWriter);
 
         LOGGER.info("analysis complete");
     }
@@ -290,7 +291,7 @@ public class SampleCountsCoOccurence
             }
         }
 
-        closeBufferedWriter(mWriter);
+        FileWriterUtils.closeBufferedWriter(mWriter);
 
         LOGGER.info("cancerType({}) results written to file", cancerType);
     }
@@ -299,7 +300,7 @@ public class SampleCountsCoOccurence
     {
         try
         {
-            mWriter = createBufferedWriter(outputFileName, false);
+            mWriter = FileWriterUtils.createBufferedWriter(outputFileName, false);
 
             mWriter.write("CancerType,Gene,Category,SampleCount");
             mWriter.write(",WithGeneCount,WithCategoryCount,ExpectedCount,FETProb");

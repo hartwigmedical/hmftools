@@ -1,8 +1,4 @@
-package com.hartwig.hmftools.linx.stats;
-
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
+package com.hartwig.hmftools.stat_calcs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -15,18 +11,20 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class StatisticRoutines
+public class CoOccurenceCalcs
 {
     private ThreeVarCoOccurence mThreeVarCoOccurence;
     private TwoVarCoOccurence mTwoVarCoOccurence;
     private SampleCountsCoOccurence mSampleCountsCoOccurence;
 
-    private static String DRIVER_GENES_FILE = "driver_genes_file";
-    private static String SAMPLE_COUNTS_FILE = "sample_counts_file";
-    private static String THREE_VAR_INPUT_FILE = "three_var_input_file";
-    private static String TWO_VAR_INPUT_FILE = "two_var_input_file";
+    private static final String LOG_DEBUG = "log_debug";
+    private static final String DATA_OUTPUT_DIR = "output_dir";
+    private static final String DRIVER_GENES_FILE = "driver_genes_file";
+    private static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
+    private static final String THREE_VAR_INPUT_FILE = "three_var_input_file";
+    private static final String TWO_VAR_INPUT_FILE = "two_var_input_file";
 
-    private static final Logger LOGGER = LogManager.getLogger(StatisticRoutines.class);
+    private static final Logger LOGGER = LogManager.getLogger(CoOccurenceCalcs.class);
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
@@ -38,9 +36,9 @@ public class StatisticRoutines
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        String outputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
-        StatisticRoutines statsRoutines = new StatisticRoutines();
+        CoOccurenceCalcs statsRoutines = new CoOccurenceCalcs();
         statsRoutines.loadConfig(cmd, outputDir);
         statsRoutines.runStatistics();
         LOGGER.info("run complete");
@@ -54,6 +52,7 @@ public class StatisticRoutines
         options.addOption(THREE_VAR_INPUT_FILE, true, "Sample data with grouping and 2 variable");
         options.addOption(TWO_VAR_INPUT_FILE, true, "Sample data with 2 variables");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(LOG_DEBUG, false, "Verbose logging");
         return options;
     }
 
@@ -64,7 +63,7 @@ public class StatisticRoutines
         return parser.parse(options, args);
     }
 
-    public StatisticRoutines()
+    public CoOccurenceCalcs()
     {
         mThreeVarCoOccurence = null;
         mSampleCountsCoOccurence = null;

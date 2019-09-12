@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.linx.stats;
+package com.hartwig.hmftools.stat_calcs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.stats.SampleCategoryData.SAMPLE_CAT_1_INDEX;
-import static com.hartwig.hmftools.linx.stats.SampleCategoryData.SAMPLE_CAT_2_INDEX;
+import static com.hartwig.hmftools.stat_calcs.SampleCategoryData.SAMPLE_CAT_1_INDEX;
+import static com.hartwig.hmftools.stat_calcs.SampleCategoryData.SAMPLE_CAT_2_INDEX;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.io.FileWriterUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -149,14 +150,14 @@ public class ThreeVarCoOccurence
             }
         }
 
-        closeBufferedWriter(mWriter);
+        FileWriterUtils.closeBufferedWriter(mWriter);
     }
 
     private boolean initialiseOutput(final String outputFileName)
     {
         try
         {
-            mWriter = createBufferedWriter(outputFileName, false);
+            mWriter = FileWriterUtils.createBufferedWriter(outputFileName, false);
 
             mWriter.write(String.format("%s,%s,%s,With%sCount", mGroupingField, mCategory1, mCategory2, mGroupingField));
 

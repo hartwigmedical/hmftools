@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.stats;
+package com.hartwig.hmftools.stat_calcs;
 
 public class FisherExactTest
 {
