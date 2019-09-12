@@ -233,8 +233,8 @@ public final class ViccJsonReader {
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
 
-    private static final List<Integer> EXPECTED_TAXONOMY = Lists.newArrayList(1,2,3,4,5);
-    private static final List<Integer> EXPECTED_ENVIRONMENTCONTEXT = Lists.newArrayList(1,2,3,4,5,6,7);
+    private static final List<Integer> EXPECTED_TAXONOMY = Lists.newArrayList(4, 5);
+    private static final List<Integer> EXPECTED_ENVIRONMENTCONTEXT = Lists.newArrayList(2, 4, 5, 6, 7, 8);
 
     private static final List<Integer> EXPECTED_CGI_ELEMENT_SIZES = Lists.newArrayList(23);
 
@@ -3278,6 +3278,8 @@ public final class ViccJsonReader {
                     .usanStem(environmentContextObject.has("usan_stem") ? environmentContextObject.getAsJsonPrimitive("usan_stem")
                             .getAsString() : null)
                     .approvedCountries(approvedCountries)
+                    .toxicity(environmentContextObject.has("toxicity") ? environmentContextObject.getAsJsonPrimitive("toxicity")
+                            .getAsString() : null)
                     .id(environmentContextObject.has("id") && !environmentContextObject.get("id").isJsonNull()
                             ? environmentContextObject.getAsJsonPrimitive("id").getAsString()
                             : null)
@@ -3291,7 +3293,7 @@ public final class ViccJsonReader {
         if (!EXPECTED_TAXONOMY.contains(environmentContextObject.keySet().size())) {
             LOGGER.warn("Found " + environmentContextObject.keySet().size() + " in taxonomy rather than the expected "
                     + EXPECTED_TAXONOMY);
-            LOGGER.warn(environmentContextObject);
+            LOGGER.warn(environmentContextObject.keySet());
         }
 
         return ImmutableTaxonomy.builder()

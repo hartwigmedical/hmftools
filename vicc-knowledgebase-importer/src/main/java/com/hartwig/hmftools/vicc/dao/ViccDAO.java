@@ -352,7 +352,6 @@ public class ViccDAO {
                 .returning(VICCENTRY.ID)
                 .fetchOne()
                 .getValue(VICCENTRY.ID);
-        LOGGER.info("vicc entry id: " + id);
         writeTags(id, viccEntry.tags());
         writeDevTags(id, viccEntry.devTags());
         writeGeneIdentifiers(id, viccEntry.geneIdentifiers());
@@ -1159,7 +1158,7 @@ public class ViccDAO {
                     MOLECULARMATCHTRIALSINTERVATIONS.DESCRIPTION,
                     MOLECULARMATCHTRIALSINTERVATIONS.INTERVENTION_TYPE,
                     MOLECULARMATCHTRIALSINTERVATIONS.MOLECULARMATCHTRIALSID)
-                    .values(intervation.intervention_name(), intervation.description(), intervation.intervention_type(), viccEntryId)
+                    .values(intervation.intervention_name(), intervation.description(), intervation.intervention_type(), id)
                     .returning(MOLECULARMATCHTRIALSINTERVATIONS.ID)
                     .fetchOne()
                     .getValue(MOLECULARMATCHTRIALSINTERVATIONS.ID);
@@ -3617,12 +3616,14 @@ public class ViccDAO {
                         ENVIRONMENTALCONTEXT.DESCRIPTION,
                         ENVIRONMENTALCONTEXT.SOURCE,
                         ENVIRONMENTALCONTEXT.USANSTEM,
+                        ENVIRONMENTALCONTEXT.TOXICITY,
                         ENVIRONMENTALCONTEXT.IDENVIRONMENTALCONTEXT,
                         ENVIRONMENTALCONTEXT.ASSOCIATIONID)
                         .values(environmentalContext.term(),
                                 environmentalContext.description(),
                                 environmentalContext.source(),
                                 environmentalContext.usanStem(),
+                                environmentalContext.toxicity(),
                                 environmentalContext.id(),
                                 associationId)
                         .returning(ENVIRONMENTALCONTEXT.ID)

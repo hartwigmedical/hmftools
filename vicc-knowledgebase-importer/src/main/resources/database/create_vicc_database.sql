@@ -429,6 +429,7 @@ CREATE TABLE environmentalContext
     description varchar(255),
     source varchar(255),
     usanStem varchar(255),
+    toxicity varchar(2000),
     idEnvironmentalContext varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
