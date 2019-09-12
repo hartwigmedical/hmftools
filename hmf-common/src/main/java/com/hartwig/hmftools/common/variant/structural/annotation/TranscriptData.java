@@ -38,4 +38,10 @@ public class TranscriptData
     public void setExons(final List<ExonData> exons) { mExons = exons; }
     public List<ExonData> exons() { return mExons; }
 
+    public String toString()
+    {
+        return String.format("%d:%s pos(%d-%d) exons(%d) %s",
+            TransId, TransName, TransStart, TransEnd, mExons.size(), IsCanonical ? "canonical" : "");
+    }
+
 }

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_GENES;
+import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_INVALID;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_NONE;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_SVS;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.RNA_SPLICE_TYPE_ONLY_REF;
@@ -60,19 +61,23 @@ public class RnaFusionMapper
     private FusionParameters mFusionParams;
     private SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
+
     private final List<GeneFusion> mDnaFusions;
+    private Map<GeneFusion,String> mDnaInvalidFusions;
 
     private BufferedWriter mWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaFusionMapper.class);
 
-    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, FusionFinder fusionFinder, final List<GeneFusion> dnaFusions)
+    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, FusionFinder fusionFinder,
+            final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
     {
         mSampleRnaData = Maps.newHashMap();
         mWriter = null;
         mFusionFinder = fusionFinder;
         mGeneTransCollection = geneTransCollection;
         mDnaFusions = dnaFusions;
+        mDnaInvalidFusions = dnaInvalidFusions;
 
         mFusionParams = new FusionParameters();
         mFusionParams.RequirePhaseMatch = false;
@@ -198,7 +203,7 @@ public class RnaFusionMapper
                 {
                     if(isExactRnaExon)
                     {
-                        if(!rnaFusion.getExactMatchTransIds(isUpstream).contains(trans.TransId))
+                        if(!rnaFusion.getExactMatchTransIds(isUpstream).contains(trans.StableId))
                             continue;
                     }
                     else if(!trans.isCanonical())
@@ -228,7 +233,7 @@ public class RnaFusionMapper
         }
 
         LOGGER.debug("rna fusion({}) breakend matches: upstream(viable={} near={} genic={}) downstream(viable={} near={} genic={})",
-                rnaFusion.Name, viableUpBreakends.size(), nearUpBreakends.size(), genicUpBreakends.size(),
+                rnaFusion.name(), viableUpBreakends.size(), nearUpBreakends.size(), genicUpBreakends.size(),
                 viableDownBreakends.size(), nearDownBreakends.size(), genicDownBreakends.size());
 
         // run them through fusion logic (ie a pair of breakend lists), but don't require phase matching
@@ -273,7 +278,7 @@ public class RnaFusionMapper
                         topDownBreakend = downBreakend;
                         topCandidateFusionViable = viableFusion;
 
-                        LOGGER.debug("rnaFusion({}) first pair({} & {})", rnaFusion.Name, upBreakend.toString(), downBreakend.toString());
+                        LOGGER.debug("rnaFusion({}) first pair({} & {})", rnaFusion.name(), upBreakend.toString(), downBreakend.toString());
                     }
                 }
             }
@@ -383,7 +388,7 @@ public class RnaFusionMapper
                     rnaFusion.setTranscriptData(isUpstream, closestTrans, closestBreakend, isViable, correctLocation, exonsSkipped);
 
                     LOGGER.debug("rnaFusion({}) {} closest breakend({}) distance({})",
-                            rnaFusion.Name, isUpstream ? "up" :"down", closestBreakend.toString(), closestDistance);
+                            rnaFusion.name(), isUpstream ? "up" :"down", closestBreakend.toString(), closestDistance);
                 }
             }
         }
@@ -413,6 +418,14 @@ public class RnaFusionMapper
             && transDown != null && dnaFusion.downstreamTrans().gene().id() == transDown.gene().id())
             {
                 return DNA_MATCH_TYPE_SVS;
+            }
+        }
+
+        for(Map.Entry<GeneFusion,String> entry : mDnaInvalidFusions.entrySet())
+        {
+            if(entry.getKey().name().equals(rnaFusionData.name()))
+            {
+                return DNA_MATCH_TYPE_INVALID + "_" + entry.getValue();
             }
         }
 
@@ -629,6 +642,8 @@ public class RnaFusionMapper
         Map<String,int[]> transPhasesUp = Maps.newHashMap();
         Map<String,int[]> transPhasesDown = Maps.newHashMap();
 
+        boolean isExactRnaExon = rnaFusion.SpliceType.equals(RNA_SPLICE_TYPE_ONLY_REF);
+
         for(int i = 0; i <= 1; ++i)
         {
             boolean isUpstream = (i == 0);
@@ -640,7 +655,7 @@ public class RnaFusionMapper
 
             if (geneData == null)
             {
-                LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.Name, isUpstream ? "up" : "down");
+                LOGGER.warn("sample({}) rnaFusion({}) {} gene not found", mSampleId, rnaFusion.name(), isUpstream ? "up" : "down");
                 rnaFusion.setValid(false);
                 return;
             }
@@ -664,7 +679,7 @@ public class RnaFusionMapper
                 if(rnaPosition < downPosLimit || rnaPosition > upPosLimit)
                 {
                     LOGGER.warn("sample({}) rnaFusion({}) {} position({}) outside geneBounds({} -> {})",
-                            mSampleId, rnaFusion.Name, isUpstream ? "upstream" : "downstream", rnaPosition, downPosLimit, upPosLimit);
+                            mSampleId, rnaFusion.name(), isUpstream ? "upstream" : "downstream", rnaPosition, downPosLimit, upPosLimit);
                     rnaFusion.setValid(false);
                     return;
                 }
@@ -691,7 +706,7 @@ public class RnaFusionMapper
                     int[] exonMatchData = findExonMatch(transData.exons(), transData.Strand, rnaPosition);
 
                     if(exonMatchData[EXON_EXACT_MATCH] > 0)
-                        rnaFusion.getExactMatchTransIds(isUpstream).add(transData.TransId);
+                        rnaFusion.getExactMatchTransIds(isUpstream).add(transData.TransName);
 
                     if(exonMatchData[EXON_FOUND] > 0)
                     {
@@ -701,7 +716,7 @@ public class RnaFusionMapper
             }
 
             LOGGER.debug("rnaFusion({}) type({}) {} position({}) matched {} transcripts",
-                    rnaFusion.Name, rnaFusion.SpliceType, isUpstream ? "upstream" : "downstream", rnaPosition, transPhases.size());
+                    rnaFusion.name(), rnaFusion.SpliceType, isUpstream ? "upstream" : "downstream", rnaPosition, transPhases.size());
         }
 
         if(!transPhasesUp.isEmpty() && !transPhasesDown.isEmpty())
@@ -711,17 +726,23 @@ public class RnaFusionMapper
                 final String transIdUp = entryUp.getKey();
                 final int[] exonDataUp = entryUp.getValue();
 
+                if(isExactRnaExon && !rnaFusion.getExactMatchTransIds(true).contains(transIdUp))
+                    continue;
+
                 for (Map.Entry<String, int[]> entryDown : transPhasesDown.entrySet())
                 {
                     final String transIdDown = entryDown.getKey();
                     final int[] exonDataDown = entryDown.getValue();
+
+                    if(isExactRnaExon && !rnaFusion.getExactMatchTransIds(false).contains(transIdDown))
+                        continue;
 
                     boolean phaseMatched = exonDataUp[EXON_PHASE] == exonDataDown[EXON_PHASE];
 
                     if (phaseMatched && !rnaFusion.hasRnaPhasedFusion())
                     {
                         LOGGER.debug("rnaFusion({}) type({}) transUp({}) transDown({} phase({}) matched({})",
-                                rnaFusion.Name, rnaFusion.SpliceType, transIdUp, transIdDown, exonDataUp[EXON_PHASE], phaseMatched);
+                                rnaFusion.name(), rnaFusion.SpliceType, transIdUp, transIdDown, exonDataUp[EXON_PHASE], phaseMatched);
 
                         rnaFusion.setRnaPhasedFusionData(transIdUp, transIdDown);
                         rnaFusion.setExonData(true, exonDataUp[EXON_RANK], exonDataUp[EXON_PHASE]);
@@ -785,6 +806,12 @@ public class RnaFusionMapper
 
             if (position == transExonData.ExonEnd || position == transExonData.ExonStart)
             {
+                // skip matches on the last exon
+                if(i == 0 && strand == -1 && position == transExonData.ExonStart)
+                    return exonMatch;
+                else if(i == exonDataList.size() - 1 && strand == 1 && position == transExonData.ExonEnd)
+                    return exonMatch;
+
                 // position exactly matches the bounds of an exon
                 exonMatch[EXON_FOUND] = 1;
                 exonMatch[EXON_EXACT_MATCH] = 1;
@@ -816,12 +843,12 @@ public class RnaFusionMapper
                 if (strand == 1)
                 {
                     exonMatch[EXON_RANK] = transExonData.ExonRank;
-                    exonMatch[EXON_PHASE] = transExonData.ExonPhase;
+                    exonMatch[EXON_PHASE] = transExonData.ExonPhaseEnd;
                 }
                 else
                 {
                     exonMatch[EXON_RANK] = nextTransExonData.ExonRank;
-                    exonMatch[EXON_PHASE] = nextTransExonData.ExonPhase;
+                    exonMatch[EXON_PHASE] = nextTransExonData.ExonPhaseEnd;
                 }
 
                 break;
@@ -881,7 +908,7 @@ public class RnaFusionMapper
             BufferedWriter writer = mWriter;
 
             writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s",
-                    sampleId, rnaFusion.Name, rnaFusion.GeneUp, rnaFusion.GeneDown, rnaFusion.isViableFusion(),
+                    sampleId, rnaFusion.name(), rnaFusion.GeneUp, rnaFusion.GeneDown, rnaFusion.isViableFusion(),
                     rnaFusion.isPhaseMatchedFusion(), rnaFusion.getCalledFusionMatch(), rnaFusion.getKnownType(),
                     rnaFusion.hasRnaPhasedFusion()));
 

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
@@ -27,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
@@ -69,19 +71,20 @@ public class FusionDisruptionAnalyser
     private NeoEpitopeFinder mNeoEpitopeFinder;
 
     private String mSampleId;
-    private String mOutputDir;
-    private SvGeneTranscriptCollection mGeneTransCollection;
+    private final String mOutputDir;
+    private final SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private List<String> mKnownFusionGenes;
     private LinxConfig mConfig;
 
-    private FusionParameters mFusionParams;
+    private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
-    private List<GeneFusion> mFusions;
+    private final List<GeneFusion> mFusions;
+    private final Map<GeneFusion,String> mInvalidFusions;
 
     private RnaFusionMapper mRnaFusionMapper;
     private VisualiserWriter mVisWriter;
@@ -99,17 +102,22 @@ public class FusionDisruptionAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
-    public FusionDisruptionAnalyser()
+    public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
+            SvGeneTranscriptCollection ensemblDataCache, VisualiserWriter writer)
     {
-        mFusionFinder = null;
-        mFusionWriter = null;
-        mDisruptionFinder = null;
+        mOutputDir = config.OutputDataPath;
 
-        mGeneTransCollection = new SvGeneTranscriptCollection();
+        mConfig = config;
+        mGeneTransCollection = ensemblDataCache;
+        mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
+        mFusionWriter = new FusionWriter(mOutputDir);
+        mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
+        mVisWriter = writer;
+
         mNeoEpitopeFinder = null;
 
-        mOutputDir = "";
         mFusions = Lists.newArrayList();
+        mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
@@ -123,6 +131,8 @@ public class FusionDisruptionAnalyser
         mChrBreakendMap = null;
         mKnownFusionGenes = Lists.newArrayList();
         mRestrictedGenes = Lists.newArrayList();
+
+        initialise(cmdLineArgs);
     }
 
     public static void addCmdLineArgs(Options options)
@@ -138,19 +148,8 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
     }
 
-    public void initialise(
-            final CommandLine cmdLineArgs, final String outputDir, final LinxConfig config, SvGeneTranscriptCollection ensemblDataCache,
-            VisualiserWriter writer)
+    private void initialise(final CommandLine cmdLineArgs)
     {
-        mOutputDir = outputDir;
-
-        mConfig = config;
-        mGeneTransCollection = ensemblDataCache;
-        mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
-        mFusionWriter = new FusionWriter(mOutputDir);
-        mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
-        mVisWriter = writer;
-
         populateKnownFusionGenes();
 
         if(cmdLineArgs != null)
@@ -169,7 +168,7 @@ public class FusionDisruptionAnalyser
 
             if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
             {
-                mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder, mFusions);
+                mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder, mFusions, mInvalidFusions);
                 mRnaFusionMapper.setOutputDir(mOutputDir);
                 mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
             }
@@ -187,7 +186,10 @@ public class FusionDisruptionAnalyser
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
 
             if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
+            {
                 mFusionFinder.setLogInvalidReasons(true);
+                mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
+            }
 
             mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
 
@@ -337,6 +339,7 @@ public class FusionDisruptionAnalyser
             return;
 
         mFusions.clear();
+        mInvalidFusions.clear();
 
         boolean checkSoloSVs = true;
         boolean checkClusters = true;
@@ -360,7 +363,7 @@ public class FusionDisruptionAnalyser
             if (var.isSglBreakend())
                 continue;
 
-            // skip SVs which have been chained or in larger
+            // skip SVs which have been chained
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
                 continue;
 
@@ -552,6 +555,8 @@ public class FusionDisruptionAnalyser
                     upperSV = upperBreakend.getSV();
                 }
 
+                isSpecificSV(upperSV);
+
                 List<GeneAnnotation> genesListUpper = Lists.newArrayList(upperSV.getGenesList(upperBreakend.usesStart()));
                 applyGeneRestrictions(genesListUpper);
 
@@ -646,7 +651,10 @@ public class FusionDisruptionAnalyser
                     }
 
                     if(!validTraversal)
+                    {
+                        recordInvalidFusion(fusion, "InvalidTraversal");
                         continue;
+                    }
 
                     ++validTraversalFusionCount;
 
@@ -710,9 +718,16 @@ public class FusionDisruptionAnalyser
                             chainFusions.add(fusion);
                         }
                     }
+                    else
+                    {
+                        final String invalidReason = !validTraversal ? "TraversesSPA" :
+                                (!chainLengthOk ? "LongChain" : "Terminated");
+
+                        recordInvalidFusion(fusion, invalidReason);
+                    }
                 }
 
-                if(validTraversalFusionCount == 0 && lpIndex2 > lpIndex1)
+                if(validTraversalFusionCount == 0 && lpIndex2 > lpIndex1 && mRnaFusionMapper == null)
                 {
                     // if there are no valid traversals between 2 indices, then any chain sections starting at the lower index
                     // will likewise be invalidated since can skip past this
@@ -723,6 +738,14 @@ public class FusionDisruptionAnalyser
                 }
             }
         }
+    }
+
+    private void recordInvalidFusion(final GeneFusion fusion, final String reason)
+    {
+        if(mInvalidFusions.keySet().stream().anyMatch(x -> fusion.name().equals(x.name())))
+            return;
+
+        mInvalidFusions.put(fusion, reason);
     }
 
     private boolean hasIdenticalFusion(final GeneFusion newFusion, final List<GeneFusion> fusions)

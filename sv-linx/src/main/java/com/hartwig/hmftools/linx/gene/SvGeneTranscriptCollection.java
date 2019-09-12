@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.Transcri
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.File;

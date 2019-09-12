@@ -16,7 +16,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 public class RnaFusionData
 {
     // data from Star Fusion predictions output:
-    public final String Name;
+    public final String RefName;
     public final String GeneUp;
     public final String GeneDown;
     public final String ChrUp;
@@ -34,8 +34,8 @@ public class RnaFusionData
     public static String RNA_SPLICE_TYPE_UNKONWN = "UNKNOWN"; // for read with a star-fusion prediction
 
     private boolean mIsValid;
-    private List<Integer> mExonMatchedTransIdUp; // IDs of transcripts with an exon matching the RNA position
-    private List<Integer> mExonMatchedTransIdDown;
+    private List<String> mExonMatchedTransIdUp; // transcripts with an exon matching the RNA position
+    private List<String> mExonMatchedTransIdDown;
 
     // annotations and matching results
     private String mGeneIdUp;
@@ -78,13 +78,15 @@ public class RnaFusionData
     public static final String DNA_MATCH_TYPE_NONE = "NONE";
     public static final String DNA_MATCH_TYPE_GENES = "GENES";
     public static final String DNA_MATCH_TYPE_SVS = "SV";
+    public static final String DNA_MATCH_TYPE_INVALID = "INVALID";
 
     public RnaFusionData(final String name, final String geneUp, final String geneDown, final String chrUp, final String chrDown,
             long posUp, long posDown, byte strandUp, byte strandDown, int junctionReadCount, int spanningFragCount, final String spliceType)
     {
-        Name = name;
         GeneUp = geneUp;
         GeneDown = geneDown;
+        RefName = geneUp + "_" + geneDown;
+
         ChrUp = chrUp;
         ChrDown = chrDown;
         PositionUp = posUp;
@@ -129,6 +131,8 @@ public class RnaFusionData
         mChainInfo = "0;0";
     }
 
+    public String name() { return GeneUp + "_" + GeneDown; }
+
     public boolean isValid() { return mIsValid; }
     public void setValid(boolean toggle) { mIsValid = toggle; }
 
@@ -156,7 +160,7 @@ public class RnaFusionData
         }
     }
 
-    public final List<Integer> getExactMatchTransIds(boolean isUpstream)
+    public final List<String> getExactMatchTransIds(boolean isUpstream)
     {
         return isUpstream ? mExonMatchedTransIdUp : mExonMatchedTransIdDown;
     }

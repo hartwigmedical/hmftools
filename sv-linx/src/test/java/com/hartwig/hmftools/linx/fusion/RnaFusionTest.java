@@ -14,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
@@ -72,7 +73,7 @@ public class RnaFusionTest
 
         FusionFinder fusionAnalyser = new FusionFinder(null, geneTransCache);
         List<GeneFusion> dnaFusions = Lists.newArrayList();
-        RnaFusionMapper rnaFusionMapper = new RnaFusionMapper(geneTransCache, fusionAnalyser, dnaFusions);
+        RnaFusionMapper rnaFusionMapper = new RnaFusionMapper(geneTransCache, fusionAnalyser, dnaFusions, Maps.newHashMap());
 
         // test positive strand
 
