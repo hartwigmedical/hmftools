@@ -505,7 +505,8 @@ public class DisruptionFinder
                     for(Transcript transcript : reportableDisruptions)
                     {
                         LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
-                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId, transcript.undisruptedCopyNumber());
+                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId,
+                                formatPloidy(transcript.undisruptedCopyNumber()));
 
                         transcript.setReportableDisruption(true);
                         mDisruptions.add(transcript);
