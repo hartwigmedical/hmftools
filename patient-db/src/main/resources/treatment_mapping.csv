@@ -82,7 +82,7 @@ drug,type,mechanism,synonyms
 "Daratumumab",Immunotherapy,"Monoclonal antibody",""
 "Darolutamide",Experimental therapy,"Experimental","ODM-201"
 "Degarelix",Androgen/estrogen deprivation therapy,"GnRH (ant)agonist","Firmagon"
-"Dendritic cell therapy (DCVAC)",Experimental therapy,"Immune therapy","DC therapy,DCVAC/PCa,Dendritic cell,dendritic cell vaccination,dendritic cell vacination,dendritic cell vacine,DC vaccinations,Dendritic cell therapy,myeloid and plasmacytoid DC vaccinations, DC immunotherapy (DENIM-study), Dendritic celtherapy"
+"Dendritic cell therapy (DCVAC)",Experimental therapy,"Immune therapy","DC therapy,DCVAC/PCa,Dendritic cell,dendritic cell vaccination,dendritic cell vacination,dendritic cell vacine,DC vaccinations,Dendritic cell therapy,myeloid and plasmacytoid DC vaccinations, DC immunotherapy (DENIM-study), Dendritic celtherapy, Natural Dendritic Cells"
 "Dendritic cell therapy (DCVAC) or placebo",Randomized trial,"Immune therapy or placebo","DCVAC/PCa of placebo, DCVAC/placebo, MIND-DC trial, Dendritic cells or placebo (study), dendtritic celactivation or placebo"
 "Denosumab",Boneregulating agent,"Anti-RANK-L",""
 "Dexamethasone",Other,"Glucocorticoid","Dexamethason"
