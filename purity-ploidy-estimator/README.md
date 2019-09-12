@@ -671,6 +671,7 @@ REP_C | 1 | Repeat sequence count
 TNC | 1 | Tri-nucleotide context
 MH | 1 | Microhomology
 KT | 1 | Forward/reverse kataegis id
+SUBCL | 1| Subclonal likelihood between 0 and 1
 
 ### Database
 
