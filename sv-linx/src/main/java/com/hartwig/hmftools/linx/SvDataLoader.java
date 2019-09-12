@@ -17,6 +17,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
@@ -29,6 +31,8 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
@@ -132,6 +136,24 @@ public class SvDataLoader
 
                 final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
                 annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
+            }
+
+            final String driverCatalogFilename = DriverCatalogFile.generateFilename(svDataOutputDir, sampleId);
+
+            if(Files.exists(Paths.get(driverCatalogFilename)))
+            {
+                List<DriverCatalog> drivers = DriverCatalogFile.read(driverCatalogFilename);
+                LOGGER.info("sample({}) loading {} driver catalog records", sampleId, drivers.size());
+                dbAccess.writeDriverCatalog(sampleId, drivers);
+            }
+
+            final String driversFilename = LinxDriverFile.generateFilename(svDataOutputDir, sampleId);
+
+            if(Files.exists(Paths.get(driversFilename)))
+            {
+                List<LinxDriver> drivers = LinxDriverFile.read(driversFilename);
+                LOGGER.info("sample({}) loading {} SV driver records", sampleId, drivers.size());
+                dbAccess.writeSvDrivers(sampleId, drivers);
             }
 
         }

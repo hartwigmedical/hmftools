@@ -218,7 +218,7 @@ public class DriverGeneAnnotator
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to load purity context: {}", e.toString());
+            LOGGER.error("failed to load driver catalog or purity context: {}", e.toString());
             return;
         }
     }
@@ -980,6 +980,8 @@ public class DriverGeneAnnotator
 
         if(mConfig.UploadToDB && mDbAccess != null)
         {
+            mDbAccess.writeDriverCatalog(mSampleId, mDriverCatalog);
+
             mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
         }
 
@@ -1105,7 +1107,10 @@ public class DriverGeneAnnotator
 
     public void close()
     {
-        mPerfCounter.logStats();
+        if(LOGGER.isDebugEnabled() || mConfig.hasMultipleSamples())
+        {
+            mPerfCounter.logStats();
+        }
 
         closeBufferedWriter(mFileWriter);
     }
