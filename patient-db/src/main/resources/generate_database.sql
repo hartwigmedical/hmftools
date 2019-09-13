@@ -1,6 +1,4 @@
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS copyNumberRegion;
-
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
