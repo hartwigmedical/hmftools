@@ -671,6 +671,7 @@ REP_C | 1 | Repeat sequence count
 TNC | 1 | Tri-nucleotide context
 MH | 1 | Microhomology
 KT | 1 | Forward/reverse kataegis id
+SUBCL | 1| Subclonal likelihood between 0 and 1
 
 ### Database
 
@@ -955,7 +956,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
-- Upcoming
+- [2.34](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.34)
   - Added driver catalog to file output
   - Purity sunrise plot now supports somatic inferred purity 
   - Additional BAF inferring rule
