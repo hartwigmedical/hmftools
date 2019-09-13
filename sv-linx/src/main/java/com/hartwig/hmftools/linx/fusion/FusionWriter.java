@@ -38,7 +38,6 @@ public class FusionWriter
 {
     private final String mOutputDir;
     private BufferedWriter mFusionWriter;
-    private BufferedWriter mVisFusionWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionWriter.class);
 
@@ -46,7 +45,6 @@ public class FusionWriter
     {
         mOutputDir = outputDir;
         mFusionWriter = null;
-        mVisFusionWriter = null;
     }
 
     public static void convertBreakendsAndFusions(
@@ -147,7 +145,7 @@ public class FusionWriter
         }
     }
 
-    public void initialiseOutputFiles(boolean addVisWriter)
+    public void initialiseOutputFiles()
     {
         try
         {
@@ -195,42 +193,10 @@ public class FusionWriter
                 mFusionWriter.write(",ProteinsKept,ProteinsLost,OverlapUp,OverlapDown,ChainInfo");
                 mFusionWriter.newLine();
             }
-
-            if(addVisWriter)
-            {
-                mVisFusionWriter = createBufferedWriter(mOutputDir + "LNX_VIS_FUSIONS.tsv", false);
-
-                mVisFusionWriter.write(VisFusionFile.header());
-                mVisFusionWriter.newLine();
-            }
         }
         catch (final IOException e)
         {
             LOGGER.error("error writing fusions: {}", e.toString());
-        }
-    }
-
-    public void writeVisualisationData(final String sampleId, final List<VisFusionFile> visFusions)
-    {
-        try
-        {
-            if (mVisFusionWriter == null)
-            {
-                // write out fusions file for visualisations
-                VisFusionFile.write(VisFusionFile.generateFilename(mOutputDir, sampleId), visFusions);
-            }
-            else
-            {
-                for (final VisFusionFile visFusion : visFusions)
-                {
-                    mVisFusionWriter.write(VisFusionFile.toString(visFusion));
-                    mVisFusionWriter.newLine();
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("failed to write fusions vis file: {}", e.toString());
         }
     }
 
@@ -338,6 +304,5 @@ public class FusionWriter
     public void close()
     {
         closeBufferedWriter(mFusionWriter);
-        closeBufferedWriter(mVisFusionWriter);
     }
 }

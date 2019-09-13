@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
@@ -43,7 +42,8 @@ public class VisualiserWriter
     // references only
     SvGeneTranscriptCollection mGeneTranscriptCollection;
 
-    private List<VisGeneData> mGeneData;
+    private final List<VisGeneData> mGeneData;
+    private final List<VisFusionFile> mFusions;
 
     private boolean mEnabled;
     private final String mOutputDir;
@@ -55,6 +55,7 @@ public class VisualiserWriter
     private BufferedWriter mCnFileWriter;
     private BufferedWriter mGeneFileWriter;
     private BufferedWriter mProteinDomainFileWriter;
+    private BufferedWriter mFusionFileWriter;
 
     public final static String GENE_TYPE_DRIVER = "DRIVER";
     public final static String GENE_TYPE_FUSION = "FUSION";
@@ -78,6 +79,7 @@ public class VisualiserWriter
         mGeneTranscriptCollection = null;
 
         mGeneData = Lists.newArrayList();
+        mFusions = Lists.newArrayList();
     }
 
     private void initialiseBatchOutputFiles()
@@ -103,6 +105,11 @@ public class VisualiserWriter
             mProteinDomainFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_PROTEIN_DOMAINS.tsv", false);
             mProteinDomainFileWriter.write(VisProteinDomainFile.header());
             mProteinDomainFileWriter.newLine();
+
+            mFusionFileWriter = createBufferedWriter(mOutputDir + "LNX_VIS_FUSIONS.tsv", false);
+            mFusionFileWriter.write(VisFusionFile.header());
+            mFusionFileWriter.newLine();
+
         }
         catch(IOException e)
         {
@@ -117,6 +124,7 @@ public class VisualiserWriter
         closeBufferedWriter(mCnFileWriter);
         closeBufferedWriter(mGeneFileWriter);
         closeBufferedWriter(mProteinDomainFileWriter);
+        closeBufferedWriter(mFusionFileWriter);
     }
 
     public void setGeneDataCollection(SvGeneTranscriptCollection geneTranscriptCollection)
@@ -128,6 +136,7 @@ public class VisualiserWriter
     {
         mSampleId = sampleId;
         mGeneData.clear();
+        mFusions.clear();
     }
 
     public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
@@ -141,18 +150,21 @@ public class VisualiserWriter
         mGeneData.add(geneData);
     }
 
+    public void addFusions(final List<VisFusionFile> fusions) { mFusions.addAll(fusions); }
+
     public void writeOutput(final List<SvCluster> clusters, final List<SvVarData> variants, final Map<String,List<SvCNData>> chrCnDataMap)
     {
         if(!mEnabled)
             return;
 
-        writeVisualSvData(variants);
-        writeVisualSegmentData(clusters);
+        writeSvData(variants);
+        writeSegmentData(clusters);
         writeGeneData();
         writeCopyNumberData(chrCnDataMap);
+        writeFusions();
     }
 
-    private void writeVisualSvData(final List<SvVarData> variants)
+    private void writeSvData(final List<SvVarData> variants)
     {
         List<VisSvDataFile> svDataList = Lists.newArrayList();
 
@@ -205,7 +217,7 @@ public class VisualiserWriter
         }
     }
 
-    private void writeVisualSegmentData(final List<SvCluster> clusters)
+    private void writeSegmentData(final List<SvCluster> clusters)
     {
         // write out the links from each chain and a link from the chain-end breakends to telomere or centromere
         List<VisSegmentFile> segments = Lists.newArrayList();
@@ -516,5 +528,29 @@ public class VisualiserWriter
         {
             LOGGER.error("filed to write VIS copy number output");
         }
+    }
+
+    private void writeFusions()
+    {
+        try
+        {
+            if (mBatchOutput)
+            {
+                for (final VisFusionFile visFusion : mFusions)
+                {
+                    mFusionFileWriter.write(VisFusionFile.toString(visFusion));
+                    mFusionFileWriter.newLine();
+                }
+            }
+            else
+            {
+                VisFusionFile.write(VisFusionFile.generateFilename(mOutputDir, mSampleId), mFusions);
+            }
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to write fusions vis file: {}", e.toString());
+        }
+
     }
 }

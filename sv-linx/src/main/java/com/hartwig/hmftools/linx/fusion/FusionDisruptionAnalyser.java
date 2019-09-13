@@ -123,7 +123,6 @@ public class FusionDisruptionAnalyser
         mFindNeoEpitopes = false;
         mFusionParams = new FusionParameters();
 
-        mVisWriter = null;
         mRnaFusionMapper = null;
 
         mPerfCounter = new PerformanceCounter("Fusions");
@@ -156,7 +155,7 @@ public class FusionDisruptionAnalyser
         {
             if(mConfig.hasMultipleSamples())
             {
-                mFusionWriter.initialiseOutputFiles(mConfig.WriteVisualisationData);
+                mFusionWriter.initialiseOutputFiles();
                 mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
             }
 
@@ -1060,7 +1059,7 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        mFusionWriter.writeVisualisationData(mSampleId, visFusions);
+        mVisWriter.addFusions(visFusions);
     }
 
     public void close()

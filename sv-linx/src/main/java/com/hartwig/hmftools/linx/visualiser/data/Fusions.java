@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,6 +19,9 @@ public class Fusions
     @NotNull
     public static List<Fusion> fromFile(@NotNull final String fileName) throws IOException
     {
+        if(!Files.exists(Paths.get(fileName)))
+            return Lists.newArrayList();
+
         final List<VisFusionFile> visFusions = VisFusionFile.read(fileName);
 
         return visFusions.stream().map(x -> ImmutableFusion.builder()
