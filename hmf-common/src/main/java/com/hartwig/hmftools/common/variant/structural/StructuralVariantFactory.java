@@ -33,6 +33,7 @@ public class StructuralVariantFactory {
     public final static String RECOVERED = "RECOVERED";
     public final static String RECOVERY_METHOD = "RECOVERY_METHOD";
     public final static String RECOVERY_FILTER = "RECOVERY_FILTER";
+    public static final String PASS = "PASS";
     public static final String INFERRED = "INFERRED";
     public final static String CIPOS = "CIPOS";
     public final static String SVTYPE = "SVTYPE";
@@ -449,10 +450,10 @@ public class StructuralVariantFactory {
         }
         if (filters.size() > 1) {
             // Doesn't pass if a filter is applied to either of the two records
-            filters.remove("PASS");
+            filters.remove(PASS);
         }
         if (filters.size() == 0) {
-            filters.add("PASS");
+            filters.add(PASS);
         }
         return filters.stream().sorted().collect(Collectors.joining(";"));
     }

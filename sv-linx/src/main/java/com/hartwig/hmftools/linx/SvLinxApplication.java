@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
@@ -259,13 +261,12 @@ public class SvLinxApplication
     {
         List<SvVarData> svVarDataItems = Lists.newArrayList();
 
-        for (final StructuralVariantData svRecord : svRecords) {
-
-            if(svRecord.filter().equals(PON_FILTER_PON))
-                continue;
-
-            // all others (currently PASS or blank) are accepted
-            svVarDataItems.add(new SvVarData(svRecord));
+        for (final StructuralVariantData svRecord : svRecords)
+        {
+            if(svRecord.filter().isEmpty() || svRecord.filter().equals(PASS) || svRecord.filter().equals(INFERRED))
+            {
+                svVarDataItems.add(new SvVarData(svRecord));
+            }
         }
 
         return svVarDataItems;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.utils;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -85,7 +86,7 @@ public class SvTestUtils
             long posStart, long posEnd, int orientStart, int orientEnd, StructuralVariantType type,
             double cnStart, double cnEnd, double cnChgStart, double cnChgEnd, double ploidy, final String insertSeq)
     {
-        return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type, cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, "PASS");
+        return createTestSv(varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type, cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS);
     }
 
     public static SvVarData createTestSv(final int varId, final String chrStart, final String chrEnd,
