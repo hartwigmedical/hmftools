@@ -170,8 +170,7 @@ public class PatientReporterApplication {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_CSV)
                 && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd,
-                KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd,
-                SAMPLE_SUMMARY_TSV);
+                KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
