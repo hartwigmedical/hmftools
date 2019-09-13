@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.analysis;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.centromeres.Centromeres;
 import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
+import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -24,6 +25,8 @@ public class SvUtilities {
 
     private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
     public static final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
+
+    // public static final RefGenome REF_GENOME = new RefGenome();
 
     public final static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
     public final static String CHROMOSOME_ARM_Q = "Q";

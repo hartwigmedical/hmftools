@@ -90,27 +90,7 @@ public class LinxConfig
 
     public LinxConfig(final CommandLine cmd)
     {
-        String configSampleStr = cmd.getOptionValue(SAMPLE);
-
-        mSampleIds = Lists.newArrayList();
-
-        if(configSampleStr != null && !configSampleStr.equals("*"))
-        {
-            if(configSampleStr.contains(","))
-            {
-                String[] tumorList = configSampleStr.split(",");
-                mSampleIds = Arrays.stream(tumorList).collect(Collectors.toList());
-            }
-            else if(configSampleStr.contains(".csv"))
-            {
-                mSampleIds = loadSampleListFile(configSampleStr);
-            }
-            else
-            {
-                // assume refers to a single sample
-                mSampleIds.add(configSampleStr);
-            }
-        }
+        mSampleIds = sampleListFromConfigStr(cmd.getOptionValue(SAMPLE));
 
         if(cmd.hasOption(UPLOAD_TO_DB) && cmd.hasOption(DB_URL))
         {
@@ -163,6 +143,31 @@ public class LinxConfig
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
+
+    public static final List<String> sampleListFromConfigStr(final String configSampleStr)
+    {
+        final List<String> sampleIds = Lists.newArrayList();
+
+        if(configSampleStr != null && !configSampleStr.equals("*"))
+        {
+            if(configSampleStr.contains(","))
+            {
+                String[] tumorList = configSampleStr.split(",");
+                sampleIds.addAll(Arrays.stream(tumorList).collect(Collectors.toList()));
+            }
+            else if(configSampleStr.contains(".csv"))
+            {
+                sampleIds.addAll(loadSampleListFile(configSampleStr));
+            }
+            else
+            {
+                // assume refers to a single sample
+                sampleIds.add(configSampleStr);
+            }
+        }
+
+        return sampleIds;
+    }
 
     public LinxConfig(int proximityDistance)
     {
@@ -225,7 +230,7 @@ public class LinxConfig
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 
-    private List<String> loadSampleListFile(final String filename)
+    private static List<String> loadSampleListFile(final String filename)
     {
         List<String> sampleIds = Lists.newArrayList();
 

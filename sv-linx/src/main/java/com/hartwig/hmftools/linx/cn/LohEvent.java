@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.cn;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 
 import java.util.List;
 
@@ -97,10 +99,15 @@ public class LohEvent
 
     public boolean armLoss()
     {
-        if(SegStart.equals(TELOMERE.toString()) && SegEnd.equals(CENTROMERE.toString()))
+        return armLoss(CHROMOSOME_ARM_P) || armLoss(CHROMOSOME_ARM_Q);
+    }
+
+    public boolean armLoss(final String arm)
+    {
+        if(arm == CHROMOSOME_ARM_P && SegStart.equals(TELOMERE.toString()) && SegEnd.equals(CENTROMERE.toString()))
             return true;
 
-        if(SegStart.equals(CENTROMERE.toString()) && SegEnd.equals(TELOMERE.toString()))
+        if(arm == CHROMOSOME_ARM_Q && SegStart.equals(CENTROMERE.toString()) && SegEnd.equals(TELOMERE.toString()))
             return true;
 
         return false;

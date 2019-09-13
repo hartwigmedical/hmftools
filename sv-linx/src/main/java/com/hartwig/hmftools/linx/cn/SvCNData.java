@@ -65,6 +65,7 @@ public class SvCNData {
 
     public int id() { return mId; }
     public long position(boolean useStart) { return useStart ? StartPos : EndPos; }
+    public long length() { return EndPos - StartPos; }
 
     public int getIndex() { return mIndex; }
     public void setIndex(int index) { mIndex = index; }
