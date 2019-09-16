@@ -104,10 +104,10 @@ public class SvSampleAnalyser {
 
     private boolean mIsValid;
 
-    private PerformanceCounter mPcPrep;
-    private PerformanceCounter mPcClusterAnalyse;
-    PerformanceCounter mPcAnnotation;
-    private PerformanceCounter mPcWrite;
+    private final PerformanceCounter mPcPrep;
+    private final PerformanceCounter mPcClusterAnalyse;
+    private final PerformanceCounter mPcAnnotation;
+    private final PerformanceCounter mPcWrite;
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 

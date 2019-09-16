@@ -63,8 +63,13 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
+    public static final String REF_GENOME_HG38 = "HG38";
+    public static final String REF_GENOME_HG37 = "HG37";
+    public static String RG_VERSION = REF_GENOME_HG37;
+
     // reference files
     public static final String REF_GENOME_FILE = "ref_genome";
+    public static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
@@ -110,6 +115,9 @@ public class LinxConfig
         OutputDataPath = formOutputPath(dataOutputDir);
 
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
+
+        if(cmd.hasOption(REF_GENOME_VERSION))
+            RG_VERSION = cmd.getOptionValue(REF_GENOME_VERSION);
 
         ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
                 : DEFAULT_PROXIMITY_DISTANCE;
@@ -172,6 +180,7 @@ public class LinxConfig
     public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
+        RG_VERSION = REF_GENOME_HG37;
         PurpleDataPath = "";
         OutputDataPath = "";
         SvDataPath = "";
@@ -202,6 +211,7 @@ public class LinxConfig
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genom version - accepts HG37 or HG38 (default = HG37)");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");

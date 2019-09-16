@@ -693,7 +693,7 @@ public class ClusterAnnotations
                     else
                     {
                         foldbackRank = chromosomeFoldbackCount - foldbackIndex - 1;
-                        long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(breakend.chromosome());
+                        long chromosomeLength = SvUtilities.getChromosomeLength(breakend.chromosome());
                         long centromere = chromosomeLength - armLength;
                         positionPercent = 1 - (breakend.position() - centromere) / (double)armLength;
                     }

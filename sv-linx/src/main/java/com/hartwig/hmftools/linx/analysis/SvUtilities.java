@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.centromeres.Centromeres;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengths;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -14,19 +11,16 @@ import java.util.Map;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG38;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
-// common utility methods for clustering logic
+// common utility methods for SVs
 
 public class SvUtilities {
-
-    private static final Map<String, GenomeRegion> CENTROMERES = Centromeres.grch37();
-    public static final Map<String,Integer> CHROMOSOME_LENGTHS = ChromosomeLengths.getChromosomeLengths();
-
-    // public static final RefGenome REF_GENOME = new RefGenome();
 
     public final static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
     public final static String CHROMOSOME_ARM_Q = "Q";
@@ -34,36 +28,44 @@ public class SvUtilities {
 
     public final static int NO_LENGTH = -1;
 
+    public static final RefGenome refGenomeLengths()
+    {
+        return RG_VERSION == REF_GENOME_HG38 ? RefGenome.HG38 : RefGenome.HG19;
+    }
+
+    public static long getChromosomeLength(final String chromosome)
+    {
+        Long chrLength = refGenomeLengths().lengths().get(chromosome);
+        return chrLength != null ? chrLength : 0;
+    }
+
     public static final String getChromosomalArm(final String chromosome, final long position)
     {
-        final GenomeRegion region = CENTROMERES.get(chromosome);
+        final Long centromerePos = refGenomeLengths().centromeres().get(chromosome);
 
-        if(region == null)
+        if(centromerePos == null)
             return "INVALID";
 
-        if(position <= region.start())
-            return CHROMOSOME_ARM_P;
-        else if(position >= region.end())
-            return CHROMOSOME_ARM_Q;
-        else
-            return CHROMOSOME_ARM_CENTROMERE;
+        return position < centromerePos ? CHROMOSOME_ARM_P : CHROMOSOME_ARM_Q;
     }
 
     public static long getChromosomalArmLength(final String chromosome, final String armType)
     {
-        final GenomeRegion region = CENTROMERES.get(chromosome);
+        final RefGenome refGenome = refGenomeLengths();
 
-        if(region == null)
+        final Long centromerePos = refGenome.centromeres().get(chromosome);
+
+        if(centromerePos == null)
             return 0;
 
         if(armType.equals(CHROMOSOME_ARM_P))
         {
-            return region.start();
+            return centromerePos;
         }
 
-        long chrLength = CHROMOSOME_LENGTHS.get(chromosome);
+        long chrLength = refGenome.lengths().get(chromosome);
 
-        return chrLength - region.end();
+        return chrLength - centromerePos;
     }
 
     public static boolean isShortArmChromosome(final String chromosome)

@@ -31,6 +31,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -62,6 +63,8 @@ public class CopyNumberAnalyser
     private BufferedWriter mPloidyCalcWriter;
     private BufferedWriter mChrArmWriter;
 
+    private PerformanceCounter mPerfCounter;
+
     private static final String WRITE_LOH_TO_FILE = "write_loh_data";
     private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
     private static final String WRITE_CHR_ARM_DATA = "write_chr_arm_data";
@@ -74,6 +77,8 @@ public class CopyNumberAnalyser
         mOutputPath = outputPath;
 
         mCnDataLoader = new CnDataLoader("", dbAccess);
+
+        mPerfCounter = new PerformanceCounter("CnAnalysis");
 
         mWriteChrArmData = false;
         mWriteLohEvents = false;
@@ -116,6 +121,8 @@ public class CopyNumberAnalyser
         int sampleCount = 0;
         for (final String sampleId : samplesList)
         {
+            mPerfCounter.start();
+
             List<StructuralVariantData> svRecords = mDbAccess.readStructuralVariantData(sampleId);
 
             if (svRecords.isEmpty())
@@ -137,7 +144,11 @@ public class CopyNumberAnalyser
                 writeChrArmData(sampleId);
 
             ++sampleCount;
+
+            mPerfCounter.stop();
         }
+
+        mPerfCounter.logStats();
     }
 
     private void writeChrArmData(final String sampleId)

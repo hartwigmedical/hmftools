@@ -246,7 +246,7 @@ public class LinxTester
             double currentCopyNumber = mOtherAllelePloidy + mUndisruptedAllelePloidy + netSvPloidy;
 
             long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
-            long chromosomeLength = SvUtilities.CHROMOSOME_LENGTHS.get(chromosome);
+            long chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
 
             for (int i = 0; i < breakendList.size(); ++i)
             {

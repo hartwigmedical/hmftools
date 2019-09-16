@@ -609,3 +609,9 @@ Biallelic point mutation in TSG | 1 | LOH, LOH_ARM, LOH_CHR
     - improved visualisations for fusions
 - 1.3
     - added driver annotations
+- 1.4
+    - Disruptive definition is changed for sv breakends. Small chained templated insertions (<5k bases) into or from intronic sections are no longer considered disruptive and will not be reported in the SV section of the report
+    - The number of undisrupted copies is calculated for each disruptive breakend
+    - Homozygous disruptions are now reported as drivers by LINX and are in the driver catalog
+    - Each amplification, deletion or LOH driver in the driver catalog is now linked to the SVs that caused it in the svDriver table
+    - Breakends in the 3’UTR region of the upstream gene are permitted to form fusions via exon skipping

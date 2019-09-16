@@ -1,18 +1,13 @@
 package com.hartwig.hmftools.linx.fusion_likelihood;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.floor;
-import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_LENGTHS;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.TRANSCRIPT_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.haveOverlap;
@@ -36,9 +31,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
@@ -100,16 +97,16 @@ public class CohortExpFusions
         // sum up all arm lengths to adjusted same-arm fusion rates
         long maxBucketLength = max(getMaxBucketLength(), 4000000);
 
-        for(Map.Entry<String,Integer> entry : CHROMOSOME_LENGTHS.entrySet())
+        for(Map.Entry<Chromosome,Long> entry : SvUtilities.refGenomeLengths().lengths().entrySet())
         {
-            final String chromosome = entry.getKey();
+            final Chromosome chromosome = entry.getKey();
 
-            long armLength = getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
+            long armLength = getChromosomalArmLength(chromosome.toString(), CHROMOSOME_ARM_P);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += pow(armLength - maxBucketLength, 2);
 
-            armLength = getChromosomalArmLength(chromosome, CHROMOSOME_ARM_Q);
+            armLength = getChromosomalArmLength(chromosome.toString(), CHROMOSOME_ARM_Q);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += armLength * (armLength - maxBucketLength);
