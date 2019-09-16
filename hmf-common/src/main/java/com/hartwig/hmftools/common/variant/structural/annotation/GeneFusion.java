@@ -122,7 +122,13 @@ public class GeneFusion
 
     public boolean isViable()
     {
-        return validChainTraversal() && !isTerminated() && mDownstreamTrans.prevSpliceAcceptorDistance() >= 0;
+        if(!validChainTraversal() || isTerminated())
+            return false;
+
+        if(mDownstreamTrans.hasNegativePrevSpliceAcceptorDistance())
+            return false;
+
+        return true;
     }
 
 }

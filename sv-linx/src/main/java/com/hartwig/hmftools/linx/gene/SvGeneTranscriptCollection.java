@@ -268,11 +268,7 @@ public class SvGeneTranscriptCollection
             // if the breakend is after (higher for +ve strand) the nearest splice acceptor, then the distance will be positve
             // and mean that the transcript isn't interupted when used in a downstream fusion - otherwise a negative will make it invalid
             long preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
-            transcript.setSpliceAcceptorDistances((int)preDistance, transcript.nextSpliceAcceptorDistance());
-        }
-        else
-        {
-            transcript.setSpliceAcceptorDistances(PRE_GENE_PROMOTOR_DISTANCE, transcript.nextSpliceAcceptorDistance());
+            transcript.setSpliceAcceptorDistance(true, (int)preDistance);
         }
     }
 
@@ -599,7 +595,8 @@ public class SvGeneTranscriptCollection
         transcript.setBioType(transData.BioType);
 
         // if not set, leave the previous exon null and it will be taken from the closest upstream gene
-        transcript.setSpliceAcceptorDistances(nextUpDistance >= 0 ? (int)nextUpDistance : null, (int)nextDownDistance);
+        transcript.setSpliceAcceptorDistance(true, nextUpDistance >= 0 ? (int)nextUpDistance : null);
+        transcript.setSpliceAcceptorDistance(false, nextDownDistance >= 0 ? (int)nextDownDistance : null);
 
         if(isCodingTypeOverride)
             transcript.setCodingType(TRANS_CODING_TYPE_CODING);

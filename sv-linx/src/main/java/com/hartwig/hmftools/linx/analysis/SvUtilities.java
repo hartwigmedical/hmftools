@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -35,13 +37,13 @@ public class SvUtilities {
 
     public static long getChromosomeLength(final String chromosome)
     {
-        Long chrLength = refGenomeLengths().lengths().get(chromosome);
+        Long chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
         return chrLength != null ? chrLength : 0;
     }
 
     public static final String getChromosomalArm(final String chromosome, final long position)
     {
-        final Long centromerePos = refGenomeLengths().centromeres().get(chromosome);
+        final Long centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
 
         if(centromerePos == null)
             return "INVALID";
@@ -52,8 +54,9 @@ public class SvUtilities {
     public static long getChromosomalArmLength(final String chromosome, final String armType)
     {
         final RefGenome refGenome = refGenomeLengths();
+        final HumanChromosome chr = HumanChromosome.fromString(chromosome);
 
-        final Long centromerePos = refGenome.centromeres().get(chromosome);
+        final Long centromerePos = refGenome.centromeres().get(chr);
 
         if(centromerePos == null)
             return 0;
@@ -63,7 +66,7 @@ public class SvUtilities {
             return centromerePos;
         }
 
-        long chrLength = refGenome.lengths().get(chromosome);
+        long chrLength = refGenome.lengths().get(chr);
 
         return chrLength - centromerePos;
     }

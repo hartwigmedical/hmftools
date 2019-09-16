@@ -45,7 +45,7 @@ public class Transcript {
     private final String mRegionType;
 
     private Integer mPrevSpliceAcceptorDistance;
-    private int mNextSpliceAcceptorDistance;
+    private Integer mNextSpliceAcceptorDistance;
 
     private Map<Integer,Integer> mAlternativePhasing;
 
@@ -68,6 +68,8 @@ public class Transcript {
     public static final int POST_CODING_PHASE = -2;
 
     private static final int STOP_CODON_LENGTH = 3;
+
+    public static final int NO_NEXT_SPLICE_ACCEPTOR = -1;
 
     public Transcript(@NotNull final GeneAnnotation gene, int transId, final String stableId,
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
@@ -92,7 +94,8 @@ public class Transcript {
 
         mBioType = "";
         mPrevSpliceAcceptorDistance = null;
-        mNextSpliceAcceptorDistance = 0;
+        mNextSpliceAcceptorDistance = null;
+
         mAlternativePhasing = Maps.newHashMap();
 
         if(totalCodingBases > STOP_CODON_LENGTH)
@@ -252,15 +255,33 @@ public class Transcript {
     public final Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
     public void setAlternativePhasing(final Map<Integer,Integer> phasings) { mAlternativePhasing = phasings; }
 
-    public void setSpliceAcceptorDistances(Integer up, int down)
+    public void setSpliceAcceptorDistance(boolean isPrevious, Integer distance)
     {
-        mPrevSpliceAcceptorDistance = up;
-        mNextSpliceAcceptorDistance = down;
+        if(isPrevious)
+            mPrevSpliceAcceptorDistance = distance;
+        else
+            mNextSpliceAcceptorDistance = distance;
     }
 
-    public boolean hasPrevSpliceAcceptorDistance() { return mPrevSpliceAcceptorDistance != null; }
-    public int prevSpliceAcceptorDistance() { return mPrevSpliceAcceptorDistance != null ? mPrevSpliceAcceptorDistance : -1; }
-    public int nextSpliceAcceptorDistance() { return mNextSpliceAcceptorDistance; }
+    public boolean hasPrevSpliceAcceptorDistance()
+    {
+        return mPrevSpliceAcceptorDistance != null;
+    }
+
+    public boolean hasNegativePrevSpliceAcceptorDistance()
+    {
+        return mPrevSpliceAcceptorDistance != null && mPrevSpliceAcceptorDistance < 0;
+    }
+
+    public int prevSpliceAcceptorDistance()
+    {
+        return mPrevSpliceAcceptorDistance != null ? mPrevSpliceAcceptorDistance : NO_NEXT_SPLICE_ACCEPTOR;
+    }
+
+    public int nextSpliceAcceptorDistance()
+    {
+        return mNextSpliceAcceptorDistance != null ? mNextSpliceAcceptorDistance : NO_NEXT_SPLICE_ACCEPTOR;
+    }
 
     public void setBioType(final String type) { mBioType = type; }
     public final String bioType() { return mBioType; }

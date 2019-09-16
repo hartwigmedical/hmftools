@@ -505,7 +505,7 @@ public class FusionFinder
         if(downTrans.bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
             return false;
 
-        if(downTrans.prevSpliceAcceptorDistance() < 0)
+        if(downTrans.hasNegativePrevSpliceAcceptorDistance())
             return false;
 
         if(fusion.getKnownType() != REPORTABLE_TYPE_KNOWN

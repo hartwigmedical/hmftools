@@ -492,10 +492,9 @@ public class RnaFusionMapper
                 if((strand == 1 && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
                 || (strand == -1 && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
                 {
-                    int distanceUp = trans.prevSpliceAcceptorDistance();
                     long breakendDistance = abs(breakendPosition - rnaPosition);
 
-                    if(breakendDistance > MAX_PROMOTOR_DISTANCE_UP || distanceUp < 0)
+                    if(breakendDistance > MAX_PROMOTOR_DISTANCE_UP || trans.hasNegativePrevSpliceAcceptorDistance())
                         return false;
                     else
                         return true;
