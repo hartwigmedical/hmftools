@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -40,9 +42,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
     @Override
     public final void render(@NotNull final Document reportDocument) {
-        DecimalFormat noDecimalFormat = new DecimalFormat("#");
-        DecimalFormat singleDecimalFormat = new DecimalFormat("#.#");
-        DecimalFormat doubleDecimalFormat = new DecimalFormat("#.##");
+        DecimalFormat noDecimalFormat = ReportResources.decimalFormat("#");
+        DecimalFormat singleDecimalFormat = ReportResources.decimalFormat("#.#");
+        DecimalFormat doubleDecimalFormat = ReportResources.decimalFormat("#.##");
 
         boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 

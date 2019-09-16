@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.text.DecimalFormat;
 
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class HrDeficiency {
@@ -14,6 +16,6 @@ public final class HrDeficiency {
 
     @NotNull
     public static String interpretToString(final double chordHrdScore) {
-        return new DecimalFormat("#.##").format(chordHrdScore);
+        return ReportResources.decimalFormat("#.##").format(chordHrdScore);
     }
 }
