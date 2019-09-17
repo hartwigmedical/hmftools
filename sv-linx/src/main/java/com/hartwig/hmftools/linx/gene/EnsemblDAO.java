@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.gene;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 
 import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
 
@@ -38,34 +40,44 @@ import org.jooq.types.ULong;
 
 public class EnsemblDAO
 {
-    private static String DB_URL = "ensembl_db";
-    private static String DB_USER = "ensembl_user";
-    private static String DB_PASS = "ensembl_pass";
+    private static final String DB_URL = "ensembl_db";
+    private static final String DB_USER = "ensembl_user";
+    private static final String DB_PASS = "ensembl_pass";
 
-    public static String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
-    public static String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
-    public static String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
-    public static String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
+    public static final String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
+    public static final String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
+    public static final String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
+    public static final String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
 
     private DSLContext mDbContext;
-    private UInteger mCoordSystemId;
+    private final int mCoordSystemId;
+    private final String mRefGenomeVersion;
 
     private static final Logger LOGGER = LogManager.getLogger(EnsemblDAO.class);
 
     public EnsemblDAO(final CommandLine cmd)
     {
-        mCoordSystemId = null;
+        mRefGenomeVersion = cmd.getOptionValue(REF_GENOME_VERSION, REF_GENOME_HG37);
 
-        if(connectDB(cmd))
-            mCoordSystemId = findCoordSystemId();
+        if(!connectDB(cmd))
+        {
+            mCoordSystemId = -1;
+            return;
+        }
+
+        mCoordSystemId = findCoordSystemId();
+        LOGGER.info("Ref genome version({}), coord system Id({})", mRefGenomeVersion, mCoordSystemId);
     }
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - HG37 (default) or HG38");
         options.addOption(DB_PASS, true, "Ensembl DB password");
         options.addOption(DB_URL, true, "Ensembl DB URL");
         options.addOption(DB_USER, true, "Ensembl DB username");
     }
+
+    public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
 
     private boolean connectDB(final CommandLine cmd)
     {
@@ -82,22 +94,32 @@ public class EnsemblDAO
         }
         catch(SQLException e)
         {
+            LOGGER.error("failed to connect to DB: {}", e.toString());
             return false;
         }
 
         return true;
     }
 
-    @NotNull
-    private UInteger findCoordSystemId()
+    private int findCoordSystemId()
     {
-        return mDbContext.select(COORD_SYSTEM.COORD_SYSTEM_ID)
-                .from(COORD_SYSTEM)
-                .where(COORD_SYSTEM.VERSION.eq("GRCh37"))
-                .orderBy(COORD_SYSTEM.RANK)
-                .limit(1)
-                .fetchOne()
-                .value1();
+        final String version = mRefGenomeVersion == REF_GENOME_HG37 ? "GRCh37" : "GRCh38";
+
+        final String queryStr = "select coord_system_id from coord_system"
+                + " where version = '" + version + "'"
+                + " order by rank  limit 1";
+
+        LOGGER.debug("gene query: {}", queryStr);
+
+        Result<?> results = mDbContext.fetch(queryStr);
+
+        for(final Record record : results)
+        {
+            UInteger coordSystemId = (UInteger) record.get("coord_system_id");
+            return coordSystemId.intValue();
+        }
+
+        return -1;
     }
 
     public void writeDataCacheFiles(final String outputDir)
@@ -155,7 +177,7 @@ public class EnsemblDAO
 
     private Result<?> queryAllGeneData()
     {
-        final String queryStr = "select gene.stable_id as GeneId,  display_xref.display_label as GeneName, seq_region.name as Chromosome,"
+        final String queryStr = "select gene.stable_id as GeneId, display_xref.display_label as GeneName, seq_region.name as Chromosome,"
                 + "gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,"
                 + " GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,"
                 + " GROUP_CONCAT(DISTINCT karyotype.band ORDER BY karyotype.band SEPARATOR '-') as KaryotypeBand,"
@@ -170,9 +192,11 @@ public class EnsemblDAO
                 + " where seq_region.name in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT')"
                 + " and ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_start <= karyotype.seq_region_end)"
                 + " or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))"
-                + " and seq_region.coord_system_id in (select coord_system_id from coord_system where version = 'GRCh37' and name = 'chromosome')"
+                + " and seq_region.coord_system_id = " + mCoordSystemId
                 + " group by Chromosome, GeneStart, GeneEnd, GeneId, GeneName, Strand"
                 + " order by Chromosome, GeneStart;";
+
+        LOGGER.debug("gene query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
     }
@@ -256,17 +280,6 @@ public class EnsemblDAO
 
         return true;
     }
-
-    /* R conversion code to split transcript and exon data
-
-    transExonData = read.csv('ensembl_trans_exon_data.csv')
-    write.csv(transExonData %>% select(TransId,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase),'ensembl_exon_data.csv', row.names=F,quote=F)
-    transcriptData = transExonData %>% group_by(TransId,Trans,GeneId,IsCanonical=(CanonicalTranscriptId==TransId),Strand,BioType,TransStart,TransEnd,CodingStart,CodingEnd) %>% count()
-    write.csv(transcriptData %>% select(TransId,TransName=Trans,GeneId,IsCanonical,Strand,BioType,TransStart,TransEnd,CodingStart,CodingEnd),
-          'ensembl_transcript_data.csv', row.names=F,quote=F)
-
-
-     */
 
     private void writeTranscriptExonData(final String outputFile)
     {

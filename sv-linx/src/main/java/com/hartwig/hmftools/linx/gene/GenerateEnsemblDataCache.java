@@ -31,11 +31,30 @@ public class GenerateEnsemblDataCache
 {
     private static final Logger LOGGER = LogManager.getLogger(GenerateEnsemblDataCache.class);
 
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        final Options options = createBasicOptions();
+        final CommandLine cmd = createCommandLine(args, options);
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        writeEnsemblDataFiles(cmd);
+    }
+
     public static void writeEnsemblDataFiles(final CommandLine cmd)
     {
         final String outputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
+        LOGGER.info("writing Ensembl data files to {}", outputDir);
+
         EnsemblDAO ensemblData = new EnsemblDAO(cmd);
+
+        if(!ensemblData.isValid())
+        {
+            LOGGER.info("invalid Ensembl DAO");
+            return;
+        }
+
         ensemblData.writeDataCacheFiles(outputDir);
 
         LOGGER.debug("reloading transcript data to generate splice acceptor positions");
@@ -47,6 +66,8 @@ public class GenerateEnsemblDataCache
 
         createTranscriptPreGenePositionData(
                 geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(), PRE_GENE_PROMOTOR_DISTANCE, outputDir);
+
+        LOGGER.info("Ensembl data cache complete");
     }
 
     private static void createTranscriptPreGenePositionData(
@@ -167,20 +188,6 @@ public class GenerateEnsemblDataCache
         }
 
         return closestPosition;
-    }
-
-    public static void main(@NotNull final String[] args) throws ParseException
-    {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-
-        Configurator.setRootLevel(Level.DEBUG);
-
-        LOGGER.info("writing Ensembl data files");
-
-        writeEnsemblDataFiles(cmd);
-
-        LOGGER.info("Ensembl data cache complete");
     }
 
     @NotNull
