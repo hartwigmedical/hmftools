@@ -57,7 +57,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull String purplePurityTsv,
+    AnalysedPatientReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull String purplePurityTsv,
             @NotNull String purpleGeneCnvTsv, @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv,
             @NotNull String linxDisruptionTsv, @Nullable String bachelorCsv, @NotNull String chordPredictionFile,
             @NotNull String circosFile, @Nullable String comments, @Nullable String correctTitle) throws IOException {
@@ -128,9 +128,8 @@ class AnalysedPatientReporter {
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
 
-        DecimalFormat percentageFormat = new DecimalFormat("#'%'");
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
-        LOGGER.info(" Purple purity: {}", percentageFormat.format(purityContext.bestFit().purity() * 100));
+        LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
         LOGGER.info(" Purple status: {}", purityContext.status());
         LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
