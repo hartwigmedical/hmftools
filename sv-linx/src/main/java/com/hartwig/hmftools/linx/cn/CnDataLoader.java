@@ -555,7 +555,7 @@ public class CnDataLoader
                 // check if the other segment is neighbouring to this one
                 SvCNData[] cnDataItems = mSvIdCnDataMap.get(endSvData.id());
 
-                if(cnDataItems != null && cnDataItems[SE_START].getIndex() == cnDataItems[SE_END].getIndex() - 1)
+                if(cnDataItems != null && cnDataItems != null && cnDataItems[SE_START].getIndex() == cnDataItems[SE_END].getIndex() - 1)
                 {
                     LOGGER.debug("segs start({}) and end({}) skipped since bounded by simpleSV({})",
                             startData, endData, endSvData.id());

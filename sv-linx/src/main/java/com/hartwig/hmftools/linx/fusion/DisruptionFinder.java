@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -108,7 +110,6 @@ public class DisruptionFinder
 
         for(final SvVarData var : svList)
         {
-            // mark any transcripts as not disruptive prior to running any fusion logic
             markTranscriptsDisruptive(var);
 
             // inferred SGLs are always non-disruptive
@@ -120,12 +121,10 @@ public class DisruptionFinder
     }
 
     private static final String NON_DISRUPT_REASON_SIMPLE_SV = "SimpleSV";
+    private static final String NON_DISRUPT_REASON_LINE = "LINE";
 
     private void markTranscriptsDisruptive(final SvVarData var)
     {
-        if(var.isSglBreakend())
-            return;
-
         final List<GeneAnnotation> genesStart = var.getGenesList(true);
         final List<GeneAnnotation> genesEnd = var.getGenesList(false);
 
@@ -142,7 +141,6 @@ public class DisruptionFinder
         final SvCluster cluster = var.getCluster();
 
         // set the undisrupted copy number against all canonical transcripts
-
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(se == SE_END && var.isSglBreakend())
@@ -159,8 +157,21 @@ public class DisruptionFinder
 
                 if(canonicalTrans != null)
                     canonicalTrans.setUndisruptedCopyNumber(undisruptedCopyNumber);
+
+                // line clusters can insert into an intron and look disruptive if a single breakend is involved,
+                // but are only inserting a (non-disruptive) shard
+                if(cluster.getResolvedType() == LINE)
+                {
+                    gene.transcripts().stream()
+                            .filter(x -> x.isIntronic())
+                            .filter(x -> x.isDisruptive())
+                            .forEach(x -> markNonDisruptiveTranscript(x, NON_DISRUPT_REASON_LINE));
+                }
             }
         }
+
+        if(var.isSglBreakend())
+            return;
 
         boolean isSimpleSV = var.isSimpleType();
 
@@ -371,15 +382,18 @@ public class DisruptionFinder
             {
                 foundMatchingTrans = true;
 
-                trans1.setIsDisruptive(false);
-                trans2.setIsDisruptive(false);
-
-                registerNonDisruptedTranscript(trans1, context);
-                registerNonDisruptedTranscript(trans2, context);
+                markNonDisruptiveTranscript(trans1, context);
+                markNonDisruptiveTranscript(trans2, context);
             }
         }
 
         return foundMatchingTrans;
+    }
+
+    private void markNonDisruptiveTranscript(final Transcript transcript, final String context)
+    {
+        transcript.setIsDisruptive(false);
+        registerNonDisruptedTranscript(transcript, context);
     }
 
     private void registerNonDisruptedTranscript(final Transcript transcript, final String context)

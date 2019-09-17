@@ -1032,7 +1032,7 @@ public class DriverGeneAnnotator
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod");
+                mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod,Likelihood");
                 mFileWriter.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
                 mFileWriter.write(",Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain");
                 mFileWriter.write(",SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType");
@@ -1053,9 +1053,9 @@ public class DriverGeneAnnotator
             {
                 final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
 
-                writer.write(String.format("%s,%s,%s,%s,%s,%s,%s",
-                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(), driverGene.likelihoodMethod(),
-                        dgData.fullyMatched(), driverEvent.Type));
+                writer.write(String.format("%s,%s,%s,%s,%s,%.2f,%s,%s",
+                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(),
+                        driverGene.likelihoodMethod(), driverGene.driverLikelihood(), dgData.fullyMatched(), driverEvent.Type));
 
                 final SvCluster cluster = driverEvent.getCluster();
 
