@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.linx.misc;
 
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG38;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.refGenomeChromosome;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -60,6 +64,24 @@ public class MiscTest
         test = appendStr(test, "else", ';');
 
         assertEquals("something;else", test);
+    }
+
+    @Test
+    public void testChromosomeConversion()
+    {
+        String chr37 = "10";
+        String chr38 = "chr10";
+
+        RG_VERSION = REF_GENOME_HG37;
+        assertEquals(chr37, refGenomeChromosome(chr37));
+
+        RG_VERSION = REF_GENOME_HG38;
+        assertEquals(chr38, refGenomeChromosome(chr37));
+
+        assertEquals(chr38, refGenomeChromosome(chr38));
+
+        RG_VERSION = REF_GENOME_HG37;
+        assertEquals(chr37, refGenomeChromosome(chr38));
     }
 
     @Test

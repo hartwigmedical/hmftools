@@ -63,9 +63,9 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
-    public static final String REF_GENOME_HG38 = "HG38";
-    public static final String REF_GENOME_HG37 = "HG37";
-    public static String RG_VERSION = REF_GENOME_HG37;
+    public static final int REF_GENOME_HG38 = 38;
+    public static final int REF_GENOME_HG37 = 37;
+    public static int RG_VERSION = REF_GENOME_HG37;
 
     // reference files
     public static final String REF_GENOME_FILE = "ref_genome";
@@ -117,7 +117,18 @@ public class LinxConfig
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
         if(cmd.hasOption(REF_GENOME_VERSION))
-            RG_VERSION = cmd.getOptionValue(REF_GENOME_VERSION);
+        {
+            int version = Integer.parseInt(cmd.getOptionValue(REF_GENOME_VERSION));
+
+            if(version == REF_GENOME_HG37 || version == REF_GENOME_HG38)
+            {
+                RG_VERSION = version;
+            }
+            else
+            {
+                LOGGER.error("invalid ref genome version({})", cmd.getOptionValue(REF_GENOME_VERSION));
+            }
+        }
 
         ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
                 : DEFAULT_PROXIMITY_DISTANCE;

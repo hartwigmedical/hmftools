@@ -4,7 +4,10 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG38;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.refGenomeChromosome;
 
 import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
 
@@ -23,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -31,7 +33,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -51,13 +52,13 @@ public class EnsemblDAO
 
     private DSLContext mDbContext;
     private final int mCoordSystemId;
-    private final String mRefGenomeVersion;
+    private final int mRefGenomeVersion;
 
     private static final Logger LOGGER = LogManager.getLogger(EnsemblDAO.class);
 
     public EnsemblDAO(final CommandLine cmd)
     {
-        mRefGenomeVersion = cmd.getOptionValue(REF_GENOME_VERSION, REF_GENOME_HG37);
+        mRefGenomeVersion = Integer.parseInt(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(REF_GENOME_HG37)));
 
         if(!connectDB(cmd))
         {
@@ -208,7 +209,7 @@ public class EnsemblDAO
     private static int GD_STRAND = 3;
     private static int GD_START = 4;
     private static int GD_END = 5;
-    private static int GD_ENTREZ = 6;
+    private static int GD_ENTREZ = 6; // currently unused
     private static int GD_BAND = 7;
     private static int GD_SYN = 8;
 
@@ -244,7 +245,7 @@ public class EnsemblDAO
                 String[] items = line.split(",");
 
                 final String geneId = items[GD_ID];
-                final String chromosome = items[GD_CHR];
+                final String chromosome = refGenomeChromosome(items[GD_CHR]);
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
@@ -369,89 +370,6 @@ public class EnsemblDAO
     private static int TE_PHASE_END = 12;
     private static int TE_CODING_START = 13;
     private static int TE_CODING_END = 14;
-
-    public static boolean loadTranscriptExonData(final String dataPath, Map<String, List<TranscriptExonData>> geneTransExonDataMap,
-            List<String> restrictedGeneIds)
-    {
-        String filename = dataPath;
-
-        filename += ENSEMBL_TRANS_EXON_DATA_FILE;
-
-        if (!Files.exists(Paths.get(filename)))
-            return false;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                LOGGER.error("empty Ensembl gene-exon data file({})", filename);
-                return false;
-            }
-
-            int exonCount = 0;
-            String currentGene = "";
-            String lastSkippedGeneId = "";
-            List<TranscriptExonData> transExonDataList = null;
-
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
-            {
-                // parse CSV data
-                String[] items = line.split(",");
-
-                // check if still on the same variant
-                final String geneId = items[TE_GENE_ID];
-
-                if(lastSkippedGeneId.equals(geneId) || (!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId)))
-                {
-                    lastSkippedGeneId = geneId;
-                    line = fileReader.readLine();
-                    continue;
-                }
-
-                if(!geneId.equals(currentGene))
-                {
-                    currentGene = geneId;
-                    transExonDataList = Lists.newArrayList();
-                    geneTransExonDataMap.put(geneId, transExonDataList);
-                }
-
-                // Gene,CanonicalTranscriptId,Strand,TransId,Trans,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,
-                // ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-
-                Long codingStart = !items[TE_CODING_START].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
-                Long codingEnd = !items[TE_CODING_END].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
-                int transId = Integer.parseInt(items[TE_TRANS_ID]);
-                int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
-
-                TranscriptExonData exonData = new TranscriptExonData(
-                        geneId, items[TE_TRANS_NAME], transId, transId == canonicalTransId, Byte.parseByte(items[TE_STRAND]),
-                        Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
-                        Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
-                        Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]),
-                        codingStart, codingEnd, items[TE_BIOTYPE]);
-
-                transExonDataList.add(exonData);
-                ++exonCount;
-
-                line = fileReader.readLine();
-            }
-
-            LOGGER.debug("loaded {} gene records, {} exons", geneTransExonDataMap.size(), exonCount);
-        }
-        catch(IOException e)
-        {
-            LOGGER.warn("failed to load gene transcript exon data({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
 
     public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
             List<String> restrictedGeneIds, boolean cacheExons)

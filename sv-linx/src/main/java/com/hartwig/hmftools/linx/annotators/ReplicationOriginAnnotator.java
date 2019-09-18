@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.refGenomeChromosome;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
@@ -45,12 +47,7 @@ public class ReplicationOriginAnnotator
 
             for (final BEDFeature bedFeature : reader.iterator())
             {
-                String chromosome = bedFeature.getContig();
-
-                if(chromosome.contains("chr"))
-                {
-                    chromosome = chromosome.replaceAll("chr", "");
-                }
+                final String chromosome = refGenomeChromosome(bedFeature.getContig());
 
                 if (!chromosome.equals(currentChr))
                 {

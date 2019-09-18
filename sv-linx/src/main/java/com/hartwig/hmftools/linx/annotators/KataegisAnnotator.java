@@ -153,6 +153,12 @@ public class KataegisAnnotator
     }
 
     private final static int CSV_REQUIRED_FIELDS = 6;
+    private final static int KAT_COL_SAMPLE = 0;
+    private final static int KAT_COL_ID = 1;
+    private final static int KAT_COL_SNV_COUNT = 2;
+    private final static int KAT_COL_CHR = 3;
+    private final static int KAT_COL_POS_START = 4;
+    private final static int KAT_COL_POS_END = 5;
 
     public void loadKataegisData(final String filename)
     {
@@ -182,15 +188,15 @@ public class KataegisAnnotator
                 if(items.length < CSV_REQUIRED_FIELDS)
                     continue;
 
-                final String sampleId = items[0];
-                final String chromosome = items[3];
+                final String sampleId = items[KAT_COL_SAMPLE];
+                final String chromosome = items[KAT_COL_CHR];
 
                 KataegisData data = new KataegisData(
                         chromosome,
-                        Long.parseLong(items[4]),
-                        Long.parseLong(items[5]),
-                        items[1],
-                        Integer.parseInt(items[2]));
+                        Long.parseLong(items[KAT_COL_POS_START]),
+                        Long.parseLong(items[KAT_COL_POS_END]),
+                        items[KAT_COL_ID],
+                        Integer.parseInt(items[KAT_COL_SNV_COUNT]));
 
                 if(!currentSample.equals(sampleId))
                 {

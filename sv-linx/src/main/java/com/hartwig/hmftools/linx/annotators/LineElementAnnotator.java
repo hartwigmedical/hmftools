@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.setClusterResolvedState;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.refGenomeChromosome;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
 
@@ -43,6 +44,10 @@ public class LineElementAnnotator {
     public static String POLY_A_MOTIF = "AAAAAAAAAAA";
     public static String POLY_T_MOTIF = "TTTTTTTTTTT";
 
+    private static final int LE_COL_CHR = 0;
+    private static final int LE_COL_POS_START = 1;
+    private static final int LE_COL_POS_END = 2;
+
     private static final Logger LOGGER = LogManager.getLogger(LineElementAnnotator.class);
 
     public LineElementAnnotator()
@@ -77,7 +82,10 @@ public class LineElementAnnotator {
                 if(items.length < 4)
                     continue;
 
-                final GenomeRegion genomeRegion = GenomeRegions.create(items[0], Long.parseLong(items[1]), Long.parseLong(items[2]));
+                final GenomeRegion genomeRegion = GenomeRegions.create(
+                        refGenomeChromosome(items[LE_COL_CHR]),
+                        Long.parseLong(items[LE_COL_POS_START]),
+                        Long.parseLong(items[LE_COL_POS_END]));
 
                 mKnownLineElements.add(genomeRegion);
 

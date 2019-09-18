@@ -35,6 +35,18 @@ public class SvUtilities {
         return RG_VERSION == REF_GENOME_HG38 ? RefGenome.HG38 : RefGenome.HG19;
     }
 
+    public static final String CHR_PREFIX = "chr";
+
+    public static String refGenomeChromosome(final String chromosome)
+    {
+        if(RG_VERSION == REF_GENOME_HG38 && !chromosome.contains(CHR_PREFIX))
+            return CHR_PREFIX + chromosome;
+        else if(RG_VERSION == REF_GENOME_HG37 && chromosome.startsWith(CHR_PREFIX))
+            return chromosome.substring(CHR_PREFIX.length());
+        else
+            return chromosome;
+    }
+
     public static long getChromosomeLength(final String chromosome)
     {
         Long chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
