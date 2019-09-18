@@ -41,10 +41,15 @@ public class SvUtilities {
     {
         if(RG_VERSION == REF_GENOME_HG38 && !chromosome.contains(CHR_PREFIX))
             return CHR_PREFIX + chromosome;
-        else if(RG_VERSION == REF_GENOME_HG37 && chromosome.startsWith(CHR_PREFIX))
-            return chromosome.substring(CHR_PREFIX.length());
+        else if(RG_VERSION == REF_GENOME_HG37)
+            return stripChromosome(chromosome);
         else
             return chromosome;
+    }
+
+    public static String stripChromosome(final String chromosome)
+    {
+        return chromosome.startsWith(CHR_PREFIX) ? chromosome.substring(CHR_PREFIX.length()) : chromosome;
     }
 
     public static long getChromosomeLength(final String chromosome)

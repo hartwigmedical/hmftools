@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.stripChromosome;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
 import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
@@ -31,6 +32,7 @@ public class SvVarData
 {
     // full set of DB fields
     private final StructuralVariantData mSVData;
+    private String[] mChr; // stripped of 'chr' for logging
     private String[] mArm;
     private SvBreakend[] mBreakend;
     private boolean[] mFragileSite;
@@ -98,6 +100,8 @@ public class SvVarData
     private void init()
     {
         mArm = new String[SE_PAIR];
+        mChr = new String[] { stripChromosome(chromosome(true)), stripChromosome(chromosome(false)) };
+
         mFragileSite = new boolean[SE_PAIR];
         mLineElement = new String[] {NO_LINE_ELEMENT, NO_LINE_ELEMENT};
         mBreakend = new SvBreakend[SE_PAIR];
@@ -164,23 +168,24 @@ public class SvVarData
         if(isSglBreakend())
         {
             return String.format("id(%s) pos(%s:%d:%d)",
-                    id(), chromosome(true), orientation(true), position(true));
+                    id(), mChr[SE_START], orientation(true), position(true));
         }
         else
         {
             return String.format("id(%s) pos(%s:%d:%d -> %s:%d:%d)",
-                    id(), chromosome(true), orientation(true), position(true),
-                    chromosome(false), orientation(false), position(false));
+                    id(), mChr[SE_START], orientation(true), position(true),
+                    mChr[SE_END], orientation(false), position(false));
         }
     }
 
     public final String posId(boolean useStart)
     {
         return String.format("%s: %s %s:%d:%d",
-                id(), useStart ? "start" :"end", chromosome(useStart), orientation(useStart), position(useStart));
+                id(), useStart ? "start" :"end", mChr[seIndex(useStart)], orientation(useStart), position(useStart));
     }
 
     public final String arm(boolean isStart) { return mArm[seIndex(isStart)]; }
+    public final String chrShort(boolean isStart) { return mChr[seIndex(isStart)]; }
 
     public void setChromosomalArms(final String start, final String end)
     {

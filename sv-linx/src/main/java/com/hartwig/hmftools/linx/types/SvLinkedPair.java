@@ -207,18 +207,18 @@ public class SvLinkedPair {
         if(var.type() != SGL)
         {
             return String.format("%s %s:%d:%s",
-                    var.id(), var.chromosome(linkedOnStart), var.position(linkedOnStart), linkedOnStart ? "start" : "end");
+                    var.id(), var.chrShort(linkedOnStart), var.position(linkedOnStart), linkedOnStart ? "start" : "end");
         }
 
         if(linkedOnStart)
         {
             return String.format("%s %s:%d SGL-on-known",
-                    var.id(), var.chromosome(true), var.position(true));
+                    var.id(), var.chrShort(true), var.position(true));
         }
         else
         {
             return String.format("%s %s:%d SGL-on-null",
-                    var.id(), var.chromosome(true), var.position(true));
+                    var.id(), var.chrShort(true), var.position(true));
         }
     }
 

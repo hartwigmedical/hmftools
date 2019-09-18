@@ -556,7 +556,7 @@ CREATE TABLE svLink
     upperSvId INT NOT NULL,
     lowerBreakendIsStart BOOLEAN NOT NULL,
     upperBreakendIsStart BOOLEAN NOT NULL,
-    chromosome VARCHAR(3),
+    chromosome VARCHAR(10),
     arm VARCHAR(3),
     assembled BOOLEAN NOT NULL,
     traversedSVCount INT,

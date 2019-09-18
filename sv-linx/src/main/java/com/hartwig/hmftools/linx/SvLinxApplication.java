@@ -68,9 +68,9 @@ public class SvLinxApplication
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        LinxConfig svaConfig = new LinxConfig(cmd);
+        LinxConfig config = new LinxConfig(cmd);
 
-        if(!svaConfig.hasValidPaths())
+        if(!config.hasValidPaths())
         {
             LOGGER.warn("invalid config paths");
             return;
@@ -78,15 +78,25 @@ public class SvLinxApplication
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        List<String> samplesList = svaConfig.getSampleIds();
+        boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty();
 
-        if(dbAccess == null && (svaConfig.hasMultipleSamples() || samplesList.isEmpty()))
+        List<String> samplesList = config.getSampleIds();
+
+        if(dbAccess == null)
         {
-            LOGGER.warn("batch mode requires a DB connection");
-            return;
+            if((config.hasMultipleSamples() || samplesList.isEmpty()))
+            {
+                LOGGER.warn("batch mode requires a DB connection");
+                return;
+            }
+
+            if(!sampleDataFromFile)
+            {
+                LOGGER.warn("no DB connection and no purple data directory specified");
+                return;
+            }
         }
 
-        boolean sampleDataFromFile = (dbAccess == null);
 
         if (samplesList.isEmpty())
         {
@@ -95,12 +105,12 @@ public class SvLinxApplication
 
             LOGGER.info("retrieved {} samples {}", samplesList.size(), filterQCPassOnly ? "QC-pass-filtered" : "");
 
-            svaConfig.setSampleIds(samplesList);
+            config.setSampleIds(samplesList);
         }
 
-        CnDataLoader cnDataLoader = new CnDataLoader(svaConfig.PurpleDataPath, dbAccess);
+        CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
 
-        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(svaConfig);
+        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config);
 
         sampleAnalyser.setCnDataLoader(cnDataLoader);
 
@@ -135,7 +145,7 @@ public class SvLinxApplication
 
             // always initialise since is used for transcript evaluation
             fusionAnalyser = new FusionDisruptionAnalyser(
-                    cmd, svaConfig, ensemblDataCache, sampleAnalyser.getVisWriter());
+                    cmd, config, ensemblDataCache, sampleAnalyser.getVisWriter());
 
             if(checkFusions)
             {
@@ -152,7 +162,7 @@ public class SvLinxApplication
 
             if(checkDrivers)
             {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, svaConfig, cnDataLoader);
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, cnDataLoader);
                 driverGeneAnnotator.loadConfig(cmd);
                 driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }
@@ -168,7 +178,7 @@ public class SvLinxApplication
             prefCounter.start();
 
             List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                    loadSampleSvDataFromFile(svaConfig.SvDataPath, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
+                    loadSampleSvDataFromFile(config.SvDataPath, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
 
             final List<SvVarData> svDataList = createSvData(svRecords);
 
@@ -178,7 +188,7 @@ public class SvLinxApplication
                 continue;
             }
 
-            if(svaConfig.hasMultipleSamples())
+            if(config.hasMultipleSamples())
             {
                 LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
             }
@@ -222,14 +232,14 @@ public class SvLinxApplication
 
             prefCounter.stop();
 
-            if(svaConfig.MaxSamples > 0 && count >= svaConfig.MaxSamples)
+            if(config.MaxSamples > 0 && count >= config.MaxSamples)
             {
                 LOGGER.info("exiting after max sample count {} reached", count);
                 break;
             }
         }
 
-        if(LOGGER.isDebugEnabled() || svaConfig.hasMultipleSamples())
+        if(LOGGER.isDebugEnabled() || config.hasMultipleSamples())
         {
             prefCounter.logStats();
         }
