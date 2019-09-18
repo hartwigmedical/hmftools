@@ -98,12 +98,12 @@ public class BarChart extends InlineBarChart {
 
     private class BarChartRenderer extends DivRenderer {
 
-        private final float BAR_OUTLINE_HEIGHT = 9f;
-        private final float BAR_INSET = 2f;
+        private static final float BAR_OUTLINE_HEIGHT = 9f;
+        private static final float BAR_INSET = 2f;
 
-        private final float OVER_UNDER_SHOOT_WIDTH = 25;
-        private final float OVER_UNDERSHOOT_OVERLAP = 2;
-        private final float OVER_UNDER_SHOOT_LABEL_OFFSET = 4;
+        private static final float OVER_UNDER_SHOOT_WIDTH = 25;
+        private static final float OVER_UNDERSHOOT_OVERLAP = 2;
+        private static final float OVER_UNDER_SHOOT_LABEL_OFFSET = 4;
 
         BarChartRenderer(final BarChart barChart) {
             super(barChart);
@@ -272,7 +272,7 @@ public class BarChart extends InlineBarChart {
         }
     }
 
-    class Indicator {
+    static class Indicator {
 
         final String name;
         final double value;

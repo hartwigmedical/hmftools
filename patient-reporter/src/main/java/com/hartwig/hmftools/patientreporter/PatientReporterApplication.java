@@ -99,19 +99,14 @@ public class PatientReporterApplication {
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
-            QCFailReport report = reporter.run(sampleMetadata.tumorSampleId(),
-                    sampleMetadata.refSampleId(),
-                    reason,
-                    cmd.getOptionValue(COMMENTS),
-                    cmd.getOptionValue(CORRECTED_REPORT));
+            QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.getOptionValue(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report for {}", sampleMetadata.tumorSampleId());
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
-            AnalysedPatientReport report = reporter.run(sampleMetadata.tumorSampleId(),
-                    cmd.getOptionValue(REF_SAMPLE_ID),
+            AnalysedPatientReport report = reporter.run(sampleMetadata,
                     cmd.getOptionValue(PURPLE_PURITY_TSV),
                     cmd.getOptionValue(PURPLE_GENE_CNV_TSV),
                     cmd.getOptionValue(SOMATIC_VARIANT_VCF),
@@ -132,10 +127,11 @@ public class PatientReporterApplication {
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
 
-        String filePrefix =
-                type == LimsSampleType.CORE ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId() : sampleReport.sampleId();
+        String filePrefix = type == LimsSampleType.CORE
+                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId()
+                : sampleReport.tumorSampleId();
         return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
     }
 

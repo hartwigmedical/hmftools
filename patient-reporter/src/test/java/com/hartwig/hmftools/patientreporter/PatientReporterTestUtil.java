@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.patientreporter;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
-import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModelFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
@@ -22,8 +19,6 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingF
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public final class PatientReporterTestUtil {
 

@@ -13,7 +13,9 @@ import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocatio
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
+import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -139,11 +141,16 @@ public class CFReportWriterTest {
 
     private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String pathologyTumorPercentage,
             @Nullable String shallowSeqPurity, @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
+        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
+                .refSampleId("x")
+                .refSampleBarcode("FR12123488")
+                .tumorSampleId(sampleId)
+                .tumorSampleBarcode("FR12345678")
+                .build();
+
         SampleReport sampleReport = ImmutableSampleReport.builder()
-                .sampleId(sampleId)
+                .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
-                .refBarcode("FR12123488")
-                .tumorBarcode("FR12345678")
                 .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(shallowSeqPurity != null ? shallowSeqPurity : "not determined")

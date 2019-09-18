@@ -46,7 +46,8 @@ public class QCFailChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         if (failReport.sampleReport().addressee() == null) {
-            throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().sampleId());
+            throw new IllegalStateException(
+                    "No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
@@ -59,7 +60,7 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().sampleId());
+        LimsSampleType type = LimsSampleType.fromSampleId(failReport.sampleReport().tumorSampleId());
 
         switch (type) {
             case CORE:
@@ -289,7 +290,7 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().tumorArrivalDate()),
                 " with internal tumor barcode ",
-                failReport.sampleReport().tumorBarcode());
+                failReport.sampleReport().tumorSampleBarcode());
     }
 
     @NotNull
@@ -297,7 +298,7 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(failReport.sampleReport().refArrivalDate()),
                 " with internal blood barcode ",
-                failReport.sampleReport().refBarcode());
+                failReport.sampleReport().refSampleBarcode());
     }
 
     @NotNull
@@ -341,7 +342,7 @@ public class QCFailChapter implements ReportChapter {
         return createContentParagraphTwice("The biopsies are evaluated at ",
                 ReportResources.HARTWIG_ADDRESS,
                 " and are known under HMF sample ID  ",
-                failReport.sampleReport().sampleId());
+                failReport.sampleReport().tumorSampleId());
     }
 
     @NotNull

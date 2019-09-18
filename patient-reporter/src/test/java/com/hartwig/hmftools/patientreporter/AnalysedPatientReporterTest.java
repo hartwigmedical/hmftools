@@ -8,13 +8,14 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
 
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
-    private static final String TUMOR_SAMPLE = "sample";
-    private static final String REF_SAMPLE = "ref_sample";
+    private static final String TUMOR_SAMPLE_ID = "sample";
+    private static final String REF_SAMPLE_ID = "ref_sample";
 
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
     private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.gene.cnv";
@@ -29,8 +30,14 @@ public class AnalysedPatientReporterTest {
     public void canRunOnRunDirectory() throws IOException {
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(testAnalysedReportData());
 
-        assertNotNull(reporter.run(TUMOR_SAMPLE,
-                REF_SAMPLE,
+        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
+                .refSampleId(REF_SAMPLE_ID)
+                .refSampleBarcode(Strings.EMPTY)
+                .tumorSampleId(TUMOR_SAMPLE_ID)
+                .tumorSampleBarcode(Strings.EMPTY)
+                .build();
+
+        assertNotNull(reporter.run(sampleMetadata,
                 PURPLE_PURITY_TSV,
                 PURPLE_GENE_CNV_TSV,
                 SOMATIC_VARIANT_VCF,

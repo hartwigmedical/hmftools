@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import java.text.DecimalFormat;
-
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 
 import org.jetbrains.annotations.NotNull;

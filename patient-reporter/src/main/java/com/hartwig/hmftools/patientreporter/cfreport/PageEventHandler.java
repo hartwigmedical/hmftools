@@ -14,7 +14,6 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 class PageEventHandler implements IEventHandler {
 
@@ -29,7 +28,6 @@ class PageEventHandler implements IEventHandler {
     private boolean fullSidebarContent;
 
     private String chapterTitle = "Undefined";
-    private String pageNumberPrefix = null;
     private boolean firstPageOfChapter = true;
 
     private PdfOutline outline = null;
@@ -54,28 +52,24 @@ class PageEventHandler implements IEventHandler {
             }
 
             SidePanel.renderSidePanel(page, sampleReport, fullSidebar, fullSidebarContent);
-            footer.renderFooter(page, !fullSidebar, pageNumberPrefix);
+            footer.renderFooter(page, !fullSidebar);
         }
     }
 
-    public void chapterTitle(@NotNull String chapterTitle) {
+    void chapterTitle(@NotNull String chapterTitle) {
         this.chapterTitle = chapterTitle;
     }
 
-    public void pageNumberPrefix(@Nullable String pageNumberPrefix) {
-        this.pageNumberPrefix = pageNumberPrefix;
-    }
-
-    public void sidebarType(boolean full, boolean fullContent) {
+    void sidebarType(boolean full, boolean fullContent) {
         fullSidebar = full;
         fullSidebarContent = fullSidebar && fullContent;
     }
 
-    public void resetChapterPageCounter() {
+    void resetChapterPageCounter() {
         firstPageOfChapter = true;
     }
 
-    public void writeDynamicTextParts(@NotNull PdfDocument document) {
+    void writeDynamicTextParts(@NotNull PdfDocument document) {
         header.writeChapterTitles(document);
         footer.writeTotalPageCount(document);
     }

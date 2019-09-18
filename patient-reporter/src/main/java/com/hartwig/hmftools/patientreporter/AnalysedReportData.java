@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
@@ -9,8 +8,6 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingM
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 @Value.Immutable
 @Value.Style(allParameters = true,

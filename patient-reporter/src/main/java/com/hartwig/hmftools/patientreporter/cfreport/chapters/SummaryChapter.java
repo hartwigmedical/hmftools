@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
@@ -186,7 +187,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Driver genes with variant(s)").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortSummaryGenes(driverVariantGenes)));
+        table.addCell(createGeneListCell(sortGenes(driverVariantGenes)));
 
         final int reportedVariants = SomaticVariants.countReportableVariants(patientReport.reportableVariants());
         Style reportedVariantsStyle =
@@ -198,17 +199,17 @@ public class SummaryChapter implements ReportChapter {
         final Set<String> amplifiedGenes = GainsAndLosses.amplifiedGenes(patientReport.gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortSummaryGenes(amplifiedGenes)));
+        table.addCell(createGeneListCell(sortGenes(amplifiedGenes)));
 
         final Set<String> copyLossGenes = GainsAndLosses.lostGenes(patientReport.gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortSummaryGenes(copyLossGenes)));
+        table.addCell(createGeneListCell(sortGenes(copyLossGenes)));
 
         final Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createGeneListCell(sortSummaryGenes(fusionGenes)));
+        table.addCell(createGeneListCell(sortGenes(fusionGenes)));
 
         div.add(table);
 
@@ -216,7 +217,8 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    public static Set<String> sortSummaryGenes(@NotNull Set<String> driverVariantGenes) {
+    @VisibleForTesting
+    static Set<String> sortGenes(@NotNull Set<String> driverVariantGenes) {
         List<String> genesList = Lists.newArrayList(driverVariantGenes);
         Collections.sort(genesList);
         return Sets.newHashSet(genesList);
