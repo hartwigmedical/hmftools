@@ -92,10 +92,11 @@ public class PatientReporterApplication {
         SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
 
         LOGGER.info("Running patient reporter v{}", VERSION);
+        printSampleMetadata(sampleMetadata);
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
-            LOGGER.info("Generating qc-fail report for {}", sampleMetadata.tumorSampleId());
+            LOGGER.info("Generating qc-fail report");
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
@@ -103,7 +104,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
-            LOGGER.info("Generating patient report for {}", sampleMetadata.tumorSampleId());
+            LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
             AnalysedPatientReport report = reporter.run(sampleMetadata,
@@ -143,6 +144,13 @@ public class PatientReporterApplication {
                 .tumorSampleId(cmd.getOptionValue(TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(cmd.getOptionValue(TUMOR_SAMPLE_BARCODE))
                 .build();
+    }
+
+    private static void printSampleMetadata(@NotNull SampleMetadata sampleMetadata) {
+        LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
+        LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
+        LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
+        LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
     }
 
     @NotNull
