@@ -20,8 +20,6 @@ public final class GeneCopyNumberFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    private static final String HEADER_PREFIX = "chr";
-    private static final String HEADER_PREFIX_OLD = "Chr";
 
     private static final String EXTENSION = ".purple.cnv.gene.tsv";
     private static final String EXTENSION_OLD = ".purple.gene.cnv";
@@ -113,7 +111,7 @@ public final class GeneCopyNumberFile {
     @VisibleForTesting
     static List<GeneCopyNumber> fromLines(@NotNull List<String> lines) {
         return lines.stream()
-                .filter(x -> !x.startsWith(HEADER_PREFIX) & !x.startsWith(HEADER_PREFIX_OLD))
+                .skip(1)
                 .map(GeneCopyNumberFile::fromString)
                 .collect(toList());
     }

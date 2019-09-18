@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -14,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 public class DriverCatalogFile {
 
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    static final String HEADER_PREFIX = "chromosome";
     private static final String DELIMITER = "\t";
     private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
 
@@ -41,12 +41,12 @@ public class DriverCatalogFile {
 
     @NotNull
      static List<DriverCatalog> fromLines(@NotNull final List<String> lines) {
-        final List<DriverCatalog> result = Lists.newArrayList();
-        for (String line : lines) {
-            if (!line.startsWith(HEADER_PREFIX)) {
-                result.add(fromString(line));
-            }
-        }
+
+        final List<DriverCatalog> result = lines.stream()
+                .skip(1)
+                .map(x -> fromString(x))
+                .collect(Collectors.toList());
+
         return result;
     }
 

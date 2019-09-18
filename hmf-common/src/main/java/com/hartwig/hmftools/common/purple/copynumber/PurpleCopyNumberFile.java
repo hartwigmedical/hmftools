@@ -72,7 +72,7 @@ public enum PurpleCopyNumberFile {
     @NotNull
     static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
         return lines.stream()
-                .filter(x -> !x.startsWith(COMMENT) && !x.startsWith("chr"))
+                .skip(1)
                 .map(PurpleCopyNumberFile::fromString)
                 .collect(toList());
     }

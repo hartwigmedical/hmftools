@@ -20,7 +20,7 @@ public class DriverCatalogFileTest {
 
         final List<String> lines = DriverCatalogFile.toLines(Lists.newArrayList(input));
         assertEquals(2, lines.size());
-        assertTrue(lines.get(0).startsWith(DriverCatalogFile.HEADER_PREFIX));
+        assertTrue(lines.get(0).startsWith("chromosome"));
 
         assertEquals(input, DriverCatalogFile.fromLines(lines).get(0));
     }
