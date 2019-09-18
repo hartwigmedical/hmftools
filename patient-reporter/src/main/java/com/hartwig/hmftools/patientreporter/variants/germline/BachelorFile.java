@@ -45,21 +45,21 @@ public final class BachelorFile {
         }
 
         String filter = values[32].trim();
-        int altReadCount = Integer.valueOf(values[16]);
-        int totalReadCount = Integer.valueOf(values[17]);
+        int altReadCount = Integer.parseInt(values[16]);
+        int totalReadCount = Integer.parseInt(values[17]);
 
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("pass"))
                 .gene(values[7].trim())
                 .chromosome(values[2].trim())
-                .position(Integer.valueOf(values[3]))
+                .position(Integer.parseInt(values[3]))
                 .hgvsCodingImpact(values[26].trim())
                 .hgvsProteinImpact(values[25].trim())
                 .totalReadCount(totalReadCount)
                 .alleleReadCount(altReadCount)
-                .adjustedVAF(Double.valueOf(values[19]))
-                .adjustedCopyNumber(Double.valueOf(values[18]))
-                .biallelic(Boolean.valueOf(values[27].trim()))
+                .adjustedVAF(Double.parseDouble(values[19]))
+                .adjustedCopyNumber(Double.parseDouble(values[18]))
+                .biallelic(Boolean.parseBoolean(values[27].trim()))
                 .build();
     }
 }

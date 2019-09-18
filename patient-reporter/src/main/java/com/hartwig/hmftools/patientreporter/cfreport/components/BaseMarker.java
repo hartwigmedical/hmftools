@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
+import java.util.Random;
+
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Random;
-
 final class BaseMarker {
 
     private BaseMarker() {
     }
 
-    public static void renderMarkerGrid(float xCount, float yCount, float xStart, float xSpacing, float yStart, float ySpacing,
+    static void renderMarkerGrid(float xCount, float yCount, float xStart, float xSpacing, float yStart, float ySpacing,
             float redProbability, float filledProbability, @NotNull PdfCanvas canvas) {
         Random r = new Random();
         for (int row = 0; row < yCount; row++) {

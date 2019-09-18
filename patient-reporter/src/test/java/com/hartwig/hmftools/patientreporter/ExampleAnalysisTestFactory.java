@@ -194,12 +194,17 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
+        SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
+                .refSampleId(Strings.EMPTY)
+                .refSampleBarcode("FR12123488")
+                .tumorSampleId(sample)
+                .tumorSampleBarcode("FR12345678")
+                .build();
+
         return ImmutableSampleReport.builder()
-                .sampleId(sample)
+                .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
-                .refBarcode("FR12123488")
                 .refArrivalDate(LocalDate.parse("01-Jan-2019", DATE_FORMATTER))
-                .tumorBarcode("FR12345678")
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
                 .pathologyTumorPercentage("80%")

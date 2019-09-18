@@ -16,19 +16,13 @@ import org.jetbrains.annotations.Nullable;
 public abstract class SampleReport {
 
     @NotNull
-    public abstract String sampleId();
+    public abstract SampleMetadata sampleMetadata();
 
     @Nullable
     public abstract PatientTumorLocation patientTumorLocation();
 
-    @NotNull
-    public abstract String refBarcode();
-
     @Nullable
     public abstract LocalDate refArrivalDate();
-
-    @NotNull
-    public abstract String tumorBarcode();
 
     @Nullable
     public abstract LocalDate tumorArrivalDate();
@@ -71,6 +65,24 @@ public abstract class SampleReport {
 
     @NotNull
     public abstract String hospitalPathologySampleId();
+
+    @NotNull
+    @Value.Derived
+    public String refSampleBarcode() {
+        return sampleMetadata().refSampleBarcode();
+    }
+
+    @NotNull
+    @Value.Derived
+    public String tumorSampleId() {
+        return sampleMetadata().tumorSampleId();
+    }
+
+    @NotNull
+    @Value.Derived
+    public String tumorSampleBarcode() {
+        return sampleMetadata().tumorSampleBarcode();
+    }
 
     @Nullable
     @Value.Derived

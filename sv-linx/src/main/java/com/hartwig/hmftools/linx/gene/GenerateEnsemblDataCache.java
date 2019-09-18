@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DAT
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class GenerateEnsemblDataCache
 
         LOGGER.debug("reloading transcript data to generate splice acceptor positions");
 
-        // create the trasnscript splice acceptor position data
+        // create the transcript splice acceptor position data
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
         geneTransCache.setDataPath(outputDir);
         geneTransCache.loadEnsemblData(false);
@@ -77,7 +78,9 @@ public class GenerateEnsemblDataCache
         // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
         try
         {
-            final String outputFile = outputDir + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+            String outputFile = outputDir + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+            if (!outputFile.endsWith(File.separator))
+                outputFile += File.separator;
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 

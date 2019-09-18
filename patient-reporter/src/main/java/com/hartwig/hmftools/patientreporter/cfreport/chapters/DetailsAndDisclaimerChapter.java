@@ -57,21 +57,26 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
         final SampleReport sampleReport = patientReport.sampleReport();
-        LimsSampleType type = LimsSampleType.fromSampleId(patientReport.sampleReport().sampleId());
+        LimsSampleType type = LimsSampleType.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
-        String addressee = sampleReport.addressee();
-        if (addressee == null) {
-            LOGGER.warn("No recipient address present for sample " + sampleReport.sampleId());
+        final String addressee;
+        if (sampleReport.addressee() != null) {
+            addressee = sampleReport.addressee();
+            assert addressee != null;
+        } else {
+            LOGGER.warn("No recipient address present for sample " + sampleReport.tumorSampleId());
             addressee = DataUtil.NA_STRING;
         }
 
-        Paragraph sampleIdentificationLineOnReport;
-        sampleIdentificationLineOnReport = createContentParagraph("The HMF sample ID is: ", patientReport.sampleReport().sampleId());
+        final Paragraph sampleIdentificationLineOnReport;
         if (type == LimsSampleType.WIDE) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
-                    patientReport.sampleReport().sampleId(),
+                    patientReport.sampleReport().tumorSampleId(),
                     " and the tissue ID of pathology is: ",
                     patientReport.sampleReport().hospitalPathologySampleId());
+        } else {
+            sampleIdentificationLineOnReport =
+                    createContentParagraph("The HMF sample ID is: ", patientReport.sampleReport().tumorSampleId());
         }
 
         Div div = new Div();
@@ -91,11 +96,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),
                 " with internal tumor barcode ",
-                sampleReport.tumorBarcode()));
+                sampleReport.tumorSampleBarcode()));
         div.add(createContentParagraphTwice("This experiment is performed on the blood sample which arrived on ",
                 DataUtil.formatDate(sampleReport.refArrivalDate()),
                 " with internal blood barcode ",
-                sampleReport.refBarcode()));
+                sampleReport.refSampleBarcode()));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
         div.add(createContentParagraph("This report is addressed at: ", addressee));

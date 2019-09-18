@@ -90,13 +90,13 @@ public final class SomaticVariants {
         int index = 2;
         while (noDigitFound && index < hgvsCoding.length()) {
             if (Character.isDigit(hgvsCoding.charAt(index))) {
-                codonAppender.append(Character.toString(hgvsCoding.charAt(index)));
+                codonAppender.append(hgvsCoding.charAt(index));
             } else {
                 noDigitFound = false;
             }
             index++;
         }
-        return Integer.valueOf(codonAppender.toString());
+        return Integer.parseInt(codonAppender.toString());
     }
 
     @NotNull

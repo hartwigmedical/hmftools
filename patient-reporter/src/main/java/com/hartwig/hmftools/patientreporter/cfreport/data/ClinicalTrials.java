@@ -40,12 +40,10 @@ public final class ClinicalTrials {
         String reference = trial.reference();
         String ext = EXTId(reference);
 
-        switch (source.toLowerCase()) {
-            case "iclusion":
-                return "https://iclusion.org/hmf/" + ext;
-            default:
-                return Strings.EMPTY;
+        if (source.equalsIgnoreCase("iclusion")) {
+            return "https://iclusion.org/hmf/" + ext;
         }
+        return Strings.EMPTY;
     }
 
     @NotNull

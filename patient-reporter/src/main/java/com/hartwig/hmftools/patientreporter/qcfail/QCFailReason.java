@@ -23,7 +23,7 @@ public enum QCFailReason {
     }
 
     @NotNull
-    String identifier() {
+    private String identifier() {
         return identifier;
     }
 

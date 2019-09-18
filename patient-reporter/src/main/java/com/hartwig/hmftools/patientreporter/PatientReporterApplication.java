@@ -37,10 +37,13 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-//            public static final String VERSION = "7.4";
+    //            public static final String VERSION = "7.4";
 
     // General params needed for every report
-    private static final String TUMOR_SAMPLE = "tumor_sample";
+    private static final String REF_SAMPLE_ID = "ref_sample_id";
+    private static final String REF_SAMPLE_BARCODE = "ref_sample_barcode";
+    private static final String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    private static final String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     private static final String OUTPUT_DIRECTORY = "output_dir";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
@@ -65,7 +68,6 @@ public class PatientReporterApplication {
     private static final String CHORD_PREDICTION_FILE = "chord_prediction_file";
     private static final String CIRCOS_FILE = "circos_file";
 
-    private static final String REF_SAMPLE = "ref_sample";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
@@ -87,26 +89,25 @@ public class PatientReporterApplication {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        LOGGER.info("Running patient reporter v" + VERSION);
-        String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
-        String refSample = cmd.getOptionValue(REF_SAMPLE);
+        SampleMetadata sampleMetadata = buildSampleMetadata(cmd);
+
+        LOGGER.info("Running patient reporter v{}", VERSION);
+        printSampleMetadata(sampleMetadata);
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
-            LOGGER.info("Generating qc-fail report for {}", tumorSample);
+            LOGGER.info("Generating qc-fail report");
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
-            QCFailReport report =
-                    reporter.run(tumorSample, refSample, reason, cmd.getOptionValue(COMMENTS), cmd.getOptionValue(CORRECTED_REPORT));
+            QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.getOptionValue(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
-            LOGGER.info("Generating patient report for {}", tumorSample);
+            LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
-            AnalysedPatientReport report = reporter.run(tumorSample,
-                    cmd.getOptionValue(REF_SAMPLE),
+            AnalysedPatientReport report = reporter.run(sampleMetadata,
                     cmd.getOptionValue(PURPLE_PURITY_TSV),
                     cmd.getOptionValue(PURPLE_GENE_CNV_TSV),
                     cmd.getOptionValue(SOMATIC_VARIANT_VCF),
@@ -127,11 +128,29 @@ public class PatientReporterApplication {
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
 
-        String filePrefix =
-                type == LimsSampleType.CORE ? sampleReport.sampleId() + "_" + sampleReport.hospitalPatientId() : sampleReport.sampleId();
+        String filePrefix = type == LimsSampleType.CORE
+                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId()
+                : sampleReport.tumorSampleId();
         return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
+    }
+
+    @NotNull
+    private static SampleMetadata buildSampleMetadata(@NotNull CommandLine cmd) {
+        return ImmutableSampleMetadata.builder()
+                .refSampleId(cmd.getOptionValue(REF_SAMPLE_ID))
+                .refSampleBarcode(cmd.getOptionValue(REF_SAMPLE_BARCODE))
+                .tumorSampleId(cmd.getOptionValue(TUMOR_SAMPLE_ID))
+                .tumorSampleBarcode(cmd.getOptionValue(TUMOR_SAMPLE_BARCODE))
+                .build();
+    }
+
+    private static void printSampleMetadata(@NotNull SampleMetadata sampleMetadata) {
+        LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
+        LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
+        LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
+        LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
     }
 
     @NotNull
@@ -169,7 +188,8 @@ public class PatientReporterApplication {
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_CSV)
-                && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd,
+                && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(
+                cmd,
                 KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
     }
 
@@ -185,7 +205,9 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForReportWriter(@NotNull CommandLine cmd) {
-        return valueExists(cmd, TUMOR_SAMPLE) && valueExists(cmd, REF_SAMPLE) && dirExists(cmd, OUTPUT_DIRECTORY);
+        return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
+                cmd,
+                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY);
     }
 
     private static boolean validInputForBaseReportData(@NotNull CommandLine cmd) {
@@ -246,7 +268,10 @@ public class PatientReporterApplication {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(TUMOR_SAMPLE, true, "The sample for which a patient report will be generated.");
+        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the sample for which we are generating a report.");
+        options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the sample for which we are generating a report.");
+        options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
+        options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF reports have to be written to.");
 
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
@@ -271,7 +296,6 @@ public class PatientReporterApplication {
         options.addOption(CHORD_PREDICTION_FILE, true, "Path towards the CHORD prediction file.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
-        options.addOption(REF_SAMPLE, true, "The reference sample for the sample for which we are generating a report.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");

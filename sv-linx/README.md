@@ -1,6 +1,6 @@
 # LINX
 
-LINX is an annotation, interpretation and visualisation tool for structural variants. The primary function of LINX is grouping together individual SV calls into distinct events and properly classify and annotating the event to understand both its mechanism and genomic impact.
+LINX is an annotation, interpretation and [visualisation](./README_VIS.md) tool for structural variants. The primary function of LINX is grouping together individual SV calls into distinct events and properly classify and annotating the event to understand both its mechanism and genomic impact.
 
 ## Contents
 
@@ -15,6 +15,7 @@ LINX is an annotation, interpretation and visualisation tool for structural vari
   + [Clustering of SVs into events](#clustering-of-svs-into-events)
   + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
   + [Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
+* [Visualisation](#visualisation)  
 * [Version History](#version-history)
 
 ## Configuration
@@ -597,6 +598,14 @@ Homozygous Deletion | 2 | DEL, LOH, LOH_ARM,LOH_CHR
 Biallelic point mutation in TSG | 1 | LOH, LOH_ARM, LOH_CHR
 
 
+## Visualisation
+
+Visualisations of the LINX output can be generated with the accompanying tool as described [here](./README_VIS.md). 
+Shown below is an example of a SS18-SSX1 fusion: 
+
+<p align="center">
+    <img src="src/main/resources/readme/default.png" width="800" alt="default">
+</p>
 
 
 ## Version History

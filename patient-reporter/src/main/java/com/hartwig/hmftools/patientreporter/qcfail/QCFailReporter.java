@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 
@@ -20,17 +21,17 @@ public class QCFailReporter {
     }
 
     @NotNull
-    public QCFailReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull QCFailReason reason,
-            @Nullable String comments, @Nullable String correctTitle) {
-        QCFailStudy study = QCFailStudy.fromSample(tumorSample);
+    public QCFailReport run(@NotNull SampleMetadata sampleMetadata, @NotNull QCFailReason reason, @Nullable String comments,
+            @Nullable String correctTitle) {
+        QCFailStudy study = QCFailStudy.fromSample(sampleMetadata.tumorSampleId());
 
         assert study != null;
 
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(), tumorSample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
+                        sampleMetadata.tumorSampleId());
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
-                refSample,
+        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sampleMetadata,
                 reportData.limsModel(),
                 reportData.hospitalModel(),
                 patientTumorLocation);

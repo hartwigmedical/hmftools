@@ -14,19 +14,18 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class Footer {
 
     private final List<PageNumberTemplate> pageNumberTemplates = Lists.newArrayList();
 
-    public void renderFooter(@NotNull PdfPage page, boolean fullWidth, @Nullable String pageNumberPrefix) {
+    public void renderFooter(@NotNull PdfPage page, boolean fullWidth) {
         final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
         PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 200, 20));
         canvas.addXObject(pageNumberTemplate, 58, 20);
-        pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberPrefix, pageNumberTemplate));
+        pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberTemplate));
 
         BaseMarker.renderMarkerGrid(fullWidth ? 5 : 3, 1, 156, 87, 22, 0, .2f, 0, canvas);
 
@@ -43,19 +42,16 @@ public class Footer {
     private static class PageNumberTemplate {
 
         private final int pageNumber;
-        @Nullable
-        private final String prefix;
         @NotNull
         private final PdfFormXObject template;
 
-        PageNumberTemplate(int pageNumber, @Nullable String prefix, @NotNull PdfFormXObject template) {
+        PageNumberTemplate(int pageNumber, @NotNull PdfFormXObject template) {
             this.pageNumber = pageNumber;
-            this.prefix = prefix;
             this.template = template;
         }
 
         void renderPageNumber(int totalPageCount, @NotNull PdfDocument document) {
-            String displayString = ((prefix != null) ? prefix.toUpperCase() + " \u2014 " : "") + pageNumber + "/" + totalPageCount;
+            String displayString = pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
             canvas.showTextAligned(new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle()),

@@ -56,7 +56,7 @@ public final class EvidenceDrugTypeMergerTest {
     }
 
     @Test
-    public void evidenceMergerknownDrugsTypeDifferentDrugsType() {
+    public void evidenceMergerKnownDrugsTypeDifferentDrugsType() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
 
@@ -94,7 +94,7 @@ public final class EvidenceDrugTypeMergerTest {
     }
 
     @Test
-    public void evidenceMergerknownDrugsTypeMoreDifferentOptions() {
+    public void evidenceMergerKnownDrugsTypeMoreDifferentOptions() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
 

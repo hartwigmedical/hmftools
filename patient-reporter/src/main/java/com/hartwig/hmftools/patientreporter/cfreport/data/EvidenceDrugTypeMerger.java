@@ -17,13 +17,14 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItemMerger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class EvidenceDrugTypeMerger {
+// Tried to merge drugs on type but drugs type needs further curation (see DEV-824)
+final class EvidenceDrugTypeMerger {
 
     private EvidenceDrugTypeMerger() {
     }
 
     @NotNull
-    public static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
+    static List<EvidenceItemMerger> merge(List<EvidenceItem> items) {
         String drugsStringTotal = Strings.EMPTY;
 
         List<EvidenceItemMerger> evidenceItems = Lists.newArrayList();
@@ -97,7 +98,7 @@ public final class EvidenceDrugTypeMerger {
         @NotNull
         private final ActionabilitySource source;
 
-        public DrugsKey(@NotNull final String event, @NotNull final EvidenceScope match, @NotNull final EvidenceLevel level,
+        DrugsKey(@NotNull final String event, @NotNull final EvidenceScope match, @NotNull final EvidenceLevel level,
                 @NotNull final String response, @NotNull final String drugType, @NotNull final ActionabilitySource source) {
             this.event = event;
             this.match = match;

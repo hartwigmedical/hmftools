@@ -27,37 +27,35 @@ public final class SidePanel {
         renderBackgroundRect(fullHeight, canvas, pageSize);
         BaseMarker.renderMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
 
-        int sideTextIndex = 0;
+        int sideTextIndex = 1;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
-        cv.add(createSidePanelDiv(sideTextIndex++, "HMF sample id", sampleReport.sampleId()));
-        cv.add(createSidePanelDiv(sideTextIndex++, "Report date", ReportResources.REPORT_DATE));
+        cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
+        cv.add(createSidePanelDiv(++sideTextIndex, "Report date", ReportResources.REPORT_DATE));
 
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.sampleId());
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
 
         if (fullHeight && fullContent) {
-            final String contactNames = type == LimsSampleType.CORE || type == LimsSampleType.WIDE
-                    ? sampleReport.requesterName()
-                    : Strings.EMPTY;
+            final String contactNames =
+                    type == LimsSampleType.CORE || type == LimsSampleType.WIDE ? sampleReport.requesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Requested by", contactNames));
+                cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
             }
 
-            final String contactEmails = type == LimsSampleType.CORE || type == LimsSampleType.WIDE
-                    ? sampleReport.requesterEmail()
-                    : Strings.EMPTY;
+            final String contactEmails =
+                    type == LimsSampleType.CORE || type == LimsSampleType.WIDE ? sampleReport.requesterEmail() : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Email", contactEmails));
+                cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
 
             final String hospitalName = sampleReport.hospitalName();
             if (!hospitalName.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital", hospitalName));
+                cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }
 
             final String hospitalPatientId = type == LimsSampleType.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
             if (!hospitalPatientId.isEmpty()) {
-                cv.add(createSidePanelDiv(sideTextIndex++, "Hospital patient id", hospitalPatientId));
+                cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", hospitalPatientId));
             }
         }
 

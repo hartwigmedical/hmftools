@@ -2,8 +2,8 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.Document;
+
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface ReportChapter {
 
@@ -11,10 +11,6 @@ public interface ReportChapter {
     String name();
 
     void render(@NotNull Document reportDocument);
-
-    default @Nullable String pageNumberPrefix() {
-        return null;
-    }
 
     default boolean isFullWidth() {
         return true;

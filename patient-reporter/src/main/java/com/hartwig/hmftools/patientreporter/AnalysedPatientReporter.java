@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -57,24 +56,26 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    AnalysedPatientReport run(@NotNull String tumorSample, @NotNull String refSample, @NotNull String purplePurityTsv,
-            @NotNull String purpleGeneCnvTsv, @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxDisruptionTsv, @Nullable String bachelorCsv, @NotNull String chordPredictionFile,
-            @NotNull String circosFile, @Nullable String comments, @Nullable String correctTitle) throws IOException {
+    AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
+            @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
+            @Nullable String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile, @Nullable String comments,
+            @Nullable String correctTitle) throws IOException {
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(), tumorSample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
+                        sampleMetadata.tumorSampleId());
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(tumorSample,
-                refSample,
+        SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sampleMetadata,
                 reportData.limsModel(),
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
-        SomaticVariantAnalysis somaticVariantAnalysis =
-                analyzeSomaticVariants(tumorSample, somaticVariantVcf, patientTumorLocation, copyNumberAnalysis.exomeGeneCopyNumbers());
+        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(sampleMetadata.tumorSampleId(),
+                somaticVariantVcf,
+                patientTumorLocation,
+                copyNumberAnalysis.exomeGeneCopyNumbers());
         List<GermlineVariant> germlineVariantsToReport =
-                analyzeGermlineVariants(tumorSample, bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
+                analyzeGermlineVariants(sampleMetadata.tumorSampleId(), bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
@@ -82,12 +83,12 @@ class AnalysedPatientReporter {
                         reportData.driverGeneView(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
-                        reportData.limsModel().germlineReportingChoice(tumorSample));
+                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleId()));
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
-        String clinicalSummary = reportData.summaryModel().findSummaryForSample(tumorSample);
+        String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
         List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
         allEvidenceItems.addAll(somaticVariantAnalysis.evidenceItems());
@@ -208,7 +209,7 @@ class AnalysedPatientReporter {
         String formattedTumorArrivalDate =
                 tumorArrivalDate != null ? DateTimeFormatter.ofPattern("dd-MMM-yyyy").format(tumorArrivalDate) : "N/A";
 
-        LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().sampleId());
+        LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().tumorSampleId());
         LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);
         LOGGER.info(" Primary tumor location: {} ({})",
                 report.sampleReport().primaryTumorLocationString(),
@@ -219,7 +220,7 @@ class AnalysedPatientReporter {
 
         List<ReportableVariant> variantsWithNotify =
                 report.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
-        LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().sampleId());
+        LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
         LOGGER.info(" Somatic variants to report: {}", report.reportableVariants().size());
         LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
         LOGGER.info(" Microsatellite Indels per Mb: {}", report.microsatelliteIndelsPerMb());
@@ -230,7 +231,7 @@ class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report : {}", report.geneFusions().size());
         LOGGER.info(" Gene disruptions to report : {}", report.geneDisruptions().size());
 
-        LOGGER.info("Printing actionability results for {}", report.sampleReport().sampleId());
+        LOGGER.info("Printing actionability results for {}", report.sampleReport().tumorSampleId());
         LOGGER.info(" Tumor-specific evidence items found: {}", report.tumorSpecificEvidence().size());
         LOGGER.info(" Off-label evidence items found: {}", report.offLabelEvidence().size());
         LOGGER.info(" Clinical trials matched to molecular profile: {}", report.clinicalTrials().size());
