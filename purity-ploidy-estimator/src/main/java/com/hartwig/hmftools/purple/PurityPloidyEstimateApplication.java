@@ -243,7 +243,8 @@ public class PurityPloidyEstimateApplication {
                         germlineDeletions,
                         purityContext,
                         qcChecks,
-                        geneCopyNumbers);
+                        geneCopyNumbers,
+                        driverCatalog);
             }
 
             LOGGER.info("Generating charts");
