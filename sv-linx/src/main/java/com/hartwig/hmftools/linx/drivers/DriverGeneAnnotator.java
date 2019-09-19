@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -26,6 +27,8 @@ import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTI
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_ARM;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_CHR;
+import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_SV_CENTRO;
+import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_SV_TELO;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -359,7 +362,8 @@ public class DriverGeneAnnotator
                 else if(lohEvent.isSvEvent())
                 {
                     // call SV + rest of arm loss an LOH as well
-                    DriverGeneEvent event = new DriverGeneEvent(LOH);
+                    DriverEventType eventType = lohEvent.telomereLoss() ? LOH_SV_TELO : LOH_SV_CENTRO;
+                    DriverGeneEvent event = new DriverGeneEvent(eventType);
                     event.setLohEvent(lohEvent);
                     event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_ARM_SV);
                     dgData.addEvent(event);
@@ -438,7 +442,8 @@ public class DriverGeneAnnotator
             }
             else if(lohEvent.isSvEvent())
             {
-                DriverGeneEvent event = new DriverGeneEvent(LOH);
+                DriverEventType eventType = lohEvent.telomereLoss() ? LOH_SV_TELO : LOH_SV_CENTRO;
+                DriverGeneEvent event = new DriverGeneEvent(eventType);
                 event.setLohEvent(lohEvent);
                 event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_ARM_SV);
                 dgData.addEvent(event);

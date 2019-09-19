@@ -113,6 +113,16 @@ public class LohEvent
         return false;
     }
 
+    public boolean telomereLoss()
+    {
+        return SegStart.equals(TELOMERE.toString()) || SegEnd.equals(TELOMERE.toString());
+    }
+
+    public boolean centromereLoss()
+    {
+        return SegStart.equals(CENTROMERE.toString()) || SegEnd.equals(CENTROMERE.toString());
+    }
+
     public boolean chromosomeLoss()
     {
         return SegStart.equals(TELOMERE.toString()) && SegEnd.equals(TELOMERE.toString());
