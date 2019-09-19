@@ -174,6 +174,7 @@ searchTerm,primaryTumorLocation,subType
 "Other (please specify below)_ACUP",Unknown,"CUP"
 "Other (please specify below)_LCNEC",NET,"Large cell"
 "Other (please specify below)_Merkel Cel Carcinoom",Skin,"Merkel-cell carcinoma"
+"Other (please specify below)_myo-epitheliaal carcinoom",Bone/Soft tissue,"Undifferentiated sarcoma"
 "Other (please specify below)_NEC",NET,"NEC"
 "Other (please specify below)_NET: onbekend",NET,""
 "Other (please specify below)_Tonsil",Head and neck,"Tonsil"
