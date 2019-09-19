@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.INTERIM_FILENAME;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.bachelor.datamodel.Program;
+import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
 
@@ -23,30 +26,45 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class GermlineVcfParser
 {
-    private Map<String, Program> mProgramConfigMap;
-    private GermlineVariantFinder mProgram;
+    private final GermlineVariantFinder mProgram;
+
+    private final BachelorConfig mConfig;
 
     // config
-    private boolean mIsBatchMode;
-    private String mBatchDataDir;
-    private boolean mUsingBatchOutput;
-    private boolean mSkipIndexFile;
-    private String mExternalFiltersFile;
+    private final boolean mSkipIndexFile;
+    private final String mExternalFiltersFile;
 
     private BufferedWriter mVcfDataWriter;
     private BufferedWriter mBedFileWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
 
-    GermlineVcfParser()
+    GermlineVcfParser(final BachelorConfig config, final CommandLine cmd)
     {
-        mProgramConfigMap = null;
-        mExternalFiltersFile = "";
-        mBatchDataDir = "";
-        mUsingBatchOutput = false;
-        mSkipIndexFile = false;
+        mConfig = config;
+
         mVcfDataWriter = null;
         mBedFileWriter = null;
+
+        mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
+        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
+
+        mProgram = new GermlineVariantFinder();
+
+        if(!mProgram.loadConfig(mConfig.ProgramConfigMap))
+        {
+            return;
+        }
+
+        if(!mExternalFiltersFile.isEmpty())
+        {
+            mProgram.addExternalFilters(ExternalDBFilters.loadExternalFilters(mExternalFiltersFile));
+        }
+
+        if(mConfig.IsBatchMode)
+        {
+            createOutputFiles(mConfig.OutputDir, BATCH_FILE);
+        }
     }
 
     private static final String SKIP_INDEX_FILE = "skip_index_file";
@@ -58,45 +76,16 @@ public class GermlineVcfParser
         options.addOption(EXTERNAL_FILTER_FILE, true, "Optional: name of an external filter file");
     }
 
-    public void initialise(final CommandLine cmd, Map<String, Program> configMap, boolean isBatchMode, String batchOutputDir)
-    {
-        mProgramConfigMap = configMap;
+    public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
 
-        if (mProgramConfigMap.isEmpty())
+    public void run(RunDirectory runDir, String sampleId, String singleSampleOutputDir)
+    {
+        if (mConfig.ProgramConfigMap.isEmpty())
         {
             LOGGER.error("No programs loaded, exiting");
             return;
         }
 
-        mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
-        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
-
-        mBatchDataDir = batchOutputDir;
-        mIsBatchMode = isBatchMode;
-        mUsingBatchOutput = mIsBatchMode && !mBatchDataDir.isEmpty();
-
-        mProgram = new GermlineVariantFinder();
-
-        if(!mProgram.loadConfig(mProgramConfigMap))
-        {
-            return;
-        }
-
-        if(!mExternalFiltersFile.isEmpty())
-        {
-            mProgram.addExternalFilters(ExternalDBFilters.loadExternalFilters(mExternalFiltersFile));
-        }
-
-        if(mUsingBatchOutput)
-        {
-            createOutputFiles(mBatchDataDir);
-        }
-    }
-
-    public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
-
-    public void run(RunDirectory runDir, String sampleId, String singleSampleOutputDir)
-    {
         LOGGER.info("Processing run for sampleId({}) directory({})", sampleId, runDir.sampleDir());
 
         processVCF(sampleId, runDir.germline());
@@ -107,10 +96,10 @@ public class GermlineVcfParser
             return;
         }
 
-        if(!mUsingBatchOutput)
+        if(!mConfig.IsBatchMode)
         {
             LOGGER.debug("Creating single sample output dir: " + singleSampleOutputDir);
-            createOutputFiles(singleSampleOutputDir);
+            createOutputFiles(singleSampleOutputDir, sampleId);
         }
 
         try
@@ -133,7 +122,7 @@ public class GermlineVcfParser
             LOGGER.error("error writing output: {}", e.toString());
         }
 
-        if(!mUsingBatchOutput)
+        if(!mConfig.IsBatchMode)
         {
             close();
         }
@@ -164,13 +153,12 @@ public class GermlineVcfParser
         }
     }
 
-    private void createOutputFiles(final String outputDir)
+    private void createOutputFiles(final String outputDir, final String filePrefix)
     {
         if(mVcfDataWriter != null || mBedFileWriter != null)
             return;
 
-        String mainFileName = outputDir + "bachelor_output.csv";
-        String bedFileName = outputDir + "bachelor_bed.csv";
+        final String mainFileName = outputDir + filePrefix + INTERIM_FILENAME;
 
         try
         {
@@ -184,8 +172,9 @@ public class GermlineVcfParser
 
             mVcfDataWriter.newLine();
 
-            if(!mIsBatchMode)
+            if(!mConfig.IsBatchMode)
             {
+                String bedFileName = outputDir + "bachelor_bed.csv";
                 mBedFileWriter = createBufferedWriter(bedFileName, false);
             }
         }

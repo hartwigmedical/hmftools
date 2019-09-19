@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorPostProcess.REF_GENOME;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
 
 import java.io.File;
 import java.io.IOException;

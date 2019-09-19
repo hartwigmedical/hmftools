@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.bachelor;
 
+import static com.hartwig.hmftools.bachelor.LoadGermlineVariants.DB_URL;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.INTERIM_FILENAME;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.READ_BAMS_DIRECT;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -19,8 +25,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorDataCollection;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.GermlineVariant;
+import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
+import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.RunDirectory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -28,8 +38,6 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.region.BEDFileLoader;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
@@ -39,10 +47,8 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -54,100 +60,38 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class BachelorPostProcess
 {
-    private DatabaseAccess mDbAccess;
-    private Multimap<String, GenomeRegion> mHighConfidenceRegions;
+    private final DatabaseAccess mDbAccess;
+    private final BachelorConfig mConfig;
     private IndexedFastaSequenceFile mIndexedFastaSeqFile;
     private BufferedWriter mWriter;
-    private AlleleDepthLoader mAllelDepthLoader;
+    private final AlleleDepthLoader mAllelDepthLoader;
     private BamCountReader mBamCountReader;
-    private boolean mReadBamsDirect;
+    private final boolean mReadBamsDirect;
 
-    private CommandLine mCmdLineArgs;
-    private String mBatchDataDir;
-    private boolean mIsBatchMode;
-    private boolean mUploadRecordsToDB;
     private List<BachelorGermlineVariant> mBachRecords;
-    private String mBachDataDir;
-    private String mSampleDataDir;
-    private boolean mUsingBatchOutput;
-
-    // config items
-    static final String REF_GENOME = "ref_genome";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    private static final String WRITE_TO_DB = "write_to_db";
-    private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // purple data directory within the sample fir
-    private static final String BACH_DIRECTORY = "bachelor_dir"; // usually defaults to the 'bachelor' subdirectory of the sample dir
-    private static final String BACH_INPUT_FILE = "bachelor_file"; // full path
-    private static final String READ_BAMS_DIRECT = "bam_direct"; // skip BAM slicing and use of Mini-Pileup file reading
-
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
-
-    private static final String DEFAULT_BACH_INPUT_FILE = "bachelor_output.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorPostProcess.class);
 
-    BachelorPostProcess()
+    BachelorPostProcess(final BachelorConfig config, final CommandLine cmd)
     {
-        mCmdLineArgs = null;
+        mConfig = config;
         mBachRecords = Lists.newArrayList();
-        mBatchDataDir = "";
-        mBachDataDir = "";
-        mSampleDataDir = "";
-        mIsBatchMode = false;
-
-        mDbAccess = null;
-        mHighConfidenceRegions = null;
-        mIndexedFastaSeqFile = null;
-        mIsBatchMode = false;
-        mUploadRecordsToDB = false;
-        mAllelDepthLoader = null;
-        mBamCountReader = null;
-        mAllelDepthLoader = null;
-        mReadBamsDirect = false;
-        mWriter = null;
-    }
-
-    public void initialise(final CommandLine cmd, boolean isBatchMode, final String batchOutputDir)
-    {
-        mCmdLineArgs = cmd;
-        mIsBatchMode = isBatchMode;
-
-        try
-        {
-            mDbAccess = databaseAccess(cmd);
-        }
-        catch (SQLException e)
-        {
-            LOGGER.error("DB connection failed: {}", e.toString());
-            return;
-        }
-
-        mBatchDataDir = batchOutputDir;
-        mUsingBatchOutput = mIsBatchMode && !mBatchDataDir.isEmpty();
 
         mReadBamsDirect = cmd.hasOption(READ_BAMS_DIRECT);
 
-        if(mReadBamsDirect)
-        {
-            mBamCountReader = new BamCountReader();
-        }
-        else
-        {
-            mAllelDepthLoader = new AlleleDepthLoader();
-        }
+        mBamCountReader = mReadBamsDirect ? new BamCountReader() : null;
+        mAllelDepthLoader = !mReadBamsDirect ? new AlleleDepthLoader() : null;
 
-        if (cmd.hasOption(HIGH_CONFIDENCE_BED) && cmd.hasOption(REF_GENOME))
+        mDbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
+
+        mIndexedFastaSeqFile = null;
+
+        if (cmd.hasOption(REF_GENOME))
         {
-            final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
             final String refGenomeFile = cmd.getOptionValue(REF_GENOME);
 
             try
             {
-                LOGGER.debug("Reading high confidence bed file");
-                mHighConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
-
                 LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
@@ -161,22 +105,23 @@ public class BachelorPostProcess
             }
         }
 
-        mUploadRecordsToDB = cmd.hasOption(WRITE_TO_DB);
+        mWriter = null;
     }
 
     private void loadBachelorRecords()
     {
-        String bachelorInputFile;
-        if (mCmdLineArgs.hasOption(BACH_INPUT_FILE))
+        String bachelorInputFile = mConfig.SampleDataDir;
+
+        if(mConfig.IsBatchMode)
         {
-            bachelorInputFile = mCmdLineArgs.getOptionValue(BACH_INPUT_FILE);
-            LOGGER.info("Loading specific input file: {}", bachelorInputFile);
+            bachelorInputFile += BATCH_FILE + INTERIM_FILENAME;
         }
         else
         {
-            bachelorInputFile = mBachDataDir + DEFAULT_BACH_INPUT_FILE;
-            LOGGER.info("Loading sample default file: {}", bachelorInputFile);
+            bachelorInputFile += mConfig.SampleId + INTERIM_FILENAME;
         }
+
+        LOGGER.info("Loading bachelor interim file: {}", bachelorInputFile);
 
         BachelorDataCollection dataCollection = new BachelorDataCollection();
 
@@ -188,19 +133,8 @@ public class BachelorPostProcess
         mBachRecords.addAll(dataCollection.getBachelorVariants());
     }
 
-    public void run(RunDirectory runDir, @Nullable List<BachelorGermlineVariant> bachRecords, String singleSampleOutputDir)
+    public void run(@Nullable List<BachelorGermlineVariant> bachRecords)
     {
-        mSampleDataDir = runDir.sampleDir().toString() + File.separator;
-
-        if(mUsingBatchOutput)
-        {
-            mBachDataDir = mBatchDataDir;
-        }
-        else
-        {
-            mBachDataDir = singleSampleOutputDir;
-        }
-
         if(bachRecords == null)
         {
             loadBachelorRecords();
@@ -210,12 +144,9 @@ public class BachelorPostProcess
             mBachRecords = bachRecords;
         }
 
-        if(mBachRecords.isEmpty())
-            return;
-
         processCurrentRecords(mBachRecords);
 
-        if(!mUsingBatchOutput)
+        if(!mConfig.IsBatchMode)
         {
             closeBufferedWriter(mWriter);
             mWriter = null;
@@ -224,17 +155,23 @@ public class BachelorPostProcess
 
     private void processCurrentRecords(List<BachelorGermlineVariant> bachRecords)
     {
+        if(bachRecords.isEmpty() && !mConfig.IsBatchMode)
+        {
+            writeToFile(mConfig.SampleId, Lists.newArrayList());
+            return;
+        }
+
         long recordsWithTumorData = bachRecords.stream().filter(x -> x.isReadDataSet()).count();
 
         if(recordsWithTumorData < bachRecords.size())
         {
             if (mReadBamsDirect)
             {
-                mBamCountReader.readBamCounts(bachRecords, mBachDataDir);
+                mBamCountReader.readBamCounts(bachRecords, mConfig.SampleDataDir);
             }
             else
             {
-                if (!mAllelDepthLoader.loadMiniPileupData(mBachDataDir))
+                if (!mAllelDepthLoader.loadMiniPileupData(mConfig.SampleDataDir))
                     return;
 
                 if (!mAllelDepthLoader.applyPileupData(bachRecords))
@@ -270,7 +207,7 @@ public class BachelorPostProcess
             final String specificSample = entry.getKey();
             sampleRecords = entry.getValue();
 
-            LOGGER.info("Sample({}) processing {} germline reports", specificSample, sampleRecords.size());
+            LOGGER.info("sample({}) processing {} germline reports", specificSample, sampleRecords.size());
 
             // sort by chromosome and position
             Collections.sort(sampleRecords);
@@ -284,17 +221,20 @@ public class BachelorPostProcess
 
             if (sampleRecords.isEmpty())
             {
-                LOGGER.info("Sample({}) has no valid germline reports", specificSample);
+                LOGGER.info("sample({}) has no valid germline reports", specificSample);
+                writeToFile(specificSample, Lists.newArrayList());
                 continue;
             }
 
-            if (mUploadRecordsToDB)
+            final List<GermlineVariant> germlineVariants = convert(sampleRecords);
+
+            if (mDbAccess != null)
             {
-                LOGGER.info("Sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
-                writeToDatabase(specificSample, sampleRecords);
+                LOGGER.info("sample({}) writing {} germline reports to database", specificSample, sampleRecords.size());
+                writeToDatabase(specificSample, germlineVariants);
             }
 
-            writeToFile(specificSample, sampleRecords);
+            writeToFile(specificSample, germlineVariants);
         }
     }
 
@@ -337,26 +277,24 @@ public class BachelorPostProcess
         final PurityContext purityContext;
         final List<PurpleCopyNumber> copyNumbers;
 
-        if (mCmdLineArgs.hasOption(PURPLE_DATA_DIRECTORY))
+        if (!mConfig.PurpleDataDir.isEmpty())
         {
-            final String purplePath = mSampleDataDir + mCmdLineArgs.getOptionValue(PURPLE_DATA_DIRECTORY);
-
-            LOGGER.debug("Sample({}) loading purple data from file using path {}", sampleId, purplePath);
+            LOGGER.debug("sample({}) loading purple data from file using path {}", sampleId, mConfig.PurpleDataDir);
 
             try
             {
-                purityContext = FittedPurityFile.read(purplePath, sampleId);
-                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, sampleId));
+                purityContext = FittedPurityFile.read(mConfig.PurpleDataDir, sampleId);
+                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDataDir, sampleId));
             }
             catch (IOException e)
             {
-                LOGGER.error("Failed to read purple data from {}: {}", purplePath, e.toString());
+                LOGGER.error("Failed to read purple data from {}: {}", mConfig.PurpleDataDir, e.toString());
                 return;
             }
         }
         else
         {
-            LOGGER.debug("Sample({}) loading purple data from database", sampleId);
+            LOGGER.debug("sample({}) loading purple data from database", sampleId);
 
             purityContext = mDbAccess.readPurityContext(sampleId);
 
@@ -412,7 +350,7 @@ public class BachelorPostProcess
             }
         }
 
-        LOGGER.debug("Sample({}) enriching variants", sampleId);
+        LOGGER.debug("sample({}) enriching variants", sampleId);
 
         final EnrichedSomaticVariantFactory enrichedSomaticVariantFactory = new EnrichedSomaticVariantFactory(mIndexedFastaSeqFile);
 
@@ -434,7 +372,7 @@ public class BachelorPostProcess
 
             if (!matched)
             {
-                LOGGER.debug("Sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
+                LOGGER.debug("sample({}) enriched variant not found: var({}) gene({}) transcript({}) chr({}) position({})",
                         sampleId, bachRecord.VariantId, bachRecord.Gene, bachRecord.TranscriptId,
                         bachRecord.Chromosome, bachRecord.Position);
             }
@@ -502,55 +440,63 @@ public class BachelorPostProcess
         }
     }
 
-    private void writeToDatabase(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
+    private void writeToDatabase(final String sampleId, final List<GermlineVariant> germlineVariants)
     {
         final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(mDbAccess.context());
-        germlineDAO.write(sampleId, bachRecords);
+        germlineDAO.write(sampleId, germlineVariants);
     }
 
-    private void writeToFile(final String sampleId, final List<BachelorGermlineVariant> bachRecords)
+    private final List<GermlineVariant> convert(final List<BachelorGermlineVariant> bachRecords)
     {
-        try
+        final List<GermlineVariant> germlineVariants = Lists.newArrayList();
+
+        for(final BachelorGermlineVariant bachRecord : bachRecords)
         {
-            if (mWriter == null)
-            {
-                String outputFileName = mBachDataDir;
-                if (!outputFileName.endsWith(File.separator))
-                {
-                    outputFileName += File.separator;
-                }
+            if (!bachRecord.isValid())
+                continue;
 
-                if (!mUsingBatchOutput)
-                {
-                    outputFileName += sampleId + "_germline_variants.csv";
-                }
-                else
-                {
-                    outputFileName += "bachelor_germline_variants.csv";
-                }
+            final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
-                mWriter = createBufferedWriter(outputFileName, false);
+            germlineVariants.add(ImmutableGermlineVariant.builder()
+                    .chromosome(bachRecord.Chromosome)
+                    .position(bachRecord.Position)
+                    .filter(bachRecord.isLowScore() ? "ARTEFACT" : "PASS")
+                    .type(enrichedVariant.type().toString())
+                    .ref(enrichedVariant.ref())
+                    .alts(enrichedVariant.alt())
+                    .gene(bachRecord.Gene)
+                    .cosmicId(enrichedVariant.canonicalCosmicID() == null ? "" : enrichedVariant.canonicalCosmicID())
+                    .dbsnpId(enrichedVariant.dbsnpID() == null ? "" : enrichedVariant.dbsnpID())
+                    .effects(bachRecord.Effects)
+                    .codingEffect(bachRecord.CodingEffect)
+                    .transcriptId(bachRecord.TranscriptId)
+                    .alleleReadCount(bachRecord.getTumorAltCount())
+                    .totalReadCount(bachRecord.getTumorReadDepth())
+                    .adjustedCopyNumber(enrichedVariant.adjustedCopyNumber())
+                    .adjustedVaf(bachRecord.getAdjustedVaf())
+                    .trinucleotideContext(enrichedVariant.trinucleotideContext())
+                    .microhomology(enrichedVariant.microhomology())
+                    .repeatSequence(enrichedVariant.repeatSequence())
+                    .repeatCount(enrichedVariant.repeatCount())
+                    .hgvsProtein(bachRecord.HgvsProtein)
+                    .hgvsCoding(bachRecord.HgvsCoding)
+                    .biallelic(bachRecord.isBiallelic())
+                    .hotspot(enrichedVariant.isHotspot())
+                    .mappability(enrichedVariant.mappability())
+                    .minorAllelePloidy(enrichedVariant.minorAllelePloidy())
+                    .program(bachRecord.Program)
+                    .variantId(bachRecord.VariantId)
+                    .annotations(bachRecord.Annotations)
+                    .phredScore(bachRecord.PhredScore)
+                    .isHomozygous(bachRecord.IsHomozygous)
+                    .matchType(bachRecord.MatchType)
+                    .codonInfo(bachRecord.CodonInfo)
+                    .clinvarMatch(bachRecord.getClinvarMatch())
+                    .clinvarSignificance(bachRecord.getClinvarSig())
+                    .clinvarSignificanceInfo(bachRecord.getClinvarSigInfo())
+                    .build());
 
-                mWriter.write("SampleId,Program,Chromosome,Position,Type,Ref,Alt,Gene,TranscriptId,DbsnpId,CosmicId");
-                mWriter.write(",Effects,CodingEffect,VcfReadData,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth");
-                mWriter.write(",AdjCopyNumber,AdjustedVaf,HighConfidenceRegion,TrinucleotideContext,Microhomology,RepeatSequence,RepeatCount");
-                mWriter.write(",HgvsProtein,HgvsCoding,Biallelic,Hotspot,Mappability,GermlineStatus,MinorAllelePloidy,Filter,CodonInfo");
-                mWriter.write(",ClinvarMatch,ClinvarSignificance,ClinvarSigInfo");
-                mWriter.newLine();
-            }
-
-            BufferedWriter writer = mWriter;
-
-            for (final BachelorGermlineVariant bachRecord : bachRecords)
-            {
-                if (!bachRecord.isValid())
-                {
-                    continue;
-                }
-
-                writer.write(String.format("%s,%s,%s,%d",
-                        bachRecord.SampleId, bachRecord.Program, bachRecord.Chromosome, bachRecord.Position));
-
+            /*
                 final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
                 writer.write(String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d",
@@ -572,8 +518,36 @@ public class BachelorPostProcess
                         enrichedVariant.mappability(), bachRecord.IsHomozygous ? "HOM" : "HET", enrichedVariant.minorAllelePloidy(),
                         bachRecord.isLowScore() ? "ARTEFACT" : "PASS", bachRecord.CodonInfo,
                         bachRecord.getClinvarMatch(), bachRecord.getClinvarSig(), bachRecord.getClinvarSigInfo()));
+             */
 
-                writer.newLine();
+
+        }
+
+        return germlineVariants;
+    }
+
+    private void writeToFile(final String sampleId, final List<GermlineVariant> germlineVariants)
+    {
+        try
+        {
+            if(mConfig.IsBatchMode)
+            {
+                if (mWriter == null)
+                {
+                    final String filename = GermlineVariantFile.generateFilename(mConfig.OutputDir, BATCH_FILE);
+                    mWriter = createBufferedWriter(filename, false);
+                }
+
+                for(GermlineVariant variant : germlineVariants)
+                {
+                    mWriter.write(GermlineVariantFile.toString(variant));
+                    mWriter.newLine();
+                }
+            }
+            else
+            {
+                final String filename = GermlineVariantFile.generateFilename(mConfig.OutputDir, sampleId);
+                GermlineVariantFile.write(filename, germlineVariants);
             }
         }
         catch (final IOException e)
@@ -584,35 +558,10 @@ public class BachelorPostProcess
 
     public void close()
     {
-        if(mUsingBatchOutput)
+        if(mConfig.IsBatchMode)
         {
             closeBufferedWriter(mWriter);
         }
     }
 
-    public static void addCmdLineOptions(Options options)
-    {
-        options.addOption(BACH_DIRECTORY, true, "Override for specific bachelor input dir, if left out then assumes in sample path & 'bachelor' sub-directory");
-        options.addOption(BACH_INPUT_FILE, true, "Override for specific bachelor input file, if left out then assumes in bachelor_dir & *germline_variants.csv");
-        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file");
-        options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
-        options.addOption(READ_BAMS_DIRECT, false, "Read tumor alt and read depth from available BAM file");
-
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
-
-        options.addOption(WRITE_TO_DB, false, "Whether to upload records to DB");
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
-    }
 }

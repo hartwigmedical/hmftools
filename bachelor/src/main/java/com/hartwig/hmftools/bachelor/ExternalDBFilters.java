@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.BachelorApplication.CONFIG_XML;
-import static com.hartwig.hmftools.bachelor.BachelorApplication.LOG_DEBUG;
-import static com.hartwig.hmftools.bachelor.BachelorApplication.loadXML;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.CONFIG_XML;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.loadXML;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.datamodel.ProgramPanel;
@@ -75,17 +76,8 @@ public class ExternalDBFilters
 
         LOGGER.info("Building ClinVar filter file");
 
-        Map<String, Program> configMap = null;
-
-        try
-        {
-            configMap = loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)));
-        }
-        catch(Exception e)
-        {
-            LOGGER.error("Error loading XML: {}", e.toString());
-            return;
-        }
+        Map<String, Program> configMap = Maps.newHashMap();
+        loadXML(Paths.get(cmd.getOptionValue(CONFIG_XML)), configMap);
 
         Program program = configMap.values().iterator().next();
 

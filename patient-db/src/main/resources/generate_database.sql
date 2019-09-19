@@ -710,8 +710,6 @@ CREATE TABLE germlineVariant
     mappability DOUBLE PRECISION NOT NULL,
     minorAllelePloidy DOUBLE PRECISION NOT NULL,
     refStatus varchar(20) NOT NULL,
-    source varchar(255) NOT NULL,
-    program varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
