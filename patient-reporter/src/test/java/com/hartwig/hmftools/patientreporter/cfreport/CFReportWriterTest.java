@@ -198,10 +198,13 @@ public class CFReportWriterTest {
 
     @NotNull
     private static String testReportFilePath(@NotNull String filename) {
+        String newFileName;
         if (TIMESTAMP_FILES) {
             int extensionStart = filename.lastIndexOf('.');
-            filename = filename.substring(0, extensionStart) + "_" + System.currentTimeMillis() + filename.substring(extensionStart);
+            newFileName = filename.substring(0, extensionStart) + "_" + System.currentTimeMillis() + filename.substring(extensionStart);
+        } else {
+            newFileName = filename;
         }
-        return REPORT_BASE_DIR + File.separator + filename;
+        return REPORT_BASE_DIR + File.separator + newFileName;
     }
 }
