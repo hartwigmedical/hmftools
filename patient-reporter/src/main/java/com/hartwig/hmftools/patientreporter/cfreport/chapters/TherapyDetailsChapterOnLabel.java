@@ -78,7 +78,6 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-
         final List<EvidenceItem> sortedEvidence = EvidenceItems.sort(evidence);
         for (EvidenceItem item : sortedEvidence) {
             String[] treatments = item.drug().split(Pattern.quote(TREATMENT_DELIMITER));
@@ -128,9 +127,10 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                 .setPaddingTop(10)
-                .add(new Paragraph("Potential eligibility for the DRUP study does not include tumor-type specific matching. Also "
-                        + "clinical (study) annotation does not yet include the results that are based on mutational signature"
-                        + " readouts, e.g. microsatellite instability and mutational load.").addStyle(ReportResources.subTextStyle())));
+                .add(new Paragraph("Potential eligibility for DRUP is dependent on tumor type details therefore certain tumor types "
+                        + "may not be eligible for the DRUP. Mutational signatures (e.g. MSI, TMB) are not yet automatically matched "
+                        + "witch clinical studies. If applicable however, matches are reported in the conclusion of the report.").addStyle(
+                        ReportResources.subTextStyle())));
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 
