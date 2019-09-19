@@ -3,13 +3,11 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
 import static com.hartwig.hmftools.linx.LinxConfig.SV_DATA_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -51,8 +49,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SvDataLoader
 {
@@ -167,16 +163,14 @@ public class SvDataLoader
     private static void loadStructuralVariants(
             final CommandLine cmd, final DatabaseAccess dbAccess, final String sampleId, final String svDataOutputDir)
     {
-        if(!cmd.hasOption(VCF_FILE) || !cmd.hasOption(REF_GENOME_FILE))
+        if(!cmd.hasOption(VCF_FILE))
         {
-            LOGGER.error("missing VCF or ref genome config to load VCF file");
+            LOGGER.error("missing VCF to load VCF file");
             return;
         }
 
         final String vcfFile = cmd.getOptionValue(VCF_FILE);
-        final String refGenomeFile = cmd.getOptionValue(REF_GENOME_FILE);
-
-        final List<StructuralVariantData> svDataList = loadSvDataFromVcf(vcfFile, refGenomeFile);
+        final List<StructuralVariantData> svDataList = loadSvDataFromVcf(vcfFile);
 
         if(!svDataList.isEmpty())
         {
@@ -201,7 +195,7 @@ public class SvDataLoader
         }
     }
 
-    public static final List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile, final String refGenomeFile)
+    public static final List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
     {
         LOGGER.info("loading SV data from vcf({})", vcfFile);
 
@@ -209,14 +203,8 @@ public class SvDataLoader
 
         try
         {
-            final IndexedFastaSequenceFile sequenceFile =
-                    !refGenomeFile.isEmpty() ? new IndexedFastaSequenceFile(new File(refGenomeFile)) : null;
-
-            final EnrichedStructuralVariantFactory factory = new EnrichedStructuralVariantFactory(sequenceFile);
             final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
-
-            LOGGER.info("Enriching variants");
-            final List<EnrichedStructuralVariant> enrichedVariants = factory.enrich(variants);
+            final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             // generate a unique ID for each SV record
             int svId = 0;
@@ -319,7 +307,6 @@ public class SvDataLoader
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database url");
-        options.addOption(REF_GENOME_FILE, true, "Path to the indexed ref genome fasta file");
         options.addOption(SV_DATA_DIR, true, "Directory to read or write SV data");
 
         return options;
