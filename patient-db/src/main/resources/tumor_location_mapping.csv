@@ -164,6 +164,7 @@ searchTerm,primaryTumorLocation,subType
 "Neuroendocrine tumor",NET,""
 "non-HIV Kaposisarcoom",Skin,"Other"
 "Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,"Lung Cancer: Non-Small Cell"
+"Not in dropdown list (please specify below)_adenocarcinoom van de klier van Bartholin vulva links",Vulva,"Adenocarcinoma"
 "Not in dropdown list (please specify below)_NEC: cervix",NET,"NEC"
 "Not in dropdown list (please specify below)_NET; primary location unspecified",NET,""
 "Oesophagal cancer (at transition from oesophagus to stomach)",Esophagus,""
