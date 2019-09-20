@@ -93,6 +93,7 @@ public class Links
                 .endOrientation(file.OrientEnd)
                 .endInfo(file.InfoEnd)
                 .ploidy(file.Ploidy)
+                .frame(0)
                 .build();
     }
 
@@ -117,6 +118,28 @@ public class Links
         Collections.sort(results);
 
         return results;
+    }
+
+    public static List<Link> addFrame(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    {
+        final List<Link> result = Lists.newArrayList();
+
+        for (Link link : links)
+        {
+            int minConnectedFrame = segments.stream().filter(x -> Links.connnected(link, x)).mapToInt(Segment::frame).min().orElse(0);
+            result.add(ImmutableLink.builder().from(link).frame(minConnectedFrame + 1).build());
+        }
+
+        return result;
+    }
+
+    private static boolean connnected(@NotNull final Link link, @NotNull final Segment segment)
+    {
+        boolean connectedAtStart = segment.chromosome().equals(link.startChromosome()) && (segment.start() == link.startPosition()
+                || segment.end() == link.startPosition());
+        boolean connectedAtEnd = segment.chromosome().equals(link.endChromosome()) && (segment.start() == link.endPosition()
+                || segment.end() == link.endPosition());
+        return connectedAtStart || connectedAtEnd;
     }
 
 }

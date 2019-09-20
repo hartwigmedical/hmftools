@@ -12,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Link
 {
+    public abstract int frame();
+
     public abstract String sampleId();
 
     public abstract int clusterId();
