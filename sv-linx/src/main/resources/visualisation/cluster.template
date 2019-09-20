@@ -1,5 +1,7 @@
 <<include etc/colors_fonts_patterns.conf>>
 
+current_frame       = SUBSTITUTE_CURRENT_FRAME
+
 show_ticks          = no
 show_tick_labels    = no
 
@@ -42,10 +44,11 @@ show_tick_labels    = no
 
     <highlight>
 		file = SUBSTITUTE_SAMPLE.segment.circos
+		stroke_thickness = 0
         <rules>
             <rule>
-                condition = var(value) == 0
-                show = no
+                condition = var(frame) > conf(current_frame)
+                fill_color = faint
             </rule>
         </rules>
     </highlight>
@@ -289,6 +292,25 @@ chromosomes_display_default = yes
 
 
 	# -----------------------------------------------------------
+	# Connectors
+    <plot>
+        type             = connector
+        file             = SUBSTITUTE_SAMPLE.connector.circos
+        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
+        connector_dims   = 0.0,0.3,0.4,0.3,0
+        thickness        = 4
+        color            = red
+
+        <rules>
+            <rule>
+                condition = var(frame) > conf(current_frame)
+                color = faint
+            </rule>
+        </rules>
+
+    </plot>
+
+	# -----------------------------------------------------------
 	# Scatter
 	<plot>
 		type             = scatter
@@ -304,18 +326,14 @@ chromosomes_display_default = yes
         min              = 0
         max              = SUBSTITUTE_SV_MAX
 
-	</plot>
+        <rules>
+            <rule>
+                condition = var(frame) > conf(current_frame)
+                color = faint
+            </rule>
+        </rules>
 
-	# -----------------------------------------------------------
-	# Connectors
-    <plot>
-        type             = connector
-        file             = SUBSTITUTE_SAMPLE.connector.circos
-        r0	             = SUBSTITUTE_MAP_INNER_RADIUSr
-        connector_dims   = 0.0,0.3,0.4,0.3,0
-        thickness        = 4
-        color            = red
-    </plot>
+	</plot>
 
 	# -----------------------------------------------------------
 	# SGL Scatter
@@ -367,6 +385,13 @@ chromosomes_display_default = yes
         radius        = SUBSTITUTE_MAP_INNER_RADIUSr
         color         = red
         thickness     = 2
+
+        <rules>
+            <rule>
+                condition = var(frame) > conf(current_frame)
+                color = faint
+            </rule>
+        </rules>
     </link>
 </links>
 
@@ -409,4 +434,7 @@ chromosomes_display_default = yes
     chr22 = 97,135,192
     chrX = 107,132,190
     chrY = 117,128,188
+
+    faint = 229,229,229
+
 </colors>

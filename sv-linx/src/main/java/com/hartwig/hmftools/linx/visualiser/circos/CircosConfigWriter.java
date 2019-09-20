@@ -93,6 +93,7 @@ public class CircosConfigWriter
         mapOuterRadius = copyNumberInnerRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
+
     }
 
     public String configPath()
@@ -127,6 +128,7 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
+                        .replaceAll("SUBSTITUTE_CURRENT_FRAME", String.valueOf(circosData.maxFrame()))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.outerRadius()))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
