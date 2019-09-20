@@ -492,7 +492,7 @@ CREATE TABLE structuralVariant
     startAnchoringSupportDistance int,
     endAnchoringSupportDistance int,
     PRIMARY KEY (id),
-    INDEX(sampleId)
+    INDEX(sampleId, svId)
 );
 
 DROP TABLE IF EXISTS svAnnotation;
@@ -521,7 +521,7 @@ CREATE TABLE svAnnotation
     localTICountStart INT,
     localTICountEnd INT,
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, svId),
     INDEX(clusterId),
     INDEX(svId)
 );
@@ -539,7 +539,7 @@ CREATE TABLE svCluster
     clusterCount INT,
     clusterDesc VARCHAR(50),
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, clusterId),
     INDEX(clusterId)
 );
 
@@ -565,7 +565,7 @@ CREATE TABLE svLink
     ploidyUncertainty DOUBLE PRECISION,
     pseudogeneInfo varchar(255),
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, clusterId),
     INDEX(clusterId)
 );
 
@@ -578,7 +578,7 @@ CREATE TABLE svDriver
     gene VARCHAR(50) NOT NULL,
     eventType VARCHAR(50),
     PRIMARY KEY (id),
-    INDEX(sampleId),
+    INDEX(sampleId, clusterId),
     INDEX(clusterId)
 );
 
@@ -605,8 +605,7 @@ CREATE TABLE svBreakend
     nextSpliceDistance INT,
     totalExonCount SMALLINT NOT NULL,
     PRIMARY KEY (id),
-    INDEX(svId),
-    INDEX(sampleId),
+    INDEX(sampleId, svId),
     INDEX(gene),
     INDEX(transcriptId)
 );

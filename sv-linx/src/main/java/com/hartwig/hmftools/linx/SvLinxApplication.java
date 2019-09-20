@@ -2,10 +2,11 @@ package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
+import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
@@ -13,25 +14,21 @@ import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
-import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
+import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -257,9 +254,9 @@ public class SvLinxApplication
 
     private static List<StructuralVariantData> loadSampleSvDataFromFile(final String samplePath, final String sampleId, final CommandLine cmd)
     {
-        if(cmd.hasOption(VCF_FILE) && cmd.hasOption(REF_GENOME_FILE))
+        if(cmd.hasOption(VCF_FILE))
         {
-            return loadSvDataFromVcf(cmd.getOptionValue(VCF_FILE), cmd.getOptionValue(REF_GENOME_FILE));
+            return loadSvDataFromVcf(cmd.getOptionValue(VCF_FILE));
         }
         else
         {

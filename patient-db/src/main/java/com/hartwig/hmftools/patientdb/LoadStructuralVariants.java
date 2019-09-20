@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class LoadStructuralVariants {
 
@@ -38,7 +36,6 @@ public class LoadStructuralVariants {
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String REF_GENOME = "ref_genome";
     private static final String ALIAS = "alias";
     private static final String SV_DATA_DIRECTORY = "sv_data_dir";
 
@@ -52,20 +49,13 @@ public class LoadStructuralVariants {
         final String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
 
         LOGGER.info("Reading data from {}", vcfPath);
-        final IndexedFastaSequenceFile sequenceFile =
-                cmd.hasOption(REF_GENOME) ? new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME))) : null;
-
-        final EnrichedStructuralVariantFactory factory = new EnrichedStructuralVariantFactory(sequenceFile);
         final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfPath, new AlwaysPassFilter());
-
-        LOGGER.info("Enriching variants");
-        final List<EnrichedStructuralVariant> enrichedVariants = factory.enrich(variants);
+        final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
         // generate a unique ID for each SV record
         int svId = 0;
 
         List<StructuralVariantData> svDataList = Lists.newArrayList();
-
         for (EnrichedStructuralVariant var : enrichedVariants) {
             svDataList.add(convertSvData(var, svId++));
         }
@@ -152,7 +142,6 @@ public class LoadStructuralVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(REF_GENOME, true, "Path to the (indexed) ref genome fasta file.");
         options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
         options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
 

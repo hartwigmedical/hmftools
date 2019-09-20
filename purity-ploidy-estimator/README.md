@@ -956,6 +956,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History
+- Upcoming
+  - Driver catalog written to DB
 - [2.34](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.34)
   - Added driver catalog to file output
   - Purity sunrise plot now supports somatic inferred purity 

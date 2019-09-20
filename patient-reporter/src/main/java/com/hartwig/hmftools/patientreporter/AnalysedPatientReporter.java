@@ -41,6 +41,7 @@ import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnaly
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -211,9 +212,11 @@ class AnalysedPatientReporter {
 
         LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().tumorSampleId());
         LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);
-        LOGGER.info(" Primary tumor location: {} ({})",
+        LOGGER.info(" Primary tumor location: {}{}",
                 report.sampleReport().primaryTumorLocationString(),
-                report.sampleReport().cancerSubTypeString());
+                !report.sampleReport().cancerSubTypeString().isEmpty()
+                        ? " (" + report.sampleReport().cancerSubTypeString() + ")"
+                        : Strings.EMPTY);
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().purityShallowSeq());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));

@@ -131,7 +131,7 @@ public class PatientReporterApplication {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
 
         String filePrefix = type == LimsSampleType.CORE
-                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId()
+                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
                 : sampleReport.tumorSampleId();
         return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
     }
