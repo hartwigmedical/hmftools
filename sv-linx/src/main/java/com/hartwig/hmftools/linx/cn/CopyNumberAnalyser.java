@@ -20,7 +20,11 @@ import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -58,7 +62,7 @@ public class CopyNumberAnalyser
 
     private final CnDataLoader mCnDataLoader;
 
-    private List<String> mSampleIds;
+    private final List<String> mSampleIds;
     private BufferedWriter mLohEventWriter;
     private BufferedWriter mPloidyCalcWriter;
     private BufferedWriter mChrArmWriter;
@@ -75,6 +79,7 @@ public class CopyNumberAnalyser
     {
         mDbAccess = dbAccess;
         mOutputPath = outputPath;
+        mSampleIds = Lists.newArrayList();
 
         mCnDataLoader = new CnDataLoader("", dbAccess);
 
@@ -105,7 +110,7 @@ public class CopyNumberAnalyser
     {
         if(cmd.hasOption(SAMPLE))
         {
-            mSampleIds = sampleListFromConfigStr(cmd.getOptionValue(SAMPLE));
+            mSampleIds.addAll(sampleListFromConfigStr(cmd.getOptionValue(SAMPLE)));
         }
 
         mWritePloidyCalcs = cmd.hasOption(WRITE_PLOIDY_TO_FILE);
@@ -318,6 +323,43 @@ public class CopyNumberAnalyser
         }
     }
 
+    private boolean isCopyNumberNeutral(final LohEvent lohEvent)
+    {
+        if(lohEvent.chromosomeLoss())
+            return false;
+
+        final List<SvCNData> cnDataList = mCnDataLoader.getChrCnDataMap().get(lohEvent.Chromosome);
+
+        if(cnDataList == null || cnDataList.isEmpty())
+            return false;
+
+        if(!lohEvent.SegStart.equals(TELOMERE))
+        {
+            final SvCNData startCnData = lohEvent.getCnData(true);
+
+            if(startCnData.getIndex() == 0)
+                return false;
+
+            final SvCNData prevCnData = cnDataList.get(startCnData.getIndex() - 1);
+            if (!copyNumbersEqual(startCnData.CopyNumber, prevCnData.CopyNumber))
+                return false;
+        }
+
+        if(!lohEvent.SegEnd.equals(TELOMERE))
+        {
+            final SvCNData endCnData = lohEvent.getCnData(false);
+
+            if(endCnData.getIndex() >= cnDataList.size() - 1)
+                return false;
+
+            final SvCNData nextCnData = cnDataList.get(endCnData.getIndex() + 1);
+            if (!copyNumbersEqual(endCnData.CopyNumber, nextCnData.CopyNumber))
+                return false;
+        }
+
+        return true;
+    }
+
     private void writeLohData(final String sampleId)
     {
         try
@@ -328,20 +370,27 @@ public class CopyNumberAnalyser
 
                 mLohEventWriter = createBufferedWriter(outputFileName, false);
 
-                mLohEventWriter.write("SampleId,Chromosome,PosStart,PosEnd,SegStart,SegEnd");
-                mLohEventWriter.write(",SegCount,Length,StartSV,EndSV");
+                mLohEventWriter.write("SampleId,Ploidy,Chromosome,PosStart,PosEnd,SegStart,SegEnd");
+                mLohEventWriter.write(",SegCount,Length,StartSV,EndSV,CnStart,CnEnd,CnNeutral");
                 mLohEventWriter.newLine();
             }
 
             final List<LohEvent> lohEvents = mCnDataLoader.getLohData();
+            double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
 
             for(final LohEvent lohData : lohEvents)
             {
-                mLohEventWriter.write(String.format("%s,%s,%d,%d,%s,%s",
-                        sampleId, lohData.Chromosome, lohData.PosStart, lohData.PosEnd, lohData.SegStart, lohData.SegEnd));
+                // report whether this LOH has copy number change on both ends or not
+                boolean cnNeutral = isCopyNumberNeutral(lohData);
+
+                mLohEventWriter.write(String.format("%s,%.2f,%s,%d,%d,%s,%s",
+                        sampleId, samplePloidy, lohData.Chromosome, lohData.PosStart, lohData.PosEnd, lohData.SegStart, lohData.SegEnd));
 
                 mLohEventWriter.write(String.format(",%d,%d,%s,%s",
                         lohData.SegCount, lohData.length(), lohData.StartSV, lohData.EndSV));
+
+                mLohEventWriter.write(String.format(",%.2f,%.2f,%s",
+                        lohData.getCnData(true).CopyNumber, lohData.getCnData(false).CopyNumber, cnNeutral));
 
                 mLohEventWriter.newLine();
             }

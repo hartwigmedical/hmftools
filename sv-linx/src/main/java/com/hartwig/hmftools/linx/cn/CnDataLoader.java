@@ -285,8 +285,8 @@ public class CnDataLoader
         mLohEventData.clear();
         mHomLossData.clear();
 
-        // walk through the CN records looking for any loss of hetrozygosity, defined as a change in the actual baf to zero
-        // and when CN rises back above this level, consider the section ended
+        // walk through the CN records looking for any loss of hetrozygosity, defined as minor allele ploidy < 0.5
+        // and when CN rises back above this level, consider the LOH section ended
         boolean isLohSection = false;
         double lohMinCN = 0;
         double lastMinCN = 0;
@@ -617,6 +617,7 @@ public class CnDataLoader
         if(lohHomLossEvents != null)
             lohData.addHomLossEvents(lohHomLossEvents);
 
+        lohData.setCnData(startData, endData);
         mLohEventData.add(lohData);
 
         return (startSvData != null && endSvData != null) ? 1 : 0;

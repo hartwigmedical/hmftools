@@ -22,7 +22,7 @@ public class SvCNData {
     final public double ActualBaf;
     final public int DepthWindowCount;
 
-    private int mIndex; // in the source table
+    private int mIndex; // in the copy number table
 
     private StructuralVariantData mSvData; // linked if known
     private boolean mSvLinkOnStart;

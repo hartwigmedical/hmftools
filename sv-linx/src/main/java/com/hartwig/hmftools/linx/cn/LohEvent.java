@@ -24,6 +24,9 @@ public class LohEvent
 
     private final List<HomLossEvent> mHomLossEvents;
 
+    private SvCNData mStartCnData;
+    private SvCNData mEndCnData;
+
     private boolean mIsValid;
     private SvBreakend mBreakendStart;
     private SvBreakend mBreakendEnd;
@@ -49,6 +52,8 @@ public class LohEvent
         StartSV = startSV;
         EndSV = endSV;
 
+        mStartCnData = null;
+        mEndCnData = null;
         mBreakendStart = null;
         mBreakendEnd = null;
         mHomLossEvents = Lists.newArrayList();
@@ -63,13 +68,15 @@ public class LohEvent
             mBreakendEnd = breakend;
     }
 
-    public void clearBreakends()
+    public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
+
+    public void setCnData(final SvCNData startCnData, final SvCNData endCnData)
     {
-        mBreakendStart = null;
-        mBreakendEnd = null;
+        mStartCnData = startCnData;
+        mEndCnData = endCnData;
     }
 
-    public final SvBreakend getBreakend(boolean isStart) { return isStart ? mBreakendStart : mBreakendEnd; }
+    public final SvCNData getCnData(boolean isStart) { return isStart ? mStartCnData : mEndCnData; }
 
     public boolean matchedBothSVs() { return mBreakendStart != null && mBreakendEnd != null; }
     public boolean sameSV() { return mBreakendStart != null && mBreakendStart.getSV() == mBreakendEnd.getSV(); }
@@ -130,8 +137,12 @@ public class LohEvent
 
     public boolean wholeArmLoss() { return armLoss() || chromosomeLoss(); }
 
-    public boolean isSvEvent() { return StartSV != CN_DATA_NO_SV || EndSV != CN_DATA_NO_SV; }
-    public boolean doubleSvEvent() { return StartSV != CN_DATA_NO_SV && EndSV != CN_DATA_NO_SV; }
+    public boolean isSvEvent(boolean useStart)
+    {
+        return useStart ? StartSV != CN_DATA_NO_SV : EndSV != CN_DATA_NO_SV;
+    }
+    public boolean isSvEvent() { return isSvEvent(true) || isSvEvent(false); }
+    public boolean doubleSvEvent() { return isSvEvent(true) && isSvEvent(false); }
 
     public String toString()
     {
