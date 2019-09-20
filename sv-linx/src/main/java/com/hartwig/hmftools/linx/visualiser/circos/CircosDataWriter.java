@@ -368,17 +368,17 @@ public class CircosDataWriter
 
             final String colorOption = colorPicker.transparentColor(segment.clusterId(), segment.chainId());
             final String startGlyph = scatterGlyph(true, segment, links);
-            result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize));
+            result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize, segment.frame()));
             if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner));
+                result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner, 0));
             }
 
             final String endGlyph = scatterGlyph(false, segment, links);
-            result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize));
+            result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize, segment.frame()));
             if (segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
-                result.add(scatterEntry(false, segment, "color=white", endGlyph, glyphSizeInner));
+                result.add(scatterEntry(false, segment, "color=white", endGlyph, glyphSizeInner, 0));
             }
         }
 
@@ -428,7 +428,7 @@ public class CircosDataWriter
 
     @NotNull
     private String scatterEntry(boolean isStart, @NotNull final Segment segment, @NotNull final String color, @NotNull final String glyph,
-            int glyph_size)
+            int glyph_size, int frame)
     {
 
         long location = isStart ? segment.start() : segment.end();
@@ -437,7 +437,7 @@ public class CircosDataWriter
                 .add(String.valueOf(location))
                 .add(String.valueOf(location))
                 .add(String.valueOf(segment.track()))
-                .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyph_size)
+                .add(color + "," + "glyph=" + glyph + ",glyph_size=" + glyph_size + ",frame=" + frame)
                 .toString();
     }
 
@@ -465,7 +465,8 @@ public class CircosDataWriter
                     .add(circosContig(link.endChromosome()))
                     .add(String.valueOf(link.endPosition()))
                     .add(String.valueOf(link.endPosition()))
-                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thicknessString(link.ploidy()))
+                    .add(colorPicker.transparentColor(link.clusterId(), link.chainId()) + "," + thicknessString(link.ploidy()) + ",frame="
+                            + link.frame())
                     .toString();
             result.add(linkString);
         }
@@ -484,8 +485,9 @@ public class CircosDataWriter
                     .add(String.valueOf(connector.position()))
                     .add(String.valueOf(connector.position()))
                     .add("r1=" + RATIO_FORMAT.format(r1) + "r," + colorPicker.transparentColor(connector.clusterId(), connector.chainId())
-                            + ","
-                            + thicknessString(connector.ploidy()))
+                            + "," + thicknessString(connector.ploidy())
+                            + ",frame=" + connector.frame()
+                    )
                     .toString();
             result.add(start);
         }
@@ -536,7 +538,7 @@ public class CircosDataWriter
                         .add(String.valueOf(segment.end()))
                         .add(String.valueOf(segment.track()))
                         .add("fill_" + colorPicker.transparentColor(segment.clusterId(), segment.chainId()) + "," + r0String + ","
-                                + r1String)
+                                + r1String + ",frame=" + segment.frame())
                         .toString();
                 result.add(entry);
 

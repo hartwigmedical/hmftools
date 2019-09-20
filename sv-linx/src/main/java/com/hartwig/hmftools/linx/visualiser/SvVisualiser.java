@@ -222,7 +222,7 @@ public class SvVisualiser implements AutoCloseable
     }
 
     private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
-            @NotNull final List<Link> links,
+            @NotNull final List<Link> filteredLinks,
             @NotNull final List<Segment> filteredSegments,
             @NotNull final List<Exon> filteredExons,
             @NotNull final List<ProteinDomain> filteredProteinDomains,
@@ -232,7 +232,7 @@ public class SvVisualiser implements AutoCloseable
     {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
-        positionsToCover.addAll(Links.allPositions(links));
+        positionsToCover.addAll(Links.allPositions(filteredLinks));
         positionsToCover.addAll(Span.allPositions(filteredSegments));
         positionsToCover.addAll(Span.allPositions(filteredExons));
 
@@ -242,7 +242,8 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, showSimpleSvSegments);
+        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments);
+        final List<Link> links = Links.addFrame(segments, filteredLinks);
 
         final ColorPicker color = colorPickerFactory.create(links);
 
