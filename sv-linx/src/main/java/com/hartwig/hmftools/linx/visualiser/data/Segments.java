@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -30,7 +29,8 @@ public class Segments
 
     private static final RefGenome REF_GENOME = RefGenome.HG19;
 
-    public static double segmentPloidyBefore(final int track, @NotNull final GenomePosition position, @NotNull final List<Segment> segments)
+    public static double segmentPloidyBefore(final int track, @NotNull final GenomePosition position,
+            @NotNull final List<Segment> segments)
     {
         return segments.stream()
                 .filter(x -> x.track() < track)
@@ -54,6 +54,7 @@ public class Segments
                 .startTerminal(SegmentTerminal.TELOMERE)
                 .endTerminal(SegmentTerminal.TELOMERE)
                 .ploidy(0)
+                .frame(0)
                 .build();
     }
 
@@ -72,6 +73,7 @@ public class Segments
                 .startTerminal(SegmentTerminal.CENTROMERE)
                 .endTerminal(SegmentTerminal.CENTROMERE)
                 .ploidy(0)
+                .frame(0)
                 .build();
     }
 
@@ -175,49 +177,22 @@ public class Segments
                         ? Long.valueOf(file.PosEnd)
                         : Long.valueOf(file.PosStart))
                 .track(0)
+                .frame(0)
                 .startTerminal(SegmentTerminal.fromString(file.PosStart))
                 .endTerminal(SegmentTerminal.fromString(file.PosEnd))
                 .ploidy(file.LinkPloidy)
                 .build();
     }
 
-    @VisibleForTesting
     @NotNull
-    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments)
-    {
-        final Map<String, Integer> trackMap = Maps.newHashMap();
-        final List<Segment> result = Lists.newArrayList();
-
-        int currentTrack = 1;
-        for (final Segment segment : segments)
-        {
-            final String chromosome = segment.chromosome();
-            if (!trackMap.containsKey(chromosome))
-            {
-                trackMap.put(chromosome, currentTrack);
-            }
-            else
-            {
-                currentTrack = Math.max(currentTrack, trackMap.get(chromosome) + 1);
-                trackMap.put(chromosome, currentTrack);
-            }
-
-            result.add(ImmutableSegment.builder().from(segment).track(currentTrack).build());
-
-        }
-
-        return result;
-
-    }
-
-    @NotNull
-    private static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links,
+    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links,
             boolean showSimpleSvSegments)
     {
 
         final Map<String, Integer> trackMap = Maps.newHashMap();
         final List<Segment> result = Lists.newArrayList();
 
+        int frame = -1;
         int currentTrack = 1;
         for (final Segment segment : segments)
         {
@@ -238,27 +213,12 @@ public class Segments
                 }
                 trackMap.put(chromosome, currentTrack);
 
-                result.add(ImmutableSegment.builder().from(segment).track(currentTrack).build());
+                result.add(ImmutableSegment.builder().from(segment).track(currentTrack).frame(frame += 2).build());
             }
         }
 
         return result;
 
-    }
-
-    @VisibleForTesting
-    @NotNull
-    static List<Segment> alwaysIncrement(@NotNull final List<Segment> segments)
-    {
-        final List<Segment> result = Lists.newArrayList();
-
-        int currentTrack = 1;
-        for (final Segment segment : segments)
-        {
-            result.add(ImmutableSegment.builder().from(segment).track(currentTrack++).build());
-        }
-
-        return result;
     }
 
     private static boolean showSegment(boolean showSimpleSvSegments, @NotNull final Segment segment, @NotNull final List<Link> links)

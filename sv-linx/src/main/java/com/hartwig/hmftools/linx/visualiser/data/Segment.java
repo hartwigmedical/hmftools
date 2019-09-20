@@ -16,6 +16,8 @@ public abstract class Segment implements GenomeRegion
     {
     }
 
+    public abstract int frame();
+
     public abstract String sampleId();
 
     public abstract int clusterId();
