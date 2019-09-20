@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Connector implements GenomePosition
 {
+    public abstract int frame();
+
     public abstract int clusterId();
 
     public abstract int chainId();
