@@ -89,7 +89,6 @@ public class FusionLikelihood
         mLogVerbose = false;
     }
 
-
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(DEL_DUP_BUCKET_LENGTHS, true, "Semi-colon separated DEL bucket lengths");

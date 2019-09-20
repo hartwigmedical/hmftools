@@ -44,7 +44,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvLinxApplication
 {
-
     private static final String DRIVERS_CHECK = "check_drivers";
     private static final String CHECK_FUSIONS = "check_fusions";
     private static final String FILTER_QC_PASS = "filter_qc_pass";

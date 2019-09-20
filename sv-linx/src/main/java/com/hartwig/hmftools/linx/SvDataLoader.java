@@ -209,7 +209,6 @@ public class SvDataLoader
             // generate a unique ID for each SV record
             int svId = 0;
 
-
             for (EnrichedStructuralVariant var : enrichedVariants)
             {
                 svDataList.add(convertSvData(var, svId++));
@@ -318,6 +317,4 @@ public class SvDataLoader
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
-
 }
