@@ -167,6 +167,7 @@ searchTerm,primaryTumorLocation,subType
 "Not in dropdown list (please specify below)_adenocarcinoom van de klier van Bartholin vulva links",Vulva,"Adenocarcinoma"
 "Not in dropdown list (please specify below)_NEC: cervix",NET,"NEC"
 "Not in dropdown list (please specify below)_NET; primary location unspecified",NET,""
+"Not in dropdown list (please specify below)_squamous cell carcinoma of the bladder",Urinary tract,"Bladder"
 "Oesophagal cancer (at transition from oesophagus to stomach)",Esophagus,""
 "Oesophago-gastric cancer (junctional)",Esophagus,"Esophagus-Gastric junction"
 "Oesophagus/Cardiacarcinoma",Stomach,"Cardiacarcinoma"
