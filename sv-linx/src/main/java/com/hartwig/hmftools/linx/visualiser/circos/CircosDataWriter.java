@@ -66,7 +66,7 @@ public class CircosDataWriter
         this.thickness = new Thickness(circosConfig.minLineSize(), circosConfig.maxLineSize(), data.connectors());
     }
 
-    public void write() throws IOException
+    public Object write() throws IOException
     {
         final Map<String, String> geneColorMap = Maps.newHashMap();
         data.genes().forEach(x ->
@@ -147,6 +147,8 @@ public class CircosDataWriter
 
         final String chromosomeBandPath = filePrefix + ".chromosome.circos";
         Files.write(new File(chromosomeBandPath).toPath(), chromosomeLocations(data.unadjustedAlterations()));
+
+        return this;
     }
 
     @NotNull
