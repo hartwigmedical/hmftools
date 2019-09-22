@@ -147,7 +147,7 @@ public class Lims {
             LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleId);
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab status do not match for sample " + sampleId + "!");
+                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleId + "!");
             } else {
                 if (purityShallowExecuted) {
                     if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
@@ -182,7 +182,7 @@ public class Lims {
                 return NOT_AVAILABLE_STRING;
             } else {
                 try {
-                    return Long.toString(Math.round(Double.parseDouble(tumorPercentageString))) + "%";
+                    return Math.round(Double.parseDouble(tumorPercentageString)) + "%";
                 } catch (final NumberFormatException e) {
                     return NOT_AVAILABLE_STRING;
                 }
