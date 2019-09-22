@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.LoadGermlineVariants.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.INTERIM_FILENAME;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.READ_BAMS_DIRECT;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
@@ -16,7 +14,6 @@ import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,14 +21,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorDataCollection;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
-import com.hartwig.hmftools.bachelor.types.RunDirectory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
@@ -58,29 +53,24 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class BachelorPostProcess
+public class VariantEnricher
 {
     private final DatabaseAccess mDbAccess;
     private final BachelorConfig mConfig;
     private IndexedFastaSequenceFile mIndexedFastaSeqFile;
     private BufferedWriter mWriter;
-    private final AlleleDepthLoader mAllelDepthLoader;
     private BamCountReader mBamCountReader;
-    private final boolean mReadBamsDirect;
 
     private List<BachelorGermlineVariant> mBachRecords;
 
-    private static final Logger LOGGER = LogManager.getLogger(BachelorPostProcess.class);
+    private static final Logger LOGGER = LogManager.getLogger(VariantEnricher.class);
 
-    BachelorPostProcess(final BachelorConfig config, final CommandLine cmd)
+    VariantEnricher(final BachelorConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mBachRecords = Lists.newArrayList();
 
-        mReadBamsDirect = cmd.hasOption(READ_BAMS_DIRECT);
-
-        mBamCountReader = mReadBamsDirect ? new BamCountReader() : null;
-        mAllelDepthLoader = !mReadBamsDirect ? new AlleleDepthLoader() : null;
+        mBamCountReader = new BamCountReader();
 
         mDbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
@@ -96,7 +86,7 @@ public class BachelorPostProcess
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
 
                 if(mBamCountReader != null)
-                    mBamCountReader.initialise(cmd, mIndexedFastaSeqFile);
+                    mBamCountReader.initialise(config.RefGenomeFile, mIndexedFastaSeqFile);
             }
             catch (IOException e)
             {
@@ -108,41 +98,9 @@ public class BachelorPostProcess
         mWriter = null;
     }
 
-    private void loadBachelorRecords()
-    {
-        String bachelorInputFile = mConfig.SampleDataDir;
-
-        if(mConfig.IsBatchMode)
-        {
-            bachelorInputFile += BATCH_FILE + INTERIM_FILENAME;
-        }
-        else
-        {
-            bachelorInputFile += mConfig.SampleId + INTERIM_FILENAME;
-        }
-
-        LOGGER.info("Loading bachelor interim file: {}", bachelorInputFile);
-
-        BachelorDataCollection dataCollection = new BachelorDataCollection();
-
-        if (!dataCollection.loadBachelorData(bachelorInputFile))
-        {
-            return;
-        }
-
-        mBachRecords.addAll(dataCollection.getBachelorVariants());
-    }
-
     public void run(@Nullable List<BachelorGermlineVariant> bachRecords)
     {
-        if(bachRecords == null)
-        {
-            loadBachelorRecords();
-        }
-        else
-        {
-            mBachRecords = bachRecords;
-        }
+        mBachRecords = bachRecords;
 
         processCurrentRecords(mBachRecords);
 
@@ -165,18 +123,7 @@ public class BachelorPostProcess
 
         if(recordsWithTumorData < bachRecords.size())
         {
-            if (mReadBamsDirect)
-            {
-                mBamCountReader.readBamCounts(bachRecords, mConfig.SampleDataDir);
-            }
-            else
-            {
-                if (!mAllelDepthLoader.loadMiniPileupData(mConfig.SampleDataDir))
-                    return;
-
-                if (!mAllelDepthLoader.applyPileupData(bachRecords))
-                    return;
-            }
+            mBamCountReader.readBamCounts(mConfig.BamFile, bachRecords);
         }
 
         Map<String, List<BachelorGermlineVariant>> sampleRecordsMap = Maps.newHashMap();
@@ -495,32 +442,6 @@ public class BachelorPostProcess
                     .clinvarSignificance(bachRecord.getClinvarSig())
                     .clinvarSignificanceInfo(bachRecord.getClinvarSigInfo())
                     .build());
-
-            /*
-                final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
-
-                writer.write(String.format(",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d",
-                        enrichedVariant.type(), enrichedVariant.ref(), enrichedVariant.alt(),
-                        bachRecord.Gene, bachRecord.TranscriptId,
-                        enrichedVariant.dbsnpID() == null ? "" : enrichedVariant.dbsnpID(),
-                        enrichedVariant.canonicalCosmicID() == null ? "" : enrichedVariant.canonicalCosmicID(),
-                        bachRecord.Effects, bachRecord.CodingEffect,
-                        bachRecord.isReadDataSet(), bachRecord.getGermlineAltCount(), bachRecord.getGermlineReadDepth(),
-                        bachRecord.getTumorAltCount(), bachRecord.getTumorReadDepth()));
-
-                writer.write(String.format(",%.2f,%.2f,%s,%s,%s,%s,%d",
-                        enrichedVariant.adjustedCopyNumber(), bachRecord.getAdjustedVaf(), enrichedVariant.highConfidenceRegion(),
-                        enrichedVariant.trinucleotideContext(), enrichedVariant.microhomology(), enrichedVariant.repeatSequence(),
-                        enrichedVariant.repeatCount()));
-
-                writer.write(String.format(",%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s,%s,%s",
-                        bachRecord.HgvsProtein, bachRecord.HgvsCoding, bachRecord.isBiallelic(), enrichedVariant.hotspot(),
-                        enrichedVariant.mappability(), bachRecord.IsHomozygous ? "HOM" : "HET", enrichedVariant.minorAllelePloidy(),
-                        bachRecord.isLowScore() ? "ARTEFACT" : "PASS", bachRecord.CodonInfo,
-                        bachRecord.getClinvarMatch(), bachRecord.getClinvarSig(), bachRecord.getClinvarSigInfo()));
-             */
-
-
         }
 
         return germlineVariants;

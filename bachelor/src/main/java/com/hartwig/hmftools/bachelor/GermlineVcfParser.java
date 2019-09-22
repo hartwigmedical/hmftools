@@ -1,20 +1,12 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.INTERIM_FILENAME;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
-import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.bachelor.types.RunDirectory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -34,17 +26,11 @@ public class GermlineVcfParser
     private final boolean mSkipIndexFile;
     private final String mExternalFiltersFile;
 
-    private BufferedWriter mVcfDataWriter;
-    private BufferedWriter mBedFileWriter;
-
-    private static final Logger LOGGER = LogManager.getLogger(BachelorApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(GermlineVcfParser.class);
 
     GermlineVcfParser(final BachelorConfig config, final CommandLine cmd)
     {
         mConfig = config;
-
-        mVcfDataWriter = null;
-        mBedFileWriter = null;
 
         mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
         mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
@@ -60,11 +46,6 @@ public class GermlineVcfParser
         {
             mProgram.addExternalFilters(ExternalDBFilters.loadExternalFilters(mExternalFiltersFile));
         }
-
-        if(mConfig.IsBatchMode)
-        {
-            createOutputFiles(mConfig.OutputDir, BATCH_FILE);
-        }
     }
 
     private static final String SKIP_INDEX_FILE = "skip_index_file";
@@ -78,7 +59,7 @@ public class GermlineVcfParser
 
     public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
 
-    public void run(RunDirectory runDir, String sampleId, String singleSampleOutputDir)
+    public void run(final String vcfFile, String sampleId, String singleSampleOutputDir)
     {
         if (mConfig.ProgramConfigMap.isEmpty())
         {
@@ -86,54 +67,23 @@ public class GermlineVcfParser
             return;
         }
 
-        LOGGER.info("Processing run for sampleId({}) directory({})", sampleId, runDir.sampleDir());
-
-        processVCF(sampleId, runDir.germline());
-
-        if(mProgram.getVariants().isEmpty())
+        if(!Files.exists(Paths.get(vcfFile)))
         {
-            LOGGER.debug("No valid variants found in " + runDir.germline().getPath());
+            LOGGER.info("sampleId({}) germline VCF({}) not found", sampleId, vcfFile);
             return;
         }
 
-        if(!mConfig.IsBatchMode)
-        {
-            LOGGER.debug("Creating single sample output dir: " + singleSampleOutputDir);
-            createOutputFiles(singleSampleOutputDir, sampleId);
-        }
+        LOGGER.info("sampleId({}) reading germline VCF({})", sampleId, vcfFile);
 
-        try
-        {
-            for (final BachelorGermlineVariant variant : mProgram.getVariants())
-            {
-                mVcfDataWriter.write(variant.asCsv(true));
-                mVcfDataWriter.newLine();
+        final File germlineVcf = new File(vcfFile);
 
-                if(mBedFileWriter != null)
-                {
-                    mBedFileWriter.write(String.format("%s\t%s\t%d\t%d",
-                            sampleId, variant.Chromosome, variant.Position - 1, variant.Position));
-                    mBedFileWriter.newLine();
-                }
-            }
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing output: {}", e.toString());
-        }
+        processVCF(sampleId, germlineVcf);
 
-        if(!mConfig.IsBatchMode)
+        if(mProgram.getVariants().isEmpty())
         {
-            close();
+            LOGGER.debug("no valid variants found");
+            return;
         }
-    }
-
-    public void close()
-    {
-        closeBufferedWriter(mVcfDataWriter);
-        mVcfDataWriter = null;
-        closeBufferedWriter(mBedFileWriter);
-        mBedFileWriter = null;
     }
 
     private void processVCF(final String sampleId, final File vcf)
@@ -150,37 +100,6 @@ public class GermlineVcfParser
         catch (final TribbleException e)
         {
             LOGGER.error("Error with VCF file {}: {}", vcf.getPath(), e.getMessage());
-        }
-    }
-
-    private void createOutputFiles(final String outputDir, final String filePrefix)
-    {
-        if(mVcfDataWriter != null || mBedFileWriter != null)
-            return;
-
-        final String mainFileName = outputDir + filePrefix + INTERIM_FILENAME;
-
-        try
-        {
-            mVcfDataWriter = createBufferedWriter(mainFileName, false);
-
-            mVcfDataWriter.write("SampleId,Program,Id,Gene,TranscriptId,Chromosome,Position,Ref,Alt");
-            mVcfDataWriter.write(",CodingEffect,Effect,Annotations,HgvsProtein,IsHomozygous,PhredScore,HgvsCoding,");
-            mVcfDataWriter.write(",MatchType,HasDepthInfo,GermlineAltCount,GermlineReadDepth,TumorAltCount,TumorReadDepth,CodonInfo");
-            mVcfDataWriter.write(",ClinvarMatch,ClinvarSignificance,ClinvarSigInfo");
-
-
-            mVcfDataWriter.newLine();
-
-            if(!mConfig.IsBatchMode)
-            {
-                String bedFileName = outputDir + "bachelor_bed.csv";
-                mBedFileWriter = createBufferedWriter(bedFileName, false);
-            }
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to create output files: {}", e.toString());
         }
     }
 }

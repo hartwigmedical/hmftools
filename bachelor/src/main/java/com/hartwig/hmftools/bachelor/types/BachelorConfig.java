@@ -32,15 +32,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class BachelorConfig
 {
-
-    public final String RunMode;
-    public final String SampleDataDir;
     public final String SampleId;
     public final String OutputDir;
+    public final String GermlineVcf;
+    public final String BamFile;
+    public final String RefGenomeFile;
     public final String PurpleDataDir;
+
     public final boolean IsBatchMode;
-    public final int MaxBatchDirectories;
-    public final List<String> RestrictedSampleIds;
+    public final BatchRunData BatchRun;
 
     public final Map<String, Program> ProgramConfigMap;
 
@@ -48,32 +48,19 @@ public class BachelorConfig
 
     // config options
     public static final String CONFIG_XML = "xml_config";
-    private static final String RUN_MODE = "run_mode";
     public static final String SAMPLE = "sample";
-    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String SAMPLE_LIST_FILE = "sample_list_file";
-    private static final String BATCH_MAX_DIR = "max_batch_dir"; // only for testing
 
-    public static final String RUN_MODE_BOTH = "Both";
-    public static final String RUN_MODE_VCF_PARSE = "VcfParse";
-    public static final String RUN_MODE_POST_PROCESS = "PostProcess";
-
-    // post-process
+    public static final String DB_USER = "db_user";
+    public static final String DB_PASS = "db_pass";
+    public static final String DB_URL = "db_url";
     public static final String REF_GENOME = "ref_genome";
+
+    private static final String GERMLINE_VCF = "germline_vcf";
+    private static final String TUMOR_BAM_FILE = "tumor_bam_file";
+    private static final String OUTPUT_DIR = "output_dir";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // path to purple data directory
-    private static final String BACH_DIRECTORY = "bachelor_dir"; // usually defaults to the 'bachelor' subdirectory of the sample dir
-    private static final String BACH_INPUT_FILE = "bachelor_file"; // full path
-    public static final String READ_BAMS_DIRECT = "bam_direct"; // skip BAM slicing and use of Mini-Pileup file reading
 
-    // common
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
     public static final String LOG_DEBUG = "log_debug";
-
-    // constants
-    public static final String INTERIM_FILENAME = ".bachelor_interim.csv";
     public static final String BATCH_FILE = "BATCH";
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorConfig.class);
@@ -90,54 +77,29 @@ public class BachelorConfig
                 mIsValid = false;
         }
 
-        RunMode = cmd.getOptionValue(RUN_MODE, RUN_MODE_BOTH);
-
-        LOGGER.info("Run mode: {}", RunMode);
-
         SampleId = cmd.getOptionValue(SAMPLE, "");
-
-        RestrictedSampleIds = Lists.newArrayList();
 
         if (SampleId.isEmpty() || SampleId.equals("*"))
         {
             LOGGER.info("Running in batch mode");
             IsBatchMode = true;
-            MaxBatchDirectories = Integer.parseInt(cmd.getOptionValue(BATCH_MAX_DIR, "0"));
-
-            if (cmd.hasOption(SAMPLE_LIST_FILE))
-            {
-                loadSampleListFile(cmd.getOptionValue(SAMPLE_LIST_FILE), RestrictedSampleIds);
-            }
+            BatchRun = new BatchRunData(cmd);
         }
         else
         {
             IsBatchMode = false;
-            MaxBatchDirectories = 0;
+            BatchRun = null;
         }
 
-        String sampleDir = cmd.getOptionValue(SAMPLE_DATA_DIR);
+        GermlineVcf = cmd.getOptionValue(GERMLINE_VCF);
+        BamFile = cmd.getOptionValue(TUMOR_BAM_FILE);
+        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
 
-        if (!sampleDir.endsWith(File.separator))
+        String sampleOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+
+        if (!sampleOutputDir.endsWith(File.separator))
         {
-            sampleDir += File.separator;
-        }
-
-        SampleDataDir = sampleDir;
-
-        String sampleOutputDir = "";
-
-        if (cmd.hasOption(OUTPUT_DIR))
-        {
-            sampleOutputDir = cmd.getOptionValue(OUTPUT_DIR);
-
-            if (!sampleOutputDir.endsWith(File.separator))
-            {
-                sampleOutputDir += File.separator;
-            }
-        }
-        else
-        {
-            sampleOutputDir = SampleDataDir;
+            sampleOutputDir += File.separator;
         }
 
         OutputDir = sampleOutputDir;
@@ -181,30 +143,7 @@ public class BachelorConfig
         return true;
     }
 
-    private void loadSampleListFile(final String filename, final List<String> sampleIds)
-    {
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
-            String line = fileReader.readLine(); // skip header
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                final String sampleId = items[0];
-                sampleIds.add(sampleId);
-            }
-
-            LOGGER.info("Loaded {} specific sample ids", sampleIds.size());
-
-        }
-        catch (IOException exception)
-        {
-            LOGGER.error("Failed to read sample list input CSV file({}): {}", filename, exception.toString());
-        }
-    }
 
 
     @NotNull
@@ -213,20 +152,12 @@ public class BachelorConfig
         final Options options = new Options();
 
         // germline VCF parsing
-        options.addOption(RUN_MODE, true, "VcfParse, PostProcess or Both (default)");
         options.addOption(CONFIG_XML, true, "XML with genes, black and white lists");
         options.addOption(OUTPUT_DIR, true, "When in single-sample mode, all output written to this dir");
-        options.addOption(SAMPLE_DATA_DIR, true, "the run directory to look for inputs");
-        options.addOption(SAMPLE_LIST_FILE, true, "Optional: limiting list of sample IDs to process");
+        options.addOption(TUMOR_BAM_FILE, true, "Location of a specific BAM file");        options.addOption(GERMLINE_VCF, true, "Germline VCF file");
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
-        options.addOption(BATCH_MAX_DIR, true, "Max batch directories to batch process");
-
-        // post-process
-        options.addOption(BACH_DIRECTORY, true, "Override for specific bachelor input dir, if left out then assumes in sample path & 'bachelor' sub-directory");
-        options.addOption(BACH_INPUT_FILE, true, "Override for specific bachelor input file, if left out then assumes in bachelor_dir & *germline_variants.csv");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
-        options.addOption(READ_BAMS_DIRECT, false, "Read tumor alt and read depth from available BAM file");
 
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");
@@ -236,7 +167,6 @@ public class BachelorConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         GermlineVcfParser.addCmdLineOptions(options);
-        BamCountReader.addCmdLineOptions(options);
 
         return options;
     }

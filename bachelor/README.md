@@ -36,73 +36,33 @@ The default mode for Bachelor is to run in a continuous mode where all 4 steps a
 
 Alternatively Stage 1 and Stage 2 can be run independently as shown below.
 
-1. Single-sample default/continuous mode:
+1. Find germline variants, write to file, upload to database
 
 ```bash
 java -jar bachelor.jar 
     -sample [sampleId] 
-    -xml_config /path/to/bachelor_config.xml 
-    -ext_filter_file /path/to/bachelor_clinvar_filters.csv 
-    -sample_data_dir /path/to/dir_that_holds_germline_vcf
-    -purple_data_dir purple
-    -output_dir /path/to/dir_that_will_hold_all_output 
-    -bam_direct 
-    -ref_genome /path/to/ref_genome.fasta 
-    -high_confidence_bed /path/to/high_conf_bed.vcf.gz 
-    -write_to_db  
+    -xml_config /path/bachelor_config.xml 
+    -ext_filter_file /path/bachelor_clinvar_filters.csv
+    -germline_vcf /sample_path/sampleid.germine_variants.vcf 
+    -tumor_bam_file /sample_path/sampleid.tumor.bam 
+    -purple_data_dir /sample_path/purple/
+    -output_dir /sample_path/bachelor/ 
+    -ref_genome /path/ref_genome.fasta 
     -db_url [db_url] -db_user [user] -db_pass [password] 
 ```
 
-2. Single-sample Stage 1 only
+2. Load germine variants from file and upload to database
 
 ```bash
-java -jar bachelor.jar 
-    -run_mode VcfParse 
+java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants 
     -sample [sampleId] 
-    -xml_config /path/to/bachelor_config.xml 
-    -ext_filter_file /path/to/bachelor_clinvar_filters.csv 
-    -sample_data_dir /path/to/dir_that_holds_germline_vcf
-    -output_dir /path/to/dir_that_will_hold_all_output 
-```
-
-3. Single-sample Stage 2 only
-```bash
-java -jar bachelor.jar 
-    -run_mode PostProcess
-    -sample [sampleId] 
-    -xml_config /path/to/bachelor_config.xml
-    -sample_data_dir /path/to/dir_that_holds_germline_vcf 
-    -purple_data_dir purple
-    -output_dir /path/to/dir_that_will_hold_all_output
-    -bam_direct 
-    -ref_genome /path/to/ref_genome.fasta 
-    -high_confidence_bed /path/to/high_conf_bed.vcf.gz 
-    -write_to_db  
+    -sample_data_dir /sample_path/bachelor/
     -db_url [db_url] -db_user [user] -db_pass [password] 
 ```
 
-
-4. Batch mode:
-
-```bash
-java -jar bachelor.jar 
-    -sample "*" or omit 
-    -xml_config /path/to/bachelor_config.xml 
-    -ext_filter_file /path/to/bachelor_clinvar_filters.csv 
-    -sample_data_dir [path_to_sample_vcf] 
-    -bam_direct 
-    -purple_data_dir purple
-    -ref_genome /path/to/ref_genome.fasta 
-    -high_confidence_bed /path/to/high_conf_bed.vcf.gz 
-    -write_to_db  
-    -db_url [db_url] -db_user [user] -db_pass [password] 
-```
 
 Optional config:
 - log_debug - log in a verbose manner
-- batch_output_dir - only applicable if running in batch mode, writes variants to a single CSV output file
-- purple_data_dir - if omitted, will retrieve copy number data from DB 
-
 
 
 ## Input Files

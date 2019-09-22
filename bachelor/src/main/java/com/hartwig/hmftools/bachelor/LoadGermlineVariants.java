@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.bachelor;
 
-import static com.hartwig.hmftools.bachelor.types.BachelorConfig.SAMPLE_DATA_DIR;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_PASS;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_USER;
+import static com.hartwig.hmftools.bachelor.types.BachelorConfig.SAMPLE;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
 
 import java.sql.SQLException;
@@ -22,12 +25,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class LoadGermlineVariants
 {
-    private static final Logger LOGGER = LogManager.getLogger(LoadGermlineVariants.class);
+    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
 
-    public static final String SAMPLE = "sample";
-    public static final String DB_USER = "db_user";
-    public static final String DB_PASS = "db_pass";
-    public static final String DB_URL = "db_url";
+    private static final Logger LOGGER = LogManager.getLogger(LoadGermlineVariants.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
