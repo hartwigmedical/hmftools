@@ -33,6 +33,7 @@ import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -305,14 +306,47 @@ public class ClusterAnalyser {
     private void dissolveSimpleGroups()
     {
         // break apart any clusters of simple SVs which aren't likely or required to be chained
-        List<SvCluster> simpleGroups = mClusters.stream()
-                .filter(x -> x.getResolvedType() == SIMPLE_GRP)
-                .filter(x -> x.getLohEvents().isEmpty())
-                .filter(x -> x.getAssemblyLinkedPairs().isEmpty())
-                .collect(Collectors.toList());
+        List<SvCluster> simpleGroups = mClusters.stream().filter(x -> x.getResolvedType() == SIMPLE_GRP).collect(Collectors.toList());
 
+        // if all links are assembled or joined in an LOH then keep the group
         for(SvCluster cluster : simpleGroups)
         {
+            boolean allLinkedByAssembly = cluster.getAssemblyLinkedPairs().size() == cluster.getSvCount() - 1;
+
+            boolean allSVsInLOH = true;
+
+            if(!allLinkedByAssembly)
+            {
+                final List<LohEvent> lohEvents = cluster.getLohEvents().stream()
+                        .filter(x -> x.doubleSvEvent())
+                        .filter(x -> x.StartSV != x.EndSV)
+                        .collect(Collectors.toList());
+
+                if(lohEvents.isEmpty())
+                {
+                    allSVsInLOH = false;
+                }
+                else
+                {
+                    for(final SvVarData var : cluster.getSVs())
+                    {
+                        if(!lohEvents.stream()
+                                .anyMatch(x -> x.StartSV == var.id() || x.EndSV == var.id()))
+                        {
+                            allSVsInLOH = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(allLinkedByAssembly || allSVsInLOH)
+            {
+                LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}",
+                        cluster.id(), cluster.getDesc(), allLinkedByAssembly, allSVsInLOH);
+                continue;
+            }
+
             mClusters.remove(cluster);
 
             LOGGER.debug("cluster({}: {}) de-merged into simple SVs", cluster.id(), cluster.getDesc());
