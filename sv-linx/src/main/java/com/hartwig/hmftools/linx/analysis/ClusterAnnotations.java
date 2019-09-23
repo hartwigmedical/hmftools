@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
+import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -493,14 +494,11 @@ public class ClusterAnnotations
 
     public static void annotateChainedClusters(final SvCluster cluster)
     {
-        if(cluster.isResolved() || cluster.getChains().isEmpty())
+        // skip simple SVs and single arm clusters without chains
+        if(cluster.getSvCount() == 1 || (cluster.getArmCount() == 1 && cluster.getChains().isEmpty()))
             return;
 
         boolean isComplex = cluster.requiresReplication() || !cluster.getFoldbacks().isEmpty();
-
-        // skip simple chained clusters
-        if(cluster.getArmCount() == 1 && cluster.getSvCount() == 2)
-            return;
 
         /* data to gather for each arm in the chain
             - number of links
@@ -550,7 +548,6 @@ public class ClusterAnnotations
             if (!chainConsistent)
             {
                 ++inconsistentChains;
-                continue;
             }
 
             final SvBreakend firstBreakend = chain.getOpenBreakend(true);
@@ -567,51 +564,43 @@ public class ClusterAnnotations
             if(!startChrArm.equals(endChrArm))
             {
                 if (!endChrArm.isEmpty() && !originArms.contains(endChrArm))
-                    originArms.add(startChrArm);
+                    originArms.add(endChrArm);
                 else
                     ++repeatedChainEndArms;
             }
         }
 
-        cluster.setArmData(originArms.size(), fragmentArms.size());
-
-        int armGroupCount = cluster.getArmGroups().size();
-
         final List<SvVarData> unlinkedRemoteSVs = cluster.getUnlinkedRemoteSVs();
 
-        int inconsistentArmCount = 0;
-
-        for(final SvArmGroup armGroup : cluster.getArmGroups())
+        for(final SvVarData var : unlinkedRemoteSVs)
         {
-            if(!armGroup.isConsistent())
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                ++inconsistentArmCount;
-                continue;
-            }
-
-            for (final SvVarData var : unlinkedRemoteSVs)
-            {
-                if (armGroup.getSVs().contains(var))
-                {
-                    ++inconsistentArmCount;
-                    continue;
-                }
+                if (!originArms.contains(var.getBreakend(se).getChrArm()))
+                    originArms.add(var.getBreakend(se).getChrArm());
             }
         }
 
-        boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
+        fragmentArms = fragmentArms.stream().filter(x -> !originArms.contains(x)).collect(Collectors.toList());
 
-        LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({} incons={})) tiCount(short={} long={})",
-                cluster.id(), isComplete ? "COMPLETE" : "incomplete",
-                chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
-                unlinkedSvCount, armGroupCount, inconsistentArmCount, shortTiCount,longTiCount);
+        cluster.setArmData(originArms.size(), fragmentArms.size());
 
-        if(isComplete && !isComplex && longTiCount > 0 && cluster.getResolvedType() == COMPLEX)
+        if(cluster.getSvCount() > 2)
         {
-            // chromothripsis is currently defined as fully chained simple cluster
-            // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
+            boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
 
-            cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
+            LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({})) tiCount(short={} long={})",
+                    cluster.id(), isComplete ? "COMPLETE" : "incomplete",
+                    chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
+                    unlinkedSvCount, cluster.getArmGroups().size(), shortTiCount, longTiCount);
+
+            if (isComplete && !isComplex && longTiCount > 0 && cluster.getResolvedType() == COMPLEX)
+            {
+                // chromothripsis is currently defined as fully chained simple cluster
+                // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
+
+                cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
+            }
         }
     }
 

@@ -574,7 +574,7 @@ public class SvCluster
             armGroup.setBoundaries(mShortTIRemoteSVs);
         }
 
-        mRecalcRemoteSVStatus = true;
+        mRecalcRemoteSVStatus = false;
     }
 
     private void setMinMaxCNChange()
