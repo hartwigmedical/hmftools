@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.stat_calcs;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -14,6 +11,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.FileWriterUtils;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,9 +42,12 @@ public class SampleCountsCoOccurence
 
     private BufferedWriter mWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(ThreeVarCoOccurence.class);
+    private static final String DRIVER_GENES_FILE = "driver_genes_file";
+    private static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
 
-    public SampleCountsCoOccurence()
+    private static final Logger LOGGER = LogManager.getLogger(SampleCountsCoOccurence.class);
+
+    public SampleCountsCoOccurence(final CommandLine cmd, final String outputDir)
     {
         mCancerTypes = Lists.newArrayList();
         mSamples = Lists.newArrayList();
@@ -59,16 +61,25 @@ public class SampleCountsCoOccurence
 
         mFisherET = new FisherExactTest();
 
-        mWriter = null;
-    }
+        final String sampleCountsFile = cmd.getOptionValue(SAMPLE_COUNTS_FILE);
+        final String driverDataFile = cmd.getOptionValue(DRIVER_GENES_FILE);
 
-    public boolean initialise(final String sampleCountsFile, final String driverDataFile, final String outputDir)
-    {
         loadDriverGeneData(driverDataFile);
         loadSampleCountsData(sampleCountsFile);
 
-        final String outputFile = outputDir + "LNX_STATS_2VAR.csv";
-        return initialiseTwoVariableOutput(outputFile);
+        final String outputFile = outputDir + "STATS_GENE_CATEGORY.csv";
+        initialiseOutputFile(outputFile);
+    }
+
+    public static void addCmdLineOptions(Options options)
+    {
+        options.addOption(DRIVER_GENES_FILE, true, "Drive genes file");
+        options.addOption(SAMPLE_COUNTS_FILE, true, "Sample counts file");
+    }
+
+    public static boolean hasConfig(final CommandLine cmd)
+    {
+        return cmd.hasOption(DRIVER_GENES_FILE) && cmd.hasOption(SAMPLE_COUNTS_FILE);
     }
 
     // non-generic 2-variable test, using 2 distinct data sets
@@ -85,6 +96,7 @@ public class SampleCountsCoOccurence
     private static int UNC_CAT_UNC_GENE = 5;
     private static int INDEX_COUNT = 6;
 
+    // debug
     private static String SPEC_CANCER = "";
     // private static String SPEC_CANCER = "Eye";
     private static String SPEC_GENE = "";
@@ -128,6 +140,8 @@ public class SampleCountsCoOccurence
          */
         int categoryCount = mCategories.size();
         int geneCount = mGenes.size();
+
+        int hypothesesCount = geneCount * categoryCount;
 
         int sampleCount = sampleDataList.size();
         LOGGER.info("processing cancerType({}) with {} samples", cancerType, sampleCount);
@@ -264,39 +278,19 @@ public class SampleCountsCoOccurence
                     return;
                 }
 
-                /*
-                if(gene.contains("BRCA"))
-                {
-                    LOGGER.debug("gene({}) counts(w={} u={} n={}) cat({}) counts(w={}) u={} n={})",
-                            gene, withGeneTotal, uncGeneTotal, noGeneTotal,
-                            category, withCatTotal, uncCatTotal, noCatTotal);
-
-                    LOGGER.debug("with cat: total({}) withGene({}) uncGene({}) noGene({})",
-                            withCatTotal, withCatWithGene, withCatUncGene, withCatNoGene);
-
-                    LOGGER.debug("unclear cat: total({}) withGene({}) uncGene({}) noGene({})",
-                            uncCatTotal, uncCatWithGene, uncCatUncGene, uncCatNoGene);
-
-                    LOGGER.debug("no cat: total({}) withGene({}) uncGene({}) noGene({})",
-                            noCatTotal, noCatWithGene, noCatUncGene, noCatNoGene);
-                }
-                */
-
                 double geneSamplesPerc = withGeneTotal/(double)sampleCount;
                 double expectedVal  = withCatTotal * geneSamplesPerc;
                 double fisherProb = mFisherET.calc(withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene, expectedVal);
 
-                writeTwoVariableResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
-                        expectedVal, withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene);
+                writeResultsData(cancerType, gene, category, sampleCount, withGeneTotal, withCatTotal, fisherProb,
+                        expectedVal, hypothesesCount, withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene);
             }
         }
-
-        FileWriterUtils.closeBufferedWriter(mWriter);
 
         LOGGER.info("cancerType({}) results written to file", cancerType);
     }
 
-    private boolean initialiseTwoVariableOutput(final String outputFileName)
+    private boolean initialiseOutputFile(final String outputFileName)
     {
         try
         {
@@ -304,7 +298,7 @@ public class SampleCountsCoOccurence
 
             mWriter.write("CancerType,Gene,Category,SampleCount");
             mWriter.write(",WithGeneCount,WithCategoryCount,ExpectedCount,FETProb");
-            mWriter.write(",WithCatWithGene,NoCatWithGene,WithCatNoGene,NoCatNoGene");
+            mWriter.write(",WithCatWithGene,NoCatWithGene,WithCatNoGene,NoCatNoGene,TestCount,CountGtExp");
 
             mWriter.newLine();
         }
@@ -317,8 +311,8 @@ public class SampleCountsCoOccurence
         return true;
     }
 
-    private void writeTwoVariableResultsData(final String cancerType, final String gene, final String category, int sampleCount,
-            int withGeneTotal, int withCatTotal, double fetProbability, double expectedVal,
+    private void writeResultsData(final String cancerType, final String gene, final String category, int sampleCount,
+            int withGeneTotal, int withCatTotal, double fetProbability, double expectedVal, int hypothesesCount,
             int withCatWithGene, int noCatWithGene, int withCatNoGene, int noCatNoGene)
     {
         if (mWriter == null)
@@ -331,9 +325,10 @@ public class SampleCountsCoOccurence
                             cancerType, gene, category, sampleCount));
 
             mWriter.write(
-                    String.format(",%d,%d,%.2f,%4.3e,%d,%d,%d,%d",
+                    String.format(",%d,%d,%.2f,%4.3e,%d,%d,%d,%d,%d,%s",
                             withGeneTotal, withCatTotal, expectedVal, fetProbability,
-                            withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene));
+                            withCatWithGene, noCatWithGene, withCatNoGene, noCatNoGene,
+                            hypothesesCount, withCatWithGene > expectedVal));
 
             mWriter.newLine();
         }
@@ -373,6 +368,11 @@ public class SampleCountsCoOccurence
         return sampleData;
     }
 
+    private final static int SC_COL_SAMPLEID = 0;
+    private final static int SC_COL_CT = 1;
+    private final static int SC_COL_GENE = 2;
+    private final static int SC_COL_DS = 3;
+
     private void loadDriverGeneData(final String filename)
     {
         if (filename.isEmpty())
@@ -404,10 +404,10 @@ public class SampleCountsCoOccurence
 
                 ++recordCount;
 
-                final String sampleId = items[0];
-                final String cancerType = items[1];
-                final String gene = items[2];
-                final String driverStatus = items[3];
+                final String sampleId = items[SC_COL_SAMPLEID];
+                final String cancerType = items[SC_COL_CT];
+                final String gene = items[SC_COL_GENE];
+                final String driverStatus = items[SC_COL_DS];
 
                 if(!mCancerTypes.contains(cancerType))
                     mCancerTypes.add(cancerType);
@@ -441,6 +441,9 @@ public class SampleCountsCoOccurence
         }
     }
 
+    private final static int SC_COL_CAT = 2;
+    private final static int SC_COL_ENRICHED = 3;
+
     private void loadSampleCountsData(final String filename)
     {
         if (filename.isEmpty())
@@ -472,10 +475,10 @@ public class SampleCountsCoOccurence
 
                 ++recordCount;
 
-                final String sampleId = items[0];
-                final String cancerType = items[1];
-                final String category = items[2];
-                final String enriched = items[3];
+                final String sampleId = items[SC_COL_SAMPLEID];
+                final String cancerType = items[SC_COL_CT];
+                final String category = items[SC_COL_CAT];
+                final String enriched = items[SC_COL_ENRICHED];
 
                 if(!mCancerTypes.contains(cancerType))
                     mCancerTypes.add(cancerType);

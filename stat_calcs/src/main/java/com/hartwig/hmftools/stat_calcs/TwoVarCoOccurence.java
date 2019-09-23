@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.stat_calcs;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -12,6 +9,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.FileWriterUtils;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,35 +21,48 @@ import org.apache.logging.log4j.Logger;
 
 public class TwoVarCoOccurence
 {
-    private List<String> mSamples;
-
     // generic data structure for 2-way co-occurrence
-    private List<TwoCategoryData> mCategoryCountsData;
-    private List<String> mCat1Values;
-    private List<String> mCat2Values;
+    private final List<TwoCategoryData> mCategoryCountsData;
+    private final List<String> mCat1Values;
+    private final List<String> mCat2Values;
 
     private String mCategory1;
     private String mCategory2;
 
-    private FisherExactTest mFisherET;
+    private final FisherExactTest mFisherET;
 
     private BufferedWriter mWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(ThreeVarCoOccurence.class);
+    private static final String TWO_VAR_INPUT_FILE = "two_var_input_file";
 
-    public TwoVarCoOccurence()
+    private static final Logger LOGGER = LogManager.getLogger(TwoVarCoOccurence.class);
+
+    public TwoVarCoOccurence(final CommandLine cmd, final String outputDir)
     {
         mCategory1 = "";
         mCategory2 = "";
 
-        mSamples = Lists.newArrayList();
         mCategoryCountsData = Lists.newArrayList();
         mCat1Values = Lists.newArrayList();
         mCat2Values = Lists.newArrayList();
 
+        final String inputFile = cmd.getOptionValue(TWO_VAR_INPUT_FILE);
+        loadSampleGenericData(inputFile);
+
         mFisherET = new FisherExactTest();
 
-        mWriter = null;
+        final String outputFile = outputDir + "STATS_2VAR.csv";
+        initialiseOutput(outputFile);
+    }
+
+    public static void addCmdLineOptions(Options options)
+    {
+        options.addOption(TWO_VAR_INPUT_FILE, true, "Sample data with 2 variables");
+    }
+
+    public static boolean hasConfig(final CommandLine cmd)
+    {
+        return cmd.hasOption(TWO_VAR_INPUT_FILE);
     }
 
     public void run()
@@ -166,14 +178,6 @@ public class TwoVarCoOccurence
         {
             LOGGER.error("error writing to stats output file: {}", e.toString());
         }
-    }
-
-    public boolean initialise(final String filename, final String outputDir)
-    {
-        loadSampleGenericData(filename);
-
-        final String outputFile = outputDir + "LNX_STATS_2VAR.csv";
-        return initialiseOutput(outputFile);
     }
 
     private static int CAT_1_INDEX = 0;

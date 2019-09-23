@@ -16,6 +16,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.FileWriterUtils;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,26 +31,35 @@ public class ThreeVarCoOccurence
     private List<String> mSamples;
 
     // generic data structure for 3-way co-occurrence
-    private Map<String, List<SampleCategoryData>> mGroupingSampleGenericData;
-    private List<String> mGroupingValues;
-    private List<String> mCat1Values;
-    private List<String> mCat2Values;
+    private final Map<String, List<SampleCategoryData>> mGroupingSampleGenericData;
+    private final List<String> mGroupingValues;
+    private final List<String> mCat1Values;
+    private final List<String> mCat2Values;
 
     private String mGroupingField;
     private String mCategory1;
     private String mCategory2;
 
-    private FisherExactTest mFisherET;
+    private final FisherExactTest mFisherET;
 
     private BufferedWriter mWriter;
 
+    private static final String THREE_VAR_INPUT_FILE = "three_var_input_file";
+
     private static final Logger LOGGER = LogManager.getLogger(ThreeVarCoOccurence.class);
 
-    public ThreeVarCoOccurence()
+    public ThreeVarCoOccurence(final CommandLine cmd, final String outputDir)
     {
         mGroupingField = "";
         mCategory1 = "";
         mCategory2 = "";
+
+        final String inputFile = cmd.getOptionValue(THREE_VAR_INPUT_FILE);
+
+        loadSampleGenericData(inputFile);
+
+        final String outputFile = outputDir + "STATS_3VAR.csv";
+        initialiseOutput(outputFile);
 
         mSamples = Lists.newArrayList();
         mGroupingSampleGenericData = new HashMap();
@@ -57,8 +68,16 @@ public class ThreeVarCoOccurence
         mCat2Values = Lists.newArrayList();
 
         mFisherET = new FisherExactTest();
+    }
 
-        mWriter = null;
+    public static void addCmdLineOptions(Options options)
+    {
+        options.addOption(THREE_VAR_INPUT_FILE, true, "Sample data with grouping and 2 variable");
+    }
+
+    public static boolean hasConfig(final CommandLine cmd)
+    {
+        return cmd.hasOption(THREE_VAR_INPUT_FILE);
     }
 
     private static String SPEC_GROUP_VAL = "";
@@ -203,14 +222,6 @@ public class ThreeVarCoOccurence
         {
             LOGGER.error("error writing to stats output file: {}", e.toString());
         }
-    }
-
-    public boolean initialise(final String filename, final String outputDir)
-    {
-        loadSampleGenericData(filename);
-
-        final String outputFile = outputDir + "LNX_STATS_3VAR.csv";
-        return initialiseOutput(outputFile);
     }
 
     private static int GENERIC_DATA_CSV_COUNT = 4;
