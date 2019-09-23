@@ -17,11 +17,11 @@ public class FusionExecution
     private final String exonFile;
     private final String proteinDomainFile;
 
-    public FusionExecution(final String sample, final String dataDir, final String plotDir)
+    public FusionExecution(final String sampleName, final String imageName, final String dataDir, final String plotDir)
     {
-        this.plotFile = plotDir + File.separator + sample + ".png";
-        this.exonFile = dataDir + File.separator + sample + ".fusions.tsv";
-        this.proteinDomainFile = dataDir + File.separator + sample + ".protein_domains.tsv";
+        this.plotFile = plotDir + File.separator + imageName;
+        this.exonFile = dataDir + File.separator + sampleName + ".fusions.tsv";
+        this.proteinDomainFile = dataDir + File.separator + sampleName + ".protein_domains.tsv";
     }
 
     public Integer executeR(SvCircosConfig config, double labelSize) throws IOException, InterruptedException

@@ -5,14 +5,6 @@ library(cowplot)
 library(magick)
 theme_set(theme_bw())
 
-#clusterProteinDomainPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02140050T.cluster103.COMPLEX.sv6.protein_domains.tsv"
-#clusterFusedExonPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02140050T.cluster103.COMPLEX.sv6.fusions.tsv"
-#circosPicturePath = "/Users/jon/hmf/analysis/fusions/plot/CPCT02140050T.cluster103.COMPLEX.sv6.png"
-#fusionHeightPerRow = 250
-#fusionLegendRows = 1
-#fusionLegendHeightPerRow = 35
-#fontSize = 42
-
 # Parse the arguments
 args <- commandArgs(trailing=T)
 clusterProteinDomainPath <- args[1]

@@ -304,7 +304,7 @@ public class SvVisualiser implements AutoCloseable
 
         if (plotFusion)
         {
-            new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
+            new FusionExecution(sample, outputFileName, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
         }
 
         if (plotChromosome)

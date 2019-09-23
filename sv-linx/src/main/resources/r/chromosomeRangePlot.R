@@ -5,12 +5,6 @@ library(ggplot2)
 library(cowplot)
 library(magick)
 
-circosPicturePath = "~/hmf/analysis/fusions/plot/test.png"
-bandsPath = "/Users/jon/hmf/analysis/fusions/data/CPCT02070140T.cluster106.COMPLEX.sv19.cytoBand.txt"
-chromosomeRangePath = "/Users/jon/hmf/analysis/fusions/data/CPCT02070140T.cluster106.COMPLEX.sv19.chromosome.circos"
-chromosomeFontsize = 45.6
-chromosomeHeightPerRow = 150
-chromosomeMaxColumns = 6
 
 args <- commandArgs(trailing=T)
 chromosomeRangePath <- args[1]
