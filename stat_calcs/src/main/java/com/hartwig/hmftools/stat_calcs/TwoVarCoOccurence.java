@@ -16,8 +16,8 @@ import org.apache.logging.log4j.Logger;
 
 // 2 variable generic co-occurence using Fisher's exact test
 // the 2 variables are tested for co-occurence
-// expected input: SampleId,Category1,Category2,Count
-// eg SampleId,Gene,LohType - would test CancerType vs LohType correlation
+// expected input: Category1,Category2,Count
+// eg Gene,LohType,Count - would test Gene vs LohType correlation
 
 public class TwoVarCoOccurence
 {
@@ -76,7 +76,7 @@ public class TwoVarCoOccurence
 
         int hypothesesCount = mCat1Values.size() * mCat2Values.size();
 
-        LOGGER.info("processing {} 2-var records", totalRecords);
+        LOGGER.info("processing {} 2-var records, hypothese({})", totalRecords, hypothesesCount);
 
         for(final String cat1 : mCat1Values)
         {
@@ -199,7 +199,7 @@ public class TwoVarCoOccurence
 
             if (line == null)
             {
-                LOGGER.error("empy 2-var CSV file({})", filename);
+                LOGGER.error("empty 2-var CSV file({})", filename);
                 return;
             }
 

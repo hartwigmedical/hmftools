@@ -342,7 +342,7 @@ public class ClusterAnalyser {
 
             if(allLinkedByAssembly || allSVsInLOH)
             {
-                LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}",
+                LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({})",
                         cluster.id(), cluster.getDesc(), allLinkedByAssembly, allSVsInLOH);
                 continue;
             }
