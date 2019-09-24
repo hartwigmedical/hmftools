@@ -89,6 +89,7 @@ public class SvCluster
 
     private int mOriginArms;
     private int mFragmentArms;
+    private int mConsistentArmCount;
 
     public static String CLUSTER_ANNOT_DM = "DM";
     public static String CLUSTER_ANNOT_BFB_AMP = "BFB_AMP";
@@ -142,6 +143,7 @@ public class SvCluster
 
         mOriginArms = 0;
         mFragmentArms = 0;
+        mConsistentArmCount = 0;
     }
 
     public int id() { return mId; }
@@ -571,7 +573,7 @@ public class SvCluster
 
         for (final SvArmGroup armGroup : mArmGroups)
         {
-            armGroup.setBoundaries(mShortTIRemoteSVs);
+            armGroup.setBoundaries();
         }
 
         mRecalcRemoteSVStatus = false;
@@ -870,9 +872,15 @@ public class SvCluster
         return null;
     }
 
-    public void setArmData(int origins, int fragments) { mOriginArms = origins; mFragmentArms = fragments; }
+    public void setArmData(int origins, int fragments, int consistentArmCount)
+    {
+        mOriginArms = origins;
+        mFragmentArms = fragments;
+        mConsistentArmCount = consistentArmCount;
+    }
     public int getOriginArms() { return mOriginArms; }
     public int getFragmentArms() { return mFragmentArms; }
+    public int getConsistentArmCount() { return mConsistentArmCount; }
 
     public ChainMetrics getLinkMetrics()
     {

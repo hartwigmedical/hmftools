@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -491,6 +492,8 @@ public class ClusterAnnotations
         }
     }
 
+    private static final int INCONSISTENT_ARM = -2;
+    private static final int CONSISTENT_ARM = 0;
 
     public static void annotateChainedClusters(final SvCluster cluster)
     {
@@ -507,17 +510,13 @@ public class ClusterAnnotations
             - start and end locations
          */
 
-        List<String> originArms = Lists.newArrayList();
         List<String> fragmentArms = Lists.newArrayList();
+        Map<String,Integer> originArms = Maps.newHashMap(); // chr-arm and consistency (1/-1, 0 if matched, or other if invalid)
 
         int chainCount = cluster.getChains().size();
-        int unlinkedSvCount = cluster.getUnlinkedSVs().size();
         int inconsistentChains = 0;
-        int repeatedChainEndArms = 0;
         int shortTiCount = 0;
         int longTiCount = 0;
-
-        List<String> chainEndArms = Lists.newArrayList();
 
         for (final SvChain chain : cluster.getChains())
         {
@@ -550,49 +549,44 @@ public class ClusterAnnotations
                 ++inconsistentChains;
             }
 
-            final SvBreakend firstBreakend = chain.getOpenBreakend(true);
-            final SvBreakend lastBreakend = chain.getOpenBreakend(false);
-
-            final String startChrArm = firstBreakend != null ? firstBreakend.getChrArm() : "";
-            final String endChrArm = lastBreakend != null ? lastBreakend.getChrArm() : "";
-
-            if(!startChrArm.isEmpty() && !originArms.contains(startChrArm))
-                originArms.add(startChrArm);
-            else
-                ++repeatedChainEndArms;
-
-            if(!startChrArm.equals(endChrArm))
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                if (!endChrArm.isEmpty() && !originArms.contains(endChrArm))
-                    originArms.add(endChrArm);
-                else
-                    ++repeatedChainEndArms;
+                final SvBreakend chainBreakend = chain.getOpenBreakend(se);
+
+                if(chainBreakend != null)
+                {
+                    addBreakendToArmConsistency(originArms, chainBreakend);
+                }
             }
         }
 
-        final List<SvVarData> unlinkedRemoteSVs = cluster.getUnlinkedRemoteSVs();
+        final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
 
-        for(final SvVarData var : unlinkedRemoteSVs)
+        for(final SvVarData var : unlinkedSVs)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if (!originArms.contains(var.getBreakend(se).getChrArm()))
-                    originArms.add(var.getBreakend(se).getChrArm());
+                if(se == SE_END && var.isSglBreakend())
+                    continue;
+
+                addBreakendToArmConsistency(originArms, var.getBreakend(se));
             }
         }
 
-        fragmentArms = fragmentArms.stream().filter(x -> !originArms.contains(x)).collect(Collectors.toList());
+        fragmentArms = fragmentArms.stream().filter(x -> !originArms.containsKey(x)).collect(Collectors.toList());
 
-        cluster.setArmData(originArms.size(), fragmentArms.size());
+        int consistentArmCount = (int)originArms.values().stream().filter(x -> x >= -1 && x <= 1).count();
+
+        cluster.setArmData(originArms.size(), fragmentArms.size(), consistentArmCount);
 
         if(cluster.getSvCount() > 2)
         {
-            boolean isComplete = (inconsistentChains == 0) && (repeatedChainEndArms == 0) && (unlinkedSvCount == 0);
+            boolean isComplete = (inconsistentChains == 0) && (consistentArmCount == originArms.size());
 
-            LOGGER.debug("cluster({}) {} chains({} incons={}) chainEnds(arms={} repeats={}) unlinkedSVs({} armCount({})) tiCount(short={} long={})",
-                    cluster.id(), isComplete ? "COMPLETE" : "incomplete",
-                    chainCount, inconsistentChains, chainEndArms.size(), repeatedChainEndArms,
-                    unlinkedSvCount, cluster.getArmGroups().size(), shortTiCount, longTiCount);
+            LOGGER.debug("cluster({}) {} chains({} incons={}) arms({} frag={} origin={} consis={}) tiCount(short={} long={})",
+                    cluster.id(), isComplete ? "COMPLETE" : "incomplete", chainCount, inconsistentChains,
+                    cluster.getArmGroups().size(), fragmentArms.size(), originArms.size(), consistentArmCount,
+                    shortTiCount, longTiCount);
 
             if (isComplete && !isComplex && longTiCount > 0 && cluster.getResolvedType() == COMPLEX)
             {
@@ -601,6 +595,30 @@ public class ClusterAnnotations
 
                 cluster.addAnnotation(CLUSTER_ANNOT_SHATTERING);
             }
+        }
+    }
+
+    private static void addBreakendToArmConsistency(final Map<String,Integer> armConsistencyMap, final SvBreakend breakend)
+    {
+        final String chrArm = breakend.getChrArm();
+
+        Integer armConsistency = armConsistencyMap.get(chrArm);
+        if(armConsistency == null)
+        {
+            armConsistencyMap.put(chrArm, calcConsistency(breakend));
+            return;
+        }
+
+        if(armConsistency == INCONSISTENT_ARM)
+            return;
+
+        if(armConsistency == CONSISTENT_ARM || calcConsistency(breakend) == armConsistency)
+        {
+            armConsistencyMap.put(chrArm, INCONSISTENT_ARM);
+        }
+        else
+        {
+            armConsistencyMap.put(chrArm, CONSISTENT_ARM);
         }
     }
 

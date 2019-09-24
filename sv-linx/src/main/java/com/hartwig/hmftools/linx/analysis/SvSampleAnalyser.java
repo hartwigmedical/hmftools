@@ -638,7 +638,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",ClusterReasons,Consistency,ArmCount,IsLINE,Replication,MinPloidy,MaxPloidy,Foldbacks");
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain,ExtTIsCnGain,OverlapTIs");
             mClusterFileWriter.write(",DSBs,ShortDSBs,ChainEndsFace,ChainEndsAway");
-            mClusterFileWriter.write(",OriginArms,FragmentArms,UnchainedSVs,Annotations,AlleleValidPerc");
+            mClusterFileWriter.write(",OriginArms,FragmentArms,ConsArmCount,UnchainedSVs,Annotations,AlleleValidPerc");
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
             mClusterFileWriter.newLine();
@@ -701,8 +701,8 @@ public class SvSampleAnalyser {
                             chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
                             chainMetrics.DSBs, chainMetrics.ShortDSBs, chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway));
 
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%s,%.2f",
-                            cluster.getOriginArms(), cluster.getFragmentArms(),
+                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%s,%.2f",
+                            cluster.getOriginArms(), cluster.getFragmentArms(), cluster.getConsistentArmCount(),
                             cluster.getUnlinkedSVs().size(), cluster.getAnnotations(), cluster.getValidAllelePloidySegmentPerc()));
 
                     final int[] armClusterData = getArmClusterData(cluster);

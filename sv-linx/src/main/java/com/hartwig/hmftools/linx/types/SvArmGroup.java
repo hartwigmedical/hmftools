@@ -35,8 +35,6 @@ public class SvArmGroup {
     private long mEndPos;
     private int mConsistency;
 
-    private static final Logger LOGGER = LogManager.getLogger(SvArmGroup.class);
-
     public SvArmGroup(final SvCluster cluster, final String chr, final String arm)
     {
         mId = makeChrArmStr(chr, arm);
@@ -107,7 +105,7 @@ public class SvArmGroup {
         return mChromosome.equals(other.chromosome()) && mArm.equals(other.arm());
     }
 
-    public void setBoundaries(final List<SvVarData> bndIgnoreList)
+    public void setBoundaries()
     {
         if(!mRequiresRecalc)
             return;

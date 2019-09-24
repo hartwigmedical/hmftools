@@ -204,8 +204,6 @@ An insertion event is modelled by LINX as a pair of structural variants which in
 
 The most common class of insertion in tumor genomes by far are mobile line element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile line elements frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source line element, with sometimes many segments from the same source location being inserted at multiple locations around the genome [CITE PCAWG]. Mobile LINE elements can also cause SINE and pseudogene insertions. LINE insertions breakpoints can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE element at the start of the insertion element and a poly-A section at the end of the inserted section. LINX uses a combination of previously known line element source information and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
 
-LINX also separately classifies VIRAL insertions in the genome as an insertion subtype utilising the viral annotations added by GRIDSS.
-
 #### Double Minute
 Any cluster which is predicted to form a closed loop by LINX without a centromere is resolved as a double minute.   All variants must form part of the double minute to be classified as event type double minute, although double minutes may also occur as part of a complex cluster.    An exception is made for a simple DUP double minute clustered with an enclosing DEL, which is classified as double minute despite the DEL not being a part of the double minute structure.
 
