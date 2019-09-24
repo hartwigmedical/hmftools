@@ -1296,7 +1296,7 @@ public class BucketAnalyser {
         LOGGER.debug("processed {} bucket groups, method(solo={} unalloc={} fit={} skipped={})",
                 mBucketGroups.size(), exceededOnSoloAlloc, exceededOnUnalloc, exceededOnFit, skippedRetry);
 
-        LOGGER.debug(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
+        LOGGER.trace(String.format("sig-optim stats: instances(%d) avgIters(%.1f) avgImprovePerc(%.3f)",
                 sigContribOptimiser.getInstances(), sigContribOptimiser.getAvgIterations(), sigContribOptimiser.getAvgImprovePerc()));
 
         // now that all samples have been tested and allocated, force a recalc of the ratios

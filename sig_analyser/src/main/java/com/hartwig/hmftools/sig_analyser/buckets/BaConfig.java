@@ -41,13 +41,13 @@ public class BaConfig
     public int MinSampleAllocCount; // hard lower limit to allocate a sample to a group
     private static String BA_MIN_SAM_ALLOC_COUNT = "ba_min_sample_alloc_count";
 
-    public boolean ApplyNoise; // whether to factor Poisson noise into the sample counts and fits
+    public boolean ApplyNoise; // whether to factor Poisson noise into the sample counts and fits, default = true
     public static double PERMITTED_PROB_NOISE = 1e-4;
     public static double MAX_NOISE_TO_SAMPLE_RATIO = 5; // per sample, the sum of potential (unallocated) bucket noise counts cannot exceeds this multiple of variant total
     public static double MAX_NOISE_ALLOC_PERCENT = 0.25; // per sample, the total vs total variants which can be allocated to noise
     private static String BA_MAX_NOISE_ALLOC_PERCENT = "ba_max_noise_pct";
 
-    public boolean UseRatioRanges;
+    public boolean UseRatioRanges; // default false
     private static String BA_USE_RATIO_RANGES = "ba_use_ratio_ranges";
     public double RatioRangeLimit;
     private static String BA_RATIO_RANGE = "ba_ratio_range";

@@ -81,7 +81,7 @@ public class SigAnalyser
             return;
         }
 
-        LOGGER.info("starting data analyser");
+        LOGGER.info("starting signature analyser");
 
         GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(GENERIC_INPUT_FILE));
 
