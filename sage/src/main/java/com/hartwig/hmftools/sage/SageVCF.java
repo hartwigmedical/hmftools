@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
+import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -39,37 +39,37 @@ public class SageVCF implements AutoCloseable {
 
     }
 
-    public void write(@NotNull final List<VariantHotspotEvidence> evidenceList) {
-        evidenceList.stream().map(this::create).forEach(writer::add);
-    }
-
-    public void write(@NotNull final VariantHotspotEvidence evidence) {
+    public void write(@NotNull final HotspotEvidence evidence) {
         writer.add(create(evidence));
     }
 
     @NotNull
-    VariantContext create(@NotNull final VariantHotspotEvidence hotspotEvidence) {
+    VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
 
         final Allele ref = Allele.create(hotspotEvidence.ref(), true);
         final Allele alt = Allele.create(hotspotEvidence.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
 
-        final Genotype tumor = new GenotypeBuilder(tumorSample).AD(new int[] { hotspotEvidence.refSupport(), hotspotEvidence.altSupport() })
+        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(hotspotEvidence.tumorReads())
+                .AD(new int[] { hotspotEvidence.tumorRefCount(), hotspotEvidence.tumorAltCount() })
                 .alleles(alleles)
                 .make();
 
-        final Genotype normal = new GenotypeBuilder(normalSample)//.DP(hotspotEvidence.normalReads())
-                .AD(new int[] { 0, 0 }).alleles(alleles).make();
+        final Genotype normal = new GenotypeBuilder(normalSample).DP(hotspotEvidence.normalReads())
+                .AD(new int[] { hotspotEvidence.normalRefCount(), hotspotEvidence.normalAltCount() })
+                .alleles(alleles)
+                .make();
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(hotspotEvidence.chromosome())
                 .start(hotspotEvidence.position())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, round(hotspotEvidence.vaf()))
                 .computeEndFromAlleles(alleles, (int) hotspotEvidence.position())
-                .genotypes(tumor)
+                .source(hotspotEvidence.type().toString())
+                .genotypes(tumor, normal)
                 .alleles(alleles);
 
         final VariantContext context = builder.make();
-        context.getCommonInfo().setLog10PError(hotspotEvidence.altQuality() / -10d);
+        context.getCommonInfo().setLog10PError(hotspotEvidence.qualityScore() / -10d);
         return context;
     }
 

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -29,15 +30,18 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
     bgzip colo829.sage.vcf
     bcftools index colo829.sage.vcf.gz
     bcftools annotate -a /Users/jon/hmf/resources/GERMLINE_PON.vcf.gz -c GERMLINE_PON_COUNT colo829.sage.vcf.gz -O z -o colo829.sage.germline.vcf.gz
+    bcftools index colo829.sage.germline.vcf.gz
+
     bcftools annotate -a /Users/jon/hmf/resources/SOMATIC_PON.vcf.gz -c SOMATIC_PON_COUNT colo829.sage.germline.vcf.gz -O z -o colo829.sage.pon.vcf.gz
+    bcftools index colo829.sage.pon.vcf.gz
 
-    bcftools annotate -a /Users/jon/hmf/resources/out_150_hg19.mappability.bed.gz -h /Users/jon/hmf/resources/mappability.hdr -c CHROM,FROM,TO,-,MAPPABILITY colo829.sage.pon.vcf.gz -O z -o colo829.sage.ann.vcf.gz
-    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -c SOMATIC colo829.sage.ann.vcf.gz -O z -o colo829.sage.final.vcf.gz
+    bcftools annotate -a /Users/jon/hmf/resources/out_150_hg19.mappability.bed.gz -h /Users/jon/hmf/resources/mappability.hdr -c CHROM,FROM,TO,-,MAPPABILITY colo829.sage.pon.vcf.gz -O z -o colo829.sage.map.vcf.gz
+    bcftools index colo829.sage.map.vcf.gz
 
+    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m STRELKA colo829.sage.map.vcf.gz -O z -o colo829.sage.final.vcf.gz
 
 
     */
-
 
     private static final String DISTANCE_FROM_REF_TAG = "NM";
     private final GenomeRegion bounds;
@@ -53,6 +57,20 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
         this.bounds = bounds;
         this.refGenome = refGenome;
         keyBuilder = ImmutableVariantHotspotImpl.builder().chromosome(bounds.chromosome()).ref("N").alt("N");
+    }
+
+    public SageSamConsumer(@NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome, List<VariantHotspot> loci) {
+        this(bounds, refGenome);
+        for (VariantHotspot locus : loci) {
+            if (inBounds(locus.position())) {
+                evidenceMap.put(locus, createEvidence(locus));
+            }
+        }
+    }
+
+    @NotNull
+    public Set<VariantHotspot> loci() {
+        return evidenceMap.keySet();
     }
 
     @NotNull
@@ -107,7 +125,6 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                         continue;
                     }
 
-
                     byte readByte = record.getReadBases()[i + readStart];
                     byte refByte = refBases[i];
                     final int baseQuality = record.getBaseQualities()[i + readStart];
@@ -124,14 +141,12 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
 
                         count.incrementAndGet();
                     } else {
-//                        final VariantHotspot key = keyBuilder.position(refPosition).ref("N").alt("N").build();
-//                        refSupportMap.compute(key, (hotspot, integer) -> integer == null ? 1 : integer + 1);
-//                        refQualityMap.compute(key, (hotspot, integer) -> integer == null ? baseQuality : integer + baseQuality);
+                        final VariantHotspot key = keyBuilder.position(refPosition).ref("N").alt("N").build();
+                        refSupportMap.compute(key, (hotspot, integer) -> integer == null ? 1 : integer + 1);
+                        refQualityMap.compute(key, (hotspot, integer) -> integer == null ? baseQuality : integer + baseQuality);
                     }
                 }
-
             }
-
         }
     }
 

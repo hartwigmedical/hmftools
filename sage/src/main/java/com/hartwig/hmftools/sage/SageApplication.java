@@ -3,16 +3,24 @@ package com.hartwig.hmftools.sage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
+import com.hartwig.hmftools.common.hotspot.HotspotEvidenceType;
+import com.hartwig.hmftools.common.hotspot.ImmutableHotspotEvidence;
+import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
+import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 
@@ -25,6 +33,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -67,17 +76,37 @@ public class SageApplication implements AutoCloseable {
 
         // Note: Turns out you need one samreaderfactory per thread!
 
-        // TODO: add referenceSequence(refGenomeFile)
-        //        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(config.tumorBam().get(0)));
+        LOGGER.info("Examining tumor sample for evidence of variants");
+        final List<ModifiableVariantHotspotEvidence> tumorEvidence = tumor(config.tumorBam().get(0));
+        final List<VariantHotspot> hotspots =
+                tumorEvidence.stream().map(x -> ImmutableVariantHotspotImpl.builder().from(x).build()).collect(Collectors.toList());
 
-        //        GenomeRegion region1 = GenomeRegions.create("17", 1, 13_000_000);
-        //        GenomeRegion region2 = GenomeRegions.create("17", 13_000_000, 26_000_000);
-        //        GenomeRegion region3 = GenomeRegions.create("17", 26_000_000, 39_000_000);
-        //        GenomeRegion region4 = GenomeRegions.create("17", 39_000_000, 52_000_000);
-        //        GenomeRegion region5 = GenomeRegions.create("17", 52_000_000, 65_000_000);
-        //        GenomeRegion region6 = GenomeRegions.create("17", 65_000_000, 81_195_210);
+        LOGGER.info("Examining normal sample for evidence of variants");
+        final List<ModifiableVariantHotspotEvidence> normalEvidence = normal(config.referenceBam(), hotspots);
 
-//        GenomeRegion region1 = GenomeRegions.create("17", 245733, 245733);
+
+        LOGGER.info("Combining");
+        Map<VariantHotspot, VariantHotspotEvidence> normalMap = asMap(normalEvidence);
+        final List<HotspotEvidence> finalEvidence = Lists.newArrayList();
+        for (VariantHotspotEvidence entry : tumorEvidence) {
+            final VariantHotspot variant = ImmutableVariantHotspotImpl.builder().from(entry).build();
+            final VariantHotspotEvidence tumor = entry;
+            final VariantHotspotEvidence normal = normalMap.get(variant);
+            finalEvidence.add(createEvidence(tumor, normal));
+        }
+
+        SageVCF vcf = new SageVCF("/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
+        finalEvidence.forEach(vcf::write);
+        vcf.close();
+
+        long timeTaken = System.currentTimeMillis() - timeStamp;
+
+        System.out.println(" in " + timeTaken);
+    }
+
+    @NotNull
+    private List<ModifiableVariantHotspotEvidence> tumor(String bamFile) throws ExecutionException, InterruptedException {
+
         GenomeRegion region1 = GenomeRegions.create("17", 1, 1_000_000);
         GenomeRegion region2 = GenomeRegions.create("17", 1_000_001, 2_000_000);
         GenomeRegion region3 = GenomeRegions.create("17", 2_000_001, 3_000_000);
@@ -93,29 +122,74 @@ public class SageApplication implements AutoCloseable {
         SageSamConsumer samConsumer6 = new SageSamConsumer(region6, refGenome);
 
         List<Future<SageSamConsumer>> futures = Lists.newArrayList();
-        //        futures.add(executorService.submit(() -> callable(GenomeRegions.create("5", 1, 60_000_000),  samConsumer)));
-        //        futures.add(executorService.submit(() -> callable(GenomeRegions.create("5", 1, 60_000_000),  samConsumer)));
-        futures.add(executorService.submit(() -> callable(region1, samConsumer1)));
-        futures.add(executorService.submit(() -> callable(region2, samConsumer2)));
-        futures.add(executorService.submit(() -> callable(region3, samConsumer3)));
-        futures.add(executorService.submit(() -> callable(region4, samConsumer4)));
-        futures.add(executorService.submit(() -> callable(region5, samConsumer5)));
-        futures.add(executorService.submit(() -> callable(region6, samConsumer6)));
-        //        futures.add(executorService.submit(() -> callable(GenomeRegions.create("5", 1, 180915260L), samConsumer)));
+        futures.add(executorService.submit(() -> callable(region1, samConsumer1, bamFile)));
+        futures.add(executorService.submit(() -> callable(region2, samConsumer2, bamFile)));
+        futures.add(executorService.submit(() -> callable(region3, samConsumer3, bamFile)));
+        futures.add(executorService.submit(() -> callable(region4, samConsumer4, bamFile)));
+        futures.add(executorService.submit(() -> callable(region5, samConsumer5, bamFile)));
+        futures.add(executorService.submit(() -> callable(region6, samConsumer6, bamFile)));
 
-//        SageVCF vcf = new SageVCF("/Users/jon/hmf/tmp/colo829.sage.vcf", "NO_NORMAL_YET", "COLO829T");
+        final List<ModifiableVariantHotspotEvidence> tumorEvidence = Lists.newArrayList();
+
         for (Future<SageSamConsumer> future : futures) {
             SageSamConsumer consumer = future.get();
-//            consumer.evidence().forEach(vcf::write);
+            tumorEvidence.addAll(consumer.evidence());
         }
 
-//        vcf.close();
+        return tumorEvidence;
+    }
 
-        long timeTaken = System.currentTimeMillis() - timeStamp;
-        long total = samConsumer1.count() + samConsumer2.count() + samConsumer3.count() + samConsumer4.count() + samConsumer5.count()
-                + samConsumer6.count();
-        System.out.println(total + " in " + timeTaken);
+    @NotNull
+    private List<ModifiableVariantHotspotEvidence> normal(String bamFile, List<VariantHotspot> hotspots) throws ExecutionException, InterruptedException {
 
+        GenomeRegion region1 = GenomeRegions.create("17", 1, 1_000_000);
+        GenomeRegion region2 = GenomeRegions.create("17", 1_000_001, 2_000_000);
+        GenomeRegion region3 = GenomeRegions.create("17", 2_000_001, 3_000_000);
+        GenomeRegion region4 = GenomeRegions.create("17", 3_000_001, 4_000_000);
+        GenomeRegion region5 = GenomeRegions.create("17", 4_000_001, 5_000_000);
+        GenomeRegion region6 = GenomeRegions.create("17", 5_000_001, 6_000_000);
+
+        SageSamConsumer samConsumer1 = new SageSamConsumer(region1, refGenome, hotspots);
+        SageSamConsumer samConsumer2 = new SageSamConsumer(region2, refGenome, hotspots);
+        SageSamConsumer samConsumer3 = new SageSamConsumer(region3, refGenome, hotspots);
+        SageSamConsumer samConsumer4 = new SageSamConsumer(region4, refGenome, hotspots);
+        SageSamConsumer samConsumer5 = new SageSamConsumer(region5, refGenome, hotspots);
+        SageSamConsumer samConsumer6 = new SageSamConsumer(region6, refGenome, hotspots);
+
+        List<Future<SageSamConsumer>> futures = Lists.newArrayList();
+        futures.add(executorService.submit(() -> callable(region1, samConsumer1, bamFile)));
+        futures.add(executorService.submit(() -> callable(region2, samConsumer2, bamFile)));
+        futures.add(executorService.submit(() -> callable(region3, samConsumer3, bamFile)));
+        futures.add(executorService.submit(() -> callable(region4, samConsumer4, bamFile)));
+        futures.add(executorService.submit(() -> callable(region5, samConsumer5, bamFile)));
+        futures.add(executorService.submit(() -> callable(region6, samConsumer6, bamFile)));
+
+        final List<ModifiableVariantHotspotEvidence> tumorEvidence = Lists.newArrayList();
+
+        for (Future<SageSamConsumer> future : futures) {
+            SageSamConsumer consumer = future.get();
+            tumorEvidence.addAll(consumer.evidence());
+        }
+
+        return tumorEvidence;
+    }
+
+    private static HotspotEvidence createEvidence(@NotNull final VariantHotspotEvidence tumor,
+            @Nullable final VariantHotspotEvidence normal) {
+        return ImmutableHotspotEvidence.builder()
+                .from(tumor)
+                .ref(tumor.ref())
+                .alt(tumor.alt())
+                .qualityScore(tumor.altQuality())
+                .tumorAltCount(tumor.altSupport())
+                .tumorRefCount(tumor.refSupport())
+                .tumorReads(tumor.readDepth())
+                .normalAltCount(normal == null ? 0 : normal.altSupport())
+                .normalRefCount(normal == null ? 0 : normal.refSupport())
+                .normalReads(normal == null ? 0 : normal.readDepth())
+                .normalIndelCount(normal == null ? 0 : normal.indelSupport())
+                .type(HotspotEvidenceType.KNOWN)
+                .build();
     }
 
     private String toString(ModifiableVariantHotspotEvidence evidence) {
@@ -123,9 +197,8 @@ public class SageApplication implements AutoCloseable {
                 + evidence.altSupport() + "\t" + evidence.altQuality() + "\t" + evidence.refSupport() + "\t" + evidence.indelSupport();
     }
 
-    private SageSamConsumer callable(GenomeRegion region, SageSamConsumer consumer) throws IOException {
-        SamReader tumorReader =
-                SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(config.tumorBam().get(0)));
+    private SageSamConsumer callable(GenomeRegion region, SageSamConsumer consumer, String bamFile) throws IOException {
+        SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
 
         SAMSlicer slicer = new SAMSlicer(13, Lists.newArrayList(region));
         slicer.slice(tumorReader, consumer);
@@ -144,4 +217,10 @@ public class SageApplication implements AutoCloseable {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
+
+    @NotNull
+    private static Map<VariantHotspot, VariantHotspotEvidence> asMap(@NotNull final List<? extends VariantHotspotEvidence> evidence) {
+        return evidence.stream().collect(Collectors.toMap(x -> ImmutableVariantHotspotImpl.builder().from(x).build(), x -> x));
+    }
+
 }
