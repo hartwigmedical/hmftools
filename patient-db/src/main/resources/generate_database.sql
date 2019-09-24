@@ -705,8 +705,6 @@ CREATE TABLE germlineVariant
     hgvsProtein varchar(255) NOT NULL,
     hgvsCoding varchar(255) NOT NULL,
     biallelic BOOLEAN NOT NULL,
-    hotspot BOOLEAN NOT NULL,
-    mappability DOUBLE PRECISION NOT NULL,
     minorAllelePloidy DOUBLE PRECISION NOT NULL,
     refStatus varchar(20) NOT NULL,
     PRIMARY KEY (id),

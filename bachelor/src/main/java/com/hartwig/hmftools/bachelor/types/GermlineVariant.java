@@ -31,8 +31,6 @@ public abstract class GermlineVariant
     public abstract String hgvsProtein();
     public abstract String hgvsCoding();
     public abstract boolean biallelic();
-    public abstract boolean hotspot();
-    public abstract double mappability();
     public abstract double minorAllelePloidy();
 
     // other fields

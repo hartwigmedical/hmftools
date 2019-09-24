@@ -53,7 +53,11 @@ public class BachelorApplication {
 
         if(!mConfig.IsBatchMode)
         {
-            mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId, mConfig.OutputDir);
+            if(!mGermlineVcfParser.run(mConfig.GermlineVcf, mConfig.SampleId, mConfig.OutputDir))
+            {
+                LOGGER.error("germline VCF parse failed");
+                return;
+            }
 
             final List<BachelorGermlineVariant> bachelorRecords = mGermlineVcfParser.getBachelorRecords();
             mVariantEnricher.run(bachelorRecords);

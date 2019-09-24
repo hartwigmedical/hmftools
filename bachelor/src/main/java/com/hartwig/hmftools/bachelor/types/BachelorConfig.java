@@ -105,6 +105,12 @@ public class BachelorConfig
         OutputDir = sampleOutputDir;
 
         PurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIRECTORY, "");
+
+        if(GermlineVcf == null || BamFile == null || RefGenomeFile == null)
+        {
+            LOGGER.error("missing input files");
+            mIsValid = false;
+        }
     }
 
     public boolean isValid() { return mIsValid; }

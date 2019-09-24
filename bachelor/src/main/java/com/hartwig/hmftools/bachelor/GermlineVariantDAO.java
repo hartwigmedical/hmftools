@@ -54,8 +54,6 @@ public class GermlineVariantDAO {
                 Tables.GERMLINEVARIANT.HGVSPROTEIN,
                 Tables.GERMLINEVARIANT.HGVSCODING,
                 Tables.GERMLINEVARIANT.BIALLELIC,
-                Tables.GERMLINEVARIANT.HOTSPOT,
-                Tables.GERMLINEVARIANT.MAPPABILITY,
                 Tables.GERMLINEVARIANT.MINORALLELEPLOIDY,
                 Tables.GERMLINEVARIANT.REFSTATUS,
                 Tables.GERMLINEVARIANT.MODIFIED);
@@ -86,8 +84,6 @@ public class GermlineVariantDAO {
                     variant.hgvsProtein(),
                     variant.hgvsCoding(),
                     variant.biallelic(),
-                    variant.hotspot(),
-                    DatabaseUtil.decimal(variant.mappability()),
                     DatabaseUtil.decimal(variant.minorAllelePloidy()),
                     variant.isHomozygous() ? "HOM" : "HET",
                     timestamp);

@@ -59,18 +59,18 @@ public class GermlineVcfParser
 
     public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
 
-    public void run(final String vcfFile, String sampleId, String singleSampleOutputDir)
+    public boolean run(final String vcfFile, String sampleId, String singleSampleOutputDir)
     {
         if (mConfig.ProgramConfigMap.isEmpty())
         {
             LOGGER.error("No programs loaded, exiting");
-            return;
+            return false;
         }
 
         if(!Files.exists(Paths.get(vcfFile)))
         {
             LOGGER.info("sampleId({}) germline VCF({}) not found", sampleId, vcfFile);
-            return;
+            return false;
         }
 
         LOGGER.info("sampleId({}) reading germline VCF({})", sampleId, vcfFile);
@@ -82,8 +82,9 @@ public class GermlineVcfParser
         if(mProgram.getVariants().isEmpty())
         {
             LOGGER.debug("no valid variants found");
-            return;
         }
+
+        return true;
     }
 
     private void processVCF(final String sampleId, final File vcf)

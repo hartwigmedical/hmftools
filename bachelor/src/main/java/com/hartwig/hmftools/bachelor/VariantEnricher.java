@@ -428,8 +428,6 @@ public class VariantEnricher
                     .hgvsProtein(bachRecord.HgvsProtein)
                     .hgvsCoding(bachRecord.HgvsCoding)
                     .biallelic(bachRecord.isBiallelic())
-                    .hotspot(enrichedVariant.isHotspot())
-                    .mappability(enrichedVariant.mappability())
                     .minorAllelePloidy(enrichedVariant.minorAllelePloidy())
                     .program(bachRecord.Program)
                     .variantId(bachRecord.VariantId)
