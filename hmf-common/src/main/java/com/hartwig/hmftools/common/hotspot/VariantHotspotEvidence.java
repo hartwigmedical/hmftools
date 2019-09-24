@@ -13,9 +13,15 @@ public interface VariantHotspotEvidence extends VariantHotspot {
 
     int refSupport();
 
+    int refQuality();
+
     int altSupport();
 
     int altQuality();
 
     int indelSupport();
+
+    default double vaf() {
+        return readDepth() == 0 ? 0 : (double) altSupport() / readDepth();
+    }
 }

@@ -302,6 +302,7 @@ public class VariantHotspotEvidenceFactory {
                 .setAltQuality(0)
                 .setAltSupport(0)
                 .setRefSupport(0)
+                .setRefQuality(0)
                 .setIndelSupport(0)
                 .setReadDepth(0);
     }
