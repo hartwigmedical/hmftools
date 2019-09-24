@@ -8,10 +8,6 @@ The steps in the routine are as follows:
 3. Enrich variants with copy number data
 4. Write final set of germline variant data to DB (germlineVariant table) and an CSV output file.
 
-In the case where step 2 needs to be completed separately, Bachelor can be run in 2 stages:
-- Stage 1 - step 1 above
-- Stage 2 - steps 3 & 4 above 
-
 ### Whitelist
 
 Any missense inframe indel, synonymous or non-coding variant that is present in clinvar with a significance IN (‘PATHOGENIC’,’LIKELY PATHOGENIC’)  or which has conflicting evidence but none of them  ‘BENIGN’ or ‘LIKELY_BENIGN’. 
@@ -32,26 +28,22 @@ Custom white and blacklistings can be specified per gene in the XML config by ei
 
 ## Usage
 
-The default mode for Bachelor is to run in a continuous mode where all 4 steps are run sequentially.
-
-Alternatively Stage 1 and Stage 2 can be run independently as shown below.
-
-1. Find germline variants, write to file, upload to database
+1. Find candidate germline variants, write to file and optionally write to db.
 
 ```bash
 java -jar bachelor.jar 
     -sample [sampleId] 
-    -xml_config /path/bachelor_config.xml 
-    -ext_filter_file /path/bachelor_clinvar_filters.csv
-    -germline_vcf /sample_path/sampleid.germine_variants.vcf 
+    -germline_vcf /sample_path/sampleid.germline_variants.vcf.gz
     -tumor_bam_file /sample_path/sampleid.tumor.bam 
     -purple_data_dir /sample_path/purple/
-    -output_dir /sample_path/bachelor/ 
+    -xml_config /path/bachelor_config.xml 
+    -ext_filter_file /path/bachelor_clinvar_filters.csv
     -ref_genome /path/ref_genome.fasta 
-    -db_url [db_url] -db_user [user] -db_pass [password] 
+    -output_dir /sample_path/bachelor/ 
+    [-db_url [db_url] -db_user [user] -db_pass [password]] 
 ```
 
-2. Load germine variants from file and upload to database
+2. Load germline variants from file and upload to database
 
 ```bash
 java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants 
@@ -59,7 +51,6 @@ java -cp bachelor.jar com.hartwig.hmftools.bachelor.LoadGermlineVariants
     -sample_data_dir /sample_path/bachelor/
     -db_url [db_url] -db_user [user] -db_pass [password] 
 ```
-
 
 Optional config:
 - log_debug - log in a verbose manner
@@ -73,7 +64,7 @@ Bachelor requires that VCF files have been annotated using SnpEff.
 
 Bachelor uses 2 config files:
 * an XML config file specifying the genes and effects to filter on, and blacklist entries for known exceptions.
-* optionally a file of Clinvar data to additionally black and white list variants
+* optionally a file of ClinVar data to additionally black and white list variants
 
 This very basic example has a single criteria: missense variants in BRCA2.
 
@@ -88,9 +79,9 @@ This very basic example has a single criteria: missense variants in BRCA2.
 ```
 
 
-## Clinvar Filter Creation
+## ClinVar Filter Creation
 
-Create a set of files from CLINVAR variant classification with this command:
+Create a set of files from ClinVar variant classification with this command:
 
 ```bash
 java -cp bachelor.jar com.hartwig.hmftools.bachelor.ExternalDBFilters
