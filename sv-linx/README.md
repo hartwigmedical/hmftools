@@ -25,11 +25,26 @@ All values are optional unless otherwise specified.
 Argument  | Description
 ---|---
 sample  | Required: Specific sample ID
+purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
 output_dir | Required: directory where all output files are written
-database connectivity | db_user, db_pass and db_url
+ref_genome_version | Defaults to HG38, valid values are 37 or 38. 
+
+#### Database Connectivity
+LINX can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
+In this case specify database connection config: db_user, db_pass and db_url.
+
+LINX will read sample data from the following HMF tables:
+* copyNumber
+* structuralVariant
+* purity
+* geneCopyNumber and driverCatalog - if running driver annotation
+
+and upload samples data to the following HMF tables:
+* svAnnotation, svCluster and svLink, viralInsertion
+* svBreakend, svFusion and svDriver
 
 #### Multi-sample batch mode
-LINX can run in a batch mode where it processes multiple samples at once. In this case it downloads SV and copy number data for each sample from the HMF database.
+LINX can run in a batch mode where it processes multiple samples at once. In this case it downloads SV and copy number data for each sample from the HMF MySQL database.
 
 The set of samples to be processed is specified in the 'sample' config value in 1 of 3 ways:
 * a list of samples separated by ','
@@ -45,13 +60,11 @@ check_fusions | discover and annotate gene fusions
 ### Reference files
 Argument  | Description
 ---|---
-fragile_site_file | list of known fragile sites
-line_element_file | list of known LINE elements
-replication_origins_file | replication timing input
-viral_hosts_file | list of known viral hosts
-gene_transcripts_dir | directory for Ensembl reference files
-sv_data_dir | directory for SV flat-file when not using database
-purple_dir | directory for purple and purity data files when not using database
+fragile_site_file | list of known fragile sites - specify Chromosome,PosStart,PosEnd
+line_element_file | list of known LINE elements - specify Chromosome,PosStart,PosEnd
+replication_origins_file | Replication timing input - in BED format with replication timing as the 4th column
+viral_hosts_file | list of known viral hosts - Refseq_id,Virus_name
+gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 ### Clustering
 Argument  | Description
@@ -63,7 +76,9 @@ chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (de
 Argument  | Description
 ---|---
 log_reportable_fusion | only log reportable fusions
-fusion_pairs_csv, promiscuous_five_csv, promiscuous_three_csv | reference files for known fusions and promiscuous genes
+fusion_pairs_csv | Known fusion pairs - specify FiveGene,ThreeGene by name 
+promiscuous_five_csv | Promiscous 5' gene - specify gene name only
+promiscuous_three_csv |  Promiscous 3' gene - specify gene name only 
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 
@@ -107,19 +122,6 @@ java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
     -ensembl_db [db_url] -ensembl_user [username] -ensembl_pass [password] 
     -output_dir /path_to_write_data_files/ 
 ```
-
-## Dependencies
-
-LINX reads sample data from the following HMF tables:
-* copyNumber
-* structuralVariant
-* purity
-* geneCopyNumber and driverCatalog - if running driver annotation
-
-LINX uploads samples data to the following HMF tables:
-* svAnnotation, svCluster and svLink, viralInsertion
-* svBreakend, svFusio and svDriver
-
 
 ## Key Concepts in LINX
 

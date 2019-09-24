@@ -79,7 +79,7 @@ public class LineElementAnnotator {
                 // parse CSV data
                 String[] items = line.split(",");
 
-                if(items.length < 4)
+                if(items.length < LE_COL_POS_END+1)
                     continue;
 
                 final GenomeRegion genomeRegion = GenomeRegions.create(

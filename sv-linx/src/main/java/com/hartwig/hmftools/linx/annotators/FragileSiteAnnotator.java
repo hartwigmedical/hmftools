@@ -19,7 +19,7 @@ public class FragileSiteAnnotator
 {
     private List<GenomeRegion> mFragileSites;
 
-    private final static int CSV_REQUIRED_FIELDS = 4;
+    private final static int CSV_REQUIRED_FIELDS = 3;
 
     private static final Logger LOGGER = LogManager.getLogger(FragileSiteAnnotator.class);
 
@@ -42,8 +42,8 @@ public class FragileSiteAnnotator
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             String line;
-            while ((line = fileReader.readLine()) != null) {
-
+            while ((line = fileReader.readLine()) != null)
+            {
                 if(line.contains("Chromosome"))
                     continue;
 
