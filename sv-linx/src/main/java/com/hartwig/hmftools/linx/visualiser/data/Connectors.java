@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -32,23 +33,33 @@ public class Connectors
                     .track(segment.track());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-            double startLinkPloidy = Links.linkPloidy(startPosition, links);
-            double startLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), startPosition, segments);
+            final Optional<Link> optionalStartPositionLink = Links.findLink(startPosition, links);
+            if (optionalStartPositionLink.isPresent()) {
+                double startLinkPloidy = optionalStartPositionLink.get().ploidy();
+                double startLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), startPosition, segments);
 
-            if (startLinkPloidy > 0)
-            {
-                result.add(builder.position(segment.start()).ploidy(Math.max(0, startLinkPloidy - startLinkPloidyBeforeSegment)).build());
+                if (startLinkPloidy > 0)
+                {
+                    result.add(builder.position(segment.start())
+                            .ploidy(Math.max(0, startLinkPloidy - startLinkPloidyBeforeSegment))
+                            .frame(optionalStartPositionLink.get().frame())
+                            .build());
+                }
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            double endLinkPloidy = Links.linkPloidy(endPosition, links);
-            double endLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), endPosition, segments);
-
-            if (endLinkPloidy > 0)
-            {
-                result.add(builder.position(segment.end()).ploidy(Math.max(0, endLinkPloidy - endLinkPloidyBeforeSegment)).build());
+            final Optional<Link> optionalEndPositionLink = Links.findLink(endPosition, links);
+            if (optionalEndPositionLink.isPresent()) {
+                double endLinkPloidy = optionalEndPositionLink.get().ploidy();
+                if (endLinkPloidy > 0)
+                {
+                    double endLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), endPosition, segments);
+                    result.add(builder.position(segment.end())
+                            .ploidy(Math.max(0, endLinkPloidy - endLinkPloidyBeforeSegment))
+                            .frame(optionalEndPositionLink.get().frame())
+                            .build());
+                }
             }
-
         }
 
         links.forEach(x -> result.addAll(create(x)));
@@ -68,6 +79,7 @@ public class Connectors
                     .clusterId(link.clusterId())
                     .chainId(link.chainId())
                     .ploidy(link.ploidy())
+                    .frame(0)
                     .track(0);
 
             if (link.isValidStart())

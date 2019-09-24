@@ -53,6 +53,7 @@ public class CircosData
     private final double maxMinorAllelePloidy;
     private final double labelSize;
     private final double geneLabelSize;
+    private final int maxFrame;
 
     public CircosData(
             boolean showSimpleSvSegments,
@@ -118,6 +119,7 @@ public class CircosData
                 ? 0.9d * config.maxGeneCharacters() / actualMaxGeneCharacters * labelSize
                 : labelSize;
 
+        maxFrame = segments.stream().mapToInt(Segment::frame).max().orElse(0);
     }
 
     public List<Connector> connectors()
@@ -156,6 +158,11 @@ public class CircosData
     public double maxPloidy()
     {
         return maxPloidy;
+    }
+
+    public int maxFrame()
+    {
+        return maxFrame;
     }
 
     public double maxCopyNumber()

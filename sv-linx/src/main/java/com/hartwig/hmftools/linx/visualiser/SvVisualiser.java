@@ -5,10 +5,12 @@ import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,7 +50,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class SvVisualiser implements AutoCloseable
 {
@@ -76,6 +77,9 @@ public class SvVisualiser implements AutoCloseable
     private final SvCircosConfig circosConfig;
     private final ExecutorService executorService;
 
+    private final List<Callable<Object>> callableImages;
+    private final List<Callable<Object>> callableConfigs;
+
     private SvVisualiser(final Options options, final String... args) throws ParseException, IOException
     {
         final CommandLine cmd = createCommandLine(args, options);
@@ -83,6 +87,9 @@ public class SvVisualiser implements AutoCloseable
         circosConfig = SvCircosConfig.createConfig(cmd);
         config = SvVisualiserConfig.createConfig(cmd);
         executorService = Executors.newFixedThreadPool(config.threads());
+
+        callableImages = Lists.newArrayList();
+        callableConfigs = Lists.newArrayList();
     }
 
     private void run() throws InterruptedException, ExecutionException
@@ -93,10 +100,10 @@ public class SvVisualiser implements AutoCloseable
         {
             if (!config.clusters().isEmpty())
             {
-                futures.add(executorService.submit(() -> runCluster(config.clusters(), false)));
+                submitCluster(config.clusters(), false);
             }
 
-            config.chromosomes().forEach(chromosome -> futures.add(executorService.submit(() -> runChromosome(chromosome))));
+            config.chromosomes().forEach(this::submitChromosome);
         }
         else
         {
@@ -104,7 +111,7 @@ public class SvVisualiser implements AutoCloseable
 
             for (Integer clusterId : clusterIds)
             {
-                futures.add(executorService.submit(() -> runCluster(Lists.newArrayList(clusterId), true)));
+                submitCluster(Lists.newArrayList(clusterId), true);
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
@@ -112,9 +119,12 @@ public class SvVisualiser implements AutoCloseable
             config.links().stream().map(Link::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
             for (final String chromosome : chromosomes)
             {
-                futures.add(executorService.submit(() -> runChromosome(chromosome)));
+                submitChromosome(chromosome);
             }
         }
+
+        callableConfigs.forEach(x -> futures.add(executorService.submit(x)));
+        callableImages.forEach(x -> futures.add(executorService.submit(x)));
 
         for (Future<Object> future : futures)
         {
@@ -122,13 +132,12 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    @Nullable
-    private Object runChromosome(@NotNull final String chromosome) throws IOException, InterruptedException
+    private void submitChromosome(@NotNull final String chromosome)
     {
         if (!HumanChromosome.contains(chromosome))
         {
             LOGGER.warn("Chromosome {} not permitted", chromosome);
-            return null;
+            return;
         }
 
         final Predicate<Link> linePredicate = x -> !x.isLineElement() || config.includeLineElements();
@@ -146,7 +155,7 @@ public class SvVisualiser implements AutoCloseable
         if (chromosomeLinks.isEmpty())
         {
             LOGGER.warn("Chromosome {} not present in file", chromosome);
-            return null;
+            return;
         }
 
         final List<Segment> chromosomeSegments =
@@ -167,12 +176,11 @@ public class SvVisualiser implements AutoCloseable
         final List<ProteinDomain> chromosomeProteinDomains =
                 config.proteinDomain().stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        return runFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
+        submitFiltered(ColorPicker::clusterColors, sample, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
                 Collections.emptyList(), false);
     }
 
-    @Nullable
-    private Object runCluster(List<Integer> clusterIds, boolean skipSingles) throws IOException, InterruptedException
+    private void submitCluster(List<Integer> clusterIds, boolean skipSingles)
     {
         final List<Link> clusterLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
@@ -187,13 +195,13 @@ public class SvVisualiser implements AutoCloseable
         if (clusterLinks.isEmpty())
         {
             LOGGER.warn("Cluster {} not present in file", clusterIdsStr);
-            return null;
+            return;
         }
 
         if (clusterLinks.size() == 1 && skipSingles)
         {
             LOGGER.debug("Skipping simple cluster {}", clusterIdsStr);
-            return null;
+            return;
         }
 
         final Set<Integer> linkChainIds = clusterLinks.stream().map(Link::chainId).collect(Collectors.toSet());
@@ -202,7 +210,7 @@ public class SvVisualiser implements AutoCloseable
         if (!segmentChainIds.isEmpty())
         {
             LOGGER.warn("Cluster {} contains chain ids {} not found in the links", clusterIdsStr, segmentChainIds);
-            return null;
+            return;
         }
 
         final String resolvedTypeString = clusterLinks.stream().findFirst().map(Link::resolvedType).map(Enum::toString).orElse("Unknown");
@@ -217,22 +225,22 @@ public class SvVisualiser implements AutoCloseable
 
         final List<Fusion> clusterFusions = config.fusions().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
 
-        return runFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
+        submitFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
                 sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
     }
 
-    private Object runFiltered(@NotNull final ColorPickerFactory colorPickerFactory, @NotNull final String sample,
-            @NotNull final List<Link> links,
+    private void submitFiltered(@NotNull final ColorPickerFactory colorPickerFactory,
+            @NotNull final String sample,
+            @NotNull final List<Link> filteredLinks,
             @NotNull final List<Segment> filteredSegments,
             @NotNull final List<Exon> filteredExons,
             @NotNull final List<ProteinDomain> filteredProteinDomains,
             @NotNull final List<Fusion> filteredFusions,
             boolean showSimpleSvSegments)
-            throws IOException, InterruptedException
     {
 
         final List<GenomePosition> positionsToCover = Lists.newArrayList();
-        positionsToCover.addAll(Links.allPositions(links));
+        positionsToCover.addAll(Links.allPositions(filteredLinks));
         positionsToCover.addAll(Span.allPositions(filteredSegments));
         positionsToCover.addAll(Span.allPositions(filteredExons));
 
@@ -242,34 +250,66 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, links, positionsToCover, showSimpleSvSegments);
+        final List<Segment> segments = Segments.extendTerminals(0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments);
+        final List<Link> links = Links.addFrame(segments, filteredLinks);
 
         final ColorPicker color = colorPickerFactory.create(links);
 
         final CircosData circosData =
                 new CircosData(showSimpleSvSegments, circosConfig, segments, links, alterations, filteredExons, filteredFusions);
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, config.outputConfPath(), circosData, circosConfig);
-        confWrite.writeConfig();
+        final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
 
-        new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData).write();
-
-        final String outputPlotName = sample + ".png";
-        final Object circosResult = new CircosExecution(config.circosBin()).generateCircos(confWrite.configPath(),
-                config.outputPlotPath(),
-                outputPlotName,
-                config.outputConfPath());
-
-        if (!config.debug())
+        callableConfigs.add(() -> new CircosDataWriter(color, sample, config.outputConfPath(), circosConfig, confWrite, circosData).write());
+        if (!fusionDataWriter.finalExons().isEmpty())
         {
-            double rLabelSize = 1.2 * circosData.labelSize();
-            final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
-            if (!fusionDataWriter.finalExons().isEmpty())
-            {
-                fusionDataWriter.write(sample, config.outputConfPath());
-                new FusionExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
-            }
+            callableConfigs.add(() -> fusionDataWriter.write(sample, config.outputConfPath()));
+        }
 
-            return new ChromosomeRangeExecution(sample, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
+        int minFrame = circosConfig.step() ? 0 : circosData.maxFrame();
+        for (int frame = minFrame; frame <= circosData.maxFrame(); frame++)
+        {
+            boolean plotFusion = !fusionDataWriter.finalExons().isEmpty();
+            submitFrame(frame, plotFusion, circosData.labelSize(), sample, confWrite);
+        }
+    }
+
+    private void submitFrame(int frame, boolean fusion, double labelSize, String sample, final CircosConfigWriter confWrite)
+    {
+        boolean plotFusion = !config.debug() && fusion;
+        boolean plotChromosome = !config.debug();
+
+        callableConfigs.add(() -> confWrite.writeConfig(frame));
+        callableImages.add(() -> createImageFrame(frame, labelSize, sample, plotFusion, plotChromosome));
+    }
+
+    private Object createImageFrame(
+            int frame,
+            double labelSize,
+            @NotNull final String sample,
+            boolean plotFusion,
+            boolean plotChromosome) throws IOException, InterruptedException
+    {
+
+        final String confFileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
+        final String outputFileName = sample + "." + String.format("%03d", frame) + ".png";
+
+        double rLabelSize = 1.2 * labelSize;
+
+        final Object circosResult =
+                new CircosExecution(config.circosBin()).generateCircos(config.outputConfPath() + File.separator + confFileName,
+                        config.outputPlotPath(),
+                        outputFileName,
+                        config.outputConfPath());
+
+        if (plotFusion)
+        {
+            new FusionExecution(sample, outputFileName, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
+        }
+
+        if (plotChromosome)
+        {
+            return new ChromosomeRangeExecution(sample, outputFileName, config.outputConfPath(), config.outputPlotPath()).executeR(circosConfig, rLabelSize);
         }
 
         return circosResult;

@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
-class CanonicalAnnotation {
+public class CanonicalAnnotation {
 
     private static final String CDKN2A_P14ARF_TRANSCRIPT = "ENST00000361570";
 
@@ -25,7 +25,7 @@ class CanonicalAnnotation {
     @NotNull
     private final Map<String, String> canonicalTranscriptGeneMap;
 
-    CanonicalAnnotation() {
+    public CanonicalAnnotation() {
         this.driverCatalogGenes = Sets.newHashSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
         this.driverCatalogGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
 

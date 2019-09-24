@@ -19,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 public class CircosConfigWriter
 {
     private final String sample;
-    private final String configPath;
     private final String outputDir;
     private final CircosData circosData;
     private final SvCircosConfig config;
@@ -44,7 +43,6 @@ public class CircosConfigWriter
     public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data, @NotNull final SvCircosConfig config)
     {
         this.sample = sample;
-        this.configPath = outputDir + File.separator + sample + ".circos.conf";
         this.circosData = data;
         this.config = config;
         this.outputDir = outputDir;
@@ -93,12 +91,9 @@ public class CircosConfigWriter
         mapOuterRadius = copyNumberInnerRadius - gapSize;
         mapMiddleRadius = mapOuterRadius - mapGainTracks * purpleTrackSize;
         mapInnerRadius = mapMiddleRadius - 1 * purpleTrackSize;
+
     }
 
-    public String configPath()
-    {
-        return configPath;
-    }
 
     public double svTrackRelative(int track)
     {
@@ -113,9 +108,13 @@ public class CircosConfigWriter
         return segmentOuterRadius;
     }
 
-    public void writeConfig()
+    @NotNull
+    public String writeConfig(int frame)
             throws IOException
     {
+        final String fileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
+        final String configPath = outputDir + File.separator + fileName;
+
         int chromosomeCount = circosData.contigLengths().size();
         int totalContigLength = circosData.totalContigLength();
 
@@ -127,6 +126,7 @@ public class CircosConfigWriter
         final Charset charset = StandardCharsets.UTF_8;
         final String template =
                 readResource("/visualisation/cluster.template")
+                        .replaceAll("SUBSTITUTE_CURRENT_FRAME", String.valueOf(frame))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.outerRadius()))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
@@ -160,6 +160,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_SAMPLE", sample);
 
         Files.write(new File(configPath).toPath(), template.getBytes(charset));
+        return fileName;
     }
 
     @NotNull

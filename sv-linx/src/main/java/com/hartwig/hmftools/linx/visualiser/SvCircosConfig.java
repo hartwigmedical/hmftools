@@ -55,6 +55,7 @@ public interface SvCircosConfig
     // Debug
     String EXACT_POSITION = "exact_position";
     String SHOW_SV_ID = "show_sv_id";
+    String STEP = "step";
 
     int DEFAULT_FUSION_HEIGHT = 250;
     int DEFAULT_FUSION_LEGEND_ROWS = 1;
@@ -127,6 +128,7 @@ public interface SvCircosConfig
 
         options.addOption(EXACT_POSITION, false, "Display exact positions at all break ends");
         options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
+        options.addOption(STEP, false, "Create image at each step of derivative chromosome");
 
     }
 
@@ -178,6 +180,8 @@ public interface SvCircosConfig
     boolean interpolateCopyNumberPositions();
 
     boolean interpolateExonPositions();
+
+    boolean step();
 
     default long labelSize(long count)
     {
@@ -249,6 +253,7 @@ public interface SvCircosConfig
 
                 .exactPosition(cmd.hasOption(EXACT_POSITION))
                 .showSvId(cmd.hasOption(SHOW_SV_ID))
+                .step(cmd.hasOption(STEP))
 
                 .build();
     }

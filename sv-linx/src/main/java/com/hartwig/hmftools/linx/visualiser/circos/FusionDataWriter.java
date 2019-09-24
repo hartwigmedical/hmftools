@@ -64,12 +64,14 @@ public class FusionDataWriter
         this.proteinDomainColors = new ProteinDomainColors(finalProteinDomains);
     }
 
-    public void write(@NotNull final String sample, @NotNull final String outputDir)
+    @NotNull
+    public Object write(@NotNull final String sample, @NotNull final String outputDir)
             throws IOException
     {
         String filePrefix = outputDir + File.separator + sample;
         FusedExons.write(filePrefix + ".fusions.tsv", finalExons);
         FusedProteinDomains.write(filePrefix + ".protein_domains.tsv", proteinDomainColors, finalProteinDomains);
+        return this;
     }
 
     public List<FusedExon> finalExons()

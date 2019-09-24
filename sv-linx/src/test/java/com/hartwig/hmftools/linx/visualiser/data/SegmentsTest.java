@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -17,13 +18,7 @@ public class SegmentsTest
 
         final List<Segment> segments = Lists.newArrayList(createSegment("1"), createSegment("2"), createSegment("1"));
 
-        final List<Segment> alwaysIncrement = Segments.alwaysIncrement(segments);
-        assertEquals(3, alwaysIncrement.size());
-        assertEquals(1, alwaysIncrement.get(0).track());
-        assertEquals(2, alwaysIncrement.get(1).track());
-        assertEquals(3, alwaysIncrement.get(2).track());
-
-        final List<Segment> incrementOnChromosome = Segments.incrementOnChromosome(segments);
+        final List<Segment> incrementOnChromosome = Segments.incrementOnChromosome(segments, Collections.emptyList(), false);
         assertEquals(3, incrementOnChromosome.size());
         assertEquals(1, incrementOnChromosome.get(0).track());
         assertEquals(1, incrementOnChromosome.get(1).track());
@@ -43,6 +38,7 @@ public class SegmentsTest
                 .startTerminal(SegmentTerminal.NONE)
                 .endTerminal(SegmentTerminal.NONE)
                 .ploidy(0)
+                .frame(0)
                 .build();
     }
 

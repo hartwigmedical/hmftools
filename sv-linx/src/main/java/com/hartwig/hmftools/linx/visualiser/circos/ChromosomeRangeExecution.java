@@ -24,11 +24,11 @@ public class ChromosomeRangeExecution
     private final String bandFile;
     private final String chromosomeFile;
 
-    public ChromosomeRangeExecution(final String sample, final String dataDir, final String plotDir)
+    public ChromosomeRangeExecution(final String sampleName, final String imageName, final String dataDir, final String plotDir)
     {
-        this.plotFile = plotDir + File.separator + sample + ".png";
-        this.bandFile = dataDir + File.separator + sample + ".cytoBand.txt";
-        this.chromosomeFile = dataDir + File.separator + sample + ".chromosome.circos";
+        this.plotFile = plotDir + File.separator + imageName;
+        this.bandFile = dataDir + File.separator + sampleName + ".cytoBand.txt";
+        this.chromosomeFile = dataDir + File.separator + sampleName + ".chromosome.circos";
     }
 
     public Integer executeR(@NotNull final SvCircosConfig config, double labelSize) throws IOException, InterruptedException
