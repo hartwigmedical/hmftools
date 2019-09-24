@@ -16,7 +16,7 @@ const val SAMPLE_MAPPING_OUTPUT_FILE = "mapping_out"
 const val ANONYMIZE_OUT = "anonymize_out"
 
 // Resource locations
-const val CURRENT_IDS_FILE = "/sample_hashes.csv"
+const val SAMPLE_HASHES_CSV = "/sample_hashes.csv"
 
 object Version {
     override fun toString(): String = this::class.java.getPackage().implementationVersion

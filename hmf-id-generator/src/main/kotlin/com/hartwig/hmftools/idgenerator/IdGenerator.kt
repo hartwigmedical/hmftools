@@ -4,7 +4,6 @@ import com.hartwig.hmftools.idgenerator.anonymizedIds.HashId
 import org.bouncycastle.jcajce.provider.digest.SHA3
 import org.bouncycastle.util.encoders.Hex
 
-
 class IdGenerator(private val password: String, private val defaultSeed: Int = 0) {
 
     fun generate(input: Collection<String>, seed: Int = 0): Collection<HashId> {

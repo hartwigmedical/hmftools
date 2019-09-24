@@ -127,7 +127,7 @@ private fun runUpdateIds(cmd: CommandLine) {
     val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
     val anonymizer = SampleAnonymizer(password)
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream())
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(SAMPLE_HASHES_CSV).openStream())
             .map { it.toHmfSampleId() }
     logger.info("Read ${currentIds.size} anonymized samples")
 
@@ -136,7 +136,7 @@ private fun runUpdateIds(cmd: CommandLine) {
     CsvWriter.writeCSV(anonymizedSamples.map { HmfSampleIdRecord(it) }, cmd.getOptionValue(OUTPUT_FILE))
     CsvWriter.writeCSV(sampleMappingRecords, cmd.getOptionValue(SAMPLE_MAPPING_OUTPUT_FILE))
     if (cmd.hasOption(ANONYMIZE_OUT)) {
-        val anonymizedRecords = samplesInput.samples.sortedWith(Comparator.comparing<SampleId, String> { it.id }).map { AnonymizedRecord.invoke(anonymizedSamples, it) }
+        val anonymizedRecords = samplesInput.samples.sortedWith(Comparator.comparing { it.id }).map { AnonymizedRecord.invoke(anonymizedSamples, it) }
         CsvWriter.writeCSV(anonymizedRecords, cmd.getOptionValue(ANONYMIZE_OUT))
     }
 
@@ -145,17 +145,17 @@ private fun runUpdateIds(cmd: CommandLine) {
 
 private fun runAnonymizeIds(cmd: CommandLine) {
     logger.info("Mode: anonymize ids")
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream())
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(SAMPLE_HASHES_CSV).openStream())
             .map { it.toHmfSampleId() }
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
     val anonymizedSamples = AnonymizedSamples(cmd.getOptionValue(PASSWORD), currentIds, samplesInput)
 
     if (cmd.hasOption(ANONYMIZE_OUT)) {
-        val anonymizedRecords = samplesInput.samples.sortedWith(Comparator.comparing<SampleId, String> { it.id }).map { AnonymizedRecord.invoke(anonymizedSamples, it) }
+        val anonymizedRecords = samplesInput.samples.sortedWith(Comparator.comparing { it.id }).map { AnonymizedRecord.invoke(anonymizedSamples, it) }
         CsvWriter.writeCSV(anonymizedRecords, cmd.getOptionValue(ANONYMIZE_OUT))
     } else {
         println("OriginalId,AnonymousId")
-        samplesInput.samples.sortedWith(Comparator.comparing<SampleId, String> { it.id }).forEach { sample ->
+        samplesInput.samples.sortedWith(Comparator.comparing { it.id }).forEach { sample ->
             anonymizedSamples[sample]
             println("${sample.id},${anonymizedSamples[sample]?.plaintext ?: "Unknown"}")
         }
