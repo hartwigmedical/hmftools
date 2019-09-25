@@ -2,8 +2,6 @@ package com.hartwig.hmftools.linx.chaining;
 
 public class ChainMetrics
 {
-    public int DSBs;
-    public int ShortDSBs;
     public int InternalTIs;
     public int InternalTICnGain;
     public int InternalShortTIs;
@@ -17,8 +15,6 @@ public class ChainMetrics
 
     public ChainMetrics()
     {
-        DSBs = 0;
-        ShortDSBs = 0;
         InternalTIs = 0;
         InternalTICnGain = 0;
         InternalShortTIs = 0;
@@ -32,8 +28,6 @@ public class ChainMetrics
 
     public void add(final ChainMetrics other)
     {
-        DSBs += other.DSBs;
-        ShortDSBs += other.ShortDSBs;
         InternalTIs += other.InternalTIs;
         InternalTICnGain += other.InternalTICnGain;
         InternalShortTIs += other.InternalShortTIs;

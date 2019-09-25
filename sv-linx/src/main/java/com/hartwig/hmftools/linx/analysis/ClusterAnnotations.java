@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_BOUNDARY_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
@@ -33,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
+import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.cn.SvCNData;
@@ -492,16 +495,22 @@ public class ClusterAnnotations
         }
     }
 
+    public static void annotateClusterDeletions(final SvCluster cluster)
+    {
+        if(cluster.getSvCount() == 1 || cluster.getResolvedType() == LINE)
+            return;
+
+        cluster.getArmGroups().forEach(x -> x.populateDbData(cluster.getDeletionData()));
+    }
+
     private static final int INCONSISTENT_ARM = -2;
     private static final int CONSISTENT_ARM = 0;
 
-    public static void annotateChainedClusters(final SvCluster cluster)
+    public static void annotateClusterChains(final SvCluster cluster)
     {
         // skip simple SVs and single arm clusters without chains
         if(cluster.getSvCount() == 1 || (cluster.getArmCount() == 1 && cluster.getChains().isEmpty()))
             return;
-
-        boolean isComplex = cluster.requiresReplication() || !cluster.getFoldbacks().isEmpty();
 
         /* data to gather for each arm in the chain
             - number of links
@@ -577,10 +586,33 @@ public class ClusterAnnotations
 
         int consistentArmCount = (int)originArms.values().stream().filter(x -> x >= -1 && x <= 1).count();
 
-        cluster.setArmData(originArms.size(), fragmentArms.size(), consistentArmCount);
+        // determine complex / active arms as those with more than 1 local topology event not including TI-only segments
+        Map<String,Integer> armClusterCounts = Maps.newHashMap();
+
+        for(final SvArmCluster armCluster : cluster.getArmClusters())
+        {
+            if(armCluster.getType() == SvArmCluster.ARM_CL_TI_ONLY)
+                continue;
+
+            Integer count = armClusterCounts.get(armCluster.getChrArm());
+
+            if(count == null)
+            {
+                armClusterCounts.put(armCluster.getChrArm(), 1);
+            }
+            else
+            {
+                armClusterCounts.put(armCluster.getChrArm(), count + 1);
+            }
+        }
+
+        int complexArms = (int)armClusterCounts.values().stream().filter(x -> x > 1).count();
+
+        cluster.setArmData(originArms.size(), fragmentArms.size(), consistentArmCount, complexArms);
 
         if(cluster.getSvCount() > 2)
         {
+            boolean isComplex = cluster.requiresReplication() || !cluster.getFoldbacks().isEmpty();
             boolean isComplete = (inconsistentChains == 0) && (consistentArmCount == originArms.size());
 
             LOGGER.debug("cluster({}) {} chains({} incons={}) arms({} frag={} origin={} consis={}) tiCount(short={} long={})",

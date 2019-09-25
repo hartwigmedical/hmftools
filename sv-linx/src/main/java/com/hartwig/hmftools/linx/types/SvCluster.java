@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
+import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_BOUNDARY_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -89,7 +90,9 @@ public class SvCluster
 
     private int mOriginArms;
     private int mFragmentArms;
-    private int mConsistentArmCount;
+    private int mConsistentArms;
+    private int mComplexArms;
+    private int[] mDeletionData;
 
     public static String CLUSTER_ANNOT_DM = "DM";
     public static String CLUSTER_ANNOT_BFB_AMP = "BFB_AMP";
@@ -143,7 +146,9 @@ public class SvCluster
 
         mOriginArms = 0;
         mFragmentArms = 0;
-        mConsistentArmCount = 0;
+        mConsistentArms = 0;
+        mComplexArms= 0;
+        mDeletionData = new int[DB_DATA_BOUNDARY_LENGTH+1];
     }
 
     public int id() { return mId; }
@@ -571,11 +576,6 @@ public class SvCluster
                 .filter(x -> !mShortTIRemoteSVs.contains(x))
                 .collect(Collectors.toList());
 
-        for (final SvArmGroup armGroup : mArmGroups)
-        {
-            armGroup.setBoundaries();
-        }
-
         mRecalcRemoteSVStatus = false;
     }
 
@@ -872,43 +872,24 @@ public class SvCluster
         return null;
     }
 
-    public void setArmData(int origins, int fragments, int consistentArmCount)
+    public void setArmData(int origins, int fragments, int consistentArms, int complexArms)
     {
         mOriginArms = origins;
         mFragmentArms = fragments;
-        mConsistentArmCount = consistentArmCount;
+        mConsistentArms = consistentArms;
+        mComplexArms = complexArms;
     }
     public int getOriginArms() { return mOriginArms; }
     public int getFragmentArms() { return mFragmentArms; }
-    public int getConsistentArmCount() { return mConsistentArmCount; }
+    public int getConsistentArms() { return mConsistentArms; }
+    public int getComplexArms() { return mComplexArms; }
+
+    public final int[] getDeletionData() { return mDeletionData; }
 
     public ChainMetrics getLinkMetrics()
     {
         ChainMetrics chainMetrics = new ChainMetrics();
-
         mChains.stream().forEach(x -> chainMetrics.add(x.extractChainMetrics()));
-
-        for(SvVarData var : mSVs)
-        {
-            for(int be = SE_START; be <= SE_END; ++be)
-            {
-                if (be == SE_END && var.isSglBreakend())
-                    continue;
-
-                boolean useStart = isStart(be);
-                SvLinkedPair dbLink = var.getDBLink(useStart);
-
-                // only take matches on the lower breakend to avoid double-counting DBs
-                if(dbLink != null && dbLink.getBreakend(true).getSV() == var && dbLink.getOtherSV(var).getCluster() == this)
-                {
-                    ++chainMetrics.DSBs;
-
-                    if(dbLink.length() <= 100)
-                        ++chainMetrics.ShortDSBs;
-                }
-            }
-        }
-
         return chainMetrics;
     }
 

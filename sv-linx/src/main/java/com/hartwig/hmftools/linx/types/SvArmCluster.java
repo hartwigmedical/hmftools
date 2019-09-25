@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 
 import java.util.List;
@@ -45,6 +46,9 @@ public class SvArmCluster
     }
 
     public int id() { return mId; }
+
+    public String getChrArm() { return makeChrArmStr(mChromosome, mArm); }
+
     public final String toString()
     {
         return String.format("%d: %s %s_%s %d:%d",

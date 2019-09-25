@@ -28,12 +28,9 @@ public class SvArmGroup {
     private final String mChromosome;
     private final String mArm;
 
-    private boolean mRequiresRecalc;
-
     // width of SVs on the arm taking into account any excluded SVs
     private long mStartPos;
     private long mEndPos;
-    private int mConsistency;
 
     public SvArmGroup(final SvCluster cluster, final String chr, final String arm)
     {
@@ -47,8 +44,6 @@ public class SvArmGroup {
         mBreakends = Lists.newArrayList();
         mStartPos = -1;
         mEndPos = -1;
-        mConsistency = 0;
-        mRequiresRecalc = true;
     }
 
     public final String id() { return mId; }
@@ -96,8 +91,6 @@ public class SvArmGroup {
 
         mStartPos = mBreakends.get(0).position();
         mEndPos = mBreakends.get(mBreakends.size()-1).position();
-
-        mRequiresRecalc = true;
     }
 
     public boolean matches(final SvArmGroup other)
@@ -105,24 +98,48 @@ public class SvArmGroup {
         return mChromosome.equals(other.chromosome()) && mArm.equals(other.arm());
     }
 
-    public void setBoundaries()
+    public int consistency()
     {
-        if(!mRequiresRecalc)
-            return;
+        return mBreakends.stream().mapToInt(x -> calcConsistency(x)).sum();
+    }
 
-        mConsistency = 0;
+    public boolean isConsistent() { return consistency() == 0; }
+
+    public static final int DB_DATA_COUNT = 0;
+    public static final int DB_DATA_CLUSTER_COUNT = 1;
+    public static final int DB_DATA_SHORT_COUNT = 2;
+    public static final int DB_DATA_TOTAL_LENGTH = 3;
+    public static final int DB_DATA_BOUNDARY_LENGTH = 4;
+
+    public void populateDbData(final int[] data)
+    {
+        List<SvLinkedPair> processedDBs = Lists.newArrayList();
 
         for(final SvBreakend breakend : mBreakends)
         {
-            mConsistency += calcConsistency(breakend);
+            final SvLinkedPair dbLink = breakend.getDBLink();
+
+            if(dbLink == null || processedDBs.contains(dbLink))
+                continue;
+
+            processedDBs.add(dbLink);
+            ++data[DB_DATA_COUNT];
+
+            if(dbLink.length() < 100)
+                ++data[DB_DATA_SHORT_COUNT];
+
+            if(dbLink.getOtherBreakend(breakend).getCluster() == mCluster)
+            {
+                ++data[DB_DATA_CLUSTER_COUNT];
+                data[DB_DATA_TOTAL_LENGTH] += max(dbLink.length(), 0);
+            }
         }
 
-        //LOGGER.debug("cluster({}) arm({}) SVs({}) range({} -> {}) consistency({})",
-        //        mCluster.id(), mId, mSVs.size(), mStartPos, mEndPos, mConsistency);
-
-        mRequiresRecalc = false;
+        // if this cluster has DBs between variants on the arm, then report the total width covered by the breakends
+        if(data[DB_DATA_CLUSTER_COUNT] > 0)
+        {
+            data[DB_DATA_BOUNDARY_LENGTH] += (int)(mEndPos - mStartPos);
+        }
     }
-
-    public boolean isConsistent() { return mConsistency == 0; }
 
 }
