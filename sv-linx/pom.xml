@@ -12,7 +12,7 @@
 
     <artifactId>sv-linx</artifactId>
     <packaging>jar</packaging>
-    <version>1.4</version>
+    <version>${sv-linx.version}</version>
     <name>HMF Tools - SV LINX</name>
 
     <dependencies>
