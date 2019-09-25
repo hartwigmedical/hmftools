@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage;
 
+import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -19,6 +21,8 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
@@ -70,6 +74,10 @@ public class SageVCF implements AutoCloseable {
         final VariantContextBuilder builder = new VariantContextBuilder().chr(tumorEvidence.chromosome())
                 .start(tumorEvidence.position())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, round(tumorEvidence.vaf()))
+                .attribute("MAP_Q", tumorEvidence.altMapQuality())
+                .attribute("MAP_BASE_Q", tumorEvidence.altMinQuality())
+                .attribute("AVG_DISTANCE_RECORD", tumorEvidence.avgAltDistanceFromRecordStart())
+                .attribute("AVG_DISTANCE_ALIGNMENT", tumorEvidence.avgAltMinDistanceFromAlignment())
                 .computeEndFromAlleles(alleles, (int) tumorEvidence.position())
                 .source("SAGE")
                 .genotypes(tumor, normal)
@@ -91,7 +99,12 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
+
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
+        header.addMetaDataLine(new VCFInfoHeaderLine("MAP_Q", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("MAP_BASE_Q", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("AVG_DISTANCE_RECORD", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("AVG_DISTANCE_ALIGNMENT", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
 
         return header;
     }
