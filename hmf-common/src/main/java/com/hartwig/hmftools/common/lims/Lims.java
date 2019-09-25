@@ -17,7 +17,6 @@ public class Lims {
 
     static final String NOT_AVAILABLE_STRING = "N/A";
     static final String NOT_DETERMINED_STRING = "not determined";
-    static final String NOT_KNOWN_STRING = "not known";
 
     @NotNull
     private final Map<String, LimsJsonSampleData> dataPerSample;
@@ -228,9 +227,9 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
         if (sampleData != null) {
             String hospitalPatientId = sampleData.hospitalPatientId();
-            return hospitalPatientId != null ? hospitalPatientId : NOT_KNOWN_STRING;
+            return hospitalPatientId != null ? hospitalPatientId : NOT_AVAILABLE_STRING;
         }
-        return NOT_KNOWN_STRING;
+        return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
@@ -238,9 +237,9 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSample.get(sample);
         if (sampleData != null) {
             String hospitalPathologySampleId = sampleData.hospitalPathologySampleId();
-            return hospitalPathologySampleId != null ? hospitalPathologySampleId : NOT_KNOWN_STRING;
+            return hospitalPathologySampleId != null ? hospitalPathologySampleId : NOT_AVAILABLE_STRING;
         }
-        return NOT_KNOWN_STRING;
+        return NOT_AVAILABLE_STRING;
     }
 
     @NotNull

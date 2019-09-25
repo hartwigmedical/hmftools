@@ -113,8 +113,8 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.purityShallowSeq(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.primaryTumor(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(doesNotExistSample));
-        assertEquals(Lims.NOT_KNOWN_STRING, lims.hospitalPatientId(doesNotExistSample));
-        assertEquals(Lims.NOT_KNOWN_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
         assertEquals(LimsGermlineReportingChoice.UNKNOWN, lims.germlineReportingChoice(doesNotExistSample));
     }
 
