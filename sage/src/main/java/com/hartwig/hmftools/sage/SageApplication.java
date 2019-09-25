@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,13 +17,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidenceType;
 import com.hartwig.hmftools.common.hotspot.ImmutableHotspotEvidence;
-import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.sage.count.BaseDetails;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -77,22 +77,25 @@ public class SageApplication implements AutoCloseable {
         // Note: Turns out you need one samreaderfactory per thread!
 
         LOGGER.info("Examining tumor sample for evidence of variants");
-        final List<ModifiableVariantHotspotEvidence> tumorEvidence = tumor(config.tumorBam().get(0));
-        final List<VariantHotspot> hotspots =
-                tumorEvidence.stream().map(x -> ImmutableVariantHotspotImpl.builder().from(x).build()).collect(Collectors.toList());
+        final List<BaseDetails> tumorEvidence = tumor(config.tumorBam().get(0));
+        final Set<Long> hotspots = tumorEvidence.stream().map(BaseDetails::position).collect(Collectors.toSet());
 
         LOGGER.info("Examining normal sample for evidence of variants");
-        final List<ModifiableVariantHotspotEvidence> normalEvidence = normal(config.referenceBam(), hotspots);
-
+        final List<BaseDetails> normalEvidence = normal(config.referenceBam(), hotspots);
 
         LOGGER.info("Combining");
-        Map<VariantHotspot, VariantHotspotEvidence> normalMap = asMap(normalEvidence);
+        Map<Long, BaseDetails> normalMap = asMap(normalEvidence);
         final List<HotspotEvidence> finalEvidence = Lists.newArrayList();
-        for (VariantHotspotEvidence entry : tumorEvidence) {
-            final VariantHotspot variant = ImmutableVariantHotspotImpl.builder().from(entry).build();
-            final VariantHotspotEvidence tumor = entry;
-            final VariantHotspotEvidence normal = normalMap.get(variant);
-            finalEvidence.add(createEvidence(tumor, normal));
+        for (final BaseDetails tumorBase : tumorEvidence) {
+
+            @Nullable
+            final BaseDetails normalBase = normalMap.get(tumorBase.position());
+            for (VariantHotspotEvidence tumorHotspot : tumorBase.evidence()) {
+                @Nullable
+                final VariantHotspotEvidence normalHotspot =
+                        normalBase == null ? null : normalBase.selectOrCreate(tumorHotspot.ref(), tumorHotspot.alt());
+                finalEvidence.add(createEvidence(tumorHotspot, normalHotspot));
+            }
         }
 
         SageVCF vcf = new SageVCF("/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
@@ -105,7 +108,7 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private List<ModifiableVariantHotspotEvidence> tumor(String bamFile) throws ExecutionException, InterruptedException {
+    private List<BaseDetails> tumor(String bamFile) throws ExecutionException, InterruptedException {
 
         GenomeRegion region1 = GenomeRegions.create("17", 1, 1_000_000);
         GenomeRegion region2 = GenomeRegions.create("17", 1_000_001, 2_000_000);
@@ -129,18 +132,18 @@ public class SageApplication implements AutoCloseable {
         futures.add(executorService.submit(() -> callable(region5, samConsumer5, bamFile)));
         futures.add(executorService.submit(() -> callable(region6, samConsumer6, bamFile)));
 
-        final List<ModifiableVariantHotspotEvidence> tumorEvidence = Lists.newArrayList();
+        final List<BaseDetails> tumorEvidence = Lists.newArrayList();
 
         for (Future<SageSamConsumer> future : futures) {
             SageSamConsumer consumer = future.get();
-            tumorEvidence.addAll(consumer.evidence());
+            tumorEvidence.addAll(consumer.bases());
         }
 
         return tumorEvidence;
     }
 
     @NotNull
-    private List<ModifiableVariantHotspotEvidence> normal(String bamFile, List<VariantHotspot> hotspots) throws ExecutionException, InterruptedException {
+    private List<BaseDetails> normal(String bamFile, Set<Long> hotspots) throws ExecutionException, InterruptedException {
 
         GenomeRegion region1 = GenomeRegions.create("17", 1, 1_000_000);
         GenomeRegion region2 = GenomeRegions.create("17", 1_000_001, 2_000_000);
@@ -164,11 +167,11 @@ public class SageApplication implements AutoCloseable {
         futures.add(executorService.submit(() -> callable(region5, samConsumer5, bamFile)));
         futures.add(executorService.submit(() -> callable(region6, samConsumer6, bamFile)));
 
-        final List<ModifiableVariantHotspotEvidence> tumorEvidence = Lists.newArrayList();
+        final List<BaseDetails> tumorEvidence = Lists.newArrayList();
 
         for (Future<SageSamConsumer> future : futures) {
             SageSamConsumer consumer = future.get();
-            tumorEvidence.addAll(consumer.evidence());
+            tumorEvidence.addAll(consumer.bases());
         }
 
         return tumorEvidence;
@@ -219,8 +222,8 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private static Map<VariantHotspot, VariantHotspotEvidence> asMap(@NotNull final List<? extends VariantHotspotEvidence> evidence) {
-        return evidence.stream().collect(Collectors.toMap(x -> ImmutableVariantHotspotImpl.builder().from(x).build(), x -> x));
+    private static Map<Long, BaseDetails> asMap(@NotNull final List<? extends BaseDetails> evidence) {
+        return evidence.stream().collect(Collectors.toMap(BaseDetails::position, x -> x));
     }
 
 }

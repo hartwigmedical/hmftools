@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.sage;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.count.BaseDetails;
+import com.hartwig.hmftools.sage.count.EvictingLinkedMap;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,59 +46,35 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
     private static final String DISTANCE_FROM_REF_TAG = "NM";
     private final GenomeRegion bounds;
     private final IndexedFastaSequenceFile refGenome;
-    private final AtomicInteger count = new AtomicInteger();
-    private final ImmutableVariantHotspotImpl.Builder keyBuilder;
 
-    private final Map<VariantHotspot, ModifiableVariantHotspotEvidence> evidenceMap = new HashMap<>();
-    private final Map<VariantHotspot, Integer> refSupportMap = new HashMap<>();
-    private final Map<VariantHotspot, Integer> refQualityMap = new HashMap<>();
+    private final Set<Long> hotspots;
+    private final EvictingLinkedMap<Long, BaseDetails> baseMap;
+    private final List<BaseDetails> baseList = Lists.newArrayList();
 
     public SageSamConsumer(@NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome) {
+        this(bounds, refGenome, Sets.newHashSet());
+
+    }
+
+    public SageSamConsumer(@NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome, Set<Long> hotspots) {
         this.bounds = bounds;
         this.refGenome = refGenome;
-        keyBuilder = ImmutableVariantHotspotImpl.builder().chromosome(bounds.chromosome()).ref("N").alt("N");
-    }
 
-    public SageSamConsumer(@NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome, List<VariantHotspot> loci) {
-        this(bounds, refGenome);
-        for (VariantHotspot locus : loci) {
-            if (inBounds(locus.position())) {
-                evidenceMap.put(locus, createEvidence(locus));
+        BiConsumer<Long, BaseDetails> baseDetailsHandler = (position, baseDetails) -> {
+            if (!baseDetails.isEmpty() || hotspots.contains(baseDetails.position())) {
+                baseList.add(baseDetails);
             }
-        }
-    }
 
-    @NotNull
-    public Set<VariantHotspot> loci() {
-        return evidenceMap.keySet();
+        };
+        baseMap = new EvictingLinkedMap<>(baseDetailsHandler);
+        this.hotspots = hotspots;
     }
 
     @NotNull
-    public List<ModifiableVariantHotspotEvidence> evidence() {
-
-        List<ModifiableVariantHotspotEvidence> result = Lists.newArrayList();
-        for (Map.Entry<VariantHotspot, ModifiableVariantHotspotEvidence> entry : evidenceMap.entrySet()) {
-            VariantHotspot key = entry.getKey();
-            ModifiableVariantHotspotEvidence value = entry.getValue();
-
-            VariantHotspot refKey = ImmutableVariantHotspotImpl.builder().from(key).ref("N").alt("N").build();
-
-            Integer refQuality = refQualityMap.get(refKey);
-            if (refQuality != null) {
-                value.setIndelSupport(refQuality);
-            }
-
-            Integer refSupport = refSupportMap.get(refKey);
-            if (refSupport != null) {
-                value.setRefSupport(refSupport);
-                value.setReadDepth(refSupport + value.altSupport());
-            }
-
-            result.add(value);
-        }
-
-        Collections.sort(result);
-        return result;
+    public List<BaseDetails> bases() {
+        baseMap.evictAll();
+        Collections.sort(baseList);
+        return baseList;
     }
 
     @Override
@@ -115,9 +91,6 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
 
                 int readStart = alignmentBlock.getReadStart() - 1;
 
-                String refString = refGenome.getSubsequenceAt(record.getContig(), refStart, refEnd).getBaseString();
-                String readString = record.getReadString().substring(readStart, readStart + alignmentBlock.getLength());
-
                 for (int i = 0; i < alignmentBlock.getLength(); i++) {
 
                     long refPosition = refStart + i;
@@ -125,25 +98,25 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                         continue;
                     }
 
-                    byte readByte = record.getReadBases()[i + readStart];
                     byte refByte = refBases[i];
+                    byte readByte = record.getReadBases()[i + readStart];
+
+                    final String ref = String.valueOf((char) refByte);
+                    final String alt = String.valueOf((char) readByte);
+
+                    final BaseDetails baseDetails = baseMap.compute(refPosition,
+                            (position, old) -> old == null ? new BaseDetails(record.getContig(), position) : old);
+
                     final int baseQuality = record.getBaseQualities()[i + readStart];
 
                     if (readByte != refByte) {
-                        final VariantHotspot key = keyBuilder.ref(String.valueOf((char) refByte))
-                                .alt(String.valueOf((char) readByte))
-                                .position(refPosition)
-                                .build();
-
-                        ModifiableVariantHotspotEvidence evidence = evidenceMap.computeIfAbsent(key, hotspot -> createEvidence(key));
+                        final ModifiableVariantHotspotEvidence evidence = baseDetails.selectOrCreate(ref, alt);
                         evidence.setAltSupport(evidence.altSupport() + 1);
                         evidence.setAltQuality(evidence.altQuality() + baseQuality);
 
-                        count.incrementAndGet();
                     } else {
-                        final VariantHotspot key = keyBuilder.position(refPosition).ref("N").alt("N").build();
-                        refSupportMap.compute(key, (hotspot, integer) -> integer == null ? 1 : integer + 1);
-                        refQualityMap.compute(key, (hotspot, integer) -> integer == null ? baseQuality : integer + baseQuality);
+                        baseDetails.incrementRefSupport();
+                        baseDetails.incrementRefQuality(baseQuality);
                     }
                 }
             }
@@ -158,10 +131,6 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                 .setReadDepth(0)
                 .setAltQuality(0)
                 .setIndelSupport(0);
-    }
-
-    public int count() {
-        return evidenceMap.size();
     }
 
     private boolean inBounds(final SAMRecord record) {
