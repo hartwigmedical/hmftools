@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +18,7 @@ public class Lims {
     static final String NOT_DETERMINED_STRING = "not determined";
 
     @NotNull
-    private final Map<String, LimsJsonSampleData> dataPerSample;
+    private final Map<String, LimsJsonSampleData> dataPerSampleBarcode;
     @NotNull
     private final Map<String, LimsJsonSubmissionData> dataPerSubmission;
     @NotNull
@@ -29,75 +28,73 @@ public class Lims {
     @NotNull
     private final Map<String, LimsShallowSeqData> shallowSeqPerSample;
 
-    Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSample, @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
-            @NotNull final Map<String, LocalDate> preLimsArrivalDates, @NotNull final Set<String> samplesWithoutSamplingDate,
-            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSample) {
-        this.dataPerSample = dataPerSample;
+    Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
+            @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
+            @NotNull final Set<String> samplesWithoutSamplingDate, @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSample) {
+        this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
         this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
         this.shallowSeqPerSample = shallowSeqPerSample;
     }
 
-    public int sampleCount() {
-        return dataPerSample.size();
+    public int sampleBarcodeCount() {
+        return dataPerSampleBarcode.size();
     }
 
     @NotNull
-    public Set<String> sampleIds() {
-        return dataPerSample.keySet();
+    public Set<String> sampleBarcodes() {
+        return dataPerSampleBarcode.keySet();
+    }
+
+    public boolean isValidSampleBarcodeCombination(@NotNull String refBarcode, @NotNull String tumorBarcode, @NotNull String sampleId) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(tumorBarcode);
+        if (sampleData == null) {
+            LOGGER.warn("Could not find entry for barcode {} in LIMS.", tumorBarcode);
+            return false;
+        }
+
+        if (!sampleData.sampleId().equals(sampleId)) {
+            LOGGER.warn("Mismatching tumor sample name. Provided={}. LIMS={}", sampleId, sampleData.sampleId());
+            return false;
+        }
+
+        String limsRefBarcode = sampleData.refBarcode();
+        if (limsRefBarcode == null || !limsRefBarcode.equals(refBarcode)) {
+            LOGGER.warn("Mismatching ref sample barcode. Provided={}. LIMS={}", refBarcode, limsRefBarcode);
+            return false;
+        }
+
+        return true;
     }
 
     @NotNull
-    public String patientId(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String patientId(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         return sampleData != null ? sampleData.patientId() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String tumorBarcode(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
-        if (sampleData != null) {
-            String tumorBarcode = sampleData.tumorBarcode();
-            if (tumorBarcode.isEmpty() || !tumorBarcode.startsWith("FR")) {
-                return NOT_AVAILABLE_STRING;
-            }
-            else {
-                return tumorBarcode;
-            }
-        }
-        return NOT_AVAILABLE_STRING;
-    }
-
-    @NotNull
-    public String refBarcode(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
-        if (sampleData != null) {
-            String refBarcode = sampleData.refBarcode();
-            if (refBarcode == null || refBarcode.isEmpty() || !refBarcode.startsWith("FR")) {
-                return NOT_AVAILABLE_STRING;
-            } else {
-                return refBarcode;
-            }
-        }
-        return NOT_AVAILABLE_STRING;
+    public String sampleId(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        return sampleData != null ? sampleData.sampleId() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable
-    public LocalDate arrivalDate(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public LocalDate arrivalDate(@NotNull String sampleBarcode, @NotNull String fallbackSampleId) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDate()) : null;
 
         if (arrivalDate == null) {
-            arrivalDate = preLimsArrivalDates.get(sampleId);
+            arrivalDate = preLimsArrivalDates.get(fallbackSampleId);
         }
 
         return arrivalDate;
     }
 
     @Nullable
-    public LocalDate samplingDate(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public LocalDate samplingDate(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             final String samplingDateString = sampleData.samplingDate();
             return getNullableDate(samplingDateString);
@@ -110,22 +107,22 @@ public class Lims {
     }
 
     @NotNull
-    public String submissionId(@NotNull String sampleId) {
-        String submission = submission(sampleId);
+    public String submissionId(@NotNull String sampleBarcode) {
+        String submission = submission(sampleBarcode);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.submission() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String projectName(@NotNull String sampleId) {
-        String submission = submission(sampleId);
+    public String projectName(@NotNull String sampleBarcode) {
+        String submission = submission(sampleBarcode);
         LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
         return submissionData != null ? submissionData.projectName() : NOT_AVAILABLE_STRING;
     }
 
     @Nullable
-    public Integer dnaNanograms(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public Integer dnaNanograms(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             try {
                 // LIMS stores the amount of nanograms per micro liter.
@@ -138,15 +135,15 @@ public class Lims {
     }
 
     @NotNull
-    public String purityShallowSeq(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String purityShallowSeq(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
 
         if (sampleData != null) {
-            boolean purityShallowExecuted = shallowSeqExecuted(sampleId);
-            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleId);
+            boolean purityShallowExecuted = shallowSeqExecuted(sampleBarcode);
+            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleId(sampleBarcode));
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleId + "!");
+                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleBarcode + "!");
             } else {
                 if (purityShallowExecuted) {
                     if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
@@ -168,11 +165,11 @@ public class Lims {
     }
 
     @NotNull
-    public String pathologyTumorPercentage(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String pathologyTumorPercentage(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             // Even if pathology tumor percentage has been determined, we still suppress it in case of shallow seq.
-            if (shallowSeqExecuted(sampleId)) {
+            if (shallowSeqExecuted(sampleBarcode)) {
                 return NOT_DETERMINED_STRING;
             }
 
@@ -191,8 +188,8 @@ public class Lims {
     }
 
     @NotNull
-    public String primaryTumor(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String primaryTumor(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             return sampleData.primaryTumor();
         }
@@ -201,30 +198,30 @@ public class Lims {
     }
 
     @NotNull
-    public String labProcedures(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String labProcedures(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
-        LOGGER.warn("Could not find lab SOP versions for sample: " + sampleId + " in LIMS");
+        LOGGER.warn("Could not find lab SOP versions for sample: " + sampleBarcode + " in LIMS");
         return NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String requesterEmail(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String requesterEmail(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         return sampleData != null ? sampleData.requesterEmail() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String requesterName(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String requesterName(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         return sampleData != null ? sampleData.requesterName() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull
-    public String hospitalPatientId(@NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sampleId);
+    public String hospitalPatientId(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String hospitalPatientId = sampleData.hospitalPatientId();
             return hospitalPatientId != null ? hospitalPatientId : NOT_AVAILABLE_STRING;
@@ -233,8 +230,8 @@ public class Lims {
     }
 
     @NotNull
-    public String hospitalPathologySampleId(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public String hospitalPathologySampleId(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String hospitalPathologySampleId = sampleData.hospitalPathologySampleId();
             return hospitalPathologySampleId != null ? hospitalPathologySampleId : NOT_AVAILABLE_STRING;
@@ -243,40 +240,33 @@ public class Lims {
     }
 
     @NotNull
-    public LimsGermlineReportingChoice germlineReportingChoice(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    public LimsGermlineReportingChoice germlineReportingChoice(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String germlineReportingChoiceString = sampleData.germlineReportingChoice();
             return germlineReportingChoiceString != null ? LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
                     germlineReportingChoiceString,
-                    sample) : LimsGermlineReportingChoice.UNKNOWN;
+                    sampleId(sampleBarcode)) : LimsGermlineReportingChoice.UNKNOWN;
         } else {
             return LimsGermlineReportingChoice.UNKNOWN;
         }
     }
 
     @Nullable
-    private String submission(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    private String submission(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         return sampleData != null ? sampleData.submission() : null;
     }
 
-    private boolean shallowSeqExecuted(@NotNull String sample) {
-        LimsJsonSampleData sampleData = dataPerSample.get(sample);
+    private boolean shallowSeqExecuted(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         assert sampleData != null;
 
-        // TODO: Cleanup once we have switched lims to using "true/false" exclusively
-        if (sampleData.shallowSeq().equalsIgnoreCase("1") || sampleData.shallowSeq().equalsIgnoreCase("true")) {
-            return true;
-        } else {
-            String labRemarks = sampleData.labRemarks();
-            String labRemarksLowerCase = labRemarks != null ? labRemarks.toLowerCase() : Strings.EMPTY;
-            return labRemarksLowerCase.contains("cpctwide") || labRemarksLowerCase.contains("shallowseq");
-        }
+        return sampleData.shallowSeq().equalsIgnoreCase("1") || sampleData.shallowSeq().equalsIgnoreCase("true");
     }
 
     @Nullable
-    private static LocalDate getNullableDate(@Nullable final String dateString) {
+    private static LocalDate getNullableDate(@Nullable String dateString) {
         if (dateString == null) {
             return null;
         }

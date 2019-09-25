@@ -145,12 +145,13 @@ public final class LoadClinicalData {
         LimsSampleReader sampleReader = new LimsSampleReader(lims, sequencedSampleIds);
 
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
-        for (String sampleId : lims.sampleIds()) {
-            LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
+        for (String sampleBarcode : lims.sampleBarcodes()) {
+            String sampleId = lims.sampleId(sampleBarcode);
+            LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleBarcode);
 
             if (sampleType != LimsSampleType.OTHER) {
-                String patientId = lims.patientId(sampleId);
-                SampleData sampleData = sampleReader.read(sampleId);
+                String patientId = lims.patientId(sampleBarcode);
+                SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
                 if (sampleData != null) {
                     List<SampleData> currentSamples = samplesPerPatient.get(patientId);

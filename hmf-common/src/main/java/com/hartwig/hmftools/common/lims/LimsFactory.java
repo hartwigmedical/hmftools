@@ -43,7 +43,7 @@ public final class LimsFactory {
     @NotNull
     public static Lims fromLimsDirectory(@NotNull final String limsDirectory) throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
-        Map<String, LimsJsonSampleData> dataPerSample = readLimsJsonSamples(limsJsonPath);
+        Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
 
         Map<String, LocalDate> preLIMSArrivalDates =
@@ -51,7 +51,7 @@ public final class LimsFactory {
         Set<String> samplesWithoutSamplingDate =
                 readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
         Map<String, LimsShallowSeqData> shallowSeqPerSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ);
-        return new Lims(dataPerSample, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqPerSample);
+        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqPerSample);
     }
 
     @NotNull
@@ -92,9 +92,10 @@ public final class LimsFactory {
                     final LimsJsonSubmissionData limsJsonSubmissionData =
                             gson.fromJson(jsonSubmission.getValue(), LimsJsonSubmissionData.class);
                     limsDataPerSubmission.put(limsJsonSubmissionData.submission(), limsJsonSubmissionData);
-                } catch (JsonSyntaxException e) {
-                    LOGGER.warn("Could not convert json element to LimsJsonSubmissionData: " + jsonSubmission.getValue() + " - message:" + e
-                            .getMessage());
+                } catch (JsonSyntaxException exception) {
+                    LOGGER.warn("Could not convert JSON element to LimsJsonSubmissionData: {} - message: {}",
+                            jsonSubmission.getValue(),
+                            exception.getMessage());
                 }
             }
         });
@@ -111,6 +112,7 @@ public final class LimsFactory {
         final Map<String, LimsJsonSampleData> limsDataPerSample = Maps.newHashMap();
 
         jsonSamples.forEach(jsonSample -> {
+            final String barcode = jsonSample.getKey();
             final JsonObject jsonSampleObject = jsonSample.getValue().getAsJsonObject();
             final String analysisType = jsonSampleObject.get("analysis_type").getAsString();
             final String label = jsonSampleObject.get("label").getAsString();
@@ -120,15 +122,14 @@ public final class LimsFactory {
             if (analysisType != null && analysisType.toLowerCase().contains("somatic") && !label.equalsIgnoreCase("research")) {
                 try {
                     final LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
-                    // DEV-785 - Samples can appear multiple times in LIMS under different barcodes.
-                    // We pick the barcode which has been sequenced by taking the one with a filled-in SOP.
-                    boolean hasSOP = !limsJsonSampleData.labSopVersions().equals("NA");
-                    if (hasSOP || !limsDataPerSample.containsKey(limsJsonSampleData.sampleId())) {
-                        limsDataPerSample.put(limsJsonSampleData.sampleId(), limsJsonSampleData);
+                    if (limsDataPerSample.containsKey(barcode)) {
+                        LOGGER.warn("LIMS contains duplicate entries for {} ({})", barcode, limsJsonSampleData.sampleId());
                     }
-                } catch (JsonSyntaxException e) {
-                    LOGGER.warn("Could not convert json element to LimsJsonSampleData: " + jsonSample.getValue() + " - message:"
-                            + e.getMessage());
+                    limsDataPerSample.put(barcode, limsJsonSampleData);
+                } catch (JsonSyntaxException exception) {
+                    LOGGER.warn("Could not convert JSON element to LimsJsonSampleData: {} - message: {}",
+                            jsonSample.getValue(),
+                            exception.getMessage());
                 }
             }
         });

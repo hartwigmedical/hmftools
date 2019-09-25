@@ -164,7 +164,7 @@ public class PatientReporterApplication {
 
         String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
         Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
-        LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleCount(), limsDirectory);
+        LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
 
         String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);

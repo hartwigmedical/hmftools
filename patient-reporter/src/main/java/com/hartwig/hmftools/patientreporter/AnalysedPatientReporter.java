@@ -76,7 +76,7 @@ class AnalysedPatientReporter {
                 patientTumorLocation,
                 copyNumberAnalysis.exomeGeneCopyNumbers());
         List<GermlineVariant> germlineVariantsToReport =
-                analyzeGermlineVariants(sampleMetadata.tumorSampleId(), bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
+                analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(), bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
@@ -84,7 +84,7 @@ class AnalysedPatientReporter {
                         reportData.driverGeneView(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
-                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleId()));
+                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()));
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
@@ -159,7 +159,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sample, @Nullable String bachelorCsv,
+    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @Nullable String bachelorCsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis) throws IOException {
         if (bachelorCsv == null) {
             LOGGER.info("Skipping germline analysis - No bachelor CSV passed. Presumably no pathogenic germline variants found.");
@@ -170,7 +170,7 @@ class AnalysedPatientReporter {
                 BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
 
-        LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sample);
+        LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();

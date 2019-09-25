@@ -38,28 +38,27 @@ public class LimsFactoryTest {
 
     @Test
     public void readSamplesCorrectlyFromJsonFile() throws FileNotFoundException {
-        final Map<String, LimsJsonSampleData> dataPerSample =
+        final Map<String, LimsJsonSampleData> dataPerSampleBarcode =
                 LimsFactory.readLimsJsonSamples(LIMS_DIRECTORY + File.separator + "lims.json");
 
-        assertEquals(2, dataPerSample.size());
+        assertEquals(3, dataPerSampleBarcode.size());
 
-        final String refSampleId = "SAMP01010003R";
-        final LimsJsonSampleData refData = dataPerSample.get(refSampleId);
-        assertEquals(refSampleId, refData.sampleId());
+        final String refSampleBarcode = "FR1234";
+        final LimsJsonSampleData refData = dataPerSampleBarcode.get(refSampleBarcode);
         assertNull(refData.hospitalPatientId());
+        assertEquals("SAMP01010003R", refData.sampleId());
         assertEquals("2016-01-03", refData.arrivalDate());
         assertEquals("143", refData.dnaConcentration());
         assertEquals("2016-01-02", refData.samplingDate());
         assertEquals("NA", refData.pathologyTumorPercentage());
         assertEquals("NA", refData.primaryTumor());
         assertEquals("PREP013V23-QC037V20-SEQ008V25", refData.labProcedures());
-        assertNull(refData.labRemarks());
         assertEquals("HMFregCPCT", refData.submission());
 
-        final String tumorSampleId = "SAMP01010003T";
-        final LimsJsonSampleData tumorData = dataPerSample.get(tumorSampleId);
-        assertEquals(tumorSampleId, tumorData.sampleId());
-        assertEquals("250", tumorData.tumorBarcode());
+        final String tumorSampleBarcode = "FR1236";
+        final LimsJsonSampleData tumorData = dataPerSampleBarcode.get(tumorSampleBarcode);
+        assertEquals(tumorSampleBarcode, tumorData.tumorBarcode());
+        assertEquals("SAMP01010003T", tumorData.sampleId());
         assertEquals("something", tumorData.hospitalPatientId());
         assertEquals("2016-02-05", tumorData.arrivalDate());
         assertEquals("143", tumorData.dnaConcentration());
@@ -68,7 +67,6 @@ public class LimsFactoryTest {
         assertEquals("NA", tumorData.primaryTumor());
         assertEquals("N/A", tumorData.labProcedures());
         assertEquals("PREPV-QC037V20-SEQ008V25", tumorData.labSopVersions());
-        assertEquals("this is a test", tumorData.labRemarks());
         assertEquals("HMFregCPCT", tumorData.submission());
         assertEquals("", tumorData.hospitalPathologySampleId());
         assertEquals("", tumorData.germlineReportingChoice());

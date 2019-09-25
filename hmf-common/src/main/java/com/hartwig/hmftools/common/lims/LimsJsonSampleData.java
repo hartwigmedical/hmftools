@@ -85,11 +85,6 @@ abstract class LimsJsonSampleData {
     @SerializedName("germline_findings")
     public abstract String germlineReportingChoice();
 
-    // Lab remarks is an optional field in LIMS
-    @Nullable
-    @SerializedName("lab_remarks")
-    public abstract String labRemarks();
-
     @NotNull
     @SerializedName("lab_sop_versions")
     abstract String labSopVersions();
