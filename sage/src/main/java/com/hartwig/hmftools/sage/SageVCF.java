@@ -7,10 +7,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
+import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
@@ -32,21 +34,24 @@ public class SageVCF implements AutoCloseable {
     private final String tumorSample;
     private final String normalSample;
     private final VariantContextWriter writer;
+    private final SomaticRefContextEnrichment refContextEnrichment;
 
-    public SageVCF(@NotNull final String filename, @NotNull final String normalSample, @NotNull final String tumorSample) {
+    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final String filename, @NotNull final String normalSample, @NotNull final String tumorSample) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
 
-        final VCFHeader header = header(normalSample, tumorSample);
         writer = new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, false).build();
-        writer.setHeader(header);
-        writer.writeHeader(header);
+        refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
 
+        final VCFHeader header = refContextEnrichment.enrichHeader(header(normalSample, tumorSample));
+        writer.writeHeader(header);
     }
 
 
     public void write(@NotNull final VariantHotspotEvidence tumorEvidence, @Nullable final VariantHotspotEvidence normalEvidence) {
-        writer.add(create(tumorEvidence, normalEvidence));
+        if (tumorEvidence.altSupport() > 2) {
+            refContextEnrichment.accept(create(tumorEvidence, normalEvidence));
+        }
     }
 
     @NotNull

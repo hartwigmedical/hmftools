@@ -80,7 +80,7 @@ public class SageApplication implements AutoCloseable {
         final List<BaseDetails> normalEvidence = normal(config.referenceBam(), hotspots);
 
         LOGGER.info("Combining");
-        SageVCF vcf = new SageVCF("/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
+        SageVCF vcf = new SageVCF(refGenome, "/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
 
         Map<Long, BaseDetails> normalMap = asMap(normalEvidence);
         for (final BaseDetails tumorBase : tumorEvidence) {
@@ -172,7 +172,6 @@ public class SageApplication implements AutoCloseable {
 
         return tumorEvidence;
     }
-
 
     private SageSamConsumer callable(GenomeRegion region, SageSamConsumer consumer, String bamFile) throws IOException {
         SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
