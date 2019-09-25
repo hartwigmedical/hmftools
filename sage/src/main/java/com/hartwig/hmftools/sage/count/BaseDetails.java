@@ -48,7 +48,7 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     @NotNull
     private ModifiableVariantHotspotEvidence update(ModifiableVariantHotspotEvidence evidence) {
-        return evidence.setRefQuality(refQuality).setRefSupport(refSupport).setReadDepth(refSupport + evidence.altSupport());
+        return evidence.setRefQuality(refQuality).setRefSupport(refSupport).setReadDepth(readDepth);
     }
 
     @NotNull
