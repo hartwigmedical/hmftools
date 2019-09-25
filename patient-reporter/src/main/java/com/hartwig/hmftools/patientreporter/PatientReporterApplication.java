@@ -133,7 +133,10 @@ public class PatientReporterApplication {
         String filePrefix = type == LimsSampleType.CORE
                 ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
                 : sampleReport.tumorSampleId();
-        return reportDirectory + File.separator + filePrefix + "_hmf_report.pdf";
+
+        String fileSuffix = patientReport.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
+
+        return reportDirectory + File.separator + filePrefix + "_hmf_report" + fileSuffix;
     }
 
     @NotNull
