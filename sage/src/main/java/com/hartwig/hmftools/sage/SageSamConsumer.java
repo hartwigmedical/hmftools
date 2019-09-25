@@ -92,20 +92,25 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                 int readStart = alignmentBlock.getReadStart() - 1;
 
                 for (int i = 0; i < alignmentBlock.getLength(); i++) {
-
                     long refPosition = refStart + i;
+                    int readPosition = readStart + i;
+
                     if (!inBounds(refPosition)) {
                         continue;
                     }
 
                     byte refByte = refBases[i];
-                    byte readByte = record.getReadBases()[i + readStart];
+                    byte readByte = record.getReadBases()[readPosition];
 
                     final String ref = String.valueOf((char) refByte);
                     final String alt = String.valueOf((char) readByte);
 
                     final BaseDetails baseDetails = baseMap.compute(refPosition,
                             (position, old) -> old == null ? new BaseDetails(record.getContig(), position) : old);
+
+                    baseDetails.incrementReadDepth();
+                    baseDetails.incrementDistanceFromRecordStart(readPosition);
+                    baseDetails.incrementRecordDistances((int)refPosition, record.getAlignmentStart(), record.getAlignmentEnd());
 
                     final int baseQuality = record.getBaseQualities()[i + readStart];
 

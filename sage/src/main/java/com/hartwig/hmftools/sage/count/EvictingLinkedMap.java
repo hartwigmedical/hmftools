@@ -15,8 +15,8 @@ public class EvictingLinkedMap<K, V> {
     private static final int MAX_CAPACITY = 1024;
     private static final int ACTUAL_CAPACITY = 700;
 
-    private final BiConsumer<K, V> evictionHandler;
     private final Map<K, V> map;
+    private final BiConsumer<K, V> evictionHandler;
     private final ArrayDeque<Map.Entry<K, V>> arrayDeque;
 
     public EvictingLinkedMap(final BiConsumer<K, V> evictionHandler) {
@@ -32,9 +32,9 @@ public class EvictingLinkedMap<K, V> {
 
     public V compute(K key, BiFunction<K, V, V> remapping) {
 
-        BiFunction<K, V, V> internalRemapping = (key1, oldValue) -> {
+        BiFunction<K, V, V> internalRemapping = (k, oldValue) -> {
 
-            V newValue = remapping.apply(key1, oldValue);
+            V newValue = remapping.apply(k, oldValue);
             if (oldValue == null) {
                 arrayDeque.addLast(new AbstractMap.SimpleEntry<>(key, newValue));
 

@@ -13,13 +13,19 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     private final String contig;
     private final long position;
+
+    private int readDepth;
     private int refSupport;
     private int refQuality;
-    private final List<ModifiableVariantHotspotEvidence> evidenceList = Lists.newArrayList();
+    private int cumulativeDistanceFromRecordStart;
+    private int cumulativeMinDistanceFromAlignment;
+
+    private final List<ModifiableVariantHotspotEvidence> evidenceList;
 
     public BaseDetails(final String contig, final long position) {
         this.contig = contig;
         this.position = position;
+        evidenceList = Lists.newArrayList();
     }
 
     public long position() {
@@ -30,6 +36,7 @@ public class BaseDetails implements Comparable<BaseDetails> {
         return evidenceList.isEmpty();
     }
 
+    @NotNull
     public List<VariantHotspotEvidence> evidence() {
         List<VariantHotspotEvidence> result = Lists.newArrayList();
         for (ModifiableVariantHotspotEvidence evidence : evidenceList) {
@@ -39,6 +46,7 @@ public class BaseDetails implements Comparable<BaseDetails> {
         return result;
     }
 
+    @NotNull
     private ModifiableVariantHotspotEvidence update(ModifiableVariantHotspotEvidence evidence) {
         return evidence.setRefQuality(refQuality).setRefSupport(refSupport).setReadDepth(refSupport + evidence.altSupport());
     }
@@ -68,8 +76,23 @@ public class BaseDetails implements Comparable<BaseDetails> {
         this.refSupport++;
     }
 
+    public void incrementReadDepth() {
+        this.readDepth++;
+    }
+
     public void incrementRefQuality(final int quality) {
         this.refQuality += quality;
+    }
+
+    public void incrementDistanceFromRecordStart(final int readPosition) {
+        this.cumulativeDistanceFromRecordStart += readPosition;
+    }
+
+    public void incrementRecordDistances(final int refPosition, final int alignmentStart, final int alignmentEnd) {
+        int distanceFromAlignmentStart = refPosition - alignmentStart;
+        int distanceFromAlignmentEnd = alignmentEnd - refPosition;
+        int minDistanceFromAlignment = Math.min(distanceFromAlignmentStart, distanceFromAlignmentEnd);
+        cumulativeMinDistanceFromAlignment += minDistanceFromAlignment;
     }
 
     @Override
