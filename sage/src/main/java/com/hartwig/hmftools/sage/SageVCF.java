@@ -4,9 +4,10 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
+import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -39,37 +40,43 @@ public class SageVCF implements AutoCloseable {
 
     }
 
-    public void write(@NotNull final HotspotEvidence evidence) {
-        writer.add(create(evidence));
+
+    public void write(@NotNull final VariantHotspotEvidence tumorEvidence, @Nullable final VariantHotspotEvidence normalEvidence) {
+        writer.add(create(tumorEvidence, normalEvidence));
     }
 
     @NotNull
-    VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
+    private VariantContext create(@NotNull final VariantHotspotEvidence tumorEvidence, @Nullable final VariantHotspotEvidence normalEvidence) {
 
-        final Allele ref = Allele.create(hotspotEvidence.ref(), true);
-        final Allele alt = Allele.create(hotspotEvidence.alt(), false);
+        final Allele ref = Allele.create(tumorEvidence.ref(), true);
+        final Allele alt = Allele.create(tumorEvidence.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
 
-        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(hotspotEvidence.tumorReads())
-                .AD(new int[] { hotspotEvidence.tumorRefCount(), hotspotEvidence.tumorAltCount() })
+        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(tumorEvidence.readDepth())
+                .AD(new int[] { tumorEvidence.refSupport(), tumorEvidence.altSupport() })
                 .alleles(alleles)
                 .make();
 
-        final Genotype normal = new GenotypeBuilder(normalSample).DP(hotspotEvidence.normalReads())
-                .AD(new int[] { hotspotEvidence.normalRefCount(), hotspotEvidence.normalAltCount() })
-                .alleles(alleles)
-                .make();
+        final Genotype normal;
+        if (normalEvidence == null) {
+            normal = new GenotypeBuilder(normalSample).DP(0).AD(new int[] { 0, 0 }).alleles(alleles).make();
+        } else {
+            normal = new GenotypeBuilder(normalSample).DP(normalEvidence.readDepth())
+                    .AD(new int[] { normalEvidence.refSupport(), normalEvidence.altSupport() })
+                    .alleles(alleles)
+                    .make();
+        }
 
-        final VariantContextBuilder builder = new VariantContextBuilder().chr(hotspotEvidence.chromosome())
-                .start(hotspotEvidence.position())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, round(hotspotEvidence.vaf()))
-                .computeEndFromAlleles(alleles, (int) hotspotEvidence.position())
-                .source(hotspotEvidence.type().toString())
+        final VariantContextBuilder builder = new VariantContextBuilder().chr(tumorEvidence.chromosome())
+                .start(tumorEvidence.position())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, round(tumorEvidence.vaf()))
+                .computeEndFromAlleles(alleles, (int) tumorEvidence.position())
+                .source("SAGE")
                 .genotypes(tumor, normal)
                 .alleles(alleles);
 
         final VariantContext context = builder.make();
-        context.getCommonInfo().setLog10PError(hotspotEvidence.qualityScore() / -10d);
+        context.getCommonInfo().setLog10PError(tumorEvidence.altQuality() / -10d);
         return context;
     }
 

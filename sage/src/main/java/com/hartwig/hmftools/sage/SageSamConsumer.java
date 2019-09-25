@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.sage.count.BaseDetails;
 import com.hartwig.hmftools.sage.count.EvictingLinkedMap;
@@ -47,7 +46,6 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
     private final GenomeRegion bounds;
     private final IndexedFastaSequenceFile refGenome;
 
-    private final Set<Long> hotspots;
     private final EvictingLinkedMap<Long, BaseDetails> baseMap;
     private final List<BaseDetails> baseList = Lists.newArrayList();
 
@@ -60,14 +58,12 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
         this.bounds = bounds;
         this.refGenome = refGenome;
 
-        BiConsumer<Long, BaseDetails> baseDetailsHandler = (position, baseDetails) -> {
+        final BiConsumer<Long, BaseDetails> baseDetailsHandler = (position, baseDetails) -> {
             if (!baseDetails.isEmpty() || hotspots.contains(baseDetails.position())) {
                 baseList.add(baseDetails);
             }
-
         };
         baseMap = new EvictingLinkedMap<>(baseDetailsHandler);
-        this.hotspots = hotspots;
     }
 
     @NotNull
@@ -109,15 +105,22 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                             (position, old) -> old == null ? new BaseDetails(record.getContig(), position) : old);
 
                     baseDetails.incrementReadDepth();
-                    baseDetails.incrementDistanceFromRecordStart(readPosition);
-                    baseDetails.incrementRecordDistances((int)refPosition, record.getAlignmentStart(), record.getAlignmentEnd());
 
                     final int baseQuality = record.getBaseQualities()[i + readStart];
 
                     if (readByte != refByte) {
+
+                        long distanceFromAlignmentStart = refPosition - record.getAlignmentStart();
+                        long distanceFromAlignmentEnd = record.getAlignmentEnd() - refPosition;
+                        int minDistanceFromAlignment = (int) Math.min(distanceFromAlignmentStart, distanceFromAlignmentEnd);
+
                         final ModifiableVariantHotspotEvidence evidence = baseDetails.selectOrCreate(ref, alt);
                         evidence.setAltSupport(evidence.altSupport() + 1);
                         evidence.setAltQuality(evidence.altQuality() + baseQuality);
+                        evidence.setAltMapQuality(evidence.altMapQuality() + record.getMappingQuality());
+                        evidence.setAltMinQuality(evidence.altMinQuality() + Math.min(record.getMappingQuality(), baseQuality));
+                        evidence.setAltDistanceFromRecordStart(evidence.altDistanceFromRecordStart() + readPosition);
+                        evidence.setAltMinDistanceFromAlignment(evidence.altMinDistanceFromAlignment() + minDistanceFromAlignment);
 
                     } else {
                         baseDetails.incrementRefSupport();
@@ -126,16 +129,6 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                 }
             }
         }
-    }
-
-    private ModifiableVariantHotspotEvidence createEvidence(VariantHotspot key) {
-        return ModifiableVariantHotspotEvidence.create()
-                .from(key)
-                .setAltSupport(0)
-                .setRefSupport(0)
-                .setReadDepth(0)
-                .setAltQuality(0)
-                .setIndelSupport(0);
     }
 
     private boolean inBounds(final SAMRecord record) {

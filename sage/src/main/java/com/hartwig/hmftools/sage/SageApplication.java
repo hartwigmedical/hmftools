@@ -14,10 +14,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
-import com.hartwig.hmftools.common.hotspot.HotspotEvidenceType;
-import com.hartwig.hmftools.common.hotspot.ImmutableHotspotEvidence;
-import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -84,8 +80,9 @@ public class SageApplication implements AutoCloseable {
         final List<BaseDetails> normalEvidence = normal(config.referenceBam(), hotspots);
 
         LOGGER.info("Combining");
+        SageVCF vcf = new SageVCF("/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
+
         Map<Long, BaseDetails> normalMap = asMap(normalEvidence);
-        final List<HotspotEvidence> finalEvidence = Lists.newArrayList();
         for (final BaseDetails tumorBase : tumorEvidence) {
 
             @Nullable
@@ -94,12 +91,11 @@ public class SageApplication implements AutoCloseable {
                 @Nullable
                 final VariantHotspotEvidence normalHotspot =
                         normalBase == null ? null : normalBase.selectOrCreate(tumorHotspot.ref(), tumorHotspot.alt());
-                finalEvidence.add(createEvidence(tumorHotspot, normalHotspot));
+                vcf.write(tumorHotspot, normalHotspot);
+
             }
         }
 
-        SageVCF vcf = new SageVCF("/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
-        finalEvidence.forEach(vcf::write);
         vcf.close();
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
@@ -177,28 +173,6 @@ public class SageApplication implements AutoCloseable {
         return tumorEvidence;
     }
 
-    private static HotspotEvidence createEvidence(@NotNull final VariantHotspotEvidence tumor,
-            @Nullable final VariantHotspotEvidence normal) {
-        return ImmutableHotspotEvidence.builder()
-                .from(tumor)
-                .ref(tumor.ref())
-                .alt(tumor.alt())
-                .qualityScore(tumor.altQuality())
-                .tumorAltCount(tumor.altSupport())
-                .tumorRefCount(tumor.refSupport())
-                .tumorReads(tumor.readDepth())
-                .normalAltCount(normal == null ? 0 : normal.altSupport())
-                .normalRefCount(normal == null ? 0 : normal.refSupport())
-                .normalReads(normal == null ? 0 : normal.readDepth())
-                .normalIndelCount(normal == null ? 0 : normal.indelSupport())
-                .type(HotspotEvidenceType.KNOWN)
-                .build();
-    }
-
-    private String toString(ModifiableVariantHotspotEvidence evidence) {
-        return evidence.chromosome() + "\t" + evidence.position() + "\t" + evidence.ref() + "\t" + evidence.alt() + "\t"
-                + evidence.altSupport() + "\t" + evidence.altQuality() + "\t" + evidence.refSupport() + "\t" + evidence.indelSupport();
-    }
 
     private SageSamConsumer callable(GenomeRegion region, SageSamConsumer consumer, String bamFile) throws IOException {
         SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));

@@ -17,8 +17,6 @@ public class BaseDetails implements Comparable<BaseDetails> {
     private int readDepth;
     private int refSupport;
     private int refQuality;
-    private int cumulativeDistanceFromRecordStart;
-    private int cumulativeMinDistanceFromAlignment;
 
     private final List<ModifiableVariantHotspotEvidence> evidenceList;
 
@@ -66,7 +64,12 @@ public class BaseDetails implements Comparable<BaseDetails> {
                 .setAlt(alt)
                 .setAltSupport(0)
                 .setAltQuality(0)
-                .setIndelSupport(0);
+                .setIndelSupport(0)
+                .setAltMapQuality(0)
+                .setAltMinQuality(0)
+                .setAltDistanceFromRecordStart(0)
+                .setAltMinDistanceFromAlignment(0)
+                ;
 
         evidenceList.add(update(newEvidence));
         return newEvidence;
@@ -82,17 +85,6 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     public void incrementRefQuality(final int quality) {
         this.refQuality += quality;
-    }
-
-    public void incrementDistanceFromRecordStart(final int readPosition) {
-        this.cumulativeDistanceFromRecordStart += readPosition;
-    }
-
-    public void incrementRecordDistances(final int refPosition, final int alignmentStart, final int alignmentEnd) {
-        int distanceFromAlignmentStart = refPosition - alignmentStart;
-        int distanceFromAlignmentEnd = alignmentEnd - refPosition;
-        int minDistanceFromAlignment = Math.min(distanceFromAlignmentStart, distanceFromAlignmentEnd);
-        cumulativeMinDistanceFromAlignment += minDistanceFromAlignment;
     }
 
     @Override
