@@ -187,7 +187,7 @@ public class CFReportWriterTest {
                 reason,
                 failStudy,
                 Optional.empty(),
-                Optional.empty(),
+                false,
                 testReportData().signaturePath(),
                 testReportData().logoRVAPath(),
                 testReportData().logoCompanyPath());

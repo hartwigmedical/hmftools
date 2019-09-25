@@ -71,8 +71,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract Optional<String> comments();
 
     @Override
-    @NotNull
-    public abstract Optional<String> titleReportCorrect();
+    public abstract boolean isCorrectedReport();
 
     @Override
     @NotNull

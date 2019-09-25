@@ -47,6 +47,6 @@ public class AnalysedPatientReporterTest {
                 CHORD_PREDICTION_FILE,
                 CIRCOS_FILE,
                 null,
-                null));
+                false));
     }
 }

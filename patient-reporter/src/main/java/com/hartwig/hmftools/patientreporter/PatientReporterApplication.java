@@ -93,14 +93,14 @@ public class PatientReporterApplication {
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         printSampleMetadata(sampleMetadata);
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         if (cmd.hasOption(QC_FAIL) && validInputForQCFailReport(cmd)) {
             LOGGER.info("Generating qc-fail report");
             QCFailReason reason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
             QCFailReporter reporter = new QCFailReporter(buildQCFailReportData(cmd));
 
-            QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.getOptionValue(CORRECTED_REPORT));
+            QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
         } else if (validInputForAnalysedSample(cmd)) {
@@ -117,7 +117,7 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(CHORD_PREDICTION_FILE),
                     cmd.getOptionValue(CIRCOS_FILE),
                     cmd.getOptionValue(COMMENTS),
-                    cmd.getOptionValue(CORRECTED_REPORT));
+                    cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
@@ -301,7 +301,7 @@ public class PatientReporterApplication {
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
-        options.addOption(CORRECTED_REPORT, true, "Additional comments to be added to the report (optional) for a corrected report.");
+        options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
     }
