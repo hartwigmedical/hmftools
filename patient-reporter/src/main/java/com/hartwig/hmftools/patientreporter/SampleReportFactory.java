@@ -27,9 +27,7 @@ public final class SampleReportFactory {
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
         String tumorSampleId = sampleMetadata.tumorSampleId();
 
-        if (!lims.isValidSampleBarcodeCombination(refSampleBarcode, tumorSampleBarcode, tumorSampleId)) {
-            LOGGER.warn("Mismatch with LIMS found. All LIMS data unreliable!");
-        }
+        lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
 
         LocalDate arrivalDateRefSample = lims.arrivalDate(refSampleBarcode, refSampleId);
         if (arrivalDateRefSample == null) {

@@ -47,25 +47,28 @@ public class Lims {
         return dataPerSampleBarcode.keySet();
     }
 
-    public boolean isValidSampleBarcodeCombination(@NotNull String refBarcode, @NotNull String tumorBarcode, @NotNull String sampleId) {
-        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(tumorBarcode);
-        if (sampleData == null) {
+    public void validateSampleBarcodeCombination(@NotNull String refBarcode, @NotNull String refSampleId, @NotNull String tumorBarcode,
+            @NotNull String tumorSampleId) {
+        LimsJsonSampleData tumorSampleData = dataPerSampleBarcode.get(tumorBarcode);
+        if (tumorSampleData == null) {
             LOGGER.warn("Could not find entry for barcode {} in LIMS.", tumorBarcode);
-            return false;
-        }
+        } else {
+            if (!tumorSampleData.sampleId().equals(tumorSampleId)) {
+                LOGGER.warn("Mismatching tumor sample name. Provided={}. LIMS={}", tumorSampleId, tumorSampleData.sampleId());
+            }
 
-        if (!sampleData.sampleId().equals(sampleId)) {
-            LOGGER.warn("Mismatching tumor sample name. Provided={}. LIMS={}", sampleId, sampleData.sampleId());
-            return false;
+            String limsRefBarcode = tumorSampleData.refBarcode();
+            if (limsRefBarcode == null || !limsRefBarcode.equals(refBarcode)) {
+                LOGGER.warn("Mismatching ref sample barcode. Provided={}. LIMS={}", refBarcode, limsRefBarcode);
+            } else {
+                LimsJsonSampleData refSampleData = dataPerSampleBarcode.get(limsRefBarcode);
+                if (refSampleData == null) {
+                    LOGGER.warn("No ref sample data for sample with barcode {}", limsRefBarcode);
+                } else if (!refSampleData.sampleId().equals(refSampleId)) {
+                    LOGGER.warn("Mismatching ref sample name. Provided={}. LIMS={}", refSampleId, refSampleData.sampleId());
+                }
+            }
         }
-
-        String limsRefBarcode = sampleData.refBarcode();
-        if (limsRefBarcode == null || !limsRefBarcode.equals(refBarcode)) {
-            LOGGER.warn("Mismatching ref sample barcode. Provided={}. LIMS={}", refBarcode, limsRefBarcode);
-            return false;
-        }
-
-        return true;
     }
 
     @NotNull

@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -71,7 +70,7 @@ public class LimsTest {
         assertEquals(1, lims.sampleBarcodes().size());
         assertFalse(lims.confirmedToHaveNoSamplingDate(TUMOR_SAMPLE_ID));
 
-        assertTrue(lims.isValidSampleBarcodeCombination(REF_SAMPLE_BARCODE, TUMOR_SAMPLE_BARCODE, TUMOR_SAMPLE_ID));
+        lims.validateSampleBarcodeCombination(REF_SAMPLE_BARCODE, Strings.EMPTY, TUMOR_SAMPLE_BARCODE, TUMOR_SAMPLE_ID);
         assertEquals(patientId, lims.patientId(TUMOR_SAMPLE_BARCODE));
         assertEquals(TUMOR_SAMPLE_ID, lims.sampleId(TUMOR_SAMPLE_BARCODE));
         assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(TUMOR_SAMPLE_BARCODE));
@@ -101,7 +100,7 @@ public class LimsTest {
         Lims lims = LimsFactory.empty();
         String doesNotExistSample = "DoesNotExist";
 
-        assertFalse(lims.isValidSampleBarcodeCombination(doesNotExistSample, doesNotExistSample, doesNotExistSample));
+        lims.validateSampleBarcodeCombination(doesNotExistSample, doesNotExistSample, doesNotExistSample, doesNotExistSample);
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.patientId(doesNotExistSample));
         assertNull(lims.arrivalDate(doesNotExistSample, doesNotExistSample));
         assertNull(lims.samplingDate(doesNotExistSample));

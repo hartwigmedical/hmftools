@@ -135,10 +135,10 @@ class BaselineReader {
                     primaryTumorLocationCarcinoma = primaryTumorLocationOther;
                 } else if (primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
                     // TODO See DEV-906
-                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
-                            patientId,
-                            primaryTumorLocationCarcinoma,
-                            primaryTumorLocationOther);
+//                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
+//                            patientId,
+//                            primaryTumorLocationCarcinoma,
+//                            primaryTumorLocationOther);
                 }
                 primaryTumorLocationCarcinomaStatus = carcinomaForm.status();
             }
@@ -151,10 +151,10 @@ class BaselineReader {
         // See DEV-540
         if (primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty() && primaryTumorLocationSelcrit != null
                 && !primaryTumorLocationSelcrit.isEmpty() && !primaryTumorLocationCarcinoma.equals(primaryTumorLocationSelcrit)) {
-            LOGGER.warn("Selcrit primary tumor location ({}) does not match carcinoma primary tumor location ({}) for {}",
-                    primaryTumorLocationSelcrit,
-                    primaryTumorLocationCarcinoma,
-                    patientId);
+//            LOGGER.warn("Selcrit primary tumor location ({}) does not match carcinoma primary tumor location ({}) for {}",
+//                    primaryTumorLocationSelcrit,
+//                    primaryTumorLocationCarcinoma,
+//                    patientId);
         }
 
         builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
