@@ -14,7 +14,7 @@ public class Lims {
 
     private static final Logger LOGGER = LogManager.getLogger(Lims.class);
 
-    static final String NOT_AVAILABLE_STRING = "N/A";
+    public static final String NOT_AVAILABLE_STRING = "N/A";
     static final String NOT_DETERMINED_STRING = "not determined";
 
     @NotNull

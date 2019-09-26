@@ -9,6 +9,7 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,5 +51,24 @@ public class LimsSampleReader {
                 lims.dnaNanograms(sampleBarcode),
                 lims.primaryTumor(sampleBarcode),
                 lims.pathologyTumorPercentage(sampleBarcode));
+    }
+
+    @Nullable
+    public SampleData readWithoutBarcode(@NotNull String sampleId) {
+        final LocalDate arrivalDate = lims.arrivalDate(Strings.EMPTY, sampleId);
+        boolean isSequenced = sequencedSampleIds.contains(sampleId);
+
+        if (arrivalDate == null) {
+            if (isSequenced) {
+                LOGGER.warn("Could not find arrival date for sequenced sample {}", sampleId);
+            }
+            return null;
+        }
+
+        if (!lims.confirmedToHaveNoSamplingDate(sampleId)) {
+            LOGGER.warn("Could not find sampling date for sequenced sample {}", sampleId);
+        }
+
+        return ImmutableSampleData.of(sampleId, isSequenced, arrivalDate, null, null, null, Lims.NOT_AVAILABLE_STRING);
     }
 }
