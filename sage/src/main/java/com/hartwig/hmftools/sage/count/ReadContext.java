@@ -1,38 +1,50 @@
 package com.hartwig.hmftools.sage.count;
 
+import static com.hartwig.hmftools.sage.count.ReadContext.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.count.ReadContext.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.count.ReadContext.ReadContextMatch.PARTIAL;
+
 import java.util.Arrays;
-import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ReadContext {
 
+    enum ReadContextMatch {
+        NONE,
+        PARTIAL,
+        FULL
+    }
+
     private static final int LENGTH = 10;
 
-    private final String left;
+    final byte[] bytes;
+    final int readBypePosition;
+
     private final String alt;
-    private final String right;
 
     public ReadContext(int readBytePosition, byte[] readBytes) {
         final byte readByte = readBytes[readBytePosition];
         alt = String.valueOf((char) readByte);
 
-        left = new String(Arrays.copyOfRange(readBytes, Math.max(0, readBytePosition - LENGTH), readBytePosition));
-        right = new String(Arrays.copyOfRange(readBytes, readBytePosition + 1, Math.min(readBytes.length, readBytePosition + 1 + LENGTH)));
+        this.bytes = readBytes;
+        this.readBypePosition = readBytePosition;
     }
 
-    ReadContext(final String left, final String alt, final String right) {
-        this.left = left;
-        this.alt = alt;
-        this.right = right;
+    private int minIndex() {
+        return Math.max(0, readBypePosition - LENGTH);
     }
 
-    public String left() {
-        return left;
+    private int maxIndex() {
+        return Math.min(bytes.length - 1, readBypePosition + LENGTH);
     }
 
-    public String right() {
-        return right;
+    private int rightLength() {
+        return maxIndex() - readBypePosition;
+    }
+
+    private int leftLength() {
+        return readBypePosition - minIndex();
     }
 
     public String alt() {
@@ -40,28 +52,33 @@ public class ReadContext {
     }
 
     public boolean isComplete() {
-        return left.length() + alt.length() + right.length() == 2 * LENGTH + 1;
+        return maxIndex() - minIndex() == 2 * LENGTH;
     }
 
-    public boolean match(@NotNull final ReadContext other) {
-        if (!alt.equals(other.alt)) {
-            return false;
+    public ReadContextMatch match(@NotNull final ReadContext other) {
+
+        if (!isComplete() && !other.isComplete()) {
+            return NONE;
         }
 
-        if (left.length() == other.left.length() && !left.equals(other.left)) {
-            return false;
+        for (int i = 0; i <= Math.min(rightLength(), other.rightLength()); i++) {
+            if (bytes[readBypePosition + i] != other.bytes[other.readBypePosition + i]) {
+                return NONE;
+            }
         }
 
-        if (right.length() == other.right.length() && !right.equals(other.right)) {
-            return false;
+        for (int i = 1; i <= Math.min(leftLength(), other.leftLength()); i++) {
+            if (bytes[readBypePosition - i] != other.bytes[other.readBypePosition - i]) {
+                return NONE;
+            }
         }
 
-        return left.length() == other.left.length() || right.length() == other.right.length();
+        return isComplete() && other.isComplete() ? FULL : PARTIAL;
     }
 
     @Override
     public String toString() {
-        return left + alt + right;
+        return new String(Arrays.copyOfRange(bytes, minIndex(), maxIndex() + 1));
     }
 
     @Override
@@ -73,12 +90,17 @@ public class ReadContext {
             return false;
         }
         final ReadContext that = (ReadContext) o;
-        return Objects.equals(left, that.left) && Objects.equals(alt, that.alt) && Objects.equals(right, that.right);
+        return match(that) == FULL;
     }
 
     @Override
     public int hashCode() {
+        int result = 1;
 
-        return Objects.hash(left, alt, right);
+        for (int i = minIndex(); i <= maxIndex(); i++) {
+            result = 31 * result + bytes[i];
+        }
+
+        return result;
     }
 }

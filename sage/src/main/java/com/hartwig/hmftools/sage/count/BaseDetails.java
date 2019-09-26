@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.sage.count;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class BaseDetails implements Comparable<BaseDetails> {
@@ -20,12 +25,14 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     private int subprimeReadDepth;
 
+    private final Map<ReadContext, ReadContextCount> readContexts;
     private final List<ModifiableVariantHotspotEvidence> evidenceList;
 
     public BaseDetails(final String contig, final long position) {
         this.contig = contig;
         this.position = position;
         evidenceList = Lists.newArrayList();
+        readContexts = Maps.newHashMap();
     }
 
     public long position() {
@@ -47,8 +54,29 @@ public class BaseDetails implements Comparable<BaseDetails> {
     }
 
     @NotNull
+    private List<ReadContextCount> contexts(@NotNull final String alt) {
+        return readContexts.values()
+                .stream()
+                .filter(x -> x.alt().equals(alt) && x.isComplete())
+                .sorted( Comparator.comparingInt(ReadContextCount::count).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
     private ModifiableVariantHotspotEvidence setCommonProperties(ModifiableVariantHotspotEvidence evidence) {
-        return evidence.setRefQuality(refQuality).setRefSupport(refSupport).setReadDepth(readDepth).setSubprimeReadDepth(subprimeReadDepth);
+
+        List<ReadContextCount> contexts = contexts(evidence.alt());
+        final String readContext = contexts.isEmpty() ? Strings.EMPTY : contexts.get(0).toString();
+        final int readContextCount = contexts.isEmpty() ? 0 : contexts.get(0).count();
+        final int readContextCountOther = contexts.stream().skip(1).mapToInt(ReadContextCount::count).sum();
+
+        return evidence.setRefQuality(refQuality)
+                .setRefSupport(refSupport)
+                .setReadDepth(readDepth)
+                .setSubprimeReadDepth(subprimeReadDepth)
+                .setReadContext(readContext)
+                .setReadContextCount(readContextCount)
+                .setReadContextCountOther(readContextCountOther);
     }
 
     @NotNull
@@ -71,7 +99,10 @@ public class BaseDetails implements Comparable<BaseDetails> {
                 .setAltMinQuality(0)
                 .setAltDistanceFromRecordStart(0)
                 .setAltMinDistanceFromAlignment(0)
-                .setSubprimeReadDepth(0);
+                .setSubprimeReadDepth(0)
+                .setReadContext(Strings.EMPTY)
+                .setReadContextCount(0)
+                .setReadContextCountOther(0);
 
         evidenceList.add(setCommonProperties(newEvidence));
         return newEvidence;
@@ -91,6 +122,16 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     public void incrementRefQuality(final int quality) {
         this.refQuality += quality;
+    }
+
+    public void addReadContext(@NotNull final ReadContext readContext) {
+        readContexts.computeIfAbsent(readContext, ReadContextCount::new);
+
+        for (ReadContextCount count : readContexts.values()) {
+            if (count.match(readContext) != ReadContext.ReadContextMatch.NONE) {
+                count.increment();
+            }
+        }
     }
 
     @Override

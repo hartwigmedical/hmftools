@@ -5,7 +5,7 @@ public class ReadContextCount extends ReadContext {
     private int count;
 
     public ReadContextCount(final ReadContext readContext) {
-        super(readContext.left(), readContext.alt(), readContext.right());
+        super(readContext.readBypePosition, readContext.bytes);
         this.count = 0;
     }
 

@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.hotspot.ModifiableVariantHotspotEvidence;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.sage.count.BaseDetails;
 import com.hartwig.hmftools.sage.count.EvictingLinkedMap;
+import com.hartwig.hmftools.sage.count.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -141,6 +142,8 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
                 evidence.setAltMinQuality(evidence.altMinQuality() + Math.min(record.getMappingQuality(), baseQuality));
                 evidence.setAltDistanceFromRecordStart(evidence.altDistanceFromRecordStart() + readBytePosition);
                 evidence.setAltMinDistanceFromAlignment(evidence.altMinDistanceFromAlignment() + minDistanceFromAlignment);
+
+                baseDetails.addReadContext(new ReadContext(readBytePosition, record.getReadBases()));
 
             } else {
                 baseDetails.incrementRefSupport();

@@ -32,6 +32,9 @@ public class SageVCF implements AutoCloseable {
 
     private final static String PASS = "PASS";
     private final static String SUBPRIME_QUALITY_READ_DEPTH = "SDP";
+    private final static String READ_CONTEXT = "RC";
+    private final static String READ_CONTEXT_COUNT = "RCC";
+    private final static String READ_CONTEXT_COUNT_OTHER = "RCCO";
 
     private final String tumorSample;
     private final String normalSample;
@@ -92,6 +95,9 @@ public class SageVCF implements AutoCloseable {
                 .attribute("MAP_BASE_Q", tumorEvidence.altMinQuality())
                 .attribute("AVG_DISTANCE_RECORD", tumorEvidence.avgAltDistanceFromRecordStart())
                 .attribute("AVG_DISTANCE_ALIGNMENT", tumorEvidence.avgAltMinDistanceFromAlignment())
+                .attribute(READ_CONTEXT, tumorEvidence.readContext())
+                .attribute(READ_CONTEXT_COUNT, tumorEvidence.readContextCount())
+                .attribute(READ_CONTEXT_COUNT_OTHER, tumorEvidence.readContextCountOther())
                 .computeEndFromAlleles(alleles, (int) tumorEvidence.position())
                 .source("SAGE")
                 .genotypes(tumor, normal)
@@ -120,6 +126,9 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine("MAP_BASE_Q", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine("AVG_DISTANCE_RECORD", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine("AVG_DISTANCE_ALIGNMENT", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_COUNT, 1, VCFHeaderLineType.Integer, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_COUNT_OTHER, 1, VCFHeaderLineType.Integer, "TODO"));
 
         return header;
     }
