@@ -147,7 +147,7 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleBarcode);
+            LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
 
             if (sampleType != LimsSampleType.OTHER) {
                 String patientId = lims.patientId(sampleBarcode);
