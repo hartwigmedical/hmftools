@@ -22,6 +22,7 @@ import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFConstants;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -30,13 +31,15 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 public class SageVCF implements AutoCloseable {
 
     private final static String PASS = "PASS";
+    private final static String SUBPRIME_QUALITY_READ_DEPTH = "SDP";
 
     private final String tumorSample;
     private final String normalSample;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final String filename, @NotNull final String normalSample, @NotNull final String tumorSample) {
+    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final String filename, @NotNull final String normalSample,
+            @NotNull final String tumorSample) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
 
@@ -47,7 +50,6 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-
     public void write(@NotNull final VariantHotspotEvidence tumorEvidence, @Nullable final VariantHotspotEvidence normalEvidence) {
         if (tumorEvidence.altSupport() > 2) {
             refContextEnrichment.accept(create(tumorEvidence, normalEvidence));
@@ -55,7 +57,8 @@ public class SageVCF implements AutoCloseable {
     }
 
     @NotNull
-    private VariantContext create(@NotNull final VariantHotspotEvidence tumorEvidence, @Nullable final VariantHotspotEvidence normalEvidence) {
+    private VariantContext create(@NotNull final VariantHotspotEvidence tumorEvidence,
+            @Nullable final VariantHotspotEvidence normalEvidence) {
 
         final Allele ref = Allele.create(tumorEvidence.ref(), true);
         final Allele alt = Allele.create(tumorEvidence.alt(), false);
@@ -63,15 +66,21 @@ public class SageVCF implements AutoCloseable {
 
         final Genotype tumor = new GenotypeBuilder(tumorSample).DP(tumorEvidence.readDepth())
                 .AD(new int[] { tumorEvidence.refSupport(), tumorEvidence.altSupport() })
+                .attribute("SDP", tumorEvidence.subprimeReadDepth())
                 .alleles(alleles)
                 .make();
 
         final Genotype normal;
         if (normalEvidence == null) {
-            normal = new GenotypeBuilder(normalSample).DP(0).AD(new int[] { 0, 0 }).alleles(alleles).make();
+            normal = new GenotypeBuilder(normalSample).DP(0)
+                    .AD(new int[] { 0, 0 })
+                    .attribute(SUBPRIME_QUALITY_READ_DEPTH, 0)
+                    .alleles(alleles)
+                    .make();
         } else {
             normal = new GenotypeBuilder(normalSample).DP(normalEvidence.readDepth())
                     .AD(new int[] { normalEvidence.refSupport(), normalEvidence.altSupport() })
+                    .attribute(SUBPRIME_QUALITY_READ_DEPTH, normalEvidence.subprimeReadDepth())
                     .alleles(alleles)
                     .make();
         }
@@ -104,6 +113,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
+        header.addMetaDataLine(new VCFFormatHeaderLine(SUBPRIME_QUALITY_READ_DEPTH, 1, VCFHeaderLineType.Integer, "Subprime quality read depth"));
 
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
         header.addMetaDataLine(new VCFInfoHeaderLine("MAP_Q", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));

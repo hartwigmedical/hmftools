@@ -113,12 +113,12 @@ public class SageApplication implements AutoCloseable {
         GenomeRegion region5 = GenomeRegions.create("17", 4_000_001, 5_000_000);
         GenomeRegion region6 = GenomeRegions.create("17", 5_000_001, 6_000_000);
 
-        SageSamConsumer samConsumer1 = new SageSamConsumer(region1, refGenome);
-        SageSamConsumer samConsumer2 = new SageSamConsumer(region2, refGenome);
-        SageSamConsumer samConsumer3 = new SageSamConsumer(region3, refGenome);
-        SageSamConsumer samConsumer4 = new SageSamConsumer(region4, refGenome);
-        SageSamConsumer samConsumer5 = new SageSamConsumer(region5, refGenome);
-        SageSamConsumer samConsumer6 = new SageSamConsumer(region6, refGenome);
+        SageSamConsumer samConsumer1 = new SageSamConsumer(13, region1, refGenome);
+        SageSamConsumer samConsumer2 = new SageSamConsumer(13, region2, refGenome);
+        SageSamConsumer samConsumer3 = new SageSamConsumer(13, region3, refGenome);
+        SageSamConsumer samConsumer4 = new SageSamConsumer(13, region4, refGenome);
+        SageSamConsumer samConsumer5 = new SageSamConsumer(13, region5, refGenome);
+        SageSamConsumer samConsumer6 = new SageSamConsumer(13, region6, refGenome);
 
         List<Future<SageSamConsumer>> futures = Lists.newArrayList();
         futures.add(executorService.submit(() -> callable(region1, samConsumer1, bamFile)));
@@ -148,12 +148,12 @@ public class SageApplication implements AutoCloseable {
         GenomeRegion region5 = GenomeRegions.create("17", 4_000_001, 5_000_000);
         GenomeRegion region6 = GenomeRegions.create("17", 5_000_001, 6_000_000);
 
-        SageSamConsumer samConsumer1 = new SageSamConsumer(region1, refGenome, hotspots);
-        SageSamConsumer samConsumer2 = new SageSamConsumer(region2, refGenome, hotspots);
-        SageSamConsumer samConsumer3 = new SageSamConsumer(region3, refGenome, hotspots);
-        SageSamConsumer samConsumer4 = new SageSamConsumer(region4, refGenome, hotspots);
-        SageSamConsumer samConsumer5 = new SageSamConsumer(region5, refGenome, hotspots);
-        SageSamConsumer samConsumer6 = new SageSamConsumer(region6, refGenome, hotspots);
+        SageSamConsumer samConsumer1 = new SageSamConsumer(13, region1, refGenome, hotspots);
+        SageSamConsumer samConsumer2 = new SageSamConsumer(13, region2, refGenome, hotspots);
+        SageSamConsumer samConsumer3 = new SageSamConsumer(13, region3, refGenome, hotspots);
+        SageSamConsumer samConsumer4 = new SageSamConsumer(13, region4, refGenome, hotspots);
+        SageSamConsumer samConsumer5 = new SageSamConsumer(13, region5, refGenome, hotspots);
+        SageSamConsumer samConsumer6 = new SageSamConsumer(13, region6, refGenome, hotspots);
 
         List<Future<SageSamConsumer>> futures = Lists.newArrayList();
         futures.add(executorService.submit(() -> callable(region1, samConsumer1, bamFile)));
@@ -176,7 +176,7 @@ public class SageApplication implements AutoCloseable {
     private SageSamConsumer callable(GenomeRegion region, SageSamConsumer consumer, String bamFile) throws IOException {
         SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
 
-        SAMSlicer slicer = new SAMSlicer(13, Lists.newArrayList(region));
+        SAMSlicer slicer = new SAMSlicer(0, Lists.newArrayList(region));
         slicer.slice(tumorReader, consumer);
         tumorReader.close();
         return consumer;

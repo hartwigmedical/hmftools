@@ -44,20 +44,24 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
     */
 
     private static final String DISTANCE_FROM_REF_TAG = "NM";
+    private final int minQuality;
+
     private final GenomeRegion bounds;
     private final IndexedFastaSequenceFile refGenome;
 
     private final EvictingLinkedMap<Long, BaseDetails> baseMap;
     private final List<BaseDetails> baseList = Lists.newArrayList();
 
-    public SageSamConsumer(@NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome) {
-        this(bounds, refGenome, Sets.newHashSet());
+    public SageSamConsumer(final int minQuality, @NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome) {
+        this(minQuality, bounds, refGenome, Sets.newHashSet());
 
     }
 
-    public SageSamConsumer(@NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome, Set<Long> hotspots) {
+    public SageSamConsumer(final int minQuality, @NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome,
+            Set<Long> hotspots) {
         this.bounds = bounds;
         this.refGenome = refGenome;
+        this.minQuality = minQuality;
 
         final BiConsumer<Long, BaseDetails> baseDetailsHandler = (position, baseDetails) -> {
             if (!baseDetails.isEmpty() || hotspots.contains(baseDetails.position())) {
@@ -79,67 +83,71 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
 
         if (inBounds(record)) {
 
-            List<AlignmentBlock> alignmentBlocks = record.getAlignmentBlocks();
-            for (AlignmentBlock alignmentBlock : alignmentBlocks) {
+            if (record.getMappingQuality() >= minQuality) {
+                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x));
+            } else {
+                record.getAlignmentBlocks().forEach(x -> processSubprimeAlignment(record, x));
+            }
 
-                long refStart = alignmentBlock.getReferenceStart();
-                long refEnd = refStart + alignmentBlock.getLength() - 1;
-                byte[] refBytes = refGenome.getSubsequenceAt(record.getContig(), refStart, refEnd).getBases();
+        }
+    }
 
-                int readStart = alignmentBlock.getReadStart() - 1;
+    private void processSubprimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock) {
+        long refStart = alignmentBlock.getReferenceStart();
+        for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
+            long position = refStart + refBytePosition;
+            baseDetails(record.getContig(), position).incrementSubprimeReadDepth();
+        }
+    }
 
-                for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
+    private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock) {
 
-                    long position = refStart + refBytePosition;
-                    int readBytePosition = readStart + refBytePosition;
+        long refStart = alignmentBlock.getReferenceStart();
+        long refEnd = refStart + alignmentBlock.getLength() - 1;
+        byte[] refBytes = refGenome.getSubsequenceAt(record.getContig(), refStart, refEnd).getBases();
 
-                    if (!inBounds(position)) {
-                        continue;
-                    }
+        int readStart = alignmentBlock.getReadStart() - 1;
 
-                    final byte refByte = refBytes[refBytePosition];
-                    final byte readByte = record.getReadBases()[readBytePosition];
-                    final int baseQuality = record.getBaseQualities()[readBytePosition];
+        for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
 
-                    final BaseDetails baseDetails = baseDetails(record.getContig(), position);
+            long position = refStart + refBytePosition;
+            int readBytePosition = readStart + refBytePosition;
 
-                    baseDetails.incrementReadDepth();
+            if (!inBounds(position)) {
+                continue;
+            }
 
-                    if (readByte != refByte) {
+            final byte refByte = refBytes[refBytePosition];
+            final byte readByte = record.getReadBases()[readBytePosition];
+            final int baseQuality = record.getBaseQualities()[readBytePosition];
 
-                        final String ref = String.valueOf((char) refByte);
-                        final String alt = String.valueOf((char) readByte);
+            final BaseDetails baseDetails = baseDetails(record.getContig(), position);
 
-                        long distanceFromAlignmentStart = position - record.getAlignmentStart();
-                        long distanceFromAlignmentEnd = record.getAlignmentEnd() - position;
-                        int minDistanceFromAlignment = (int) Math.min(distanceFromAlignmentStart, distanceFromAlignmentEnd);
+            baseDetails.incrementReadDepth();
 
-                        final ModifiableVariantHotspotEvidence evidence = baseDetails.selectOrCreate(ref, alt);
-                        evidence.setAltSupport(evidence.altSupport() + 1);
-                        evidence.setAltQuality(evidence.altQuality() + baseQuality);
-                        evidence.setAltMapQuality(evidence.altMapQuality() + record.getMappingQuality());
-                        evidence.setAltMinQuality(evidence.altMinQuality() + Math.min(record.getMappingQuality(), baseQuality));
-                        evidence.setAltDistanceFromRecordStart(evidence.altDistanceFromRecordStart() + readBytePosition);
-                        evidence.setAltMinDistanceFromAlignment(evidence.altMinDistanceFromAlignment() + minDistanceFromAlignment);
+            if (readByte != refByte) {
 
-                        //TODO: This feels a little dodgy
-                        // TODO: Fix up quality for MNVs && Increment read depth of subsequent bases
-                        //                        int mismatchedBases = mismatchedBases(refBytePosition, readBytePosition, refBytes, record.getReadBases());
-                        //                        final String ref = new String(Arrays.copyOfRange(refBytes, refBytePosition, refBytePosition + mismatchedBases));
-                        //                        final String alt =
-                        //                                new String(Arrays.copyOfRange(record.getReadBases(), readBytePosition, readBytePosition + mismatchedBases));
-                        //                        refBytePosition += (mismatchedBases - 1);
-                        //                        for (int i = 1; i < mismatchedBases; i++) {
-                        //                            baseDetails(record.getContig(), position + i).incrementReadDepth();
-                        //                        }
+                final String ref = String.valueOf((char) refByte);
+                final String alt = String.valueOf((char) readByte);
 
-                    } else {
-                        baseDetails.incrementRefSupport();
-                        baseDetails.incrementRefQuality(baseQuality);
-                    }
-                }
+                long distanceFromAlignmentStart = position - record.getAlignmentStart();
+                long distanceFromAlignmentEnd = record.getAlignmentEnd() - position;
+                int minDistanceFromAlignment = (int) Math.min(distanceFromAlignmentStart, distanceFromAlignmentEnd);
+
+                final ModifiableVariantHotspotEvidence evidence = baseDetails.selectOrCreate(ref, alt);
+                evidence.setAltSupport(evidence.altSupport() + 1);
+                evidence.setAltQuality(evidence.altQuality() + baseQuality);
+                evidence.setAltMapQuality(evidence.altMapQuality() + record.getMappingQuality());
+                evidence.setAltMinQuality(evidence.altMinQuality() + Math.min(record.getMappingQuality(), baseQuality));
+                evidence.setAltDistanceFromRecordStart(evidence.altDistanceFromRecordStart() + readBytePosition);
+                evidence.setAltMinDistanceFromAlignment(evidence.altMinDistanceFromAlignment() + minDistanceFromAlignment);
+
+            } else {
+                baseDetails.incrementRefSupport();
+                baseDetails.incrementRefQuality(baseQuality);
             }
         }
+
     }
 
     @NotNull
@@ -149,6 +157,18 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
 
     private int mismatchedBases(int refStart, int readStart, byte[] refBases, byte[] readBases) {
         assert (refBases[refStart] != readBases[readStart]);
+
+
+        //TODO: This feels a little dodgy
+        // TODO: Fix up quality for MNVs && Increment read depth of subsequent bases
+        //                        int mismatchedBases = mismatchedBases(refBytePosition, readBytePosition, refBytes, record.getReadBases());
+        //                        final String ref = new String(Arrays.copyOfRange(refBytes, refBytePosition, refBytePosition + mismatchedBases));
+        //                        final String alt =
+        //                                new String(Arrays.copyOfRange(record.getReadBases(), readBytePosition, readBytePosition + mismatchedBases));
+        //                        refBytePosition += (mismatchedBases - 1);
+        //                        for (int i = 1; i < mismatchedBases; i++) {
+        //                            baseDetails(record.getContig(), position + i).incrementReadDepth();
+        //                        }
 
         for (int i = 1; ; i++) {
             int refPosition = refStart + i;

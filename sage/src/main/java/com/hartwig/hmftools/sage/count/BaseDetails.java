@@ -18,6 +18,8 @@ public class BaseDetails implements Comparable<BaseDetails> {
     private int refSupport;
     private int refQuality;
 
+    private int subprimeReadDepth;
+
     private final List<ModifiableVariantHotspotEvidence> evidenceList;
 
     public BaseDetails(final String contig, final long position) {
@@ -38,22 +40,22 @@ public class BaseDetails implements Comparable<BaseDetails> {
     public List<VariantHotspotEvidence> evidence() {
         List<VariantHotspotEvidence> result = Lists.newArrayList();
         for (ModifiableVariantHotspotEvidence evidence : evidenceList) {
-            result.add(update(evidence));
+            result.add(setCommonProperties(evidence));
         }
 
         return result;
     }
 
     @NotNull
-    private ModifiableVariantHotspotEvidence update(ModifiableVariantHotspotEvidence evidence) {
-        return evidence.setRefQuality(refQuality).setRefSupport(refSupport).setReadDepth(readDepth);
+    private ModifiableVariantHotspotEvidence setCommonProperties(ModifiableVariantHotspotEvidence evidence) {
+        return evidence.setRefQuality(refQuality).setRefSupport(refSupport).setReadDepth(readDepth).setSubprimeReadDepth(subprimeReadDepth);
     }
 
     @NotNull
     public ModifiableVariantHotspotEvidence selectOrCreate(@NotNull final String ref, @NotNull final String alt) {
         for (ModifiableVariantHotspotEvidence evidence : evidenceList) {
             if (evidence.ref().equals(ref) && evidence.alt().equals(alt)) {
-                return update(evidence);
+                return setCommonProperties(evidence);
             }
         }
 
@@ -69,9 +71,9 @@ public class BaseDetails implements Comparable<BaseDetails> {
                 .setAltMinQuality(0)
                 .setAltDistanceFromRecordStart(0)
                 .setAltMinDistanceFromAlignment(0)
-                ;
+                .setSubprimeReadDepth(0);
 
-        evidenceList.add(update(newEvidence));
+        evidenceList.add(setCommonProperties(newEvidence));
         return newEvidence;
     }
 
@@ -81,6 +83,10 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     public void incrementReadDepth() {
         this.readDepth++;
+    }
+
+    public void incrementSubprimeReadDepth() {
+        this.subprimeReadDepth++;
     }
 
     public void incrementRefQuality(final int quality) {
