@@ -283,7 +283,7 @@ public final class LoadClinicalData {
         Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), limsSampleDataPerPatient);
         LOGGER.info(String.format(" Finished curation of %s DRUP patients.", drupPatients.size()));
 
-        LOGGER.info("Interpreting and curating data based off LIMS.");
+        LOGGER.info("Interpreting and curating data based off LIMS (WIDE and CORE).");
         Map<String, Patient> patientsFromLims = readLimsPatients(limsSampleDataPerPatient, tumorLocationCurator);
         LOGGER.info(String.format(" Finished curation of %s patients based off LIMS", patientsFromLims.keySet().size()));
 
