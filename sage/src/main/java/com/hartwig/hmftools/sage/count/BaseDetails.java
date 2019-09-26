@@ -54,11 +54,11 @@ public class BaseDetails implements Comparable<BaseDetails> {
     }
 
     @NotNull
-    private List<ReadContextCount> contexts(@NotNull final String alt) {
+    public List<ReadContextCount> contexts(@NotNull final String alt) {
         return readContexts.values()
                 .stream()
                 .filter(x -> x.alt().equals(alt) && x.isComplete())
-                .sorted( Comparator.comparingInt(ReadContextCount::count).reversed())
+                .sorted(Comparator.comparingInt(ReadContextCount::count).reversed())
                 .collect(Collectors.toList());
     }
 

@@ -3,13 +3,13 @@ package com.hartwig.hmftools.sage.count;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextConsumer implements Consumer<SAMRecord> {
+public class ReadContextConsumer implements GenomePosition, Consumer<SAMRecord> {
     private final VariantHotspot hotspot;
     private final ReadContext readContext;
 
@@ -21,6 +21,17 @@ public class ReadContextConsumer implements Consumer<SAMRecord> {
         assert (readContext.isComplete());
         this.hotspot = hotspot;
         this.readContext = readContext;
+    }
+
+    @NotNull
+    @Override
+    public String chromosome() {
+        return hotspot.chromosome();
+    }
+
+    @Override
+    public long position() {
+        return hotspot.position();
     }
 
     public VariantHotspot hotspot() {
@@ -48,28 +59,27 @@ public class ReadContextConsumer implements Consumer<SAMRecord> {
     public void accept(final SAMRecord record) {
 
         if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
-            for (AlignmentBlock alignmentBlock : record.getAlignmentBlocks()) {
-                final int readBaseStart = alignmentBlock.getReadStart() - 1;
 
-                for (int i = 0; i < alignmentBlock.getLength(); i++) {
-                    long refPosition = alignmentBlock.getReferenceStart() + i;
+            byte[] readBases = record.getReadBases();
+            for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
+                long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1); //TODO: Check + 1
 
-                    final int readBasePosition = readBaseStart + i;
-                    final ReadContext newContext = new ReadContext(readBasePosition, record.getReadBases());
-                    ReadContext.ReadContextMatch match = readContext.match(newContext);
-                    if (match.equals(ReadContext.ReadContextMatch.NONE)) {
-                        if (refPosition == hotspot.position()) {
-                            if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                                full++;
-                            } else {
-                                partial++;
-                            }
-                        } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                            missaligned++;
+                final ReadContext newContext = new ReadContext(readBasePosition, readBases);
+                ReadContext.ReadContextMatch match = readContext.match(newContext);
+                if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
+                    if (refPosition == hotspot.position()) {
+                        if (match.equals(ReadContext.ReadContextMatch.FULL)) {
+                            full++;
+                        } else {
+                            partial++;
                         }
+                    } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
+                        missaligned++;
                     }
                 }
+
             }
         }
     }
+
 }

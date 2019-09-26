@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
@@ -310,6 +311,9 @@ public class VariantHotspotEvidenceFactory {
                 .setAltDistanceFromRecordStart(0)
                 .setAltMinDistanceFromAlignment(0)
                 .setSubprimeReadDepth(0)
+                .setReadContext(Strings.EMPTY)
+                .setReadContextCount(0)
+                .setReadContextCountOther(0)
                 ;
     }
 
