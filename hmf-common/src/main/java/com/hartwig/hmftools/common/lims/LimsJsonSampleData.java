@@ -59,7 +59,7 @@ abstract class LimsJsonSampleData {
     public abstract String pathologyTumorPercentage();
 
     @NotNull
-    @SerializedName("dna_conc")
+    @SerializedName("conc")
     public abstract String dnaConcentration();
 
     @NotNull
