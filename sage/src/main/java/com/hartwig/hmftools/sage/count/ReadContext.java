@@ -27,6 +27,18 @@ public class ReadContext {
         this.right = right;
     }
 
+    public String left() {
+        return left;
+    }
+
+    public String right() {
+        return right;
+    }
+
+    public String alt() {
+        return alt;
+    }
+
     public boolean isComplete() {
         return left.length() + alt.length() + right.length() == 2 * LENGTH + 1;
     }
@@ -57,7 +69,7 @@ public class ReadContext {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof ReadContext)) {
             return false;
         }
         final ReadContext that = (ReadContext) o;

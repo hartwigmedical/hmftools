@@ -1,0 +1,20 @@
+package com.hartwig.hmftools.sage.count;
+
+public class ReadContextCount extends ReadContext {
+
+    private int count;
+
+    public ReadContextCount(final ReadContext readContext) {
+        super(readContext.left(), readContext.alt(), readContext.right());
+        this.count = 0;
+    }
+
+    public void increment() {
+        count++;
+    }
+
+    public int count() {
+        return count;
+    }
+
+}
