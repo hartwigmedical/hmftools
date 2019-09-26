@@ -155,7 +155,9 @@ public final class LoadClinicalData {
 
                 if (sampleData != null) {
                     List<SampleData> currentSamples = samplesPerPatient.get(patientId);
-                    if (currentSamples != null) {
+                    if (currentSamples != null && !sampleIdExistsInSampleDataList(currentSamples, sampleId)) {
+                        // TODO If a single sample exists in LIMS with multiple barcodes we should pick "the most relevant one".
+                        // Currently just picking a random one - sampleId has to be unique in this list.
                         currentSamples.add(sampleData);
                     } else {
                         currentSamples = Lists.newArrayList(sampleData);
@@ -166,6 +168,16 @@ public final class LoadClinicalData {
         }
 
         return samplesPerPatient;
+    }
+
+    private static boolean sampleIdExistsInSampleDataList(@NotNull List<SampleData> samples, @NotNull String sampleId) {
+        for (SampleData sample : samples) {
+            if (sample.sampleId().equals(sampleId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull
