@@ -284,18 +284,18 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
         LOGGER.info(" Done writing DRUP datamodel.");
-        LOGGER.info("Writing DRUP patients...");
+        LOGGER.info("Writing raw DRUP patient data...");
         model.patients().forEach(patient -> ecrfDAO.writeDrupPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info(" Done writing DRUP patients.");
+        LOGGER.info(" Done writing raw DRUP patient data.");
     }
 
     public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
         LOGGER.info("Writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
-        LOGGER.info("Done writing CPCT datamodel.");
-        LOGGER.info("Writing CPCT patients...");
+        LOGGER.info(" Done writing CPCT datamodel.");
+        LOGGER.info("Writing raw CPCT patient data...");
         model.patients().forEach(patient -> ecrfDAO.writeCpctPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info("Done writing CPCT patients.");
+        LOGGER.info(" Done writing raw CPCT patient data.");
     }
 
     public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
