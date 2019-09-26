@@ -175,6 +175,8 @@ public final class LoadClinicalData {
             }
             for (String sampleId : sequencedPatientEntry.getValue()) {
                 if (!sampleIdExistsInSampleDataList(samples, sampleId)) {
+                    LOGGER.info(" Creating sample data for {}. This sample is not found in LIMS even though it has been sequenced!",
+                            sampleId);
                     SampleData sampleData = sampleReader.readWithoutBarcode(sampleId);
                     if (sampleData != null) {
                         samples.add(sampleData);
