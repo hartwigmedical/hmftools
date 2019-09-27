@@ -6,7 +6,7 @@ The steps in the routine are as follows:
 1. Parse germline VCF to identify candidate variants. Apply black and white lists to exclude or include variants.
 2. If the tumor alt and read depth counts are not in the germline VCF, obtain them from the sample's tumor BAM file.
 3. Enrich variants with copy number data
-4. Write final set of germline variant data to DB (germlineVariant table) and an CSV output file.
+4. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
 ### Whitelist
 
