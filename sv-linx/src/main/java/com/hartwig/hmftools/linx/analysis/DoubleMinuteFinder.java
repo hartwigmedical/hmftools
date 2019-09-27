@@ -11,14 +11,13 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWrite
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_CENTROMERE;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.CENTROMERE_CN;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.P_ARM_TELOMERE_CN;
-import static com.hartwig.hmftools.linx.cn.CnDataLoader.Q_ARM_TELOMERE_CN;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
@@ -67,8 +66,9 @@ public class DoubleMinuteFinder
     private static final double PLOIDY_THRESHOLD = 8;
     private static final double HIGH_PLOIDY_FACTOR = 1.1;
     private static final double ADJACENT_PLOIDY_RATIO = 2.3;
-    private static final double DOMINANT_FOLDBACK_THRESHOLD = 0.75;
+    private static final double DOMINANT_FOLDBACK_RATIO_THRESHOLD = 0.75;
     private static final double DOMINANT_FOLDBACK_INF_THRESHOLD = 0.5;
+    private static final double DOMINANT_FOLDBACK_PLOIDY_THRESHOLD = 4;
     private static final int INF_PAIR_MIN_DISTANCE = 50000;
 
     private static final Logger LOGGER = LogManager.getLogger(DoubleMinuteFinder.class);
@@ -133,24 +133,13 @@ public class DoubleMinuteFinder
                 maxInfPloidy = max(maxInfPloidy, var.ploidy());
         }
 
-        if(maxSvPloidy < PLOIDY_THRESHOLD)
-            return;
-
         double sumFoldbackPloidy = 0;
         double maxFoldbackPloidy = 0;
 
         if(!cluster.getFoldbacks().isEmpty())
         {
-            List<SvVarData> chainedFoldbacks = Lists.newArrayList();
-
             for (SvVarData var : cluster.getFoldbacks())
             {
-                if(var.isChainedFoldback() && !chainedFoldbacks.contains(var))
-                {
-                    chainedFoldbacks.add(var);
-                    chainedFoldbacks.add(var.getChainedFoldbackSv());
-                }
-
                 maxFoldbackPloidy = max(maxFoldbackPloidy, var.ploidy());
                 sumFoldbackPloidy += var.ploidy();
             }
@@ -160,20 +149,21 @@ public class DoubleMinuteFinder
         // - BFB plausible if 2*sum(foldback ploidy) + maxINFPloidy > maxPloidy and maxFBPloidy > 0.15 * maxPloidy
         // - If foldbacks exist but one foldback is a ‘dominant foldback’  (>75% of the total foldback and 0.5 * maxINFPloidy) then BFB is still implausible
 
-        boolean hasDominantFoldback = (maxFoldbackPloidy > DOMINANT_FOLDBACK_THRESHOLD * sumFoldbackPloidy)
+        boolean hasDominantFoldback = (maxFoldbackPloidy > DOMINANT_FOLDBACK_RATIO_THRESHOLD * sumFoldbackPloidy)
+                && (maxFoldbackPloidy >= DOMINANT_FOLDBACK_PLOIDY_THRESHOLD)
                 && (maxFoldbackPloidy > DOMINANT_FOLDBACK_INF_THRESHOLD * maxInfPloidy);
 
-        if(!hasDominantFoldback)
+        if(!hasDominantFoldback && sumFoldbackPloidy > 0 && 2 * sumFoldbackPloidy + maxInfPloidy > maxSvPloidy)
         {
-            if(2 * sumFoldbackPloidy + maxInfPloidy > maxSvPloidy)
-            {
-                LOGGER.debug(String.format("cluster(%s) maxPloidy(%.1f) foldbacks(%d ploidy(max=%.1f sum=%.1f) explains AMP",
-                        cluster.id(), maxSvPloidy, cluster.getFoldbacks().size(), maxFoldbackPloidy, sumFoldbackPloidy));
+            LOGGER.debug(String.format("cluster(%s) maxPloidy(%.1f) foldbacks(%d ploidy(max=%.1f sum=%.1f) explains AMP",
+                    cluster.id(), maxSvPloidy, cluster.getFoldbacks().size(), maxFoldbackPloidy, sumFoldbackPloidy));
 
-                cluster.addAnnotation(CLUSTER_ANNOT_BFB_AMP);
-                return;
-            }
+            cluster.addAnnotation(CLUSTER_ANNOT_BFB_AMP);
+            return;
         }
+
+        if(maxSvPloidy < PLOIDY_THRESHOLD)
+            return;
 
         // other the criteria to be a DM are:
         // - at least 1 NON SIMPLE DEL variant has ploidy > 2.3x neigbouring major allele ploidy on at least one side
@@ -244,36 +234,43 @@ public class DoubleMinuteFinder
         if(highPloidySVs.isEmpty() || !hasHighMinPloidy)
             return;
 
-        if(highPloidySVs.size() == 1 && highPloidySVs.get(0).type() != DUP)
-            return;
+        LOGGER.debug(String.format("cluster(%s) possible DM: maxPloidy(%.1f) dmSvCount(%d)",
+                cluster.id(), maxSvPloidy, highPloidySVs.size()));
 
         if(highPloidySVs.size() == 2 && highPloidySVs.get(0).isInferredSgl() && highPloidySVs.get(1).isInferredSgl())
         {
             long distance = abs(highPloidySVs.get(0).position(true) - highPloidySVs.get(1).position(true));
 
             if(distance < INF_PAIR_MIN_DISTANCE)
+            {
+                LOGGER.debug(String.format("cluster(%s) possible DM: inf-pair distance(%d) too small",
+                        cluster.id(), distance));
                 return;
+            }
         }
 
-        boolean hasTorCAmplication = false;
+        List<String> processedArms = Lists.newArrayList();
 
         for(SvVarData var : highPloidySVs)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(se == SE_END && var.isLocal() || var.isSglBreakend())
+                if(se == SE_END && (var.isLocal() || var.isSglBreakend()))
                     continue;
 
-                if(hasTelomereOrCentromereAmplication(var.chromosome(isStart(se)), var.arm(isStart(se))))
+                final String chrArm = makeChrArmStr(var.chromosome(isStart(se)), var.arm(isStart(se)));
+
+                if(processedArms.contains(chrArm))
+                    continue;
+
+                processedArms.add(chrArm);
+
+                if(!amplifiedVsSampleAndArm(cluster, var.chromosome(isStart(se)), var.arm(isStart(se)), maxSvPloidy))
                 {
-                    hasTorCAmplication = true;
-                    break;
+                    return;
                 }
             }
         }
-
-        if(hasTorCAmplication)
-            return;
 
         final SvChain dmChain = createDMChain(cluster, highPloidySVs);
 
@@ -334,30 +331,32 @@ public class DoubleMinuteFinder
         return cnData.majorAllelePloidy();
     }
 
-    private static final double PLOIDY_VS_T_AND_C = 3;
-
-    private boolean hasTelomereOrCentromereAmplication(final String chromosome, final String arm)
+    private boolean amplifiedVsSampleAndArm(final SvCluster cluster, final String chromosome, final String arm, double dmPloidy)
     {
         final TelomereCentromereCnData tcData = mCnAnalyser.getChrTeleCentroData().get(chromosome);
 
         if(tcData == null)
             return false;
 
-        //  we want to check telomere / centromere CN < max (8, 3x sample ploidy).
-
         final PurityContext samplePurity = mCnAnalyser.getPurityContext();
         if(samplePurity == null)
             return false;
 
+        double samplePloidy = samplePurity.score().maxPloidy();
         double centromereCopyNumber = arm == CHROMOSOME_ARM_P ? tcData.CentromerePArm : tcData.CentromereQArm;
         double telomereCopyNumber = arm == CHROMOSOME_ARM_P ? tcData.TelomerePArm : tcData.TelomereQArm;
 
-        if(centromereCopyNumber > PLOIDY_THRESHOLD || telomereCopyNumber > PLOIDY_THRESHOLD)
+        if(dmPloidy > centromereCopyNumber * ADJACENT_PLOIDY_RATIO && dmPloidy > telomereCopyNumber * ADJACENT_PLOIDY_RATIO)
+        {
             return true;
+        }
+        else if(dmPloidy > 5 * samplePloidy)
+        {
+            return true;
+        }
 
-        if(telomereCopyNumber > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C
-        || centromereCopyNumber > samplePurity.score().maxPloidy() * PLOIDY_VS_T_AND_C)
-            return true;
+        LOGGER.debug(String.format("cluster(%s) possible DM: not amplified vs telo(%s) centro(%s) sample(%s)",
+                cluster.id(), formatPloidy(telomereCopyNumber),formatPloidy(telomereCopyNumber), formatPloidy(samplePloidy)));
 
         return false;
     }
@@ -422,6 +421,7 @@ public class DoubleMinuteFinder
 
         double minDMPloidy = 0;
         double maxDMCopyNumber = 0;
+        double maxCentroTeloCopyNumber = 0;
 
         for(final SvVarData var : highPloidySVs)
         {
@@ -432,11 +432,32 @@ public class DoubleMinuteFinder
 
             maxDMCopyNumber = max(maxDMCopyNumber, max(var.copyNumber(true), var.copyNumber(false)));
 
-            if(!chromosomes.contains(var.chromosome(true)))
-                chromosomes.add(var.chromosome(true));
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(var.isSglBreakend() && se== SE_END)
+                    continue;
 
-            if(!var.isSglBreakend() && !chromosomes.contains(var.chromosome(false)))
-                chromosomes.add(var.chromosome(false));
+                final String chromosome = var.chromosome(isStart(se));
+
+                if(!chromosomes.contains(chromosome))
+                    chromosomes.add(chromosome);
+
+                final TelomereCentromereCnData tcData = mCnAnalyser.getChrTeleCentroData().get(chromosome);
+
+                if(tcData != null)
+                {
+                    if(var.arm(isStart(se)) == CHROMOSOME_ARM_P)
+                    {
+                        maxCentroTeloCopyNumber = max(maxCentroTeloCopyNumber, tcData.TelomerePArm);
+                        maxCentroTeloCopyNumber = max(maxCentroTeloCopyNumber, tcData.CentromerePArm);
+                    }
+                    else
+                    {
+                        maxCentroTeloCopyNumber = max(maxCentroTeloCopyNumber, tcData.TelomereQArm);
+                        maxCentroTeloCopyNumber = max(maxCentroTeloCopyNumber, tcData.CentromereQArm);
+                    }
+                }
+            }
 
             svIds = appendStr(svIds, var.idStr(), ';');
         }
@@ -452,16 +473,6 @@ public class DoubleMinuteFinder
 
         // get amplified genes list by looking at all section traversed by this chain or breakends with genes in them?
         String amplifiedGenesStr = chain != null ? getAmplifiedGenesList(chain) : "";
-
-        long posStart = 0;
-        long posEnd = 0;
-
-        if(fullyChained && highPloidySVs.size() == 1)
-        {
-            SvVarData dup = highPloidySVs.get(0);
-            posStart = dup.position(true);
-            posEnd = dup.position(false);
-        }
 
         String chromosomeStr = "";
         for(String chr : chromosomes)
@@ -480,7 +491,7 @@ public class DoubleMinuteFinder
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
                 mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount,SamplePurity,SamplePloidy,DMSvCount,DMSvTypes");
-                mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes,DupPosStart,DupPosEnd");
+                mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes,MaxTeloCentroCn");
                 mFileWriter.write(",MaxCopyNumber,MinPloidy,AmpGenes");
                 mFileWriter.newLine();
             }
@@ -491,8 +502,8 @@ public class DoubleMinuteFinder
             mFileWriter.write(String.format(",%.2f,%.2f,%d,%s,%s,%d,%d",
                     samplePurity, samplePloidy, highPloidySVs.size(), dmTypesStr, fullyChained, dmChainLength, chainSvCount));
 
-            mFileWriter.write(String.format(",%s,%s,%d,%d,%.2f,%.2f,%s",
-                    svIds, chromosomeStr, posStart, posEnd, maxDMCopyNumber, minDMPloidy, amplifiedGenesStr));
+            mFileWriter.write(String.format(",%s,%s,%.2f,%.2f,%.2f,%s",
+                    svIds, chromosomeStr, maxCentroTeloCopyNumber, maxDMCopyNumber, minDMPloidy, amplifiedGenesStr));
 
             mFileWriter.newLine();
         }

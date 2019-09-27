@@ -2,6 +2,9 @@ package com.hartwig.hmftools.linx.utils;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.msi.MicrosatelliteStatus.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
+import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NORMAL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -17,6 +20,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
@@ -199,6 +208,8 @@ public class LinxTester
         if(includePloidyCalcs)
             CnDataLoader.calculateAdjustedPloidy(SampleId);
 
+        setSamplePurity();
+
         CnDataLoader.createChrCopyNumberMap();
 
         setSvCopyNumberData(
@@ -206,6 +217,7 @@ public class LinxTester
                 CnDataLoader.getSvPloidyCalcMap(),
                 CnDataLoader.getSvIdCnDataMap(),
                 CnDataLoader.getChrCnDataMap());
+
     }
 
     private double calcActualBaf(double copyNumber)
@@ -401,6 +413,41 @@ public class LinxTester
                 breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, ploidy);
             }
         }
+    }
+
+    private void setSamplePurity()
+    {
+        FittedPurity purity = ImmutableFittedPurity.builder()
+                .purity(1)
+                .ploidy(2)
+                .diploidProportion(1)
+                .normFactor(1)
+                .score(1)
+                .somaticPenalty(0)
+                .build();
+
+        FittedPurityScore purityScore = ImmutableFittedPurityScore.builder()
+                .maxPurity(1)
+                .minPurity(1)
+                .maxDiploidProportion(1)
+                .maxPloidy(2)
+                .minDiploidProportion(0)
+                .minPloidy(2)
+                .build();
+
+        PurityContext purityContext = ImmutablePurityContext.builder()
+                .bestFit(purity)
+                .gender(MALE)
+                .microsatelliteIndelsPerMb(0)
+                .microsatelliteStatus(UNKNOWN)
+                .polyClonalProportion(0)
+                .score(purityScore)
+                .status(NORMAL)
+                .version("1.0")
+                .wholeGenomeDuplication(false)
+                .build();
+
+        CnDataLoader.setPurityContext(purityContext);
     }
 
 }

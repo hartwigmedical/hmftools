@@ -587,7 +587,7 @@ public class SvCluster
             return;
         }
 
-        // establish the lowest copy number change, using calculated ploidy if present
+        // establish the high and low ploidy from all SVs
         mMinPloidy = -1;
         mMaxPloidy = 0;
 

@@ -91,6 +91,7 @@ public class CnDataLoader
     public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
     public final Map<Integer,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
     public final PurityContext getPurityContext() { return mPurityContext; }
+    public final void setPurityContext(final PurityContext context) { mPurityContext = context; }
 
     public void loadSampleData(final String sampleId, List<StructuralVariantData> svRecords)
     {
@@ -627,11 +628,40 @@ public class CnDataLoader
     {
         mChrEndsCNMap.clear();
 
-        double telomerePArm = 0;
-        double telomereQArm = 0;
-        double centromerePArm = 0;
-        double centromereQArm = 0;
+        for(Map.Entry<String,List<SvCNData>> entry : mChrCnDataMap.entrySet())
+        {
+            double telomerePArm = 0;
+            double telomereQArm = 0;
+            double centromerePArm = 0;
+            double centromereQArm = 0;
 
+            for(final SvCNData cnData : entry.getValue())
+            {
+                if(cnData.SegStart.equals(TELOMERE.toString()))
+                {
+                    telomerePArm = cnData.CopyNumber;
+                }
+
+                if(cnData.SegEnd.equals(CENTROMERE.toString()))
+                {
+                    centromerePArm = cnData.CopyNumber;
+                }
+
+                if(cnData.SegStart.equals(CENTROMERE.toString()))
+                {
+                    centromereQArm = cnData.CopyNumber;
+                }
+
+                if(cnData.SegEnd.equals(TELOMERE.toString()))
+                {
+                    telomereQArm = cnData.CopyNumber;
+                }
+            }
+
+            mChrEndsCNMap.put(entry.getKey(), new TelomereCentromereCnData(telomerePArm, telomereQArm, centromerePArm, centromereQArm));
+        }
+
+        /*
         for(final PurpleCopyNumber cnRecord : mCnRecords)
         {
             if(cnRecord.segmentStartSupport().equals(TELOMERE))
@@ -656,6 +686,7 @@ public class CnDataLoader
                         cnRecord.chromosome(), new TelomereCentromereCnData(telomerePArm, telomereQArm, centromerePArm, centromereQArm));
             }
         }
+        */
     }
 
 }

@@ -689,7 +689,7 @@ public class SvSampleAnalyser {
                             foldbackCount += 0.5;
                     }
 
-                    mClusterFileWriter.write(String.format(",%s,%d,%s,%s,%.0f,%.0f,%.0f",
+                    mClusterFileWriter.write(String.format(",%s,%d,%s,%s,%.1f,%.1f,%.0f",
                             cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.hasLinkingLineElements(),
                             cluster.requiresReplication(), cluster.getMinPloidy(), cluster.getMaxPloidy(), foldbackCount));
 
