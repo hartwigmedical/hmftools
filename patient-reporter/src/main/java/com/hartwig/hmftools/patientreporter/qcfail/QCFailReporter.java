@@ -22,7 +22,7 @@ public class QCFailReporter {
 
     @NotNull
     public QCFailReport run(@NotNull SampleMetadata sampleMetadata, @NotNull QCFailReason reason, @Nullable String comments,
-            @Nullable String correctTitle) {
+            boolean correctedReport) {
         QCFailStudy study = QCFailStudy.fromSample(sampleMetadata.tumorSampleId());
 
         assert study != null;
@@ -36,13 +36,15 @@ public class QCFailReporter {
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
-        return ImmutableQCFailReport.of(sampleReport,
-                reason,
-                study,
-                Optional.ofNullable(comments),
-                Optional.ofNullable(correctTitle),
-                reportData.signaturePath(),
-                reportData.logoRVAPath(),
-                reportData.logoCompanyPath());
+        return ImmutableQCFailReport.builder()
+                .sampleReport(sampleReport)
+                .reason(reason)
+                .study(study)
+                .comments(Optional.ofNullable(comments))
+                .isCorrectedReport(correctedReport)
+                .signaturePath(reportData.signaturePath())
+                .logoRVAPath(reportData.logoRVAPath())
+                .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
     }
 }

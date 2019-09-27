@@ -17,8 +17,7 @@ public interface PatientReport {
     @NotNull
     Optional<String> comments();
 
-    @NotNull
-    Optional<String> titleReportCorrect();
+    boolean isCorrectedReport();
 
     @NotNull
     String signaturePath();

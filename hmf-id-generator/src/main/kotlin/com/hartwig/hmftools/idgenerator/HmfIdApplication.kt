@@ -127,7 +127,7 @@ private fun runUpdateIds(cmd: CommandLine) {
     val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
     val anonymizer = SampleAnonymizer(password)
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream())
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(SAMPLE_HASHES_CSV).openStream())
             .map { it.toHmfSampleId() }
     logger.info("Read ${currentIds.size} anonymized samples")
 
@@ -145,8 +145,9 @@ private fun runUpdateIds(cmd: CommandLine) {
 
 private fun runAnonymizeIds(cmd: CommandLine) {
     logger.info("Mode: anonymize ids")
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(CURRENT_IDS_FILE).openStream())
+    val currentIds = CsvReader.readCSVByName<HmfSampleIdRecord>(IdGenerator::class.java.getResource(SAMPLE_HASHES_CSV).openStream())
             .map { it.toHmfSampleId() }
+    // TODO Should not need PATIENT_MAPPING_FILE!
     val samplesInput = readSamplesInput(cmd.getOptionValue(SAMPLE_IDS_FILE), cmd.getOptionValue(PATIENT_MAPPING_FILE))
     val anonymizedSamples = AnonymizedSamples(cmd.getOptionValue(PASSWORD), currentIds, samplesInput)
 

@@ -60,7 +60,7 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @Nullable String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile, @Nullable String comments,
-            @Nullable String correctTitle) throws IOException {
+            boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -76,7 +76,7 @@ class AnalysedPatientReporter {
                 patientTumorLocation,
                 copyNumberAnalysis.exomeGeneCopyNumbers());
         List<GermlineVariant> germlineVariantsToReport =
-                analyzeGermlineVariants(sampleMetadata.tumorSampleId(), bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
+                analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(), bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
@@ -84,7 +84,7 @@ class AnalysedPatientReporter {
                         reportData.driverGeneView(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
-                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleId()));
+                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()));
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
@@ -97,28 +97,30 @@ class AnalysedPatientReporter {
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
         List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
-        AnalysedPatientReport report = ImmutableAnalysedPatientReport.of(sampleReport,
-                copyNumberAnalysis.hasReliablePurityFit(),
-                copyNumberAnalysis.purity(),
-                copyNumberAnalysis.ploidy(),
-                clinicalSummary,
-                nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()),
-                ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems),
-                nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()),
-                reportableVariants,
-                somaticVariantAnalysis.microsatelliteIndelsPerMb(),
-                somaticVariantAnalysis.tumorMutationalLoad(),
-                somaticVariantAnalysis.tumorMutationalBurden(),
-                chordAnalysis,
-                copyNumberAnalysis.reportableGainsAndLosses(),
-                svAnalysis.reportableFusions(),
-                svAnalysis.reportableDisruptions(),
-                circosFile,
-                Optional.ofNullable(comments),
-                Optional.ofNullable(correctTitle),
-                reportData.signaturePath(),
-                reportData.logoRVAPath(),
-                reportData.logoCompanyPath());
+        AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .hasReliablePurityFit(copyNumberAnalysis.hasReliablePurityFit())
+                .impliedPurity(copyNumberAnalysis.purity())
+                .averageTumorPloidy(copyNumberAnalysis.ploidy())
+                .clinicalSummary(clinicalSummary)
+                .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
+                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
+                .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
+                .reportableVariants(reportableVariants)
+                .microsatelliteIndelsPerMb(somaticVariantAnalysis.microsatelliteIndelsPerMb())
+                .tumorMutationalLoad(somaticVariantAnalysis.tumorMutationalLoad())
+                .tumorMutationalBurden(somaticVariantAnalysis.tumorMutationalBurden())
+                .chordAnalysis(chordAnalysis)
+                .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
+                .geneFusions(svAnalysis.reportableFusions())
+                .geneDisruptions(svAnalysis.reportableDisruptions())
+                .circosPath(circosFile)
+                .comments(Optional.ofNullable(comments))
+                .isCorrectedReport(correctedReport)
+                .signaturePath(reportData.signaturePath())
+                .logoRVAPath(reportData.logoRVAPath())
+                .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
 
         printReportState(report);
 
@@ -157,7 +159,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sample, @Nullable String bachelorCsv,
+    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @Nullable String bachelorCsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis) throws IOException {
         if (bachelorCsv == null) {
             LOGGER.info("Skipping germline analysis - No bachelor CSV passed. Presumably no pathogenic germline variants found.");
@@ -168,7 +170,7 @@ class AnalysedPatientReporter {
                 BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
 
-        LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sample);
+        LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();

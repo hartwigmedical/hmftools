@@ -10,7 +10,7 @@
 
     <artifactId>strelka-post-process</artifactId>
     <packaging>jar</packaging>
-    <version>1.6</version>
+    <version>${strelka-post-process.version}</version>
     <name>HMF Tools - Strelka Post Process</name>
 
     <dependencies>

@@ -59,7 +59,7 @@ abstract class LimsJsonSampleData {
     public abstract String pathologyTumorPercentage();
 
     @NotNull
-    @SerializedName("dna_conc")
+    @SerializedName("conc")
     public abstract String dnaConcentration();
 
     @NotNull
@@ -84,11 +84,6 @@ abstract class LimsJsonSampleData {
     @Nullable
     @SerializedName("germline_findings")
     public abstract String germlineReportingChoice();
-
-    // Lab remarks is an optional field in LIMS
-    @Nullable
-    @SerializedName("lab_remarks")
-    public abstract String labRemarks();
 
     @NotNull
     @SerializedName("lab_sop_versions")

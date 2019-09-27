@@ -20,7 +20,9 @@ import org.junit.Test;
 
 public class LimsTest {
 
-    private static final String SAMPLE = "CPCT02991111T";
+    private static final String REF_SAMPLE_BARCODE = "FR1234";
+    private static final String TUMOR_SAMPLE_BARCODE = "FR5678";
+    private static final String TUMOR_SAMPLE_ID = "CPCT02991111T";
     private static final String SUBMISSION = "ABCDEF123";
 
     @Test
@@ -35,23 +37,19 @@ public class LimsTest {
         final String projectName = "projectX";
         final String requesterEmail = "henk@hmf.nl";
         final String requesterName = "henk";
-        final String refBarcode = "A123";
-        final String tumorBarcode = "T456";
-        final String labRemarks = "CPCT WIDE project";
         final String hospitalPatientId = "Henkie";
         final String hospitalPathologySampleId = "Henkie's sample";
 
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
+        LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID)
                 .patientId(patientId)
                 .arrivalDate(arrivalDate)
                 .samplingDate(samplingDate)
                 .dnaConcentration(dnaConcentration)
                 .primaryTumor(primaryTumor)
                 .labSopVersions(labSopVersions)
-                .labRemarks(labRemarks)
                 .submission(SUBMISSION)
-                .refBarcode(refBarcode)
-                .tumorBarcode(tumorBarcode)
+                .refBarcode(REF_SAMPLE_BARCODE)
+                .tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .requesterEmail(requesterEmail)
                 .requesterName(requesterName)
                 .shallowSeq("1")
@@ -60,40 +58,41 @@ public class LimsTest {
                 .hospitalPathologySampleId(hospitalPathologySampleId)
                 .build();
 
-        final LimsJsonSubmissionData submissionData =
+        LimsJsonSubmissionData submissionData =
                 ImmutableLimsJsonSubmissionData.builder().submission(SUBMISSION).projectName(projectName).build();
 
-        final LimsShallowSeqData shallowSeqData =
-                ImmutableLimsShallowSeqData.builder().sampleId(SAMPLE).purityShallowSeq(purityShallowSeq).build();
+        LimsShallowSeqData shallowSeqData =
+                ImmutableLimsShallowSeqData.builder().sampleId(TUMOR_SAMPLE_ID).purityShallowSeq(purityShallowSeq).build();
 
-        final Lims lims = buildFullTestLims(sampleData, submissionData, shallowSeqData);
+        Lims lims = buildFullTestLims(sampleData, submissionData, shallowSeqData);
 
-        assertEquals(1, lims.sampleCount());
-        assertFalse(lims.confirmedToHaveNoSamplingDate(SAMPLE));
+        assertEquals(1, lims.sampleBarcodeCount());
+        assertEquals(1, lims.sampleBarcodes().size());
+        assertFalse(lims.confirmedToHaveNoSamplingDate(TUMOR_SAMPLE_ID));
 
-        assertEquals(patientId, lims.patientId(SAMPLE));
-        assertEquals("N/A", lims.refBarcode(SAMPLE));
-        assertEquals("N/A", lims.tumorBarcode(SAMPLE));
-        assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(SAMPLE));
-        assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(SAMPLE));
+        lims.validateSampleBarcodeCombination(REF_SAMPLE_BARCODE, Strings.EMPTY, TUMOR_SAMPLE_BARCODE, TUMOR_SAMPLE_ID);
+        assertEquals(patientId, lims.patientId(TUMOR_SAMPLE_BARCODE));
+        assertEquals(TUMOR_SAMPLE_ID, lims.sampleId(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsTestUtil.toDate(samplingDate), lims.samplingDate(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsTestUtil.toDate(arrivalDate), lims.arrivalDate(TUMOR_SAMPLE_BARCODE, TUMOR_SAMPLE_ID));
 
-        assertEquals(SUBMISSION, lims.submissionId(SAMPLE));
-        assertEquals(projectName, lims.projectName(SAMPLE));
-        assertEquals(requesterEmail, lims.requesterEmail(SAMPLE));
-        assertEquals(requesterName, lims.requesterName(SAMPLE));
+        assertEquals(SUBMISSION, lims.submissionId(TUMOR_SAMPLE_BARCODE));
+        assertEquals(projectName, lims.projectName(TUMOR_SAMPLE_BARCODE));
+        assertEquals(requesterEmail, lims.requesterEmail(TUMOR_SAMPLE_BARCODE));
+        assertEquals(requesterName, lims.requesterName(TUMOR_SAMPLE_BARCODE));
 
-        Integer dnaAmount = lims.dnaNanograms(SAMPLE);
+        Integer dnaAmount = lims.dnaNanograms(TUMOR_SAMPLE_BARCODE);
         assertNotNull(dnaAmount);
         assertEquals(500L, (int) dnaAmount);
 
-        assertEquals("71%", lims.purityShallowSeq(SAMPLE));
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(SAMPLE));
-        assertEquals(primaryTumor, lims.primaryTumor(SAMPLE));
-        assertEquals(labSopVersions, lims.labProcedures(SAMPLE));
+        assertEquals("71%", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
+        assertEquals(primaryTumor, lims.primaryTumor(TUMOR_SAMPLE_BARCODE));
+        assertEquals(labSopVersions, lims.labProcedures(TUMOR_SAMPLE_BARCODE));
 
-        assertEquals(hospitalPatientId, lims.hospitalPatientId(SAMPLE));
-        assertEquals(hospitalPathologySampleId, lims.hospitalPathologySampleId(SAMPLE));
-        assertEquals(LimsGermlineReportingChoice.UNKNOWN, lims.germlineReportingChoice(SAMPLE));
+        assertEquals(hospitalPatientId, lims.hospitalPatientId(TUMOR_SAMPLE_BARCODE));
+        assertEquals(hospitalPathologySampleId, lims.hospitalPathologySampleId(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsGermlineReportingChoice.UNKNOWN, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
@@ -101,10 +100,10 @@ public class LimsTest {
         Lims lims = LimsFactory.empty();
         String doesNotExistSample = "DoesNotExist";
 
-        assertNull(lims.arrivalDate(doesNotExistSample));
+        lims.validateSampleBarcodeCombination(doesNotExistSample, doesNotExistSample, doesNotExistSample, doesNotExistSample);
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.patientId(doesNotExistSample));
+        assertNull(lims.arrivalDate(doesNotExistSample, doesNotExistSample));
         assertNull(lims.samplingDate(doesNotExistSample));
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.refBarcode(doesNotExistSample));
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.tumorBarcode(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.requesterName(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.requesterEmail(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.projectName(doesNotExistSample));
@@ -113,8 +112,8 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.purityShallowSeq(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.primaryTumor(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(doesNotExistSample));
-        assertEquals(Lims.NOT_KNOWN_STRING, lims.hospitalPatientId(doesNotExistSample));
-        assertEquals(Lims.NOT_KNOWN_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
         assertEquals(LimsGermlineReportingChoice.UNKNOWN, lims.germlineReportingChoice(doesNotExistSample));
     }
 
@@ -122,14 +121,15 @@ public class LimsTest {
     public void fallBackOnPreLIMSArrivalDateWorks() {
         final LocalDate date = LimsTestUtil.toDate("2017-10-03");
 
-        final Lims lims = buildTestLimsWithPreLIMSArrivalDateForSample(SAMPLE, date);
+        final Lims lims = buildTestLimsWithPreLIMSArrivalDateForSample(TUMOR_SAMPLE_ID, date);
 
-        assertEquals(date, lims.arrivalDate(SAMPLE));
+        assertEquals(date, lims.arrivalDate("DoesNotExist", TUMOR_SAMPLE_ID));
     }
 
     @Test
     public void invalidDataYieldsNullOrNA() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE)
+        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID)
+                .tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .arrivalDate("IsNotADate")
                 .samplingDate(null)
                 .dnaConcentration("IsNotADNAConcentration")
@@ -139,82 +139,88 @@ public class LimsTest {
 
         final Lims lims = buildTestLimsWithSample(sampleData);
 
-        assertEquals(1, lims.sampleCount());
+        assertEquals(1, lims.sampleBarcodeCount());
 
-        assertNull(lims.arrivalDate(SAMPLE));
-        assertNull(lims.samplingDate(SAMPLE));
-        assertNull(lims.dnaNanograms(SAMPLE));
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.pathologyTumorPercentage(SAMPLE));
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(SAMPLE));
+        assertNull(lims.arrivalDate(TUMOR_SAMPLE_BARCODE, TUMOR_SAMPLE_ID));
+        assertNull(lims.samplingDate(TUMOR_SAMPLE_BARCODE));
+        assertNull(lims.dnaNanograms(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
     public void noPathologyTumorPercentageDeterminedForShallowSeq() {
-        final LimsJsonSampleData sampleData1 = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("1").build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
 
-        Lims lims1 = buildTestLimsWithSample(sampleData1);
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims1.pathologyTumorPercentage(SAMPLE));
-
-        final LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().sampleId(SAMPLE).labRemarks("ShallowSeq").build();
-
-        Lims lims2 = buildTestLimsWithSample(sampleData2);
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims2.pathologyTumorPercentage(SAMPLE));
+        Lims lims = buildTestLimsWithSample(sampleData);
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
     public void missingOrMalformedShallowSeqDataForSampleYieldsNA() {
-        final LimsJsonSampleData sampleData1 = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("1").build();
+        final LimsJsonSampleData sampleData1 =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
 
         Lims lims1 = buildTestLimsWithSample(sampleData1);
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims1.purityShallowSeq(SAMPLE));
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims1.pathologyTumorPercentage(SAMPLE));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims1.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
 
-        final LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("1").build();
+        final LimsJsonSampleData sampleData2 =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
         Lims lims2 = buildTestLimsWithSampleAndShallowSeq(sampleData2, "NotANumber");
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.purityShallowSeq(SAMPLE));
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims2.pathologyTumorPercentage(SAMPLE));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims2.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
     public void canRetrievePathologyPercentageForSample() {
-        final LimsJsonSampleData sampleData1 =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("0").pathologyTumorPercentage("70").build();
+        final LimsJsonSampleData sampleData1 = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId(TUMOR_SAMPLE_ID)
+                .shallowSeq("0")
+                .pathologyTumorPercentage("70")
+                .build();
 
         Lims lims1 = buildTestLimsWithSample(sampleData1);
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims1.purityShallowSeq(SAMPLE));
-        assertEquals("70%", lims1.pathologyTumorPercentage(SAMPLE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals("70%", lims1.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
 
-        final LimsJsonSampleData sampleData2 =
-                createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("0").pathologyTumorPercentage("NotANumber").build();
+        final LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId(TUMOR_SAMPLE_ID)
+                .shallowSeq("0")
+                .pathologyTumorPercentage("NotANumber")
+                .build();
 
         Lims lims2 = buildTestLimsWithSample(sampleData2);
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims2.purityShallowSeq(SAMPLE));
-        assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.pathologyTumorPercentage(SAMPLE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims2.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
     public void canRetrieveShallowSeqPurityForSample() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("1").build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2");
-        assertEquals("20%", lims.purityShallowSeq(SAMPLE));
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(SAMPLE));
+        assertEquals("20%", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
     public void canRetrieveShallowSeqBelowDetectionLimitForSample() {
-        final LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(SAMPLE).shallowSeq("1").build();
+        final LimsJsonSampleData sampleData =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
-        assertEquals("below detection threshold", lims.purityShallowSeq(SAMPLE));
-        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(SAMPLE));
+        assertEquals("below detection threshold", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
+        assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
 
     @NotNull
-    private static Lims buildFullTestLims(@NotNull final LimsJsonSampleData sampleData,
-            @NotNull final LimsJsonSubmissionData submissionData, @NotNull LimsShallowSeqData shallowSeqData) {
-        Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
-        dataPerSample.put(sampleData.sampleId(), sampleData);
+    private static Lims buildFullTestLims(@NotNull LimsJsonSampleData sampleData, @NotNull LimsJsonSubmissionData submissionData,
+            @NotNull LimsShallowSeqData shallowSeqData) {
+        Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
+        dataPerSampleBarcode.put(sampleData.tumorBarcode(), sampleData);
 
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         dataPerSubmission.put(submissionData.submission(), submissionData);
@@ -225,26 +231,25 @@ public class LimsTest {
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
         shallowSeqDataPerSample.put(shallowSeqData.sampleId(), shallowSeqData);
 
-        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
+        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
 
     @NotNull
-    private static Lims buildTestLimsWithSample(@NotNull final LimsJsonSampleData sampleData) {
-        Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
-        dataPerSample.put(sampleData.sampleId(), sampleData);
+    private static Lims buildTestLimsWithSample(@NotNull LimsJsonSampleData sampleData) {
+        Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
+        dataPerSampleBarcode.put(sampleData.tumorBarcode(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
         Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
+        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 
     @NotNull
-    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull final LimsJsonSampleData sampleData,
-            @NotNull String shallowSeqPurity) {
-        Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
-        dataPerSample.put(sampleData.sampleId(), sampleData);
+    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull LimsJsonSampleData sampleData, @NotNull String shallowSeqPurity) {
+        Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
+        dataPerSampleBarcode.put(sampleData.tumorBarcode(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
         Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
@@ -252,19 +257,19 @@ public class LimsTest {
 
         shallowSeqDataPerSample.put(sampleData.sampleId(), ImmutableLimsShallowSeqData.of(sampleData.sampleId(), shallowSeqPurity));
 
-        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
+        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 
     @NotNull
-    private static Lims buildTestLimsWithPreLIMSArrivalDateForSample(@NotNull final String sample, @NotNull final LocalDate date) {
-        final Map<String, LimsJsonSampleData> dataPerSample = Maps.newHashMap();
+    private static Lims buildTestLimsWithPreLIMSArrivalDateForSample(@NotNull String sampleId, @NotNull LocalDate date) {
+        final Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
         final Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         final Map<String, LocalDate> preLimsArrivalDates = Maps.newHashMap();
-        preLimsArrivalDates.put(sample, date);
+        preLimsArrivalDates.put(sampleId, date);
 
         Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        return new Lims(dataPerSample, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
+        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 }

@@ -11,7 +11,7 @@
 
     <artifactId>bachelor</artifactId>
     <packaging>jar</packaging>
-    <version>${hmf-bachelor.version}</version>
+    <version>${bachelor.version}</version>
     <name>HMF Tools - Bachelor</name>
 
     <dependencies>
