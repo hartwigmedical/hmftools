@@ -17,42 +17,37 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvSimulator
 {
-    private SvSimShattering mSimShattering;
-
-    private static String SHATTERING_SEG_COUNT = "sim_sh_seg_count";
-    private static String SHATTERING_ITERATIONS = "sim_sh_iterations";
+    private final ShatteringSim mSimShattering;
 
     private static final Logger LOGGER = LogManager.getLogger(SvSimulator.class);
 
-    public SvSimulator()
+    public SvSimulator(final CommandLine cmd, final String outputDir)
     {
-        mSimShattering = new SvSimShattering();
-    }
+        final ShatteringConfig config = new ShatteringConfig(cmd);
 
-    public void loadConfig(final CommandLine cmd, final String outputDir)
-    {
-        mSimShattering.setOutputDir(outputDir);
-
-        int segCount = Integer.parseInt(cmd.getOptionValue(SHATTERING_SEG_COUNT, "1"));
-        int iterations = Integer.parseInt(cmd.getOptionValue(SHATTERING_ITERATIONS, "1"));
-        mSimShattering.initialise(segCount, iterations);
+        if(config.isValid())
+            mSimShattering = new ShatteringSim(config, outputDir);
+        else
+            mSimShattering = null;
     }
 
     public void run()
     {
         LOGGER.info("starting simulations");
-        mSimShattering.run();
-        mSimShattering.logResults();
-        mSimShattering.close();
+
+        if(mSimShattering != null)
+        {
+            mSimShattering.run();
+        }
+
         LOGGER.info("simulations complete");
     }
 
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(SHATTERING_SEG_COUNT, true, "Shattering segments");
-        options.addOption(SHATTERING_ITERATIONS, true, "Shattering iterations");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        ShatteringConfig.addCommandLineOptions(options);
         return options;
     }
 
@@ -74,8 +69,8 @@ public class SvSimulator
         }
 
         String outputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
-        SvSimulator simulator = new SvSimulator();
-        simulator.loadConfig(cmd, outputDir);
+
+        SvSimulator simulator = new SvSimulator(cmd, outputDir);
         simulator.run();
     }
 

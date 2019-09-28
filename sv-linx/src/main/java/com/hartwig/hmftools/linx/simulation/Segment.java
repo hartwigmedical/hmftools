@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.linx.simulation;
 
-public class SvSimSegment
+public class Segment
 {
     public final int Id;
     public final boolean HasStart;
     public final boolean HasEnd;
 
-    private SvSimSegment mStartLink;
-    private SvSimSegment mEndLink;
+    private Segment mStartLink;
+    private Segment mEndLink;
 
-    public SvSimSegment(int id, boolean hasStart, boolean hasEnd)
+    public Segment(int id, boolean hasStart, boolean hasEnd)
     {
         Id = id;
         mStartLink = null;
@@ -30,9 +30,9 @@ public class SvSimSegment
         return isStart ? HasStart && mStartLink == null: HasEnd && mEndLink == null;
     }
 
-    public SvSimSegment getLink(boolean isStart) { return isStart ? mStartLink : mEndLink; }
+    public Segment getLink(boolean isStart) { return isStart ? mStartLink : mEndLink; }
 
-    public void setLink(final SvSimSegment link, boolean isStart)
+    public void setLink(final Segment link, boolean isStart)
     {
         if(isStart)
             mStartLink = link;

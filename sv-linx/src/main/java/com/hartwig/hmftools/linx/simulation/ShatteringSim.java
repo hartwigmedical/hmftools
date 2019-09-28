@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.simulation;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
@@ -15,81 +16,78 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SvSimShattering
+public class ShatteringSim
 {
-    private static final Logger LOGGER = LogManager.getLogger(SvSimShattering.class);
-
     // config
-    private int mIterations;
-    private int mSegmentCount;
-    private List<SvSimSegment> mSegments;
-    private int mRemainingLinkCount;
-    private String mOutputDir;
+    private final ShatteringConfig mConfig;
+    private final String mOutputDir;
 
     // state and results
+    private final List<Segment> mSegments;
+    private int mSegmentCount;
+    private int mRemainingLinkCount;
     private Random mRandom;
     private int mRunIndex;
     private boolean mValidRun;
-    private int[] mLatestResults;
-
+    private ShatteringResult mLatestResult;
 
     private BufferedWriter mResultsWriter;
 
     // testing
-    private List<Integer> mSpecifiedOrder;
+    private final List<Integer> mSpecifiedOrder;
 
-    public SvSimShattering()
+    private static final Logger LOGGER = LogManager.getLogger(ShatteringSim.class);
+
+    public ShatteringSim(final ShatteringConfig config, final String outputDir)
     {
+        mConfig = config;
+        mOutputDir = outputDir;
+        initialiseWriter();
+
         mSegments = Lists.newArrayList();
+        mSegmentCount = 0;
         mRemainingLinkCount = 0;
         mValidRun = true;
-        mOutputDir = "";
-        mResultsWriter = null;
-        mLatestResults = new int[SS_RESULTS_ADJACENT_SEGS+1];
+        mLatestResult = null;
 
         mRandom = new Random(123456);
         mSpecifiedOrder = Lists.newArrayList();
     }
 
-    public void setOutputDir(final String dir)
-    {
-        mOutputDir = dir;
-        initialiseWriter();
-    }
-
     public boolean validRun() { return mValidRun; }
-
-    public void initialise(int segmentCount, int iterations)
-    {
-        mRunIndex = 0;
-        mIterations = iterations;
-        mSegments.clear();
-        mSegmentCount = segmentCount;
-        mValidRun = true;
-
-        mSegments.add(new SvSimSegment(0, false, true));
-
-        for(int i = 0; i < mSegmentCount; ++i)
-        {
-            mSegments.add(new SvSimSegment(i+1, true, true));
-        }
-
-        mSegments.add(new SvSimSegment(mSegments.size(), true, false));
-    }
 
     public void run()
     {
-        for(int i = 0; i < mIterations; ++i)
+        for(mSegmentCount = mConfig.SegmentCountMin; mSegmentCount <= mConfig.SegmentCountMax; ++mSegmentCount)
+        {
+            LOGGER.info("run with segmentCount({})", mSegmentCount);
+
+            performRun();
+
+            if(!mValidRun)
+                break;
+        }
+
+        close();
+    }
+
+    private void performRun()
+    {
+        initialiseState();
+
+        for(int i = 0; i < mConfig.Iterations; ++i)
         {
             runIteration();
             updateResults();
-            logResults();
+            writeResults();
             ++mRunIndex;
 
-            if(mIterations > 10000 && (i % 10000) == 1)
+            if(mConfig.Iterations > 10000 && (i % 10000) == 1)
             {
                 LOGGER.info("run index {}", i);
             }
@@ -97,16 +95,33 @@ public class SvSimShattering
             if(!mValidRun)
                 break;
         }
+
+    }
+
+    private void initialiseState()
+    {
+        mRunIndex = 0;
+        mSegments.clear();
+        mValidRun = true;
+
+        // create a set of segments with 2 unconnected ends, and 2 bounding segments with a single exposed end
+        mSegments.add(new Segment(0, false, true));
+
+        for(int i = 0; i < mSegmentCount; ++i)
+        {
+            mSegments.add(new Segment(i+1, true, true));
+        }
+
+        mSegments.add(new Segment(mSegments.size(), true, false));
     }
 
     private void clearRunState()
     {
-        mRemainingLinkCount = (mSegmentCount + 1 ) * 2;
+        int breakendCount = mSegmentCount * 2 + 2; // each segment has 2 ends plus the start and end bounding ends
+        mRemainingLinkCount = breakendCount;
+
         mSegments.stream().forEach(x -> x.clearLinks());
     }
-
-    // private static int SPEC_RUN_INDEX = -1;
-    private static int SPEC_RUN_INDEX = 23;
 
     private void runIteration()
     {
@@ -114,35 +129,72 @@ public class SvSimShattering
 
         boolean foundLink = true;
 
-        if(mRunIndex == SPEC_RUN_INDEX)
-        {
-            LOGGER.debug("spec index({})", mRunIndex);
-        }
-
         while(mRemainingLinkCount > 0 && foundLink)
         {
+            // randomly find the next 2 ends to connect
             int[] nextIndices = getNextIndexPair(mRemainingLinkCount);
             int nextIndex1 = nextIndices[0];
             int nextIndex2 = nextIndices[1];
-            int index = 0;
 
-            SvSimSegment nextSegment1 = null;
+            Segment nextSegment1 = null;
             boolean seg1LinkOnStart = false;
-            SvSimSegment nextSegment2 = null;
+            Segment nextSegment2 = null;
             boolean seg2LinkOnStart = false;
 
             foundLink = false;
 
+            // use these randomly selected indices to find the next segments to be linked
+            int unlinkedIndex = 0;
+            for(int i = 0; i < mSegments.size(); ++i)
+            {
+                Segment segment = mSegments.get(i);
+
+                if (segment.fullyLinked())
+                    continue;
+
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    boolean isStart = isStart(be);
+
+                    if (!segment.isLinkOpen(isStart))
+                        continue;
+
+                    if (nextSegment1 == null && unlinkedIndex >= nextIndex1)
+                    {
+                        nextSegment1 = segment;
+                        seg1LinkOnStart = isStart;
+                    }
+                    else if (nextSegment2 == null && unlinkedIndex >= nextIndex2)
+                    {
+                        nextSegment2 = segment;
+                        seg2LinkOnStart = isStart;
+                    }
+
+                    ++unlinkedIndex;
+                }
+
+                if (nextSegment1 != null && nextSegment2 != null)
+                {
+                    foundLink = true;
+                    nextSegment1.setLink(nextSegment2, seg1LinkOnStart);
+                    nextSegment2.setLink(nextSegment1, seg2LinkOnStart);
+                    mRemainingLinkCount -= 2;
+                    break;
+                }
+            }
+
+            /*
             int segIndex = 0;
             for(; segIndex < mSegments.size(); ++segIndex)
             {
-                SvSimSegment segment = mSegments.get(segIndex);
+                Segment segment = mSegments.get(segIndex);
 
                 if(!segment.fullyLinked())
                 {
                     for (int be = SE_START; be <= SE_END; ++be)
                     {
                         boolean isStart = isStart(be);
+
                         if (!segment.isLinkOpen(isStart))
                             continue;
 
@@ -176,6 +228,7 @@ public class SvSimShattering
                     segIndex = 0;
                 }
             }
+            */
 
             if(!foundLink)
             {
@@ -192,18 +245,18 @@ public class SvSimShattering
 
     private boolean moreLinksPossible()
     {
-        SvSimSegment first = mSegments.get(0);
+        Segment first = mSegments.get(0);
 
         if(first.isLinkOpen(false))
             return true;
 
-        SvSimSegment last = mSegments.get(mSegments.size()-1);
+        Segment last = mSegments.get(mSegments.size()-1);
 
         if(last.isLinkOpen(true))
             return true;
 
         // see a path can be traced from first to last
-        SvSimSegment currentSegment = first;
+        Segment currentSegment = first;
         boolean nextLinkOnStart = false;
 
         int iterations = 0;
@@ -211,7 +264,7 @@ public class SvSimShattering
         while(true)
         {
             // check other side
-            SvSimSegment nextSegment = currentSegment.getLink(nextLinkOnStart);
+            Segment nextSegment = currentSegment.getLink(nextLinkOnStart);
 
             if(nextSegment == null)
                 return true;
@@ -234,13 +287,6 @@ public class SvSimShattering
         }
     }
 
-    public static int SS_RESULTS_TEST_COUNT = 0;
-    public static int SS_RESULTS_TEST_RUN = 1;
-    public static int SS_RESULTS_SEGMENTS = 2;
-    public static int SS_RESULTS_SEGS_LINKED = 3;
-    public static int SS_RESULTS_EXACT_MATCHES = 4;
-    public static int SS_RESULTS_ADJACENT_SEGS = 5;
-
     private void updateResults()
     {
         /* record the following
@@ -248,15 +294,14 @@ public class SvSimShattering
             - number of links used
             - number of adjacent links preserved
         */
-        mLatestResults = new int[SS_RESULTS_ADJACENT_SEGS+1];
 
         int segmentsLinked = 0;
         int exactMatchCount = 0;
 
-        SvSimSegment first = mSegments.get(0);
-        SvSimSegment last = mSegments.get(mSegments.size()-1);
+        Segment first = mSegments.get(0);
+        Segment last = mSegments.get(mSegments.size()-1);
 
-        SvSimSegment currentSegment = first;
+        Segment currentSegment = first;
         boolean nextLinkOnStart = false;
 
         List<Integer> linkedIndices = Lists.newLinkedList();
@@ -266,7 +311,7 @@ public class SvSimShattering
 
         while(true)
         {
-            SvSimSegment nextSegment = currentSegment.getLink(nextLinkOnStart);
+            Segment nextSegment = currentSegment.getLink(nextLinkOnStart);
 
             if(nextSegment == null)
             {
@@ -316,12 +361,14 @@ public class SvSimShattering
                 ++adjacentPairs;
         }
 
-        mLatestResults[SS_RESULTS_TEST_COUNT] = mIterations;
-        mLatestResults[SS_RESULTS_TEST_RUN] = mRunIndex;
-        mLatestResults[SS_RESULTS_SEGMENTS] = mSegmentCount;
-        mLatestResults[SS_RESULTS_SEGS_LINKED] = segmentsLinked;
-        mLatestResults[SS_RESULTS_EXACT_MATCHES] = exactMatchCount;
-        mLatestResults[SS_RESULTS_ADJACENT_SEGS] = adjacentPairs;
+        mLatestResult = ImmutableShatteringResult.builder()
+                .testCount(mConfig.Iterations)
+                .runIndex(mRunIndex)
+                .segments(mSegmentCount)
+                .linkedSegments(segmentsLinked)
+                .exactMatches(exactMatchCount)
+                .adjacentSegments(adjacentPairs)
+                .build();
 
         LOGGER.debug("run({}) results: links({}) exact({}) adj({})", mRunIndex, segmentsLinked, exactMatchCount, adjacentPairs);
     }
@@ -366,18 +413,16 @@ public class SvSimShattering
         return indices;
     }
 
-    public final int[] getLatestResults()
+    public final ShatteringResult getLatestResults()
     {
-        return mLatestResults;
-    }
-
-    public void logResults()
-    {
-        writeResults();
+        return mLatestResult;
     }
 
     private void initialiseWriter()
     {
+        if(mOutputDir.isEmpty())
+            return;
+        
         try
         {
             String outputFileName = mOutputDir + "SIM_RESULTS.csv";
@@ -385,7 +430,7 @@ public class SvSimShattering
             mResultsWriter = createBufferedWriter(outputFileName, false);
 
             // definitional fields
-            mResultsWriter.write("TestCount,TestRun,SegCount,SegsLinked,ExactMatches,AdjacentSegs");
+            mResultsWriter.write("TestIterations,TestRun,SegCount,SegsLinked,ExactMatches,AdjacentSegs");
 
             mResultsWriter.newLine();
         }
@@ -403,9 +448,8 @@ public class SvSimShattering
         try
         {
             mResultsWriter.write(String.format("%d,%d,%d,%d,%d,%d",
-                    mLatestResults[SS_RESULTS_TEST_COUNT], mLatestResults[SS_RESULTS_TEST_RUN],
-                    mLatestResults[SS_RESULTS_SEGMENTS], mLatestResults[SS_RESULTS_SEGS_LINKED],
-                    mLatestResults[SS_RESULTS_EXACT_MATCHES], mLatestResults[SS_RESULTS_ADJACENT_SEGS]));
+                    mLatestResult.testCount(), mLatestResult.runIndex(), mLatestResult.segments(),
+                    mLatestResult.linkedSegments(), mLatestResult.exactMatches(), mLatestResult.adjacentSegments()));
 
             mResultsWriter.newLine();
         }

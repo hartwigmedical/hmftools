@@ -1,18 +1,14 @@
 package com.hartwig.hmftools.linx.misc;
 
-import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_ADJACENT_SEGS;
-import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_EXACT_MATCHES;
-import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_SEGMENTS;
-import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_SEGS_LINKED;
-import static com.hartwig.hmftools.linx.simulation.SvSimShattering.SS_RESULTS_TEST_RUN;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.simulation.SvSimShattering;
+import com.hartwig.hmftools.linx.simulation.ShatteringConfig;
+import com.hartwig.hmftools.linx.simulation.ShatteringResult;
+import com.hartwig.hmftools.linx.simulation.ShatteringSim;
 
 import org.junit.Test;
 
@@ -21,9 +17,10 @@ public class SimulationTest
     @Test
     public void testShatteringSim()
     {
-        SvSimShattering shatteringSim = new SvSimShattering();
+        ShatteringConfig config = new ShatteringConfig(4, 1);
+        ShatteringSim shatteringSim = new ShatteringSim(config, "");
 
-        shatteringSim.initialise(4, 1);
+        // shatteringSim.initialise(4, 1);
 
         // first test all segments added first to last
 
@@ -45,13 +42,13 @@ public class SimulationTest
         shatteringSim.run();
         assertTrue(shatteringSim.validRun());
 
-        int[] results = shatteringSim.getLatestResults();
+        ShatteringResult result = shatteringSim.getLatestResults();
 
         // assertEquals(0, results[SS_RESULTS_TEST_RUN]);
-        assertEquals(4, results[SS_RESULTS_SEGMENTS]);
-        assertEquals(4, results[SS_RESULTS_SEGS_LINKED]);
-        assertEquals(5, results[SS_RESULTS_EXACT_MATCHES]);
-        assertEquals(5, results[SS_RESULTS_ADJACENT_SEGS]);
+        assertEquals(4, result.segments());
+        assertEquals(4, result.linkedSegments());
+        assertEquals(5, result.exactMatches());
+        assertEquals(5, result.adjacentSegments());
 
         // test all segments added last to first
 
@@ -73,13 +70,13 @@ public class SimulationTest
         shatteringSim.run();
         assertTrue(shatteringSim.validRun());
 
-        results = shatteringSim.getLatestResults();
+        result = shatteringSim.getLatestResults();
 
         // assertEquals(0, results[SS_RESULTS_TEST_RUN]);
-        assertEquals(4, results[SS_RESULTS_SEGMENTS]);
-        assertEquals(4, results[SS_RESULTS_SEGS_LINKED]);
-        assertEquals(5, results[SS_RESULTS_EXACT_MATCHES]);
-        assertEquals(5, results[SS_RESULTS_ADJACENT_SEGS]);
+        assertEquals(4, result.segments());
+        assertEquals(4, result.linkedSegments());
+        assertEquals(5, result.exactMatches());
+        assertEquals(5, result.adjacentSegments());
 
         // test only 2 segs added
         linkOrder.clear();
@@ -96,12 +93,12 @@ public class SimulationTest
         shatteringSim.run();
         assertTrue(shatteringSim.validRun());
 
-        results = shatteringSim.getLatestResults();
+        result = shatteringSim.getLatestResults();
 
-        assertEquals(4, results[SS_RESULTS_SEGMENTS]);
-        assertEquals(2, results[SS_RESULTS_SEGS_LINKED]);
-        assertEquals(0, results[SS_RESULTS_EXACT_MATCHES]);
-        assertEquals(1, results[SS_RESULTS_ADJACENT_SEGS]);
+        assertEquals(4, result.segments());
+        assertEquals(2, result.linkedSegments());
+        assertEquals(0, result.exactMatches());
+        assertEquals(1, result.adjacentSegments());
 
         // leave a single fully open link
         linkOrder.clear();
@@ -120,13 +117,10 @@ public class SimulationTest
         shatteringSim.run();
         assertTrue(shatteringSim.validRun());
 
-        results = shatteringSim.getLatestResults();
+        result = shatteringSim.getLatestResults();
 
-        // assertEquals(0, results[SS_RESULTS_TEST_RUN]);
-        assertEquals(3, results[SS_RESULTS_SEGS_LINKED]);
-        assertEquals(3, results[SS_RESULTS_EXACT_MATCHES]);
-        assertEquals(3, results[SS_RESULTS_ADJACENT_SEGS]);
-
-
+        assertEquals(3, result.linkedSegments());
+        assertEquals(3, result.exactMatches());
+        assertEquals(3, result.adjacentSegments());
     }
 }
