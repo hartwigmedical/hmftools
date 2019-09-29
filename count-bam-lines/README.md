@@ -16,6 +16,29 @@ sex chromosomes in males in the germline sample.
 
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
+## Installation
+
+To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
+COBALT also requires a GC profile. This is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl/).
+
+COBALT depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
+After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
+```
+    library(BiocManager)
+    install("copynumber")
+```
+
+COBALT requires Java 1.8+ and can be run with the minimum set of arguments as follows:
+
+```
+java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication \
+    -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
+    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
+    -output_dir /run_dir/cobalt \ 
+    -threads 16 \ 
+    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
+```
+
 ## R Dependencies
 Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
 
@@ -48,22 +71,6 @@ Argument | Default | Description
 threads | 4 | Number of threads to use
 min_quality | 10 | Min quality
 ref_genome | None | Path to the reference genome fasta file if using CRAM files
-
-## Example Usage
-
-```
-java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication \
-    -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
-    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
-    -output_dir /run_dir/cobalt \ 
-    -threads 16 \ 
-    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
-```
-
-Please note the PURPLE jar file also contains the COBALT source so may be used in place of the COBALT jar file in the example above, i.e.:
-```
-java -cp -Xmx8G purple.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication
-```
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -104,7 +111,7 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
-## Version History
+## Version History and Download Links
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.7)
   - Exit gracefully on exceptions
   - Changed file names and headers for better consistency with other HMF tools
