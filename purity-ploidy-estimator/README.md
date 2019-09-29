@@ -2,7 +2,7 @@
 # PURPLE
 
 PURPLE is a **pur**ity **pl**oidy **e**stimator. 
-It combines B-allele frequency (BAF), read depth ratios, somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
+It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../count-bam-lines), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
