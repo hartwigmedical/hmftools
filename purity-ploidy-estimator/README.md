@@ -35,11 +35,11 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [CIRCOS](#circos)
   + [Charts](#charts)
 * [Performance Characteristics](#performance-characteristics)
-* [Version History / Download Links](#version-history-/-download-links)
+* [Version History / Download Links](#version-history-and-download-links)
 
 ## Installation
 
-To install, download the latest compiled jar file from the [download links](#version-history-/-download-links). 
+To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 PURPLE also requires the same GC profile as used in COBALT (available from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl/) and a reference genome.
 While these are sufficient to run PURPLE there are a number of optional dependencies that provide additional functionality.
 
@@ -971,7 +971,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 4 | 1 | 3 | 4.38
 
 
-## Version History / Download Links
+## Version History and Download Links
 - Upcoming
   - Driver catalog written to DB
 - [2.34](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.34)
