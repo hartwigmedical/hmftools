@@ -18,8 +18,7 @@ Finally, the Bioconductor copy number package is used to generate segments from 
 
 ## Installation
 
-To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-COBALT also requires a GC profile. This is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl/).
+To install, download the latest compiled jar file from the [download links](#version-history-and-download-links) and the appropriate GC profile from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl/).
 
 COBALT depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
@@ -39,14 +38,6 @@ java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication 
     -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
 ```
 
-## R Dependencies
-Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
-
-This can be installed in R (3.5+) with the following commands:
-```
-    library(BiocManager)
-    install("copynumber")
-```
 
 ## Mandatory Arguments
 
