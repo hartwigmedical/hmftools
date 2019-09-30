@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,6 +48,19 @@ public class EvictingLinkedMap<K, V> {
         };
 
         return map.compute(key, internalRemapping);
+    }
+
+    public V computeIfAbsent(K key, Function<K, V> supplier) {
+        Function<K, V> internalSupplier = k -> {
+            V newValue = supplier.apply(k);
+            arrayDeque.addLast(new AbstractMap.SimpleEntry<>(key, newValue));
+            if (arrayDeque.size() > ACTUAL_CAPACITY) {
+                evict(1);
+            }
+            return newValue;
+        };
+
+        return map.computeIfAbsent(key, internalSupplier);
     }
 
     public void evictAll() {

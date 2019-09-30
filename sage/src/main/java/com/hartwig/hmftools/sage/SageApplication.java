@@ -18,11 +18,11 @@ import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.count.BaseDetails;
 import com.hartwig.hmftools.sage.count.ReadContextConsumer;
 import com.hartwig.hmftools.sage.count.ReadContextConsumerDispatcher;
 import com.hartwig.hmftools.sage.count.ReadContextCounter;
-import com.hartwig.hmftools.sage.evidence.VariantEvidence;
 import com.hartwig.hmftools.sage.task.SagePipeline;
 
 import org.apache.commons.cli.CommandLine;
@@ -79,7 +79,7 @@ public class SageApplication implements AutoCloseable {
 
         // Note: Turns out you need one samreaderfactory per thread!
 
-        List<Future<List<VariantEvidence>>> futures = Lists.newArrayList();
+        List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
 
         for (int j = 0; j < 6; j++) {
             int start = 1 + j * 1_000_000;
@@ -91,7 +91,7 @@ public class SageApplication implements AutoCloseable {
             futures.add(myThing.submit());
         }
 
-        for (Future<List<VariantEvidence>> future : futures) {
+        for (Future<List<List<AltContext>>> future : futures) {
 //            future.get().forEach(System.out::println);
             future.get().forEach(vcf::write);
         }

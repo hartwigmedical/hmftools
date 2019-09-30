@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.sage;
 
-import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
-import com.hartwig.hmftools.sage.evidence.SampleEvidence;
-import com.hartwig.hmftools.sage.evidence.VariantEvidence;
+import com.hartwig.hmftools.sage.context.AltContext;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -49,30 +47,36 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    public void write(@NotNull final VariantEvidence evidence) {
-        refContextEnrichment.accept(create(evidence));
+    public void write(@NotNull final List<AltContext> altContexts) {
+        refContextEnrichment.accept(create(altContexts));
     }
 
     @NotNull
-    private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final SampleEvidence evidence) {
+    private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
         return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
                 .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
                 .attribute("SDP", evidence.subprimeReadDepth())
+                .attribute("QUAL", new int[] { evidence.quality(), evidence.baseQuality(), evidence.mapQuality() })
+                .attribute("DIST", new int[] { evidence.avgRecordDistance(), evidence.avgAlignmentDistance() })
                 .alleles(alleles)
                 .make();
     }
 
     @NotNull
-    private VariantContext create(@NotNull final VariantEvidence evidence) {
+    private VariantContext create(@NotNull final List<AltContext> altContexts) {
+        assert (altContexts.size() > 1);
 
-        final Allele ref = Allele.create(evidence.ref(), true);
-        final Allele alt = Allele.create(evidence.alt(), false);
+        final AltContext normal = altContexts.get(0);
+        //        final AltContext firstTumor = altContexts.get(1);
+
+        final Allele ref = Allele.create(normal.ref(), true);
+        final Allele alt = Allele.create(normal.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
 
-        final List<Genotype> genotypes = Lists.newArrayList(createGenotype(alleles, evidence.normalEvidence()));
-        evidence.tumorEvidence().stream().map(x -> createGenotype(alleles, x)).forEach(genotypes::add);
+        final List<Genotype> genotypes = altContexts.stream().map(x -> createGenotype(alleles, x)).collect(Collectors.toList());
 
-        final VariantContextBuilder builder = new VariantContextBuilder().chr(evidence.chromosome()).start(evidence.position())
+        final VariantContextBuilder builder = new VariantContextBuilder().chr(normal.chromosome()).start(normal.position())
+
                 //                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, round(tumorEvidence.vaf()))
                 //                .attribute("MAP_Q", tumorEvidence.altMapQuality())
                 //                .attribute("MAP_BASE_Q", tumorEvidence.altMinQuality())
@@ -81,11 +85,10 @@ public class SageVCF implements AutoCloseable {
                 //                .attribute(READ_CONTEXT, tumorEvidence.readContext())
                 //                .attribute(READ_CONTEXT_COUNT, tumorEvidence.readContextCount())
                 //                .attribute(READ_CONTEXT_COUNT_OTHER, tumorEvidence.readContextCountOther())
-                                .computeEndFromAlleles(alleles, (int) evidence.position())
-                .source("SAGE").genotypes(genotypes).alleles(alleles);
+                .computeEndFromAlleles(alleles, (int) normal.position()).source("SAGE").genotypes(genotypes).alleles(alleles);
 
         final VariantContext context = builder.make();
-        //        context.getCommonInfo().setLog10PError(evidence.altQuality() / -10d);
+        //        context.getCommonInfo().setLog10PError(firstTumor.altQuality() / -10d);
         return context;
     }
 
@@ -109,13 +112,13 @@ public class SageVCF implements AutoCloseable {
                 "Subprime quality read depth"));
 
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
-        header.addMetaDataLine(new VCFInfoHeaderLine("MAP_Q", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("MAP_BASE_Q", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("AVG_DISTANCE_RECORD", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("AVG_DISTANCE_ALIGNMENT", UNBOUNDED, VCFHeaderLineType.Float, "TODO"));
+
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_COUNT, 1, VCFHeaderLineType.Integer, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_COUNT_OTHER, 1, VCFHeaderLineType.Integer, "TODO"));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Float, "[MinBaseMapQual, BaseQual, MapQual]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Float, "[AvgRecordDistance, AvgAlignmentDistance]"));
 
         return header;
     }
