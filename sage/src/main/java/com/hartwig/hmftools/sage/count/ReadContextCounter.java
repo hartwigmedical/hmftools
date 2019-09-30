@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.sage.count;
 
-public class ReadContextCount extends ReadContext {
+public class ReadContextCounter extends ReadContext {
 
     private int count;
 
-    public ReadContextCount(final ReadContext readContext) {
+    public ReadContextCounter(final ReadContext readContext) {
         super(readContext.readBypePosition, readContext.bytes);
         this.count = 0;
     }

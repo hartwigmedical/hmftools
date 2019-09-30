@@ -34,10 +34,6 @@ public class ReadContextConsumer implements GenomePosition, Consumer<SAMRecord> 
         return hotspot.position();
     }
 
-    public VariantHotspot hotspot() {
-        return hotspot;
-    }
-
     @NotNull
     public ReadContext readContext() {
         return readContext;
@@ -57,27 +53,28 @@ public class ReadContextConsumer implements GenomePosition, Consumer<SAMRecord> 
 
     @Override
     public void accept(final SAMRecord record) {
-
         if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
 
             byte[] readBases = record.getReadBases();
             for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
                 long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1); //TODO: Check + 1
+                final ReadContext refPositionContext = new ReadContext(readBasePosition, readBases);
+                accept(refPosition, refPositionContext);
+            }
+        }
+    }
 
-                final ReadContext newContext = new ReadContext(readBasePosition, readBases);
-                ReadContext.ReadContextMatch match = readContext.match(newContext);
-                if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
-                    if (refPosition == hotspot.position()) {
-                        if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                            full++;
-                        } else {
-                            partial++;
-                        }
-                    } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                        realigned++;
-                    }
+    public void accept(long refPosition, ReadContext refPositionContext) {
+        ReadContext.ReadContextMatch match = readContext.match(refPositionContext);
+        if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
+            if (refPosition == hotspot.position()) {
+                if (match.equals(ReadContext.ReadContextMatch.FULL)) {
+                    full++;
+                } else {
+                    partial++;
                 }
-
+            } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
+                realigned++;
             }
         }
     }

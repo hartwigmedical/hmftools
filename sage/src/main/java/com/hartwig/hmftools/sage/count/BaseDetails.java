@@ -25,7 +25,7 @@ public class BaseDetails implements Comparable<BaseDetails> {
 
     private int subprimeReadDepth;
 
-    private final Map<ReadContext, ReadContextCount> readContexts;
+    private final Map<ReadContext, ReadContextCounter> readContexts;
     private final List<ModifiableVariantHotspotEvidence> evidenceList;
 
     public BaseDetails(final String contig, final long position) {
@@ -54,21 +54,21 @@ public class BaseDetails implements Comparable<BaseDetails> {
     }
 
     @NotNull
-    public List<ReadContextCount> contexts(@NotNull final String alt) {
+    public List<ReadContextCounter> contexts(@NotNull final String alt) {
         return readContexts.values()
                 .stream()
                 .filter(x -> x.alt().equals(alt) && x.isComplete())
-                .sorted(Comparator.comparingInt(ReadContextCount::count).reversed())
+                .sorted(Comparator.comparingInt(ReadContextCounter::count).reversed())
                 .collect(Collectors.toList());
     }
 
     @NotNull
     private ModifiableVariantHotspotEvidence setCommonProperties(ModifiableVariantHotspotEvidence evidence) {
 
-        List<ReadContextCount> contexts = contexts(evidence.alt());
+        List<ReadContextCounter> contexts = contexts(evidence.alt());
         final String readContext = contexts.isEmpty() ? Strings.EMPTY : contexts.get(0).toString();
         final int readContextCount = contexts.isEmpty() ? 0 : contexts.get(0).count();
-        final int readContextCountOther = contexts.stream().skip(1).mapToInt(ReadContextCount::count).sum();
+        final int readContextCountOther = contexts.stream().skip(1).mapToInt(ReadContextCounter::count).sum();
 
         return evidence.setRefQuality(refQuality)
                 .setRefSupport(refSupport)
@@ -125,9 +125,9 @@ public class BaseDetails implements Comparable<BaseDetails> {
     }
 
     public void addReadContext(@NotNull final ReadContext readContext) {
-        readContexts.computeIfAbsent(readContext, ReadContextCount::new);
+        readContexts.computeIfAbsent(readContext, ReadContextCounter::new);
 
-        for (ReadContextCount count : readContexts.values()) {
+        for (ReadContextCounter count : readContexts.values()) {
             if (count.match(readContext) != ReadContext.ReadContextMatch.NONE) {
                 count.increment();
             }

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,7 +21,9 @@ import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.count.BaseDetails;
 import com.hartwig.hmftools.sage.count.ReadContextConsumer;
 import com.hartwig.hmftools.sage.count.ReadContextConsumerDispatcher;
-import com.hartwig.hmftools.sage.count.ReadContextCount;
+import com.hartwig.hmftools.sage.count.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.VariantEvidence;
+import com.hartwig.hmftools.sage.task.SagePipeline;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,7 +34,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -47,6 +47,7 @@ public class SageApplication implements AutoCloseable {
     private final SageConfig config;
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
+    private final SageVCF vcf;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = SageConfig.createOptions();
@@ -68,6 +69,7 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
+        vcf = new SageVCF(refGenome, "/Users/jon/hmf/tmp/colo829.sage.vcf", config.reference(), config.tumor());
 
     }
 
@@ -77,109 +79,27 @@ public class SageApplication implements AutoCloseable {
 
         // Note: Turns out you need one samreaderfactory per thread!
 
-        LOGGER.info("Examining tumor sample for evidence of variants");
-        final List<BaseDetails> tumorBaseDetails = tumor(config.tumorBam().get(0));
+        List<Future<List<VariantEvidence>>> futures = Lists.newArrayList();
 
-        repeatContextStuff(config.tumorBam().get(0), tumorBaseDetails);
+        for (int j = 0; j < 6; j++) {
+            int start = 1 + j * 1_000_000;
+            int end = 1_000_000 + j * 1_000_000;
 
-        final Set<Long> hotspots = tumorBaseDetails.stream().map(BaseDetails::position).collect(Collectors.toSet());
+            final GenomeRegion region = GenomeRegions.create("17", start, end);
+            SagePipeline myThing = new SagePipeline(region, config, executorService, refGenome);
 
-        LOGGER.info("Examining normal sample for evidence of variants");
-        final List<BaseDetails> normalEvidence = normal(config.referenceBam(), hotspots);
-
-        LOGGER.info("Combining");
-        SageVCF vcf = new SageVCF(refGenome, "/Users/jon/hmf/tmp/colo829.sage.vcf", "COLO829R", "COLO829T");
-
-        Map<Long, BaseDetails> normalMap = asMap(normalEvidence);
-        for (final BaseDetails tumorBase : tumorBaseDetails) {
-
-            @Nullable
-            final BaseDetails normalBase = normalMap.get(tumorBase.position());
-            for (VariantHotspotEvidence tumorHotspot : tumorBase.evidence()) {
-                @Nullable
-                final VariantHotspotEvidence normalHotspot =
-                        normalBase == null ? null : normalBase.selectOrCreate(tumorHotspot.ref(), tumorHotspot.alt());
-                vcf.write(tumorHotspot, normalHotspot);
-
-            }
+            futures.add(myThing.submit());
         }
 
-        vcf.close();
-
-        long timeTaken = System.currentTimeMillis() - timeStamp;
-
-        System.out.println(" in " + timeTaken);
-    }
-
-    @NotNull
-    private List<BaseDetails> tumor(String bamFile) throws ExecutionException, InterruptedException {
-
-        GenomeRegion region1 = GenomeRegions.create("17", 1, 1_000_000);
-        GenomeRegion region2 = GenomeRegions.create("17", 1_000_001, 2_000_000);
-        GenomeRegion region3 = GenomeRegions.create("17", 2_000_001, 3_000_000);
-        GenomeRegion region4 = GenomeRegions.create("17", 3_000_001, 4_000_000);
-        GenomeRegion region5 = GenomeRegions.create("17", 4_000_001, 5_000_000);
-        GenomeRegion region6 = GenomeRegions.create("17", 5_000_001, 6_000_000);
-
-        SageSamConsumer samConsumer1 = new SageSamConsumer(13, region1, refGenome);
-        SageSamConsumer samConsumer2 = new SageSamConsumer(13, region2, refGenome);
-        SageSamConsumer samConsumer3 = new SageSamConsumer(13, region3, refGenome);
-        SageSamConsumer samConsumer4 = new SageSamConsumer(13, region4, refGenome);
-        SageSamConsumer samConsumer5 = new SageSamConsumer(13, region5, refGenome);
-        SageSamConsumer samConsumer6 = new SageSamConsumer(13, region6, refGenome);
-
-        List<Future<SageSamConsumer>> futures = Lists.newArrayList();
-        futures.add(executorService.submit(() -> callable(region1, samConsumer1, bamFile)));
-        futures.add(executorService.submit(() -> callable(region2, samConsumer2, bamFile)));
-        futures.add(executorService.submit(() -> callable(region3, samConsumer3, bamFile)));
-        futures.add(executorService.submit(() -> callable(region4, samConsumer4, bamFile)));
-        futures.add(executorService.submit(() -> callable(region5, samConsumer5, bamFile)));
-        futures.add(executorService.submit(() -> callable(region6, samConsumer6, bamFile)));
-
-        final List<BaseDetails> tumorEvidence = Lists.newArrayList();
-
-        for (Future<SageSamConsumer> future : futures) {
-            SageSamConsumer consumer = future.get();
-            tumorEvidence.addAll(consumer.bases());
+        for (Future<List<VariantEvidence>> future : futures) {
+//            future.get().forEach(System.out::println);
+            future.get().forEach(vcf::write);
         }
 
-        return tumorEvidence;
+                long timeTaken = System.currentTimeMillis() - timeStamp;
+                System.out.println(" in " + timeTaken);
     }
 
-    @NotNull
-    private List<BaseDetails> normal(String bamFile, Set<Long> hotspots) throws ExecutionException, InterruptedException {
-
-        GenomeRegion region1 = GenomeRegions.create("17", 1, 1_000_000);
-        GenomeRegion region2 = GenomeRegions.create("17", 1_000_001, 2_000_000);
-        GenomeRegion region3 = GenomeRegions.create("17", 2_000_001, 3_000_000);
-        GenomeRegion region4 = GenomeRegions.create("17", 3_000_001, 4_000_000);
-        GenomeRegion region5 = GenomeRegions.create("17", 4_000_001, 5_000_000);
-        GenomeRegion region6 = GenomeRegions.create("17", 5_000_001, 6_000_000);
-
-        SageSamConsumer samConsumer1 = new SageSamConsumer(13, region1, refGenome, hotspots);
-        SageSamConsumer samConsumer2 = new SageSamConsumer(13, region2, refGenome, hotspots);
-        SageSamConsumer samConsumer3 = new SageSamConsumer(13, region3, refGenome, hotspots);
-        SageSamConsumer samConsumer4 = new SageSamConsumer(13, region4, refGenome, hotspots);
-        SageSamConsumer samConsumer5 = new SageSamConsumer(13, region5, refGenome, hotspots);
-        SageSamConsumer samConsumer6 = new SageSamConsumer(13, region6, refGenome, hotspots);
-
-        List<Future<SageSamConsumer>> futures = Lists.newArrayList();
-        futures.add(executorService.submit(() -> callable(region1, samConsumer1, bamFile)));
-        futures.add(executorService.submit(() -> callable(region2, samConsumer2, bamFile)));
-        futures.add(executorService.submit(() -> callable(region3, samConsumer3, bamFile)));
-        futures.add(executorService.submit(() -> callable(region4, samConsumer4, bamFile)));
-        futures.add(executorService.submit(() -> callable(region5, samConsumer5, bamFile)));
-        futures.add(executorService.submit(() -> callable(region6, samConsumer6, bamFile)));
-
-        final List<BaseDetails> tumorEvidence = Lists.newArrayList();
-
-        for (Future<SageSamConsumer> future : futures) {
-            SageSamConsumer consumer = future.get();
-            tumorEvidence.addAll(consumer.bases());
-        }
-
-        return tumorEvidence;
-    }
 
     private void repeatContextStuff(@NotNull String bamFile, List<BaseDetails> tumorDetails)
             throws ExecutionException, InterruptedException {
@@ -203,7 +123,7 @@ public class SageApplication implements AutoCloseable {
                 for (VariantHotspotEvidence evidence : detail.evidence()) {
                     if (evidence.altSupport() > 2 && region.contains(evidence)) {
 
-                        List<ReadContextCount> altReadContexts = detail.contexts(evidence.alt());
+                        List<ReadContextCounter> altReadContexts = detail.contexts(evidence.alt());
                         if (!altReadContexts.isEmpty()) {
                             regionsBuilder.addPosition(evidence.position());
 
@@ -222,7 +142,6 @@ public class SageApplication implements AutoCloseable {
         for (Future<ReadContextConsumerDispatcher> future : futures) {
             result.addAll(future.get().consumers());
         }
-
 
         LOGGER.info("Getting repeat contexts complete in {} millis!", System.currentTimeMillis() - time);
     }
@@ -247,6 +166,7 @@ public class SageApplication implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
+        vcf.close();
         refGenome.close();
         executorService.shutdown();
     }

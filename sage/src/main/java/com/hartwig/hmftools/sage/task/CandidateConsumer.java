@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.task;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +24,7 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SageSamConsumer implements Consumer<SAMRecord> {
+public class CandidateConsumer implements Consumer<SAMRecord> {
 
     /*
     bgzip colo829.sage.vcf
@@ -53,12 +53,12 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
     private final EvictingLinkedMap<Long, BaseDetails> baseMap;
     private final List<BaseDetails> baseList = Lists.newArrayList();
 
-    public SageSamConsumer(final int minQuality, @NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome) {
+    public CandidateConsumer(final int minQuality, @NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome) {
         this(minQuality, bounds, refGenome, Sets.newHashSet());
 
     }
 
-    public SageSamConsumer(final int minQuality, @NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome,
+    public CandidateConsumer(final int minQuality, @NotNull final GenomeRegion bounds, final IndexedFastaSequenceFile refGenome,
             Set<Long> hotspots) {
         this.bounds = bounds;
         this.refGenome = refGenome;
@@ -123,7 +123,6 @@ public class SageSamConsumer implements Consumer<SAMRecord> {
             final int baseQuality = record.getBaseQualities()[readBytePosition];
 
             final BaseDetails baseDetails = baseDetails(record.getContig(), position);
-
             baseDetails.incrementReadDepth();
 
             if (readByte != refByte) {
