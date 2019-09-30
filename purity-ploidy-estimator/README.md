@@ -9,7 +9,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
 ## Contents
 
 * [Installation](#installation)
-* [Arguments](#usage)
+* [Arguments](#arguments)
   + [Mandatory Arguments](#mandatory-arguments)
   + [Optional Arguments](#optional-arguments)
 * [Input](#input)
@@ -73,7 +73,7 @@ java -jar purple.jar \
    -ref_genome /path/to/Homo_sapiens_assembly37.fasta
 ```
 
-We recommended using [GRIDSS](https://github.com/PapenfussLab/gridss) as the structural variant caller and using the following arguments into PURPLE:
+We recommend using [GRIDSS](https://github.com/PapenfussLab/gridss) as the structural variant caller and using the following arguments into PURPLE:
 
 ```
 java -jar purple.jar \
@@ -87,7 +87,7 @@ java -jar purple.jar \
    -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/to/COLO829/COLO829.sv.high_confidence.vcf.gz \
    -sv_recovery_vcf /path/to/COLO829/COLO829.sv.low_confidence.vcf.gz \
-   -circos /path/to/circos-0.69-5/bin/circos \
+   -circos /path/to/circos-0.69-6/bin/circos \
    -db_enabled -db_user build -db_pass build \
    -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
@@ -216,12 +216,12 @@ If provided, the variants are used for enhancing the purity and ploidy fit in 2 
 Firstly, each solution receives a penalty for the proportion of somatic variants which have implied ploidies that are inconsistent with the minor and major allele ploidy. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
-For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Alllelic Depth) field in the vcf.
+For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) field in the vcf.
 High quality filtering of artifacts and false positive calls is also critical to achieving an accurate fit. 
 
 #### Preparing Strelka output for PURPLE 
 
-HMF currently uses Strelka for somatic calling. A number of transformations are required to prepare Stelka output for use in PURPLE. 
+HMF currently uses Strelka for somatic calling. A number of transformations are required to prepare Strelka output for use in PURPLE. 
 At a minimum this includes:
 1. Merging SNP and INDEL output
 2. Renaming samples from NORMAL and TUMOR to names consistent with AMBER/COBALT/PURPLE
@@ -330,7 +330,7 @@ Each of the 3 penalty terms is described in detail in the following sections.
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
 For each [ploidy|purity] combination tested an implied major and minor allele ploidy is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment based on the implied ploidies.   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
-- For major allele plody > 1 and minor allele ploidy > 0 a fixed deviation penalty applies
+- For major allele ploidy > 1 and minor allele ploidy > 0 a fixed deviation penalty applies
   - the penalty depends only on the distance to the nearest integer ploidy and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - For small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to reflect the fact the increasing probability that the observed deviation requires a implied non-integer (subclonal) ploidy.
   - The deviation penalty is increased more slowly at lower purities reflecting the increased expected noise.   This is implemented by modeling the penalty as a normal distribution with the standard deviation a function of the purity. 
@@ -382,10 +382,10 @@ This feature was introduced primarily to deal with a degeneracy where in certain
 may provide a plausible minor and major allele ploidy fit to the copy number data, but imply that many SNVs exceed the major allele ploidy 
 which is biologically implausible.
 
-The somatic penalty is determined for each [sample plody,purity] combination by sampling 1000 somatic SNV per tumor and comparing the 
+The somatic penalty is determined for each [sample ploidy,purity] combination by sampling 1000 somatic SNV per tumor and comparing the 
 observed ploidy with an upper bound expectation of the variant’s ploidy from the 99.9% percentile of a binomial distribution given the 
 major allele at the SNV location. 
-The penalty applied to a single SNV is the max(0,impled SNV ploidy - 99.9% expected bound given the major allele). 
+The penalty applied to a single SNV is the max(0,implied SNV ploidy - 99.9% expected bound given the major allele). 
 The somatic penalty is averaged across the 1000 variants and multiplied by a somaticPenaltyWeight [0.3] constant and added to the ploidy penalty.
 
 #### Candidates
@@ -431,7 +431,7 @@ Ref normalised copy number uses the actual germline ratios rather than the typic
     - The dubious region ends at a centromere, telomere or a segment that is within tolerances.
 
 When merging segments, the depth window count (number of COBALT windows) of each segment is used as a proxy for confidence and is used to calculate a weighted average of the copy number. 
-Similarly, the BAF count is used tom calculated the weighted average BAF. 
+Similarly, the BAF count is used to calculate the weighted average BAF. 
 The min and max start of the combined region is the minimum from each segment.  
 
 Regions that are non-diploid in the germline are typically smoothed over, thus the copy number profile represents the somatic copy number without influence from the germline. 
@@ -447,7 +447,7 @@ Consecutive non-diploid regions un-interrupted by a structural variant will be m
 ### 5. Inferring copy number for regions without read depth information
 
 Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them. 
-We calculate then use ploidies of the structural variants to resolve this.
+We use the ploidies of the structural variants to resolve this.
 
 The outermost segment of any SV cluster will be associated with a structural variant whose ploidy can be determined from the adjacent copy number region and the VAF of the SV. 
 Note that if we are inferring from a lower copy number region into a higher one and the VAF is > 0.75 then we use the read depth rather than the VAF to infer a ploidy. 
@@ -778,7 +778,6 @@ It is possible to load the PURPLE enriched structural variants into the database
 ```
 java -cp purple.jar com.hartwig.hmftools.patientdb.LoadStructuralVariants \ 
     -tumor COLO829T \
-    -purple_dir /path/to/COLO829/purple \
     -structural_vcf /path/to/COLO829/COLO829T.purple.sv.vcf.gz \
     -db_user purple_writer -db_pass purple_writer_password \
     -db_url mysql://localhost:3306/patientdb?serverTimezone=UTC
