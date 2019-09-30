@@ -11,7 +11,7 @@ Additionally, AMBER is able to:
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-AMBER also requires a set of likely heterozygous sites (to determine BAF) and an optional set of SNP sites (to facilitate sample matching).  
+AMBER requires a set of likely heterozygous sites (to determine BAF) and an optional set of SNP sites (to facilitate sample matching).  
 Both are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
 
 AMBER depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
