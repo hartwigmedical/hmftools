@@ -77,8 +77,8 @@ Argument  | Description
 ---|---
 log_reportable_fusion | only log reportable fusions
 fusion_pairs_csv | Known fusion pairs - specify FiveGene,ThreeGene by name 
-promiscuous_five_csv | Promiscous 5' gene - specify gene name only
-promiscuous_three_csv |  Promiscous 3' gene - specify gene name only 
+promiscuous_five_csv | Promiscuous 5' gene - specify gene name only
+promiscuous_three_csv |  Promiscuous 3' gene - specify gene name only 
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 
@@ -165,7 +165,7 @@ SIMPLE | Single break junction cluster which forms a local deletion, tandem dupl
 RECIPROCAL | Reciprocal inversion or translocation events forming from 2 concurrent breaks interacting with each other
 TEMPLATED INSERTION | DEL or DUP or unbalanced translocation (‘chain’) with templated insertion
 INSERTION | SV that are formed by the insertion of a templated piece of DNA normally via either a mobile line element or virus.
-DOUBLE_MIUNTE | Any cluster where all variants form part of a double minute
+DOUBLE_MINUTE | Any cluster where all variants form part of a double minute
 COMPLEX | Clusters with 3 or more variants that cannot be resolved into one of the above categories
 INCOMPLETE | 1 or 2 breakpoint clusters which are inconsistent, but cannot be clustered further OR clusters which are inferred from copy number changes only
 
@@ -243,14 +243,14 @@ The following schematic outlines the overall workflow in the LINX algorithm. Eac
 To help resolve and characterise events, LINX first annotates a number of genomic properties.
 
 #### Externally sourced genomic annotations
-Each brekend is first annotated with the following information from external sources
+Each breakend is first annotated with the following information from external sources
 * Whether it is in a known fragile site <SOURCE: Driver paper>
 * Whether it is in a known LINE source element <SOURCE: PCAWG LINE paper>
 * The replication timing of the breakend <SOURCE: HeLA replication timing>
 
 #### Identification of foldback inversions
 Foldback inversions are important structural features in the genome since they are a hallmark of the breakage fusion bridge process and are used by LINX in a number of ways in both the clustering and chaining algorithms. They can also be objectively identified independently of the clustering and chaining so it is useful to identify them upfront. We perform a genome wide search for foldback inversions. A pair of breakends are marked as forming a foldback if they meet the following criteria:
-* the breakend orientations are the same and are consecutive (ignoring any fully assembled interim breeakends) and after allowing for overlapping deletion bridges on both ends, specifically both 
+* the breakend orientations are the same and are consecutive (ignoring any fully assembled interim breakends) and after allowing for overlapping deletion bridges on both ends, specifically both 
     * The outer breakend may be overlapped by a variant within it’s anchor distance
     * The inner breakend may not have a facing breakend within it’s anchor distance
 * the breakends belong to a single inversion or are linked by an assembled or short chain (<= 5K bases)
@@ -334,7 +334,7 @@ consolidatedUncertainty = SQRT( countObservations / (countObervations-1) * SUM[1
 ```
 
 #### Identification of subclonal variants
-We identify high confidence subclonal variants using the uncertainty bounds, using the threshold of maximum ploidy < 0.75. Clonal and subclonal variants are unlikely to have occured at the same time and hence all subclonal variants are excluded from clustering with any variant that does not overlap in ploidy uncertainty and does not have a ploidy within 0.5 of the subclonal variants. Proximity clustering is still allowed, since the ploidy estimates for proximate variants are more uncertain.
+We identify high confidence subclonal variants using the uncertainty bounds, using the threshold of maximum ploidy < 0.75. Clonal and subclonal variants are unlikely to have occurred at the same time and hence all subclonal variants are excluded from clustering with any variant that does not overlap in ploidy uncertainty and does not have a ploidy within 0.5 of the subclonal variants. Proximity clustering is still allowed, since the ploidy estimates for proximate variants are more uncertain.
 
 
 ### Clustering of SVs into events 
@@ -398,7 +398,7 @@ Merge any 2 unresolved clusters if they 2 touch the same 2 chromosomal arms. SVs
 ##### Single breakends on same arm with matching satellite repeat type clustering
 Where complex events touch satellite repeats we frequently find many single breakends on the same chromosome with links to the same type of repeat. In particular this can occur when shattering events include complex focal scarring in centromeric regions leading to many unresolved single breakends
 
-We therefore merge any cluster with less than or equal to 1 non single breakend and non inferredbreakend with any other cluster which contains a single breakend on the same chromosome with matching repeat class or type for the following cases:
+We therefore merge any cluster with less than or equal to 1 non single breakend and non inferred breakend with any other cluster which contains a single breakend on the same chromosome with matching repeat class or type for the following cases:
 * RepeatClass = 'Satellite/centr’ (centromeric)
 * RepeatType = '(CATTC)n’ (satellite repeat type)
 * RepeatType = ‘(GAATG)n’ (satellite repeat type)
@@ -409,7 +409,7 @@ To protect against false positives and joining complex clusters which both touch
 We don’t cluster other common sequences such as telomeric sequences, Sine/Alu or LINE/L1 as these tend to be associated with genome wide insertion patterns rather than specific clusters which touch a repetitive region.
 
 #### Incomplete and small complex cluster merging
-These rules are implemented to merge small unresolve with 3 or less variants to other unresolved clusters with an arbitrary cluster size where the location and orientation of proximate or overlapping breakends between the 2 clusters indicated that they may be linked. 
+These rules are implemented to merge small unresolved with 3 or less variants to other unresolved clusters with an arbitrary cluster size where the location and orientation of proximate or overlapping breakends between the 2 clusters indicated that they may be linked. 
 
 ##### Breakends straddled by consecutive same orientation breakends
 Merge any non resolved breakend to a cluster which straddles it immediately on both sides with 2 breakends facing the same direction, and where the facing breakends have matching ploidy.
@@ -466,7 +466,7 @@ Where more than 1 possible pair of linkable chain exists in the cache, links are
 3. Breakends with a single link possibility
 4. Links with highest matching ploidy status (MATCHED > OVERLAPPING_PLOIDY_RANGE > NO_OVERLAP)
 5. Adjacent links
-6. igher ploidy links (allowing for 0.5 abs and 15% threshold)
+6. Higher ploidy links (allowing for 0.5 abs and 15% threshold)
 7. Shortest link
 
 For uniform ploidy clusters, only rules 1, 3,5 & 7 are considered in the prioritisation of links.
@@ -489,10 +489,10 @@ If a cluster is identified as containing a potential double minute then LINX wil
 The following data is captured for each TI:
 * Whether the link is assembled
 * Distance to the next link and whether it traverses any other breakends or links
-* Overlap with a gene and any exon matches (eg a pseudogenes)
+* Overlap with a gene and any exon matches (eg pseudogenes)
 
 #### Annotation of Local topology
-Consecutive breakends with no more than 5kb between them or which are part of the same foldback inversion are grouped together into a local toplogy group and given an id. The number of TIs formed by chained segments wholly within the local topology group are counted and a topology type is given to the remaining variants based on the breakend orientations. The topology types are categorised as one of the following (after excluding all TIs)
+Consecutive breakends with no more than 5kb between them or which are part of the same foldback inversion are grouped together into a local topology group and given an id. The number of TIs formed by chained segments wholly within the local topology group are counted and a topology type is given to the remaining variants based on the breakend orientations. The topology types are categorised as one of the following (after excluding all TIs)
 * TI_ONLY - All breakends in the group form templated insertions
 * ISOLATED_BE - One breakend only
 * DSB - A par of breakends forming a deletion bridge
@@ -517,7 +517,7 @@ Each breakend is additionally annotated for the transcript with the following in
 * isDisruptive: disruptive for a particular transcript if the SV it belongs to is an inversion,single breakend or translocation or if the SV overlaps at least one exon in the transcript AND the variant is not part of a chain which does not disrupt the exon ordering in the transcript.
 * TranscriptCodingContext: UPSTREAM, 5_UTR, CODING, 3_UTR, DOWNSTREAM OR NON_CODING
 * geneOrientation: relative orientation of gene compared to breakend (UPSTREAM or DOWNSTREAM)
-* isExonic (TRUE/ALSE)
+* isExonic (TRUE/FALSE)
 * exactBasePhase: The exact base phasing of the current location
 * Next splice site information: The distance to, phasing of and exon rank of the 1st base of the next facing splice acceptor or donor (note: phasing will be different from exactBasePhase if the breakend is exonic in the transcript or the coding context is upstream. Null if there are no subsequent splice sites in the gene.
 * ExonTotalCount: The total number of exons in the transcript (for reference)
