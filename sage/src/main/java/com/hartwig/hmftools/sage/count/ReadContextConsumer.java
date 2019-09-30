@@ -15,7 +15,7 @@ public class ReadContextConsumer implements GenomePosition, Consumer<SAMRecord> 
 
     private int full;
     private int partial;
-    private int missaligned;
+    private int realigned;
 
     public ReadContextConsumer(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
         assert (readContext.isComplete());
@@ -51,8 +51,8 @@ public class ReadContextConsumer implements GenomePosition, Consumer<SAMRecord> 
         return partial;
     }
 
-    public int missaligned() {
-        return missaligned;
+    public int realigned() {
+        return realigned;
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ReadContextConsumer implements GenomePosition, Consumer<SAMRecord> 
                             partial++;
                         }
                     } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                        missaligned++;
+                        realigned++;
                     }
                 }
 

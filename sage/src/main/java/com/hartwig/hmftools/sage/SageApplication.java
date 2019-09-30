@@ -185,7 +185,7 @@ public class SageApplication implements AutoCloseable {
             throws ExecutionException, InterruptedException {
 
         long time = System.currentTimeMillis();
-        LOGGER.info("Getting repeat contexts with single thread...");
+        LOGGER.info("Getting repeat contexts...");
 
         // TODO: This was a terrible idea and took 15 mins....
 
@@ -196,6 +196,8 @@ public class SageApplication implements AutoCloseable {
             int end = 1_000_000 + j * 1_000_000;
             GenomeRegion region = GenomeRegions.create("17", start, end);
 
+            GenomeRegions regionsBuilder = new GenomeRegions("17", 1000);
+
             List<ReadContextConsumer> readContexts = Lists.newArrayList();
             for (BaseDetails detail : tumorDetails) {
                 for (VariantHotspotEvidence evidence : detail.evidence()) {
@@ -203,6 +205,8 @@ public class SageApplication implements AutoCloseable {
 
                         List<ReadContextCount> altReadContexts = detail.contexts(evidence.alt());
                         if (!altReadContexts.isEmpty()) {
+                            regionsBuilder.addPosition(evidence.position());
+
                             readContexts.add(new ReadContextConsumer(evidence, altReadContexts.get(0)));
                         }
                     }
@@ -210,7 +214,7 @@ public class SageApplication implements AutoCloseable {
             }
 
             ReadContextConsumerDispatcher dispatcher = new ReadContextConsumerDispatcher(readContexts);
-            futures.add(executorService.submit(() -> callable(region, dispatcher, bamFile)));
+            futures.add(executorService.submit(() -> callable(regionsBuilder.build(), dispatcher, bamFile)));
         }
 
         LOGGER.info("submitted, just awaiting results");
@@ -227,6 +231,15 @@ public class SageApplication implements AutoCloseable {
         SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
 
         SAMSlicer slicer = new SAMSlicer(0, Lists.newArrayList(region));
+        slicer.slice(tumorReader, consumer);
+        tumorReader.close();
+        return consumer;
+    }
+
+    private <T extends Consumer<SAMRecord>> T callable(List<GenomeRegion> regions, T consumer, String bamFile) throws IOException {
+        SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
+
+        SAMSlicer slicer = new SAMSlicer(13, regions);
         slicer.slice(tumorReader, consumer);
         tumorReader.close();
         return consumer;
