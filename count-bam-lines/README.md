@@ -90,7 +90,7 @@ The following tab delimited files are written:
 
 `/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
-TUMOR.cobalt contains the counts and ratios of the reference and tumor:
+TUMOR.cobalt.ratio.tsv contains the counts and ratios of the reference and tumor:
 
 Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio
 ---|---|---|---|---|---|---
