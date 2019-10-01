@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.sam;
 
+import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.GenomeRegions;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
@@ -72,5 +75,10 @@ public class SAMRecords {
         return nextReferencePosition == 0 && startReadPosition == record.getReadLength()
                 ? record.getAlignmentEnd() - position
                 : Math.max(0, nextReferencePosition - position - 1);
+    }
+
+    @NotNull
+    public static GenomeRegion alignmentRegion(@NotNull final SAMRecord record) {
+        return GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
     }
 }
