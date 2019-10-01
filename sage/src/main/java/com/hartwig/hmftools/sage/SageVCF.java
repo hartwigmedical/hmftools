@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -52,12 +53,15 @@ public class SageVCF implements AutoCloseable {
 
     @NotNull
     private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
+        ReadContextCounter readContextCounter = evidence.primaryReadContext();
+
         return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
                 .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
                 .attribute("SDP", evidence.subprimeReadDepth())
                 .attribute("QUAL", new int[] { evidence.quality(), evidence.baseQuality(), evidence.mapQuality() })
                 .attribute("DIST", new int[] { evidence.avgRecordDistance(), evidence.avgAlignmentDistance() })
-                .attribute("RC", evidence.readContext())
+                .attribute("RC", evidence.primaryReadContext().toString())
+                .attribute("RCC", new int[] {readContextCounter.full(), readContextCounter.partial(), readContextCounter.realigned()})
                 .alleles(alleles)
                 .make();
     }

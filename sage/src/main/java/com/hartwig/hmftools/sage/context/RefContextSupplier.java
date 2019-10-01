@@ -53,8 +53,7 @@ public class RefContextSupplier implements Consumer<SAMRecord>, Supplier<List<Re
     private final RefContextCandidates candidates;
     private final String bamFile;
 
-    public RefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final RefContextCandidates candidates) {
+    public RefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile, @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final RefContextCandidates candidates) {
         this.sample = sample;
         this.bounds = bounds;
         this.refGenome = refGenome;

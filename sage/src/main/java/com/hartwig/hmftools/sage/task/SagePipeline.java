@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.MultiSampleContext;
+import com.hartwig.hmftools.sage.context.ReadContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContextSupplier;
@@ -51,7 +52,8 @@ public class SagePipeline {
         for (int i = 0; i < samples.size(); i++) {
             final String sample = samples.get(i);
             final String bam = bams.get(i);
-            tumorFutures.add(CompletableFuture.completedFuture(sample)
+
+            CompletableFuture<List<AltContext>> candidateFuture = CompletableFuture.completedFuture(sample)
                     .thenApplyAsync(unused -> new RefContextSupplier(13,
                             sample,
                             region,
@@ -61,7 +63,10 @@ public class SagePipeline {
                             .stream()
                             .flatMap(x -> x.alts().stream())
                             .filter(x -> x.altSupport() > 2)
-                            .collect(Collectors.toList()), executor));
+                            .collect(Collectors.toList()), executor)
+                    .thenApplyAsync(altContexts -> new ReadContextSupplier(13, sample, region, bam, altContexts).get());
+
+            tumorFutures.add(candidateFuture);
 
         }
 

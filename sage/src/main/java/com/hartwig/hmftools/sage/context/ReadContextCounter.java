@@ -34,11 +34,6 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return hotspot.position();
     }
 
-    @NotNull
-    public ReadContext readContext() {
-        return readContext;
-    }
-
     public int full() {
         return full;
     }
@@ -49,6 +44,17 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
     public int realigned() {
         return realigned;
+    }
+
+    public void reset() {
+        full = 0;
+        partial = 0;
+        realigned = 0;
+    }
+
+    @Override
+    public String toString() {
+        return readContext.toString();
     }
 
     @Override
