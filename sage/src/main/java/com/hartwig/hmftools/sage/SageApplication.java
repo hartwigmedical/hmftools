@@ -3,26 +3,19 @@ package com.hartwig.hmftools.sage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
-import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.count.BaseDetails;
-import com.hartwig.hmftools.sage.count.ReadContextConsumer;
-import com.hartwig.hmftools.sage.count.ReadContextConsumerDispatcher;
-import com.hartwig.hmftools.sage.count.ReadContextCounter;
 import com.hartwig.hmftools.sage.task.SagePipeline;
 
 import org.apache.commons.cli.CommandLine;
@@ -92,58 +85,12 @@ public class SageApplication implements AutoCloseable {
         }
 
         for (Future<List<List<AltContext>>> future : futures) {
-//            future.get().forEach(System.out::println);
+            //            future.get().forEach(System.out::println);
             future.get().forEach(vcf::write);
         }
 
-                long timeTaken = System.currentTimeMillis() - timeStamp;
-                System.out.println(" in " + timeTaken);
-    }
-
-
-    private void repeatContextStuff(@NotNull String bamFile, List<BaseDetails> tumorDetails)
-            throws ExecutionException, InterruptedException {
-
-        long time = System.currentTimeMillis();
-        LOGGER.info("Getting repeat contexts...");
-
-        // TODO: This was a terrible idea and took 15 mins....
-
-        List<Future<ReadContextConsumerDispatcher>> futures = Lists.newArrayList();
-
-        for (int j = 0; j < 6; j++) {
-            int start = 1 + j * 1_000_000;
-            int end = 1_000_000 + j * 1_000_000;
-            GenomeRegion region = GenomeRegions.create("17", start, end);
-
-            GenomeRegions regionsBuilder = new GenomeRegions("17", 1000);
-
-            List<ReadContextConsumer> readContexts = Lists.newArrayList();
-            for (BaseDetails detail : tumorDetails) {
-                for (VariantHotspotEvidence evidence : detail.evidence()) {
-                    if (evidence.altSupport() > 2 && region.contains(evidence)) {
-
-                        List<ReadContextCounter> altReadContexts = detail.contexts(evidence.alt());
-                        if (!altReadContexts.isEmpty()) {
-                            regionsBuilder.addPosition(evidence.position());
-
-                            readContexts.add(new ReadContextConsumer(evidence, altReadContexts.get(0)));
-                        }
-                    }
-                }
-            }
-
-            ReadContextConsumerDispatcher dispatcher = new ReadContextConsumerDispatcher(readContexts);
-            futures.add(executorService.submit(() -> callable(regionsBuilder.build(), dispatcher, bamFile)));
-        }
-
-        LOGGER.info("submitted, just awaiting results");
-        final List<ReadContextConsumer> result = Lists.newArrayList();
-        for (Future<ReadContextConsumerDispatcher> future : futures) {
-            result.addAll(future.get().consumers());
-        }
-
-        LOGGER.info("Getting repeat contexts complete in {} millis!", System.currentTimeMillis() - time);
+        long timeTaken = System.currentTimeMillis() - timeStamp;
+        System.out.println(" in " + timeTaken);
     }
 
     private <T extends Consumer<SAMRecord>> T callable(GenomeRegion region, T consumer, String bamFile) throws IOException {
@@ -175,11 +122,6 @@ public class SageApplication implements AutoCloseable {
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static Map<Long, BaseDetails> asMap(@NotNull final List<? extends BaseDetails> evidence) {
-        return evidence.stream().collect(Collectors.toMap(BaseDetails::position, x -> x));
     }
 
 }

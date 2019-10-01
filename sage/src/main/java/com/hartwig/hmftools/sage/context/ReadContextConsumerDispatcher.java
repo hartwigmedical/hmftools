@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage.context;
 
 import java.util.List;
 import java.util.function.Consumer;

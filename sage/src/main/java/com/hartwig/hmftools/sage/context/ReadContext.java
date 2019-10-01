@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage.context;
 
-import static com.hartwig.hmftools.sage.count.ReadContext.ReadContextMatch.FULL;
-import static com.hartwig.hmftools.sage.count.ReadContext.ReadContextMatch.NONE;
-import static com.hartwig.hmftools.sage.count.ReadContext.ReadContextMatch.PARTIAL;
+import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.PARTIAL;
 
 import java.util.Arrays;
 

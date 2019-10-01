@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage.context;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

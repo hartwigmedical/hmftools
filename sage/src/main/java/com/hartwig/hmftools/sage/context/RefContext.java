@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.sage.count.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 

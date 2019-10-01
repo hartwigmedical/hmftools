@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.count.ReadContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

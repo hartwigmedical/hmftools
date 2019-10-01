@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage.context;
 
 import java.util.Comparator;
 import java.util.List;
@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class BaseDetails implements Comparable<BaseDetails> {
 
     private final String contig;

@@ -4,7 +4,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.count.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 
