@@ -1,16 +1,22 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.Comparator;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class AltContext implements VariantHotspot {
 
     private final RefContext refContext;
     private final String alt;
+    private final List<ReadContextCounter> interimReadContextCounters = Lists.newArrayList();
 
     private int baseQuality;
     private int mapQuality;
@@ -38,6 +44,25 @@ public class AltContext implements VariantHotspot {
         this.quality += Math.min(mapQuality, baseQuality);
         totalRecordDistance += recordDistance;
         totalAlignmentDistance += alignmentDistance;
+
+        if (readContext.isComplete()) {
+            boolean readContextMatch = false;
+            for (ReadContextCounter counter : interimReadContextCounters) {
+                readContextMatch |= counter.accept(position(), readContext);
+            }
+
+            if (!readContextMatch) {
+                interimReadContextCounters.add(new ReadContextCounter(this, readContext));
+            }
+        }
+    }
+
+    @NotNull
+    public String readContext() {
+        return interimReadContextCounters.stream()
+                .max(Comparator.comparingInt(ReadContextCounter::full))
+                .map(x -> x.readContext().toString())
+                .orElse(Strings.EMPTY);
     }
 
     @NotNull

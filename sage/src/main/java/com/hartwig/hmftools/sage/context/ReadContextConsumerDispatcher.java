@@ -14,10 +14,10 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextConsumerDispatcher implements Consumer<SAMRecord> {
 
-    private final List<ReadContextConsumer> consumers;
-    private final GenomePositionSelector<ReadContextConsumer> consumerSelector;
+    private final List<ReadContextCounter> consumers;
+    private final GenomePositionSelector<ReadContextCounter> consumerSelector;
 
-    public ReadContextConsumerDispatcher(@NotNull final List<ReadContextConsumer> consumerList) {
+    public ReadContextConsumerDispatcher(@NotNull final List<ReadContextCounter> consumerList) {
         consumerSelector = GenomePositionSelectorFactory.create(consumerList);
         this.consumers = consumerList;
     }
@@ -29,7 +29,7 @@ public class ReadContextConsumerDispatcher implements Consumer<SAMRecord> {
         consumerSelector.select(samRegion, x -> x.accept(samRecord));
     }
 
-    public List<ReadContextConsumer> consumers() {
+    public List<ReadContextCounter> consumers() {
         return consumers;
     }
 }

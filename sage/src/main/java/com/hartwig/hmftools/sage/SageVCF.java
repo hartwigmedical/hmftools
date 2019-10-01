@@ -23,7 +23,6 @@ import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
@@ -58,6 +57,7 @@ public class SageVCF implements AutoCloseable {
                 .attribute("SDP", evidence.subprimeReadDepth())
                 .attribute("QUAL", new int[] { evidence.quality(), evidence.baseQuality(), evidence.mapQuality() })
                 .attribute("DIST", new int[] { evidence.avgRecordDistance(), evidence.avgAlignmentDistance() })
+                .attribute("RC", evidence.readContext())
                 .alleles(alleles)
                 .make();
     }
@@ -113,12 +113,11 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_COUNT, 1, VCFHeaderLineType.Integer, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_COUNT_OTHER, 1, VCFHeaderLineType.Integer, "TODO"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 3, VCFHeaderLineType.Integer, "[Full, Partial, Realigned]"));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Float, "[MinBaseMapQual, BaseQual, MapQual]"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Float, "[AvgRecordDistance, AvgAlignmentDistance]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Integer, "[MinBaseMapQual, BaseQual, MapQual]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Integer, "[AvgRecordDistance, AvgAlignmentDistance]"));
 
         return header;
     }
