@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.task;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -11,10 +10,11 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.MultiSampleContext;
-import com.hartwig.hmftools.sage.context.ReadContextSupplier;
+import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextCandidates;
-import com.hartwig.hmftools.sage.context.RefContextSupplier;
+import com.hartwig.hmftools.sage.context.TumorReadContextSupplier;
+import com.hartwig.hmftools.sage.context.TumorRefContextCandidates;
+import com.hartwig.hmftools.sage.context.TumorRefContextSupplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,17 +54,17 @@ public class SagePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture = CompletableFuture.completedFuture(sample)
-                    .thenApplyAsync(unused -> new RefContextSupplier(13,
+                    .thenApplyAsync(unused -> new TumorRefContextSupplier(13,
                             sample,
                             region,
                             bam,
                             refGenome,
-                            RefContextCandidates.tumorCandidates()).get()
+                            new TumorRefContextCandidates(sample)).get()
                             .stream()
                             .flatMap(x -> x.alts().stream())
                             .filter(x -> x.altSupport() > 2)
                             .collect(Collectors.toList()), executor)
-                    .thenApplyAsync(altContexts -> new ReadContextSupplier(13, sample, region, bam, altContexts).get());
+                    .thenApplyAsync(altContexts -> new TumorReadContextSupplier(13, sample, region, bam, altContexts).get());
 
             tumorFutures.add(candidateFuture);
 
@@ -79,14 +79,7 @@ public class SagePipeline {
                 multiSampleContext.addTumor(i, future.join());
             }
 
-            Set<Long> positions = multiSampleContext.positions();
-
-            return new RefContextSupplier(13,
-                    config.reference(),
-                    region,
-                    config.referenceBam(),
-                    refGenome,
-                    RefContextCandidates.normalCandidates(positions)).get();
+            return new NormalRefContextSupplier(13, region, config.referenceBam(), refGenome, multiSampleContext.normalCandidates()).get();
         });
 
         return normalFuture.thenApplyAsync(aVoid -> {

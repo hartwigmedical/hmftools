@@ -3,7 +3,10 @@ package com.hartwig.hmftools.sage.context;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Maps;
+import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +18,6 @@ public class RefContext implements GenomePosition {
     private final long position;
     private final String ref;
     private final Map<String, AltContext> alts;
-
 
     private int readDepth;
     private int mapQuality;
@@ -55,13 +57,21 @@ public class RefContext implements GenomePosition {
 
     @NotNull
     public AltContext altContext(@NotNull final String alt) {
-        return  alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
+        return alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
     }
 
-    public void altRead(@NotNull final String alt, int mapQuality, int baseQuality, int recordDistance, int alignmentDistance, @NotNull final ReadContext readContext) {
+    public void altRead(@NotNull final String alt, int mapQuality, int baseQuality, int recordDistance, int alignmentDistance,
+            @NotNull final ReadContext readContext) {
         this.readDepth++;
         final AltContext altContext = alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
-        altContext.altRead(mapQuality, baseQuality, recordDistance, alignmentDistance,readContext);
+        altContext.altRead(mapQuality, baseQuality, recordDistance, alignmentDistance);
+        altContext.addReadContext(readContext);
+    }
+
+    public void altRead(@NotNull final String alt, int mapQuality, int baseQuality, int recordDistance, int alignmentDistance) {
+        this.readDepth++;
+        final AltContext altContext = alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
+        altContext.altRead(mapQuality, baseQuality, recordDistance, alignmentDistance);
     }
 
     @NotNull
@@ -99,4 +109,25 @@ public class RefContext implements GenomePosition {
     public String sample() {
         return sample;
     }
+
+    @Override
+    public boolean equals(@Nullable Object another) {
+        if (this == another) {
+            return true;
+        }
+        return another instanceof RefContext && equalTo((RefContext) another);
+    }
+
+    private boolean equalTo(RefContext another) {
+        return chromosome().equals(another.chromosome()) && position() == another.position();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 5381;
+        h += (h << 5) + chromosome().hashCode();
+        h += (h << 5) + Longs.hashCode(position());
+        return h;
+    }
+
 }

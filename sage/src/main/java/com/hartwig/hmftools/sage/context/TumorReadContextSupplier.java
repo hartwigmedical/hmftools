@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,9 +23,9 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class ReadContextSupplier implements Supplier<List<AltContext>>, Consumer<SAMRecord> {
+public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Consumer<SAMRecord> {
 
-    private static final Logger LOGGER = LogManager.getLogger(ReadContextSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(TumorReadContextSupplier.class);
 
     private final String sample;
     private final GenomeRegion bounds;
@@ -34,7 +34,7 @@ public class ReadContextSupplier implements Supplier<List<AltContext>>, Consumer
     private final List<AltContext> altContexts;
     private final int minQuality;
 
-    public ReadContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
+    public TumorReadContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
             @NotNull final List<AltContext> altContexts) {
 
         this.minQuality = minQuality;
@@ -67,8 +67,6 @@ public class ReadContextSupplier implements Supplier<List<AltContext>>, Consumer
 
     @Override
     public void accept(final SAMRecord samRecord) {
-        final GenomeRegion samRegion =
-                GenomeRegions.create(samRecord.getContig(), samRecord.getAlignmentStart(), samRecord.getAlignmentEnd());
-        consumerSelector.select(samRegion, x -> x.accept(samRecord));
+        consumerSelector.select(SAMRecords.alignmentRegion(samRecord), x -> x.accept(samRecord));
     }
 }

@@ -34,8 +34,8 @@ public class MultiSampleContext {
     public void addTumor(int tumorSample, @NotNull final List<AltContext> altContexts) {
         final Map<VariantHotspot, AltContext> map = altContextMap.get(tumorSample);
         altContexts.forEach(x -> {
-            allHotspots.add((VariantHotspot) x);
-            map.put((VariantHotspot) x, x);
+            allHotspots.add(x);
+            map.put(x, x);
         });
 
     }
@@ -43,6 +43,37 @@ public class MultiSampleContext {
     @NotNull
     public Set<Long> positions() {
         return allHotspots.stream().map(GenomePosition::position).collect(Collectors.toSet());
+    }
+
+    @NotNull
+    public RefContextCandidates normalCandidates() {
+
+        NormalRefContextCandidates candidates = new NormalRefContextCandidates();
+
+        List<VariantHotspot> sortedHotspots =
+                allHotspots.stream().sorted(Comparator.comparingLong(GenomePosition::position)).collect(Collectors.toList());
+
+        for (VariantHotspot hotspot : sortedHotspots) {
+            RefContext refContext = new RefContext(normalSample, hotspot.chromosome(), hotspot.position(), hotspot.ref());
+            AltContext altContext = refContext.altContext(hotspot.alt());
+
+            final List<ReadContextCounter> readContextCounters = Lists.newArrayList();
+            for (Map<VariantHotspot, AltContext> variantHotspotAltContextMap : altContextMap) {
+                AltContext tumorContext = variantHotspotAltContextMap.get(hotspot);
+                if (tumorContext != null) {
+                    readContextCounters.add(tumorContext.primaryReadContext());
+                }
+            }
+
+            if (!readContextCounters.isEmpty()) {
+                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
+                altContext.setPrimaryReadContext(new ReadContextCounter(hotspot, readContextCounters.get(0).readContext()));
+            }
+
+            candidates.addRefContext(refContext);
+        }
+
+        return candidates;
     }
 
     public void addNormal(@NotNull final List<RefContext> altContexts) {

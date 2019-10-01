@@ -35,15 +35,16 @@ public class AltContext implements VariantHotspot {
         this.alt = alt;
     }
 
-    public void altRead(int mapQuality, int baseQuality, int recordDistance, int alignmentDistance,
-            @NotNull final ReadContext readContext) {
+    public void altRead(int mapQuality, int baseQuality, int recordDistance, int alignmentDistance) {
         this.altReads++;
         this.baseQuality += baseQuality;
         this.mapQuality += mapQuality;
         this.quality += Math.min(mapQuality, baseQuality);
         totalRecordDistance += recordDistance;
         totalAlignmentDistance += alignmentDistance;
+    }
 
+    public void addReadContext(@NotNull final ReadContext readContext) {
         if (readContext.isComplete()) {
             boolean readContextMatch = false;
             for (ReadContextCounter counter : readContextCounters) {
@@ -62,6 +63,11 @@ public class AltContext implements VariantHotspot {
         return readContextCounters.isEmpty()
                 ? new ReadContextCounter(this, new ReadContext(0, alt.getBytes()))
                 : readContextCounters.get(0);
+    }
+
+    public void setPrimaryReadContext(@NotNull final ReadContextCounter readContext) {
+        readContextCounters.clear();
+        readContextCounters.add(readContext);
     }
 
     @NotNull
