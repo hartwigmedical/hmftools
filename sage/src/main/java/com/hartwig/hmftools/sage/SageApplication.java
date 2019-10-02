@@ -14,7 +14,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.SagePipeline;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
