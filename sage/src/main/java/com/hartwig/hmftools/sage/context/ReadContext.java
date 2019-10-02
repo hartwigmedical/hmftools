@@ -16,7 +16,7 @@ public class ReadContext {
         FULL
     }
 
-    private static final int LENGTH = 10;
+    private static final int LENGTH = 15;
 
     final byte[] bytes;
     final int readBypePosition;
