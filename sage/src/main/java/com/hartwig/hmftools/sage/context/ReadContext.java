@@ -18,8 +18,8 @@ public class ReadContext {
 
     private static final int LENGTH = 15;
 
-    final byte[] bytes;
-    final int readBypePosition;
+    private final byte[] bytes;
+    private final int readBytePosition;
 
     private final String alt;
 
@@ -28,23 +28,39 @@ public class ReadContext {
         alt = String.valueOf((char) readByte);
 
         this.bytes = readBytes;
-        this.readBypePosition = readBytePosition;
+        this.readBytePosition = readBytePosition;
     }
 
     private int minIndex() {
-        return Math.max(0, readBypePosition - LENGTH);
+        return Math.max(0, readBytePosition - LENGTH);
+    }
+
+    private static int rightLength(final int readBytePosition, final byte[] bytes) {
+        return maxIndex(readBytePosition, bytes) - readBytePosition;
+    }
+
+    private static int leftLength(final int readBytePosition) {
+        return readBytePosition - minIndex(readBytePosition);
+    }
+
+    public byte[] readBytes() {
+        return bytes;
+    }
+
+    public int readBytePosition() {
+        return readBytePosition;
     }
 
     private int maxIndex() {
-        return Math.min(bytes.length - 1, readBypePosition + LENGTH);
+        return Math.min(bytes.length - 1, readBytePosition + LENGTH);
     }
 
     private int rightLength() {
-        return maxIndex() - readBypePosition;
+        return maxIndex() - readBytePosition;
     }
 
     private int leftLength() {
-        return readBypePosition - minIndex();
+        return readBytePosition - minIndex();
     }
 
     public String alt() {
@@ -56,24 +72,28 @@ public class ReadContext {
     }
 
     public ReadContextMatch match(@NotNull final ReadContext other) {
+        return match(other.readBytePosition, other.bytes);
+    }
 
-        if (!isComplete() && !other.isComplete()) {
+    public ReadContextMatch match(int otherReadBytePosition, byte[] otherReadBytes) {
+
+        if (!isComplete() && !isComplete(otherReadBytePosition, otherReadBytes)) {
             return NONE;
         }
 
-        for (int i = 0; i <= Math.min(rightLength(), other.rightLength()); i++) {
-            if (bytes[readBypePosition + i] != other.bytes[other.readBypePosition + i]) {
+        for (int i = 0; i <= Math.min(rightLength(), rightLength(otherReadBytePosition, otherReadBytes)); i++) {
+            if (bytes[this.readBytePosition + i] != otherReadBytes[otherReadBytePosition + i]) {
                 return NONE;
             }
         }
 
-        for (int i = 1; i <= Math.min(leftLength(), other.leftLength()); i++) {
-            if (bytes[readBypePosition - i] != other.bytes[other.readBypePosition - i]) {
+        for (int i = 1; i <= Math.min(leftLength(), leftLength(otherReadBytePosition)); i++) {
+            if (bytes[this.readBytePosition - i] != otherReadBytes[otherReadBytePosition - i]) {
                 return NONE;
             }
         }
 
-        return isComplete() && other.isComplete() ? FULL : PARTIAL;
+        return isComplete() && isComplete(otherReadBytePosition, otherReadBytes) ? FULL : PARTIAL;
     }
 
     @Override
@@ -102,5 +122,17 @@ public class ReadContext {
         }
 
         return result;
+    }
+
+    private static int minIndex(final int readBypePosition) {
+        return Math.max(0, readBypePosition - LENGTH);
+    }
+
+    private static int maxIndex(final int readBytePosition, final byte[] bytes) {
+        return Math.min(bytes.length - 1, readBytePosition + LENGTH);
+    }
+
+    private static boolean isComplete(final int readBytePosition, final byte[] bytes) {
+        return maxIndex(readBytePosition, bytes) - minIndex(readBytePosition) == 2 * LENGTH;
     }
 }

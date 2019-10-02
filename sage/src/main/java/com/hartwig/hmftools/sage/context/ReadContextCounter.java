@@ -87,8 +87,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
             byte[] readBases = record.getReadBases();
             for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
                 long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1);
-                final ReadContext refPositionContext = new ReadContext(readBasePosition, readBases);
-                if (incrementCounters(refPosition, refPositionContext)) {
+                if (incrementCounters(refPosition, readBasePosition, readBases)) {
                     incrementQualityScores(readBasePosition, record);
                 }
             }
@@ -107,8 +106,8 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
     }
 
-    public boolean incrementCounters(long refPosition, @NotNull final ReadContext refPositionContext) {
-        ReadContext.ReadContextMatch match = readContext.match(refPositionContext);
+    public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
+        ReadContext.ReadContextMatch match = readContext.match(otherReadBytePosition, otherReadByte);
         if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
             if (refPosition == hotspot.position()) {
                 if (match.equals(ReadContext.ReadContextMatch.FULL)) {
