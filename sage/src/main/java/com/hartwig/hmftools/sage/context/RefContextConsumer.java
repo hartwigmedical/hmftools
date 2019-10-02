@@ -14,7 +14,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefContextConsumer implements Consumer<SAMRecord> {
 
-    private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer.class);
+    private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer2.class);
 
 
     /*
@@ -44,15 +44,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private final GenomeRegion bounds;
     private final IndexedFastaSequenceFile refGenome;
     private final RefContextCandidates candidates;
-    private final boolean doReadContext;
+    private final boolean tumor;
+    private final int chromosomeLength;
 
-    public RefContextConsumer(boolean readContext, final int minQuality, @NotNull final GenomeRegion bounds,
+    public RefContextConsumer(boolean tumor, final int minQuality, @NotNull final GenomeRegion bounds,
             @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final RefContextCandidates candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
         this.minQuality = minQuality;
         this.candidates = candidates;
-        this.doReadContext = readContext;
+        this.tumor = tumor;
+        chromosomeLength = refGenome.getSequence(bounds.chromosome()).length();
+
     }
 
     @Override
@@ -61,8 +64,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         if (inBounds(record)) {
 
             if (record.getMappingQuality() >= minQuality) {
-                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x));
+
+                int refBasesStart = Math.max(1, record.getAlignmentStart() - 15);
+                int refBasesEnd = Math.min(chromosomeLength, record.getAlignmentEnd() + 15);
+                int refBasesAlignmentStartIndex = record.getAlignmentStart() - refBasesStart;
+
+                byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), refBasesStart, refBasesEnd).getBases();
+
+
+                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases, refBasesAlignmentStartIndex));
             } else {
+
+
                 record.getAlignmentBlocks().forEach(x -> processSubprimeAlignment(record, x));
             }
 
@@ -85,38 +98,37 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 refContext.subprimeRead(record.getMappingQuality());
             }
         }
+
     }
 
-    private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock) {
+    private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock, byte[] refBases, int refBasesAlignmentStartIndex) {
 
-        long refStart = alignmentBlock.getReferenceStart();
-        long refEnd = refStart + alignmentBlock.getLength() - 1;
-        byte[] refBytes = refGenome.getSubsequenceAt(record.getContig(), refStart, refEnd).getBases();
+        int readBasesStartIndex = alignmentBlock.getReadStart() - 1;
+        int refPositionStart = record.getReferencePositionAtReadPosition(alignmentBlock.getReadStart());
+        int refBasesStartIndex = refPositionStart - record.getAlignmentStart()  + refBasesAlignmentStartIndex;
 
-        int readStart = alignmentBlock.getReadStart() - 1;
+        for (int i = 0; i < alignmentBlock.getLength(); i++) {
 
-        for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
+            long refPosition = refPositionStart + i;
+            int readByteIndex = readBasesStartIndex + i;
+            int refByteIndex = refBasesStartIndex + i;
 
-            long position = refStart + refBytePosition;
-            int readBytePosition = readStart + refBytePosition;
-
-            if (!inBounds(position)) {
+            if (!inBounds(refPosition)) {
                 continue;
             }
 
-            final byte refByte = refBytes[refBytePosition];
+            final byte refByte = refBases[refByteIndex];
             final String ref = String.valueOf((char) refByte);
-            final byte readByte = record.getReadBases()[readBytePosition];
-            final int baseQuality = record.getBaseQualities()[readBytePosition];
+            final byte readByte = record.getReadBases()[readByteIndex];
+            final int baseQuality = record.getBaseQualities()[readByteIndex];
 
-            final RefContext refContext = candidates.refContext(record.getContig(), position, ref);
+            final RefContext refContext = candidates.refContext(record.getContig(), refPosition, ref);
             if (refContext != null) {
 
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
-
-                    if (doReadContext) {
-                        refContext.altRead(alt, new ReadContext(readBytePosition, record.getReadBases()));
+                    if (tumor) {
+                        refContext.altRead(alt, new ReadContext(readByteIndex, record.getReadBases()));
                     } else {
                         refContext.altRead(alt);
                     }
