@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.context;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
@@ -12,16 +13,31 @@ import org.jetbrains.annotations.Nullable;
 
 public class NormalRefContextCandidates implements RefContextCandidates {
 
+    private final String sample;
     private final List<RefContext> refContexts;
     private final GenomePositionSelector<RefContext> refContextSelector;
 
-    public NormalRefContextCandidates() {
+    public NormalRefContextCandidates(final String sample) {
+        this.sample = sample;
         this.refContexts = Lists.newArrayList();
         this.refContextSelector = GenomePositionSelectorFactory.create(refContexts);
     }
 
-    public void addRefContext(@NotNull final RefContext refContext) {
+    @NotNull
+    public RefContext add(@NotNull final String chromosome, final long position, @NotNull final String ref) {
+        if (!refContexts.isEmpty() && refContexts.get(refContexts.size() - 1).position() > position) {
+            throw new IllegalArgumentException("Can only add sorted ref contexts");
+        }
+
+        Optional<RefContext> optionalRefContext = refContextSelector.select(GenomePositions.create(chromosome, position));
+        if (optionalRefContext.isPresent()) {
+            return optionalRefContext.get();
+        }
+
+        RefContext refContext = new RefContext(sample, chromosome, position, ref);
         refContexts.add(refContext);
+
+        return refContext;
     }
 
     @Nullable

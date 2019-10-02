@@ -53,14 +53,14 @@ public class SagePipelineData {
     @NotNull
     public RefContextCandidates normalCandidates() {
 
-        NormalRefContextCandidates candidates = new NormalRefContextCandidates();
+        NormalRefContextCandidates candidates = new NormalRefContextCandidates(normalSample);
 
         List<VariantHotspot> sortedHotspots =
                 allHotspots.stream().sorted(Comparator.comparingLong(GenomePosition::position)).collect(Collectors.toList());
 
         for (VariantHotspot hotspot : sortedHotspots) {
-            RefContext refContext = new RefContext(normalSample, hotspot.chromosome(), hotspot.position(), hotspot.ref());
-            AltContext altContext = refContext.altContext(hotspot.alt());
+            final RefContext refContext = candidates.add(hotspot.chromosome(), hotspot.position(), hotspot.ref());
+            final AltContext altContext = refContext.altContext(hotspot.alt());
 
             final List<ReadContextCounter> readContextCounters = Lists.newArrayList();
             for (Map<VariantHotspot, AltContext> variantHotspotAltContextMap : altContextMap) {
@@ -74,8 +74,6 @@ public class SagePipelineData {
                 readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
                 altContext.setPrimaryReadContext(new ReadContextCounter(hotspot, readContextCounters.get(0).readContext()));
             }
-
-            candidates.addRefContext(refContext);
         }
 
         return candidates;
