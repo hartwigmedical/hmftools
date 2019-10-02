@@ -8,15 +8,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.task.SagePipeline;
+import com.hartwig.hmftools.sage.context.SagePipeline;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,9 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageApplication implements AutoCloseable {
@@ -62,7 +57,7 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        vcf = new SageVCF(refGenome, "/Users/jon/hmf/tmp/colo829.sage.vcf", config.reference(), config.tumor());
+        vcf = new SageVCF(refGenome, config.outputFile(), config.reference(), config.tumor());
 
     }
 
@@ -91,24 +86,6 @@ public class SageApplication implements AutoCloseable {
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         System.out.println(" in " + timeTaken);
-    }
-
-    private <T extends Consumer<SAMRecord>> T callable(GenomeRegion region, T consumer, String bamFile) throws IOException {
-        SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
-
-        SAMSlicer slicer = new SAMSlicer(0, Lists.newArrayList(region));
-        slicer.slice(tumorReader, consumer);
-        tumorReader.close();
-        return consumer;
-    }
-
-    private <T extends Consumer<SAMRecord>> T callable(List<GenomeRegion> regions, T consumer, String bamFile) throws IOException {
-        SamReader tumorReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.refGenome())).open(new File(bamFile));
-
-        SAMSlicer slicer = new SAMSlicer(13, regions);
-        slicer.slice(tumorReader, consumer);
-        tumorReader.close();
-        return consumer;
     }
 
     @Override

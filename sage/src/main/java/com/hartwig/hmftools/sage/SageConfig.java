@@ -26,6 +26,7 @@ public interface SageConfig {
     String TUMOR = "tumor";
     String TUMOR_BAM = "tumor_bam";
     String REF_GENOME = "ref_genome";
+    String OUTPUT_VCF = "out";
 
     int DEFAULT_THREADS = 2;
 
@@ -38,6 +39,7 @@ public interface SageConfig {
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
+        options.addOption(OUTPUT_VCF, true, "Path to output vcf");
 
         return options;
     }
@@ -60,6 +62,13 @@ public interface SageConfig {
     List<String> tumorBam();
 
     @NotNull
+    String outputFile();
+
+    default int minQuality() {
+        return 13;
+    }
+
+    @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
 
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
@@ -77,6 +86,7 @@ public interface SageConfig {
         }
 
         return ImmutableSageConfig.builder()
+                .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
                 .reference(reference)
                 .referenceBam(reference_bam)

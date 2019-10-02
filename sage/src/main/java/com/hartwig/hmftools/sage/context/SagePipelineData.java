@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MultiSampleContext {
+public class SagePipelineData {
 
     private final String normalSample;
 
@@ -24,7 +24,7 @@ public class MultiSampleContext {
     private final List<Map<VariantHotspot, AltContext>> altContextMap = new ArrayList<>();
     private final Map<Long, RefContext> normalMap = Maps.newHashMap();
 
-    public MultiSampleContext(final String normalSample, final int tumorSampleSize) {
+    public SagePipelineData(final String normalSample, final int tumorSampleSize) {
         this.normalSample = normalSample;
         for (int i = 0; i < tumorSampleSize; i++) {
             altContextMap.add(new HashMap<>());
