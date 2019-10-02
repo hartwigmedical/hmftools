@@ -11,7 +11,7 @@ Query OK, 1 row affected (0.00 sec)
 mysql> GRANT ALL on hmfpatients_test.* TO 'build'@'localhost';
 Query OK, 0 rows affected (0.00 sec)
 
-Maven automatically rebuilds the hmfpatient_test database based on DDL statements provided
+Maven automatically rebuilds the hmfpatients_test database based on DDL statements provided
 in file generate_database.sql via this additional Maven build step we are automatically 
 sure the jOOQ generated Java entity code always matches the DDL statements.
 
