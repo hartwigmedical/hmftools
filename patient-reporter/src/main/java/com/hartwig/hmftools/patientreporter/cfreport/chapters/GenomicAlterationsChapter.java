@@ -67,7 +67,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Protein"),
                             TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("VAF").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("tVAF").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Biallelic").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Hotspot").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Clonal").setTextAlignment(TextAlignment.CENTER),
@@ -78,7 +78,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Protein"),
                             TableUtil.createHeaderCell("Read depth").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("VAF").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("tVAF").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Biallelic").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Hotspot").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
