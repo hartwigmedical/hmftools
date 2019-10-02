@@ -17,6 +17,10 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private int partial;
     private int realigned;
 
+    private int quality;
+    private int baseQuality;
+    private int mapQuality;
+
     public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
         assert (readContext.isComplete());
         this.hotspot = hotspot;
@@ -46,6 +50,18 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return realigned;
     }
 
+    public int quality() {
+        return quality;
+    }
+
+    public int baseQuality() {
+        return baseQuality;
+    }
+
+    public int mapQuality() {
+        return mapQuality;
+    }
+
     public ReadContext readContext() {
         return readContext;
     }
@@ -54,6 +70,9 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         full = 0;
         partial = 0;
         realigned = 0;
+        quality = 0;
+        baseQuality = 0;
+        mapQuality = 0;
     }
 
     @Override
@@ -67,14 +86,28 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
             byte[] readBases = record.getReadBases();
             for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
-                long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1); //TODO: Check + 1
+                long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1);
                 final ReadContext refPositionContext = new ReadContext(readBasePosition, readBases);
-                accept(refPosition, refPositionContext);
+                if (incrementCounters(refPosition, refPositionContext)) {
+                    incrementQualityScores(readBasePosition, record);
+                }
             }
         }
     }
 
-    public boolean accept(long refPosition, ReadContext refPositionContext) {
+    private void incrementQualityScores(int readBasePosition, final SAMRecord record) {
+        final int distanceFromReadEdge = Math.min(readBasePosition, record.getReadBases().length - readBasePosition - 1);
+        final int mapQuality = record.getMappingQuality();
+        final int baseQuality = record.getBaseQualities()[readBasePosition];
+        final int quality = Math.min(Math.min(mapQuality, baseQuality), distanceFromReadEdge);
+
+        this.mapQuality += mapQuality;
+        this.baseQuality += baseQuality;
+        this.quality += quality;
+
+    }
+
+    public boolean incrementCounters(long refPosition, @NotNull final ReadContext refPositionContext) {
         ReadContext.ReadContextMatch match = readContext.match(refPositionContext);
         if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
             if (refPosition == hotspot.position()) {

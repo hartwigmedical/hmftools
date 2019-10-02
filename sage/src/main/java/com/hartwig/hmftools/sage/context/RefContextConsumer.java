@@ -115,23 +115,10 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
 
-                    long distanceFromAlignmentStart = position - record.getAlignmentStart();
-                    long distanceFromAlignmentEnd = record.getAlignmentEnd() - position;
-                    int minDistanceFromAlignment = (int) Math.min(distanceFromAlignmentStart, distanceFromAlignmentEnd);
-
                     if (doReadContext) {
-                        refContext.altRead(alt,
-                                record.getMappingQuality(),
-                                baseQuality,
-                                readBytePosition,
-                                minDistanceFromAlignment,
-                                new ReadContext(readBytePosition, record.getReadBases()));
+                        refContext.altRead(alt, new ReadContext(readBytePosition, record.getReadBases()));
                     } else {
-                        refContext.altRead(alt,
-                                record.getMappingQuality(),
-                                baseQuality,
-                                readBytePosition,
-                                minDistanceFromAlignment);
+                        refContext.altRead(alt);
                     }
 
                 } else {

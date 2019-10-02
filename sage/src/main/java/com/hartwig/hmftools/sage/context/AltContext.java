@@ -17,13 +17,7 @@ public class AltContext implements VariantHotspot {
     private final String alt;
     private final List<ReadContextCounter> readContextCounters = Lists.newArrayList();
 
-    private int baseQuality;
-    private int mapQuality;
-    private int quality;
     private int altReads;
-
-    private int totalRecordDistance;
-    private int totalAlignmentDistance;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
         refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position(), hotspot.ref());
@@ -35,20 +29,15 @@ public class AltContext implements VariantHotspot {
         this.alt = alt;
     }
 
-    public void altRead(int mapQuality, int baseQuality, int recordDistance, int alignmentDistance) {
+    public void incrementAltRead() {
         this.altReads++;
-        this.baseQuality += baseQuality;
-        this.mapQuality += mapQuality;
-        this.quality += Math.min(mapQuality, baseQuality);
-        totalRecordDistance += recordDistance;
-        totalAlignmentDistance += alignmentDistance;
     }
 
     public void addReadContext(@NotNull final ReadContext readContext) {
         if (readContext.isComplete()) {
             boolean readContextMatch = false;
             for (ReadContextCounter counter : readContextCounters) {
-                readContextMatch |= counter.accept(position(), readContext);
+                readContextMatch |= counter.incrementCounters(position(), readContext);
             }
 
             if (!readContextMatch) {
@@ -93,24 +82,8 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
-    public int quality() {
-        return quality;
-    }
-
-    public int mapQuality() {
-        return mapQuality;
-    }
-
-    public int baseQuality() {
-        return baseQuality;
-    }
-
     public int altSupport() {
         return altReads;
-    }
-
-    public int refQuality() {
-        return refContext.refQuality();
     }
 
     public int refSupport() {
@@ -123,14 +96,6 @@ public class AltContext implements VariantHotspot {
 
     public int subprimeReadDepth() {
         return refContext.subprimeReadDepth();
-    }
-
-    public int avgRecordDistance() {
-        return altSupport() == 0 ? altSupport() : totalRecordDistance / altSupport();
-    }
-
-    public int avgAlignmentDistance() {
-        return altSupport() == 0 ? altSupport() : totalAlignmentDistance / altSupport();
     }
 
     @NotNull

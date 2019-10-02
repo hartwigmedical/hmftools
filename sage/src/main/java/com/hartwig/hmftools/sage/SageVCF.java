@@ -33,7 +33,6 @@ public class SageVCF implements AutoCloseable {
     private final static String SUBPRIME_QUALITY_READ_DEPTH = "SDP";
     private final static String READ_CONTEXT = "RC";
     private final static String READ_CONTEXT_COUNT = "RCC";
-    private final static String READ_CONTEXT_COUNT_OTHER = "RCCO";
 
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
@@ -59,8 +58,8 @@ public class SageVCF implements AutoCloseable {
         return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
                 .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
                 .attribute("SDP", evidence.subprimeReadDepth())
-                .attribute("QUAL", new int[] { evidence.quality(), evidence.baseQuality(), evidence.mapQuality() })
-                .attribute("DIST", new int[] { evidence.avgRecordDistance(), evidence.avgAlignmentDistance() })
+                .attribute("QUAL",
+                        new int[] { readContextCounter.quality(), readContextCounter.baseQuality(), readContextCounter.mapQuality() })
                 .attribute("RCC", new int[] { readContextCounter.full(), readContextCounter.partial(), readContextCounter.realigned() })
                 .alleles(alleles)
                 .make();
