@@ -66,6 +66,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return readContext;
     }
 
+
     public void reset() {
         full = 0;
         partial = 0;

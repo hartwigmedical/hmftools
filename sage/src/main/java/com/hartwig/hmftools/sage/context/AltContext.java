@@ -24,7 +24,7 @@ public class AltContext implements VariantHotspot {
         this.alt = hotspot.alt();
     }
 
-    public AltContext(final RefContext refContext, final String alt) {
+    AltContext(final RefContext refContext, final String alt) {
         this.refContext = refContext;
         this.alt = alt;
     }
@@ -50,7 +50,7 @@ public class AltContext implements VariantHotspot {
     public ReadContextCounter primaryReadContext() {
         readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
         return readContextCounters.isEmpty()
-                ? new ReadContextCounter(this, new ReadContext(0, alt.getBytes()))
+                ? new ReadContextCounter(this, new ReadContext(0, alt().getBytes(), 0, ref().getBytes()))
                 : readContextCounters.get(0);
     }
 

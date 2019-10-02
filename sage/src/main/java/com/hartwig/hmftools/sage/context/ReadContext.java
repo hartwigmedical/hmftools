@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.PAR
 
 import java.util.Arrays;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ReadContext {
@@ -18,17 +19,46 @@ public class ReadContext {
 
     private static final int LENGTH = 15;
 
-    private final byte[] bytes;
+    private final byte[] readBytes;
     private final int readBytePosition;
 
     private final String alt;
+    private final int distance;
+    private final String difference;
 
-    public ReadContext(int readBytePosition, byte[] readBytes) {
-        final byte readByte = readBytes[readBytePosition];
-        alt = String.valueOf((char) readByte);
+    public ReadContext(int readBytePosition, byte[] readBytes, int refBytePosition, byte[] refBytes) {
+        alt = String.valueOf((char) readBytes[readBytePosition]);
 
-        this.bytes = readBytes;
+        this.readBytes = readBytes;
         this.readBytePosition = readBytePosition;
+
+        if (isComplete(readBytePosition, readBytes) && isComplete(refBytePosition, refBytes)) {
+
+            int length = 2 * LENGTH + 1;
+            int refStartIndex = minIndex(refBytePosition);
+            int readStartIndex = minIndex(readBytePosition);
+
+            int distance = 0;
+            char[] diffChar = new char[length];
+            for (int i = 0; i < length; i++) {
+                byte refByte = refBytes[refStartIndex + i];
+                byte readByte = readBytes[readStartIndex + i];
+
+                if (refByte == readByte) {
+                    diffChar[i] = '.';
+                } else {
+                    diffChar[i] = 'X';
+                    distance++;
+                }
+            }
+
+            this.distance = distance;
+            difference = new String(diffChar);
+
+        } else {
+            this.difference = Strings.EMPTY;
+            this.distance = -1;
+        }
     }
 
     private int minIndex() {
@@ -44,7 +74,7 @@ public class ReadContext {
     }
 
     public byte[] readBytes() {
-        return bytes;
+        return readBytes;
     }
 
     public int readBytePosition() {
@@ -52,15 +82,7 @@ public class ReadContext {
     }
 
     private int maxIndex() {
-        return Math.min(bytes.length - 1, readBytePosition + LENGTH);
-    }
-
-    private int rightLength() {
-        return maxIndex() - readBytePosition;
-    }
-
-    private int leftLength() {
-        return readBytePosition - minIndex();
+        return Math.min(readBytes.length - 1, readBytePosition + LENGTH);
     }
 
     public String alt() {
@@ -72,7 +94,7 @@ public class ReadContext {
     }
 
     public ReadContextMatch match(@NotNull final ReadContext other) {
-        return match(other.readBytePosition, other.bytes);
+        return match(other.readBytePosition, other.readBytes);
     }
 
     public ReadContextMatch match(int otherReadBytePosition, byte[] otherReadBytes) {
@@ -81,14 +103,14 @@ public class ReadContext {
             return NONE;
         }
 
-        for (int i = 0; i <= Math.min(rightLength(), rightLength(otherReadBytePosition, otherReadBytes)); i++) {
-            if (bytes[this.readBytePosition + i] != otherReadBytes[otherReadBytePosition + i]) {
+        for (int i = 0; i <= Math.min(rightLength(readBytePosition, readBytes), rightLength(otherReadBytePosition, otherReadBytes)); i++) {
+            if (readBytes[this.readBytePosition + i] != otherReadBytes[otherReadBytePosition + i]) {
                 return NONE;
             }
         }
 
-        for (int i = 1; i <= Math.min(leftLength(), leftLength(otherReadBytePosition)); i++) {
-            if (bytes[this.readBytePosition - i] != otherReadBytes[otherReadBytePosition - i]) {
+        for (int i = 1; i <= Math.min(leftLength(readBytePosition), leftLength(otherReadBytePosition)); i++) {
+            if (readBytes[this.readBytePosition - i] != otherReadBytes[otherReadBytePosition - i]) {
                 return NONE;
             }
         }
@@ -98,7 +120,7 @@ public class ReadContext {
 
     @Override
     public String toString() {
-        return new String(Arrays.copyOfRange(bytes, minIndex(), maxIndex() + 1));
+        return new String(Arrays.copyOfRange(readBytes, minIndex(), maxIndex() + 1));
     }
 
     @Override
@@ -118,7 +140,7 @@ public class ReadContext {
         int result = 1;
 
         for (int i = minIndex(); i <= maxIndex(); i++) {
-            result = 31 * result + bytes[i];
+            result = 31 * result + readBytes[i];
         }
 
         return result;
@@ -134,5 +156,13 @@ public class ReadContext {
 
     private static boolean isComplete(final int readBytePosition, final byte[] bytes) {
         return maxIndex(readBytePosition, bytes) - minIndex(readBytePosition) == 2 * LENGTH;
+    }
+
+    public int distanceFromRef() {
+        return distance;
+    }
+
+    public String differenceFromRef() {
+        return difference;
     }
 }

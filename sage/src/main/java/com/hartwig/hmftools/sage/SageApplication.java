@@ -68,7 +68,7 @@ public class SageApplication implements AutoCloseable {
 
         List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
 
-        for (int j = 0; j < 8; j++) {
+        for (int j = 0; j < 6; j++) {
             int start = 1 + j * 1_000_000;
             int end = 1_000_000 + j * 1_000_000;
 

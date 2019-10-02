@@ -14,7 +14,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefContextConsumer implements Consumer<SAMRecord> {
 
-    private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer2.class);
+    private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer.class);
 
 
     /*
@@ -110,17 +110,17 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         for (int i = 0; i < alignmentBlock.getLength(); i++) {
 
             long refPosition = refPositionStart + i;
-            int readByteIndex = readBasesStartIndex + i;
-            int refByteIndex = refBasesStartIndex + i;
+            int readBaseIndex = readBasesStartIndex + i;
+            int refBaseIndex = refBasesStartIndex + i;
 
             if (!inBounds(refPosition)) {
                 continue;
             }
 
-            final byte refByte = refBases[refByteIndex];
+            final byte refByte = refBases[refBaseIndex];
             final String ref = String.valueOf((char) refByte);
-            final byte readByte = record.getReadBases()[readByteIndex];
-            final int baseQuality = record.getBaseQualities()[readByteIndex];
+            final byte readByte = record.getReadBases()[readBaseIndex];
+            final int baseQuality = record.getBaseQualities()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition, ref);
             if (refContext != null) {
@@ -128,7 +128,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
-                        refContext.altRead(alt, new ReadContext(readByteIndex, record.getReadBases()));
+                        refContext.altRead(alt, new ReadContext(readBaseIndex, record.getReadBases(), refBaseIndex, refBases));
                     } else {
                         refContext.altRead(alt);
                     }

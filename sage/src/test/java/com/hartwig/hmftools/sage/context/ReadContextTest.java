@@ -10,41 +10,41 @@ public class ReadContextTest {
 
     @Test
     public void testExactLengthOnBothSide() {
-        final String expected = "AAAAAAAAAATCCCCCCCCCC";
-        final ReadContext victim = new ReadContext(10, expected.getBytes());
+        final String expected = "AAAAAAAAAAAAAAATCCCCCCCCCCCCCCC";
+        final ReadContext victim = new ReadContext(15, expected.getBytes(), 0, new byte[]{});
         assertTrue(victim.isComplete());
         assertEquals(expected, victim.toString());
     }
 
     @Test
     public void testAdditionalLengthOnBothSide() {
-        final String expected = "ATG" + "AAAAAAAAAATCCCCCCCCCC" + "ATG";
-        final ReadContext victim = new ReadContext(13, expected.getBytes());
+        final String expected = "ATG" + "AAAAAAAAAAAAAAATCCCCCCCCCCCCCCC" + "ATG";
+        final ReadContext victim = new ReadContext(18, expected.getBytes(), 0, new byte[]{});
         assertTrue(victim.isComplete());
-        assertEquals("AAAAAAAAAATCCCCCCCCCC", victim.toString());
+        assertEquals("AAAAAAAAAAAAAAATCCCCCCCCCCCCCCC", victim.toString());
     }
 
     @Test
     public void testShortLeft() {
-        final String bytes = "AATCCCCCCCCCC";
-        final ReadContext victim = new ReadContext(2, bytes.getBytes());
+        final String bytes = "AATCCCCCCCCCCCCCCC";
+        final ReadContext victim = new ReadContext(2, bytes.getBytes(), 0, new byte[]{});
         assertFalse(victim.isComplete());
         assertEquals(bytes, victim.toString());
     }
 
     @Test
     public void testShortRight() {
-        final String bytes = "AAAAAAAAAATCCC";
-        final ReadContext victim = new ReadContext(10, bytes.getBytes());
+        final String bytes = "AAAAAAAAAAAAAAATCCC";
+        final ReadContext victim = new ReadContext(15, bytes.getBytes(), 0, new byte[]{});
         assertFalse(victim.isComplete());
         assertEquals(bytes, victim.toString());
     }
 
     @Test
     public void testIncompleteStillMatches() {
-        final ReadContext full = new ReadContext(10, "AAAAAAAAAATCCCCCCCCCC".getBytes());
-        final ReadContext shortLeft = new ReadContext(2, "AATCCCCCCCCCC".getBytes());
-        final ReadContext shortRight = new ReadContext(10, "AAAAAAAAAATCCC".getBytes());
+        final ReadContext full = new ReadContext(15, "AAAAAAAAAAAAAAATCCCCCCCCCCCCCCC".getBytes(), 0, new byte[]{});
+        final ReadContext shortLeft = new ReadContext(2, "AATCCCCCCCCCCCCCCC".getBytes(), 0, new byte[]{});
+        final ReadContext shortRight = new ReadContext(15, "AAAAAAAAAAAAAAATCCC".getBytes(), 0, new byte[]{});
 
         assertEquals(ReadContext.ReadContextMatch.FULL, full.match(full));
 
@@ -60,11 +60,11 @@ public class ReadContextTest {
 
     @Test
     public void testMatch() {
-        final ReadContext full = new ReadContext(10, "AAAAAAAAAATCCCCCCCCCC".getBytes());
-        final ReadContext diffAtAlt = new ReadContext(10, "AAAAAAAAAAGCCCCCCCCCC".getBytes());
-        final ReadContext diffLeft = new ReadContext(10, "TAAAAAAAAATCCCCCCCCCC".getBytes());
-        final ReadContext diffRight = new ReadContext(10, "AAAAAAAAAATCCCCCCCCCG".getBytes());
-        final ReadContext diffBoth = new ReadContext(10, "AGAAAAAAAATCCCCCCCCGC".getBytes());
+        final ReadContext full = new ReadContext(15, "AAAAAAAAAAAAAAATCCCCCCCCCCCCCCC".getBytes(), 0, new byte[]{});
+        final ReadContext diffAtAlt = new ReadContext(15, "AAAAAAAAAAAAAAAGCCCCCCCCCCCCCCC".getBytes(), 0, new byte[]{});
+        final ReadContext diffLeft = new ReadContext(15, "TAAAAAAAAAAAAAATCCCCCCCCCCCCCCC".getBytes(), 0, new byte[]{});
+        final ReadContext diffRight = new ReadContext(15, "AAAAAAAAAAAAAAATCCCCCCCCCCCCCCG".getBytes(), 0, new byte[]{});
+        final ReadContext diffBoth = new ReadContext(15, "TAAAAAAAAAAAAAATCCCCCCCCCCCCCCG".getBytes(), 0, new byte[]{});
 
         assertEquals(ReadContext.ReadContextMatch.NONE,full.match(diffAtAlt));
         assertEquals(ReadContext.ReadContextMatch.NONE,full.match(diffLeft));
