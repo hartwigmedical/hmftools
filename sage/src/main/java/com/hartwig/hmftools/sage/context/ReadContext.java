@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.PAR
 
 import java.util.Arrays;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,24 +19,35 @@ public class ReadContext {
         FULL
     }
 
-    private static final int LENGTH = 15;
+    private static final int DEFAULT_BUFFER = 20;
 
     private final byte[] readBytes;
     private final int readBytePosition;
+    private final int buffer;
 
     private final String alt;
     private final int distance;
     private final String difference;
 
     public ReadContext(int readBytePosition, byte[] readBytes, int refBytePosition, byte[] refBytes) {
+        this(DEFAULT_BUFFER, readBytePosition, readBytes, refBytePosition, refBytes);
+    }
+
+    @VisibleForTesting
+    ReadContext(int buffer, int readBytePosition, byte[] readBytes) {
+        this(buffer, readBytePosition, readBytes, 0, new byte[]{});
+    }
+
+    private ReadContext(int buffer, int readBytePosition, byte[] readBytes, int refBytePosition, byte[] refBytes) {
         alt = String.valueOf((char) readBytes[readBytePosition]);
 
+        this.buffer = buffer;
         this.readBytes = readBytes;
         this.readBytePosition = readBytePosition;
 
         if (isComplete(readBytePosition, readBytes) && isComplete(refBytePosition, refBytes)) {
 
-            int length = 2 * LENGTH + 1;
+            int length = 2 * buffer + 1;
             int refStartIndex = minIndex(refBytePosition);
             int readStartIndex = minIndex(readBytePosition);
 
@@ -62,14 +75,14 @@ public class ReadContext {
     }
 
     private int minIndex() {
-        return Math.max(0, readBytePosition - LENGTH);
+        return Math.max(0, readBytePosition - buffer);
     }
 
-    private static int rightLength(final int readBytePosition, final byte[] bytes) {
+    private int rightLength(final int readBytePosition, final byte[] bytes) {
         return maxIndex(readBytePosition, bytes) - readBytePosition;
     }
 
-    private static int leftLength(final int readBytePosition) {
+    private int leftLength(final int readBytePosition) {
         return readBytePosition - minIndex(readBytePosition);
     }
 
@@ -82,7 +95,7 @@ public class ReadContext {
     }
 
     private int maxIndex() {
-        return Math.min(readBytes.length - 1, readBytePosition + LENGTH);
+        return Math.min(readBytes.length - 1, readBytePosition + buffer);
     }
 
     public String alt() {
@@ -90,7 +103,7 @@ public class ReadContext {
     }
 
     public boolean isComplete() {
-        return maxIndex() - minIndex() == 2 * LENGTH;
+        return maxIndex() - minIndex() == 2 * buffer;
     }
 
     public ReadContextMatch match(@NotNull final ReadContext other) {
@@ -146,16 +159,16 @@ public class ReadContext {
         return result;
     }
 
-    private static int minIndex(final int readBypePosition) {
-        return Math.max(0, readBypePosition - LENGTH);
+    private int minIndex(final int readBypePosition) {
+        return Math.max(0, readBypePosition - buffer);
     }
 
-    private static int maxIndex(final int readBytePosition, final byte[] bytes) {
-        return Math.min(bytes.length - 1, readBytePosition + LENGTH);
+    private int maxIndex(final int readBytePosition, final byte[] bytes) {
+        return Math.min(bytes.length - 1, readBytePosition + buffer);
     }
 
-    private static boolean isComplete(final int readBytePosition, final byte[] bytes) {
-        return maxIndex(readBytePosition, bytes) - minIndex(readBytePosition) == 2 * LENGTH;
+    private boolean isComplete(final int readBytePosition, final byte[] bytes) {
+        return maxIndex(readBytePosition, bytes) - minIndex(readBytePosition) == 2 * buffer;
     }
 
     public int distanceFromRef() {
