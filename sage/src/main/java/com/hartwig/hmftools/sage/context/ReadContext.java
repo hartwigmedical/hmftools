@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.PAR
 
 import java.util.Arrays;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SAMRecord;
 
 public class ReadContext {
 
@@ -29,49 +29,34 @@ public class ReadContext {
     private final int distance;
     private final String difference;
 
-    public ReadContext(int readBytePosition, byte[] readBytes, int refBytePosition, byte[] refBytes) {
-        this(DEFAULT_BUFFER, readBytePosition, readBytes, refBytePosition, refBytes);
+    public ReadContext(int readBytePosition, byte[] readBytes) {
+        this(DEFAULT_BUFFER, readBytePosition, readBytes);
     }
 
-    @VisibleForTesting
+    public ReadContext(int readBytePosition, @NotNull final SAMRecord record, byte[] refBases) {
+        this(DEFAULT_BUFFER, readBytePosition, record, refBases);
+    }
+
+    public ReadContext(int buffer, int readBytePosition, @NotNull final SAMRecord record, byte[] refBases) {
+        this.buffer = buffer;
+        this.readBytes = record.getReadBases();
+        this.readBytePosition = readBytePosition;
+
+        final ReadContextDistance readContextDistance = new ReadContextDistance(buffer, readBytePosition, record, refBases);
+        this.distance = readContextDistance.distance();
+        this.difference = readContextDistance.cigar();
+        this.alt = String.valueOf((char) readBytes[readBytePosition]);
+    }
+
     ReadContext(int buffer, int readBytePosition, byte[] readBytes) {
-        this(buffer, readBytePosition, readBytes, 0, new byte[]{});
-    }
-
-    private ReadContext(int buffer, int readBytePosition, byte[] readBytes, int refBytePosition, byte[] refBytes) {
         alt = String.valueOf((char) readBytes[readBytePosition]);
 
         this.buffer = buffer;
         this.readBytes = readBytes;
         this.readBytePosition = readBytePosition;
 
-        if (isComplete(readBytePosition, readBytes) && isComplete(refBytePosition, refBytes)) {
-
-            int length = 2 * buffer + 1;
-            int refStartIndex = minIndex(refBytePosition);
-            int readStartIndex = minIndex(readBytePosition);
-
-            int distance = 0;
-            char[] diffChar = new char[length];
-            for (int i = 0; i < length; i++) {
-                byte refByte = refBytes[refStartIndex + i];
-                byte readByte = readBytes[readStartIndex + i];
-
-                if (refByte == readByte) {
-                    diffChar[i] = '.';
-                } else {
-                    diffChar[i] = 'X';
-                    distance++;
-                }
-            }
-
-            this.distance = distance;
-            difference = new String(diffChar);
-
-        } else {
-            this.difference = Strings.EMPTY;
-            this.distance = -1;
-        }
+        this.difference = Strings.EMPTY;
+        this.distance = -1;
     }
 
     private int minIndex() {

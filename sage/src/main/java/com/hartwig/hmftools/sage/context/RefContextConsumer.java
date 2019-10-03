@@ -65,14 +65,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             if (record.getMappingQuality() >= minQuality) {
 
-                int refBasesStart = Math.max(1, record.getAlignmentStart() - 15);
-                int refBasesEnd = Math.min(chromosomeLength, record.getAlignmentEnd() + 15);
-                int refBasesAlignmentStartIndex = record.getAlignmentStart() - refBasesStart;
-
-                byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), refBasesStart, refBasesEnd).getBases();
-
-
-                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases, refBasesAlignmentStartIndex));
+                byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
+                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases));
             } else {
 
 
@@ -101,11 +95,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     }
 
-    private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock, byte[] refBases, int refBasesAlignmentStartIndex) {
+    private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock, byte[] refBases) {
 
         int readBasesStartIndex = alignmentBlock.getReadStart() - 1;
-        int refPositionStart = record.getReferencePositionAtReadPosition(alignmentBlock.getReadStart());
-        int refBasesStartIndex = refPositionStart - record.getAlignmentStart()  + refBasesAlignmentStartIndex;
+        int refPositionStart = alignmentBlock.getReferenceStart();
+        int refBasesStartIndex = refPositionStart - record.getAlignmentStart();
 
         for (int i = 0; i < alignmentBlock.getLength(); i++) {
 
@@ -128,7 +122,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
-                        refContext.altRead(alt, new ReadContext(readBaseIndex, record.getReadBases(), refBaseIndex, refBases));
+                        refContext.altRead(alt, new ReadContext(readBaseIndex, record, refBases));
                     } else {
                         refContext.altRead(alt);
                     }

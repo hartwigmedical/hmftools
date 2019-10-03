@@ -94,7 +94,7 @@ public class ReadContextDistance {
 
             char newOperator;
             if (readBase == refBase) {
-                newOperator = '=';
+                newOperator = 'M';
             } else {
                 newOperator = 'X';
                 distance++;
