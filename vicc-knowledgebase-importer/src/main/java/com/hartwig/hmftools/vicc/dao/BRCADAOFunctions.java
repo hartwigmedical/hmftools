@@ -3,7 +3,7 @@ package com.hartwig.hmftools.vicc.dao;
 import static com.hartwig.hmftools.vicc.database.Tables.BRCAPART1;
 import static com.hartwig.hmftools.vicc.database.Tables.BRCAPART2;
 
-import com.hartwig.hmftools.vicc.datamodel.BRCA;
+import com.hartwig.hmftools.vicc.datamodel.brca.BRCA;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

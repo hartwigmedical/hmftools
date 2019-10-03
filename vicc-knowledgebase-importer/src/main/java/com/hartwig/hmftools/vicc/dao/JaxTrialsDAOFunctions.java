@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSMOLECULARPROFIL
 import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSTHERAPIES;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXTRIALSVARIANTREQUIREMENTDETAILS;
 
-import com.hartwig.hmftools.vicc.datamodel.JaxTrials;
-import com.hartwig.hmftools.vicc.datamodel.JaxTrialsIndications;
-import com.hartwig.hmftools.vicc.datamodel.JaxTrialsMolecularProfile;
-import com.hartwig.hmftools.vicc.datamodel.JaxTrialsTherapies;
-import com.hartwig.hmftools.vicc.datamodel.JaxTrialsVariantRequirementDetails;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsIndications;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsMolecularProfile;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsTherapies;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsVariantRequirementDetails;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

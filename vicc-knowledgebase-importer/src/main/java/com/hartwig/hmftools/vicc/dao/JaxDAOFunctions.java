@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.vicc.database.Tables.JAXMOLECULARPROFILE;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXREFERENCES;
 import static com.hartwig.hmftools.vicc.database.Tables.JAXTHERAPY;
 
-import com.hartwig.hmftools.vicc.datamodel.Jax;
-import com.hartwig.hmftools.vicc.datamodel.JaxReferences;
+import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
+import com.hartwig.hmftools.vicc.datamodel.jax.JaxReferences;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

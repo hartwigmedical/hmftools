@@ -13,13 +13,13 @@ import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBGENECLINICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBVARIANTBIOLOGICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBVARIANTCLINICAL;
 
-import com.hartwig.hmftools.vicc.datamodel.OncoKbBiological;
-import com.hartwig.hmftools.vicc.datamodel.OncoKbClinical;
-import com.hartwig.hmftools.vicc.datamodel.OncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.OncoKbDrugAbstracts;
-import com.hartwig.hmftools.vicc.datamodel.Oncokb;
-import com.hartwig.hmftools.vicc.datamodel.OncokbGene;
-import com.hartwig.hmftools.vicc.datamodel.OncokbVariant;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbBiological;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbClinical;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbConsequence;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbDrugAbstracts;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.Oncokb;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbGene;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

@@ -13,10 +13,10 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOTHE
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOVERALLCONTACT;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSTAGS;
 
-import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsIntervation;
-import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsLocations;
-import com.hartwig.hmftools.vicc.datamodel.MolecularMatchTrialsTags;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsIntervation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsLocations;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsTags;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

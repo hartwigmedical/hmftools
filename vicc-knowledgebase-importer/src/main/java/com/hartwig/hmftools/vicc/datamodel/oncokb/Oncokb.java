@@ -1,0 +1,19 @@
+package com.hartwig.hmftools.vicc.datamodel.oncokb;
+
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Value.Immutable
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public abstract class Oncokb implements KbSpecificObject {
+
+    @Nullable
+    public abstract OncoKbBiological oncoKbBiological();
+
+    @Nullable
+    public abstract OncoKbClinical oncoKbClinical();
+
+}

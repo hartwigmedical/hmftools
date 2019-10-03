@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.dao;
 
 import static com.hartwig.hmftools.vicc.database.Tables.SAGE;
 
-import com.hartwig.hmftools.vicc.datamodel.Sage;
+import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

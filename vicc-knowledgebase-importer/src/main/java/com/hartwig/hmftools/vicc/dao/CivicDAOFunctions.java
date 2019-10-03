@@ -39,15 +39,15 @@ import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSTYPES
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSVARIANTS;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTTYPES;
 
-import com.hartwig.hmftools.vicc.datamodel.Civic;
-import com.hartwig.hmftools.vicc.datamodel.CivicClinicalTrial;
-import com.hartwig.hmftools.vicc.datamodel.CivicDrugs;
-import com.hartwig.hmftools.vicc.datamodel.CivicEvidenceItems;
-import com.hartwig.hmftools.vicc.datamodel.CivicSource;
-import com.hartwig.hmftools.vicc.datamodel.CivicUser;
-import com.hartwig.hmftools.vicc.datamodel.CivicVariantGroup;
-import com.hartwig.hmftools.vicc.datamodel.CivicVariantTypes;
-import com.hartwig.hmftools.vicc.datamodel.CivicVariants;
+import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrugs;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicSource;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicUser;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantGroup;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantTypes;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariants;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

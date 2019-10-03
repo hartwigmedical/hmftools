@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.vicc.database.Tables.CGIREGION;
 import static com.hartwig.hmftools.vicc.database.Tables.CGISTRAND;
 import static com.hartwig.hmftools.vicc.database.Tables.CGITRANSCRIPT;
 
-import com.hartwig.hmftools.vicc.datamodel.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

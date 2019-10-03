@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.vicc.database.Tables.PMKBTISSUE;
 import static com.hartwig.hmftools.vicc.database.Tables.PMKBTUMOR;
 import static com.hartwig.hmftools.vicc.database.Tables.PMKBVARIANT;
 
-import com.hartwig.hmftools.vicc.datamodel.Pmkb;
-import com.hartwig.hmftools.vicc.datamodel.PmkbGene;
-import com.hartwig.hmftools.vicc.datamodel.PmkbTissue;
-import com.hartwig.hmftools.vicc.datamodel.PmkbTumor;
-import com.hartwig.hmftools.vicc.datamodel.PmkbVariant;
+import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
+import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbGene;
+import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbTissue;
+import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbTumor;
+import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
