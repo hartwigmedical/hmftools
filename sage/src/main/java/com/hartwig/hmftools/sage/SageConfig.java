@@ -65,7 +65,7 @@ public interface SageConfig {
     String outputFile();
 
     default int minQuality() {
-        return 0;
+        return 1;
     }
 
     @NotNull
