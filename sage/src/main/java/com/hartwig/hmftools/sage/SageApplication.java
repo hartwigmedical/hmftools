@@ -68,9 +68,12 @@ public class SageApplication implements AutoCloseable {
 
         List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
 
-        for (int j = 0; j < 6; j++) {
-            int start = 1 + j * 1_000_000;
-            int end = 1_000_000 + j * 1_000_000;
+        for (int j = 0; j < 1; j++) {
+//            int start = 1 + j * 1_000_000;
+//            int end = 1_000_000 + j * 1_000_000;
+
+            int start = 22_253_000;
+            int end = 22_254_000;
 
             final GenomeRegion region = GenomeRegions.create("17", start, end);
             SagePipeline myThing = new SagePipeline(region, config, executorService, refGenome);
@@ -78,10 +81,17 @@ public class SageApplication implements AutoCloseable {
             futures.add(myThing.submit());
         }
 
-        for (Future<List<List<AltContext>>> future : futures) {
-            //            future.get().forEach(System.out::println);
-            future.get().forEach(vcf::write);
+        for (int i = 0; i < futures.size(); i++) {
+            int start = 1 + i * 1_000_000;
+
+            Future<List<List<AltContext>>> future = futures.get(i);
+
+            List<List<AltContext>> altContexts = future.get();
+            LOGGER.info("Writing {} ", start);
+            altContexts.forEach(vcf::write);
+//            LOGGER.info("Finished Writing {} ", start);
         }
+
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         System.out.println(" in " + timeTaken);

@@ -40,7 +40,7 @@ public class SagePipeline {
     @NotNull
     public CompletableFuture<List<List<AltContext>>> submit() {
 
-        LOGGER.info("Starting pipeline of: " + region.start());
+        //        LOGGER.info("Starting pipeline of: " + region.start());
 
         final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size());
         List<String> samples = config.tumor();
@@ -51,22 +51,22 @@ public class SagePipeline {
             final String sample = samples.get(i);
             final String bam = bams.get(i);
 
-            CompletableFuture<List<AltContext>> candidateFuture = CompletableFuture.completedFuture(sample)
-                    .thenApplyAsync(unused -> new TumorRefContextSupplier(config.minQuality(),
+            CompletableFuture<List<AltContext>> candidateFuture =
+                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config.minQuality(),
                             sample,
                             region,
                             bam,
                             refGenome,
-                            new TumorRefContextCandidates(sample)).get()
-                            .stream()
-                            .flatMap(x -> x.alts().stream())
-                            .filter(x -> x.altSupport() > 2)
-                            .collect(Collectors.toList()), executor)
-                    .thenApplyAsync(altContexts -> new TumorReadContextSupplier(config.minQuality(),
-                            sample,
-                            region,
-                            bam,
-                            altContexts).get());
+                            new TumorRefContextCandidates(sample)), executor)
+                            .thenApply(refContexts -> refContexts.stream()
+                                    .flatMap(x -> x.alts().stream())
+                                    .filter(x -> x.altSupport() > 2)
+                                    .collect(Collectors.toList()))
+                            .thenApply(altContexts -> new TumorReadContextSupplier(config.minQuality(),
+                                    sample,
+                                    region,
+                                    bam,
+                                    altContexts).get());
 
             tumorFutures.add(candidateFuture);
 
@@ -74,7 +74,7 @@ public class SagePipeline {
 
         final CompletableFuture<Void> doneTumor = CompletableFuture.allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()]));
 
-        final CompletableFuture<List<RefContext>> normalFuture = doneTumor.thenApplyAsync(aVoid -> {
+        final CompletableFuture<List<RefContext>> normalFuture = doneTumor.thenApply(aVoid -> {
 
             for (int i = 0; i < tumorFutures.size(); i++) {
                 CompletableFuture<List<AltContext>> future = tumorFutures.get(i);
@@ -88,11 +88,9 @@ public class SagePipeline {
                     sagePipelineData.normalCandidates()).get();
         });
 
-        return normalFuture.thenApplyAsync(aVoid -> {
+        return normalFuture.thenApply(aVoid -> {
 
             sagePipelineData.addNormal(normalFuture.join());
-
-            LOGGER.info("Creating set " + region.start());
 
             return sagePipelineData.altContexts();
         });
