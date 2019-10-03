@@ -18,7 +18,7 @@
         <module>health-checker</module>
         <module>fastq-stats</module>
         <module>amber</module>
-        <module>sage</module>
+<!--        <module>sage</module>-->
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
         <module>hmf-gene-panel-builder</module>
