@@ -21,6 +21,8 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private int baseQuality;
     private int mapQuality;
 
+    private int coverage;
+
     public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
         assert (readContext.isComplete());
         this.hotspot = hotspot;
@@ -84,14 +86,17 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     @Override
     public void accept(final SAMRecord record) {
         if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
+//            coverage++;
+//            if (coverage < 100) {
 
-            byte[] readBases = record.getReadBases();
-            for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
-                long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1);
-                if (incrementCounters(refPosition, readBasePosition, readBases)) {
-                    incrementQualityScores(readBasePosition, record);
+                byte[] readBases = record.getReadBases();
+                for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
+                    long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1);
+                    if (incrementCounters(refPosition, readBasePosition, readBases)) {
+                        incrementQualityScores(readBasePosition, record);
+                    }
                 }
-            }
+//            }
         }
     }
 
@@ -99,7 +104,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         final int distanceFromReadEdge = Math.min(readBasePosition, record.getReadBases().length - readBasePosition - 1);
         final int mapQuality = record.getMappingQuality();
         final int baseQuality = record.getBaseQualities()[readBasePosition];
-        final int quality = Math.min(Math.min(mapQuality - 12, baseQuality), distanceFromReadEdge);
+        final int quality = Math.min(Math.min(Math.max(0, mapQuality - 12), baseQuality), distanceFromReadEdge);
 
         this.mapQuality += mapQuality;
         this.baseQuality += baseQuality;
