@@ -34,25 +34,23 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
     private final List<AltContext> altContexts;
     private final int minQuality;
 
-    public TumorReadContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final List<AltContext> altContexts) {
+    public TumorReadContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds,
+            @NotNull final String bamFile, @NotNull final List<AltContext> altContexts) {
 
         this.minQuality = minQuality;
         this.sample = sample;
         this.bounds = bounds;
         this.bamFile = bamFile;
         this.altContexts = altContexts;
-        consumerSelector =
-                GenomePositionSelectorFactory.create(altContexts.stream().map(AltContext::primaryReadContext).collect(Collectors.toList()));
-
+        final List<ReadContextCounter> readContextCounters =
+                altContexts.stream().map(AltContext::setPrimaryReadCounterFromInterim).collect(Collectors.toList());
+        consumerSelector = GenomePositionSelectorFactory.create(readContextCounters);
     }
 
     @Override
     public List<AltContext> get() {
 
         LOGGER.info("Read Contexts " + sample + "  from " + bounds.start());
-        altContexts.forEach(x -> x.primaryReadContext().reset());
-
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
             SAMSlicer slicer = new SAMSlicer(minQuality, Lists.newArrayList(bounds));

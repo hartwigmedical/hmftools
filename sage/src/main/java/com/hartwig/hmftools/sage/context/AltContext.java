@@ -15,8 +15,9 @@ public class AltContext implements VariantHotspot {
 
     private final RefContext refContext;
     private final String alt;
-    private final List<ReadContextCounter> readContextCounters = Lists.newArrayList();
+    private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
 
+    private ReadContextCounter readContextCounter;
     private int altReads;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
@@ -34,29 +35,45 @@ public class AltContext implements VariantHotspot {
     }
 
     public void addReadContext(@NotNull final ReadContext readContext) {
+        if (readContextCounter != null) {
+            throw new IllegalStateException();
+        }
+
         if (readContext.isComplete()) {
             boolean readContextMatch = false;
-            for (ReadContextCounter counter : readContextCounters) {
+            for (ReadContextCounter counter : interimReadContexts) {
                 readContextMatch |= counter.incrementCounters(position(), readContext.readBytePosition(), readContext.readBytes());
             }
 
             if (!readContextMatch) {
-                readContextCounters.add(new ReadContextCounter(this, readContext));
+                interimReadContexts.add(new ReadContextCounter(this, readContext));
             }
         }
     }
 
     @NotNull
-    public ReadContextCounter primaryReadContext() {
-        readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
-        return readContextCounters.isEmpty()
+    public ReadContextCounter setPrimaryReadCounterFromInterim() {
+        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
+        readContextCounter = interimReadContexts.isEmpty()
                 ? new ReadContextCounter(this, new ReadContext(0, alt().getBytes()))
-                : readContextCounters.get(0);
+                : new ReadContextCounter(this, interimReadContexts.get(0).readContext());
+
+        interimReadContexts.clear();
+
+        return primaryReadContext();
+    }
+
+    @NotNull
+    public ReadContextCounter primaryReadContext() {
+        if (readContextCounter == null) {
+            throw new IllegalStateException();
+        }
+
+        return readContextCounter;
     }
 
     public void setPrimaryReadContext(@NotNull final ReadContextCounter readContext) {
-        readContextCounters.clear();
-        readContextCounters.add(readContext);
+        readContextCounter = readContext;
     }
 
     @NotNull

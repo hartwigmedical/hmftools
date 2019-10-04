@@ -68,16 +68,6 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return readContext;
     }
 
-
-    public void reset() {
-        full = 0;
-        partial = 0;
-        realigned = 0;
-        quality = 0;
-        baseQuality = 0;
-        mapQuality = 0;
-    }
-
     @Override
     public String toString() {
         return readContext.toString();
@@ -86,8 +76,8 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     @Override
     public void accept(final SAMRecord record) {
         if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
-//            coverage++;
-//            if (coverage < 100) {
+            coverage++;
+            if (coverage < 1000) {
 
                 byte[] readBases = record.getReadBases();
                 for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
@@ -96,7 +86,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
                         incrementQualityScores(readBasePosition, record);
                     }
                 }
-//            }
+            }
         }
     }
 
