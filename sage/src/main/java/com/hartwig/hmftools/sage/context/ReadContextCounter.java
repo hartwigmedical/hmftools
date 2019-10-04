@@ -108,13 +108,14 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
             if (refPosition == hotspot.position()) {
                 if (match.equals(ReadContext.ReadContextMatch.FULL)) {
                     full++;
+                    return true;
                 } else {
                     partial++;
+                    return true;
                 }
             } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
                 realigned++;
             }
-            return true;
         }
         return false;
     }
