@@ -98,8 +98,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
         this.mapQuality += mapQuality;
         this.baseQuality += baseQuality;
-        this.quality += quality;
-
+        this.quality += Math.max(0, quality - 12);
     }
 
     public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
