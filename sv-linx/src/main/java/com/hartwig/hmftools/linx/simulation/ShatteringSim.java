@@ -183,53 +183,6 @@ public class ShatteringSim
                 }
             }
 
-            /*
-            int segIndex = 0;
-            for(; segIndex < mSegments.size(); ++segIndex)
-            {
-                Segment segment = mSegments.get(segIndex);
-
-                if(!segment.fullyLinked())
-                {
-                    for (int be = SE_START; be <= SE_END; ++be)
-                    {
-                        boolean isStart = isStart(be);
-
-                        if (!segment.isLinkOpen(isStart))
-                            continue;
-
-                        if (nextSegment1 == null && index >= nextIndex1) // && nextSegment2 != segment
-                        {
-                            nextSegment1 = segment;
-                            seg1LinkOnStart = isStart;
-                        }
-                        else if (nextSegment2 == null && index >= nextIndex2) //&& nextSegment1 != segment
-                        {
-                            nextSegment2 = segment;
-                            seg2LinkOnStart = isStart;
-                        }
-
-                        ++index;
-                    }
-
-                    if (nextSegment1 != null && nextSegment2 != null)
-                    {
-                        foundLink = true;
-                        nextSegment1.setLink(nextSegment2, seg1LinkOnStart);
-                        nextSegment2.setLink(nextSegment1, seg2LinkOnStart);
-                        mRemainingLinkCount -= 2;
-                        break;
-                    }
-                }
-
-                if(segIndex == mSegments.size() - 1)
-                {
-                    // 2 free segments may not be found if the 2 random indices are in the last open segment with both links available
-                    segIndex = 0;
-                }
-            }
-            */
-
             if(!foundLink)
             {
                 LOGGER.error("no link found: nextIndex({} & {}) remaining({})", nextIndex1, nextIndex2, mRemainingLinkCount);
@@ -240,7 +193,6 @@ public class ShatteringSim
             if(!moreLinksPossible())
                 break;
         }
-
     }
 
     private boolean moreLinksPossible()
@@ -352,7 +304,8 @@ public class ShatteringSim
             }
         }
 
-        // test now many consecutive segments are present
+        // test now many adjacent segments are present, even if not directly next to each other
+        // these are equivalent to deletion bridges (with zero loss)
         int adjacentPairs = 0;
 
         for(int i = 0; i < mSegments.size() - 1; ++i)
@@ -422,7 +375,7 @@ public class ShatteringSim
     {
         if(mOutputDir.isEmpty())
             return;
-        
+
         try
         {
             String outputFileName = mOutputDir + "SIM_RESULTS.csv";
