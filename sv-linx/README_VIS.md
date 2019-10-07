@@ -81,7 +81,7 @@ Another key feature of the CIRCOS plot is the ability to trace the derivative ch
 Each segment in the 4th track represents a segment of the derivative chromosome and is linked on both ends either to a centromeric or 
 telomeric end (marked with an open or closed square respective) or a breakend (marked with a track or triangle in the case of foldbacks). 
 Each derivative chromosome can be traced continuously from one telomeric / centromeric end to another (or to a single breakend if one is 
-reached) by following a continuous series of segments and beakends. To make this easier to follow, each time a new segment is connected on 
+reached) by following a continuous series of segments and breakends. To make this easier to follow, each time a new segment is connected on 
 a chromosome the segment is offset outwards slightly. Hence the derivative chromosomes can be traced from the inside to the outside of the 
 4th track of the diagram. A cluster may contain 1 or more derivative chromosomes. In cluster mode each derivative chromosome will be shown 
 in a different colour for ease of viewing (with a maximum of 10 colours after which all derivative chromosomes are shown in black). 
@@ -219,7 +219,7 @@ The label size scales linearly from the min to the max label size as an inverse 
 If the number of distance labels exceeds `max_distance_labels`, no distance labels will be shown and all labels will be sized with `min_label_size`.
 
 The same label size will be applied genes unless there is a gene which exceeds `max_gene_characters` in length. In this case, all genes
-will be scaled down to prevent the gene labels from going outside the gene track. Adjusting this parameter is best done in conjuction with
+will be scaled down to prevent the gene labels from going outside the gene track. Adjusting this parameter is best done in conjunction with
 the `gene_relative_size` parameter.
 
 By default, position labels will be shown every 100k bases. However, if the number of labels exceeds `max_position_labels` then this will be reduced
@@ -257,7 +257,7 @@ Argument | Default | Description
 chr_range_height| 150 | Chromosome range height in pixels per row
 chr_range_columns| 6 | Maximum chromosomes per row
 
-Note the CIRCOS panel is 3000 pixels in heigh and width.
+Note the CIRCOS panel is 3000 pixels in height and width.
 
 ## Fusion Panel
 

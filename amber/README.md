@@ -8,13 +8,29 @@ Additionally, AMBER is able to:
   - detect evidence of contamination in the tumor from homozygous sites in the reference; and
   - facilitate sample matching by recording SNPs in the germline
 
-## R Dependencies
-Segmentation is done with the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package.
+## Installation
 
-This can be installed in R (3.5+) with the following commands:
+To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
+AMBER requires a set of likely heterozygous sites (to determine BAF) and an optional set of SNP sites (to facilitate sample matching).  
+Both are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+
+AMBER depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
+After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
 ```
     library(BiocManager)
     install("copynumber")
+```
+
+AMBER requires Java 1.8+ and can be run with the minimum set of arguments as follows:
+
+```
+java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
+   -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
+   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
+   -output_dir /run_dir/amber/ \
+   -threads 16 \
+   -ref_genome /path/to/refGenome/refGenome.fasta \
+   -bed /path/to/GermlineHetPon.hg19.bed.gz 
 ```
 
 ## Mandatory Arguments
@@ -48,18 +64,6 @@ max_depth_percent | 1.5 | Only include reference sites with read depth within ma
 min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
 max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
 
-## Example Usage
-
-```
-java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
-   -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
-   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
-   -output_dir /run_dir/amber/ \
-   -threads 16 \
-   -ref_genome /path/to/refGenome/refGenome.fasta \
-   -bed /path/to/GermlineHetPon.hg19.bed.gz 
-```
-
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -78,13 +82,6 @@ Bam | 32 | 8 | 170 | 21.60
 Bam | 48 | 7 | 199 | 21.43
 Bam | 64 | 6 | 221 | 21.78
 
-For comparison, the deprecated pileup method has the following characteristics:
-
-Amber Method | Threads | Elapsed Time| CPU Time 
----|---|---|---
-Pileup | 1 | 180 | 180 
-Pileup | 64 | 44 | 272 
-
 ## Output
 File | Description
 --- | ---
@@ -95,63 +92,8 @@ TUMOR.amber.baf.vcf.gz | Similar information as BAF file but in VCF format.
 TUMOR.amber.contamination.vcf.gz | Entry at each homozygous site in the reference and tumor.
 REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference. 
  
-# AMBER From Pileup - Deprecated
 
-Prior versions of AMBER relied on mpileups of the tumor and reference rather than the BAMs themselves. 
-Sambamba (or samtools) can be used to generate the mpileups. 
-
-Example generation:
-
-```
-export PATH=/path/to/samtools/:$PATH
-
-sambamba mpileup -t 6 /
-    -L /path/to/bed/HeterozygousLocations.bed /
-    /path/to/bam/REFERENCE.bam /
-    --samtools -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta /
-    > /path/to/mpileup/REFERENCE.mpileup
-
-sambamba mpileup -t 6 /
-    -L /path/to/bed/HeterozygousLocations.bed /
-    /path/to/bam/TUMOR.bam /
-    --samtools -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta /
-    > /path/to/mpileup/TUMOR.mpileup
-
-```
-
-## Usage
-
-Argument | Default | Description
----|---|---
--sample | None | Name of tumor sample
--reference | None | Location of reference mpileup file
--tumor | None | Location of tumor mpileup file
--output_dir | None | Directory to write output
--min_depth_percent | 0.5 | Only include reference positions with read depth within min percentage of median
--min_depth_percent | 1.5 | Only include reference positions with read depth within max percentage of median
--min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
--max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
-
-Arguments without default values are mandatory.
-
-## Example Usage
-
-Please note the application name has changed from earlier versions.
-
-```
-java -cp amber.jar com.hartwig.hmftools.amber.pileup.AmberFromPileupApplication \ 
-    -sample TUMOR \
-    -output_dir /run_dir/amber \
-    -reference /path/to/mpileup/REFERENCE.mpileup \
-    -tumor /path/to/mpileup/TUMOR.mpileup
-```
-
-## Comparison to bam method
-Calculating the BAF directly from the bams is functionally equivalent to the pileup method when using the following samtools arguments:
-
-``` -A -B -x -Q 13 -q 1 -f /path/to/refGenome/refGenome.fasta ```
-
-# Version History
+# Version History and Download Links
 - [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.5)
   - Fixed bug in contamination model if absolute zero contamination
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.4)

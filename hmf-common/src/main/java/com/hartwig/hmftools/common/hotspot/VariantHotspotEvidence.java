@@ -29,6 +29,14 @@ public interface VariantHotspotEvidence extends VariantHotspot {
 
     int altMinDistanceFromAlignment();
 
+    int subprimeReadDepth();
+
+    String readContext();
+
+    int readContextCount();
+
+    int readContextCountOther();
+
     default int avgAltDistanceFromRecordStart() {
         return altDistanceFromRecordStart() / altSupport();
     }
