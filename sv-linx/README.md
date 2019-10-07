@@ -118,7 +118,6 @@ To generate these 4 data files, first run LINX with these command line options:
 
 ```
 java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
-    -sample SAMPLE_ID 
     -ensembl_db [db_url] -ensembl_user [username] -ensembl_pass [password] 
     -output_dir /path_to_write_data_files/ 
 ```

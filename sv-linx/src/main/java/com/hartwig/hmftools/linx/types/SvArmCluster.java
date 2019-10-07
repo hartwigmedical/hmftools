@@ -90,6 +90,7 @@ public class SvArmCluster
     public static final int ARM_CL_COMPLEX_LINE = 6;
     public static final int ARM_CL_COMPLEX_OTHER = 7;
     public static final int ARM_CL_SIMPLE_DUP = 8;
+    public static final int ARM_CL_SAME_ORIENT = 9;
     public static final int ARM_CL_MAX = ARM_CL_SIMPLE_DUP;
 
     public static final String typeToString(int type)
@@ -105,9 +106,10 @@ public class SvArmCluster
             case ARM_CL_COMPLEX_LINE: return "COMPLEX_LINE";
             case ARM_CL_COMPLEX_OTHER : return "COMPLEX_OTHER";
             case ARM_CL_SIMPLE_DUP: return "SIMPLE_DUP";
+            case ARM_CL_SAME_ORIENT: return "SAME_ORIENT";
         }
 
-        return "Unknown";
+        return "UNKNOWN";
     }
 
     public int getType() { return mType; }
@@ -232,12 +234,14 @@ public class SvArmCluster
 
         int nonTiBreakendCount = mBreakends.size() - tiCount * 2;
 
+        /*
         if(foldbackCount == 0 && nonTiBreakendCount > 2)
         {
             // cannot just be a DSB with TIs, so early exit for further analysis
             mType = ARM_CL_COMPLEX_OTHER;
             return;
         }
+        */
 
         List<SvBreakend> unlinkedBreakends = mBreakends.stream().filter(x -> !tiBreakends.contains(x)).collect(Collectors.toList());
 
@@ -274,6 +278,10 @@ public class SvArmCluster
         else if(foldbackCount == 0 && dsbCount == 1 && nonTiBreakendCount == 2)
         {
             mType = ARM_CL_DSB;
+        }
+        else if(unlinkedBreakends.size() == 2 && unlinkedBreakends.get(0).orientation() == unlinkedBreakends.get(1).orientation())
+        {
+            mType = ARM_CL_SAME_ORIENT;
         }
         else
         {

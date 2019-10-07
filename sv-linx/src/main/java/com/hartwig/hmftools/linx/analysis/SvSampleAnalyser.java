@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_FOLDBACK_DSB;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_ISOLATED_BE;
+import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SAME_ORIENT;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SIMPLE_DUP;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
@@ -646,7 +647,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",DBs,ClusterDBs,ShortDBs,TotalDeleted,TotalRange");
 
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
-            mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcComplexOther");
+            mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
             mClusterFileWriter.newLine();
         }
         catch (final IOException e)
@@ -718,11 +719,11 @@ public class SvSampleAnalyser {
                     final int[] armClusterData = getArmClusterData(cluster);
                     long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
                             cluster.getArmClusters().size(), armClusterTIs, armClusterData[ARM_CL_ISOLATED_BE],
                             armClusterData[ARM_CL_TI_ONLY], armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP],
                             armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
-                            armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_COMPLEX_OTHER]));
+                            armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_SAME_ORIENT], armClusterData[ARM_CL_COMPLEX_OTHER]));
 
                     mClusterFileWriter.newLine();
                 }
