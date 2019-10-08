@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.ContigContext;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -68,19 +69,19 @@ public class SageApplication implements AutoCloseable {
     private void run() throws InterruptedException, ExecutionException, IOException {
 
         long timeStamp = System.currentTimeMillis();
-        final List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
+        final List<ContigContext> contigContexts = Lists.newArrayList();
 
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig)) {
+            if (HumanChromosome.contains(contig) && contig.equals("17")) {
                 int maxPosition = samSequenceRecord.getSequenceLength();
-                futures.addAll(runChromosome(contig, config.regionSliceSize(), maxPosition));
+                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
             }
         }
 
-        for (final Future<List<List<AltContext>>> future : futures) {
-            future.get().forEach(vcf::write);
+        for (final ContigContext contigContext : contigContexts) {
+            contigContext.write(vcf);
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
@@ -95,21 +96,20 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private List<Future<List<List<AltContext>>>> runChromosome(@NotNull final String chromosome, int regionSliceSize, int maxPosition) {
+    private ContigContext runChromosome(@NotNull final String chromosome, int regionSliceSize, int maxPosition) {
 
-        final List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
-
+        final ContigContext contigContext = new ContigContext(chromosome);
         for (int i = 0; ; i++) {
             int start = 1 + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize, maxPosition);
-            futures.add(runRegion(chromosome, start, end));
+            contigContext.add(runRegion(chromosome, start, end));
 
             if (end >= maxPosition) {
                 break;
             }
         }
 
-        return futures;
+        return contigContext;
     }
 
     @NotNull

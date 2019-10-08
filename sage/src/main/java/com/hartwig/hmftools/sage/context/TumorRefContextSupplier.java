@@ -28,8 +28,9 @@ public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
     private final String bamFile;
     private final RefContextConsumer refContextConsumer;
 
-    public TumorRefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final TumorRefContextCandidates candidates) {
+    public TumorRefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds,
+            @NotNull final String bamFile, @NotNull final IndexedFastaSequenceFile refGenome,
+            @NotNull final TumorRefContextCandidates candidates) {
         this.sample = sample;
         this.bounds = bounds;
         this.candidates = candidates;
@@ -40,7 +41,11 @@ public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
     @Override
     public List<RefContext> get() {
 
-        LOGGER.info("Candidates " + sample + "  from " + bounds.start());
+        if (bounds.start() == 1) {
+            LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
+        }
+
+        LOGGER.info("Processing {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));

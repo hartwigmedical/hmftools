@@ -18,6 +18,12 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
 
     /*
+
+    bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' GIABvsSELFv004.sage.vcf.gz -O z -o GIABvsSELFv004.sage.filtered.vcf.gz
+    bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' COLO829v003.sage.vcf.gz -O z -o COLO829v003.sage.filtered.vcf.gz
+
+
+
     bgzip colo829.sage.vcf
     bcftools index colo829.sage.vcf.gz
 
@@ -34,8 +40,14 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA -c FILTER colo829.sage.map.vcf.gz -O z -o colo829.sage.pre.vcf.gz
     bcftools index colo829.sage.pre.vcf.gz
-
     bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA -c FILTER colo829.sage.pre.vcf.gz -O z -o colo829.sage.final.vcf.gz
+
+
+    bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA -c FILTER COLO829v003.sage.filtered.map.vcf.gz -O z -o COLO829v003.sage.filtered.pre.vcf.gz
+    bcftools index COLO829v003.sage.filtered.pre.vcf.gz
+    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA -c FILTER COLO829v003.sage.filtered.pre.vcf.gz -O z -o COLO829v003.sage.filtered.final.vcf.gz
+
+
     */
 
     private static final String DISTANCE_FROM_REF_TAG = "NM";

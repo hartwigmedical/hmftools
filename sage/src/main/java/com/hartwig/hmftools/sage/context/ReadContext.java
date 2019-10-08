@@ -19,7 +19,7 @@ public class ReadContext {
         FULL
     }
 
-    private static final int DEFAULT_BUFFER = 20;
+    private static final int DEFAULT_BUFFER = 25;
 
     private final byte[] readBytes;
     private final int readBytePosition;
@@ -29,15 +29,15 @@ public class ReadContext {
     private final int distance;
     private final String difference;
 
-    public ReadContext(int readBytePosition, byte[] readBytes) {
+    ReadContext(int readBytePosition, byte[] readBytes) {
         this(DEFAULT_BUFFER, readBytePosition, readBytes);
     }
 
-    public ReadContext(int readBytePosition, @NotNull final SAMRecord record, byte[] refBases) {
+    ReadContext(int readBytePosition, @NotNull final SAMRecord record, byte[] refBases) {
         this(DEFAULT_BUFFER, readBytePosition, record, refBases);
     }
 
-    public ReadContext(int buffer, int readBytePosition, @NotNull final SAMRecord record, byte[] refBases) {
+    private ReadContext(int buffer, int readBytePosition, @NotNull final SAMRecord record, byte[] refBases) {
         this.buffer = buffer;
         this.readBytes = record.getReadBases();
         this.readBytePosition = readBytePosition;
