@@ -91,7 +91,7 @@ public class SvArmCluster
     public static final int ARM_CL_COMPLEX_OTHER = 7;
     public static final int ARM_CL_SIMPLE_DUP = 8;
     public static final int ARM_CL_SAME_ORIENT = 9;
-    public static final int ARM_CL_MAX = ARM_CL_SIMPLE_DUP;
+    public static final int ARM_CL_MAX = ARM_CL_SAME_ORIENT;
 
     public static final String typeToString(int type)
     {
