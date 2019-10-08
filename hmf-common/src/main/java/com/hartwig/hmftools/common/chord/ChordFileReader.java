@@ -16,13 +16,13 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ChordFileReader {
 
-    // Chord files stores in {run}/chord/{sample}_chord_prediction.txt
-    private static final String CHORD_BASE_DIRECTORY = "chord";
+    // Chord files stores in {run}/chord_pilot/{sample}_chord_prediction.txt
+    private static final String CHORD_BASE_DIRECTORY = "chord_pilot";
     private static final String CHORD_EXTENSION = "_chord_prediction.txt";
     private static final String VALUE_SEPARATOR = "\t";
 
-    private static final int BRCA1_COLUMN = 1;
-    private static final int NONE_COLUMN = 2;
+    private static final int NONE_COLUMN = 1;
+    private static final int BRCA1_COLUMN = 2;
     private static final int BRCA2_COLUMN = 3;
     private static final int HRD_COLUMN = 4;
     private static final int PREDICTED_RESPONSE_COLUMN = 5;
@@ -49,11 +49,12 @@ public final class ChordFileReader {
     private static ImmutableChordAnalysis.Builder appendChordValues(@NotNull ImmutableChordAnalysis.Builder builder,
             @NotNull String filePath) throws IOException {
         String[] values = findValuesLine(filePath).split(VALUE_SEPARATOR);
-        builder.BRCA1Value(Double.valueOf(values[BRCA1_COLUMN]));
+
         builder.noneValue(Double.valueOf(values[NONE_COLUMN]));
+        builder.BRCA1Value(Double.valueOf(values[BRCA1_COLUMN]));
         builder.BRCA2Value(Double.valueOf(values[BRCA2_COLUMN]));
         builder.hrdValue(Double.valueOf(values[HRD_COLUMN]));
-        builder.predictedResponseValue(Double.valueOf(values[PREDICTED_RESPONSE_COLUMN]));
+        builder.predictedResponseValue(Boolean.parseBoolean(values[PREDICTED_RESPONSE_COLUMN]));
         return builder;
     }
 

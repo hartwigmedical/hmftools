@@ -19,13 +19,12 @@ class ChordDAO {
     void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         deleteChordForSample(sample);
 
-        context.insertInto(CHORD, CHORD.SAMPLEID, CHORD.BRCA1, CHORD.NOTHING, CHORD.BRCA2, CHORD.HRD, CHORD.PREDICTEDRESPONSE)
+        context.insertInto(CHORD, CHORD.SAMPLEID, CHORD.NOTHING, CHORD.BRCA1, CHORD.BRCA2, CHORD.HRD, CHORD.PREDICTEDRESPONSE)
                 .values(sample,
-                        DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
                         DatabaseUtil.decimal(chordAnalysis.noneValue()),
+                        DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA2Value()),
-                        DatabaseUtil.decimal(chordAnalysis.hrdValue()),
-                        DatabaseUtil.decimal(chordAnalysis.predictedResponseValue()))
+                        DatabaseUtil.decimal(chordAnalysis.hrdValue()), Boolean.toString(chordAnalysis.predictedResponseValue()))
                 .execute();
     }
 
