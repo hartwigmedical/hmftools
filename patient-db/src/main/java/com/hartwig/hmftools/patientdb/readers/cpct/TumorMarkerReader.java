@@ -17,7 +17,7 @@ final class TumorMarkerReader {
 
     private static final String STUDY_TREATMENT = "SE.TREATMENT";
     private static final String FORM_RESPONSE = "FRM.RESPONSE";
-    private static final String ITEMGROUP_RESPONSE = "GRP.RESPONSE.RESPONSE";
+    private static final String ITEMGROUP_RESPONSE = "GRP.RESPONSE.LB_TUMORMARKERS";
 
     private static final String FIELD_DATE = "FLD.RESPONSE.LBDTC_TUMORMARKERS";
     private static final String FIELD_MARKER = "FLD.RESPONSE.LBTERM_TUMORMARKERS";
