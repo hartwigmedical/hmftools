@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public interface CombinedRegion extends GenomeRegion {
 
     @NotNull
