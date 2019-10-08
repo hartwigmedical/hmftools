@@ -2,10 +2,12 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
+import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -230,12 +232,6 @@ public class LinkFinder
         return var1.getTIAssemblies(v1Start).stream().anyMatch(x -> var2.getTIAssemblies(v2Start).contains(x));
     }
 
-    public static boolean haveOverlappingDeletionBridge(final SvBreakend breakend1, final SvBreakend breakend2)
-    {
-        final SvLinkedPair dbLink = breakend1.getDBLink();
-        return (dbLink != null && dbLink == breakend2.getDBLink() && dbLink.length() < 1);
-    }
-
     public static boolean areLinkedSection(final SvVarData v1, final SvVarData v2, boolean v1Start, boolean v2Start)
     {
         // templated insertions are allowed to traverse the centromere
@@ -265,8 +261,10 @@ public class LinkFinder
 
     public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
     {
-        // return the maximal length from each breakend's anchor distances if present
-        return max(breakend1.getMinTemplatedLength(), breakend2.getMinTemplatedLength());
+        // return the minimum length from each breakend's anchor distances if present
+        int homologyLengths = breakend1.homology().length() + breakend2.homology().length();
+        int minAnchorDistance = min(breakend1.anchorDistance(), breakend2.anchorDistance());
+        return max(minAnchorDistance - homologyLengths, MIN_TEMPLATED_INSERTION_LENGTH);
     }
 
     public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -392,7 +390,7 @@ public class LinkFinder
                             continue;
 
                         long distance = abs(var1.position(v1Start) - var2.position(v2Start));
-                        int minTiLength = max(var1.getMinTemplatedLength(v1Start), var2.getMinTemplatedLength(v2Start));
+                        int minTiLength = getMinTemplatedInsertionLength(var1.getBreakend(v1Start), var2.getBreakend(v2Start));
 
                         if (!areLinkedSection(var1, var2, v1Start, v2Start) || distance < minTiLength)
                             continue;

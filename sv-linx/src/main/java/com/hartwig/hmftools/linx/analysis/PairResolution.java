@@ -116,7 +116,7 @@ public class PairResolution
 
         boolean isSingleChain = cluster.isFullyChained(false) && clusterChains.size() == 1;
 
-        // first look for a single chain with only short external TIs - this can be classiied as a synthetic DEL or DUP
+        // first look for a single chain with only short external TIs - this can be classified as a synthetic DEL or DUP
         if(isSingleChain && longTiLink == null)
         {
             final SvChain chain = cluster.getChains().get(0);
@@ -536,6 +536,7 @@ public class PairResolution
         setPairLengthData(cluster);
 
         boolean lohBoundedTi = isLohBoundedTi(longestTiPair);
+        boolean hasLongTi = longestTiPair.length() > SHORT_TI_LENGTH;
 
         ResolvedType resolvedType = NONE;
 
@@ -573,10 +574,11 @@ public class PairResolution
                         breakendToSwitch = longestTiPair.hasBreakend(lowerBe1) ? lowerBe1 : upperBe1;
                     }
 
-                    chain.reverseSectionOnBreakend(breakendToSwitch);
-
-                    LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
-                    chain.logLinks();
+                    if(chain.reverseSectionOnBreakend(breakendToSwitch))
+                    {
+                        LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
+                        chain.logLinks();
+                    }
 
                     resolvedType = RECIP_INV_DEL_DUP;
                 }
@@ -605,10 +607,11 @@ public class PairResolution
                     breakendToSwitch = longestTiPair.hasBreakend(lowerBe2) ? lowerBe2 : longestTiPair.getOtherBreakend(lowerBe1);
                 }
 
-                chain.reverseSectionOnBreakend(breakendToSwitch);
-
-                LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
-                chain.logLinks();
+                if(chain.reverseSectionOnBreakend(breakendToSwitch))
+                {
+                    LOGGER.debug("cluster({}) reconfigured chain:", cluster.id());
+                    chain.logLinks();
+                }
 
                 resolvedType = RECIP_INV_DUPS;
             }

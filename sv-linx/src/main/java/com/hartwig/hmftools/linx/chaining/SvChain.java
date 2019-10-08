@@ -407,7 +407,7 @@ public class SvChain {
         }
     }
 
-    public void reverseSectionOnBreakend(final SvBreakend breakend)
+    public boolean reverseSectionOnBreakend(final SvBreakend breakend)
     {
         // reverses a section of a chain
         // eg sAe - B - eCs - D if reversed at C's start breaknd will become sCe - B - eAs - D
@@ -421,6 +421,11 @@ public class SvChain {
             {
                 SvBreakend chainStart = getOpenBreakend(true);
                 SvLinkedPair newLink = SvLinkedPair.from(chainStart, pair.secondBreakend());
+
+                if(newLink.length() <= 0)
+                    return false;
+
+                newLink.setLinkReason("RECIP_INV_RECONFIG", 0);
 
                 List<SvLinkedPair> linksToSwitch = Lists.newArrayList();
                 for(int j = 0; j < i; ++j)
@@ -447,6 +452,11 @@ public class SvChain {
                 SvBreakend chainEnd = getOpenBreakend(false);
                 SvLinkedPair newLink = SvLinkedPair.from(pair.firstBreakend(), chainEnd);
 
+                if(newLink.length() <= 0)
+                    return false;
+
+                newLink.setLinkReason("RECIP_INV_RECONFIG", 0);
+
                 List<SvLinkedPair> linksToSwitch = Lists.newArrayList();
                 for(int j = i + 1; j < mLinkedPairs.size(); ++j)
                 {
@@ -468,6 +478,8 @@ public class SvChain {
                 break;
             }
         }
+
+        return true;
     }
 
     public static void reconcileChains(final List<SvChain> chains)

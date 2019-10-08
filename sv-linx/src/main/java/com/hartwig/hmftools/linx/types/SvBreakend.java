@@ -59,7 +59,10 @@ public class SvBreakend {
         return mSV.posId(mUsesStart);
     }
 
-    public int getMinTemplatedLength() { return mSV.getMinTemplatedLength(mUsesStart); }
+    public int anchorDistance()
+    {
+        return mUsesStart ? mSV.getSvData().startAnchoringSupportDistance() : mSV.getSvData().endAnchoringSupportDistance();
+    }
 
     public double copyNumberLowSide()
     {
@@ -77,6 +80,11 @@ public class SvBreakend {
     }
     public double ploidy() { return mSV.ploidy(); }
     public double ploidyUncertainty() { return mSV.ploidyUncertainty(); }
+
+    public String homology()
+    {
+        return mUsesStart ? mSV.getSvData().startHomologySequence() : mSV.getSvData().endHomologySequence();
+    }
 
     public double getCopyNumber(boolean usePrevious)
     {
