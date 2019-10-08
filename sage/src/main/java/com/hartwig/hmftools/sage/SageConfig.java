@@ -64,6 +64,10 @@ public interface SageConfig {
     @NotNull
     String outputFile();
 
+    default int regionSliceSize() {
+        return 1_000_000;
+    }
+
     default int minQuality() {
         return 1;
     }

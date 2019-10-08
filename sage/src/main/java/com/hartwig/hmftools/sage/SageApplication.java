@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -25,6 +26,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageApplication implements AutoCloseable {
@@ -48,12 +53,12 @@ public class SageApplication implements AutoCloseable {
         }
     }
 
-    public SageApplication(final Options options, final String... args) throws IOException, ParseException {
+    private SageApplication(final Options options, final String... args) throws IOException, ParseException {
 
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(cmd);
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         vcf = new SageVCF(refGenome, config.outputFile(), config.reference(), config.tumor());
@@ -63,38 +68,56 @@ public class SageApplication implements AutoCloseable {
     private void run() throws InterruptedException, ExecutionException, IOException {
 
         long timeStamp = System.currentTimeMillis();
+        final List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
 
-        // Note: Turns out you need one samreaderfactory per thread!
-
-        List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
-
-        for (int j = 0; j < 1; j++) {
-//            int start = 1 + j * 1_000_000;
-//            int end = 1_000_000 + j * 1_000_000;
-
-            int start = 22_253_000;
-            int end = 22_254_000;
-
-            final GenomeRegion region = GenomeRegions.create("17", start, end);
-            SagePipeline myThing = new SagePipeline(region, config, executorService, refGenome);
-
-            futures.add(myThing.submit());
+        SAMSequenceDictionary dictionary = dictionary();
+        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+            final String contig = samSequenceRecord.getSequenceName();
+            if (HumanChromosome.contains(contig)) {
+                int maxPosition = samSequenceRecord.getSequenceLength();
+                futures.addAll(runChromosome(contig, config.regionSliceSize(), maxPosition));
+            }
         }
 
-        for (int i = 0; i < futures.size(); i++) {
-            int start = 1 + i * 1_000_000;
-
-            Future<List<List<AltContext>>> future = futures.get(i);
-
-            List<List<AltContext>> altContexts = future.get();
-            LOGGER.info("Writing {} ", start);
-            altContexts.forEach(vcf::write);
-//            LOGGER.info("Finished Writing {} ", start);
+        for (final Future<List<List<AltContext>>> future : futures) {
+            future.get().forEach(vcf::write);
         }
-
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         System.out.println(" in " + timeTaken);
+    }
+
+    private SAMSequenceDictionary dictionary() throws IOException {
+        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(config.referenceBam()));
+        SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
+        tumorReader.close();
+        return dictionary;
+    }
+
+    @NotNull
+    private List<Future<List<List<AltContext>>>> runChromosome(@NotNull final String chromosome, int regionSliceSize, int maxPosition) {
+
+        final List<Future<List<List<AltContext>>>> futures = Lists.newArrayList();
+
+        for (int i = 0; ; i++) {
+            int start = 1 + i * regionSliceSize;
+            int end = Math.min(start + regionSliceSize, maxPosition);
+            futures.add(runRegion(chromosome, start, end));
+
+            if (end >= maxPosition) {
+                break;
+            }
+        }
+
+        return futures;
+    }
+
+    @NotNull
+    private Future<List<List<AltContext>>> runRegion(@NotNull final String chromosome, int start, int end) {
+        final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
+        final SagePipeline regionPipeline = new SagePipeline(region, config, executorService, refGenome);
+        return regionPipeline.submit();
+
     }
 
     @Override

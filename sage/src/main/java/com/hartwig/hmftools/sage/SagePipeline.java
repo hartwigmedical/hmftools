@@ -40,8 +40,6 @@ public class SagePipeline {
     @NotNull
     public CompletableFuture<List<List<AltContext>>> submit() {
 
-        //        LOGGER.info("Starting pipeline of: " + region.start());
-
         final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size());
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
