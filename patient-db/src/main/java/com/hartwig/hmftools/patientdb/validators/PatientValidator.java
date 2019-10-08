@@ -284,8 +284,8 @@ public final class PatientValidator {
                                 patientIdentifier,
                                 "Matched drugs are based on less than 90% of search term.",
                                 treatment.formStatus(),
-                                drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
-                                        ',')));
+                                "'" + drugName + "' matched to '" + Strings.join(curatedTreatments, ',') + "' based on '" + Strings.join(matchedTerms,
+                                        ',') + "'"));
                     }
                 }
             }
