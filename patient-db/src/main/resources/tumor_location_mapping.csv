@@ -212,6 +212,7 @@ searchTerm,primaryTumorLocation,subType
 "Sarcoma: myofibroblastar sarcoma",Bone/Soft tissue,"Myofibroblastar sarcoma"
 "Sarcoma: Osteosarcoma (Bone Cancer)",Bone/Soft tissue,"Osteosarcoma (Bone Cancer)"
 "Sarcoma: other",Bone/Soft tissue,"Sarcoma"
+"Sarcoma: Other_angiosarcoma",Bone/Soft tissue,"Angiosarcoma"
 "Sarcoma: Rhabdomyosarcoma",Bone/Soft tissue,"Rhabdomyosarcoma"
 "Sarcoma: Soft Tissue",Bone/Soft tissue,"Sarcoma"
 "Sarcoma: Undifferentiated",Bone/Soft tissue,"Undifferentiated sarcoma"
