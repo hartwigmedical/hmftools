@@ -16,7 +16,7 @@ class GenomePositionSelectorListImpl<P extends GenomePosition> implements Genome
     private final List<P> positions;
     private int index = 0;
 
-    GenomePositionSelectorListImpl(@NotNull List<P> positions) {
+    GenomePositionSelectorListImpl(@NotNull final List<P> positions) {
         this.positions = positions;
     }
 
@@ -28,7 +28,7 @@ class GenomePositionSelectorListImpl<P extends GenomePosition> implements Genome
         }
 
         int currentCompare = current().compareTo(position);
-        while (currentCompare > 0 && index > 0) {
+        while (currentCompare >= 0 && index > 0) {
             index--;
             currentCompare = current().compareTo(position);
         }

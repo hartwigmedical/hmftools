@@ -61,7 +61,20 @@ public class GenomePositionSelectorTest {
 
         final ListMultimap<Chromosome, GenomePosition> positionMap = Multimaps.fromPositions(positions);
         listSelector = GenomePositionSelectorFactory.create(positionMap);
+    }
 
+    @Test
+    public void testIdenticalPositionsInListSelector() {
+
+        final GenomeRegion tinyRegion = GenomeRegions.create("1", 250, 250);
+        final GenomePosition inTinyRegion = GenomePositions.create(tinyRegion.chromosome(), tinyRegion.start());
+        final GenomePosition alsoInTinyRegion = GenomePositions.create(tinyRegion.chromosome(), tinyRegion.start());
+        final GenomePositionSelector<GenomePosition> listSelector =
+                GenomePositionSelectorFactory.create(Lists.newArrayList(inTinyRegion, alsoInTinyRegion));
+
+        // Do this twice to make sure it goes back and publishes them all
+        assertRegion(listSelector, tinyRegion, inTinyRegion, alsoInTinyRegion);
+        assertRegion(listSelector, tinyRegion, inTinyRegion, alsoInTinyRegion);
     }
 
     @Test
@@ -126,7 +139,10 @@ public class GenomePositionSelectorTest {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region2, inRegion2);
         assertRegion(listSelector, region3, inRegion3);
-        assertRegion(listSelector, GenomeRegions.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
+        assertRegion(listSelector,
+                GenomeRegions.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()),
+                inRegion3,
+                afterRegion3);
     }
 
     @Test
@@ -135,7 +151,10 @@ public class GenomePositionSelectorTest {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region3, inRegion3);
-        assertRegion(listSelector, GenomeRegions.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()), inRegion3, afterRegion3);
+        assertRegion(listSelector,
+                GenomeRegions.create(afterRegion3.chromosome(), inRegion3.position(), afterRegion3.position()),
+                inRegion3,
+                afterRegion3);
     }
 
     @Test
