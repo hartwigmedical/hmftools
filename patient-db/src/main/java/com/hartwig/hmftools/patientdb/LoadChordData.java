@@ -43,27 +43,27 @@ public final class LoadChordData {
 
         if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, tumor_sample)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load chord data", options);
+            formatter.printHelp("patient-db - load chord_pilot data", options);
         } else {
             final File runDirectory = new File(runDirectoryPath);
             if (runDirectory.isDirectory()) {
                 final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                LOGGER.info(String.format("Extracting and writing chord for %s", runDirectoryPath));
+                LOGGER.info(String.format("Extracting and writing chord_pilot for %s", runDirectoryPath));
                 try {
                     ChordAnalysis chordAnalysis = generateChordForRun(runDirectoryPath, tumor_sample);
                     dbWriter.writeChord(tumor_sample, chordAnalysis);
 
                 } catch (IOException e) {
-                    LOGGER.warn(String.format("Cannot extract chord for %s.", runDirectoryPath));
+                    LOGGER.warn(String.format("Cannot extract chord_pilot for %s.", runDirectoryPath));
                 }
             } else {
                 if (!runDirectory.exists()) {
                     LOGGER.warn("dir " + runDirectory + " does not exist.");
                 }
                 HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("patient-db - load chord data", options);
+                formatter.printHelp("patient-db - load chord_pilot data", options);
             }
         }
     }

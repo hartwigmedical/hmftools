@@ -50,7 +50,7 @@ public class TumorLocationCurator implements CleanableCurator {
 
     @NotNull
     public CuratedTumorLocation search(@Nullable final String searchTerm) {
-        if (searchTerm != null) {
+        if (searchTerm != null && !searchTerm.isEmpty()) {
             String effectiveSearchTerm = searchTerm.toLowerCase();
             unusedSearchTerms.remove(effectiveSearchTerm);
             final CuratedTumorLocation result = tumorLocationMap.get(effectiveSearchTerm);

@@ -642,7 +642,7 @@ public final class ExampleAnalysisTestFactory {
                 .BRCA1Value(brca1Value)
                 .BRCA2Value(brca2Value)
                 .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5 ? 1 : 0)
+                .predictedResponseValue(brca1Value + brca2Value > 0.5 ? true : false)
                 .build();
     }
 

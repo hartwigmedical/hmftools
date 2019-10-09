@@ -282,10 +282,10 @@ public final class PatientValidator {
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < 0.9) {
                         findings.add(ValidationFinding.of(curationName,
                                 patientIdentifier,
-                                "Matched drug are based on less than 90% of search term.",
+                                "Matched drugs are based on less than 90% of search term.",
                                 treatment.formStatus(),
-                                drugName + " matched to " + Strings.join(curatedTreatments, ',') + " based on " + Strings.join(matchedTerms,
-                                        ',')));
+                                "'" + drugName + "' matched to '" + Strings.join(curatedTreatments, ',') + "' based on '" + Strings.join(matchedTerms,
+                                        ',') + "'"));
                     }
                 }
             }
@@ -298,7 +298,7 @@ public final class PatientValidator {
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         final List<ValidationFinding> findings = Lists.newArrayList();
         final String searchTerm = baselineData.curatedTumorLocation().searchTerm();
-        if (searchTerm != null && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
+        if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientIdentifier,
                     "Failed to curate primary tumor location",

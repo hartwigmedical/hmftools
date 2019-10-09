@@ -308,7 +308,7 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting metric data for sample: " + sample);
         metricDAO.deleteMetricForSample(sample);
 
-        LOGGER.info("Deleting chord data for sample: " + sample);
+        LOGGER.info("Deleting chord_pilot data for sample: " + sample);
         chordDAO.deleteChordForSample(sample);
 
         LOGGER.info("Deleting amber data for sample: " + sample);
