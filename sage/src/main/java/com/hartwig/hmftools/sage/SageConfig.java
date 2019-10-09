@@ -31,7 +31,7 @@ public interface SageConfig {
     String MIN_BASE_QUALITY = "min_base_quality";
 
     int DEFAULT_THREADS = 2;
-    int DEFAULT_MIN_MAP_QUALITY = 1;
+    int DEFAULT_MIN_MAP_QUALITY = 0;
     int DEFAULT_MIN_BASE_QUALITY = 13;
 
     @NotNull
