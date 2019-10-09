@@ -24,7 +24,8 @@ class ChordDAO {
                         DatabaseUtil.decimal(chordAnalysis.noneValue()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA2Value()),
-                        DatabaseUtil.decimal(chordAnalysis.hrdValue()), Boolean.toString(chordAnalysis.predictedResponseValue()))
+                        DatabaseUtil.decimal(chordAnalysis.hrdValue()),
+                        chordAnalysis.predictedResponseValue() ? (byte) 1 : (byte) 0)
                 .execute();
     }
 

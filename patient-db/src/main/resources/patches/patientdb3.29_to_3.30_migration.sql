@@ -1,1 +1,3 @@
-ALTER TABLE chord MODIFY predictedResponse varchar(255) NOT NULL;
+ALTER TABLE chord MODIFY predictedResponse BOOLEAN NOT NULL;
+
+update table chord set predictedResponse = hrd > 0.5;
