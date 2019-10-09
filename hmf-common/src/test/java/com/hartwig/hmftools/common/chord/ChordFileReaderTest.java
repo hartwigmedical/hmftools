@@ -9,10 +9,9 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class ChordFileReaderTest {
-    private static final String BASE_DIRECTORY = Resources.getResource("chord").getPath();
+    private static final String FILE = Resources.getResource("chord/sample_chord_prediction.txt").getPath();
     private static final double EPSILON = 1.0E-10;
 
-    private static final String SAMPLE = "sample";
     private static final double NONE = 0.850;
 
     private static final double BRCA1 = 0.230;
@@ -22,9 +21,7 @@ public class ChordFileReaderTest {
 
     @Test
     public void loadChordFile() throws IOException {
-        String file = ChordFileReader.generateFilename(BASE_DIRECTORY.substring(0, BASE_DIRECTORY.length() - "chord".length() - 1), SAMPLE);
-
-        ChordAnalysis chordAnalysis = ChordFileReader.read(file);
+        ChordAnalysis chordAnalysis = ChordFileReader.read(FILE);
 
         assertEquals(BRCA1, chordAnalysis.BRCA1Value(), EPSILON);
         assertEquals(NONE, chordAnalysis.noneValue(), EPSILON);
