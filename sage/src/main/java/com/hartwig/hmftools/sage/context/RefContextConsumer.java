@@ -93,6 +93,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         case EQ:
                         case X:
                             processPrimeAlignment(record, readBase, refBase, length, refBases);
+//                            if (Math.abs(record.getInferredInsertSize()) >= 1000) {
+//                                System.out.println(record.getInferredInsertSize());
+//                            }
+
+                            break;
                     }
 
                     if (e.getOperator().consumesReferenceBases()) {
@@ -102,7 +107,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     if (e.getOperator().consumesReadBases()) {
                         readBase += e.getLength();
                     }
-
                 }
 
             } else {

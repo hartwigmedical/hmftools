@@ -21,6 +21,10 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private int baseQuality;
     private int mapQuality;
 
+    private int excessiveInferredSize;
+    private int inconsistentChromosome;
+    private int improperPair;
+
     private int coverage;
 
     public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
@@ -64,6 +68,10 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return mapQuality;
     }
 
+    public int[] rcq() {
+        return new int[] { improperPair, inconsistentChromosome, excessiveInferredSize };
+    }
+
     public ReadContext readContext() {
         return readContext;
     }
@@ -84,6 +92,19 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
                     long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1);
                     if (incrementCounters(refPosition, readBasePosition, readBases)) {
                         incrementQualityScores(readBasePosition, record);
+
+                        if (Math.abs(record.getInferredInsertSize()) >= 1000) {
+                            excessiveInferredSize++;
+                        }
+
+                        if (!record.getReferenceName().equals(record.getMateReferenceName())) {
+                            inconsistentChromosome++;
+                        }
+
+                        if (!record.getProperPairFlag()) {
+                            improperPair++;
+                        }
+
                     }
                 }
             }

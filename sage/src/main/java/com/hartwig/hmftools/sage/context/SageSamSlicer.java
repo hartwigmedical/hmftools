@@ -52,7 +52,8 @@ class SageSamSlicer {
 
     private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record) {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
-                .isSecondaryOrSupplementary();
+                .isSecondaryOrSupplementary()
+                ;
     }
 
 }
