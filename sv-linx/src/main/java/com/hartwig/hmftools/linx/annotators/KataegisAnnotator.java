@@ -124,13 +124,13 @@ public class KataegisAnnotator
 
                 mFileWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Chromosome,PosStart,PosEnd,KataegisId,SnvCount");
+                mFileWriter.write("SampleId,Chromosome,KatPosStart,KatPosEnd,KataegisId,SnvCount");
                 mFileWriter.write(",SvId,SvPosition,SvIsStart,SvOrient,Distance");
                 mFileWriter.newLine();
             }
 
             mFileWriter.write(String.format("%s,%s,%d,%d,%s,%d",
-                    sampleId, data.Chromosome, data.PosStart, data.PosStart, data.Id, data.SnvCount));
+                    sampleId, data.Chromosome, data.PosStart, data.PosEnd, data.Id, data.SnvCount));
 
             if(breakend != null)
             {

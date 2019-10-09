@@ -25,9 +25,10 @@ All values are optional unless otherwise specified.
 Argument  | Description
 ---|---
 sample  | Required: Specific sample ID
+sv_vcf | Full path and filename for the SV VCF
 purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
 output_dir | Required: directory where all output files are written
-ref_genome_version | Defaults to HG38, valid values are 37 or 38. 
+ref_genome_version | Defaults to HG37, valid values are 37 or 38. 
 
 #### Database Connectivity
 LINX can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
