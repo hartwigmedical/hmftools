@@ -87,8 +87,21 @@ public class SagePipelineData {
     public List<List<AltContext>> altContexts() {
         List<List<AltContext>> result = Lists.newArrayList();
 
-        List<VariantHotspot> sortedHotspots =
-                allHotspots.stream().sorted(Comparator.comparingLong(GenomePosition::position)).collect(Collectors.toList());
+        final Comparator<VariantHotspot> hotspotComparator = (o1, o2) -> {
+            int standardCompare = o1.compareTo(o2);
+            if (standardCompare != 0) {
+                return standardCompare;
+            }
+
+            int refCompare = o1.ref().compareTo(o2.ref());
+            if (refCompare != 0) {
+                return refCompare;
+            }
+
+            return o1.alt().compareTo(o2.alt());
+        };
+
+        final List<VariantHotspot> sortedHotspots = allHotspots.stream().sorted(hotspotComparator).collect(Collectors.toList());
 
         for (VariantHotspot sortedHotspot : sortedHotspots) {
 
