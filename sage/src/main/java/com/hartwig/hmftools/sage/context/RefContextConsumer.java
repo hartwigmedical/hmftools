@@ -76,13 +76,14 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         if (inBounds(record)) {
 
+            int alignmentStart = record.getAlignmentStart();
+            int alignmentEnd = record.getAlignmentEnd();
+
             if (record.getMappingQuality() >= minQuality) {
 
-                byte[] refBases =
-                        refGenome.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
-                //                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases));
+                byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), alignmentStart, alignmentEnd).getBases();
 
-                int readBase = 1;
+                int readIndex = 0;
                 int refBase = record.getAlignmentStart();
 
                 for (final CigarElement e : record.getCigar().getCigarElements()) {
@@ -92,10 +93,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         case M:
                         case EQ:
                         case X:
-                            processPrimeAlignment(record, readBase, refBase, length, refBases);
+                            processAlignment(record, readIndex, refBase, length, refBases);
                             break;
                         case D:
-
+                            //                            processDelete(record, length, readIndex - 1, refBase - 1, refBases);
+                            break;
                     }
 
                     if (e.getOperator().consumesReferenceBases()) {
@@ -103,7 +105,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     }
 
                     if (e.getOperator().consumesReadBases()) {
-                        readBase += e.getLength();
+                        readIndex += e.getLength();
                     }
                 }
 
@@ -115,38 +117,26 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processSubprimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock) {
-        long refStart = alignmentBlock.getReferenceStart();
-        long refEnd = refStart + alignmentBlock.getLength() - 1;
-        byte[] refBytes = refGenome.getSubsequenceAt(record.getContig(), refStart, refEnd).getBases();
+    private void processDelete(@NotNull final SAMRecord record, int length, int readIndex, int refPosition, byte[] refBases) {
 
-        for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
-            long position = refStart + refBytePosition;
+        int refIndex = refPosition - record.getAlignmentStart();
 
-            final byte refByte = refBytes[refBytePosition];
-            final String ref = String.valueOf((char) refByte);
+        final String alt = new String(refBases, refIndex, 1);
+        final String ref = new String(refBases, refIndex, length + 1);
 
-            final RefContext refContext = candidates.refContext(record.getContig(), position);
-            if (refContext != null) {
-                refContext.subprimeRead(record.getMappingQuality());
+        final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
+        if (refContext != null) {
+            if (tumor) {
+                refContext.altRead(ref, alt, new ReadContext(readIndex, record, refBases));
+            } else {
+                refContext.altRead(ref, alt);
             }
         }
-
     }
 
-    private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock, byte[] refBases) {
-        processPrimeAlignment(record,
-                alignmentBlock.getReadStart(),
-                alignmentBlock.getReferenceStart(),
-                alignmentBlock.getLength(),
-                refBases);
-    }
-
-    private void processPrimeAlignment(@NotNull final SAMRecord record, int readStart, int referenceStart, int alignmentLength,
+    private void processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
             byte[] refBases) {
 
-        int readBasesStartIndex = readStart - 1;
-        int refPositionStart = referenceStart;
         int refBasesStartIndex = refPositionStart - record.getAlignmentStart();
 
         for (int i = 0; i < alignmentLength; i++) {
@@ -178,6 +168,20 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 } else {
                     refContext.refRead(record.getMappingQuality(), baseQuality);
                 }
+            }
+        }
+
+    }
+
+    private void processSubprimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock) {
+        long refStart = alignmentBlock.getReferenceStart();
+
+        for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
+            long position = refStart + refBytePosition;
+
+            final RefContext refContext = candidates.refContext(record.getContig(), position);
+            if (refContext != null) {
+                refContext.subprimeRead(record.getMappingQuality());
             }
         }
 
