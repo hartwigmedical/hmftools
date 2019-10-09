@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -79,7 +80,31 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
                 byte[] refBases =
                         refGenome.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
-                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases));
+                //                record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases));
+
+                int readBase = 1;
+                int refBase = record.getAlignmentStart();
+
+                for (final CigarElement e : record.getCigar().getCigarElements()) {
+                    final int length = e.getLength();
+
+                    switch (e.getOperator()) {
+                        case M:
+                        case EQ:
+                        case X:
+                            processPrimeAlignment(record, readBase, refBase, length, refBases);
+                    }
+
+                    if (e.getOperator().consumesReferenceBases()) {
+                        refBase += e.getLength();
+                    }
+
+                    if (e.getOperator().consumesReadBases()) {
+                        readBase += e.getLength();
+                    }
+
+                }
+
             } else {
 
                 record.getAlignmentBlocks().forEach(x -> processSubprimeAlignment(record, x));
@@ -108,12 +133,23 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     }
 
     private void processPrimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock, byte[] refBases) {
+        processPrimeAlignment(record,
+                alignmentBlock.getReadStart(),
+                alignmentBlock.getReferenceStart(),
+                alignmentBlock.getLength(),
+                refBases);
+    }
 
-        int readBasesStartIndex = alignmentBlock.getReadStart() - 1;
-        int refPositionStart = alignmentBlock.getReferenceStart();
+    private void processPrimeAlignment(@NotNull final SAMRecord record, int readStart, int referenceStart, int alignmentLength,
+            byte[] refBases) {
+
+
+
+        int readBasesStartIndex = readStart - 1;
+        int refPositionStart = referenceStart;
         int refBasesStartIndex = refPositionStart - record.getAlignmentStart();
 
-        for (int i = 0; i < alignmentBlock.getLength(); i++) {
+        for (int i = 0; i < alignmentLength; i++) {
 
             long refPosition = refPositionStart + i;
             int readBaseIndex = readBasesStartIndex + i;
