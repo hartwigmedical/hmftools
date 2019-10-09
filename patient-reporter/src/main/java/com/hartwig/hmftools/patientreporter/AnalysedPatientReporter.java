@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -38,6 +39,8 @@ import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVari
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,8 +62,8 @@ class AnalysedPatientReporter {
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
-            @Nullable String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile, @Nullable String comments,
-            boolean correctedReport) throws IOException {
+            @Nullable String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
+            @NotNull String linxViralInsertionFile, @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -87,6 +90,7 @@ class AnalysedPatientReporter {
                         reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()));
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
+        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionFile);
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
@@ -114,6 +118,7 @@ class AnalysedPatientReporter {
                 .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
+                .viralInsertion(viralInsertions)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
@@ -125,6 +130,17 @@ class AnalysedPatientReporter {
         printReportState(report);
 
         return report;
+    }
+
+    @NotNull
+    private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException{
+        List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(linxViralInsertionFile);
+        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+
+        for (LinxViralInsertFile viralInsertion: viralInsertFileList) {
+            viralInsertions.add(ImmutableViralInsertion.builder().virus(viralInsertion.VirusName).countVirus("1").build());
+        }
+       return viralInsertions;
     }
 
     @NotNull

@@ -31,6 +31,8 @@ import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDi
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +64,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         final String sampleId = "PNT00012345T";
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -90,6 +93,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
                 false,
@@ -117,6 +121,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        final List<ViralInsertion> viralInsertions = createTestViralInsertions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -137,12 +142,20 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
                 false,
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
+    }
+
+    @NotNull
+    private static List<ViralInsertion> createTestViralInsertions() {
+        List<ViralInsertion> viralInsertions =
+                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus("2").build());
+        return Lists.newArrayList(viralInsertions);
     }
 
     @NotNull
@@ -164,6 +177,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        final List<ViralInsertion> viralInsertions = createTestViralInsertions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -184,6 +198,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
                 false,

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
@@ -51,6 +52,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
+
     }
 
     @NotNull
@@ -203,6 +206,25 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
             contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMaxCopies(),
                     hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+        }
+
+        return TableUtil.createWrappingReportTable(title, contentTable);
+    }
+
+    @NotNull
+    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertion) {
+        final String title = "Tumor viral insertions";
+        if (viralInsertion.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
+        }
+
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 50 },
+                new Cell[] { TableUtil.createHeaderCell("Viral name"), TableUtil.createHeaderCell("Count viral") });
+
+        for (ViralInsertion viralInsert : viralInsertion) {
+            contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
+            contentTable.addCell(TableUtil.createContentCell(viralInsert.countVirus()));
+
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

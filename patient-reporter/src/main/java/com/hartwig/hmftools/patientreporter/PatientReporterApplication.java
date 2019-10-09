@@ -67,6 +67,7 @@ public class PatientReporterApplication {
     private static final String BACHELOR_CSV = "bachelor_csv";
     private static final String CHORD_PREDICTION_FILE = "chord_prediction_file";
     private static final String CIRCOS_FILE = "circos_file";
+    private static final String LINX_VIRALINSERTION_FILE = "viral_insertion_file";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
@@ -116,6 +117,7 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(BACHELOR_CSV),
                     cmd.getOptionValue(CHORD_PREDICTION_FILE),
                     cmd.getOptionValue(CIRCOS_FILE),
+                    cmd.getOptionValue(LINX_VIRALINSERTION_FILE),
                     cmd.getOptionValue(COMMENTS),
                     cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
@@ -191,9 +193,9 @@ public class PatientReporterApplication {
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_CSV)
-                && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(
-                cmd,
-                KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
+                && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_FILE)
+                && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, GERMLINE_GENES_CSV)
+                && fileExists(cmd, SAMPLE_SUMMARY_TSV);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
@@ -297,6 +299,7 @@ public class PatientReporterApplication {
         options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
         options.addOption(BACHELOR_CSV, true, "Path towards the germline germline CSV (optional).");
         options.addOption(CHORD_PREDICTION_FILE, true, "Path towards the CHORD prediction file.");
+        options.addOption(LINX_VIRALINSERTION_FILE, true, "Path towards the LINX viral integration file.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
