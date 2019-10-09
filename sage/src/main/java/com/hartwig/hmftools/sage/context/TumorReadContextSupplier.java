@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -50,10 +49,10 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
     @Override
     public List<AltContext> get() {
 
-        LOGGER.info("Read Contexts " + sample + "  from " + bounds.start());
+        LOGGER.info("Tumor read contexts {} position {}:{}", sample, bounds.chromosome(), bounds.start());
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SAMSlicer slicer = new SAMSlicer(minQuality, Lists.newArrayList(bounds));
+            SageSamSlicer slicer = new SageSamSlicer(minQuality, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, this);
             tumorReader.close();
         } catch (IOException e) {

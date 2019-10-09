@@ -23,7 +23,7 @@ public class ContigContext {
         futures = Lists.newArrayList();
     }
 
-    public void add(Future<List<List<AltContext>>> futures) {
+    public void add(@NotNull final Future<List<List<AltContext>>> futures) {
         this.futures.add(futures);
     }
 
@@ -32,7 +32,7 @@ public class ContigContext {
             future.get().forEach(vcf::write);
         }
 
-        LOGGER.info("Finalised processing of chromosome {} ", contig);
+        LOGGER.info("Finalised writing chromosome {} ", contig);
     }
 
 }

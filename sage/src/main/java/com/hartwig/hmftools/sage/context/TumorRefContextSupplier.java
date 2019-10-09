@@ -7,7 +7,6 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,11 +44,11 @@ public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
             LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
         }
 
-        LOGGER.info("Processing {} position {}:{}", sample, bounds.chromosome(), bounds.start());
+        LOGGER.info("Tumor candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SAMSlicer slicer = new SAMSlicer(0, Lists.newArrayList(bounds));
+            SageSamSlicer slicer = new SageSamSlicer(0, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, refContextConsumer);
             tumorReader.close();
         } catch (IOException e) {
