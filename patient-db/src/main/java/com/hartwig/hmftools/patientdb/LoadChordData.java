@@ -28,8 +28,8 @@ public final class LoadChordData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    private static final String RUN_DIR = "run_dir";
     private static final String TUMOR_SAMPLE = "tumor_sample";
+    private static final String PREDICTION_FILE = "prediction_file";
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
         final Options options = createOptions();
@@ -38,39 +38,38 @@ public final class LoadChordData {
         final String password = cmd.getOptionValue(DB_PASS);
         final String databaseUrl = cmd.getOptionValue(DB_URL);
 
-        final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
+        final String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
         final String tumor_sample = cmd.getOptionValue(TUMOR_SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, tumor_sample)) {
+        if (Utils.anyNull(userName, password, databaseUrl, predictionFile, tumor_sample)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load chord_pilot data", options);
+            formatter.printHelp("patient-db - load chord data", options);
         } else {
-            final File runDirectory = new File(runDirectoryPath);
-            if (runDirectory.isDirectory()) {
+            final File fileObject = new File(predictionFile);
+            if (fileObject.isFile()) {
                 final String jdbcUrl = "jdbc:" + databaseUrl;
                 final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                LOGGER.info(String.format("Extracting and writing chord_pilot for %s", runDirectoryPath));
+                LOGGER.info(String.format("Extracting and writing chord for %s", predictionFile));
                 try {
-                    ChordAnalysis chordAnalysis = generateChordForRun(runDirectoryPath, tumor_sample);
+                    ChordAnalysis chordAnalysis = generateChordForRun(predictionFile);
                     dbWriter.writeChord(tumor_sample, chordAnalysis);
 
                 } catch (IOException e) {
-                    LOGGER.warn(String.format("Cannot extract chord_pilot for %s.", runDirectoryPath));
+                    LOGGER.warn(String.format("Cannot extract chord for %s.", predictionFile));
                 }
             } else {
-                if (!runDirectory.exists()) {
-                    LOGGER.warn("dir " + runDirectory + " does not exist.");
+                if (!fileObject.exists()) {
+                    LOGGER.warn("file " + predictionFile + " does not exist.");
                 }
                 HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("patient-db - load chord_pilot data", options);
+                formatter.printHelp("patient-db - load chord data", options);
             }
         }
     }
 
     @NotNull
-    private static ChordAnalysis generateChordForRun(@NotNull String runDirectoryPath, @NotNull String tumorSample) throws IOException {
-        String chordFile = ChordFileReader.generateFilename(runDirectoryPath, tumorSample);
+    private static ChordAnalysis generateChordForRun(@NotNull String chordFile) throws IOException {
         return ChordFileReader.read(chordFile);
     }
 
@@ -80,7 +79,7 @@ public final class LoadChordData {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(RUN_DIR, true, "Path towards the folder containing patient runs.");
+        options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
         options.addOption(TUMOR_SAMPLE, true, "The tumor sample.");
 
         return options;
