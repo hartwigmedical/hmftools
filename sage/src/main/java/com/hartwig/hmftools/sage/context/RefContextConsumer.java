@@ -8,7 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -111,7 +110,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             } else {
 
-                record.getAlignmentBlocks().forEach(x -> processSubprimeAlignment(record, x));
+                processSubprime(record);
             }
 
         }
@@ -173,18 +172,17 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     }
 
-    private void processSubprimeAlignment(@NotNull final SAMRecord record, @NotNull final AlignmentBlock alignmentBlock) {
-        long refStart = alignmentBlock.getReferenceStart();
+    private void processSubprime(@NotNull final SAMRecord record) {
+        int refStart = record.getAlignmentStart();
+        int refEnd = record.getAlignmentEnd();
 
-        for (int refBytePosition = 0; refBytePosition < alignmentBlock.getLength(); refBytePosition++) {
-            long position = refStart + refBytePosition;
+        for (int refPosition = refStart; refPosition <= refEnd; refPosition++) {
 
-            final RefContext refContext = candidates.refContext(record.getContig(), position);
+            final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null) {
                 refContext.subprimeRead(record.getMappingQuality());
             }
         }
-
     }
 
     private boolean inBounds(final SAMRecord record) {
