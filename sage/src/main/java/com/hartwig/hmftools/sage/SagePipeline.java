@@ -50,7 +50,7 @@ public class SagePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config.minQuality(),
+                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config.minMapQuality(),
                             sample,
                             region,
                             bam,
@@ -60,7 +60,7 @@ public class SagePipeline {
                                     .flatMap(x -> x.alts().stream())
                                     .filter(x -> x.altSupport() > 2)
                                     .collect(Collectors.toList()))
-                            .thenApply(altContexts -> new TumorReadContextSupplier(config.minQuality(),
+                            .thenApply(altContexts -> new TumorReadContextSupplier(config.minMapQuality(),
                                     sample,
                                     region,
                                     bam,
@@ -79,7 +79,7 @@ public class SagePipeline {
                 sagePipelineData.addTumor(i, future.join());
             }
 
-            return new NormalRefContextSupplier(config.minQuality(),
+            return new NormalRefContextSupplier(config.minMapQuality(),
                     region,
                     config.referenceBam(),
                     refGenome,

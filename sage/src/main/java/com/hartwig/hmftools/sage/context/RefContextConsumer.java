@@ -77,10 +77,10 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             if (record.getMappingQuality() >= minQuality) {
 
-                byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
+                byte[] refBases =
+                        refGenome.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
                 record.getAlignmentBlocks().forEach(x -> processPrimeAlignment(record, x, refBases));
             } else {
-
 
                 record.getAlignmentBlocks().forEach(x -> processSubprimeAlignment(record, x));
             }
@@ -99,7 +99,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final byte refByte = refBytes[refBytePosition];
             final String ref = String.valueOf((char) refByte);
 
-            RefContext refContext = candidates.refContext(record.getContig(), position, ref);
+            final RefContext refContext = candidates.refContext(record.getContig(), position, ref);
             if (refContext != null) {
                 refContext.subprimeRead(record.getMappingQuality());
             }
