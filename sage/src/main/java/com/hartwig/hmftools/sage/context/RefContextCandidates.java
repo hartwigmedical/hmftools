@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 public interface RefContextCandidates {
 
     @Nullable
-    RefContext refContext(@NotNull final String chromosome, final long position, @NotNull final String ref);
+    RefContext refContext(@NotNull final String chromosome, final long position);
 
     @NotNull
     List<RefContext> refContexts();

@@ -27,8 +27,8 @@ public class TumorRefContextCandidates implements RefContextCandidates {
     }
 
     @NotNull
-    public RefContext refContext(@NotNull final String chromosome, final long position, @NotNull final String ref) {
-        return rollingCandidates.computeIfAbsent(position, aLong -> new RefContext(sample, chromosome, position, ref));
+    public RefContext refContext(@NotNull final String chromosome, final long position) {
+        return rollingCandidates.computeIfAbsent(position, aLong -> new RefContext(sample, chromosome, position));
     }
 
     @NotNull

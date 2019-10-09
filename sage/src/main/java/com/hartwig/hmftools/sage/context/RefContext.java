@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.sage.context;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Maps;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.position.GenomePosition;
 
@@ -16,7 +16,6 @@ public class RefContext implements GenomePosition {
     private final String sample;
     private final String chromosome;
     private final long position;
-    private final String ref;
     private final Map<String, AltContext> alts;
 
     private int readDepth;
@@ -26,12 +25,11 @@ public class RefContext implements GenomePosition {
     private int refReads;
     private int subprimeReadDepth;
 
-    public RefContext(final String sample, final String chromosome, final long position, final String ref) {
+    public RefContext(final String sample, final String chromosome, final long position) {
         this.sample = sample;
         this.chromosome = chromosome;
         this.position = position;
-        this.ref = ref;
-        this.alts = Maps.newHashMap();
+        this.alts = new HashMap<>();
     }
 
     public boolean isAltsEmpty() {
@@ -56,20 +54,21 @@ public class RefContext implements GenomePosition {
     }
 
     @NotNull
-    public AltContext altContext(@NotNull final String alt) {
-        return alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
+    public AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
+        final String refAltKey = ref + "|" + alt;
+        return alts.computeIfAbsent(refAltKey, key -> new AltContext(RefContext.this, ref, alt));
     }
 
-    public void altRead(@NotNull final String alt, @NotNull final ReadContext interimReadContext) {
+    public void altRead(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext interimReadContext) {
         this.readDepth++;
-        final AltContext altContext = alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
+        final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead();
         altContext.addReadContext(interimReadContext);
     }
 
-    public void altRead(@NotNull final String alt) {
+    public void altRead(@NotNull final String ref, @NotNull final String alt) {
         this.readDepth++;
-        final AltContext altContext = alts.computeIfAbsent(alt, key -> new AltContext(RefContext.this, key));
+        final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead();
     }
 
@@ -82,11 +81,6 @@ public class RefContext implements GenomePosition {
     @Override
     public long position() {
         return position;
-    }
-
-    @NotNull
-    public String ref() {
-        return ref;
     }
 
     public int refQuality() {

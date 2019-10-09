@@ -83,6 +83,12 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
     @Override
     public void accept(final SAMRecord record) {
+
+//        if (hotspot.alt().equals("T") && hotspot.position() == 144930 && record.getReadName().equals("A00624:8:HHKYHDSXX:4:1571:4508:4758")) {
+//            System.out.println("Sdf");
+//        }
+
+
         if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
             coverage++;
             if (coverage < 1000) {
@@ -126,6 +132,22 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     }
 
     public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
+
+//        if (hotspot.position() == refPosition && refPosition == 144930 && hotspot.alt().equals("T")) {
+////            System.out.println("sdf");
+//            ReadContext myNewReadContext = new ReadContext(otherReadBytePosition, otherReadByte);
+//            System.out.println(myNewReadContext);
+//
+//            if (myNewReadContext.toString().equals("TCAGAGGGAATGCACATCAGTGTGGG")) {
+//                System.out.println("sdf");
+//            }
+//
+//
+//        }
+
+
+
+
         ReadContext.ReadContextMatch match = readContext.match(otherReadBytePosition, otherReadByte);
         if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
             if (refPosition == hotspot.position()) {

@@ -29,7 +29,7 @@ public class SagePipelineData {
     private final List<Map<VariantHotspot, AltContext>> altContextMap = new ArrayList<>();
     private final Map<Long, RefContext> normalMap = Maps.newHashMap();
 
-    public SagePipelineData(final String normalSample, final int tumorSampleSize) {
+    SagePipelineData(final String normalSample, final int tumorSampleSize) {
         this.normalSample = normalSample;
         for (int i = 0; i < tumorSampleSize; i++) {
             altContextMap.add(new HashMap<>());
@@ -46,11 +46,6 @@ public class SagePipelineData {
     }
 
     @NotNull
-    public Set<Long> positions() {
-        return allHotspots.stream().map(GenomePosition::position).collect(Collectors.toSet());
-    }
-
-    @NotNull
     public RefContextCandidates normalCandidates() {
 
         NormalRefContextCandidates candidates = new NormalRefContextCandidates(normalSample);
@@ -59,8 +54,8 @@ public class SagePipelineData {
                 allHotspots.stream().sorted(Comparator.comparingLong(GenomePosition::position)).collect(Collectors.toList());
 
         for (VariantHotspot hotspot : sortedHotspots) {
-            final RefContext refContext = candidates.add(hotspot.chromosome(), hotspot.position(), hotspot.ref());
-            final AltContext altContext = refContext.altContext(hotspot.alt());
+            final RefContext refContext = candidates.add(hotspot.chromosome(), hotspot.position());
+            final AltContext altContext = refContext.altContext(hotspot.ref(), hotspot.alt());
 
             final List<ReadContextCounter> readContextCounters = Lists.newArrayList();
             for (Map<VariantHotspot, AltContext> variantHotspotAltContextMap : altContextMap) {
@@ -108,7 +103,7 @@ public class SagePipelineData {
             final List<AltContext> altContexts = new ArrayList<>(altContextMap.size() + 1);
             final RefContext normalRefContext = normalMap.get(sortedHotspot.position());
             if (normalRefContext != null) {
-                altContexts.add(normalRefContext.altContext(sortedHotspot.alt()));
+                altContexts.add(normalRefContext.altContext(sortedHotspot.ref(), sortedHotspot.alt()));
             } else {
                 altContexts.add(new AltContext(normalSample, sortedHotspot));
             }

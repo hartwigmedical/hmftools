@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class AltContext implements VariantHotspot {
 
     private final RefContext refContext;
+    private final String ref;
     private final String alt;
     private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
 
@@ -21,12 +22,14 @@ public class AltContext implements VariantHotspot {
     private int altReads;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
-        refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position(), hotspot.ref());
+        refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
         this.alt = hotspot.alt();
+        this.ref = hotspot.ref();
     }
 
-    AltContext(final RefContext refContext, final String alt) {
+    AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
+        this.ref = ref;
         this.alt = alt;
     }
 
@@ -79,7 +82,7 @@ public class AltContext implements VariantHotspot {
     @NotNull
     @Override
     public String ref() {
-        return refContext.ref();
+        return ref;
     }
 
     @NotNull
@@ -136,7 +139,7 @@ public class AltContext implements VariantHotspot {
     @Override
     public int hashCode() {
         int h = 5381;
-        h += (h << 5) + ref().hashCode();
+        h += (h << 5) + ref.hashCode();
         h += (h << 5) + alt.hashCode();
         h += (h << 5) + chromosome().hashCode();
         h += (h << 5) + Longs.hashCode(position());

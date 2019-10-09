@@ -93,11 +93,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         case EQ:
                         case X:
                             processPrimeAlignment(record, readBase, refBase, length, refBases);
-//                            if (Math.abs(record.getInferredInsertSize()) >= 1000) {
-//                                System.out.println(record.getInferredInsertSize());
-//                            }
-
                             break;
+                        case D:
+
                     }
 
                     if (e.getOperator().consumesReferenceBases()) {
@@ -128,7 +126,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final byte refByte = refBytes[refBytePosition];
             final String ref = String.valueOf((char) refByte);
 
-            final RefContext refContext = candidates.refContext(record.getContig(), position, ref);
+            final RefContext refContext = candidates.refContext(record.getContig(), position);
             if (refContext != null) {
                 refContext.subprimeRead(record.getMappingQuality());
             }
@@ -146,8 +144,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     private void processPrimeAlignment(@NotNull final SAMRecord record, int readStart, int referenceStart, int alignmentLength,
             byte[] refBases) {
-
-
 
         int readBasesStartIndex = readStart - 1;
         int refPositionStart = referenceStart;
@@ -168,15 +164,15 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final byte readByte = record.getReadBases()[readBaseIndex];
             final int baseQuality = record.getBaseQualities()[readBaseIndex];
 
-            final RefContext refContext = candidates.refContext(record.getContig(), refPosition, ref);
+            final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null) {
 
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
-                        refContext.altRead(alt, new ReadContext(readBaseIndex, record, refBases));
+                        refContext.altRead(ref, alt, new ReadContext(readBaseIndex, record, refBases));
                     } else {
-                        refContext.altRead(alt);
+                        refContext.altRead(ref, alt);
                     }
 
                 } else {

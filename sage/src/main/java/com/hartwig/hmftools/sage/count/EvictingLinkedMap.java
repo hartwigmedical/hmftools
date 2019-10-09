@@ -5,7 +5,6 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,24 +30,6 @@ public class EvictingLinkedMap<K, V> {
         return map.get(key);
     }
 
-    public V compute(K key, BiFunction<K, V, V> remapping) {
-
-        BiFunction<K, V, V> internalRemapping = (k, oldValue) -> {
-
-            V newValue = remapping.apply(k, oldValue);
-            if (oldValue == null) {
-                arrayDeque.addLast(new AbstractMap.SimpleEntry<>(key, newValue));
-
-                if (arrayDeque.size() > ACTUAL_CAPACITY) {
-                    evict(1);
-                }
-            }
-
-            return newValue;
-        };
-
-        return map.compute(key, internalRemapping);
-    }
 
     public V computeIfAbsent(K key, Function<K, V> supplier) {
         Function<K, V> internalSupplier = k -> {
