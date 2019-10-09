@@ -24,9 +24,12 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class GenomicAlterationsChapter implements ReportChapter {
+    private static final Logger LOGGER = LogManager.getLogger(GenomicAlterationsChapter.class);
 
     // TODO Remove this toggle-off once purple v2.31 is in production
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
@@ -222,6 +225,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Viral name"), TableUtil.createHeaderCell("Count viral") });
 
         for (ViralInsertion viralInsert : viralInsertion) {
+            LOGGER.info(viralInsert);
             contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
             contentTable.addCell(TableUtil.createContentCell(viralInsert.countVirus()));
 

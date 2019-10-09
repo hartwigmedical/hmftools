@@ -5,10 +5,13 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
@@ -133,14 +136,63 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException{
+    private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException {
         List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(linxViralInsertionFile);
-        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), linxViralInsertionFile);
 
-        for (LinxViralInsertFile viralInsertion: viralInsertFileList) {
-            viralInsertions.add(ImmutableViralInsertion.builder().virus(viralInsertion.VirusName).countVirus("1").build());
+        Map<AnalysedPatientReporter.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
+        for (LinxViralInsertFile viralInsertion : viralInsertFileList) {
+            AnalysedPatientReporter.VirusKey key = new AnalysedPatientReporter.VirusKey(viralInsertion.VirusId);
+            List<LinxViralInsertFile> items = itemsPerKey.get(key);
+
+            if (items == null) {
+                items = Lists.newArrayList();
+            }
+            items.add(viralInsertion);
+            itemsPerKey.put(key, items);
         }
-       return viralInsertions;
+
+        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        String virusName = Strings.EMPTY;
+        int count = 0;
+        for (Map.Entry<AnalysedPatientReporter.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
+            List<LinxViralInsertFile> itemsForKey = entry.getValue();
+            for (LinxViralInsertFile virus: itemsForKey) {
+                 virusName = virus.VirusName;
+            }
+
+             count = itemsForKey.size();
+
+            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).countVirus(Integer.toString(count)).build());
+        }
+        return viralInsertions;
+    }
+
+    private static class VirusKey {
+
+        @NotNull
+        private final String virusId;
+
+        private VirusKey(@NotNull final String virusId) {
+            this.virusId = virusId;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final AnalysedPatientReporter.VirusKey key = (AnalysedPatientReporter.VirusKey) o;
+            return Objects.equals(virusId, key.virusId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(virusId);
+        }
     }
 
     @NotNull
