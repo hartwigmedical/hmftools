@@ -49,7 +49,6 @@ public class Lims {
 
     public void validateSampleBarcodeCombination(@NotNull String refBarcode, @NotNull String refSampleId, @NotNull String tumorBarcode,
             @NotNull String tumorSampleId) {
-        tumorBarcode = tumorBarcode.split("_")[0];
         LimsJsonSampleData tumorSampleData = dataPerSampleBarcode.get(tumorBarcode);
         if (tumorSampleData == null) {
             LOGGER.warn("Could not find entry for barcode {} in LIMS.", tumorBarcode);
