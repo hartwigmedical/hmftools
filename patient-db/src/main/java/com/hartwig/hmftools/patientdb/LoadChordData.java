@@ -6,8 +6,6 @@ import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -31,7 +29,7 @@ public final class LoadChordData {
     private static final String TUMOR_SAMPLE = "tumor_sample";
     private static final String PREDICTION_FILE = "prediction_file";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String userName = cmd.getOptionValue(DB_USER);

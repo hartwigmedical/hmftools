@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.chord;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -10,15 +9,12 @@ import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.io.exception.MalformedFileException;
-import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class ChordFileReader {
 
-    // Chord files stores in {run}/chord_pilot/{sample}_chord_prediction.txt
-    private static final String CHORD_BASE_DIRECTORY = "chord";
-    private static final String CHORD_EXTENSION = "_chord_prediction.txt";
+    // Chord files stores in {run}/chord/{sample}_chord_prediction.txt
     private static final String VALUE_SEPARATOR = "\t";
 
     private static final int NONE_COLUMN = 1;
@@ -28,12 +24,6 @@ public final class ChordFileReader {
     private static final int PREDICTED_RESPONSE_COLUMN = 5;
 
     private ChordFileReader() {
-    }
-
-    @NotNull
-    public static String generateFilename(@NotNull final String runDir, @NotNull final String sample) throws FileNotFoundException {
-        String path = runDir + File.separator + CHORD_BASE_DIRECTORY;
-        return PathPrefixSuffixFinder.build().findPath(path, sample, CHORD_EXTENSION).toString();
     }
 
     @NotNull
