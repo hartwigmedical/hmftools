@@ -65,7 +65,7 @@ class AnalysedPatientReporter {
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
-            @Nullable String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
+            @NotNull String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
             @NotNull String linxViralInsertionFile, @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
@@ -227,12 +227,8 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @Nullable String bachelorCsv,
+    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorCsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis) throws IOException {
-        if (bachelorCsv == null) {
-            LOGGER.info("Skipping germline analysis - No bachelor CSV passed. Presumably no pathogenic germline variants found.");
-            return Lists.newArrayList();
-        }
 
         List<GermlineVariant> variants =
                 BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
