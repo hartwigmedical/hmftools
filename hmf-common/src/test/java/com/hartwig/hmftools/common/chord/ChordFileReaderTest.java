@@ -12,7 +12,7 @@ public class ChordFileReaderTest {
     private static final String FILE = Resources.getResource("chord/sample_chord_prediction.txt").getPath();
     private static final double EPSILON = 1.0E-10;
 
-    private static final double NONE = 0.250;
+    private static final double NONE = 0.370;
     private static final double BRCA1 = 0.230;
     private static final double BRCA2 = 0.400;
     private static final double HRD = 0.630;
