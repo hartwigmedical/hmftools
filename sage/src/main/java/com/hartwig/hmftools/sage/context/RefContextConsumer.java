@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.context;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.cigar.CigarHandler;
+import com.hartwig.hmftools.sage.cigar.CigarTraversal;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,34 +83,28 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             if (record.getMappingQuality() >= minQuality) {
 
-                byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), alignmentStart, alignmentEnd).getBases();
-
-                int readIndex = 0;
-                int refBase = record.getAlignmentStart();
-
-                for (final CigarElement e : record.getCigar().getCigarElements()) {
-                    final int length = e.getLength();
-
-                    switch (e.getOperator()) {
-                        case M:
-                        case EQ:
-                        case X:
-                            processAligned(record, readIndex, refBase, length, refBases);
-                            break;
-                        case D:
-                        case I:
-                            processIndel(e, record, readIndex - 1, refBase - 1, refBases);
-                            break;
+                final byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), alignmentStart, alignmentEnd).getBases();
+                final CigarHandler handler = new CigarHandler() {
+                    @Override
+                    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                            final int refPosition) {
+                        processAligned(record, readIndex, refPosition, element.getLength(), refBases);
                     }
 
-                    if (e.getOperator().consumesReferenceBases()) {
-                        refBase += e.getLength();
+                    @Override
+                    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                            final int refPosition) {
+                        processIndel(element, record, readIndex, refPosition, refBases);
                     }
 
-                    if (e.getOperator().consumesReadBases()) {
-                        readIndex += e.getLength();
+                    @Override
+                    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                            final int refPosition) {
+                        processIndel(element, record, readIndex, refPosition, refBases);
                     }
-                }
+                };
+
+                CigarTraversal.traverseCigar(record, handler);
 
             } else {
 
