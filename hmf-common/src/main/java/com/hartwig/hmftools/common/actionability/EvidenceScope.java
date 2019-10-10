@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.actionability;
 import org.jetbrains.annotations.NotNull;
 
 public enum EvidenceScope {
-    BROAD("Gene-level"),
+    GENE_LEVEL("Gene-level"),
     SPECIFIC("Specific");
 
     @NotNull

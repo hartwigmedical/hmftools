@@ -112,6 +112,6 @@ public class SomaticVariantEvidenceAnalyzer {
                 .level(EvidenceLevel.fromString(actionableRange.level()))
                 .response(actionableRange.response())
                 .cancerType(actionableRange.cancerType())
-                .scope(EvidenceScope.BROAD);
+                .scope(EvidenceScope.GENE_LEVEL);
     }
 }

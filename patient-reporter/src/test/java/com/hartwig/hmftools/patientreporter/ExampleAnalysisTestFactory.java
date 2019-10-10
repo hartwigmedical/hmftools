@@ -303,7 +303,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:208")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         return evidenceItems;
@@ -316,22 +316,22 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
 
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("DRUP")
                 .reference("EXT10299 (NL54757.031.16)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("EBIN (EORTC-1612-MG)")
                 .reference("EXT11284 (NL67202.031.18)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("LXH254 in tumors with MAPK pathway alterations")
                 .reference("EXT10453 (NL55506.078.15)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("POLARIS")
                 .reference("EXT11388 (NL69569.028.19)")
                 .build());
@@ -346,7 +346,7 @@ public final class ExampleAnalysisTestFactory {
                 .reference("EXT6690 (NL45261.031.13)")
                 .build());
         trials.add(iclusionBuilder.event("CDKN2A p.Ala68fs")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("DRUP")
                 .reference("EXT10299 (NL54757.031.16)")
                 .build());
@@ -366,7 +366,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
@@ -402,7 +402,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
@@ -456,7 +456,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
