@@ -37,9 +37,9 @@ public final class LoadChordData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
 
         final String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
-        final String tumor_sample = cmd.getOptionValue(TUMOR_SAMPLE);
+        final String sample = cmd.getOptionValue(TUMOR_SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, predictionFile, tumor_sample)) {
+        if (Utils.anyNull(userName, password, databaseUrl, predictionFile, sample)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load chord data", options);
         } else {
@@ -51,7 +51,7 @@ public final class LoadChordData {
                 LOGGER.info(String.format("Extracting and writing chord for %s", predictionFile));
                 try {
                     ChordAnalysis chordAnalysis = generateChordForRun(predictionFile);
-                    dbWriter.writeChord(tumor_sample, chordAnalysis);
+                    dbWriter.writeChord(sample, chordAnalysis);
 
                 } catch (IOException e) {
                     LOGGER.warn(String.format("Cannot extract chord for %s.", predictionFile));
@@ -88,5 +88,4 @@ public final class LoadChordData {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }
