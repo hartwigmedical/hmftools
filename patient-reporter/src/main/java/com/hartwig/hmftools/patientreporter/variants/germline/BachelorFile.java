@@ -31,7 +31,6 @@ public final class BachelorFile {
         List<GermlineVariant> germlineVariants = Lists.newArrayList();
         // Skip header line
         for (String line : lines.subList(1, lines.size())) {
-            LOGGER.info(line);
             germlineVariants.add(fromString(line));
         }
         return germlineVariants;
@@ -40,6 +39,11 @@ public final class BachelorFile {
     @NotNull
     private static GermlineVariant fromString(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+
+        String program = values[24];
+        if (!program.equalsIgnoreCase("HMF")) {
+            LOGGER.warn("Unexpected bachelor program found: " + program);
+        }
 
         String filter = values[2].trim();
         int altReadCount = Integer.parseInt(values[15]);
@@ -50,7 +54,7 @@ public final class BachelorFile {
                 .gene(values[6].trim())
                 .chromosome(values[0].trim())
                 .position(Integer.parseInt(values[1].trim()))
-                .hgvsCodingImpact(values[19].trim())
+                .hgvsCodingImpact(values[21].trim())
                 .hgvsProteinImpact(values[20].trim())
                 .totalReadCount(totalReadCount)
                 .alleleReadCount(altReadCount)

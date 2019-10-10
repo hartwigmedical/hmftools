@@ -25,7 +25,7 @@ public class BachelorFileTest {
         GermlineVariant variant = germlineVariants.get(0);
         assertTrue(variant.passFilter());
         assertEquals("BRCA1", variant.gene());
-        assertEquals("CAC", variant.hgvsCodingImpact());
+        assertEquals("c.68_69delAG", variant.hgvsCodingImpact());
         assertEquals("p.Glu23fs", variant.hgvsProteinImpact());
         assertEquals(45, variant.alleleReadCount());
         assertEquals(97, variant.totalReadCount());
