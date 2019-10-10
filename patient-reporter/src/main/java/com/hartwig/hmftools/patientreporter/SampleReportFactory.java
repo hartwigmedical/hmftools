@@ -22,9 +22,9 @@ public final class SampleReportFactory {
     @NotNull
     public static SampleReport fromLimsAndHospitalModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
             @NotNull HospitalModel hospitalModel, @Nullable PatientTumorLocation patientTumorLocation) {
-        String refSampleBarcode = sampleMetadata.refSampleBarcode();
+        String refSampleBarcode = sampleMetadata.refSampleBarcode().split("_")[0];
         String refSampleId = sampleMetadata.refSampleId();
-        String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
+        String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode().split("_")[0];
         String tumorSampleId = sampleMetadata.tumorSampleId();
 
         lims.validateSampleBarcodeCombination(refSampleBarcode, refSampleId, tumorSampleBarcode, tumorSampleId);
