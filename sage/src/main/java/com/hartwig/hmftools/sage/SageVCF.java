@@ -41,7 +41,9 @@ public class SageVCF implements AutoCloseable {
     public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final String filename, @NotNull final String normalSample,
             @NotNull final List<String> tumorSamples) {
 
-        writer = new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
+        writer = new VariantContextWriterBuilder().setOutputFile(filename)
+                .modifyOption(Options.INDEX_ON_THE_FLY, true)
+                .build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
 
         final VCFHeader header = refContextEnrichment.enrichHeader(header(normalSample, tumorSamples));

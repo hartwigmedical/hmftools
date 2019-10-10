@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -92,10 +93,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         case M:
                         case EQ:
                         case X:
-                            processAlignment(record, readIndex, refBase, length, refBases);
+                            processAligned(record, readIndex, refBase, length, refBases);
                             break;
                         case D:
-                            //                            processDelete(record, length, readIndex - 1, refBase - 1, refBases);
+                        case I:
+                            processIndel(e, record, readIndex - 1, refBase - 1, refBases);
                             break;
                     }
 
@@ -116,24 +118,35 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processDelete(@NotNull final SAMRecord record, int length, int readIndex, int refPosition, byte[] refBases) {
+    private void processIndel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+            byte[] refBases) {
 
         int refIndex = refPosition - record.getAlignmentStart();
 
-        final String alt = new String(refBases, refIndex, 1);
-        final String ref = new String(refBases, refIndex, length + 1);
-
-        final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-        if (refContext != null) {
-            if (tumor) {
-                refContext.altRead(ref, alt, new ReadContext(readIndex, record, refBases));
+        // TODO: Handle CIGAR 1I150M
+        if (refIndex >= 0 && refPosition <= bounds.end() && refPosition >= bounds.start()) {
+            final String ref;
+            final String alt;
+            if (e.getOperator() == CigarOperator.D) {
+                ref = new String(refBases, refIndex, e.getLength() + 1);
+                alt = new String(refBases, refIndex, 1);
             } else {
-                refContext.altRead(ref, alt);
+                ref = new String(refBases, refIndex, 1);
+                alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
+            }
+
+            final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
+            if (refContext != null) {
+                if (tumor) {
+                    refContext.altRead(ref, alt, new ReadContext(readIndex, record, refBases));
+                } else {
+                    refContext.altRead(ref, alt);
+                }
             }
         }
     }
 
-    private void processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
+    private void processAligned(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
             byte[] refBases) {
 
         int refBasesStartIndex = refPositionStart - record.getAlignmentStart();

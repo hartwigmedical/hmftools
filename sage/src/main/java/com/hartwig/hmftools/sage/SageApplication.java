@@ -74,11 +74,16 @@ public class SageApplication implements AutoCloseable {
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig) && contig.equals("17")) {
+            if (HumanChromosome.contains(contig)) {
                 int maxPosition = samSequenceRecord.getSequenceLength();
                 contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
             }
         }
+
+        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), 9000000));
+        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+        //        contigCon`texts.add(runSingleRegion("17", 32000000, 33000000));
+        //        contigContexts.add(runSingleRegion("17", 33000001, 34000000));
 
         for (final ContigContext contigContext : contigContexts) {
             contigContext.write(vcf);
@@ -110,6 +115,15 @@ public class SageApplication implements AutoCloseable {
         }
 
         return contigContext;
+    }
+
+    @NotNull
+    private ContigContext runSingleRegion(@NotNull final String chromosome, int start, int end) {
+
+        final ContigContext contigContext = new ContigContext(chromosome);
+        contigContext.add(runRegion(chromosome, start, end));
+        return contigContext;
+
     }
 
     @NotNull
