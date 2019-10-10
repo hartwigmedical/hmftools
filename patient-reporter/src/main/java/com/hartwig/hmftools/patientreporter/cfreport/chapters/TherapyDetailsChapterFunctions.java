@@ -64,7 +64,7 @@ final class TherapyDetailsChapterFunctions {
     @NotNull
     static Paragraph createTreatmentMatchParagraph(boolean matchIsSpecific) {
         return new Paragraph().add(Icon.createIcon(matchIsSpecific ? Icon.IconType.MATCH_SPECIFIC : Icon.IconType.MATCH_BROAD))
-                .add(new Text(" " + (matchIsSpecific ? "Specific" : "Broad")).addStyle(ReportResources.tableContentStyle()));
+                .add(new Text(" " + (matchIsSpecific ? "Specific" : "Gene-level")).addStyle(ReportResources.tableContentStyle()));
     }
 
     @NotNull
