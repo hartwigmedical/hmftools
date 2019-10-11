@@ -52,7 +52,7 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return patientReport.isCorrectedReport() ? "Sequence Report Corrected" : "Sequence Report";
+        return patientReport.isCorrectedReport() ? "DNA Analysis Report Corrected" : "DNA Analysis Report";
     }
 
     @Override
