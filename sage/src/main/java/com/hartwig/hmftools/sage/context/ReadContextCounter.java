@@ -86,7 +86,8 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
 
     @Override
     public void accept(final SAMRecord record) {
-        if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
+        if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()
+                && readContext.isComplete()) {
             coverage++;
             if (coverage < 1000) {
                 CigarTraversal.traverseCigar(record, this);
@@ -141,8 +142,8 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
     }
 
     private double quality(int mapQuality, int baseQuality, int distanceFromEdge) {
-        int quality = Math.min(distanceFromEdge, Math.min(baseQuality - 12, mapQuality - 24));
-        return Math.max(0, quality);
+        final int quality = Math.min(Math.min(Math.max(0, mapQuality - 12), baseQuality), distanceFromEdge);
+        return Math.max(0, quality - 12);
     }
 
     public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
