@@ -41,7 +41,7 @@ public class ReadContextImproved {
             return ReadContextMatch.NONE;
         }
 
-        return isComplete() && other.isComplete() ? ReadContextMatch.FULL : ReadContextMatch.NONE;
+        return isComplete() && other.isComplete() ? ReadContextMatch.FULL : ReadContextMatch.PARTIAL;
     }
 
     public boolean isWithin(byte[] bases) {
@@ -49,7 +49,7 @@ public class ReadContextImproved {
             return false;
         }
 
-        for (int i = buffer - 1; i < bases.length - buffer - 1; i++) {
+        for (int i = 0; i < bases.length - length() - 1; i++) {
             if (isWithin(i, bases)) {
                 return true;
             }
@@ -129,6 +129,11 @@ public class ReadContextImproved {
 
     private int length() {
         return rightFlankEndIndex() - leftFlankStartIndex() + 1;
+    }
+
+    @Override
+    public String toString() {
+        return new String(bases, leftFlankStartIndex(), length());
     }
 
 }
