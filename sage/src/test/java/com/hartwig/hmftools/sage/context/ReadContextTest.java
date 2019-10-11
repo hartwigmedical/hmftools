@@ -46,16 +46,16 @@ public class ReadContextTest {
         final ReadContext shortLeft = new ReadContext(15, 2, "AATCCCCCCCCCCCCCCC".getBytes());
         final ReadContext shortRight = new ReadContext(15, 15, "AAAAAAAAAAAAAAATCCC".getBytes());
 
-        assertEquals(ReadContext.ReadContextMatch.FULL, full.match(full));
+        assertEquals(ReadContextMatch.FULL, full.match(full));
 
-        assertEquals(ReadContext.ReadContextMatch.PARTIAL, full.match(shortLeft));
-        assertEquals(ReadContext.ReadContextMatch.PARTIAL, full.match(shortRight));
+        assertEquals(ReadContextMatch.PARTIAL, full.match(shortLeft));
+        assertEquals(ReadContextMatch.PARTIAL, full.match(shortRight));
 
-        assertEquals(ReadContext.ReadContextMatch.PARTIAL, shortLeft.match(full));
-        assertEquals(ReadContext.ReadContextMatch.PARTIAL, shortRight.match(full));
+        assertEquals(ReadContextMatch.PARTIAL, shortLeft.match(full));
+        assertEquals(ReadContextMatch.PARTIAL, shortRight.match(full));
 
-        assertEquals(ReadContext.ReadContextMatch.NONE, shortLeft.match(shortRight));
-        assertEquals(ReadContext.ReadContextMatch.NONE, shortRight.match(shortLeft));
+        assertEquals(ReadContextMatch.NONE, shortLeft.match(shortRight));
+        assertEquals(ReadContextMatch.NONE, shortRight.match(shortLeft));
     }
 
     @Test
@@ -66,10 +66,10 @@ public class ReadContextTest {
         final ReadContext diffRight = new ReadContext(15, 15, "AAAAAAAAAAAAAAATCCCCCCCCCCCCCCG".getBytes());
         final ReadContext diffBoth = new ReadContext(15, 15, "TAAAAAAAAAAAAAATCCCCCCCCCCCCCCG".getBytes());
 
-        assertEquals(ReadContext.ReadContextMatch.NONE, full.match(diffAtAlt));
-        assertEquals(ReadContext.ReadContextMatch.NONE, full.match(diffLeft));
-        assertEquals(ReadContext.ReadContextMatch.NONE, full.match(diffRight));
-        assertEquals(ReadContext.ReadContextMatch.NONE, full.match(diffBoth));
+        assertEquals(ReadContextMatch.NONE, full.match(diffAtAlt));
+        assertEquals(ReadContextMatch.NONE, full.match(diffLeft));
+        assertEquals(ReadContextMatch.NONE, full.match(diffRight));
+        assertEquals(ReadContextMatch.NONE, full.match(diffBoth));
     }
 
 }
