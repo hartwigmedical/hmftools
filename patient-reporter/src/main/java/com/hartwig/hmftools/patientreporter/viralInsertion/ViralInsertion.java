@@ -12,6 +12,5 @@ public abstract class ViralInsertion {
     @NotNull
     public abstract String virus();
 
-    @NotNull
-    public abstract String countVirus();
+    public abstract int countVirus();
 }

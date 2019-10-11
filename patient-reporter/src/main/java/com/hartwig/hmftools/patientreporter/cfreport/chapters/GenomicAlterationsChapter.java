@@ -55,7 +55,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
-       // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
 
     }
 
@@ -225,9 +225,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("Number of viral integrations") });
 
         for (ViralInsertion viralInsert : viralInsertion) {
-            LOGGER.info(viralInsert);
             contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
-            contentTable.addCell(TableUtil.createContentCell(viralInsert.countVirus()));
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.countVirus())));
 
         }
 

@@ -154,7 +154,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ViralInsertion> createTestViralInsertions() {
         List<ViralInsertion> viralInsertions =
-                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus("2").build());
+                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus(2).build());
         return Lists.newArrayList(viralInsertions);
     }
 

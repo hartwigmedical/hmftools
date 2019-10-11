@@ -136,7 +136,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException {
+    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException {
         List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(linxViralInsertionFile);
         LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), linxViralInsertionFile);
 
@@ -163,7 +163,7 @@ class AnalysedPatientReporter {
 
              count = itemsForKey.size();
 
-            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).countVirus(Integer.toString(count)).build());
+            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).countVirus(count).build());
         }
         return viralInsertions;
     }
