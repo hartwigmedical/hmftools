@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.context;
 
-import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.FULL;
-import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.NONE;
-import static com.hartwig.hmftools.sage.context.ReadContext.ReadContextMatch.PARTIAL;
+import static com.hartwig.hmftools.sage.context.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.context.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.context.ReadContextMatch.PARTIAL;
 
 import java.util.Arrays;
 
@@ -12,12 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContext {
-
-    enum ReadContextMatch {
-        NONE,
-        PARTIAL,
-        FULL
-    }
 
     private static final int DEFAULT_BUFFER = 25;
 

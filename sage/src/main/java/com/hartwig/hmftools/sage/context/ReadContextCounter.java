@@ -147,17 +147,17 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
     }
 
     public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
-        final ReadContext.ReadContextMatch match = readContext.match(otherReadBytePosition, otherReadByte);
-        if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
+        final ReadContextMatch match = readContext.match(otherReadBytePosition, otherReadByte);
+        if (!match.equals(ReadContextMatch.NONE)) {
             if (refPosition == hotspot.position()) {
-                if (match.equals(ReadContext.ReadContextMatch.FULL)) {
+                if (match.equals(ReadContextMatch.FULL)) {
                     full++;
                     return true;
                 } else {
                     partial++;
                     return true;
                 }
-            } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
+            } else if (match.equals(ReadContextMatch.FULL)) {
                 realigned++;
             }
         }
