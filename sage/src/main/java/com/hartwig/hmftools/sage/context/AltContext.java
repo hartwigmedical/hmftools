@@ -37,19 +37,19 @@ public class AltContext implements VariantHotspot {
         this.altReads++;
     }
 
-    public void addReadContext(@NotNull final ReadContext readContext) {
+    public void addReadContext(@NotNull final ReadContextImproved newReadContext) {
         if (readContextCounter != null) {
             throw new IllegalStateException();
         }
 
-        if (readContext.isComplete()) {
+        if (newReadContext.isComplete()) {
             boolean readContextMatch = false;
             for (ReadContextCounter counter : interimReadContexts) {
-                readContextMatch |= counter.incrementCounters(position(), readContext.readBytePosition(), readContext.readBytes());
+                readContextMatch |= counter.incrementCounters(newReadContext);
             }
 
             if (!readContextMatch) {
-                interimReadContexts.add(new ReadContextCounter(this, readContext));
+                interimReadContexts.add(new ReadContextCounter(this, newReadContext));
             }
         }
     }
@@ -58,7 +58,7 @@ public class AltContext implements VariantHotspot {
     public ReadContextCounter setPrimaryReadCounterFromInterim() {
         interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
         readContextCounter = interimReadContexts.isEmpty()
-                ? new ReadContextCounter(this, new ReadContext(0, alt().getBytes()))
+                ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
                 : new ReadContextCounter(this, interimReadContexts.get(0).readContext());
 
         interimReadContexts.clear();

@@ -4,17 +4,14 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.sage.cigar.CigarHandler;
-import com.hartwig.hmftools.sage.cigar.CigarTraversal;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, CigarHandler {
+public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private final VariantHotspot hotspot;
-    private final ReadContext readContext;
+    private final ReadContextImproved readContext;
 
     private int full;
     private int partial;
@@ -30,7 +27,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
 
     private int coverage;
 
-    public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
+    public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContextImproved readContext) {
         assert (readContext.isComplete());
         this.hotspot = hotspot;
         this.readContext = readContext;
@@ -75,7 +72,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
         return new int[] { improperPair, inconsistentChromosome, excessiveInferredSize };
     }
 
-    public ReadContext readContext() {
+    public ReadContextImproved readContext() {
         return readContext;
     }
 
@@ -86,50 +83,31 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
 
     @Override
     public void accept(final SAMRecord record) {
+
         if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()
                 && readContext.isComplete()) {
             coverage++;
             if (coverage < 1000) {
-                CigarTraversal.traverseCigar(record, this);
-            }
-        }
-    }
+                int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                if (readIndex >= 0 && incrementCounters(readIndex, record.getReadBases())) {
+                    incrementQualityScores(readIndex, record);
 
-    @Override
-    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readStartIndex,
-            final int refStartPosition) {
-        byte[] readBases = record.getReadBases();
-        for (int i = 0; i < element.getLength(); i++) {
-            int readIndex = readStartIndex + i;
-            int refPosition = refStartPosition + i;
-            if (incrementCounters(refPosition, readIndex, readBases)) {
-                incrementQualityScores(readIndex, record);
+                    if (Math.abs(record.getInferredInsertSize()) >= 1000) {
+                        excessiveInferredSize++;
+                    }
 
-                if (Math.abs(record.getInferredInsertSize()) >= 1000) {
-                    excessiveInferredSize++;
-                }
+                    if (!record.getReferenceName().equals(record.getMateReferenceName())) {
+                        inconsistentChromosome++;
+                    }
 
-                if (!record.getReferenceName().equals(record.getMateReferenceName())) {
-                    inconsistentChromosome++;
-                }
-
-                if (!record.getProperPairFlag()) {
-                    improperPair++;
+                    if (!record.getProperPairFlag()) {
+                        improperPair++;
+                    }
+                } else if (readContext.isWithin(record.getReadBases())) {
+                    realigned++;
                 }
             }
         }
-    }
-
-    @Override
-    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-            final int refPosition) {
-        // Empty
-    }
-
-    @Override
-    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-            final int refPosition) {
-        // Empty
     }
 
     private void incrementQualityScores(int readBasePosition, final SAMRecord record) {
@@ -146,21 +124,27 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord>, 
         return Math.max(0, quality - 12);
     }
 
-    public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
-        final ReadContextMatch match = readContext.match(otherReadBytePosition, otherReadByte);
-        if (!match.equals(ReadContextMatch.NONE)) {
-            if (refPosition == hotspot.position()) {
-                if (match.equals(ReadContextMatch.FULL)) {
-                    full++;
-                    return true;
-                } else {
-                    partial++;
-                    return true;
-                }
-            } else if (match.equals(ReadContextMatch.FULL)) {
-                realigned++;
-            }
+    private boolean incrementCounters(int otherRefIndex, byte[] otherBases) {
+        final ReadContextMatch match = readContext.matchAtPosition(otherRefIndex, otherBases);
+        if (match == ReadContextMatch.FULL) {
+            full++;
+            return true;
         }
+
+        if (match == ReadContextMatch.PARTIAL) {
+            partial++;
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean incrementCounters(@NotNull final ReadContextImproved other) {
+        if (readContext.isFullMatch(other)) {
+            full++;
+            return true;
+        }
+
         return false;
     }
 

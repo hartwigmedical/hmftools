@@ -100,7 +100,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     @Override
                     public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        processIndel(element, record, readIndex, refPosition, refBases);
+                        processDel(element, record, readIndex, refPosition, refBases);
                     }
                 };
 
@@ -134,7 +134,27 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null) {
                 if (tumor) {
-                    refContext.altRead(ref, alt, new ReadContext(readIndex, record, refBases));
+                    refContext.altRead(ref, alt, ReadContextFactory.create(refPosition, readIndex, record));
+                } else {
+                    refContext.altRead(ref, alt);
+                }
+            }
+        }
+    }
+
+
+    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition, byte[] refBases) {
+
+        int refIndex = refPosition - record.getAlignmentStart();
+
+        if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
+            final String ref = new String(refBases, refIndex, e.getLength() + 1);
+            final String alt = new String(refBases, refIndex, 1);
+
+            final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
+            if (refContext != null) {
+                if (tumor) {
+                    refContext.altRead(ref, alt, ReadContextFactory.createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
@@ -149,7 +169,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         for (int i = 0; i < alignmentLength; i++) {
 
-            long refPosition = refPositionStart + i;
+            int refPosition = refPositionStart + i;
             int readBaseIndex = readBasesStartIndex + i;
             int refBaseIndex = refBasesStartIndex + i;
 
@@ -168,7 +188,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
-                        refContext.altRead(ref, alt, new ReadContext(readBaseIndex, record, refBases));
+                        refContext.altRead(ref, alt, ReadContextFactory.create(refPosition, readBaseIndex, record));
                     } else {
                         refContext.altRead(ref, alt);
                     }

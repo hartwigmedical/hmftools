@@ -1,25 +1,30 @@
 package com.hartwig.hmftools.sage.context;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.jetbrains.annotations.NotNull;
 
 public class ReadContextImproved {
 
     private final int position;
-    private final int leftIndex;
-    private final int rightIndex;
-    private final int buffer;
-    private final byte[] bases;
+    private final int readIndex;
+    private final int leftCentreIndex;
+    private final int rightCentreIndex;
+    private final int flankSize;
+    private final byte[] readBases;
 
-    public ReadContextImproved(final int position, final int leftIndex, final int rightIndex, final int buffer, final byte[] bases) {
-        assert (leftIndex > 0);
-        assert (rightIndex < bases.length);
-        assert (rightIndex >= leftIndex);
+    public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+            final int flankSize, final byte[] readBases) {
+        assert (leftCentreIndex > 0);
+        assert (rightCentreIndex < readBases.length);
+        assert (rightCentreIndex >= leftCentreIndex);
 
-        this.position = position;
-        this.buffer = buffer;
-        this.leftIndex = leftIndex;
-        this.rightIndex = rightIndex;
-        this.bases = bases;
+        this.position = refPosition;
+        this.flankSize = flankSize;
+        this.leftCentreIndex = leftCentreIndex;
+        this.rightCentreIndex = rightCentreIndex;
+        this.readBases = readBases;
+        this.readIndex = readIndex;
     }
 
     public int position() {
@@ -27,21 +32,33 @@ public class ReadContextImproved {
     }
 
     public boolean isComplete() {
-        return leftFlankLength() == buffer && rightFlankLength() == buffer;
+        return leftFlankLength() == flankSize && rightFlankLength() == flankSize;
+    }
+
+    public boolean isFullMatch(@NotNull final ReadContextImproved other) {
+        return isComplete() && other.isComplete() && centerMatch(other.readIndex, other.readBases)
+                && leftFlankMatchingBases(other.readIndex, other.readBases) == flankSize
+                && rightFlankMatchingBases(other.readIndex, other.readBases) == flankSize;
     }
 
     @NotNull
-    public ReadContextMatch matchAtPosition(@NotNull final ReadContextImproved other) {
+    public ReadContextMatch matchAtPosition(int otherRefIndex, byte[] otherBases) {
 
-        if (centreLength() != other.centreLength() || position != other.position) {
+        if (!isComplete()) {
             return ReadContextMatch.NONE;
         }
 
-        if (!centerMatch(other) || !leftFlankMatch(other) || !rightFlankMatch(other)) {
+        int leftFlankingBases = leftFlankMatchingBases(otherRefIndex, otherBases);
+        if (leftFlankingBases < 0) {
             return ReadContextMatch.NONE;
         }
 
-        return isComplete() && other.isComplete() ? ReadContextMatch.FULL : ReadContextMatch.PARTIAL;
+        int rightFlankingBases = rightFlankMatchingBases(otherRefIndex, otherBases);
+        if (rightFlankingBases < 0) {
+            return ReadContextMatch.NONE;
+        }
+
+        return leftFlankingBases == flankSize && rightFlankingBases == flankSize ? ReadContextMatch.FULL : ReadContextMatch.PARTIAL;
     }
 
     public boolean isWithin(byte[] bases) {
@@ -49,7 +66,7 @@ public class ReadContextImproved {
             return false;
         }
 
-        for (int i = 0; i < bases.length - length() - 1; i++) {
+        for (int i = 0; i < bases.length - length(); i++) {
             if (isWithin(i, bases)) {
                 return true;
             }
@@ -65,18 +82,27 @@ public class ReadContextImproved {
                 return false;
             }
 
-            if (bases[index + i] != this.bases[startIndex + i]) {
+            if (bases[index + i] != this.readBases[startIndex + i]) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean centerMatch(@NotNull final ReadContextImproved other) {
-        assert other.centreLength() == centreLength();
+    @VisibleForTesting
+    boolean centerMatch(int otherRefIndex, byte[] otherBases) {
+        int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
+        if (otherLeftCentreIndex < 0) {
+            return false;
+        }
+
+        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1;
+        if (otherRightCentreIndex >= otherBases.length) {
+            return false;
+        }
 
         for (int i = 0; i < centreLength(); i++) {
-            if (bases[leftIndex + i] != other.bases[other.leftIndex + i]) {
+            if (readBases[leftCentreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
                 return false;
             }
         }
@@ -84,47 +110,54 @@ public class ReadContextImproved {
         return true;
     }
 
-    private boolean leftFlankMatch(@NotNull final ReadContextImproved other) {
+    @VisibleForTesting
+    int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases) {
+        int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
+        int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - flankSize);
+        int totalLength = Math.min(leftFlankLength(), otherLeftFlankLength);
 
-        for (int i = 1; i <= Math.min(leftFlankLength(), other.leftFlankLength()); i++) {
-            if (bases[leftIndex - i] != other.bases[other.leftIndex - i]) {
-                return false;
+        for (int i = 1; i <= totalLength; i++) {
+            if (readBases[leftCentreIndex - i] != otherBases[otherLeftCentreIndex - i]) {
+                return -1;
             }
         }
 
-        return true;
+        return totalLength;
     }
 
-    private boolean rightFlankMatch(@NotNull final ReadContextImproved other) {
-        assert other.rightFlankLength() == rightFlankLength();
+    @VisibleForTesting
+    int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases) {
+        int otherRightCentreIndex = otherRefIndex + rightCentreIndex - readIndex;
+        int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + flankSize) - otherRightCentreIndex;
+        int maxLength = Math.min(rightFlankLength(), otherRightFlankLength);
 
-        for (int i = 1; i <= Math.min(rightFlankLength(), other.rightFlankLength()); i++) {
-            if (bases[rightIndex + i] != other.bases[other.rightIndex + i]) {
-                return false;
+        for (int i = 1; i <= maxLength; i++) {
+            if (readBases[rightCentreIndex + i] != otherBases[otherRightCentreIndex + i]) {
+                return -1;
             }
         }
 
-        return true;
+        return maxLength;
     }
 
     private int leftFlankStartIndex() {
-        return Math.max(0, leftIndex - buffer);
+        return Math.max(0, leftCentreIndex - flankSize);
     }
 
     private int leftFlankLength() {
-        return leftIndex - leftFlankStartIndex();
+        return leftCentreIndex - leftFlankStartIndex();
     }
 
     private int rightFlankEndIndex() {
-        return Math.min(bases.length - 1, rightIndex + buffer);
+        return Math.min(readBases.length - 1, rightCentreIndex + flankSize);
     }
 
     private int rightFlankLength() {
-        return rightFlankEndIndex() - rightIndex;
+        return rightFlankEndIndex() - rightCentreIndex;
     }
 
     private int centreLength() {
-        return rightIndex - leftIndex + 1;
+        return rightCentreIndex - leftCentreIndex + 1;
     }
 
     private int length() {
@@ -133,7 +166,7 @@ public class ReadContextImproved {
 
     @Override
     public String toString() {
-        return new String(bases, leftFlankStartIndex(), length());
+        return new String(readBases, leftFlankStartIndex(), length());
     }
 
 }
