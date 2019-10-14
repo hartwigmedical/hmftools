@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.linx.HomozygousDisruption;
+import com.hartwig.hmftools.common.linx.HomozygousDisruptionFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -33,6 +35,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
+import com.hartwig.hmftools.patientreporter.copynumber.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
@@ -66,7 +69,7 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
-            @NotNull String linxViralInsertionFile, @Nullable String comments, boolean correctedReport) throws IOException {
+            @NotNull String linxViralInsertionFile, @NotNull String linxDriversTsv, @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -76,7 +79,7 @@ class AnalysedPatientReporter {
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
-        CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
+        CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation, linxDriversTsv);
         SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(sampleMetadata.tumorSampleId(),
                 somaticVariantVcf,
                 patientTumorLocation,
@@ -197,7 +200,7 @@ class AnalysedPatientReporter {
 
     @NotNull
     private CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation, @NotNull String linxDriversTsv) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
 
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
@@ -208,6 +211,9 @@ class AnalysedPatientReporter {
 
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
+
+        List<HomozygousDisruption> delDisruptions = HomozygousDisruptionAnalyzer.analysisHomozygousDisruption(linxDriversTsv);
+        LOGGER.info(" Total homozygous disruptions: {}", delDisruptions.size());
 
         return CopyNumberAnalyzer.run(purityContext, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }

@@ -37,6 +37,8 @@ public class AnalysedPatientReporterTest {
     private static final String BACHELOR_CSV = BASE_DIRECTORY + "/bachelor/sample_germline_variants.csv";
     private static final String CHORD_PREDICTION_FILE = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String LINX_VIRAL_INSERTIONS_FILE = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
+    private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.linx.drivers.tsv";
+
     private static final Logger LOGGER = LogManager.getLogger(AnalysedPatientReporterTest.class);
 
     @Test
@@ -61,6 +63,7 @@ public class AnalysedPatientReporterTest {
                 CHORD_PREDICTION_FILE,
                 CIRCOS_FILE,
                 LINX_VIRAL_INSERTIONS_FILE,
+                LINX_DRIVERS_TSV,
                 null,
                 false));
     }
