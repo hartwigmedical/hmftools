@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.HomozygousDisruptionFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -69,7 +68,8 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
-            @NotNull String linxViralInsertionFile, @NotNull String linxDriversTsv, @Nullable String comments, boolean correctedReport) throws IOException {
+            @NotNull String linxViralInsertionFile, @NotNull String linxDriversTsv, @Nullable String comments, boolean correctedReport)
+            throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -160,11 +160,11 @@ class AnalysedPatientReporter {
         int count = 0;
         for (Map.Entry<AnalysedPatientReporter.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
             List<LinxViralInsertFile> itemsForKey = entry.getValue();
-            for (LinxViralInsertFile virus: itemsForKey) {
-                 virusName = virus.VirusName;
+            for (LinxViralInsertFile virus : itemsForKey) {
+                virusName = virus.VirusName;
             }
 
-             count = itemsForKey.size();
+            count = itemsForKey.size();
 
             viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).countVirus(count).build());
         }
@@ -215,7 +215,11 @@ class AnalysedPatientReporter {
         List<HomozygousDisruption> delDisruptions = HomozygousDisruptionAnalyzer.analysisHomozygousDisruption(linxDriversTsv);
         LOGGER.info(" Total homozygous disruptions: {}", delDisruptions.size());
 
-        return CopyNumberAnalyzer.run(purityContext, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
+        return CopyNumberAnalyzer.run(purityContext,
+                exomeGeneCopyNumbers,
+                reportData.actionabilityAnalyzer(),
+                patientTumorLocation,
+                delDisruptions);
     }
 
     @NotNull

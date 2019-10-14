@@ -117,7 +117,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
+        final List<ReportableGainLoss> gainsAndLosses = createAllGainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -620,6 +620,27 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         return Lists.newArrayList(gainLoss1);
+    }
+
+    @NotNull
+    private static List<ReportableGainLoss> createAllGainsLosses() {
+        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
+                .chromosome("10")
+                .chromosomeBand("q23.31")
+                .gene("PTEN")
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
+                .build();
+
+        ReportableGainLoss gainLoss2 = ImmutableReportableGainLoss.builder()
+                .chromosome("")
+                .chromosomeBand("")
+                .gene("KRAS")
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.HOM_DEL_DISRUPTION)
+                .build();
+
+        return Lists.newArrayList(gainLoss1, gainLoss2);
     }
 
     @NotNull
