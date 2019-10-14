@@ -10,11 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
-import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.LogManager;

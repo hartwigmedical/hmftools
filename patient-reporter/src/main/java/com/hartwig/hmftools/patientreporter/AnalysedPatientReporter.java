@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -29,6 +28,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -212,7 +212,7 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        List<HomozygousDisruption> delDisruptions = HomozygousDisruptionAnalyzer.analysisHomozygousDisruption(linxDriversTsv);
+        List<LinxDriver> delDisruptions = HomozygousDisruptionAnalyzer.readingLinxDriver(linxDriversTsv);
         LOGGER.info(" Total homozygous disruptions: {}", delDisruptions.size());
 
         return CopyNumberAnalyzer.run(purityContext,

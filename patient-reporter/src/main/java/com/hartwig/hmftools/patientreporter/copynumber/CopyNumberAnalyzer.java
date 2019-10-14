@@ -12,11 +12,11 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,14 +35,14 @@ public final class CopyNumberAnalyzer {
     @NotNull
     public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull List<HomozygousDisruption> homozygousDisruptions) {
+            @NotNull List<LinxDriver> linxDrivers) {
         FittedPurity bestFit = purityContext.bestFit();
 
         CNADrivers copyNumberDriverModel = new CNADrivers();
         List<DriverCatalog> drivers = Lists.newArrayList();
         drivers.addAll(copyNumberDriverModel.amplifications(bestFit.ploidy(), exomeGeneCopyNumbers));
         drivers.addAll(copyNumberDriverModel.deletions(exomeGeneCopyNumbers));
-        drivers.addAll(copyNumberDriverModel.homozoguousDeletions(homozygousDisruptions));
+        drivers.addAll(copyNumberDriverModel.homozoguousDeletions(linxDrivers));
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =

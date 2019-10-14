@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -116,7 +116,7 @@ public class CNADrivers {
     }
 
     @NotNull
-    public List<DriverCatalog> homozoguousDeletions(@NotNull final List<HomozygousDisruption> homozygousDisruptions) {
+    public List<DriverCatalog> homozoguousDeletions(@NotNull final List<LinxDriver> homozygousDisruptions) {
         return homozygousDisruptions.stream()
                 .map(x -> ImmutableDriverCatalog.builder()
                         .chromosome("") // TODO: add value

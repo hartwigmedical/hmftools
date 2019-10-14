@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.HomozygousDisruption;
-import com.hartwig.hmftools.common.linx.HomozygousDisruptionFile;
-import com.hartwig.hmftools.common.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,8 +21,8 @@ public final class HomozygousDisruptionAnalyzer {
     }
 
     @NotNull
-    public static List<HomozygousDisruption> analysisHomozygousDisruption(@NotNull String linxDriversTsv) throws IOException {
-        List<HomozygousDisruption> linxDrivers = HomozygousDisruptionFile.read(linxDriversTsv);
+    public static List<LinxDriver> readingLinxDriver(@NotNull String linxDriversTsv) throws IOException {
+        List<LinxDriver> linxDrivers = LinxDriverFile.read(linxDriversTsv);
         LOGGER.info("Loaded {} linx drivers from {}", linxDrivers.size(), linxDriversTsv);
 
         return extractDelDisruptions(linxDrivers);
@@ -30,17 +30,17 @@ public final class HomozygousDisruptionAnalyzer {
     }
 
     @NotNull
-    public static List<HomozygousDisruption> extractDelDisruptions(@NotNull List<HomozygousDisruption> linxDrivers) {
-        List<HomozygousDisruption> homozygousDisruptionList = Lists.newArrayList();
-        for (HomozygousDisruption homozygousDisruption : linxDrivers) {
+    public static List<LinxDriver> extractDelDisruptions(@NotNull List<LinxDriver> linxDrivers) {
+        List<LinxDriver> linxDriverList = Lists.newArrayList();
+        for (LinxDriver homozygousDisruption : linxDrivers) {
             if (homozygousDisruption.eventType().equals("HOM_DEL_DISRUPTION")) {
-                homozygousDisruptionList.add(ImmutableHomozygousDisruption.builder()
+                linxDriverList.add(ImmutableLinxDriver.builder()
                         .clusterId(homozygousDisruption.clusterId())
                         .gene(homozygousDisruption.gene())
                         .eventType(homozygousDisruption.eventType())
                         .build());
             }
         }
-        return homozygousDisruptionList;
+        return linxDriverList;
     }
 }
