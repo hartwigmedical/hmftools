@@ -132,7 +132,7 @@ public class CNADrivers {
                         .driver(DriverType.HOM_DISRUPTION)
                         .likelihoodMethod(LikelihoodMethod.DEL)
                         .category(oncoGenes.contains(x.gene()) ? DriverCategory.ONCO : DriverCategory.TSG)
-                        .biallelic(true)
+                        .biallelic(true) // TODO: add value
                         .minCopyNumber(0) // TODO: add value
                         .maxCopyNumber(0) // TODO: add value
                         .build())
