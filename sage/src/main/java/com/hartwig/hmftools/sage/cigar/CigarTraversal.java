@@ -31,7 +31,9 @@ public class CigarTraversal {
                     refBase += e.getLength();
                     break;
                 case I:
-                    if (readIndex - 1 >= 0) { // TODO: Handler 1I150M
+                    // TODO: Handle 1I150M
+                    int refIndex = refBase - 1 - record.getAlignmentStart();
+                    if (refIndex >= 0) {
                         handler.handleInsert(record, e, readIndex - 1, refBase - 1);
                     }
                     readIndex += e.getLength();

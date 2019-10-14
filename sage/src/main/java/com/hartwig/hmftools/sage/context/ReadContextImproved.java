@@ -68,18 +68,18 @@ public class ReadContextImproved {
     }
 
     @NotNull
-    public ReadContextMatch matchAtPosition(int otherRefIndex, byte[] otherBases) {
+    public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
 
-        if (!isComplete()) {
+        if (!isComplete() || !centerMatch(otherReadIndex, otherBases)) {
             return ReadContextMatch.NONE;
         }
 
-        int leftFlankingBases = leftFlankMatchingBases(otherRefIndex, otherBases);
+        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases);
         if (leftFlankingBases < 0) {
             return ReadContextMatch.NONE;
         }
 
-        int rightFlankingBases = rightFlankMatchingBases(otherRefIndex, otherBases);
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases);
         if (rightFlankingBases < 0) {
             return ReadContextMatch.NONE;
         }
