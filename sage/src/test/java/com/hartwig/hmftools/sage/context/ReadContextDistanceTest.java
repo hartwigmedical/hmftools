@@ -17,22 +17,22 @@ public class ReadContextDistanceTest {
         final String readCigar = "5S4M2I1M2D1M2S";
         final SAMRecord record = buildSamRecord(readCigar, readBases);
 
-        ReadContextDistance victim = new ReadContextDistance(1, 6, record, refBases.getBytes());
+        ReadContextDistance victim = new ReadContextDistance(true, 1, 6, record, refBases.getBytes());
         assertDistance(1, "1M1X1M", victim);
 
-        victim = new ReadContextDistance(2, 6, record, refBases.getBytes());
+        victim = new ReadContextDistance(true, 2, 6, record, refBases.getBytes());
         assertDistance(2, "1S1M1X2M", victim);
 
-        victim = new ReadContextDistance(3, 6, record, refBases.getBytes());
+        victim = new ReadContextDistance(true, 3, 6, record, refBases.getBytes());
         assertDistance(3, "2S1M1X2M1I", victim);
 
-        victim = new ReadContextDistance(4, 6, record, refBases.getBytes());
+        victim = new ReadContextDistance(true, 4, 6, record, refBases.getBytes());
         assertDistance(3, "3S1M1X2M2I", victim);
 
-        victim = new ReadContextDistance(5, 6, record, refBases.getBytes());
+        victim = new ReadContextDistance(true, 5, 6, record, refBases.getBytes());
         assertDistance(3, "4S1M1X2M2I1M", victim);
 
-        victim = new ReadContextDistance(6, 6, record, refBases.getBytes());
+        victim = new ReadContextDistance(true, 6, 6, record, refBases.getBytes());
         assertDistance(4, "5S1M1X2M2I1M2D1M", victim);
     }
 
@@ -43,7 +43,7 @@ public class ReadContextDistanceTest {
         final String readCigar = "8M";
 
         final SAMRecord record = buildSamRecord(readCigar, readBases);
-        final ReadContextDistance victim = new ReadContextDistance(3, 4, record, refBases.getBytes());
+        final ReadContextDistance victim = new ReadContextDistance(true, 3, 4, record, refBases.getBytes());
         assertDistance(1, "3M1X3M", victim);
     }
 
@@ -54,7 +54,7 @@ public class ReadContextDistanceTest {
         final String readCigar = "8M";
 
         final SAMRecord record = buildSamRecord(readCigar, readBases);
-        final ReadContextDistance victim = new ReadContextDistance(3, 4, record, refBases.getBytes());
+        final ReadContextDistance victim = new ReadContextDistance(true, 3, 4, record, refBases.getBytes());
         assertDistance(2, "3M2X2M", victim);
     }
 
@@ -65,7 +65,7 @@ public class ReadContextDistanceTest {
         final String readCigar = "4S5M";
 
         final SAMRecord record = buildSamRecord(readCigar, readBases);
-        final ReadContextDistance victim = new ReadContextDistance(3, 5, record, refBases.getBytes());
+        final ReadContextDistance victim = new ReadContextDistance(true, 3, 5, record, refBases.getBytes());
         assertDistance(2, "2S1M1X3M", victim);
     }
 

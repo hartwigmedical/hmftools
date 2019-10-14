@@ -183,7 +183,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
-                        refContext.altRead(ref, alt, ReadContextFactory.createSNVContext(refPosition, readBaseIndex, record));
+                        refContext.altRead(ref, alt, ReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases));
                     } else {
                         refContext.altRead(ref, alt);
                     }

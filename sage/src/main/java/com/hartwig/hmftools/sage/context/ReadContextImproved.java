@@ -2,7 +2,10 @@ package com.hartwig.hmftools.sage.context;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SAMRecord;
 
 public class ReadContextImproved {
 
@@ -12,6 +15,8 @@ public class ReadContextImproved {
     private final int rightCentreIndex;
     private final int flankSize;
     private final byte[] readBases;
+    private final int distance;
+    private final String distanceCigar;
 
     public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases) {
@@ -25,6 +30,27 @@ public class ReadContextImproved {
         this.rightCentreIndex = rightCentreIndex;
         this.readBases = readBases;
         this.readIndex = readIndex;
+        this.distance = 0;
+        this.distanceCigar = Strings.EMPTY;
+
+    }
+
+    public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+            final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
+        assert (leftCentreIndex > 0);
+        assert (rightCentreIndex >= leftCentreIndex);
+
+        this.position = refPosition;
+        this.flankSize = flankSize;
+        this.leftCentreIndex = leftCentreIndex;
+        this.rightCentreIndex = rightCentreIndex;
+        this.readBases = record.getReadBases();
+        this.readIndex = readIndex;
+
+        ReadContextDistance distance = new ReadContextDistance(leftFlankStartIndex(), rightFlankEndIndex(), record, refBases);
+        this.distance = distance.distance();
+        this.distanceCigar = distance.cigar();
+
     }
 
     public int position() {
@@ -169,4 +195,11 @@ public class ReadContextImproved {
         return new String(readBases, leftFlankStartIndex(), length());
     }
 
+    public int distance() {
+        return distance;
+    }
+
+    public String distanceCigar() {
+        return distanceCigar;
+    }
 }

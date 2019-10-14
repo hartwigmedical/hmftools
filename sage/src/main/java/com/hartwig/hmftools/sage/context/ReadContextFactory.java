@@ -19,7 +19,8 @@ public class ReadContextFactory {
                 readIndex - 1,
                 readIndex + 1 + microhomology.length(),
                 DEFAULT_BUFFER,
-                record.getReadBases());
+                refBases,
+                record);
     }
 
     @NotNull
@@ -31,13 +32,14 @@ public class ReadContextFactory {
                 readIndex - 1,
                 readIndex + 1 + microhomology.length() + alt.length() - 1,
                 DEFAULT_BUFFER,
-                record.getReadBases());
+                refBases,
+                record);
     }
 
     @NotNull
-    public static ReadContextImproved createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record) {
+    public static ReadContextImproved createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, byte[] refBases) {
 
-        return createOld(refPosition, readIndex, record);
+        return new ReadContextImproved(refPosition, readIndex, readIndex, readIndex, DEFAULT_BUFFER, refBases, record);
         //        int leftIndex = readIndex;
         //        int rightIndex = readIndex;
         //
@@ -58,11 +60,6 @@ public class ReadContextFactory {
         //        }
         //
         //        return new ReadContextImproved(refPosition, readIndex, leftIndex, rightIndex, DEFAULT_BUFFER, readBases);
-    }
-
-    @NotNull
-    public static ReadContextImproved createOld(int refPosition, int readIndex, @NotNull final SAMRecord record) {
-        return new ReadContextImproved(refPosition, readIndex, readIndex, readIndex, DEFAULT_BUFFER, record.getReadBases());
     }
 
     @NotNull

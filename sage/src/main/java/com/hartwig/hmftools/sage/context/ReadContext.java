@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
+@Deprecated
 public class ReadContext {
 
     private static final int DEFAULT_BUFFER = 25;
@@ -36,7 +37,7 @@ public class ReadContext {
         this.readBytes = record.getReadBases();
         this.readBytePosition = readBytePosition;
 
-        final ReadContextDistance readContextDistance = new ReadContextDistance(buffer, readBytePosition, record, refBases);
+        final ReadContextDistance readContextDistance = new ReadContextDistance(true, buffer, readBytePosition, record, refBases);
         this.distance = readContextDistance.distance();
         this.difference = readContextDistance.cigar();
         this.alt = String.valueOf((char) readBytes[readBytePosition]);
