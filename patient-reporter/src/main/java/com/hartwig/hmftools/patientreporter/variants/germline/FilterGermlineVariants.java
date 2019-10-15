@@ -33,7 +33,7 @@ public final class FilterGermlineVariants {
 
             if (reportingGermlineGenes.contains(germlineVariant.gene())) {
 
-                if (Double.compare(chordAnalysis.hrdValue(), 0.5) == 1 || chordAnalysis.hrdValue() == 0.5) {
+                if ( chordAnalysis.hrdValue() >= 0.5) {
                     // report all reportable germline variants where HRD score is greater than 0.5
                     filteredGermlineVariants.add(germlineVariant);
                 } else {

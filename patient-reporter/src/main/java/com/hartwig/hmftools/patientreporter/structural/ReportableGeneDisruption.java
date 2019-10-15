@@ -29,4 +29,6 @@ public abstract class ReportableGeneDisruption {
     public abstract int geneMaxCopies();
 
     public abstract int firstAffectedExon();
+
+    public abstract double undisruptedCopyNumber();
 }
