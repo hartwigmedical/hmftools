@@ -111,9 +111,10 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     }
 
     private void incrementQualityScores(int readBasePosition, final SAMRecord record) {
-        final int distanceFromReadEdge = Math.min(readBasePosition, record.getReadBases().length - readBasePosition - 1);
+        final int distanceFromReadEdge = readContext.distanceFromReadEdge(readBasePosition, record);
+        final int baseQuality = readContext.baseQuality(readBasePosition, record);
+
         final int mapQuality = record.getMappingQuality();
-        final int baseQuality = record.getBaseQualities()[readBasePosition];
         this.mapQuality += mapQuality;
         this.baseQuality += baseQuality;
         this.quality += quality(mapQuality, baseQuality, distanceFromReadEdge);

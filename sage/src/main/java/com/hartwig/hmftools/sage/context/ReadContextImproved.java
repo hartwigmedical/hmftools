@@ -32,7 +32,6 @@ public class ReadContextImproved {
         this.readIndex = readIndex;
         this.distance = 0;
         this.distanceCigar = Strings.EMPTY;
-
     }
 
     public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
@@ -55,6 +54,32 @@ public class ReadContextImproved {
 
     public int position() {
         return position;
+    }
+
+    int baseQuality(int readIndex, SAMRecord record) {
+        int leftOffset = this.readIndex - leftCentreIndex;
+        int rightOffset = rightCentreIndex - this.readIndex;
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        int leftQuality = record.getBaseQualities()[leftIndex];
+        if (leftIndex == rightIndex) {
+            return leftQuality;
+        }
+
+        int rightQuality = record.getBaseQualities()[rightIndex];
+        return Math.min(leftQuality, rightQuality);
+    }
+
+    int distanceFromReadEdge(int readIndex, SAMRecord record) {
+        int leftOffset = this.readIndex - leftCentreIndex;
+        int rightOffset = rightCentreIndex - this.readIndex;
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        return Math.min(leftIndex, record.getReadBases().length - rightIndex - 1);
     }
 
     public boolean isComplete() {
@@ -164,6 +189,14 @@ public class ReadContextImproved {
         }
 
         return maxLength;
+    }
+
+    int centreStartIndex() {
+        return leftCentreIndex;
+    }
+
+    int centreEndIndex() {
+        return rightCentreIndex;
     }
 
     private int leftFlankStartIndex() {
