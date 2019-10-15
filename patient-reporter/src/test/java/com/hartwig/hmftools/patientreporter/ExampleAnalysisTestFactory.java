@@ -689,8 +689,7 @@ public final class ExampleAnalysisTestFactory {
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
                 .ploidy(2D)
-                .geneMinCopies(0)
-                .geneMaxCopies(2)
+                .undisruptedCopyNumber(0.5)
                 .build();
 
         return Lists.newArrayList(disruption1);

@@ -55,7 +55,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
-       // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
+        // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
 
     }
 
@@ -190,12 +190,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 40, 65, 65 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 40, 100 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Disrupted range"), TableUtil.createHeaderCell("Type"),
                         TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell("Gene \nmin copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell("Gene \nmax copies").setTextAlignment(TextAlignment.RIGHT) });
+                        TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.RIGHT) });
 
         final List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
         for (ReportableGeneDisruption disruption : sortedDisruptions) {
@@ -205,12 +204,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(disruption.type()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMinCopies(),
-                    hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMaxCopies(),
-                    hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(Double.toString(disruption.undisruptedCopyNumber()))
+                    .setTextAlignment(TextAlignment.RIGHT));
         }
-
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 

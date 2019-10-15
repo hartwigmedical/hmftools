@@ -40,8 +40,6 @@ public class ReportableGeneDisruptionFactoryTest {
         assertEquals("3p12", disruption.location());
         assertEquals("ROPN1B", disruption.gene());
         assertEquals("Intron 3 -> Intron 8", disruption.range());
-        assertEquals(1, disruption.geneMinCopies());
-        assertEquals(2, disruption.geneMaxCopies());
         assertEquals(3, disruption.firstAffectedExon());
 
         Double ploidy = disruption.ploidy();

@@ -38,9 +38,8 @@ final class ReportableGeneDisruptionFactory {
                     .type(primaryDisruption.type())
                     .range(rangeField(pairedDisruption))
                     .ploidy(primaryDisruption.ploidy())
-                    .geneMinCopies((int) Math.max(0, Math.round(copyNumber.minCopyNumber())))
-                    .geneMaxCopies((int) Math.max(0, Math.round(copyNumber.maxCopyNumber())))
                     .firstAffectedExon(primaryDisruption.exonUp())
+                    .undisruptedCopyNumber(primaryDisruption.undisruptedCopyNumber())
                     .build());
         }
 

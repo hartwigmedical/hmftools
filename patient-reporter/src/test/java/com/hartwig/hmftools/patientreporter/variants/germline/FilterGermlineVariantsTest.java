@@ -25,7 +25,7 @@ public class FilterGermlineVariantsTest {
     @NotNull
     private static ChordAnalysis createChordAnalysis() {
         double brca1Value = 0.3;
-        double brca2Value = 0.21;
+        double brca2Value = 0.19;
 
         return ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
