@@ -422,6 +422,8 @@ public class CohortExpFusions
         regions.add(GenePhaseRegion.from(newRegion, 0, newRegion.length()));
     }
 
+    private static int DEFAULT_BUCKET_REGION_RATIO = 10;
+
     public void generateSameGeneCounts(GeneRangeData geneData)
     {
         // look for skipped or repeated exons within the same transcript and within phased regions
@@ -436,7 +438,7 @@ public class CohortExpFusions
 
         for(int i = 0; i < bucketLengths; ++i)
         {
-            int blockSize = (int)(mProximateBucketLengths.get(i) / 10);
+            int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
             blockSize = max(blockSize, MIN_BUCKET_LENGTH);
             regionAllocators[i] = new RegionAllocator(blockSize);
         }

@@ -20,8 +20,6 @@ public class RegionAllocator
 
     private Map<String,Boolean> mAllocations;
 
-    public static int DEFAULT_REGION_GRID_SIZE = 100;
-
     public RegionAllocator(int blockSize)
     {
         mBlockSize = blockSize;
