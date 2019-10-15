@@ -78,6 +78,18 @@ public interface SageConfig {
 
     int minBaseQuality();
 
+    default int minVariantQuality() {
+        return 100;
+    }
+
+    default int minTumorAltSupport() {
+        return 3;
+    }
+
+    default int maxNormalAltSupport() {
+        return 3;
+    }
+
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
 

@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.context;
 
+import static com.hartwig.hmftools.sage.context.ReadContextFactory.createDelContext;
+import static com.hartwig.hmftools.sage.context.ReadContextFactory.createInsertContext;
+import static com.hartwig.hmftools.sage.context.ReadContextFactory.createSNVContext;
+
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -125,9 +129,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null) {
                 if (tumor) {
-                    refContext.altRead(ref,
-                            alt,
-                            ReadContextFactory.createInsertContext(alt, refPosition, readIndex, record, refIndex, refBases));
+                    refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
@@ -147,9 +149,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null) {
                 if (tumor) {
-                    refContext.altRead(ref,
-                            alt,
-                            ReadContextFactory.createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
+                    refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
@@ -183,7 +183,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
-                        refContext.altRead(ref, alt, ReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases));
+                        refContext.altRead(ref, alt, createSNVContext(refPosition, readBaseIndex, record, refBases));
                     } else {
                         refContext.altRead(ref, alt);
                     }

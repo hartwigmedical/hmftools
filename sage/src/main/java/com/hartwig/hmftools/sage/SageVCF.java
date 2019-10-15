@@ -35,23 +35,25 @@ public class SageVCF implements AutoCloseable {
     private final static String READ_CONTEXT_COUNT = "RCC";
     private final static String READ_CONTEXT_QUALITY = "RCQ";
 
+    private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final String filename, @NotNull final String normalSample,
-            @NotNull final List<String> tumorSamples) {
+    SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+        this.config = config;
 
-        writer = new VariantContextWriterBuilder().setOutputFile(filename)
-                .modifyOption(Options.INDEX_ON_THE_FLY, true)
-                .build();
+        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
 
-        final VCFHeader header = refContextEnrichment.enrichHeader(header(normalSample, tumorSamples));
+        final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
         writer.writeHeader(header);
     }
 
     public void write(@NotNull final List<AltContext> altContexts) {
-        refContextEnrichment.accept(create(altContexts));
+        final AltContext normal = altContexts.get(0);
+        if (normal.altSupport() <= config.maxNormalAltSupport()) {
+            refContextEnrichment.accept(create(altContexts));
+        }
     }
 
     @NotNull
@@ -74,7 +76,7 @@ public class SageVCF implements AutoCloseable {
         assert (altContexts.size() > 1);
 
         final AltContext normal = altContexts.get(0);
-        //        final AltContext firstTumor = altContexts.get(1);
+        final AltContext firstTumor = altContexts.get(1);
 
         final Allele ref = Allele.create(normal.ref(), true);
         final Allele alt = Allele.create(normal.alt(), false);
@@ -102,7 +104,7 @@ public class SageVCF implements AutoCloseable {
                 .alleles(alleles);
 
         final VariantContext context = builder.make();
-        //        context.getCommonInfo().setLog10PError(firstTumor.altQuality() / -10d);
+        context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
         return context;
     }
 

@@ -56,15 +56,9 @@ public class SagePipeline {
                             bam,
                             refGenome,
                             new TumorRefContextCandidates(sample)), executor)
-                            .thenApply(refContexts -> refContexts.stream()
-                                    .flatMap(x -> x.alts().stream())
-                                    .filter(x -> x.altSupport() > 2)
-                                    .collect(Collectors.toList()))
-                            .thenApply(altContexts -> new TumorReadContextSupplier(config.minMapQuality(),
-                                    sample,
-                                    region,
-                                    bam,
-                                    altContexts).get());
+                            .thenApply(this::altSupportFilter)
+                            .thenApply(x -> new TumorReadContextSupplier(config.minMapQuality(), sample, region, bam, x).get())
+                            .thenApply(this::qualityFilter);
 
             tumorFutures.add(candidateFuture);
 
@@ -92,6 +86,16 @@ public class SagePipeline {
 
             return sagePipelineData.altContexts();
         });
+    }
+
+    @NotNull
+    private List<AltContext> altSupportFilter(@NotNull final List<RefContext> refContexts) {
+        return refContexts.stream().flatMap(x -> x.alts().stream()).filter(x -> x.altSupport() >= config.minTumorAltSupport()).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private List<AltContext> qualityFilter(@NotNull final List<AltContext> contexts) {
+        return contexts.stream().filter(x -> x.primaryReadContext().quality() >= config.minVariantQuality()).collect(Collectors.toList());
     }
 
 }

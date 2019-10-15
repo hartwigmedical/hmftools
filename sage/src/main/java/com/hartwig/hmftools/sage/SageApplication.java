@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -28,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -49,7 +47,7 @@ public class SageApplication implements AutoCloseable {
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("AmberApplication", options);
+            formatter.printHelp("SageApplication", options);
             System.exit(1);
         }
     }
@@ -62,7 +60,7 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        vcf = new SageVCF(refGenome, config.outputFile(), config.reference(), config.tumor());
+        vcf = new SageVCF(refGenome, config);
 
     }
 
@@ -71,18 +69,21 @@ public class SageApplication implements AutoCloseable {
         long timeStamp = System.currentTimeMillis();
         final List<ContigContext> contigContexts = Lists.newArrayList();
 
-        SAMSequenceDictionary dictionary = dictionary();
-        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
-            final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig)) {
-                int maxPosition = samSequenceRecord.getSequenceLength();
-                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
-            }
-        }
+        //        SAMSequenceDictionary dictionary = dictionary();
+        //        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+        //            final String contig = samSequenceRecord.getSequenceName();
+        //            if (HumanChromosome.contains(contig)) {
+        //                int maxPosition = samSequenceRecord.getSequenceLength();
+        //                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
+        //            }
+        //        }
 
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), 9000000));
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
-        //        contigCon`texts.add(runSingleRegion("17", 32000000, 33000000));
+        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+        //                        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+        //        contigContexts.add(runSingleRegion("17", 6_200_165, 6200165));
+        //        contigContexts.add(runSingleRegion("17", 42_796_634, 42796634));
+        //        contigContexts.add(runSingleRegion("17", 55_639_513, 55639513));
+        //        contigContexts.add(runSingleRegion("17", 72_558_371, 72558371));
         //        contigContexts.add(runSingleRegion("17", 33000001, 34000000));
 
         for (final ContigContext contigContext : contigContexts) {
