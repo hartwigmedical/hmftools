@@ -135,7 +135,7 @@ public final class EvidenceDrugTypeMergerTest {
                 .response("Response")
                 .reference("V600E")
                 .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
@@ -165,7 +165,7 @@ public final class EvidenceDrugTypeMergerTest {
                 .response("Response")
                 .reference("V600E")
                 .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         assertEquals(4, EvidenceDrugTypeMerger.merge(evidenceItems).size());

@@ -26,9 +26,7 @@ public class SvAnalyzerTest {
         List<ReportableGeneFusion> testFusions = Lists.newArrayList(createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
         List<ReportableDisruption> testDisruptions = Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).build());
 
-        List<GeneCopyNumber> geneCopyNumbers =
-                Lists.newArrayList(createTestCopyNumberBuilder().minCopyNumber(2D).maxCopyNumber(2D).gene(DISRUPTED_GENE).build());
-        SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, geneCopyNumbers, testActionabilityAnalyzer(), null);
+        SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, testActionabilityAnalyzer(), null);
 
         assertEquals(1, analysis.reportableFusions().size());
         assertEquals(1, analysis.reportableDisruptions().size());

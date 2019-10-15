@@ -7,7 +7,6 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,8 +27,9 @@ public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
     private final String bamFile;
     private final RefContextConsumer refContextConsumer;
 
-    public TumorRefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final TumorRefContextCandidates candidates) {
+    public TumorRefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds,
+            @NotNull final String bamFile, @NotNull final IndexedFastaSequenceFile refGenome,
+            @NotNull final TumorRefContextCandidates candidates) {
         this.sample = sample;
         this.bounds = bounds;
         this.candidates = candidates;
@@ -40,11 +40,15 @@ public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
     @Override
     public List<RefContext> get() {
 
-        LOGGER.info("Candidates " + sample + "  from " + bounds.start());
+        if (bounds.start() == 1) {
+            LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
+        }
+
+        LOGGER.info("Tumor candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SAMSlicer slicer = new SAMSlicer(0, Lists.newArrayList(bounds));
+            SageSamSlicer slicer = new SageSamSlicer(0, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, refContextConsumer);
             tumorReader.close();
         } catch (IOException e) {

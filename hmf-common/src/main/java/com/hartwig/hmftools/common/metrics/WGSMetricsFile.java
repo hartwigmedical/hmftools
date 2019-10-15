@@ -29,7 +29,7 @@ public final class WGSMetricsFile {
     public static WGSMetrics read(@NotNull String refFilePath) throws IOException {
         ImmutableWGSMetrics.Builder builder = ImmutableWGSMetrics.builder();
 
-        builder = appendRefValues(builder, refFilePath);
+        appendRefValues(builder, refFilePath);
 
         return builder.build();
     }
@@ -38,33 +38,27 @@ public final class WGSMetricsFile {
     public static WGSMetrics read(@NotNull String refFilePath, @NotNull String tumorFilePath) throws IOException {
         ImmutableWGSMetrics.Builder builder = ImmutableWGSMetrics.builder();
 
-        builder = appendRefValues(builder, refFilePath);
-        builder = appendTumorValues(builder, tumorFilePath);
+        appendRefValues(builder, refFilePath);
+        appendTumorValues(builder, tumorFilePath);
 
         return builder.build();
     }
 
-    @NotNull
-    private static ImmutableWGSMetrics.Builder appendRefValues(@NotNull ImmutableWGSMetrics.Builder builder, @NotNull String refFilePath)
+    private static void appendRefValues(@NotNull ImmutableWGSMetrics.Builder builder, @NotNull String refFilePath)
             throws IOException {
         WGSMetricsLines lines = WGSMetricsLines.fromFile(refFilePath);
 
         builder.refMeanCoverage(Double.parseDouble(lines.findValueByHeader(MEAN_COVERAGE_COLUMN)));
         builder.ref10xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_10X_COLUMN)));
         builder.ref20xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_20X_COLUMN)));
-
-        return builder;
     }
 
-    @NotNull
-    private static ImmutableWGSMetrics.Builder appendTumorValues(@NotNull ImmutableWGSMetrics.Builder builder,
+    private static void appendTumorValues(@NotNull ImmutableWGSMetrics.Builder builder,
             @NotNull String tumorFilePath) throws IOException {
         WGSMetricsLines lines = WGSMetricsLines.fromFile(tumorFilePath);
 
         builder.tumorMeanCoverage(Double.parseDouble(lines.findValueByHeader(MEAN_COVERAGE_COLUMN)));
         builder.tumor30xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_30X_COLUMN)));
         builder.tumor60xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_60X_COLUMN)));
-
-        return builder;
     }
 }

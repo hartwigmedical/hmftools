@@ -3,10 +3,11 @@ package com.hartwig.hmftools.patientreporter.structural;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -22,39 +23,31 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+    public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
-        Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
         Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
-
+        Set<Double> valueDisruption = Sets.newHashSet();
         for (Pair<ReportableDisruption, ReportableDisruption> pairedDisruption : pairedMap.values()) {
             ReportableDisruption primaryDisruption = pairedDisruption.getLeft();
+            valueDisruption.add(primaryDisruption.undisruptedCopyNumber());
+            if (valueDisruption.size() > 1) {
+                LOGGER.warn("The undisrupted copy number of the sv is not the same");
+            }
+            double lowestUndisruptedCopyNumber = valueDisruption.stream().findFirst().get();
 
-            GeneCopyNumber copyNumber = copyNumberPerGene.get(primaryDisruption.gene());
             reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                     .location(primaryDisruption.chromosome() + primaryDisruption.chrBand())
                     .gene(primaryDisruption.gene())
                     .type(primaryDisruption.type())
                     .range(rangeField(pairedDisruption))
                     .ploidy(primaryDisruption.ploidy())
-                    .geneMinCopies((int) Math.max(0, Math.round(copyNumber.minCopyNumber())))
-                    .geneMaxCopies((int) Math.max(0, Math.round(copyNumber.maxCopyNumber())))
                     .firstAffectedExon(primaryDisruption.exonUp())
+                    .undisruptedCopyNumber(lowestUndisruptedCopyNumber)
                     .build());
         }
 
         LOGGER.debug("Generated {} reportable disruptions based on {} disruptions", reportableDisruptions.size(), disruptions.size());
         return reportableDisruptions;
-    }
-
-    @NotNull
-    private static Map<String, GeneCopyNumber> toGeneMap(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        Map<String, GeneCopyNumber> copyNumberPerGeneMap = Maps.newHashMap();
-        for (GeneCopyNumber copyNumber : geneCopyNumbers) {
-            copyNumberPerGeneMap.put(copyNumber.gene(), copyNumber);
-        }
-        return copyNumberPerGeneMap;
     }
 
     @NotNull

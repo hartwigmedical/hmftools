@@ -14,18 +14,22 @@ import org.jetbrains.annotations.NotNull;
 public class AltContext implements VariantHotspot {
 
     private final RefContext refContext;
+    private final String ref;
     private final String alt;
-    private final List<ReadContextCounter> readContextCounters = Lists.newArrayList();
+    private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
 
+    private ReadContextCounter readContextCounter;
     private int altReads;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
-        refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position(), hotspot.ref());
+        refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
         this.alt = hotspot.alt();
+        this.ref = hotspot.ref();
     }
 
-    AltContext(final RefContext refContext, final String alt) {
+    AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
+        this.ref = ref;
         this.alt = alt;
     }
 
@@ -33,36 +37,52 @@ public class AltContext implements VariantHotspot {
         this.altReads++;
     }
 
-    public void addReadContext(@NotNull final ReadContext readContext) {
-        if (readContext.isComplete()) {
+    public void addReadContext(@NotNull final ReadContextImproved newReadContext) {
+        if (readContextCounter != null) {
+            throw new IllegalStateException();
+        }
+
+        if (newReadContext.isComplete()) {
             boolean readContextMatch = false;
-            for (ReadContextCounter counter : readContextCounters) {
-                readContextMatch |= counter.incrementCounters(position(), readContext.readBytePosition(), readContext.readBytes());
+            for (ReadContextCounter counter : interimReadContexts) {
+                readContextMatch |= counter.incrementCounters(newReadContext);
             }
 
             if (!readContextMatch) {
-                readContextCounters.add(new ReadContextCounter(this, readContext));
+                interimReadContexts.add(new ReadContextCounter(this, newReadContext));
             }
         }
     }
 
     @NotNull
+    public ReadContextCounter setPrimaryReadCounterFromInterim() {
+        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
+        readContextCounter = interimReadContexts.isEmpty()
+                ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
+                : new ReadContextCounter(this, interimReadContexts.get(0).readContext());
+
+        interimReadContexts.clear();
+
+        return primaryReadContext();
+    }
+
+    @NotNull
     public ReadContextCounter primaryReadContext() {
-        readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
-        return readContextCounters.isEmpty()
-                ? new ReadContextCounter(this, new ReadContext(0, alt().getBytes()))
-                : readContextCounters.get(0);
+        if (readContextCounter == null) {
+            throw new IllegalStateException();
+        }
+
+        return readContextCounter;
     }
 
     public void setPrimaryReadContext(@NotNull final ReadContextCounter readContext) {
-        readContextCounters.clear();
-        readContextCounters.add(readContext);
+        readContextCounter = readContext;
     }
 
     @NotNull
     @Override
     public String ref() {
-        return refContext.ref();
+        return ref;
     }
 
     @NotNull
@@ -119,7 +139,7 @@ public class AltContext implements VariantHotspot {
     @Override
     public int hashCode() {
         int h = 5381;
-        h += (h << 5) + ref().hashCode();
+        h += (h << 5) + ref.hashCode();
         h += (h << 5) + alt.hashCode();
         h += (h << 5) + chromosome().hashCode();
         h += (h << 5) + Longs.hashCode(position());

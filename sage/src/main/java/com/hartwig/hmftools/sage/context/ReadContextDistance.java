@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.context;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
@@ -11,12 +13,16 @@ public class ReadContextDistance {
     private int distance;
     private final String difference;
 
-    public ReadContextDistance(final int buffer, final int readBasesAltIndex, @NotNull final SAMRecord record, byte[] refBases) {
+    @VisibleForTesting
+    ReadContextDistance(final boolean testing, final int buffer, final int readBasesAltIndex, @NotNull final SAMRecord record,
+            byte[] refBases) {
+        this(readBasesAltIndex - buffer, readBasesAltIndex + buffer, record, refBases);
+    }
+
+    public ReadContextDistance(final int readBasesStartIndex, final int readBasesEndIndex, @NotNull final SAMRecord record,
+            byte[] refBases) {
 
         final StringBuilder differenceBuilder = new StringBuilder();
-
-        int readBasesStartIndex = readBasesAltIndex - buffer;
-        int readBasesEndIndex = readBasesAltIndex + buffer;
 
         int refBasesCurrentIndex = 0;
         int readBasesCurrentIndex = 0;

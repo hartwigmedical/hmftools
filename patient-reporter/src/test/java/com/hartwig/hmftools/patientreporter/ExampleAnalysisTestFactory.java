@@ -31,6 +31,8 @@ import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDi
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +64,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
+        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         final String sampleId = "PNT00012345T";
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -90,6 +93,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
                 false,
@@ -113,10 +117,11 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
+        final List<ReportableGainLoss> gainsAndLosses = createAllGainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        final List<ViralInsertion> viralInsertions = createTestViralInsertions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -137,12 +142,20 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
                 false,
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
+    }
+
+    @NotNull
+    private static List<ViralInsertion> createTestViralInsertions() {
+        List<ViralInsertion> viralInsertions =
+                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus(2).build());
+        return Lists.newArrayList(viralInsertions);
     }
 
     @NotNull
@@ -164,6 +177,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
+        final List<ViralInsertion> viralInsertions = createTestViralInsertions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -184,6 +198,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
                 false,
@@ -288,7 +303,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:208")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         return evidenceItems;
@@ -301,22 +316,22 @@ public final class ExampleAnalysisTestFactory {
                 ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
 
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("DRUP")
                 .reference("EXT10299 (NL54757.031.16)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("EBIN (EORTC-1612-MG)")
                 .reference("EXT11284 (NL67202.031.18)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("LXH254 in tumors with MAPK pathway alterations")
                 .reference("EXT10453 (NL55506.078.15)")
                 .build());
         trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("POLARIS")
                 .reference("EXT11388 (NL69569.028.19)")
                 .build());
@@ -331,7 +346,7 @@ public final class ExampleAnalysisTestFactory {
                 .reference("EXT6690 (NL45261.031.13)")
                 .build());
         trials.add(iclusionBuilder.event("CDKN2A p.Ala68fs")
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .acronym("DRUP")
                 .reference("EXT10299 (NL54757.031.16)")
                 .build());
@@ -351,7 +366,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
@@ -387,7 +402,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Responsive")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
@@ -441,7 +456,7 @@ public final class ExampleAnalysisTestFactory {
                 .response("Resistant")
                 .reference("variant:17")
                 .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.BROAD)
+                .scope(EvidenceScope.GENE_LEVEL)
                 .build());
 
         evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
@@ -608,6 +623,27 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    private static List<ReportableGainLoss> createAllGainsLosses() {
+        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
+                .chromosome("10")
+                .chromosomeBand("q23.31")
+                .gene("PTEN")
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
+                .build();
+
+        ReportableGainLoss gainLoss2 = ImmutableReportableGainLoss.builder()
+                .chromosome("")
+                .chromosomeBand("")
+                .gene("KRAS")
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.HOM_DEL_DISRUPTION)
+                .build();
+
+        return Lists.newArrayList(gainLoss1, gainLoss2);
+    }
+
+    @NotNull
     private static List<ReportableGeneFusion> createTestFusions() {
         ReportableGeneFusion fusion1 = ImmutableReportableGeneFusion.builder()
                 .geneStart("TMPRSS2")
@@ -653,8 +689,7 @@ public final class ExampleAnalysisTestFactory {
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
                 .ploidy(2D)
-                .geneMinCopies(0)
-                .geneMaxCopies(2)
+                .undisruptedCopyNumber(0.5)
                 .build();
 
         return Lists.newArrayList(disruption1);

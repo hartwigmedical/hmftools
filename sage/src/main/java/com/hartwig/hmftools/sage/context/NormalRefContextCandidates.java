@@ -17,14 +17,14 @@ public class NormalRefContextCandidates implements RefContextCandidates {
     private final List<RefContext> refContexts;
     private final GenomePositionSelector<RefContext> refContextSelector;
 
-    public NormalRefContextCandidates(final String sample) {
+    public NormalRefContextCandidates(@NotNull final String sample) {
         this.sample = sample;
         this.refContexts = Lists.newArrayList();
         this.refContextSelector = GenomePositionSelectorFactory.create(refContexts);
     }
 
     @NotNull
-    public RefContext add(@NotNull final String chromosome, final long position, @NotNull final String ref) {
+    public RefContext add(@NotNull final String chromosome, final long position) {
         if (!refContexts.isEmpty() && refContexts.get(refContexts.size() - 1).position() > position) {
             throw new IllegalArgumentException("Can only add sorted ref contexts");
         }
@@ -34,7 +34,7 @@ public class NormalRefContextCandidates implements RefContextCandidates {
             return optionalRefContext.get();
         }
 
-        RefContext refContext = new RefContext(sample, chromosome, position, ref);
+        RefContext refContext = new RefContext(sample, chromosome, position);
         refContexts.add(refContext);
 
         return refContext;
@@ -42,7 +42,7 @@ public class NormalRefContextCandidates implements RefContextCandidates {
 
     @Nullable
     @Override
-    public RefContext refContext(@NotNull final String chromosome, final long position, @NotNull final String ref) {
+    public RefContext refContext(@NotNull final String chromosome, final long position) {
         return refContextSelector.select(GenomePositions.create(chromosome, position)).orElse(null);
     }
 

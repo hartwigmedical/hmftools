@@ -1,0 +1,3 @@
+clusterId	gene	eventType
+-50	BRCA1	LOH_CHR
+270	ATM	HOM_DEL_DISRUPTION

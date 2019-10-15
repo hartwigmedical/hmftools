@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -53,11 +52,11 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     @Override
     public List<RefContext> get() {
 
-        LOGGER.info("Normal from " + bounds.start());
+        LOGGER.info("Normal candidates position {}:{}",  bounds.chromosome(), bounds.start());
 
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SAMSlicer slicer = new SAMSlicer(0, Lists.newArrayList(bounds));
+            SageSamSlicer slicer = new SageSamSlicer(0, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, this);
             tumorReader.close();
         } catch (IOException e) {

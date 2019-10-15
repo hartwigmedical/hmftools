@@ -9,13 +9,14 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class BachelorFile {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorFile.class);
 
-    private static final String DELIMITER = ",";
+    private static final String DELIMITER = "\t";
 
     private BachelorFile() {
     }
@@ -39,27 +40,27 @@ public final class BachelorFile {
     private static GermlineVariant fromString(@NotNull String line) {
         String[] values = line.split(DELIMITER);
 
-        String program = values[1];
-        if (!program.equalsIgnoreCase("hmf")) {
+        String program = values[24];
+        if (!program.equalsIgnoreCase("HMF")) {
             LOGGER.warn("Unexpected bachelor program found: " + program);
         }
 
-        String filter = values[32].trim();
-        int altReadCount = Integer.parseInt(values[16]);
-        int totalReadCount = Integer.parseInt(values[17]);
+        String filter = values[2].trim();
+        int altReadCount = Integer.parseInt(values[15]);
+        int totalReadCount = Integer.parseInt(values[16]);
 
         return ImmutableGermlineVariant.builder()
-                .passFilter(filter.equalsIgnoreCase("pass"))
-                .gene(values[7].trim())
-                .chromosome(values[2].trim())
-                .position(Integer.parseInt(values[3]))
-                .hgvsCodingImpact(values[26].trim())
-                .hgvsProteinImpact(values[25].trim())
+                .passFilter(filter.equalsIgnoreCase("PASS"))
+                .gene(values[6].trim())
+                .chromosome(values[0].trim())
+                .position(Integer.parseInt(values[1].trim()))
+                .hgvsCodingImpact(values[21].trim())
+                .hgvsProteinImpact(values[20].trim())
                 .totalReadCount(totalReadCount)
                 .alleleReadCount(altReadCount)
-                .adjustedVAF(Double.parseDouble(values[19]))
-                .adjustedCopyNumber(Double.parseDouble(values[18]))
-                .biallelic(Boolean.parseBoolean(values[27].trim()))
+                .adjustedVAF(Double.parseDouble(values[17].trim()))
+                .adjustedCopyNumber(Double.parseDouble(values[18].trim()))
+                .biallelic(Boolean.parseBoolean(values[22].trim()))
                 .build();
     }
 }

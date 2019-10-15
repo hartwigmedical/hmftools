@@ -11,7 +11,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private final VariantHotspot hotspot;
-    private final ReadContext readContext;
+    private final ReadContextImproved readContext;
 
     private int full;
     private int partial;
@@ -21,9 +21,13 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private int baseQuality;
     private int mapQuality;
 
+    private int excessiveInferredSize;
+    private int inconsistentChromosome;
+    private int improperPair;
+
     private int coverage;
 
-    public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
+    public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContextImproved readContext) {
         assert (readContext.isComplete());
         this.hotspot = hotspot;
         this.readContext = readContext;
@@ -64,18 +68,12 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return mapQuality;
     }
 
-    public ReadContext readContext() {
-        return readContext;
+    public int[] rcq() {
+        return new int[] { improperPair, inconsistentChromosome, excessiveInferredSize };
     }
 
-
-    public void reset() {
-        full = 0;
-        partial = 0;
-        realigned = 0;
-        quality = 0;
-        baseQuality = 0;
-        mapQuality = 0;
+    public ReadContextImproved readContext() {
+        return readContext;
     }
 
     @Override
@@ -85,18 +83,30 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
     @Override
     public void accept(final SAMRecord record) {
-        if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()) {
-//            coverage++;
-//            if (coverage < 100) {
 
-                byte[] readBases = record.getReadBases();
-                for (int readBasePosition = 0; readBasePosition < readBases.length; readBasePosition++) {
-                    long refPosition = record.getReferencePositionAtReadPosition(readBasePosition + 1);
-                    if (incrementCounters(refPosition, readBasePosition, readBases)) {
-                        incrementQualityScores(readBasePosition, record);
+        if (record.getAlignmentStart() <= hotspot.position() && record.getAlignmentEnd() >= hotspot.position()
+                && readContext.isComplete()) {
+            coverage++;
+            if (coverage < 1000) {
+                int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                if (readIndex >= 0 && incrementCounters(readIndex, record.getReadBases())) {
+                    incrementQualityScores(readIndex, record);
+
+                    if (Math.abs(record.getInferredInsertSize()) >= 1000) {
+                        excessiveInferredSize++;
                     }
+
+                    if (!record.getReferenceName().equals(record.getMateReferenceName())) {
+                        inconsistentChromosome++;
+                    }
+
+                    if (!record.getProperPairFlag()) {
+                        improperPair++;
+                    }
+                } else if (readContext.isWithin(record.getReadBases())) {
+                    realigned++;
                 }
-//            }
+            }
         }
     }
 
@@ -104,28 +114,37 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         final int distanceFromReadEdge = Math.min(readBasePosition, record.getReadBases().length - readBasePosition - 1);
         final int mapQuality = record.getMappingQuality();
         final int baseQuality = record.getBaseQualities()[readBasePosition];
-        final int quality = Math.min(Math.min(Math.max(0, mapQuality - 12), baseQuality), distanceFromReadEdge);
-
         this.mapQuality += mapQuality;
         this.baseQuality += baseQuality;
-        this.quality += quality;
-
+        this.quality += quality(mapQuality, baseQuality, distanceFromReadEdge);
     }
 
-    public boolean incrementCounters(long refPosition, int otherReadBytePosition, byte[] otherReadByte) {
-        ReadContext.ReadContextMatch match = readContext.match(otherReadBytePosition, otherReadByte);
-        if (!match.equals(ReadContext.ReadContextMatch.NONE)) {
-            if (refPosition == hotspot.position()) {
-                if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                    full++;
-                } else {
-                    partial++;
-                }
-            } else if (match.equals(ReadContext.ReadContextMatch.FULL)) {
-                realigned++;
-            }
+    private double quality(int mapQuality, int baseQuality, int distanceFromEdge) {
+        final int quality = Math.min(Math.min(Math.max(0, mapQuality - 12), baseQuality), distanceFromEdge);
+        return Math.max(0, quality - 12);
+    }
+
+    private boolean incrementCounters(int otherRefIndex, byte[] otherBases) {
+        final ReadContextMatch match = readContext.matchAtPosition(otherRefIndex, otherBases);
+        if (match == ReadContextMatch.FULL) {
+            full++;
             return true;
         }
+
+        if (match == ReadContextMatch.PARTIAL) {
+            partial++;
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean incrementCounters(@NotNull final ReadContextImproved other) {
+        if (readContext.isFullMatch(other)) {
+            full++;
+            return true;
+        }
+
         return false;
     }
 

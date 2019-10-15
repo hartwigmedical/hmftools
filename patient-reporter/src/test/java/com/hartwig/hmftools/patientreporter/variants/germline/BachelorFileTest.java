@@ -25,12 +25,12 @@ public class BachelorFileTest {
         GermlineVariant variant = germlineVariants.get(0);
         assertTrue(variant.passFilter());
         assertEquals("BRCA1", variant.gene());
-        assertEquals("c.2019delA", variant.hgvsCodingImpact());
-        assertEquals("p.Glu673fs", variant.hgvsProteinImpact());
-        assertEquals(20, variant.alleleReadCount());
-        assertEquals(75, variant.totalReadCount());
-        assertEquals(1.99, variant.adjustedCopyNumber(), EPSILON);
-        assertEquals(-0.1, variant.adjustedVAF(), EPSILON);
+        assertEquals("c.68_69delAG", variant.hgvsCodingImpact());
+        assertEquals("p.Glu23fs", variant.hgvsProteinImpact());
+        assertEquals(45, variant.alleleReadCount());
+        assertEquals(97, variant.totalReadCount());
+        assertEquals(3.8773, variant.adjustedCopyNumber(), EPSILON);
+        assertEquals(0.43355030873174055, variant.adjustedVAF(), EPSILON);
         assertFalse(variant.biallelic());
     }
 }

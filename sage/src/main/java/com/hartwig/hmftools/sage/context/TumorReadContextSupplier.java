@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -34,28 +33,26 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
     private final List<AltContext> altContexts;
     private final int minQuality;
 
-    public TumorReadContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final List<AltContext> altContexts) {
+    public TumorReadContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds,
+            @NotNull final String bamFile, @NotNull final List<AltContext> altContexts) {
 
         this.minQuality = minQuality;
         this.sample = sample;
         this.bounds = bounds;
         this.bamFile = bamFile;
         this.altContexts = altContexts;
-        consumerSelector =
-                GenomePositionSelectorFactory.create(altContexts.stream().map(AltContext::primaryReadContext).collect(Collectors.toList()));
-
+        final List<ReadContextCounter> readContextCounters =
+                altContexts.stream().map(AltContext::setPrimaryReadCounterFromInterim).collect(Collectors.toList());
+        consumerSelector = GenomePositionSelectorFactory.create(readContextCounters);
     }
 
     @Override
     public List<AltContext> get() {
 
-        LOGGER.info("Read Contexts " + sample + "  from " + bounds.start());
-        altContexts.forEach(x -> x.primaryReadContext().reset());
-
+        LOGGER.info("Tumor read contexts {} position {}:{}", sample, bounds.chromosome(), bounds.start());
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SAMSlicer slicer = new SAMSlicer(minQuality, Lists.newArrayList(bounds));
+            SageSamSlicer slicer = new SageSamSlicer(minQuality, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, this);
             tumorReader.close();
         } catch (IOException e) {

@@ -27,8 +27,12 @@ public interface SageConfig {
     String TUMOR_BAM = "tumor_bam";
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
+    String MIN_MAP_QUALITY = "min_map_quality";
+    String MIN_BASE_QUALITY = "min_base_quality";
 
     int DEFAULT_THREADS = 2;
+    int DEFAULT_MIN_MAP_QUALITY = 1;
+    int DEFAULT_MIN_BASE_QUALITY = 13;
 
     @NotNull
     static Options createOptions() {
@@ -40,6 +44,8 @@ public interface SageConfig {
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
+        options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
+        options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
 
         return options;
     }
@@ -64,9 +70,13 @@ public interface SageConfig {
     @NotNull
     String outputFile();
 
-    default int minQuality() {
-        return 1;
+    default int regionSliceSize() {
+        return 1_000_000;
     }
+
+    int minMapQuality();
+
+    int minBaseQuality();
 
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
@@ -93,6 +103,8 @@ public interface SageConfig {
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
                 .refGenome(cmd.getOptionValue(REF_GENOME))
+                .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
+                .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
                 .build();
 
     }

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
@@ -23,9 +24,12 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class GenomicAlterationsChapter implements ReportChapter {
+    private static final Logger LOGGER = LogManager.getLogger(GenomicAlterationsChapter.class);
 
     // TODO Remove this toggle-off once purple v2.31 is in production
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
@@ -51,6 +55,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
+        // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
+
     }
 
     @NotNull
@@ -184,12 +190,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 40, 65, 65 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 40, 100 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Disrupted range"), TableUtil.createHeaderCell("Type"),
                         TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell("Gene \nmin copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell("Gene \nmax copies").setTextAlignment(TextAlignment.RIGHT) });
+                        TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.RIGHT) });
 
         final List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
         for (ReportableGeneDisruption disruption : sortedDisruptions) {
@@ -199,10 +204,26 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(disruption.type()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMinCopies(),
-                    hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.createContentCell(GeneDisruptions.copyNumberString(disruption.geneMaxCopies(),
-                    hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(Double.toString(disruption.undisruptedCopyNumber()))
+                    .setTextAlignment(TextAlignment.RIGHT));
+        }
+        return TableUtil.createWrappingReportTable(title, contentTable);
+    }
+
+    @NotNull
+    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertion) {
+        final String title = "Tumor viral insertions";
+        if (viralInsertion.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
+        }
+
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 50 },
+                new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("Number of viral integrations") });
+
+        for (ViralInsertion viralInsert : viralInsertion) {
+            contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.countVirus())));
+
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

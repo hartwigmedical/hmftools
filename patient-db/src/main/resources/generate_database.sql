@@ -744,7 +744,7 @@ CREATE TABLE chord
     nothing DOUBLE PRECISION NOT NULL,
     BRCA2 DOUBLE PRECISION NOT NULL,
     hrd DOUBLE PRECISION NOT NULL,
-    predictedResponse varchar(255) NOT NULL,
+    predictedResponse BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
 
