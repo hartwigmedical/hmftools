@@ -22,30 +22,29 @@ public class ReadContextFactory {
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
         int startIndex = microhomologyContextWithRepeats.position();
-        int endIndex = Math.max(startIndex,
-                microhomologyContextWithRepeats.position() + microhomologyContextWithRepeats.length() - ref.length() + 2);
+        int length = Math.max(microhomologyContext.length(), microhomologyContextWithRepeats.length() - ref.length() + 1) + 1;
+        int endIndex = Math.min(record.getReadBases().length, startIndex + length);
 
-        //        String readContextCentre = new String(record.getReadBases(), startIndex, endIndex - startIndex + 1);
         return new ReadContextImproved(refPosition, readIndex, startIndex, endIndex, DEFAULT_BUFFER, refBases, record);
     }
 
     @NotNull
     public static ReadContextImproved createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
             @NotNull final SAMRecord record, byte[] refBases) {
+
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
         int startIndex = microhomologyContextWithRepeats.position();
-        int length = Math.max(microhomologyContextWithRepeats.length() + 2, alt.length());
-        int endIndex = startIndex + length;
+        int length = Math.max(microhomologyContextWithRepeats.length() + 1, alt.length());
 
-//        String readContextCentre = new String(record.getReadBases(), startIndex, length);
+        int endIndex = Math.min(record.getReadBases().length, startIndex + length);
+
         return new ReadContextImproved(refPosition, readIndex, startIndex, endIndex, DEFAULT_BUFFER, refBases, record);
     }
 
     @NotNull
     public static ReadContextImproved createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, byte[] refBases) {
-
         return new ReadContextImproved(refPosition, readIndex, readIndex, readIndex, DEFAULT_BUFFER, refBases, record);
     }
 

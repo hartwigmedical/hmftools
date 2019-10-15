@@ -36,7 +36,7 @@ public class ReadContextImproved {
 
     public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
-        assert (leftCentreIndex > 0);
+        assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
         this.position = refPosition;
@@ -234,5 +234,12 @@ public class ReadContextImproved {
 
     public String distanceCigar() {
         return distanceCigar;
+    }
+
+
+    @VisibleForTesting
+    @NotNull
+    String centerBases() {
+        return new String(readBases, leftCentreIndex, rightCentreIndex - leftCentreIndex + 1);
     }
 }

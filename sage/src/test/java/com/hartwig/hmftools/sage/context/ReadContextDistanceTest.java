@@ -78,7 +78,7 @@ public class ReadContextDistanceTest {
 
 
     @NotNull
-    private static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString) {
+    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString) {
         final StringBuilder qualityString = new StringBuilder();
         for (int i = 0; i < readString.length(); i++) {
             qualityString.append("A");
@@ -88,7 +88,7 @@ public class ReadContextDistanceTest {
     }
 
     @NotNull
-    private static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString, @NotNull final String qualities) {
+     static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString, @NotNull final String qualities) {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(100);
         record.setCigarString(cigar);
