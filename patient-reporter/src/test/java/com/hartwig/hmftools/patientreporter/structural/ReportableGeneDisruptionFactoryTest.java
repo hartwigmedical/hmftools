@@ -24,9 +24,6 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder =
                 createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
 
-        List<GeneCopyNumber> copyNumbers =
-                Lists.newArrayList(createTestCopyNumberBuilder().gene("ROPN1B").minCopyNumber(1).maxCopyNumber(2).build());
-
         List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(
                 pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
                 pairedDisruptionBuilder.exonUp(8).exonDown(9).build());
@@ -50,10 +47,6 @@ public class ReportableGeneDisruptionFactoryTest {
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
-
-        List<GeneCopyNumber> copyNumbers =
-                Lists.newArrayList(createTestCopyNumberBuilder().gene("ROPN1B").minCopyNumber(1).maxCopyNumber(1).build(),
-                        createTestCopyNumberBuilder().gene("SETD2").minCopyNumber(1).maxCopyNumber(1).build());
 
         List<ReportableDisruption> pairedDisruptions =
                 Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").build(), pairedDisruptionBuilder.gene("SETD2").build());
