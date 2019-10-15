@@ -32,12 +32,8 @@ public final class FilterGermlineVariants {
             assert germlineVariant.passFilter();
 
             if (reportingGermlineGenes.contains(germlineVariant.gene())) {
-                LOGGER.info("chord" + chordAnalysis.hrdValue());
-                LOGGER.info("chord" + Double.compare(chordAnalysis.hrdValue(), 0.5));
 
-                if (Double.compare(chordAnalysis.hrdValue(), 0.5) == 1) {
-                    LOGGER.info("chord in " + chordAnalysis.hrdValue());
-
+                if (Double.compare(chordAnalysis.hrdValue(), 0.5) == 1 || chordAnalysis.hrdValue() == 0.5) {
                     // report all reportable germline variants where HRD score is greater than 0.5
                     filteredGermlineVariants.add(germlineVariant);
                 } else {
