@@ -84,8 +84,13 @@ class AnalysedPatientReporter {
                 somaticVariantVcf,
                 patientTumorLocation,
                 copyNumberAnalysis.exomeGeneCopyNumbers());
-        List<GermlineVariant> germlineVariantsToReport =
-                analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(), bachelorCsv, copyNumberAnalysis, somaticVariantAnalysis);
+
+        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
+        List<GermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
+                bachelorCsv,
+                copyNumberAnalysis,
+                somaticVariantAnalysis,
+                chordAnalysis);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
@@ -97,7 +102,6 @@ class AnalysedPatientReporter {
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionFile);
-        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
@@ -238,7 +242,8 @@ class AnalysedPatientReporter {
 
     @NotNull
     private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorCsv,
-            @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis) throws IOException {
+            @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
+            @NotNull ChordAnalysis chordAnalysis) throws IOException {
 
         List<GermlineVariant> variants =
                 BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
@@ -254,7 +259,7 @@ class AnalysedPatientReporter {
                     reportData.driverGeneView(),
                     reportData.germlineReportingModel(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
-                    somaticVariantAnalysis.variantsToReport());
+                    somaticVariantAnalysis.variantsToReport(), chordAnalysis);
         }
     }
 

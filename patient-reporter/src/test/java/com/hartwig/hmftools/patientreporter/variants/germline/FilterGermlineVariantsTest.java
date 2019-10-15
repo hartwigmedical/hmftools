@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
@@ -20,6 +22,20 @@ public class FilterGermlineVariantsTest {
 
     private static final DriverGeneView TEST_DRIVER_GENE_VIEW = PatientReporterTestFactory.createTestDriverGeneView(ONCOGENE, TSG);
 
+    @NotNull
+    private static ChordAnalysis createChordAnalysis() {
+        double brca1Value = 0.3;
+        double brca2Value = 0.2;
+
+        return ImmutableChordAnalysis.builder()
+                .noneValue(1 - (brca1Value + brca2Value))
+                .BRCA1Value(brca1Value)
+                .BRCA2Value(brca2Value)
+                .hrdValue(brca1Value + brca2Value)
+                .predictedResponseValue(brca1Value + brca2Value > 0.5 ? true : false)
+                .build();
+    }
+
     @Test
     public void checkForGermlineGenesReportedONCO() {
         GermlineReportingModel germlineReportingModel = PatientReporterTestFactory.createTestGermlineGenesReporting();
@@ -32,7 +48,7 @@ public class FilterGermlineVariantsTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbers,
-                somaticVariants);
+                somaticVariants, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantMatch.size());
     }
 
@@ -47,7 +63,7 @@ public class FilterGermlineVariantsTest {
                 FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch, TEST_DRIVER_GENE_VIEW,
                         germlineReportingModel,
                         geneCopyNumbersMatch,
-                        variantsMatch);
+                        variantsMatch, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantMatch.size()); // all three options matched
 
         List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false, 1);
@@ -57,7 +73,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsNonMatchBiallelic, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatchBiallelic,
-                variantsNonMatchBiallelic);
+                variantsNonMatchBiallelic, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
         List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true, 1);
@@ -67,7 +83,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsNonMatchVariant, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatchVariant,
-                variantsNonMatchVariant);
+                variantsNonMatchVariant, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
         List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true, 1);
@@ -77,7 +93,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsNonMatchCopy, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatchCopy,
-                variantsNonMatchCopy);
+                variantsNonMatchCopy, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
         List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false, 1);
@@ -87,7 +103,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsNonMatch, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
-                variantsNonMatch);
+                variantsNonMatch, createChordAnalysis());
         assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
         List<GermlineVariant> germlineVariantsOptionBiallelic = createTestGermlineVariantsTSGGene(true, 1);
@@ -97,7 +113,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsOptionBiallelic, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersOptionBiallelic,
-                variantsOptionBiallelic);
+                variantsOptionBiallelic, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
         List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false, 1);
@@ -107,7 +123,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsOptionVariant, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersOptionVariant,
-                variantsOptionVariant);
+                variantsOptionVariant, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
         List<GermlineVariant> germlineVariantsOptionCopyNumberPartialLoss = createTestGermlineVariantsTSGGene(false, 1);
@@ -117,7 +133,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsOptionCopyNumberPartialLoss, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersCopyNumberPartialLoss,
-                variantsOptionCopyNumberPartialLoss);
+                variantsOptionCopyNumberPartialLoss, createChordAnalysis());
         assertEquals(0, filteredGermlineVariantOptionCopyNumberPartialLoss.size()); // only match copy number
 
         List<GermlineVariant> germlineVariantsOptionCopyNumberFullLoss = createTestGermlineVariantsTSGGene(false, 2);
@@ -127,7 +143,7 @@ public class FilterGermlineVariantsTest {
                 germlineVariantsOptionCopyNumberFullLoss, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersCopyNumberFullLoss,
-                variantsOptionCopyNumberFullLoss);
+                variantsOptionCopyNumberFullLoss, createChordAnalysis());
         assertEquals(1, filteredGermlineVariantOptionCopyNumberFullLoss.size()); // only match copy number
     }
 
