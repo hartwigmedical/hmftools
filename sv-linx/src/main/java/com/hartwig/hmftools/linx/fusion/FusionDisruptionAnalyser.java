@@ -80,6 +80,7 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
+    private boolean mLogRepeatedGenePairs;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
@@ -96,6 +97,7 @@ public class FusionDisruptionAnalyser
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     public static final String LOG_ALL_POTENTIALS = "log_potential_fusions";
+    public static final String LOG_REPEAT_GENE_PAIRS = "log_repeat_gene_pairs";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String NEO_EPITOPES = "neo_epitopes";
@@ -120,6 +122,7 @@ public class FusionDisruptionAnalyser
         mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
+        mLogRepeatedGenePairs = false;
         mFindNeoEpitopes = false;
         mFusionParams = new FusionParameters();
 
@@ -144,6 +147,7 @@ public class FusionDisruptionAnalyser
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
+        options.addOption(LOG_REPEAT_GENE_PAIRS, false, "Log sme gene-pair repeatedly if supported by different SVs");
         options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
     }
 
@@ -183,6 +187,7 @@ public class FusionDisruptionAnalyser
             mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
             mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
             mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
+            mLogRepeatedGenePairs = cmdLineArgs.hasOption(LOG_REPEAT_GENE_PAIRS);
 
             if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
             {
@@ -941,7 +946,9 @@ public class FusionDisruptionAnalyser
         List<GeneFusion> uniqueFusions = mFusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
 
         List<String> genePairs = Lists.newArrayList();
-        uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
+
+        if(!mLogRepeatedGenePairs)
+            uniqueFusions.stream().forEach(x -> genePairs.add(x.name()));
 
         List<Integer> usedSvIds = Lists.newArrayList();
         uniqueFusions.stream().forEach(x -> usedSvIds.add(x.upstreamTrans().gene().id()));
@@ -968,14 +975,11 @@ public class FusionDisruptionAnalyser
                     .filter(x -> x.isViable() && !x.neoEpitopeOnly())
                     .filter(x -> x != fusion)
                     .filter(x -> x.name().equals(fusion.name()))
+                    .filter(x -> !usedSvIds.contains(x.upstreamTrans().gene().id()) && !usedSvIds.contains(x.downstreamTrans().gene().id()))
                     .collect(Collectors.toList());
 
-            genePairs.add(fusion.name());
-
-            usedSvIds.add(fusion.upstreamTrans().gene().id());
-
-            if(!usedSvIds.contains(fusion.downstreamTrans().gene().id()))
-                usedSvIds.add(fusion.downstreamTrans().gene().id());
+            if(!mLogRepeatedGenePairs)
+                genePairs.add(fusion.name());
 
             GeneFusion topFusion = determineReportableFusion(similarFusions, false);
 
@@ -985,6 +989,11 @@ public class FusionDisruptionAnalyser
                 mFusionFinder.setFusionProteinFeatures(topFusion);
 
                 uniqueFusions.add(topFusion);
+
+                usedSvIds.add(topFusion.upstreamTrans().gene().id());
+
+                if(!usedSvIds.contains(topFusion.downstreamTrans().gene().id()))
+                    usedSvIds.add(topFusion.downstreamTrans().gene().id());
             }
         }
 
