@@ -149,7 +149,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null) {
                 if (tumor) {
-                    refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refBases));
+                    refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
