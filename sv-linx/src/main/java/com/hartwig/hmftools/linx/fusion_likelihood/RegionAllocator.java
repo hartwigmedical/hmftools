@@ -9,6 +9,10 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+// The RegionAllocator tracks links between sections of the genome by breaking them into blocks of a defined size.
+// When a link is made between two blocks, this is recorded to prevent the same link being allocated again
+// The overall number of allocated linked bases is then the product of the linked blocks' areas
+
 public class RegionAllocator
 {
     private final int mBlockSize;
@@ -21,7 +25,7 @@ public class RegionAllocator
     public RegionAllocator(int blockSize)
     {
         mBlockSize = blockSize;
-        mBlockArea= blockSize * blockSize;
+        mBlockArea = blockSize * blockSize;
 
         mAllocations = Maps.newHashMap();
     }

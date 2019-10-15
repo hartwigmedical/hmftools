@@ -190,7 +190,6 @@ public class GenePhaseRegion
         return false;
     }
 
-
     public boolean hasAnyPhaseMatch(final boolean[] phaseArray)
     {
         for(int i = 0; i < PHASE_MAX; ++i)
@@ -251,7 +250,7 @@ public class GenePhaseRegion
 
     public static boolean haveOverlap(final GenePhaseRegion region1, final GenePhaseRegion region2, int overlapBases)
     {
-        // if adjacency is included, then regions which are a base apart are considered an overlap - eg 100-199 and 200-300
+        // a positive value for overlap bases requires a gap between the regions, a negative value allows some overlap without calling it such
         if (region1.end() < region2.start() - overlapBases || region1.start() > region2.end() + overlapBases)
             return false;
 

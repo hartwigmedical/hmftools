@@ -106,21 +106,13 @@ public class FusionLikelihood
             setBucketLengths(cmdLineArgs.getOptionValue(DEL_DUP_BUCKET_LENGTHS), mProximateBucketLengths);
         }
 
-        int shortInvBucket = SHORT_INV_BUCKET;
-
-        if(cmdLineArgs.hasOption(SHORT_INV_BUCKET_LENGTH))
-        {
-            shortInvBucket = Integer.parseInt(cmdLineArgs.getOptionValue(SHORT_INV_BUCKET_LENGTH));
-        }
-
         if(cmdLineArgs.hasOption(LIMITED_CHROMOSOMES))
         {
             mRestrictedChromosomes = Arrays.stream(cmdLineArgs.getOptionValue(LIMITED_CHROMOSOMES).split(";"))
                     .collect(Collectors.toList());
         }
 
-        mCohortCalculator.initialise(mProximateBucketLengths, shortInvBucket);
-
+        mCohortCalculator.initialiseLengths(mProximateBucketLengths, mRestrictedChromosomes);
     }
 
     public void setRestrictedGeneIds(final List<String> geneIds) { mRestrictedGeneIds.addAll(geneIds); }
@@ -161,7 +153,6 @@ public class FusionLikelihood
             }
         }
     }
-
 
     public void writeGeneLikelihoodData(final String outputDir)
     {

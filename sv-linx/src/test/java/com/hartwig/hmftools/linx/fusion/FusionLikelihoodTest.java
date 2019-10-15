@@ -107,7 +107,7 @@ public class FusionLikelihoodTest
 
         // for testing same-gene fusions
         List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
-        likelihoodCalc.initialise(delLengths, 0);
+        likelihoodCalc.initialiseLengths(delLengths, Lists.newArrayList());
 
         likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
         phaseRegions = geneRangeData.getPhaseRegions();

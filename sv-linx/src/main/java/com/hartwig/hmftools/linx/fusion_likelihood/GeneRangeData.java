@@ -20,9 +20,6 @@ public class GeneRangeData
     // a set of merged and extended regions with matching phase and pre-gene combinations
     private List<GenePhaseRegion> mPhaseRegions;
 
-    // a set of overlapping intronic regions, not crossing over any exon boundary
-    private List<GenePhaseRegion> mIntronicPhaseRegions;
-
     // intronic regions for each transcript
     private List<GenePhaseRegion> mTranscriptPhaseRegions;
 
@@ -42,7 +39,6 @@ public class GeneRangeData
     {
         GeneData = geneData;
         mPhaseRegions = Lists.newArrayList();
-        mIntronicPhaseRegions = Lists.newArrayList();
         mTranscriptPhaseRegions = Lists.newArrayList();
 
         Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
@@ -57,9 +53,6 @@ public class GeneRangeData
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
     public void setPhaseRegions(List<GenePhaseRegion> regions) { mPhaseRegions = regions; }
-
-    public final List<GenePhaseRegion> getIntronicPhaseRegions() { return mIntronicPhaseRegions; }
-    public void setIntronicPhaseRegions(List<GenePhaseRegion> regions) { mIntronicPhaseRegions = regions; }
 
     public final List<GenePhaseRegion> getTranscriptPhaseRegions() { return mTranscriptPhaseRegions; }
     public void setTranscriptPhaseRegions(List<GenePhaseRegion> regions) { mTranscriptPhaseRegions = regions; }

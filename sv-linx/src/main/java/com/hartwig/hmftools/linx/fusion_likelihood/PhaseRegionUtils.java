@@ -257,6 +257,95 @@ public class PhaseRegionUtils
         }
     }
 
+    public static void divideOverlappingRegions(final String chromosome, final String arm, List<GeneRangeData> geneRangeList)
+    {
+        int phaseRegions = geneRangeList.stream().mapToInt(x -> x.getPhaseRegions().size()).sum();
+        int regionsRemoved = 0;
+
+        // find all regions with an overlap, to later control their phase-match allocation
+        for (int lgIndex = 0; lgIndex < geneRangeList.size(); ++lgIndex)
+        {
+            GeneRangeData lowerGene = geneRangeList.get(lgIndex);
+
+            List<GenePhaseRegion> lowerRegions = lowerGene.getPhaseRegions();
+
+            // don't allow same-gene fusions (they are handled within a transcript), so start the index at the next gene
+            for (int ugIndex = lgIndex + 1; ugIndex < geneRangeList.size(); ++ugIndex)
+            {
+                GeneRangeData upperGene = geneRangeList.get(ugIndex);
+
+                if (upperGene.GeneData.Strand != lowerGene.GeneData.Strand)
+                    continue;
+
+                if (!upperGene.Arm.equals(lowerGene.Arm))
+                    break;
+
+                /*
+                if(lowerGene.GeneData.GeneId.equals("ENSG00000121236") && upperGene.GeneData.GeneId.equals("ENSG00000258588"))
+                {
+                    LOGGER.info("spec genes");
+                }
+                */
+
+                List<GenePhaseRegion> upperRegions = upperGene.getPhaseRegions();
+
+                int lrIndex = 0;
+
+                while(lrIndex < lowerRegions.size())
+                {
+                    GenePhaseRegion lowerRegion = lowerRegions.get(lrIndex);
+
+                    int lrCount = lowerRegions.size();
+
+                    int urIndex = 0;
+
+                    while(urIndex < upperRegions.size())
+                    {
+                        GenePhaseRegion upperRegion = upperRegions.get(urIndex);
+
+                        if (!haveOverlap(lowerRegion, upperRegion, -PERMITTED_REGION_OVERLAP))
+                        {
+                            ++urIndex;
+                            continue;
+                        }
+
+                        int urCount = upperRegions.size();
+
+                        if(lrIndex >= lowerRegions.size() || urIndex >= upperRegions.size())
+                        {
+                            LOGGER.error("genes({} & {}) index errors", lowerGene.GeneData.GeneId, upperGene.GeneData.GeneId);
+                            return;
+                        }
+
+                        splitOverlappingPhaseRegion(lowerRegion, lrIndex, lowerRegions, upperRegion, urIndex, upperRegions);
+
+                        // check for a region removed from either list
+                        if(urCount == upperRegions.size())
+                            ++urIndex;
+                        else
+                            ++regionsRemoved;
+
+                        if(lowerRegions.size() < lrCount)
+                        {
+                            ++regionsRemoved;
+                            break;
+                        }
+                    }
+
+                    if(lrCount == lowerRegions.size())
+                        ++lrIndex;
+                }
+            }
+        }
+
+        int newPhaseRegions = geneRangeList.stream().mapToInt(x -> x.getPhaseRegions().size()).sum();
+
+        int added = max(newPhaseRegions - phaseRegions + regionsRemoved, 0);
+
+        LOGGER.debug("chromosome({}) arm({}) dividing phase regions: initial({}) removed({}) added({}) final({})",
+                chromosome, arm, phaseRegions, regionsRemoved, added, newPhaseRegions);
+    }
+
     public static void splitOverlappingPhaseRegion(
             GenePhaseRegion region1, int index1, final List<GenePhaseRegion> regions1,
             GenePhaseRegion region2, int index2, final List<GenePhaseRegion> regions2)
