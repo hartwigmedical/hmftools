@@ -9,10 +9,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +28,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefContextCandidates candidates;
     private final String bamFile;
     private final RefContextConsumer refContextConsumer;
-    private final GenomePositionSelector<ReadContextCounter> consumerSelector;
+    private final ContextSelector<ReadContextCounter> consumerSelector;
     private final int minQuality;
 
     public NormalRefContextSupplier(final int minQuality, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
@@ -41,7 +38,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         this.candidates = candidates;
         this.bamFile = bamFile;
         refContextConsumer = new RefContextConsumer(false, minQuality, bounds, refGenome, candidates);
-        consumerSelector = GenomePositionSelectorFactory.create(candidates.refContexts()
+        consumerSelector = new ContextSelector<>(candidates.refContexts()
                 .stream()
                 .flatMap(x -> x.alts().stream())
                 .map(AltContext::primaryReadContext)
@@ -52,7 +49,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     @Override
     public List<RefContext> get() {
 
-        LOGGER.info("Normal candidates position {}:{}",  bounds.chromosome(), bounds.start());
+        LOGGER.info("Normal candidates position {}:{}", bounds.chromosome(), bounds.start());
 
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
@@ -76,7 +73,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         refContextConsumer.accept(samRecord);
 
         if (samRecord.getMappingQuality() >= minQuality) {
-            consumerSelector.select(SAMRecords.alignmentRegion(samRecord), x -> x.accept(samRecord));
+            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord));
         }
     }
 }

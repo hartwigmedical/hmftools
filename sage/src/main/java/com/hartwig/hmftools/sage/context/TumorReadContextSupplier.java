@@ -9,10 +9,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +26,7 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
     private final String sample;
     private final GenomeRegion bounds;
     private final String bamFile;
-    private final GenomePositionSelector<ReadContextCounter> consumerSelector;
+    private final ContextSelector<ReadContextCounter> consumerSelector;
     private final List<AltContext> altContexts;
     private final int minQuality;
 
@@ -43,7 +40,7 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
         this.altContexts = altContexts;
         final List<ReadContextCounter> readContextCounters =
                 altContexts.stream().map(AltContext::setPrimaryReadCounterFromInterim).collect(Collectors.toList());
-        consumerSelector = GenomePositionSelectorFactory.create(readContextCounters);
+        consumerSelector = new ContextSelector<>(readContextCounters);
     }
 
     @Override
@@ -64,6 +61,6 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
 
     @Override
     public void accept(final SAMRecord samRecord) {
-        consumerSelector.select(SAMRecords.alignmentRegion(samRecord), x -> x.accept(samRecord));
+        consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord));
     }
 }
