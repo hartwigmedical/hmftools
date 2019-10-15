@@ -31,7 +31,7 @@ public class ReportableGeneDisruptionFactoryTest {
                 pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
                 pairedDisruptionBuilder.exonUp(8).exonDown(9).build());
 
-        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions, copyNumbers);
+        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 
         assertEquals(1, reportableDisruptions.size());
 
@@ -58,7 +58,7 @@ public class ReportableGeneDisruptionFactoryTest {
         List<ReportableDisruption> pairedDisruptions =
                 Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").build(), pairedDisruptionBuilder.gene("SETD2").build());
 
-        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions, copyNumbers);
+        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 
         assertEquals(2, reportableDisruptions.size());
     }

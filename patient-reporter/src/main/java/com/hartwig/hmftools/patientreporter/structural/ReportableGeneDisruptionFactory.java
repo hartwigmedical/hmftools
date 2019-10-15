@@ -22,16 +22,13 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+    public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
-        Map<String, GeneCopyNumber> copyNumberPerGene = toGeneMap(geneCopyNumbers);
         Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
         for (Pair<ReportableDisruption, ReportableDisruption> pairedDisruption : pairedMap.values()) {
             ReportableDisruption primaryDisruption = pairedDisruption.getLeft();
 
-            GeneCopyNumber copyNumber = copyNumberPerGene.get(primaryDisruption.gene());
             reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                     .location(primaryDisruption.chromosome() + primaryDisruption.chrBand())
                     .gene(primaryDisruption.gene())
@@ -45,15 +42,6 @@ final class ReportableGeneDisruptionFactory {
 
         LOGGER.debug("Generated {} reportable disruptions based on {} disruptions", reportableDisruptions.size(), disruptions.size());
         return reportableDisruptions;
-    }
-
-    @NotNull
-    private static Map<String, GeneCopyNumber> toGeneMap(@NotNull List<GeneCopyNumber> geneCopyNumbers) {
-        Map<String, GeneCopyNumber> copyNumberPerGeneMap = Maps.newHashMap();
-        for (GeneCopyNumber copyNumber : geneCopyNumbers) {
-            copyNumberPerGeneMap.put(copyNumber.gene(), copyNumber);
-        }
-        return copyNumberPerGeneMap;
     }
 
     @NotNull

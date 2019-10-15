@@ -100,7 +100,7 @@ class AnalysedPatientReporter {
                         reportData.germlineReportingModel(),
                         reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()));
 
-        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, copyNumberAnalysis, patientTumorLocation);
+        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionFile);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
@@ -259,24 +259,21 @@ class AnalysedPatientReporter {
                     reportData.driverGeneView(),
                     reportData.germlineReportingModel(),
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
-                    somaticVariantAnalysis.variantsToReport(), chordAnalysis);
+                    somaticVariantAnalysis.variantsToReport(),
+                    chordAnalysis);
         }
     }
 
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
-            @NotNull CopyNumberAnalysis copyNumberAnalysis, @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
         List<ReportableDisruption> disruptions = ReportableDisruptionFile.read(linxDisruptionTsv);
         LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxDisruptionTsv);
 
-        return SvAnalyzer.run(fusions,
-                disruptions,
-                copyNumberAnalysis.exomeGeneCopyNumbers(),
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
+        return SvAnalyzer.run(fusions, disruptions, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull
