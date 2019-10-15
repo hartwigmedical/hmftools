@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefContextConsumer implements Consumer<SAMRecord> {
 
@@ -60,19 +59,17 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private final int minQuality;
 
     private final GenomeRegion bounds;
-    private final IndexedFastaSequenceFile refGenome;
+    private final RefSequence refGenome;
     private final RefContextCandidates candidates;
     private final boolean tumor;
-    private final int chromosomeLength;
 
-    public RefContextConsumer(boolean tumor, final int minQuality, @NotNull final GenomeRegion bounds,
-            @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final RefContextCandidates candidates) {
+    public RefContextConsumer(boolean tumor, final int minQuality, @NotNull final GenomeRegion bounds, @NotNull final RefSequence refGenome,
+            @NotNull final RefContextCandidates candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
         this.minQuality = minQuality;
         this.candidates = candidates;
         this.tumor = tumor;
-        chromosomeLength = refGenome.getSequence(bounds.chromosome()).length();
 
     }
 
@@ -85,8 +82,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             int alignmentEnd = record.getAlignmentEnd();
 
             if (record.getMappingQuality() >= minQuality) {
-
-                final byte[] refBases = refGenome.getSubsequenceAt(record.getContig(), alignmentStart, alignmentEnd).getBases();
+                final byte[] refBases = refGenome.alignment(alignmentStart, alignmentEnd);
                 final CigarHandler handler = new CigarHandler() {
                     @Override
                     public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,

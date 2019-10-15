@@ -15,26 +15,24 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
 
     private static final Logger LOGGER = LogManager.getLogger(TumorRefContextSupplier.class);
 
     private final String sample;
+    private final String bamFile;
     private final GenomeRegion bounds;
     private final TumorRefContextCandidates candidates;
-    private final String bamFile;
     private final RefContextConsumer refContextConsumer;
 
     public TumorRefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds,
-            @NotNull final String bamFile, @NotNull final IndexedFastaSequenceFile refGenome,
-            @NotNull final TumorRefContextCandidates candidates) {
+            @NotNull final String bamFile, @NotNull final RefSequence refGenome) {
         this.sample = sample;
         this.bounds = bounds;
-        this.candidates = candidates;
         this.bamFile = bamFile;
-        refContextConsumer = new RefContextConsumer(true, minQuality, bounds, refGenome, candidates);
+        this.candidates = new TumorRefContextCandidates(sample);
+        this.refContextConsumer = new RefContextConsumer(true, minQuality, bounds, refGenome, this.candidates);
     }
 
     @Override

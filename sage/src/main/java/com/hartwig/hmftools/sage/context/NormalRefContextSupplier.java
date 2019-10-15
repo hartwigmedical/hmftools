@@ -18,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Consumer<SAMRecord> {
 
@@ -32,7 +31,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final int minQuality;
 
     public NormalRefContextSupplier(final int minQuality, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final RefContextCandidates candidates) {
+            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
         this.minQuality = minQuality;
         this.bounds = bounds;
         this.candidates = candidates;
