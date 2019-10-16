@@ -13,6 +13,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
@@ -53,6 +54,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurityFit));
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
+        reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableDriverCatalogs()));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
         // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
@@ -121,6 +123,27 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                     .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. "
                             + "Referral to a genetic specialist should be considered.").addStyle(ReportResources.subTextStyle())));
+        }
+
+        return TableUtil.createWrappingReportTable(title, contentTable);
+    }
+
+    @NotNull
+    private static Table createHomozygousDelDisruptionsTable(@NotNull List<ReportableDriverCatalog> homozygoudDelDisruptions) {
+        final String title = "Tumor specific homozygous disruptions";
+        if (homozygoudDelDisruptions.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
+        }
+
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 80 },
+                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("chromosome band"),
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("driver")});
+
+        for (ReportableDriverCatalog homozygousDisruption : homozygoudDelDisruptions) {
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.driver().toString()));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

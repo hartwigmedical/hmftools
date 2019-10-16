@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -111,30 +110,6 @@ public class CNADrivers {
                         .biallelic(true)
                         .minCopyNumber(x.minCopyNumber())
                         .maxCopyNumber(x.maxCopyNumber())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    @NotNull
-    public List<DriverCatalog> homozoguousDeletions(@NotNull final List<LinxDriver> homozygousDisruptions) {
-        return homozygousDisruptions.stream()
-                .map(x -> ImmutableDriverCatalog.builder()
-                        .chromosome("") // TODO: add value
-                        .chromosomeBand("") // TODO: add value
-                        .gene(x.gene())
-                        .missense(0)
-                        .nonsense(0)
-                        .inframe(0)
-                        .frameshift(0)
-                        .splice(0)
-                        .dndsLikelihood(0)
-                        .driverLikelihood(1)
-                        .driver(DriverType.HOM_DISRUPTION)
-                        .likelihoodMethod(LikelihoodMethod.DEL)
-                        .category(oncoGenes.contains(x.gene()) ? DriverCategory.ONCO : DriverCategory.TSG)
-                        .biallelic(true) // TODO: add value
-                        .minCopyNumber(0) // TODO: add value
-                        .maxCopyNumber(0) // TODO: add value
                         .build())
                 .collect(Collectors.toList());
     }

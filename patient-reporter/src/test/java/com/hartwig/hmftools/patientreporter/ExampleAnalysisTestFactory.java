@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
@@ -27,7 +28,9 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
@@ -65,6 +68,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        final List<ReportableDriverCatalog> reportableDriverCatalogs = Lists.newArrayList();
 
         final String sampleId = "PNT00012345T";
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -93,6 +97,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                reportableDriverCatalogs,
                 viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
@@ -122,6 +127,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final List<ViralInsertion> viralInsertions = createTestViralInsertions();
+        final List<ReportableDriverCatalog> reportableDriverCatalogs = createReportableHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -142,6 +148,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                reportableDriverCatalogs,
                 viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
@@ -149,6 +156,17 @@ public final class ExampleAnalysisTestFactory {
                 reportData.signaturePath(),
                 reportData.logoRVAPath(),
                 reportData.logoCompanyPath());
+    }
+
+    @NotNull
+    private static List<ReportableDriverCatalog> createReportableHomozygousDisruptions() {
+        List<ReportableDriverCatalog> homozygousDisruptions = Lists.newArrayList(ImmutableReportableDriverCatalog.builder()
+                .chromosome("8")
+                .chromosomeBand("p22")
+                .gene("SGCZ")
+                .driver(DriverType.HOM_DISRUPTION.toString().toLowerCase())
+                .build());
+        return Lists.newArrayList(homozygousDisruptions);
     }
 
     @NotNull
@@ -178,6 +196,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final List<ViralInsertion> viralInsertions = createTestViralInsertions();
+        final List<ReportableDriverCatalog> reportableDriverCatalogs = createReportableHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -198,6 +217,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
+                reportableDriverCatalogs,
                 viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
@@ -632,15 +652,7 @@ public final class ExampleAnalysisTestFactory {
                 .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
                 .build();
 
-        ReportableGainLoss gainLoss2 = ImmutableReportableGainLoss.builder()
-                .chromosome("")
-                .chromosomeBand("")
-                .gene("KRAS")
-                .copies(0)
-                .interpretation(CopyNumberInterpretation.HOM_DEL_DISRUPTION)
-                .build();
-
-        return Lists.newArrayList(gainLoss1, gainLoss2);
+        return Lists.newArrayList(gainLoss1);
     }
 
     @NotNull

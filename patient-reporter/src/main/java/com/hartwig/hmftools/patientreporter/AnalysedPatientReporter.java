@@ -28,13 +28,13 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.HomozygousDisruptionAnalyzer;
+import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
@@ -68,8 +68,8 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
-            @NotNull String linxViralInsertionFile, @NotNull String linxDriversTsv, @Nullable String comments, boolean correctedReport)
-            throws IOException {
+            @NotNull String linxViralInsertionFile, @NotNull String linxDriversCatalogTsv, @Nullable String comments,
+            boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -79,7 +79,9 @@ class AnalysedPatientReporter {
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
-        CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation, linxDriversTsv);
+        List<ReportableDriverCatalog> reportableDriverCatalogs = analyzeDriverCatalog(linxDriversCatalogTsv);
+
+        CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(sampleMetadata.tumorSampleId(),
                 somaticVariantVcf,
                 patientTumorLocation,
@@ -128,6 +130,7 @@ class AnalysedPatientReporter {
                 .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
+                .reportableDriverCatalogs(reportableDriverCatalogs)
                 .viralInsertion(viralInsertions)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
@@ -140,6 +143,11 @@ class AnalysedPatientReporter {
         printReportState(report);
 
         return report;
+    }
+
+    @NotNull
+    public List<ReportableDriverCatalog> analyzeDriverCatalog(@NotNull String linxDriversCatalogTsv) throws IOException {
+        return HomozygousDisruptionAnalyzer.interpetDriverCatalog(linxDriversCatalogTsv);
     }
 
     @NotNull
@@ -204,7 +212,7 @@ class AnalysedPatientReporter {
 
     @NotNull
     private CopyNumberAnalysis analyzeCopyNumbers(@NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull String linxDriversTsv) throws IOException {
+            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
 
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
@@ -216,14 +224,7 @@ class AnalysedPatientReporter {
         List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
 
-        List<LinxDriver> delDisruptions = HomozygousDisruptionAnalyzer.readingLinxDriver(linxDriversTsv);
-        LOGGER.info(" Total homozygous disruptions: {}", delDisruptions.size());
-
-        return CopyNumberAnalyzer.run(purityContext,
-                exomeGeneCopyNumbers,
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation,
-                delDisruptions);
+        return CopyNumberAnalyzer.run(purityContext, exomeGeneCopyNumbers, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull

@@ -6,26 +6,31 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
 
 import org.junit.Test;
 
 public class HomozygousDisruptionAnalyzerTest {
-    private static final String LINX_DRIVERS_TSV = Resources.getResource("test_run/linx/sample.linx.drivers.tsv").getPath();
+    private static final String LINX_DRIVERS_CATALOG_TSV = Resources.getResource("test_run/linx/sample.drivers.catalog.tsv").getPath();
 
     @Test
-    public void canAnnotateDelDisruptions() throws IOException {
-        List<LinxDriver> homozygousDisruptionTsv = LinxDriverFile.read(LINX_DRIVERS_TSV);
-        assertEquals(2, homozygousDisruptionTsv.size());
+    public void canExtractOnlyHomozygousDisruptions() throws IOException{
 
-        List<LinxDriver> delDisruptions = HomozygousDisruptionAnalyzer.extractDelDisruptions(homozygousDisruptionTsv);
-        assertEquals(1, delDisruptions.size());
+        List<DriverCatalog> allDriversCatalog = DriverCatalogFile.read(LINX_DRIVERS_CATALOG_TSV);
+        assertEquals(3, allDriversCatalog.size());
 
-        LinxDriver homozygousDisruption1 = homozygousDisruptionTsv.get(1);
-        assertEquals(270, homozygousDisruption1.clusterId());
-        assertEquals("ATM", homozygousDisruption1.gene());
-        assertEquals("HOM_DEL_DISRUPTION", homozygousDisruption1.eventType());
+        List<ReportableDriverCatalog> homozygousDisruptions = HomozygousDisruptionAnalyzer.extractHomozygousDisruptions(allDriversCatalog);
+
+        assertEquals(1, homozygousDisruptions.size());
+
+        ReportableDriverCatalog homozygousDisruption1 = homozygousDisruptions.get(0);
+        assertEquals("9", homozygousDisruption1.chromosome());
+        assertEquals("p23-p24.1", homozygousDisruption1.chromosomeBand());
+        assertEquals("PTPRD", homozygousDisruption1.gene());
+        assertEquals(DriverType.HOM_DISRUPTION, homozygousDisruption1.driver());
     }
 
 }
