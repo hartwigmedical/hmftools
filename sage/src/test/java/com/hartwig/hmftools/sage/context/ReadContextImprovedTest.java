@@ -46,4 +46,38 @@ public class ReadContextImprovedTest {
         assertFalse(victim.centerMatch(0, "CC".getBytes()));
     }
 
+    @Test
+    public void testPloyAJitterCentreMatch() {
+
+        final ReadContextImproved victim = new ReadContextImproved(1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
+        assertTrue(victim.centerMatch(0, 0, "GAAAAAAAAT".getBytes()));
+        assertFalse(victim.centerMatch(0, 0, "GAAAAAAAAC".getBytes()));
+        assertFalse(victim.centerMatch(0, 0, "GAAAACAAAT".getBytes()));
+
+        assertTrue(victim.centerMatch(1, 0, "GAAAAAAAAAT".getBytes()));
+        assertFalse(victim.centerMatch(1, 0, "GAAAAAAAAAC".getBytes()));
+        assertFalse(victim.centerMatch(1, 0, "GAAAATAAAAT".getBytes()));
+
+        assertTrue(victim.centerMatch(-1, 0, "GAAAAAAAT".getBytes()));
+        assertFalse(victim.centerMatch(-1, 0, "GAAAAAAAC".getBytes()));
+        assertFalse(victim.centerMatch(-1, 0, "GAAAAGAAT".getBytes()));
+    }
+
+    @Test
+    public void testRepeatJitterCentreMatch() {
+
+        final ReadContextImproved victim = new ReadContextImproved(1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
+        assertTrue(victim.centerMatch(0, 0, "GACACACACT".getBytes()));
+        assertFalse(victim.centerMatch(0, 0, "GACACACACC".getBytes()));
+        assertFalse(victim.centerMatch(0, 0, "GACACACCCT".getBytes()));
+
+        assertTrue(victim.centerMatch(2, 0, "GACACACACACT".getBytes()));
+        assertFalse(victim.centerMatch(2, 0, "GACACACACACC".getBytes()));
+        assertFalse(victim.centerMatch(2, 0, "GACACACACCCT".getBytes()));
+
+        assertTrue(victim.centerMatch(-2, 0, "GACACACT".getBytes()));
+        assertFalse(victim.centerMatch(-2, 0, "GACACACC".getBytes()));
+        assertFalse(victim.centerMatch(-2, 0, "GACACTCT".getBytes()));
+    }
+
 }

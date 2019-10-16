@@ -142,18 +142,33 @@ public class ReadContextImproved {
 
     @VisibleForTesting
     boolean centerMatch(int otherRefIndex, byte[] otherBases) {
+        return centerMatch(0, otherRefIndex, otherBases);
+    }
+
+    @VisibleForTesting
+    boolean centerMatch(int jitter, int otherRefIndex, byte[] otherBases) {
         int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
         if (otherLeftCentreIndex < 0) {
             return false;
         }
 
-        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1;
-        if (otherRightCentreIndex >= otherBases.length) {
+        // last base
+        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1 + jitter;
+        if (otherRightCentreIndex >= otherBases.length || readBases[rightCentreIndex] != otherBases[otherRightCentreIndex]) {
             return false;
         }
 
-        for (int i = 0; i < centreLength(); i++) {
+        // Up to jitter
+        int lengthUntilJitter = centreLength() - 1 + Math.min(0, jitter);
+        for (int i = 0; i < lengthUntilJitter; i++) {
             if (readBases[leftCentreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
+                return false;
+            }
+        }
+
+        // Jitter
+        for (int i = 1; i <= jitter; i++) {
+            if (readBases[rightCentreIndex - 1 - jitter + i] != otherBases[otherRightCentreIndex - 1 - jitter + i]) {
                 return false;
             }
         }
@@ -235,7 +250,6 @@ public class ReadContextImproved {
     public String distanceCigar() {
         return distanceCigar;
     }
-
 
     @VisibleForTesting
     @NotNull
