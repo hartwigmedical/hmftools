@@ -2,28 +2,28 @@ package com.hartwig.hmftools.sage.context;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.count.EvictingLinkedMap;
+import com.hartwig.hmftools.sage.count.EvictingArray;
 
 import org.jetbrains.annotations.NotNull;
 
 public class TumorRefContextCandidates implements RefContextCandidates {
 
     private final String sample;
-    private final EvictingLinkedMap<Long, RefContext> rollingCandidates;
+    private final EvictingArray<RefContext> rollingCandidates;
     private final List<RefContext> savedCandidates = Lists.newArrayList();
 
     public TumorRefContextCandidates(String sample) {
         this.sample = sample;
-        final BiConsumer<Long, RefContext> evictionHandler = (position, refContext) -> {
+        final Consumer<RefContext> evictionHandler = (refContext) -> {
             if (!refContext.isAltsEmpty()) {
                 savedCandidates.add(refContext);
             }
         };
 
-        this.rollingCandidates = new EvictingLinkedMap<>(evictionHandler);
+        this.rollingCandidates = new EvictingArray<>(256, evictionHandler);
     }
 
     @NotNull
