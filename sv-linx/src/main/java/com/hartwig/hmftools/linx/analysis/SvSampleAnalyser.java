@@ -49,8 +49,11 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriverFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLinkFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
@@ -333,7 +336,6 @@ public class SvSampleAnalyser {
             }
         }
 
-
         if(mConfig.UploadToDB && dbAccess != null)
         {
             dbAccess.writeSvLinxData(mSampleId, linxSvData);
@@ -343,6 +345,25 @@ public class SvSampleAnalyser {
         }
 
         mPcWrite.stop();
+    }
+
+    public void writeSampleWithNoSVs(final String sampleId)
+    {
+        try
+        {
+            LinxSvDataFile.write(LinxSvDataFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxClusterFile.write(LinxClusterFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxLinkFile.write(LinxLinkFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxViralInsertFile.write(LinxViralInsertFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+
+            LinxFusionFile.write(LinxFusionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxBreakendFile.write(LinxBreakendFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxDriverFile.write(LinxDriverFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to write sample SV data: {}", e.toString());
+        }
     }
 
     private void annotateAndFilterVariants()

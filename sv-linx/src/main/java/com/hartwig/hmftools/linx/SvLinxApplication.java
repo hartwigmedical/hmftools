@@ -180,7 +180,13 @@ public class SvLinxApplication
 
             if(svDataList.isEmpty())
             {
-                LOGGER.debug("sample({}) has no SVs, totalProcessed({})", sampleId, count);
+                LOGGER.info("sample({}) has no passing SVs", sampleId);
+
+                if(config.isSingleSample())
+                {
+                    sampleAnalyser.writeSampleWithNoSVs(sampleId);
+                }
+
                 continue;
             }
 
