@@ -58,7 +58,9 @@ public final class FilterGermlineVariants {
                             }
                         }
 
-                        if (filterBiallelic || filterMinCopyNumberTumor || filterSomaticVariantInSameGene) {
+                        if (filterBiallelic || filterSomaticVariantInSameGene) {
+                            filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1));
+                        } else if (filterMinCopyNumberTumor) {
                             filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0));
                         }
                     }
