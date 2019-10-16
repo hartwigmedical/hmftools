@@ -30,7 +30,7 @@ public class HomozygousDisruptionAnalyzerTest {
         assertEquals("9", homozygousDisruption1.chromosome());
         assertEquals("p23-p24.1", homozygousDisruption1.chromosomeBand());
         assertEquals("PTPRD", homozygousDisruption1.gene());
-        assertEquals(DriverType.HOM_DISRUPTION, homozygousDisruption1.driver());
+        assertEquals(DriverType.HOM_DISRUPTION.toString().toLowerCase(), homozygousDisruption1.driver());
     }
 
 }
