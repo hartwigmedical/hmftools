@@ -77,7 +77,8 @@ public class GermlineVcfParser
 
         final File germlineVcf = new File(vcfFile);
 
-        processVCF(sampleId, germlineVcf);
+        if(!processVCF(sampleId, germlineVcf))
+            return false;
 
         if(mProgram.getVariants().isEmpty())
         {
@@ -87,10 +88,10 @@ public class GermlineVcfParser
         return true;
     }
 
-    private void processVCF(final String sampleId, final File vcf)
+    private boolean processVCF(final String sampleId, final File vcf)
     {
         if(vcf == null)
-            return;
+            return false;
 
         LOGGER.debug("Processing vcf: {}", vcf.getPath());
 
@@ -101,6 +102,9 @@ public class GermlineVcfParser
         catch (final TribbleException e)
         {
             LOGGER.error("Error with VCF file {}: {}", vcf.getPath(), e.getMessage());
+            return false;
         }
+
+        return true;
     }
 }
