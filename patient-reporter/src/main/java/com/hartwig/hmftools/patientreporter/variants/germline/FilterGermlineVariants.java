@@ -22,10 +22,10 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<GermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
+    public static List<InterpretGermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport, @NotNull ChordAnalysis chordAnalysis) {
-        List<GermlineVariant> filteredGermlineVariants = Lists.newArrayList();
+        List<InterpretGermlineVariant> filteredGermlineVariants = Lists.newArrayList();
 
         Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
@@ -35,12 +35,12 @@ public final class FilterGermlineVariants {
 
                 if ( chordAnalysis.hrdValue() >= 0.5) {
                     // report all reportable germline variants where HRD score is greater than 0.5
-                    filteredGermlineVariants.add(germlineVariant);
+                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0));
                 } else {
                     // Note: Reporting germline genes may not necessarily be present in driverGeneView!
                     if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                         // Report all germline variants on reportable oncogenes.
-                        filteredGermlineVariants.add(germlineVariant);
+                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1));
                     } else {
                         // Only report germline variants on TSGs if there is a 2nd hit.
                         boolean filterBiallelic = germlineVariant.biallelic();
@@ -59,13 +59,18 @@ public final class FilterGermlineVariants {
                         }
 
                         if (filterBiallelic || filterMinCopyNumberTumor || filterSomaticVariantInSameGene) {
-                            filteredGermlineVariants.add(germlineVariant);
+                            filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0));
                         }
                     }
                 }
             }
         }
         return filteredGermlineVariants;
+    }
+
+    @NotNull
+    private static InterpretGermlineVariant mergeInterpretGermlineVariants(@NotNull GermlineVariant germlineVariant, double driverLikelihood) {
+        return ImmutableInterpretGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }
 
     @NotNull

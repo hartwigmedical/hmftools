@@ -42,6 +42,7 @@ import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.InterpretGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
@@ -88,7 +89,7 @@ class AnalysedPatientReporter {
                 copyNumberAnalysis.exomeGeneCopyNumbers());
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
-        List<GermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
+        List<InterpretGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
                 bachelorCsv,
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
@@ -242,7 +243,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<GermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorCsv,
+    private List<InterpretGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorCsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
             @NotNull ChordAnalysis chordAnalysis) throws IOException {
 
