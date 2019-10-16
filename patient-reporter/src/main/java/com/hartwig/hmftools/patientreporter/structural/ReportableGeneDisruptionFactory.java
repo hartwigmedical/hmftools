@@ -26,14 +26,18 @@ final class ReportableGeneDisruptionFactory {
     public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
-        Set<Double> valueDisruption = Sets.newHashSet();
+        Set<Double> valueUndisruptedCopyNumber = Sets.newHashSet();
+        Set<Double> valueDisruptedCopyNumber = Sets.newHashSet();
+
         for (Pair<ReportableDisruption, ReportableDisruption> pairedDisruption : pairedMap.values()) {
             ReportableDisruption primaryDisruption = pairedDisruption.getLeft();
-            valueDisruption.add(primaryDisruption.undisruptedCopyNumber());
-            if (valueDisruption.size() > 1) {
-                LOGGER.warn("The undisrupted copy number of the sv is not the same");
+            valueUndisruptedCopyNumber.add(primaryDisruption.undisruptedCopyNumber());
+            valueDisruptedCopyNumber.add(primaryDisruption.ploidy());
+
+            if (valueDisruptedCopyNumber.size() > 1) {
+                LOGGER.warn("The disrupted copy number of the sv is not the same, the disrupted copies are: " + valueDisruptedCopyNumber);
             }
-            double lowestUndisruptedCopyNumber = valueDisruption.stream().findFirst().get();
+            double lowestUndisruptedCopyNumber = valueUndisruptedCopyNumber.stream().findFirst().get();
 
             reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                     .location(primaryDisruption.chromosome() + primaryDisruption.chrBand())
