@@ -204,8 +204,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(disruption.type()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurityFit))
                     .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.createContentCell(Double.toString(disruption.undisruptedCopyNumber()))
-                    .setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.undisruptedCopyNumber(),
+                    hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
         }
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
