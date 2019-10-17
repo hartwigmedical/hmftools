@@ -30,6 +30,7 @@ public final class FilterGermlineVariants {
 
             if (reportingGermlineGenes.contains(germlineVariant.gene())) {
                 // Note: Reporting germline genes may not necessarily be present in driverGeneView!
+                // Note: Reporting germline genes when chord predicted response is true
                 if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
                     filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
