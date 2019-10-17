@@ -52,15 +52,10 @@ public final class FilterGermlineVariants {
 
                     if (filterBiallelic || filterSomaticVariantInSameGene) {
                         filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
-                    } else if (filterMinCopyNumberTumor) {
+                    } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
                         filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
                     }
                 }
-
-                if (chordAnalysis.predictedResponseValue()) {
-                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
-                }
-
             }
         }
         return filteredGermlineVariants;
