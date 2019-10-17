@@ -57,6 +57,10 @@ public final class FilterGermlineVariants {
                     }
                 }
 
+                if (chordAnalysis.predictedResponseValue()) {
+                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
+                }
+
             }
         }
         return filteredGermlineVariants;
