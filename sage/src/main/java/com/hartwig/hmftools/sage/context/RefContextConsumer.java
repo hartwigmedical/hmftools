@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.context.ReadContextFactory.createSNVCont
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.cigar.CigarHandler;
 import com.hartwig.hmftools.sage.cigar.CigarTraversal;
 
@@ -62,15 +63,17 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private final RefSequence refGenome;
     private final RefContextCandidates candidates;
     private final boolean tumor;
+    private final SageConfig config;
 
-    public RefContextConsumer(boolean tumor, final int minQuality, @NotNull final GenomeRegion bounds, @NotNull final RefSequence refGenome,
-            @NotNull final RefContextCandidates candidates) {
+    public RefContextConsumer(boolean tumor, final SageConfig config, @NotNull final GenomeRegion bounds,
+            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
-        this.minQuality = minQuality;
+        this.minQuality = config.minMapQuality();
         this.candidates = candidates;
         this.tumor = tumor;
 
+        this.config = config;
     }
 
     @Override
@@ -123,7 +126,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null) {
+            if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
                 if (tumor) {
                     refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refBases));
                 } else {
@@ -143,7 +146,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(refBases, refIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null) {
+            if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
                 if (tumor) {
                     refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
                 } else {
@@ -174,7 +177,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final int baseQuality = record.getBaseQualities()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null) {
+            if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
 
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);

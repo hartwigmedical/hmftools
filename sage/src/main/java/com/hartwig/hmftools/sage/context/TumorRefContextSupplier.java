@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.SageConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,13 +27,13 @@ public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
     private final TumorRefContextCandidates candidates;
     private final RefContextConsumer refContextConsumer;
 
-    public TumorRefContextSupplier(final int minQuality, final String sample, @NotNull final GenomeRegion bounds,
+    public TumorRefContextSupplier(final SageConfig config, final String sample, @NotNull final GenomeRegion bounds,
             @NotNull final String bamFile, @NotNull final RefSequence refGenome) {
         this.sample = sample;
         this.bounds = bounds;
         this.bamFile = bamFile;
         this.candidates = new TumorRefContextCandidates(sample);
-        this.refContextConsumer = new RefContextConsumer(true, minQuality, bounds, refGenome, this.candidates);
+        this.refContextConsumer = new RefContextConsumer(true, config, bounds, refGenome, this.candidates);
     }
 
     @Override

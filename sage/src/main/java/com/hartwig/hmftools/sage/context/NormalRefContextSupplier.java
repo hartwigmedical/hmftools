@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.SageConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,13 +31,13 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final ContextSelector<ReadContextCounter> consumerSelector;
     private final int minQuality;
 
-    public NormalRefContextSupplier(final int minQuality, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
+    public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
             @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
-        this.minQuality = minQuality;
+        this.minQuality = config.minMapQuality();
         this.bounds = bounds;
         this.candidates = candidates;
         this.bamFile = bamFile;
-        refContextConsumer = new RefContextConsumer(false, minQuality, bounds, refGenome, candidates);
+        refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
         consumerSelector = new ContextSelector<>(candidates.refContexts()
                 .stream()
                 .flatMap(x -> x.alts().stream())

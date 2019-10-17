@@ -50,7 +50,7 @@ public class SagePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config.minMapQuality(), sample, region, bam, refSequence), executor)
+                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config, sample, region, bam, refSequence), executor)
                             .thenApply(this::altSupportFilter)
                             .thenApply(x -> new TumorReadContextSupplier(config.minMapQuality(), sample, region, bam, x).get())
                             .thenApply(this::qualityFilter);
@@ -67,7 +67,7 @@ public class SagePipeline {
                 sagePipelineData.addTumor(i, future.join());
             }
 
-            return new NormalRefContextSupplier(config.minMapQuality(),
+            return new NormalRefContextSupplier(config,
                     region,
                     config.referenceBam(),
                     refSequence,
