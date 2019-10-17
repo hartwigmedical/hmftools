@@ -32,7 +32,7 @@ public final class FilterGermlineVariants {
                 // Note: Reporting germline genes may not necessarily be present in driverGeneView!
                 if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
-                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1));
+                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
                 } else {
                     // Only report germline variants on TSGs if there is a 2nd hit.
                     boolean filterBiallelic = germlineVariant.biallelic();
@@ -51,7 +51,7 @@ public final class FilterGermlineVariants {
                     }
 
                     if (filterBiallelic || filterSomaticVariantInSameGene) {
-                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1));
+                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
                     } else if (filterMinCopyNumberTumor) {
                         filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
                     }
