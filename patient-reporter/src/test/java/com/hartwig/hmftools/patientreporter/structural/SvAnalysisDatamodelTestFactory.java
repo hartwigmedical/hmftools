@@ -28,7 +28,6 @@ final class SvAnalysisDatamodelTestFactory {
                 .chromosome(Strings.EMPTY)
                 .orientation(1)
                 .type(Strings.EMPTY)
-                .ploidy(1D)
                 .gene(Strings.EMPTY)
                 .chrBand(Strings.EMPTY)
                 .strand(1)
