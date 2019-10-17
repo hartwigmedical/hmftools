@@ -22,6 +22,16 @@ public final class RepeatContextFactory {
     }
 
     @NotNull
+    public static Optional<RepeatContext> repeats(int index, @NotNull final byte[] sequence) {
+        int startIndex = Math.max(0, index - 2 * MAX_LENGTH);
+        int actualIndex = Math.min(index, 2 * MAX_LENGTH);
+        int length = Math.min(sequence.length - startIndex, 4 * MAX_LENGTH + 1);
+
+        final String sequenceString = new String(sequence, startIndex, length);
+        return repeats(actualIndex, sequenceString);
+    }
+
+    @NotNull
     public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
         final Map<String, Integer> result = Maps.newHashMap();
 
@@ -49,6 +59,7 @@ public final class RepeatContextFactory {
         }
         return result.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).map(RepeatContextFactory::create);
     }
+
 
     @NotNull
     private static RepeatContext create(@NotNull Map.Entry<String, Integer> entry) {
@@ -85,4 +96,65 @@ public final class RepeatContextFactory {
 
         return count;
     }
+
+
+    //    @NotNull
+    //    public static Optional<RepeatContext> repeats(int index, @NotNull final byte[] sequence) {
+    //        final Map<String, Integer> result = Maps.newHashMap();
+    //
+    //        if (sequence.length >= index) {
+    //            for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {
+    //                for (int end = index; end <= Math.min(sequence.length, start + MAX_LENGTH); end++) {
+    //                    if (end != index) {
+    //                        int count = 0;
+    //                        int repeatIndex = Math.min(start, end);
+    //                        int repeatLength = Math.max(start, end) - repeatIndex + 1;
+    //
+    //                        count += backwardRepeats(repeatLength, repeatIndex, start, sequence);
+    //                        count += forwardRepeats(repeatLength, repeatIndex, start, sequence);
+    //
+    //                        if (count >= MIN_COUNT) {
+    //                            result.merge(new String(sequence, repeatIndex, repeatLength), count, Math::max);
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        } else {
+    //            LOGGER.warn("Repeats requested outside of sequence length");
+    //        }
+    //        return result.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).map(RepeatContextFactory::create);
+    //    }
+    //
+    //    @VisibleForTesting
+    //    static int forwardRepeats(int repeatLength, int repeatIndex, int sequenceIndex, @NotNull final byte[] sequence) {
+    //        int count = 0;
+    //        for (int j = 0; j < sequence.length - repeatLength + 1; j += repeatLength) {
+    //            int sequenceStartIndex = sequenceIndex + j;
+    //            for (int i = 0; i < repeatLength; i++) {
+    //                if (sequence[sequenceStartIndex + i] != sequence[repeatIndex + i]) {
+    //                    return count;
+    //                }
+    //            }
+    //            count++;
+    //        }
+    //
+    //        return count;
+    //    }
+    //
+    //    @VisibleForTesting
+    //    static int backwardRepeats(int repeatLength, int repeatIndex, int sequenceIndex, @NotNull final byte[] sequence) {
+    //        int count = 0;
+    //        for (int j = sequenceIndex - repeatLength; j >= 0; j -= repeatLength) {
+    //            int sequenceStartIndex = sequenceIndex + j;
+    //            for (int i = 0; i < repeatLength; i++) {
+    //                if (sequence[sequenceStartIndex + i] != sequence[repeatIndex + i]) {
+    //                    return count;
+    //                }
+    //            }
+    //            count++;
+    //        }
+    //
+    //        return count;
+    //    }
+
 }

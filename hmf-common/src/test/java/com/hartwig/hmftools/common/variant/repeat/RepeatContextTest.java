@@ -23,6 +23,9 @@ public class RepeatContextTest {
         assertEquals(Optional.empty(), RepeatContextFactory.repeats(9, sequence));
         assertEquals(Optional.empty(), RepeatContextFactory.repeats(10, sequence));
         assertRepeats("B", 4, RepeatContextFactory.repeats(11, sequence));
+        assertRepeats("B", 4, RepeatContextFactory.repeats(12, sequence));
+        assertRepeats("B", 4, RepeatContextFactory.repeats(13, sequence));
+        assertRepeats("B", 4, RepeatContextFactory.repeats(14, sequence));
     }
 
     private static void assertRepeats(final String expectedSequence, final int expectedCount, @NotNull final String victim) {

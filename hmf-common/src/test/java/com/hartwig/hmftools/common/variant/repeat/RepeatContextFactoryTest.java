@@ -12,6 +12,10 @@ public class RepeatContextFactoryTest {
     public void canDetermineRepeatContext() {
         String refGenome = "GATCGATCGATCGAAAAA";
 
+        assertRepeatContext(3, "GATC", 5, refGenome);
+        assertRepeatContext(3, "ATCG", 12, refGenome);
+        assertRepeatContext(5, "A", 15, refGenome);
+
         // First is right within the GATC repeats
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(5, refGenome);
         assert optRepeatContextGATC.isPresent();
@@ -62,4 +66,18 @@ public class RepeatContextFactoryTest {
         assertEquals(2, RepeatContextFactory.backwardRepeats("AC", "ACAC"));
         assertEquals(2, RepeatContextFactory.backwardRepeats("AC", "AACAC"));
     }
+
+    private static void assertRepeatContext(int expectedCount, String expectedBases, int index, String sequence) {
+        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
+        RepeatContext repeatContextGATC = optRepeatContextGATC.get();
+        assertEquals(expectedCount, repeatContextGATC.count());
+        assertEquals(expectedBases, repeatContextGATC.sequence());
+
+        optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence.getBytes());
+        repeatContextGATC = optRepeatContextGATC.get();
+        assertEquals(expectedCount, repeatContextGATC.count());
+        assertEquals(expectedBases, repeatContextGATC.sequence());
+    }
+
+
 }
