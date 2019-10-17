@@ -38,14 +38,13 @@ public final class ReportableVariantAnalyzer {
                 LOGGER.warn("No driver entry found for gene {}!", variant.gene());
             }
             for (InterpretGermlineVariant interpretGermlineVariant: germlineVariantsToReport) {
-                if (interpretGermlineVariant.germlineVariant().gene().contains(variant.gene())) {
+                if (interpretGermlineVariant.germlineVariant().gene().equals(variant.gene())) {
                     driverLikelihood = interpretGermlineVariant.driverLikelihood();
-                } else {
-                    driverLikelihood = catalog != null ? catalog.driverLikelihood() : null;
                 }
             }
+            double somaticDriverCatalog = catalog != null ? catalog.driverLikelihood() : null;
             reportableVariants.add(fromSomaticVariant(variant).driverCategory(driverGeneView.category(variant.gene()))
-                    .driverLikelihood(driverLikelihood)
+                    .driverLikelihood(driverLikelihood != null ? driverLikelihood : somaticDriverCatalog)
                     .notifyClinicalGeneticist(false)
                     .build());
         }
