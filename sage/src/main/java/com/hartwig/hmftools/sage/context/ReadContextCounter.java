@@ -16,6 +16,8 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private int full;
     private int partial;
     private int realigned;
+    private int lengthened;
+    private int shortened;
 
     private int quality;
     private int baseQuality;
@@ -66,6 +68,10 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
     public int mapQuality() {
         return mapQuality;
+    }
+
+    public int[] rcc() {
+        return new int[] { full, partial, realigned, shortened, lengthened };
     }
 
     public int[] rcq() {
