@@ -42,7 +42,7 @@ public final class ReportableVariantAnalyzer {
                     driverLikelihood = interpretGermlineVariant.driverLikelihood();
                 }
             }
-            double somaticDriverCatalog = catalog != null ? catalog.driverLikelihood() : null;
+            Double somaticDriverCatalog = catalog != null ? catalog.driverLikelihood() : null;
             reportableVariants.add(fromSomaticVariant(variant).driverCategory(driverGeneView.category(variant.gene()))
                     .driverLikelihood(driverLikelihood != null ? driverLikelihood : somaticDriverCatalog)
                     .notifyClinicalGeneticist(false)
