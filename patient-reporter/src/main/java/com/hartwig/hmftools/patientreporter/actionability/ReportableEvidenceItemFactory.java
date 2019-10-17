@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 
@@ -38,7 +39,7 @@ public final class ReportableEvidenceItemFactory {
         for (Map.Entry<SomaticVariant, List<EvidenceItem>> entry : evidenceItemMap.entrySet()) {
             String gene = entry.getKey().gene();
             for (DriverCatalog catalog : driverCatalog) {
-                if (catalog.gene().equals(gene)) {
+                if (catalog.gene().equals(gene) || !entry.getKey().canonicalCodingEffect().equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)) {
                     DriverInterpretation interpretation = DriverInterpretation.interpret(catalog.driverLikelihood());
                     if (interpretation == DriverInterpretation.HIGH) {
                         evidencePerVariantHighDriver.put(entry.getKey(), entry.getValue());
