@@ -103,7 +103,7 @@ public class ReportableVariantAnalyzerTest {
 
         assertEquals(GENE_2, reportableVariants.get(2).gene());
         assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
-        assertTrue(reportableVariants.get(2).biallelic());
+        assertFalse(reportableVariants.get(2).biallelic());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class ReportableVariantAnalyzerTest {
 
         assertEquals(GENE_2, reportableVariants.get(2).gene());
         assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
-        assertTrue(reportableVariants.get(2).biallelic());
+        assertFalse(reportableVariants.get(2).biallelic());
     }
 
     @NotNull
