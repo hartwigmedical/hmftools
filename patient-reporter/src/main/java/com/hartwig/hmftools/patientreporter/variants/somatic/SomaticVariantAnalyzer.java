@@ -57,7 +57,7 @@ public final class SomaticVariantAnalyzer {
 
         // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
         List<EvidenceItem> filteredEvidence =
-                ReportableEvidenceItemFactory.reportableFlatListDriversOnly(evidencePerVariant, driverCatalog);
+                ReportableEvidenceItemFactory.reportableFlatListDriversSomaticVariantOnly(evidencePerVariant, driverCatalog);
 
         // Check that all variants with high level evidence are reported (since they are in the driver catalog).
         for (Map.Entry<SomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {

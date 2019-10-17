@@ -29,11 +29,11 @@ public final class ReportableEvidenceItemFactory {
 
     @NotNull
     public static List<EvidenceItem> reportableFlatList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
-        return filterForReporting(toList(evidenceItemMap));
+        return filterForReporting(toList(evidenceItemMap)); // fusion and copy number
     }
 
     @NotNull
-    public static List<EvidenceItem> reportableFlatListDriversOnly(@NotNull Map<SomaticVariant, List<EvidenceItem>> evidenceItemMap,
+    public static List<EvidenceItem> reportableFlatListDriversSomaticVariantOnly(@NotNull Map<SomaticVariant, List<EvidenceItem>> evidenceItemMap,
             @NotNull List<DriverCatalog> driverCatalog) {
         Map<SomaticVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
         for (Map.Entry<SomaticVariant, List<EvidenceItem>> entry : evidenceItemMap.entrySet()) {
@@ -48,7 +48,7 @@ public final class ReportableEvidenceItemFactory {
             }
         }
 
-        return filterForReporting(toList(evidencePerVariantHighDriver));
+        return filterForReporting(toList(evidencePerVariantHighDriver)); // somatic variants
     }
 
     @NotNull
