@@ -65,7 +65,7 @@ public class SageVCF implements AutoCloseable {
                 .attribute("SDP", evidence.subprimeReadDepth())
                 .attribute("QUAL",
                         new int[] { readContextCounter.quality(), readContextCounter.baseQuality(), readContextCounter.mapQuality() })
-                .attribute("RCC", new int[] { readContextCounter.full(), readContextCounter.partial(), readContextCounter.realigned() })
+                .attribute("RCC", readContextCounter.rcc())
                 .attribute("RCQ", readContextCounter.rcq())
                 .alleles(alleles)
                 .make();
@@ -130,7 +130,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 3, VCFHeaderLineType.Integer, "[Full, Partial, Realigned]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 5, VCFHeaderLineType.Integer, "[Full, Partial, Realigned, J-, J+]"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
                 3,
                 VCFHeaderLineType.Integer,

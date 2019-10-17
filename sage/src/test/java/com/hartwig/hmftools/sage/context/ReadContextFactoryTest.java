@@ -13,7 +13,7 @@ public class ReadContextFactoryTest {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GAGGCTCATCTAGG";
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("2M3I9M", readSequence);
-        ReadContextImproved victium = ReadContextFactory.createInsertContext("AGGC", 1000, 1, record, refSequence.getBytes());
+        ReadContextImproved victium = ReadContextFactory.createInsertContext("AGGC", 1000, 1, record, 0, refSequence.getBytes());
         assertEquals("AGGCT", victium.centerBases());
     }
 
@@ -22,7 +22,7 @@ public class ReadContextFactoryTest {
         String refSequence = "TGAAAAAAAATCT";
         String readSequence = "TGAAAAAAAAATCT";
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("2M1I11M", readSequence);
-        ReadContextImproved victium = ReadContextFactory.createInsertContext("GA", 1000, 1, record, refSequence.getBytes());
+        ReadContextImproved victium = ReadContextFactory.createInsertContext("GA", 1000, 1, record, 0, refSequence.getBytes());
         assertEquals("GAAAAAAAAAT", victium.centerBases());
     }
 
@@ -31,7 +31,7 @@ public class ReadContextFactoryTest {
         String refSequence = "GATCATCTG";
         String readSequence = "GATCATCATCTG";
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3I8M", readSequence);
-        ReadContextImproved victium = ReadContextFactory.createInsertContext("ATCA", 1000, 1, record, refSequence.getBytes());
+        ReadContextImproved victium = ReadContextFactory.createInsertContext("ATCA", 1000, 1, record, 0, refSequence.getBytes());
         assertEquals("GATCATCATCT", victium.centerBases());
     }
 
@@ -40,7 +40,7 @@ public class ReadContextFactoryTest {
         String refSequence = "GATCATCATCTG";
         String readSequence = "GATCATCATCATCTG";
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3I10M", readSequence);
-        ReadContextImproved victium = ReadContextFactory.createInsertContext("ATCA", 1000, 1, record, refSequence.getBytes());
+        ReadContextImproved victium = ReadContextFactory.createInsertContext("ATCA", 1000, 1, record, 0, refSequence.getBytes());
         assertEquals("GATCATCATCATCT", victium.centerBases());
     }
 
@@ -49,7 +49,7 @@ public class ReadContextFactoryTest {
         String refSequence =  "ATGCGATCTTCC";
         String readSequence = "ATGCGATCAATCTTCC";
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("5M4I7M", readSequence);
-        ReadContextImproved victium = ReadContextFactory.createInsertContext("GATCA", 1000, 4, record, refSequence.getBytes());
+        ReadContextImproved victium = ReadContextFactory.createInsertContext("GATCA", 1000, 4, record, 0, refSequence.getBytes());
         assertEquals("GATCAA", victium.centerBases());
     }
 

@@ -95,22 +95,30 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
             coverage++;
             if (coverage < 1000) {
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                if (readIndex >= 0 && incrementCounters(readIndex, record.getReadBases())) {
-                    incrementQualityScores(readIndex, record);
-
-                    if (Math.abs(record.getInferredInsertSize()) >= 1000) {
-                        excessiveInferredSize++;
+                if (readIndex >= 0) {
+                    ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                    switch (match) {
+                        case FULL:
+                            full++;
+                            incrementQualityFlags(record);
+                            incrementQualityScores(readIndex, record);
+                            break;
+                        case PARTIAL:
+                            partial++;
+                            incrementQualityFlags(record);
+                            incrementQualityScores(readIndex, record);
+                            break;
+                        case JITTER_REMOVED:
+                            shortened++;
+                            break;
+                        case JITTER_ADDED:
+                            lengthened++;
+                            break;
+                        default:
+                            if (readContext.isWithin(record.getReadBases())) {
+                                realigned++;
+                            }
                     }
-
-                    if (!record.getReferenceName().equals(record.getMateReferenceName())) {
-                        inconsistentChromosome++;
-                    }
-
-                    if (!record.getProperPairFlag()) {
-                        improperPair++;
-                    }
-                } else if (readContext.isWithin(record.getReadBases())) {
-                    realigned++;
                 }
             }
         }
@@ -131,21 +139,6 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return Math.max(0, quality - 12);
     }
 
-    private boolean incrementCounters(int otherRefIndex, byte[] otherBases) {
-        final ReadContextMatch match = readContext.matchAtPosition(otherRefIndex, otherBases);
-        if (match == ReadContextMatch.FULL) {
-            full++;
-            return true;
-        }
-
-        if (match == ReadContextMatch.PARTIAL) {
-            partial++;
-            return true;
-        }
-
-        return false;
-    }
-
     public boolean incrementCounters(@NotNull final ReadContextImproved other) {
         if (readContext.isFullMatch(other)) {
             full++;
@@ -153,6 +146,20 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         }
 
         return false;
+    }
+
+    private void incrementQualityFlags(@NotNull final SAMRecord record) {
+        if (Math.abs(record.getInferredInsertSize()) >= 1000) {
+            excessiveInferredSize++;
+        }
+
+        if (!record.getReferenceName().equals(record.getMateReferenceName())) {
+            inconsistentChromosome++;
+        }
+
+        if (!record.getProperPairFlag()) {
+            improperPair++;
+        }
     }
 
 }

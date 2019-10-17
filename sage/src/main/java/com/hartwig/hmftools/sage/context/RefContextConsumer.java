@@ -128,7 +128,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
                 if (tumor) {
-                    refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refBases));
+                    refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refIndex, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
