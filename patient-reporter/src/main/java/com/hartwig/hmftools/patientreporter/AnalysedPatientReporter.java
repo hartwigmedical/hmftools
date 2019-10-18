@@ -68,7 +68,7 @@ class AnalysedPatientReporter {
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
-            @NotNull String bachelorCsv, @NotNull String chordPredictionFile, @NotNull String circosFile,
+            @NotNull String bachelorTSV, @NotNull String chordPredictionFile, @NotNull String circosFile,
             @NotNull String linxViralInsertionFile, @NotNull String linxDriversCatalogTsv, @Nullable String comments,
             boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
@@ -90,7 +90,7 @@ class AnalysedPatientReporter {
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
         List<InterpretGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
-                bachelorCsv,
+                bachelorTSV,
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
                 chordAnalysis);
@@ -243,13 +243,13 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<InterpretGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorCsv,
+    private List<InterpretGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTSV,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
             @NotNull ChordAnalysis chordAnalysis) throws IOException {
 
         List<GermlineVariant> variants =
-                BachelorFile.loadBachelorCsv(bachelorCsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
-        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorCsv);
+                BachelorFile.loadBachelorCsv(bachelorTSV).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTSV);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
