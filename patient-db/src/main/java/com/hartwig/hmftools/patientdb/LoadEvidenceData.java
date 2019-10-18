@@ -9,8 +9,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -31,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 public class LoadEvidenceData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
+
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
 
     private static final String DB_USER = "db_user";
@@ -38,7 +37,7 @@ public class LoadEvidenceData {
     private static final String DB_URL = "db_url";
 
     private static final String RUN_DIR = "run_dir";
-    private static final String TUMOR_SAMPLE = "tumor_sample";
+    private static final String SAMPLE = "sample";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -48,9 +47,9 @@ public class LoadEvidenceData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
-        final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
+        final String sample = cmd.getOptionValue(SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory, tumorSample)) {
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory, sample)) {
             printUsageAndExit(options);
         }
 
@@ -64,14 +63,14 @@ public class LoadEvidenceData {
 
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
-        LOGGER.info("sample: " + tumorSample);
+        LOGGER.info("Sample: " + sample);
 
         LOGGER.info("Reading primary tumor location from DB");
-        String primaryTumorLocation = dbAccess.readTumorLocation(tumorSample);
+        String primaryTumorLocation = dbAccess.readTumorLocation(sample);
         LOGGER.info("Primary tumor location: " + primaryTumorLocation);
 
         LOGGER.info("Reading somatic variants from DB");
-        List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(tumorSample);
+        List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
         List<SomaticVariant> passSomaticVariants = extractPassSomaticVariants(variants);
 
         LOGGER.info("All somatic Variants: " + variants.size());
@@ -84,10 +83,10 @@ public class LoadEvidenceData {
         LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
 
         LOGGER.info("Reading gene copy numbers and sample ploidy from DB");
-        List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(tumorSample);
+        List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
         LOGGER.info("All geneCopyNumbers: " + geneCopyNumbers.size());
 
-        PurityContext purityContext = dbAccess.readPurityContext(tumorSample);
+        PurityContext purityContext = dbAccess.readPurityContext(sample);
         assert purityContext != null;
 
         double ploidy = purityContext.bestFit().ploidy();
@@ -102,7 +101,7 @@ public class LoadEvidenceData {
                 evidencePerGeneCopyNumber.keySet().size());
 
         LOGGER.info("Reading gene fusions from DB");
-        List<ReportableGeneFusion> fusions = dbAccess.readGeneFusions(tumorSample);
+        List<ReportableGeneFusion> fusions = dbAccess.readGeneFusions(sample);
         LOGGER.info(" All fusions: " + fusions.size());
 
         Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion =
@@ -116,7 +115,7 @@ public class LoadEvidenceData {
         combinedEvidence.addAll(allEvidenceForCopyNumbers);
         combinedEvidence.addAll(allEvidenceForGeneFusions);
 
-        dbAccess.writeClinicalEvidence(tumorSample, combinedEvidence);
+        dbAccess.writeClinicalEvidence(sample, combinedEvidence);
     }
 
     @NotNull
@@ -152,8 +151,8 @@ public class LoadEvidenceData {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
-        options.addOption(RUN_DIR, true, "Path towards the folder containing patient run.");
-        options.addOption(TUMOR_SAMPLE, true, "Tumor sample of patient");
+        options.addOption(RUN_DIR, true, "Path towards the folder containing sample run.");
+        options.addOption(SAMPLE, true, "Tumor sample of run");
 
         return options;
     }
