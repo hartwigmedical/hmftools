@@ -58,19 +58,4 @@ public class AnalysedPatientReporterTest {
                 false));
     }
 
-    @Test
-    public void canMergeViralInsertions() throws IOException {
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(testAnalysedReportData());
-        List<ViralInsertion> viralInsertions = reporter.analyzeViralInsertions(LINX_VIRAL_INSERTIONS_FILE);
-        assertEquals(2, viralInsertions.size());
-
-        ViralInsertion viralInsertion1 = viralInsertions.get(0);
-        assertEquals("Human papillomavirus type 15", viralInsertion1.virus());
-        assertEquals(1, viralInsertion1.countVirus());
-
-        ViralInsertion viralInsertion2 = viralInsertions.get(1);
-        assertEquals("Human papillomavirus type 16", viralInsertion2.virus());
-        assertEquals(2, viralInsertion2.countVirus());
-
-    }
 }

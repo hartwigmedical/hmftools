@@ -5,13 +5,10 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
@@ -28,7 +25,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -46,6 +42,7 @@ import com.hartwig.hmftools.patientreporter.variants.germline.InterpretGermlineV
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
+import com.hartwig.hmftools.patientreporter.viralInsertion.InterpretViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.LogManager;
@@ -152,63 +149,9 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException {
-        List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(linxViralInsertionFile);
-        LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), linxViralInsertionFile);
+    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException{
+        return InterpretViralInsertion.interpretVirals(linxViralInsertionFile);
 
-        Map<AnalysedPatientReporter.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
-        for (LinxViralInsertFile viralInsertion : viralInsertFileList) {
-            AnalysedPatientReporter.VirusKey key = new AnalysedPatientReporter.VirusKey(viralInsertion.VirusId);
-            List<LinxViralInsertFile> items = itemsPerKey.get(key);
-
-            if (items == null) {
-                items = Lists.newArrayList();
-            }
-            items.add(viralInsertion);
-            itemsPerKey.put(key, items);
-        }
-
-        List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        String virusName = Strings.EMPTY;
-        int count = 0;
-        for (Map.Entry<AnalysedPatientReporter.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
-            List<LinxViralInsertFile> itemsForKey = entry.getValue();
-            for (LinxViralInsertFile virus : itemsForKey) {
-                virusName = virus.VirusName;
-            }
-
-            count = itemsForKey.size();
-
-            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).countVirus(count).build());
-        }
-        return viralInsertions;
-    }
-
-    private static class VirusKey {
-
-        @NotNull
-        private final String virusId;
-
-        private VirusKey(@NotNull final String virusId) {
-            this.virusId = virusId;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            final AnalysedPatientReporter.VirusKey key = (AnalysedPatientReporter.VirusKey) o;
-            return Objects.equals(virusId, key.virusId);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(virusId);
-        }
     }
 
     @NotNull
