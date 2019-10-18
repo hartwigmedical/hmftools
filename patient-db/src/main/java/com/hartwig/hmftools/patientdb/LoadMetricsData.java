@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -46,24 +45,13 @@ public final class LoadMetricsData {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
-            final File metricsDir = new File(sample);
-            if (metricsDir.isDirectory()) {
-                final String jdbcUrl = "jdbc:" + databaseUrl;
-                final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+            final String jdbcUrl = "jdbc:" + databaseUrl;
+            final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                LOGGER.info(String.format("Extracting and writing metrics for %s", tumorMetricsFile));
-                String refFile = WGSMetricsFile.generateFilename(sample, refMetricsFile);
-                String tumorFile = WGSMetricsFile.generateFilename(sample, tumorMetricsFile);
+            LOGGER.info("Extracting and writing metrics for {}", sample);
 
-                WGSMetrics metrics = WGSMetricsFile.read(refFile, tumorFile);
-                dbWriter.writeMetrics(tumorMetricsFile, metrics);
-            } else {
-                if (!metricsDir.exists()) {
-                    LOGGER.warn("Dir " + metricsDir + " does not exist.");
-                }
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("patient-db - load metrics data", options);
-            }
+            WGSMetrics metrics = WGSMetricsFile.read(refMetricsFile, tumorMetricsFile);
+            dbWriter.writeMetrics(sample, metrics);
         }
     }
 
