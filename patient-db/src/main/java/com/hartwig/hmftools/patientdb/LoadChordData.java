@@ -22,12 +22,13 @@ public final class LoadChordData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadChordData.class);
 
+    private static final String SAMPLE = "sample";
+
+    private static final String PREDICTION_FILE = "prediction_file";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-
-    private static final String TUMOR_SAMPLE = "tumor_sample";
-    private static final String PREDICTION_FILE = "prediction_file";
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createOptions();
@@ -37,7 +38,7 @@ public final class LoadChordData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
 
         final String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
-        final String sample = cmd.getOptionValue(TUMOR_SAMPLE);
+        final String sample = cmd.getOptionValue(SAMPLE);
 
         if (Utils.anyNull(userName, password, databaseUrl, predictionFile, sample)) {
             HelpFormatter formatter = new HelpFormatter();
@@ -74,11 +75,11 @@ public final class LoadChordData {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
+        options.addOption(SAMPLE, true, "The tumor sample.");
+        options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
-        options.addOption(TUMOR_SAMPLE, true, "The tumor sample.");
 
         return options;
     }

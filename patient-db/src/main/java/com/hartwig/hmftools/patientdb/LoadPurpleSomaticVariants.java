@@ -21,20 +21,22 @@ public class LoadPurpleSomaticVariants {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
 
-    private static final String TUMOR_SAMPLE = "tumor";
-    private static final String VCF = "somatic_vcf";
+    private static final String SAMPLE = "sample";
+    private static final String ALIAS = "alias";
+
+    private static final String SOMATIC_VCF = "somatic_vcf";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String ALIAS = "alias";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
-        final String vcfPath = cmd.getOptionValue(VCF);
+        final String tumorSample = cmd.getOptionValue(SAMPLE);
+        final String vcfPath = cmd.getOptionValue(SOMATIC_VCF);
 
         LOGGER.info("Reading data from {}", vcfPath);
         final SomaticVariantFactory factory = SomaticVariantFactory.unfilteredInstance();
@@ -49,8 +51,8 @@ public class LoadPurpleSomaticVariants {
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
-        options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
-        options.addOption(VCF, true, "Path to the PURPLE somatic variant VCF file.");
+        options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
+        options.addOption(SOMATIC_VCF, true, "Path to the PURPLE somatic variant VCF file.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
@@ -73,5 +75,4 @@ public class LoadPurpleSomaticVariants {
         final String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
-
 }

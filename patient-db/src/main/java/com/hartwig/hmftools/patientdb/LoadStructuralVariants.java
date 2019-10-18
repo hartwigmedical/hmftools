@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -31,21 +32,23 @@ public class LoadStructuralVariants {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
-    private static final String TUMOR_SAMPLE = "tumor";
-    private static final String VCF = "structural_vcf";
+    private static final String SAMPLE = "sample";
+    private static final String ALIAS = "alias";
+
+    private static final String SV_VCF = "structural_vcf";
+    private static final String SV_DATA_DIRECTORY = "sv_data_dir";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String ALIAS = "alias";
-    private static final String SV_DATA_DIRECTORY = "sv_data_dir";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        final String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
-        final String vcfPath = cmd.getOptionValue(VCF);
+        final String tumorSample = cmd.getOptionValue(SAMPLE);
+        final String vcfPath = cmd.getOptionValue(SV_VCF);
         final String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
 
         LOGGER.info("Reading data from {}", vcfPath);
@@ -76,51 +79,57 @@ public class LoadStructuralVariants {
         LOGGER.info("Complete");
     }
 
-    public static StructuralVariantData convertSvData(final EnrichedStructuralVariant var, int svId) {
+    @NotNull
+    private static StructuralVariantData convertSvData(@NotNull EnrichedStructuralVariant var, int svId) {
+        EnrichedStructuralVariantLeg start = var.start();
+        EnrichedStructuralVariantLeg end = var.end();
+        String filter = var.filter();
+        Boolean imprecise = var.imprecise();
+
         return ImmutableStructuralVariantData.builder()
                 .id(svId)
-                .startChromosome(var.chromosome(true))
-                .endChromosome(var.end() == null ? "0" : var.chromosome(false))
-                .startPosition(var.position(true))
-                .endPosition(var.end() == null ? -1 : var.position(false))
-                .startOrientation(var.orientation(true))
-                .endOrientation(var.end() == null ? (byte) 0 : var.orientation(false))
-                .startHomologySequence(var.start().homology())
-                .endHomologySequence(var.end() == null ? "" : var.end().homology())
+                .startChromosome(start.chromosome())
+                .endChromosome(end == null ? "0" : end.chromosome())
+                .startPosition(start.position())
+                .endPosition(end == null ? -1 : end.position())
+                .startOrientation(start.orientation())
+                .endOrientation(end == null ? (byte) 0 : end.orientation())
+                .startHomologySequence(start.homology())
+                .endHomologySequence(end == null ? "" : end.homology())
                 .ploidy(getValueNotNull(var.ploidy()))
-                .startAF(getValueNotNull(var.start().alleleFrequency()))
-                .endAF(var.end() == null ? 0 : getValueNotNull(var.end().alleleFrequency()))
-                .adjustedStartAF(getValueNotNull(var.start().adjustedAlleleFrequency()))
-                .adjustedEndAF(var.end() == null ? 0 : getValueNotNull(var.end().adjustedAlleleFrequency()))
-                .adjustedStartCopyNumber(getValueNotNull(var.start().adjustedCopyNumber()))
-                .adjustedEndCopyNumber(var.end() == null ? 0 : getValueNotNull(var.end().adjustedCopyNumber()))
-                .adjustedStartCopyNumberChange(getValueNotNull(var.start().adjustedCopyNumberChange()))
-                .adjustedEndCopyNumberChange(var.end() == null ? 0 : getValueNotNull(var.end().adjustedCopyNumberChange()))
+                .startAF(getValueNotNull(start.alleleFrequency()))
+                .endAF(end == null ? 0 : getValueNotNull(end.alleleFrequency()))
+                .adjustedStartAF(getValueNotNull(start.adjustedAlleleFrequency()))
+                .adjustedEndAF(end == null ? 0 : getValueNotNull(end.adjustedAlleleFrequency()))
+                .adjustedStartCopyNumber(getValueNotNull(start.adjustedCopyNumber()))
+                .adjustedEndCopyNumber(end == null ? 0 : getValueNotNull(end.adjustedCopyNumber()))
+                .adjustedStartCopyNumberChange(getValueNotNull(start.adjustedCopyNumberChange()))
+                .adjustedEndCopyNumberChange(end == null ? 0 : getValueNotNull(end.adjustedCopyNumberChange()))
                 .insertSequence(var.insertSequence())
                 .type(var.type())
-                .filter(var.filter())
-                .imprecise(var.imprecise())
+                .filter(filter != null ? filter : "Unknown")
+                .imprecise(imprecise != null ? imprecise : false)
                 .qualityScore(getValueNotNull(var.qualityScore()))
                 .event(getValueNotNull(var.event()))
-                .startTumorVariantFragmentCount(getValueNotNull(var.start().tumorVariantFragmentCount()))
-                .startTumorReferenceFragmentCount(getValueNotNull(var.start().tumorReferenceFragmentCount()))
-                .startNormalVariantFragmentCount(getValueNotNull(var.start().normalVariantFragmentCount()))
-                .startNormalReferenceFragmentCount(getValueNotNull(var.start().normalReferenceFragmentCount()))
-                .endTumorVariantFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().tumorVariantFragmentCount()))
-                .endTumorReferenceFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().tumorReferenceFragmentCount()))
-                .endNormalVariantFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().normalVariantFragmentCount()))
-                .endNormalReferenceFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().normalReferenceFragmentCount()))
-                .startIntervalOffsetStart(getValueNotNull(var.start().startOffset()))
-                .startIntervalOffsetEnd(getValueNotNull(var.start().endOffset()))
-                .endIntervalOffsetStart(var.end() == null ? 0 : getValueNotNull(var.end().startOffset()))
-                .endIntervalOffsetEnd(var.end() == null ? 0 : getValueNotNull(var.end().endOffset()))
-                .inexactHomologyOffsetStart(getValueNotNull(var.start().inexactHomologyOffsetStart()))
-                .inexactHomologyOffsetEnd(getValueNotNull(var.start().inexactHomologyOffsetEnd()))
+                .startTumorVariantFragmentCount(getValueNotNull(start.tumorVariantFragmentCount()))
+                .startTumorReferenceFragmentCount(getValueNotNull(start.tumorReferenceFragmentCount()))
+                .startNormalVariantFragmentCount(getValueNotNull(start.normalVariantFragmentCount()))
+                .startNormalReferenceFragmentCount(getValueNotNull(start.normalReferenceFragmentCount()))
+                .endTumorVariantFragmentCount(end == null ? 0 : getValueNotNull(end.tumorVariantFragmentCount()))
+                .endTumorReferenceFragmentCount(end == null ? 0 : getValueNotNull(end.tumorReferenceFragmentCount()))
+                .endNormalVariantFragmentCount(end == null ? 0 : getValueNotNull(end.normalVariantFragmentCount()))
+                .endNormalReferenceFragmentCount(end == null ? 0 : getValueNotNull(end.normalReferenceFragmentCount()))
+                .startIntervalOffsetStart(getValueNotNull(start.startOffset()))
+                .startIntervalOffsetEnd(getValueNotNull(start.endOffset()))
+                .endIntervalOffsetStart(end == null ? 0 : getValueNotNull(end.startOffset()))
+                .endIntervalOffsetEnd(end == null ? 0 : getValueNotNull(end.endOffset()))
+                .inexactHomologyOffsetStart(getValueNotNull(start.inexactHomologyOffsetStart()))
+                .inexactHomologyOffsetEnd(getValueNotNull(start.inexactHomologyOffsetEnd()))
                 .startLinkedBy(getValueNotNull(var.startLinkedBy()))
                 .endLinkedBy(getValueNotNull(var.endLinkedBy()))
                 .vcfId(getValueNotNull(var.id()))
-                .startRefContext(getValueNotNull(var.start().refGenomeContext()))
-                .endRefContext(var.end() == null ? "" : getValueNotNull(var.end().refGenomeContext()))
+                .startRefContext(getValueNotNull(start.refGenomeContext()))
+                .endRefContext(end == null ? "" : getValueNotNull(end.refGenomeContext()))
                 .recovered(var.recovered())
                 .recoveryMethod((getValueNotNull(var.recoveryMethod())))
                 .recoveryFilter(getValueNotNull(var.recoveryFilter()))
@@ -129,21 +138,21 @@ public class LoadStructuralVariants {
                 .insertSequenceRepeatType(getValueNotNull(var.insertSequenceRepeatType()))
                 .insertSequenceRepeatOrientation(getValueNotNull(var.insertSequenceRepeatOrientation()))
                 .insertSequenceRepeatCoverage(getValueNotNull(var.insertSequenceRepeatCoverage()))
-                .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
-                .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
+                .startAnchoringSupportDistance(start.anchoringSupportDistance())
+                .endAnchoringSupportDistance(end == null ? 0 : end.anchoringSupportDistance())
                 .build();
     }
 
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
-        options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
-        options.addOption(VCF, true, "Path to the PURPLE structural variant VCF file.");
+        options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
+        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
+        options.addOption(SV_VCF, true, "Path to the PURPLE structural variant VCF file.");
+        options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
-        options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
 
         return options;
     }

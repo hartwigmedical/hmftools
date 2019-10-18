@@ -37,6 +37,7 @@ public class LoadPurpleData {
     private static final String ALIAS = "alias";
     
     private static final String PURPLE_DIR = "purple_dir";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";

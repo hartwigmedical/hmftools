@@ -56,19 +56,19 @@ public final class LoadClinicalData {
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
 
     private static final String RUNS_DIRECTORY = "runs_dir";
+
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
+    private static final String LIMS_DIRECTORY = "lims_dir";
+    private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
+    private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-
-    private static final String LIMS_DIRECTORY = "lims_dir";
-
-    private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
-    private static final String TUMOR_LOCATION_SYMLINK = "tumor_location_symlink";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
@@ -443,20 +443,18 @@ public final class LoadClinicalData {
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
 
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
-
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
-
         options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
         options.addOption(TUMOR_LOCATION_SYMLINK, true, "Name of tumor location csv symlink.");
 
+        options.addOption(DB_USER, true, "Database user name.");
+        options.addOption(DB_PASS, true, "Database password.");
+        options.addOption(DB_URL, true, "Database url.");
         return options;
     }
 

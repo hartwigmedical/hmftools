@@ -32,11 +32,13 @@ public class LoadSomaticVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadSomaticVariants.class);
 
     private static final String SAMPLE = "sample";
-    private static final String HOTSPOT = "hotspot";
-    private static final String VCF_FILE = "vcf_file";
+
+    private static final String SOMATIC_VCF = "somatic_vcf";
+    private static final String HOTSPOT_TSV = "hotspot_tsv";
+    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
+
     private static final String PASS_FILTER = "pass_filter";
     private static final String SOMATIC_FILTER = "somatic_filter";
-    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -45,7 +47,7 @@ public class LoadSomaticVariants {
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
-        final String vcfFileLocation = cmd.getOptionValue(VCF_FILE);
+        final String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
         final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
         final String sample = cmd.getOptionValue(SAMPLE);
         final DatabaseAccess dbAccess = databaseAccess(cmd);
@@ -58,8 +60,8 @@ public class LoadSomaticVariants {
         }
 
         final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
-        if (cmd.hasOption(HOTSPOT)) {
-            final String hotspotFile = cmd.getOptionValue(HOTSPOT);
+        if (cmd.hasOption(HOTSPOT_TSV)) {
+            final String hotspotFile = cmd.getOptionValue(HOTSPOT_TSV);
             LOGGER.info("Reading hotspot file: {}", hotspotFile);
             compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
@@ -81,15 +83,15 @@ public class LoadSomaticVariants {
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
-        options.addOption(VCF_FILE, true, "Path to the vcf file.");
+        options.addOption(SAMPLE, true, "Tumor sample.");
+        options.addOption(SOMATIC_VCF, true, "Path to the somatic SNV/indel vcf file.");
+        options.addOption(HOTSPOT_TSV, true, "Location of hotspot tsv file");
         options.addOption(HIGH_CONFIDENCE_BED, true, "Path to the high confidence bed file.");
+        options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
+        options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(SAMPLE, true, "Tumor sample.");
-        options.addOption(PASS_FILTER, false, "Only load unfiltered variants");
-        options.addOption(SOMATIC_FILTER, false, "Only load variants flagged SOMATIC");
-        options.addOption(HOTSPOT, true, "Location of hotspot file");
 
         return options;
     }

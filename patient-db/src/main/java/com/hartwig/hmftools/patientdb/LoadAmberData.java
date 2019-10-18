@@ -30,8 +30,10 @@ public class LoadAmberData {
     private static final Logger LOGGER = LogManager.getLogger(LoadAmberData.class);
 
     private static final String SAMPLE = "sample";
+
     private static final String AMBER_DIR = "amber_dir";
     private static final String BED_FILE = "bed";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
@@ -92,5 +94,4 @@ public class LoadAmberData {
             dbAccess.writeAmberBAF(tumorSample, amber);
         }
     }
-
 }
