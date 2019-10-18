@@ -113,8 +113,8 @@ public final class Microhomology {
 
         int tailLength = readSequence.length - position - 1;
 
-        System.arraycopy(readSequence, 0, completeSequence, 0, position);
-        System.arraycopy(refBytes, 0, completeSequence, position, ref.length());
+        System.arraycopy(readSequence, 0, completeSequence, 0, position + 1);
+        System.arraycopy(refBytes, 1, completeSequence, position + 1, ref.length() - 1);
         System.arraycopy(readSequence, position + 1, completeSequence, completeSequence.length - tailLength, tailLength);
 
         return completeSequence;

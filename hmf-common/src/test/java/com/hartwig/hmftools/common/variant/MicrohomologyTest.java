@@ -113,6 +113,12 @@ public class MicrohomologyTest {
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(4, "GATCA".getBytes(), "AA")));
     }
 
+    @Test
+    public void testReconstructDeletedSequenceWithDelCombinedWithSnv() {
+        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "TT")));
+        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
+    }
+
     private void asserDeleteExpandRepeats(String expected, int position, int altLength, String readSequence) {
         MicrohomologyContext context = Microhomology.microhomologyAtDelete(position, altLength, readSequence.getBytes());
         MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
