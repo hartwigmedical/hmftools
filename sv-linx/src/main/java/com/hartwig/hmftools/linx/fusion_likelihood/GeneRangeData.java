@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 
@@ -23,6 +24,8 @@ public class GeneRangeData
     // intronic regions for each transcript
     private List<GenePhaseRegion> mTranscriptPhaseRegions;
 
+    private Boolean mStreamUpOnly; // if a gene is forced to only be a 5' or 3' partner
+
     // maps from the DEL or DUP bucket length array index to overlap count
     private Map<Integer,Long> mDelFusionBaseCounts;
     private Map<Integer,Long> mDupFusionBaseCounts;
@@ -34,6 +37,7 @@ public class GeneRangeData
     public static final int NON_PROX_TYPE_MEDIUM_INV = 1;
     public static final int NON_PROX_TYPE_LONG_SAME_ARM = 2;
     public static final int NON_PROX_TYPE_REMOTE = 3;
+    public static final int NON_PROX_TYPE_MAX = NON_PROX_TYPE_REMOTE + 1;
 
     public GeneRangeData(final EnsemblGeneData geneData)
     {
@@ -44,11 +48,13 @@ public class GeneRangeData
         Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
         ChromosomeArm = makeChrArmStr(geneData.Chromosome, Arm);
 
+        mStreamUpOnly = null;
+
         mDelFusionBaseCounts = Maps.newHashMap();
         mDupFusionBaseCounts = Maps.newHashMap();
 
-        mBaseOverlapCountUpstream = new long[NON_PROX_TYPE_REMOTE+1];
-        mBaseOverlapCountDownstream = new long[NON_PROX_TYPE_REMOTE+1];
+        mBaseOverlapCountUpstream = new long[NON_PROX_TYPE_MAX];
+        mBaseOverlapCountDownstream = new long[NON_PROX_TYPE_MAX];
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }
@@ -56,6 +62,11 @@ public class GeneRangeData
 
     public final List<GenePhaseRegion> getTranscriptPhaseRegions() { return mTranscriptPhaseRegions; }
     public void setTranscriptPhaseRegions(List<GenePhaseRegion> regions) { mTranscriptPhaseRegions = regions; }
+
+    public boolean isStreamRestricted() { return mStreamUpOnly != null; }
+    public boolean isOnlyUpstreamPartner() { return mStreamUpOnly != null ? mStreamUpOnly : false; }
+    public boolean isOnlyDownstreamPartner() { return mStreamUpOnly != null ? !mStreamUpOnly : false; }
+    public void setRestrictedStream(Boolean stream) { mStreamUpOnly = stream; }
 
     public Map<Integer,Long> getDelFusionBaseCounts() { return mDelFusionBaseCounts; }
     public Map<Integer,Long> getDupFusionBaseCounts() { return mDupFusionBaseCounts; }
@@ -74,6 +85,8 @@ public class GeneRangeData
     {
         mDelFusionBaseCounts.clear();
         mDupFusionBaseCounts.clear();
+        mBaseOverlapCountUpstream = new long[NON_PROX_TYPE_MAX];
+        mBaseOverlapCountDownstream = new long[NON_PROX_TYPE_MAX];
     }
 
     public long phasedRegionTotal()
@@ -91,6 +104,11 @@ public class GeneRangeData
     public boolean hasProteinCoding()
     {
         return mPhaseRegions.stream().anyMatch(GenePhaseRegion::proteinCoding);
+    }
+
+    public String toString()
+    {
+        return String.format("{}:{} {} {} -> {}", GeneData.GeneId, GeneData.GeneName, ChromosomeArm, GeneData.GeneStart, GeneData.GeneEnd);
     }
 
 }

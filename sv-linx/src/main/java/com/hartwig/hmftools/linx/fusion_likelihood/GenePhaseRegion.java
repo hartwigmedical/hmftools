@@ -277,7 +277,7 @@ public class GenePhaseRegion
 
     public final String toString()
     {
-        return String.format("range(%d - %d) len(%d) phases(%d) preGene(%d)",
-                mStart, mEnd, length(), mCombinedPhase, mCombinedPreGeneStatus);
+        return String.format("%s: range(%d - %d) len(%d) phases(%d) preGene(%d)",
+                GeneId, mStart, mEnd, length(), mCombinedPhase, mCombinedPreGeneStatus);
     }
 }
