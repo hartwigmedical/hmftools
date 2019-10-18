@@ -49,7 +49,7 @@ public final class SomaticVariantAnalyzer {
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
+                actionabilityAnalyzer.evidenceForSomaticVariants(variantsToReport, primaryTumorLocation);
 
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
