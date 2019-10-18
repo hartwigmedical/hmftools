@@ -2,11 +2,12 @@ package com.hartwig.hmftools.sage.context;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ReadContextImprovedTest {
 
-    private ReadContextImproved victim = new ReadContextImproved(0, 1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
+    private ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
     public void testRightFlankMatchingBases() {
@@ -47,7 +48,7 @@ public class ReadContextImprovedTest {
     @Test
     public void testPloyAJitterCentreMatch() {
 
-        ReadContextImproved victim = new ReadContextImproved(1, 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
+        ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "A", 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GAAAAAAAAT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAAAAAAC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAACAAAT".getBytes()));
@@ -62,7 +63,7 @@ public class ReadContextImprovedTest {
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAA".getBytes()));
 
 
-        victim = new ReadContextImproved(0, 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
+        victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GAAAAAAAAT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAAAAAAC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAACAAAT".getBytes()));
@@ -81,7 +82,7 @@ public class ReadContextImprovedTest {
     @Test
     public void testRepeatJitterCentreMatch() {
 
-         ReadContextImproved victim = new ReadContextImproved(2, 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
+         ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "AC", 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GACACACACT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACCCT".getBytes()));
@@ -94,7 +95,7 @@ public class ReadContextImprovedTest {
         assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACTCT".getBytes()));
 
-        victim = new ReadContextImproved(0, 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
+        victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GACACACACT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACCCT".getBytes()));
@@ -107,5 +108,25 @@ public class ReadContextImprovedTest {
         assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACTCT".getBytes()));
     }
+
+    @Test
+    public void testPartialMatchMustHaveAtLeastOneFullSide() {
+
+        ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
+
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(1, "GT".getBytes()));
+
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(1, "GTAA".getBytes()));
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(0, "TAA".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "TA".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "T".getBytes()));
+    }
+
+
+
+
 
 }

@@ -78,6 +78,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return new int[] { improperPair, inconsistentChromosome, excessiveInferredSize };
     }
 
+    @NotNull
     public ReadContextImproved readContext() {
         return readContext;
     }

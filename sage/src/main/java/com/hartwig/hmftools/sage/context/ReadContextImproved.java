@@ -21,9 +21,11 @@ public class ReadContextImproved {
     private final byte[] readBases;
     private final int distance;
     private final String distanceCigar;
+    private final String repeat;
+    private final String microhomology;
     private final int jitter;
 
-    public ReadContextImproved(final int jitter, final int refPosition, final int readIndex, final int leftCentreIndex,
+    public ReadContextImproved(final String microhomology, final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
             final int rightCentreIndex, final int flankSize, final byte[] readBases) {
         assert (leftCentreIndex > 0);
         assert (rightCentreIndex < readBases.length);
@@ -37,10 +39,12 @@ public class ReadContextImproved {
         this.readIndex = readIndex;
         this.distance = 0;
         this.distanceCigar = Strings.EMPTY;
-        this.jitter = Math.abs(jitter);
+        this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
+        this.repeat = repeat;
+        this.microhomology = microhomology;
     }
 
-    public ReadContextImproved(final int jitter, final int refPosition, final int readIndex, final int leftCentreIndex,
+    public ReadContextImproved(final String microhomology, final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
             final int rightCentreIndex, final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -55,8 +59,9 @@ public class ReadContextImproved {
         ReadContextDistance distance = new ReadContextDistance(leftFlankStartIndex(), rightFlankEndIndex(), record, refBases);
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
-        this.jitter = Math.abs(jitter);
-
+        this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
+        this.repeat = repeat;
+        this.microhomology = microhomology;
     }
 
     public int position() {
@@ -136,8 +141,12 @@ public class ReadContextImproved {
             return NONE;
         }
 
+        if (leftFlankingBases != flankSize && rightFlankingBases != flankSize) {
+            return NONE;
+        }
+
         if (centreMatch == ReadContextMatch.FULL) {
-            return leftFlankingBases == flankSize && rightFlankingBases == flankSize ? FULL : PARTIAL;
+            return leftFlankingBases == rightFlankingBases ? FULL : PARTIAL;
         }
 
         return centreMatch;
@@ -301,5 +310,15 @@ public class ReadContextImproved {
     @NotNull
     String centerBases() {
         return new String(readBases, leftCentreIndex, rightCentreIndex - leftCentreIndex + 1);
+    }
+
+    @NotNull
+    public String microhomology() {
+        return microhomology;
+    }
+
+    @NotNull
+    public String repeat() {
+        return repeat;
     }
 }
