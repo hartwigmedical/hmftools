@@ -15,30 +15,17 @@ public class RepeatContextFactoryTest {
         assertRepeatContext(3, "GATC", 5, refGenome);
         assertRepeatContext(3, "ATCG", 12, refGenome);
         assertRepeatContext(5, "A", 15, refGenome);
+    }
 
-        // First is right within the GATC repeats
-        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(5, refGenome);
-        assert optRepeatContextGATC.isPresent();
+    @Test
+    public void snvRepeat() {
+        String refGenome = "GATCCCCCC";
+        assertEquals("", RepeatContextFactory.repeats(2, refGenome).map(RepeatContext::sequence).orElse(""));
+        assertEquals("C", RepeatContextFactory.repeats(3, refGenome).map(RepeatContext::sequence).orElse(""));
 
-        RepeatContext repeatContextGATC = optRepeatContextGATC.get();
-        assertEquals(3, repeatContextGATC.count());
-        assertEquals("GATC", repeatContextGATC.sequence());
-
-        // Then one right at the final trailing G.
-        Optional<RepeatContext> optRepeatContextATCG = RepeatContextFactory.repeats(12, refGenome);
-        assert optRepeatContextATCG.isPresent();
-
-        RepeatContext repeatContextATCG = optRepeatContextATCG.get();
-        assertEquals(3, repeatContextATCG.count());
-        assertEquals("ATCG", repeatContextATCG.sequence());
-
-        // Finally one in the A repeat section at the end.
-        Optional<RepeatContext> optRepeatContextA = RepeatContextFactory.repeats(15, refGenome);
-        assert optRepeatContextA.isPresent();
-
-        RepeatContext repeatContextA = optRepeatContextA.get();
-        assertEquals(5, repeatContextA.count());
-        assertEquals("A", repeatContextA.sequence());
+        refGenome = "GGGGGGATC";
+        assertEquals("G", RepeatContextFactory.repeats(5, refGenome).map(RepeatContext::sequence).orElse(""));
+        assertEquals("", RepeatContextFactory.repeats(6, refGenome).map(RepeatContext::sequence).orElse(""));
     }
 
     @Test
@@ -78,6 +65,5 @@ public class RepeatContextFactoryTest {
         assertEquals(expectedCount, repeatContextGATC.count());
         assertEquals(expectedBases, repeatContextGATC.sequence());
     }
-
 
 }
