@@ -970,13 +970,15 @@ public class FusionDisruptionAnalyser
                 continue;
 
             // gather up all other candidate fusions for this pairing and take the highest priority
-            List<GeneFusion> similarFusions = mFusions.stream()
+            List<GeneFusion> similarFusions = Lists.newArrayList(fusion);
+
+            similarFusions.addAll(mFusions.stream()
                     .filter(x -> !x.reportable())
                     .filter(x -> x.isViable() && !x.neoEpitopeOnly())
                     .filter(x -> x != fusion)
                     .filter(x -> x.name().equals(fusion.name()))
                     .filter(x -> !usedSvIds.contains(x.upstreamTrans().gene().id()) && !usedSvIds.contains(x.downstreamTrans().gene().id()))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
 
             if(!mLogRepeatedGenePairs)
                 genePairs.add(fusion.name());

@@ -439,13 +439,23 @@ public class FusionFinder
                     featureEnd = max(transProteinData.get(j).SeqEnd, featureEnd);
             }
 
-            addProteinFeature(downTrans, true, feature, featureStart, featureEnd);
+            boolean pfPreserved = proteinFeaturePreserved(downTrans, true, feature, featureStart, featureEnd);
+
+            if(!pfPreserved && downTrans.gene().StableId.equals(fusion.upstreamTrans().gene().StableId))
+            {
+                // for same gene fusions, check whether the upstream transcript section preserves this feature
+                pfPreserved = proteinFeaturePreserved(fusion.upstreamTrans(), false, feature, featureStart, featureEnd);
+            }
+
+            downTrans.addProteinFeature(feature, pfPreserved);
+
             processedFeatures.add(feature);
         }
 
     }
 
-    private void addProteinFeature(final Transcript transcript, boolean isDownstream, final String feature, int featureStart, int featureEnd)
+    private static boolean proteinFeaturePreserved(
+            final Transcript transcript, boolean isDownstream, final String feature, int featureStart, int featureEnd)
     {
         boolean featurePreserved;
 
@@ -474,7 +484,7 @@ public class FusionFinder
             }
         }
 
-        transcript.addProteinFeature(feature, featurePreserved);
+        return featurePreserved;
     }
 
     public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
