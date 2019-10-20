@@ -20,7 +20,7 @@ public class ReadContextFactory {
     private static final int DEFAULT_BUFFER = 25;
 
     @NotNull
-    public static ReadContextImproved createDelContext(@NotNull final String ref, int refPosition, int readIndex,
+    public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex,
             @NotNull final SAMRecord record, int refIndex, byte[] refBases) {
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
@@ -38,7 +38,7 @@ public class ReadContextFactory {
         }
 
         final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
-        return new ReadContextImproved(microhomologyContext.toString(),
+        return new ReadContext(microhomologyContext.toString(),
                 repeat,
                 refPosition,
                 readIndex,
@@ -50,7 +50,7 @@ public class ReadContextFactory {
     }
 
     @NotNull
-    public static ReadContextImproved createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
+    public static ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
             @NotNull final SAMRecord record, final int refIndex, byte[] refBases) {
 
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
@@ -68,7 +68,7 @@ public class ReadContextFactory {
         }
 
         final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
-        return new ReadContextImproved(microhomologyContext.toString(),
+        return new ReadContext(microhomologyContext.toString(),
                 repeat,
                 refPosition,
                 readIndex,
@@ -80,7 +80,7 @@ public class ReadContextFactory {
     }
 
     @NotNull
-    public static ReadContextImproved createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, int refIndex,
+    public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, int refIndex,
             byte[] refBases) {
 
         int startIndex = readIndex;
@@ -92,10 +92,9 @@ public class ReadContextFactory {
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-
         final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
 
-        return new ReadContextImproved(Strings.EMPTY,
+        return new ReadContext(Strings.EMPTY,
                 repeat,
                 refPosition,
                 readIndex,
@@ -107,8 +106,8 @@ public class ReadContextFactory {
     }
 
     @NotNull
-    public static ReadContextImproved dummy(int refPosition, @NotNull final String alt) {
-        return new ReadContextImproved(Strings.EMPTY, Strings.EMPTY, refPosition, 0, 0, 0, DEFAULT_BUFFER, alt.getBytes());
+    public static ReadContext dummy(int refPosition, @NotNull final String alt) {
+        return new ReadContext(Strings.EMPTY, Strings.EMPTY, refPosition, 0, 0, 0, DEFAULT_BUFFER, alt.getBytes());
     }
 
 }

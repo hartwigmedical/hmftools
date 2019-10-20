@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class ReadContextImprovedTest {
+public class ReadContextTest {
 
-    private ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
+    private ReadContext victim = new ReadContext(Strings.EMPTY, "", 1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
     public void testRightFlankMatchingBases() {
@@ -48,7 +48,7 @@ public class ReadContextImprovedTest {
     @Test
     public void testPloyAJitterCentreMatch() {
 
-        ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "A", 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
+        ReadContext victim = new ReadContext(Strings.EMPTY, "A", 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GAAAAAAAAT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAAAAAAC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAACAAAT".getBytes()));
@@ -62,8 +62,7 @@ public class ReadContextImprovedTest {
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAAGAAT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAA".getBytes()));
 
-
-        victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
+        victim = new ReadContext(Strings.EMPTY, "", 1000, 2, 2, 11, 2, "GGGAAAAAAAATTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GAAAAAAAAT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAAAAAAC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GAAAACAAAT".getBytes()));
@@ -82,37 +81,37 @@ public class ReadContextImprovedTest {
     @Test
     public void testRepeatJitterCentreMatch() {
 
-         ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "AC", 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
+        ReadContext victim = new ReadContext(Strings.EMPTY, "AC", 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GACACACACT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACCCT".getBytes()));
 
-        assertEquals(ReadContextMatch.JITTER_ADDED, victim.centreMatch( 0, "GACACACACACT".getBytes()));
+        assertEquals(ReadContextMatch.JITTER_ADDED, victim.centreMatch(0, "GACACACACACT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACACC".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACACCCT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACCCT".getBytes()));
 
-        assertEquals(ReadContextMatch.JITTER_REMOVED, victim.centreMatch( 0, "GACACACT".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACC".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACTCT".getBytes()));
+        assertEquals(ReadContextMatch.JITTER_REMOVED, victim.centreMatch(0, "GACACACT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACC".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACTCT".getBytes()));
 
-        victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
+        victim = new ReadContext(Strings.EMPTY, "", 1000, 2, 2, 11, 2, "GGGACACACACTTT".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.centreMatch(0, "GACACACACT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACC".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACCCT".getBytes()));
 
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACACACT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACACT".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACACC".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACACCCT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACACCCT".getBytes()));
 
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACT".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACACC".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.centreMatch( 0, "GACACTCT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACACC".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.centreMatch(0, "GACACTCT".getBytes()));
     }
 
     @Test
     public void testPartialMatchMustHaveAtLeastOneFullSide() {
 
-        ReadContextImproved victim = new ReadContextImproved(Strings.EMPTY, "", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        ReadContext victim = new ReadContext(Strings.EMPTY, "", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
         assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
@@ -125,8 +124,12 @@ public class ReadContextImprovedTest {
         assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "T".getBytes()));
     }
 
-
-
-
+    @Test
+    public void testJitterPolyT() {
+        ReadContext victim = new ReadContext(Strings.EMPTY, "T", 1000, 4, 4, 6, 4, "GATCATTTTTTGC".getBytes());
+        assertEquals(ReadContextMatch.FULL,           victim.matchAtPosition(4, "GATCATTTTTTGC".getBytes()));
+        assertEquals(ReadContextMatch.JITTER_REMOVED, victim.matchAtPosition(4, "GATCATTTTTGC".getBytes()));
+        assertEquals(ReadContextMatch.JITTER_ADDED,   victim.matchAtPosition(4, "GATCATTTTTTTGC".getBytes()));
+    }
 
 }

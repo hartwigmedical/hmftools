@@ -11,7 +11,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private final VariantHotspot hotspot;
-    private final ReadContextImproved readContext;
+    private final ReadContext readContext;
 
     private int full;
     private int partial;
@@ -29,7 +29,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
     private int coverage;
 
-    public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContextImproved readContext) {
+    public ReadContextCounter(@NotNull final VariantHotspot hotspot, @NotNull final ReadContext readContext) {
         assert (readContext.isComplete());
         this.hotspot = hotspot;
         this.readContext = readContext;
@@ -79,7 +79,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     }
 
     @NotNull
-    public ReadContextImproved readContext() {
+    public ReadContext readContext() {
         return readContext;
     }
 
@@ -140,7 +140,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return Math.max(0, quality - 12);
     }
 
-    public boolean incrementCounters(@NotNull final ReadContextImproved other) {
+    public boolean incrementCounters(@NotNull final ReadContext other) {
         if (readContext.isFullMatch(other)) {
             full++;
             return true;

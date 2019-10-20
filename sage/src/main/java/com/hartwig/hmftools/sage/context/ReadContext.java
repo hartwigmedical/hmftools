@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextImproved {
+public class ReadContext {
 
     private final int position;
     private final int readIndex;
@@ -25,7 +25,7 @@ public class ReadContextImproved {
     private final String microhomology;
     private final int jitter;
 
-    public ReadContextImproved(final String microhomology, final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
+    public ReadContext(final String microhomology, final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
             final int rightCentreIndex, final int flankSize, final byte[] readBases) {
         assert (leftCentreIndex > 0);
         assert (rightCentreIndex < readBases.length);
@@ -44,7 +44,7 @@ public class ReadContextImproved {
         this.microhomology = microhomology;
     }
 
-    public ReadContextImproved(final String microhomology, final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
+    public ReadContext(final String microhomology, final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
             final int rightCentreIndex, final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -98,7 +98,7 @@ public class ReadContextImproved {
         return leftFlankLength() == flankSize && rightFlankLength() == flankSize;
     }
 
-    public boolean isFullMatch(@NotNull final ReadContextImproved other) {
+    public boolean isFullMatch(@NotNull final ReadContext other) {
         return isComplete() && other.isComplete() && centreMatch(other.readIndex, other.readBases) == ReadContextMatch.FULL
                 && leftFlankMatchingBases(other.readIndex, other.readBases) == flankSize
                 && rightFlankMatchingBases(other.readIndex, other.readBases) == flankSize;

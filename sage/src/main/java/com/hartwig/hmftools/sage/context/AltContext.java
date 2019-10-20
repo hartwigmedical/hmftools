@@ -37,7 +37,7 @@ public class AltContext implements VariantHotspot {
         this.altReads++;
     }
 
-    public void addReadContext(@NotNull final ReadContextImproved newReadContext) {
+    public void addReadContext(@NotNull final ReadContext newReadContext) {
         if (readContextCounter != null) {
             throw new IllegalStateException();
         }
