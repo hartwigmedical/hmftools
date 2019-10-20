@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.variant.repeat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
@@ -18,40 +20,71 @@ public class RepeatContextFactoryTest {
     }
 
     @Test
+    public void testForwardsAndBackwardsCount() {
+        assertRepeatContext(1, 6, 3, "CA", 5, "TCACACATTT");
+
+        assertRepeatContext(0, 5, 3, "AC", 0, "ACACACTTTT");
+        assertRepeatContext(0, 5, 3, "AC", 1, "ACACACTTTT");
+        assertRepeatContext(0, 5, 3, "AC", 2, "ACACACTTTT");
+        assertRepeatContext(0, 5, 3, "AC", 3, "ACACACTTTT");
+        assertRepeatContext(0, 5, 3, "AC", 4, "ACACACTTTT");
+        assertRepeatContext(0, 5, 3, "AC", 5, "ACACACTTTT");
+        assertRepeatContext(6, 9, 4, "T", 6, "ACACACTTTT");
+        assertRepeatContext(6, 9, 4, "T", 7, "ACACACTTTT");
+        assertRepeatContext(6, 9, 4, "T", 8, "ACACACTTTT");
+        assertRepeatContext(6, 9, 4, "T", 9, "ACACACTTTT");
+    }
+
+    @Test
     public void snvRepeat() {
-        String refGenome = "GATCCCCCC";
-        assertEquals("", RepeatContextFactory.repeats(2, refGenome).map(RepeatContext::sequence).orElse(""));
-        assertEquals("C", RepeatContextFactory.repeats(3, refGenome).map(RepeatContext::sequence).orElse(""));
+        String refGenome = "GATCCCCCCT";
+        assertNone(0, refGenome);
+        assertNone(1, refGenome);
+        assertNone(2, refGenome);
+        assertRepeatContext(3, 8, 6, "C", 3, refGenome);
+        assertRepeatContext(3, 8, 6, "C", 4, refGenome);
+        assertRepeatContext(3, 8, 6, "C", 5, refGenome);
+        assertRepeatContext(3, 8, 6, "C", 6, refGenome);
+        assertRepeatContext(3, 8, 6, "C", 7, refGenome);
+        assertRepeatContext(3, 8, 6, "C", 8, refGenome);
 
         refGenome = "GGGGGGATC";
-        assertEquals("G", RepeatContextFactory.repeats(5, refGenome).map(RepeatContext::sequence).orElse(""));
-        assertEquals("", RepeatContextFactory.repeats(6, refGenome).map(RepeatContext::sequence).orElse(""));
+        assertRepeatContext(0, 5, 6, "G", 0, refGenome);
+        assertRepeatContext(0, 5, 6, "G", 1, refGenome);
+        assertRepeatContext(0, 5, 6, "G", 2, refGenome);
+        assertRepeatContext(0, 5, 6, "G", 3, refGenome);
+        assertRepeatContext(0, 5, 6, "G", 4, refGenome);
+        assertRepeatContext(0, 5, 6, "G", 5, refGenome);
+        assertRepeatContext(0, 5, 6, "G", 5, refGenome);
+        assertNone(6, refGenome);
+    }
+
+
+    @Test
+    public void testMatchRepeatInBytes() {
+        final String sequence = "AAGATCATC";
+        assertFalse(RepeatContextFactory.match(3, 3, 0, sequence.getBytes()));
+        assertFalse(RepeatContextFactory.match(3, 3, 1, sequence.getBytes()));
+        assertFalse(RepeatContextFactory.match(3, 3, 2, sequence.getBytes()));
+        assertTrue(RepeatContextFactory.match(3, 3, 3, sequence.getBytes()));
+        assertFalse(RepeatContextFactory.match(3, 3, 4, sequence.getBytes()));
+        assertFalse(RepeatContextFactory.match(3, 3, 5, sequence.getBytes()));
+        assertTrue(RepeatContextFactory.match(3, 3, 6, sequence.getBytes()));
+        assertFalse(RepeatContextFactory.match(3, 3, 7, sequence.getBytes()));
     }
 
     @Test
-    public void canCountForwardRepeats() {
-        assertEquals(1, RepeatContextFactory.forwardRepeats("A", "A"));
-        assertEquals(2, RepeatContextFactory.forwardRepeats("A", "AA"));
-        assertEquals(3, RepeatContextFactory.forwardRepeats("A", "AAA"));
-
-        assertEquals(0, RepeatContextFactory.forwardRepeats("AC", "A"));
-        assertEquals(1, RepeatContextFactory.forwardRepeats("AC", "AC"));
-        assertEquals(1, RepeatContextFactory.forwardRepeats("AC", "ACA"));
-        assertEquals(2, RepeatContextFactory.forwardRepeats("AC", "ACAC"));
-        assertEquals(2, RepeatContextFactory.forwardRepeats("AC", "ACACA"));
+    public void testForwardRepeats() {
+        final String sequence = "AAGATCATC";
+        assertEquals(1, RepeatContextFactory.forwardRepeats(6, 3,  sequence.getBytes()));
+        assertEquals(2, RepeatContextFactory.forwardRepeats(3, 3,  sequence.getBytes()));
     }
 
     @Test
-    public void canCountBackwardsRepeats() {
-        assertEquals(1, RepeatContextFactory.backwardRepeats("A", "A"));
-        assertEquals(2, RepeatContextFactory.backwardRepeats("A", "AA"));
-        assertEquals(3, RepeatContextFactory.backwardRepeats("A", "AAA"));
-
-        assertEquals(0, RepeatContextFactory.backwardRepeats("AC", "A"));
-        assertEquals(1, RepeatContextFactory.backwardRepeats("AC", "AC"));
-        assertEquals(1, RepeatContextFactory.backwardRepeats("AC", "AAC"));
-        assertEquals(2, RepeatContextFactory.backwardRepeats("AC", "ACAC"));
-        assertEquals(2, RepeatContextFactory.backwardRepeats("AC", "AACAC"));
+    public void testBackwardRepeats() {
+        final String sequence = "AAGATCATCATC";
+        assertEquals(1, RepeatContextFactory.backwardRepeats(6, 3,  sequence.getBytes()));
+        assertEquals(2, RepeatContextFactory.backwardRepeats(9, 3,  sequence.getBytes()));
     }
 
     private static void assertRepeatContext(int expectedCount, String expectedBases, int index, String sequence) {
@@ -59,11 +92,20 @@ public class RepeatContextFactoryTest {
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
         assertEquals(expectedCount, repeatContextGATC.count());
         assertEquals(expectedBases, repeatContextGATC.sequence());
+    }
 
-        optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence.getBytes());
-        repeatContextGATC = optRepeatContextGATC.get();
-        assertEquals(expectedCount, repeatContextGATC.count());
+    private static void assertRepeatContext(int start, int end, int count, String expectedBases, int index, String sequence) {
+        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
+        RepeatContext repeatContextGATC = optRepeatContextGATC.get();
+        assertEquals(count, repeatContextGATC.count());
+        assertEquals(start, repeatContextGATC.startIndex());
+        assertEquals(end, repeatContextGATC.endIndex());
         assertEquals(expectedBases, repeatContextGATC.sequence());
+    }
+
+    private static void assertNone(int index, String sequence) {
+        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
+        assertFalse(optRepeatContextGATC.isPresent());
     }
 
 }
