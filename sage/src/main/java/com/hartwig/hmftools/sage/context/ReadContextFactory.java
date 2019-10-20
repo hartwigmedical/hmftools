@@ -24,6 +24,7 @@ public class ReadContextFactory {
             @NotNull final SAMRecord record, int refIndex, byte[] refBases) {
 
         final String refString = new String(refBases);
+        final String readString = new String(record.getReadBases());
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -32,7 +33,14 @@ public class ReadContextFactory {
         int length = Math.max(microhomologyContext.length(), microhomologyContextWithRepeats.length() - ref.length() + 1) + 1;
         int endIndex = Math.min(record.getReadBases().length, startIndex + length);
 
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(refIndex + 1, refString);
+        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex + 1, readString);
+        if (repeatContext.isPresent()) {
+            final RepeatContext repeat = repeatContext.get();
+            startIndex = Math.min(startIndex, readIndex - repeat.backwardsCount() * repeat.sequence().length());
+            endIndex = Math.max(endIndex,
+                    Math.min(record.getReadBases().length - 1, readIndex + repeat.forwardsCount() * repeat.sequence().length() + 1));
+        }
+
         final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
         return new ReadContextImproved(microhomologyContext.toString(),
                 repeat,
@@ -50,16 +58,24 @@ public class ReadContextFactory {
             @NotNull final SAMRecord record, final int refIndex, byte[] refBases) {
 
         final String refString = new String(refBases);
+        final String readString = new String(record.getReadBases());
 
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
         int startIndex = microhomologyContextWithRepeats.position();
         int length = Math.max(microhomologyContextWithRepeats.length() + 1, alt.length());
-
         int endIndex = Math.min(record.getReadBases().length, startIndex + length);
 
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(refIndex + 1, refString);
+
+        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex + 1, readString);
+        if (repeatContext.isPresent()) {
+            final RepeatContext repeat = repeatContext.get();
+            startIndex = Math.min(startIndex, readIndex - repeat.backwardsCount() * repeat.sequence().length());
+            endIndex = Math.max(endIndex,
+                    Math.min(record.getReadBases().length - 1, readIndex + repeat.forwardsCount() * repeat.sequence().length() + 1));
+        }
+
         final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
         return new ReadContextImproved(microhomologyContext.toString(),
                 repeat,
