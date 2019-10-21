@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.context;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -130,6 +131,15 @@ public class ReadContextTest {
         assertEquals(ReadContextMatch.FULL,           victim.matchAtPosition(4, "GATCATTTTTTGC".getBytes()));
         assertEquals(ReadContextMatch.JITTER_REMOVED, victim.matchAtPosition(4, "GATCATTTTTGC".getBytes()));
         assertEquals(ReadContextMatch.JITTER_ADDED,   victim.matchAtPosition(4, "GATCATTTTTTTGC".getBytes()));
+    }
+
+    @Test
+    public void testPhasedMNV() {
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGATC".getBytes());
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, Strings.EMPTY, 1001, 4, 4, 5, 4, "ATCTTGATCT".getBytes());
+
+        assertTrue(victim1.phased(victim2));
+        assertTrue(victim2.phased(victim1));
     }
 
 }
