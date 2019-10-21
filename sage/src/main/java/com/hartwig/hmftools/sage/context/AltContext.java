@@ -20,6 +20,8 @@ public class AltContext implements VariantHotspot {
 
     private ReadContextCounter readContextCounter;
     private int altReads;
+    private int phase;
+
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
         refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
@@ -146,4 +148,11 @@ public class AltContext implements VariantHotspot {
         return h;
     }
 
+    public int phase() {
+        return phase;
+    }
+
+    public void phase(final int phase) {
+        this.phase = phase;
+    }
 }
