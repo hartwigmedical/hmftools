@@ -25,7 +25,7 @@ public class AnalysedPatientReporterTest {
     private static final String LINX_FUSIONS_TSV = Resources.getResource("test_run/linx/sample.linx.fusions.tsv").getPath();
     private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/linx/sample.linx.disruptions.tsv").getPath();
     private static final String BACHELOR_CSV = BASE_DIRECTORY + "/bachelor/sample_germline_variants.csv";
-    private static final String CHORD_PREDICTION_FILE = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
+    private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String LINX_VIRAL_INSERTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
 
@@ -48,7 +48,7 @@ public class AnalysedPatientReporterTest {
                 LINX_FUSIONS_TSV,
                 LINX_DISRUPTIONS_TSV,
                 BACHELOR_CSV,
-                CHORD_PREDICTION_FILE,
+                CHORD_PREDICTION_TXT,
                 CIRCOS_FILE,
                 LINX_VIRAL_INSERTIONS_TSV,
                 LINX_DRIVER_CATALOG_TSV,

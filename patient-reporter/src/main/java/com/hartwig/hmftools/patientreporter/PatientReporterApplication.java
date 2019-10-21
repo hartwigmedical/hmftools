@@ -65,7 +65,7 @@ public class PatientReporterApplication {
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
     private static final String BACHELOR_TSV = "bachelor_tsv";
-    private static final String CHORD_PREDICTION_FILE = "chord_prediction_file";
+    private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     private static final String CIRCOS_FILE = "circos_file";
     private static final String LINX_VIRALINSERTION_TSV = "viral_insertion_tsv";
     private static final String LINX_DRIVERS_CATALOG_TSV = "linx_drivers_catalog_tsv";
@@ -116,7 +116,7 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(LINX_FUSION_TSV),
                     cmd.getOptionValue(LINX_DISRUPTION_TSV),
                     cmd.getOptionValue(BACHELOR_TSV),
-                    cmd.getOptionValue(CHORD_PREDICTION_FILE),
+                    cmd.getOptionValue(CHORD_PREDICTION_TXT),
                     cmd.getOptionValue(CIRCOS_FILE),
                     cmd.getOptionValue(LINX_VIRALINSERTION_TSV),
                     cmd.getOptionValue(LINX_DRIVERS_CATALOG_TSV),
@@ -195,7 +195,7 @@ public class PatientReporterApplication {
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_TSV)
-                && fileExists(cmd, CHORD_PREDICTION_FILE) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV)
+                && fileExists(cmd, CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV)
                 && fileExists(cmd, LINX_DRIVERS_CATALOG_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
                 && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
     }
@@ -300,9 +300,9 @@ public class PatientReporterApplication {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
-        options.addOption(CHORD_PREDICTION_FILE, true, "Path towards the CHORD prediction file.");
-        options.addOption(LINX_VIRALINSERTION_TSV, true, "Path towards the LINX viral integration tsv.");
-        options.addOption(LINX_DRIVERS_CATALOG_TSV, true, "Path towards the LINX drivers catalog tsv.");
+        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
+        options.addOption(LINX_VIRALINSERTION_TSV, true, "Path towards the LINX viral integration TSV.");
+        options.addOption(LINX_DRIVERS_CATALOG_TSV, true, "Path towards the LINX drivers catalog TSV.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");

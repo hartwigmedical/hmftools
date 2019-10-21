@@ -65,7 +65,7 @@ class AnalysedPatientReporter {
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
-            @NotNull String bachelorTSV, @NotNull String chordPredictionFile, @NotNull String circosFile,
+            @NotNull String bachelorTSV, @NotNull String chordPredictionTxt, @NotNull String circosFile,
             @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @Nullable String comments,
             boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
@@ -83,7 +83,7 @@ class AnalysedPatientReporter {
         SomaticVariantAnalysis somaticVariantAnalysis =
                 analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, copyNumberAnalysis.exomeGeneCopyNumbers());
 
-        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
+        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
         List<InterpretGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
                 bachelorTSV,
                 copyNumberAnalysis,
@@ -218,9 +218,9 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private static ChordAnalysis analyzeChord(@NotNull String chordPredictionFile) throws IOException {
-        ChordAnalysis chord = ChordFileReader.read(chordPredictionFile);
-        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionFile);
+    private static ChordAnalysis analyzeChord(@NotNull String chordPredictionTxt) throws IOException {
+        ChordAnalysis chord = ChordFileReader.read(chordPredictionTxt);
+        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
         return chord;
     }
 
