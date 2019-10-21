@@ -22,9 +22,9 @@ public final class InterpretViralInsertion {
     }
 
     @NotNull
-    public static List<ViralInsertion> interpretVirals(@NotNull String viralInsertFile) throws IOException {
-        List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(viralInsertFile);
-        LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), viralInsertFile);
+    public static List<ViralInsertion> interpretVirals(@NotNull String viralInsertTsv) throws IOException {
+        List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(viralInsertTsv);
+        LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), viralInsertTsv);
 
         Map<InterpretViralInsertion.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
         for (LinxViralInsertFile viralInsertion : viralInsertFileList) {

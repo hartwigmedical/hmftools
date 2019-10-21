@@ -12,11 +12,11 @@ import org.junit.Test;
 public class InterpretViralInsertionTest {
 
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
-    private static final String LINX_VIRAL_INSERTIONS_FILE = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
+    private static final String LINX_VIRAL_INSERTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
 
     @Test
     public void canMergeViralInsertions() throws IOException {
-        List<ViralInsertion> viralInsertions = InterpretViralInsertion.interpretVirals(LINX_VIRAL_INSERTIONS_FILE);
+        List<ViralInsertion> viralInsertions = InterpretViralInsertion.interpretVirals(LINX_VIRAL_INSERTIONS_TSV);
         assertEquals(2, viralInsertions.size());
 
         ViralInsertion viralInsertion1 = viralInsertions.get(0);

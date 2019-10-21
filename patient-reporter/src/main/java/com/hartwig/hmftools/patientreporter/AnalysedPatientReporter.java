@@ -66,7 +66,7 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorTSV, @NotNull String chordPredictionFile, @NotNull String circosFile,
-            @NotNull String linxViralInsertionFile, @NotNull String linxDriversCatalogTsv, @Nullable String comments,
+            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @Nullable String comments,
             boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
@@ -101,7 +101,7 @@ class AnalysedPatientReporter {
                         patientTumorLocation);
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
-        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionFile);
+        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
@@ -149,8 +149,8 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException {
-        return InterpretViralInsertion.interpretVirals(linxViralInsertionFile);
+    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
+        return InterpretViralInsertion.interpretVirals(linxViralInsertionTsv);
 
     }
 

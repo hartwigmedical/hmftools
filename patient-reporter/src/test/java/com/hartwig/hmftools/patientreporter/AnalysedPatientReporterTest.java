@@ -6,10 +6,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
-import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -28,7 +26,7 @@ public class AnalysedPatientReporterTest {
     private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/linx/sample.linx.disruptions.tsv").getPath();
     private static final String BACHELOR_CSV = BASE_DIRECTORY + "/bachelor/sample_germline_variants.csv";
     private static final String CHORD_PREDICTION_FILE = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
-    private static final String LINX_VIRAL_INSERTIONS_FILE = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
+    private static final String LINX_VIRAL_INSERTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
 
     @Test
@@ -52,7 +50,7 @@ public class AnalysedPatientReporterTest {
                 BACHELOR_CSV,
                 CHORD_PREDICTION_FILE,
                 CIRCOS_FILE,
-                LINX_VIRAL_INSERTIONS_FILE,
+                LINX_VIRAL_INSERTIONS_TSV,
                 LINX_DRIVER_CATALOG_TSV,
                 null,
                 false));
