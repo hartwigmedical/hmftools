@@ -121,14 +121,16 @@ public class FusionFinder
                     continue;
                 }
 
-                for (final Transcript startTrans : startGene.transcripts())
-                {
-                    for (final Transcript endTrans : endGene.transcripts())
-                    {
-                        final Transcript upstreamTrans = startUpstream ? startTrans : endTrans;
-                        final Transcript downstreamTrans = !startUpstream ? startTrans : endTrans;
+                final GeneAnnotation upGene = startUpstream ? startGene : endGene;
+                final GeneAnnotation downGene = !startUpstream ? startGene : endGene;
 
-                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, params);
+                boolean knownPair = mKnownFusionData != null && mKnownFusionData.hasKnownFusion(upGene.GeneName, downGene.GeneName);
+
+                for (final Transcript upstreamTrans : upGene.transcripts())
+                {
+                    for (final Transcript downstreamTrans : downGene.transcripts())
+                    {
+                        GeneFusion geneFusion = checkFusionLogic(upstreamTrans, downstreamTrans, params, !knownPair);
 
                         if(geneFusion == null)
                             continue;
@@ -161,13 +163,18 @@ public class FusionFinder
 
     public static boolean validFusionTranscript(final Transcript transcript)
     {
+        return validFusionTranscript(transcript, true);
+    }
+
+    private static boolean validFusionTranscript(final Transcript transcript, boolean requireUpstreamDisruptive)
+    {
         // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
         if(transcript.isUpstream())
         {
             if(transcript.isPromoter())
                 return false;
 
-            if(!transcript.isDisruptive())
+            if(requireUpstreamDisruptive && !transcript.isDisruptive())
                 return false;
         }
         else
@@ -187,10 +194,16 @@ public class FusionFinder
 
     public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params)
     {
+        return checkFusionLogic(upstreamTrans, downstreamTrans, params, true);
+    }
+
+    private static GeneFusion checkFusionLogic(
+            final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params, boolean requireUpstreamDisruptive)
+    {
         // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
 
-        if(!validFusionTranscript(upstreamTrans) || !validFusionTranscript(downstreamTrans))
+        if(!validFusionTranscript(upstreamTrans, requireUpstreamDisruptive) || !validFusionTranscript(downstreamTrans))
         {
             logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid trans");
             return null;

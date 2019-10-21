@@ -439,7 +439,7 @@ public class FusionLikelihood
 
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
 
-            writer.write("GeneIdUp,GeneIdDown,Type,LengthMin,LengthMax,Likelihood");
+            writer.write("GeneIdUp,GeneNameUp,GeneIdDown,GeneNameDown,Type,LengthMin,LengthMax,Likelihood");
             writer.newLine();
 
             long proximateLimit = mCohortCalculator.getMaxBucketLength();

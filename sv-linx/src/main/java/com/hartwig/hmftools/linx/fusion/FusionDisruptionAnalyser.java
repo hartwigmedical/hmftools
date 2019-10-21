@@ -10,12 +10,9 @@ import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
-import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
-import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isSpecificSV;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
@@ -74,7 +71,6 @@ public class FusionDisruptionAnalyser
     private final String mOutputDir;
     private final SvGeneTranscriptCollection mGeneTransCollection;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
-    private List<String> mKnownFusionGenes;
     private LinxConfig mConfig;
 
     private final FusionParameters mFusionParams;
@@ -131,7 +127,6 @@ public class FusionDisruptionAnalyser
         mPerfCounter = new PerformanceCounter("Fusions");
 
         mChrBreakendMap = null;
-        mKnownFusionGenes = Lists.newArrayList();
         mRestrictedGenes = Lists.newArrayList();
 
         initialise(cmdLineArgs);
@@ -153,8 +148,6 @@ public class FusionDisruptionAnalyser
 
     private void initialise(final CommandLine cmdLineArgs)
     {
-        populateKnownFusionGenes();
-
         if(cmdLineArgs != null)
         {
             if(mConfig.hasMultipleSamples())
@@ -458,7 +451,7 @@ public class FusionDisruptionAnalyser
             for(int i = 0; i < chainFusions.size(); ++i)
             {
                 GeneFusion fusion = chainFusions.get(i);
-                String genePair = fusion.upstreamTrans().gene().GeneName + "_" + fusion.downstreamTrans().gene().GeneName;
+                final String genePair = fusion.name();
 
                 if(genePairings.contains(genePair))
                     continue;
@@ -558,8 +551,6 @@ public class FusionDisruptionAnalyser
 
                     upperSV = upperBreakend.getSV();
                 }
-
-                isSpecificSV(upperSV);
 
                 List<GeneAnnotation> genesListUpper = Lists.newArrayList(upperSV.getGenesList(upperBreakend.usesStart()));
                 applyGeneRestrictions(genesListUpper);
@@ -922,23 +913,6 @@ public class FusionDisruptionAnalyser
                 .build();
     }
 
-
-
-    private void populateKnownFusionGenes()
-    {
-        if(mFusionFinder.getKnownFusionDatal() == null)
-            return;
-
-        for(final String[] genePair : mFusionFinder.getKnownFusionDatal().knownPairs())
-        {
-            if(!mKnownFusionGenes.contains(genePair[FIVE_GENE]))
-                mKnownFusionGenes.add(genePair[FIVE_GENE]);
-
-            if(!mKnownFusionGenes.contains(genePair[THREE_GENE]))
-                mKnownFusionGenes.add(genePair[THREE_GENE]);
-        }
-    }
-
     private final List<GeneFusion> extractUniqueFusions()
     {
         // from the list of all potential fusions, collect up all reportable ones, and then the highest priority fusion
@@ -1092,224 +1066,5 @@ public class FusionDisruptionAnalyser
         if(mNeoEpitopeFinder != null)
             mNeoEpitopeFinder.close();
     }
-
-    // currently unused logic for finding unclustered or chained fusions:
-
-    /*
-
-    private boolean hasFusionGenePair(final GeneAnnotation geneUp, final GeneAnnotation geneDown)
-    {
-        for(final GeneFusion fusion : mFusions)
-        {
-            final GeneAnnotation upGene = fusion.upstreamTrans().parent();
-            final GeneAnnotation downGene = fusion.downstreamTrans().parent();
-
-            if(upGene.GeneName.equals(geneUp.GeneName) && downGene.GeneName.equals(geneDown.GeneName))
-                return true;
-        }
-
-        return false;
-    }
-
-    private boolean areKnownFusionGenes(final String geneUp, final String geneDown)
-    {
-        if(mFusionFinder.getKnownFusionsModel() == null)
-            return false;
-
-        for(Pair<String,String> genePair : mFusionFinder.getKnownFusionsModel().fusions().keySet())
-        {
-            if(genePair.getFirst().equals(geneUp) && genePair.getSecond().equals(geneDown))
-                return true;
-        }
-
-        return false;
-    }
-
-    public static final String LOG_KNOWN_FUSION_DATA = "log_known_fusion_data";
-    public static final String INVALID_REASON_UNCLUSTERED = "Unclustered";
-    public static final String INVALID_REASON_UNCHAINED = "Unchained";
-
-    private void findUnclusteredKnownFusions(final List<SvVarData> svList)
-    {
-        // look for unclustered or unchained SVs with breakends in known fusion pairs
-        Map<SvBreakend, GeneAnnotation> knownFusionBreakends = Maps.newHashMap();
-
-        for(final SvVarData var :svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                boolean isStart = isStart(be);
-
-                List<GeneAnnotation> genesList = Lists.newArrayList(var.getGenesList(isStart));
-
-                for(GeneAnnotation gene : genesList)
-                {
-                    if(mKnownFusionGenes.contains(gene.GeneName))
-                    {
-                        knownFusionBreakends.put(var.getBreakend(isStart), gene);
-                        break;
-                    }
-                }
-            }
-        }
-
-        for (Map.Entry<SvBreakend, GeneAnnotation> entry1 : knownFusionBreakends.entrySet())
-        {
-            SvBreakend be1 = entry1.getKey();
-            GeneAnnotation gene1 = entry1.getValue();
-            List<GeneAnnotation> genes1 = Lists.newArrayList(gene1);
-
-            for (Map.Entry<SvBreakend, GeneAnnotation> entry2 : knownFusionBreakends.entrySet())
-            {
-                SvBreakend be2 = entry2.getKey();
-                GeneAnnotation gene2 = entry2.getValue();
-                List<GeneAnnotation> genes2 = Lists.newArrayList(gene2);
-
-                if(be1 == be2)
-                    continue;
-
-                if(!areKnownFusionGenes(gene1.GeneName, gene2.GeneName))
-                    continue;
-
-                if (hasFusionGenePair(gene1, gene2))
-                    continue;
-
-                if(be1.getSV().getCluster() == be2.getSV().getCluster())
-                {
-                    // skip if already in the same chain
-                    SvCluster cluster = be1.getSV().getCluster();
-
-                    if(cluster.findSameChainForSVs(be1.getSV(), be2.getSV()) != null)
-                        continue;
-                }
-
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2,
-                        true, true, null, true);
-
-                if (fusions.isEmpty())
-                    continue;
-
-                if(mLogReportableOnly)
-                {
-                    fusions = fusions.stream().filter(GeneFusion::reportable).collect(Collectors.toList());
-                }
-
-                // check transcript disruptions
-                for (final GeneFusion fusion : fusions)
-                {
-                    FusionTermination[] terminationInfo = {null, null};
-
-                    for(int i = 0; i <=1; ++i)
-                    {
-                        boolean isUpstream = (i == 0);
-
-                        // look at each gene in turn
-                        Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                        GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().parent() : fusion.downstreamTrans().parent();
-
-                        SvBreakend breakend = gene.GeneName.equals(gene1.GeneName) ? be1 : be2;
-
-                        terminationInfo[i] = checkTranscriptDisruptionInfo(breakend, transcript);
-                    }
-
-                    final SvCluster cluster1 = be1.getSV().getCluster();
-                    final SvCluster cluster2 = be2.getSV().getCluster();
-
-                    String combinedClusterInfo = String.format("Unclustered;%d;%s;%d;%s",
-                            cluster1.getSvCount(), cluster1.getResolvedType(), cluster2.getSvCount(), cluster2.getResolvedType());
-
-                    FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
-                            .clusterId(cluster1.id())
-                            .clusterCount(cluster1.getSvCount())
-                            .resolvedType(combinedClusterInfo)
-                            .chainInfo(null)
-                            .disruptionUp(terminationInfo[0])
-                            .disruptionDown(terminationInfo[1])
-                            .build();
-
-                    fusion.setAnnotations(annotations);
-                    writeFusionData(fusion, cluster1);
-                }
-
-                mFusions.addAll(fusions);
-            }
-        }
-
-        if(mReportKnownFusionData)
-        {
-            logKnownFusionData(knownFusionBreakends);
-        }
-    }
-
-    private void logKnownFusionData(Map<SvBreakend, GeneAnnotation> knownFusionBreakends)
-    {
-        for (Map.Entry<SvBreakend, GeneAnnotation> entry1 : knownFusionBreakends.entrySet())
-        {
-            SvBreakend be1 = entry1.getKey();
-            GeneAnnotation gene1 = entry1.getValue();
-            List<GeneAnnotation> genes1 = Lists.newArrayList(gene1);
-
-            // skip SVs where all transcripts are non-disruptive
-            if(!gene1.hasAnyDisruptiveTranscript())
-                continue;
-
-            for (Map.Entry<SvBreakend, GeneAnnotation> entry2 : knownFusionBreakends.entrySet())
-            {
-                SvBreakend be2 = entry2.getKey();
-                GeneAnnotation gene2 = entry2.getValue();
-                List<GeneAnnotation> genes2 = Lists.newArrayList(gene2);
-
-                if (be1 == be2)
-                    continue;
-
-                if(!gene2.hasAnyDisruptiveTranscript())
-                    continue;
-
-                if (!areKnownFusionGenes(gene1.GeneName, gene2.GeneName))
-                    continue;
-
-                if (hasFusionGenePair(gene1, gene2)) // already captured even if not valid
-                    continue;
-
-                // possible reasons for not forming a valid fusions are:
-                // 1. Unclustered or unchained SVs
-                // 2. Incorrect orientations
-                // 3. Invalid transcript locations (eg post-coding)
-                // 4. Unphased
-
-                List<String> invalidReasons = Lists.newArrayList();
-
-                if (be1.getSV().getCluster() != be2.getSV().getCluster())
-                {
-                    invalidReasons.add(INVALID_REASON_UNCLUSTERED);
-                }
-                else
-                {
-                    SvCluster cluster = be1.getSV().getCluster();
-
-                    if(cluster.findSameChainForSVs(be1.getSV(), be2.getSV()) == null)
-                    {
-                        invalidReasons.add(INVALID_REASON_UNCHAINED);
-                    }
-                }
-
-                List<GeneFusion> fusions = mFusionFinder.findFusions(genes1, genes2, true, true, invalidReasons, false);
-
-                String invalidReasonStr = "";
-
-                for(String reason : invalidReasons)
-                {
-                    invalidReasonStr = appendStr(invalidReasonStr, reason, ';');
-                }
-
-                // SampleId,GeneUp,GeneDown,SvId1,SvId2,InvalidReasons
-                String fusionInfo = String.format("%s,%s,%s,%s,%s,%s",
-                        mSampleId, gene1.GeneName, gene2.GeneName, be1.getSV().id(), be2.getSV().id(), invalidReasonStr);
-
-                LOGGER.info("KNOWN_FUSION_DATA: {}", fusionInfo);
-            }
-        }
-    }
-    */
 
 }
