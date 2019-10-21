@@ -38,7 +38,7 @@ public class SagePipeline {
     }
 
     @NotNull
-    public CompletableFuture<List<List<AltContext>>> submit() {
+    public CompletableFuture<List<SageEntry>> submit() {
 
         final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size());
         List<String> samples = config.tumor();
@@ -78,7 +78,7 @@ public class SagePipeline {
 
             sagePipelineData.addNormal(normalFuture.join());
 
-            return sagePipelineData.altContexts();
+            return sagePipelineData.results();
         });
     }
 

@@ -49,10 +49,10 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    public void write(@NotNull final List<AltContext> altContexts) {
-        final AltContext normal = altContexts.get(0);
+    public void write(@NotNull final SageEntry entry) {
+        final AltContext normal = entry.normal();
         if (normal.altSupport() <= config.maxNormalAltSupport()) {
-            refContextEnrichment.accept(create(altContexts));
+            refContextEnrichment.accept(create(entry.normal(), entry.tumorAltContexts()));
         }
     }
 
@@ -72,17 +72,18 @@ public class SageVCF implements AutoCloseable {
     }
 
     @NotNull
-    private VariantContext create(@NotNull final List<AltContext> altContexts) {
-        assert (altContexts.size() > 1);
+    private VariantContext create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorContexts) {
+        assert (tumorContexts.size() >= 1);
 
-        final AltContext normal = altContexts.get(0);
-        final AltContext firstTumor = altContexts.get(1);
+        final AltContext firstTumor = tumorContexts.get(0);
 
         final Allele ref = Allele.create(normal.ref(), true);
         final Allele alt = Allele.create(normal.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
+        final Genotype normalGenotype = createGenotype(alleles, normal);
 
-        final List<Genotype> genotypes = altContexts.stream().map(x -> createGenotype(alleles, x)).collect(Collectors.toList());
+        final List<Genotype> genotypes = tumorContexts.stream().map(x -> createGenotype(alleles, x)).collect(Collectors.toList());
+        genotypes.add(0, normalGenotype);
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(normal.chromosome())
                 .start(normal.position())

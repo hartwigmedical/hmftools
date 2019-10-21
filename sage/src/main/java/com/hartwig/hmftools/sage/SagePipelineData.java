@@ -79,8 +79,8 @@ public class SagePipelineData {
     }
 
     @NotNull
-    public List<List<AltContext>> altContexts() {
-        List<List<AltContext>> result = Lists.newArrayList();
+    public List<SageEntry> results() {
+        List<SageEntry> result = Lists.newArrayList();
 
         final Comparator<VariantHotspot> hotspotComparator = (o1, o2) -> {
             int standardCompare = o1.compareTo(o2);
@@ -107,22 +107,20 @@ public class SagePipelineData {
 
         for (VariantHotspot sortedHotspot : sortedHotspots) {
 
-            final List<AltContext> altContexts = new ArrayList<>(altContextMap.size() + 1);
             final RefContext normalRefContext = normalMap.get(sortedHotspot.position());
-            if (normalRefContext != null) {
-                altContexts.add(normalRefContext.altContext(sortedHotspot.ref(), sortedHotspot.alt()));
-            } else {
-                altContexts.add(new AltContext(normalSample, sortedHotspot));
-            }
+            final AltContext normalAltContext = normalRefContext == null
+                    ? new AltContext(normalSample, sortedHotspot)
+                    : normalRefContext.altContext(sortedHotspot.ref(), sortedHotspot.alt());
 
+            final List<AltContext> tumorAltContexts = new ArrayList<>(altContextMap.size() + 1);
             for (Map<VariantHotspot, AltContext> variantHotspotAltContextMap : altContextMap) {
                 AltContext tumorContext = variantHotspotAltContextMap.get(sortedHotspot);
                 if (tumorContext != null) {
-                    altContexts.add(tumorContext);
+                    tumorAltContexts.add(tumorContext);
                 }
             }
 
-            result.add(altContexts);
+            result.add(new SageEntry(normalAltContext, tumorAltContexts));
         }
 
         return result;
