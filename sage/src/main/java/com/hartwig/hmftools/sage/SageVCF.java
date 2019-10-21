@@ -38,6 +38,7 @@ public class SageVCF implements AutoCloseable {
     private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
+    private final PhasingQueue phasingQueue;
 
     SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
         this.config = config;
@@ -46,13 +47,15 @@ public class SageVCF implements AutoCloseable {
         refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
 
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
+        phasingQueue = new PhasingQueue(entry -> refContextEnrichment.accept(create(entry.normal(), entry.tumorAltContexts())));
+
         writer.writeHeader(header);
     }
 
     public void write(@NotNull final SageEntry entry) {
         final AltContext normal = entry.normal();
         if (normal.altSupport() <= config.maxNormalAltSupport()) {
-            refContextEnrichment.accept(create(entry.normal(), entry.tumorAltContexts()));
+            phasingQueue.accept(entry);
         }
     }
 
@@ -106,6 +109,11 @@ public class SageVCF implements AutoCloseable {
                 .genotypes(genotypes)
                 .alleles(alleles);
 
+        if (firstTumor.phase() > 0) {
+            builder.attribute("PHASE", firstTumor.phase());
+        }
+
+
         final VariantContext context = builder.make();
         context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
         return context;
@@ -133,7 +141,10 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 5, VCFHeaderLineType.Integer, "[Full, Partial, Realigned, J-, J+]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT,
+                5,
+                VCFHeaderLineType.Integer,
+                "[Full, Partial, Realigned, J-, J+]"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
                 3,
                 VCFHeaderLineType.Integer,
@@ -145,12 +156,14 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine("RDIS", 1, VCFHeaderLineType.Integer, "Distance from ref"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RCR", 1, VCFHeaderLineType.String, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RCMH", 1, VCFHeaderLineType.String, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("PHASE", 1, VCFHeaderLineType.Integer, "TODO"));
 
         return header;
     }
 
     @Override
     public void close() {
+        phasingQueue.flush();
         writer.close();
     }
 

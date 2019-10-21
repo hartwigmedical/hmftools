@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage;
 
 import java.util.ArrayDeque;
 import java.util.Iterator;
@@ -9,29 +9,32 @@ import com.hartwig.hmftools.sage.context.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PhasingQueue implements Consumer<AltContext> {
+public class PhasingQueue implements Consumer<SageEntry> {
 
     private int phase;
-    private final Consumer<AltContext> consumer;
-    private final ArrayDeque<AltContext> deque = new ArrayDeque<>();
+    private final Consumer<SageEntry> consumer;
+    private final ArrayDeque<SageEntry> deque = new ArrayDeque<>();
 
-    public PhasingQueue(@NotNull final Consumer<AltContext> consumer) {
+    PhasingQueue(@NotNull final Consumer<SageEntry> consumer) {
         this.consumer = consumer;
     }
 
     @Override
-    public void accept(final AltContext newAltContext) {
+    public void accept(@NotNull final SageEntry entry) {
+        final AltContext newAltContext = entry.primaryTumor();
         final ReadContext newReadContext = newAltContext.primaryReadContext().readContext();
 
-        Iterator<AltContext> iterator = deque.iterator();
+        Iterator<SageEntry> iterator = deque.iterator();
         while (iterator.hasNext()) {
-            final AltContext oldAltContext = iterator.next();
+            final SageEntry oldEntry = iterator.next();
+
+            final AltContext oldAltContext = oldEntry.primaryTumor();
             final ReadContext oldReadContext = oldAltContext.primaryReadContext().readContext();
             long distance = newAltContext.position() - oldAltContext.position();
 
             if (distance > 30 || distance < 0) {
                 iterator.remove();
-                consumer.accept(oldAltContext);
+                consumer.accept(oldEntry);
             } else if (oldReadContext.phased(newReadContext)) {
                 if (oldAltContext.phase() != 0) {
                     newAltContext.phase(oldAltContext.phase());
@@ -45,7 +48,7 @@ public class PhasingQueue implements Consumer<AltContext> {
             }
         }
 
-        deque.add(newAltContext);
+        deque.add(entry);
     }
 
     public void flush() {
