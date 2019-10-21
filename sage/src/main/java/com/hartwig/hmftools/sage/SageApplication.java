@@ -49,7 +49,7 @@ public class SageApplication implements AutoCloseable {
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("AmberApplication", options);
+            formatter.printHelp("SageApplication", options);
             System.exit(1);
         }
     }
@@ -62,7 +62,7 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        vcf = new SageVCF(refGenome, config.outputFile(), config.reference(), config.tumor());
+        vcf = new SageVCF(refGenome, config);
 
     }
 
@@ -80,9 +80,18 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), 9000000));
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
-        //        contigCon`texts.add(runSingleRegion("17", 32000000, 33000000));
+//        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+//                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+        //        contigContexts.add(runSingleRegion("17", 6_200_165, 6200165));
+        //        contigContexts.add(runSingleRegion("17", 19_465_877, 19465877));
+//                contigContexts.add(runSingleRegion("17", 22_260_001, 23_262_000));
+        //        contigContexts.add(runSingleRegion("17", 25_282_540, 34000000));
+        //        contigContexts.add(runSingleRegion("17", 32_371_135, 32371135));
+//                contigContexts.add(runSingleRegion("17", 37_000_000, 38_000_000));
+        //        contigContexts.add(runSingleRegion("17", 42_796_634, 42796634));
+        //        contigContexts.add(runSingleRegion("17", 47_414_327, 47414327));
+        //        contigContexts.add(runSingleRegion("17", 55_639_513, 55639513));
+        //                contigContexts.add(runSingleRegion("17", 72_558_371, 72558371));
         //        contigContexts.add(runSingleRegion("17", 33000001, 34000000));
 
         for (final ContigContext contigContext : contigContexts) {

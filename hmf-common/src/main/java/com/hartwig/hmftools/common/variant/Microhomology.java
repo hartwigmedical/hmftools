@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -14,30 +12,8 @@ public final class Microhomology {
     }
 
     @NotNull
-    public static String microhomologyAtDelete(int position, @NotNull final String sequence, @NotNull final String ref) {
-        if (sequence.length() < position + ref.length()) {
-            LOGGER.warn("Attempt to determine microhomology outside of sequence length");
-            return Strings.EMPTY;
-        }
-
-        String result =
-                commonPrefix(sequence.substring(position + 1), sequence.substring(position + 1 + ref.length() - 1), ref.length() - 1);
-
-        for (int i = position; i >= 0; i--) {
-            final String earlierPrefix = commonPrefix(sequence.substring(i), sequence.substring(i + ref.length() - 1), ref.length() - 1);
-            if (earlierPrefix.length() > result.length()) {
-                result = earlierPrefix;
-            } else {
-                return result;
-            }
-        }
-
-        return result;
-    }
-
-    @NotNull
-    public static String microhomologyAtInsert(int position, @NotNull final String sequence, @NotNull final String alt) {
-        if (sequence.length() < position) {
+    public static String microhomologyAtInsert(int position, @NotNull final String refSequence, @NotNull final String alt) {
+        if (refSequence.length() < position) {
             LOGGER.warn("Attempt to determine microhomology outside of sequence length");
             return Strings.EMPTY;
         }
@@ -46,53 +22,79 @@ public final class Microhomology {
             return Strings.EMPTY;
         }
 
-        assert (sequence.charAt(position) == alt.charAt(0));
-        final char ref = sequence.charAt(position);
-        final String insert = alt.substring(1);
-        final String preInsert = sequence.substring(0, position);
-        final String postInsert = sequence.substring(position + 1);
-
-        final String commonPrefix = commonPrefix(insert, postInsert);
-        final String commonSuffixWithRef = commonSuffix(preInsert + ref, insert);
-
-        return commonPrefix.length() > commonSuffixWithRef.length() ? commonPrefix : commonSuffixWithRef;
+        final String readSequence = refSequence.substring(0, position) + alt + refSequence.substring(position + 1);
+        return microhomologyAtInsert(position, alt.length(), readSequence.getBytes()).toString();
     }
 
-    @VisibleForTesting
     @NotNull
-    static String commonSuffix(@NotNull final String first, @NotNull final String second) {
-        int minLength = Math.min(second.length(), first.length());
-        if (minLength == 0) {
+    public static String microhomologyAtDelete(int position, @NotNull final String refSequence, @NotNull final String ref) {
+        if (refSequence.length() < position + ref.length()) {
+            LOGGER.warn("Attempt to determine microhomology outside of sequence length");
             return Strings.EMPTY;
         }
 
-        for (int i = 0; i < minLength; i++) {
-            if (first.charAt(first.length() - 1 - i) != second.charAt(second.length() - 1 - i)) {
-                return i == 0 ? Strings.EMPTY : first.substring(first.length() - i);
-            }
-        }
-
-        return first.substring(first.length() - minLength);
+        return microhomologyAtDelete(position, ref.length(), refSequence.getBytes()).toString();
     }
 
     @NotNull
-    private static String commonPrefix(@NotNull final String first, @NotNull final String second) {
-        return commonPrefix(first, second, first.length());
+    public static MicrohomologyContext microhomologyAtInsert(int position, int altLength, @NotNull final byte[] readSequence) {
+        return leftAlignedMicrohomology(position, altLength, readSequence);
     }
 
-    @VisibleForTesting
     @NotNull
-    static String commonPrefix(@NotNull final String first, @NotNull final String second, int maxLength) {
-        int minLength = Math.min(maxLength, Math.min(second.length(), first.length()));
-        if (minLength == 0) {
-            return Strings.EMPTY;
-        }
+    public static MicrohomologyContext microhomologyAtDelete(int position, int refLength, @NotNull final byte[] refSequence) {
+        return leftAlignedMicrohomology(position, refLength, refSequence);
+    }
 
-        for (int i = 0; i < minLength; i++) {
-            if (first.charAt(i) != second.charAt(i)) {
-                return i == 0 ? Strings.EMPTY : first.substring(0, i);
+    @NotNull
+    private static MicrohomologyContext leftAlignedMicrohomology(int position, int altLength, @NotNull final byte[] sequence) {
+
+        // Left align
+        if (position > 0 && position + altLength - 1 < sequence.length) {
+            byte ref = sequence[position];
+            byte alt = sequence[position + altLength - 1];
+            if (ref == alt) {
+                return microhomologyAtInsert(position - 1, altLength, sequence);
             }
         }
-        return first.substring(0, minLength);
+
+        int length = 0;
+        for (int i = 0; i < altLength - 1; i++) {
+            if (position + i + altLength < sequence.length && sequence[position + i + 1] == sequence[position + i + altLength]) {
+                length++;
+            } else {
+                break;
+            }
+        }
+
+        return new MicrohomologyContext(position, sequence, length);
+    }
+
+    @NotNull
+    public static MicrohomologyContext expandMicrohomologyRepeats(@NotNull final MicrohomologyContext result) {
+        if (result.length() == 0) {
+            return result;
+        }
+
+        final byte[] readSequence = result.readSequence();
+        int length = result.length();
+        int mhIndex = 0;
+        for (int i = result.homologyIndex() + length; i < readSequence.length; i++) {
+            if (readSequence[i] == readSequence[result.homologyIndex() + mhIndex]) {
+                length++;
+                mhIndex++;
+                if (mhIndex >= result.length()) {
+                    mhIndex = 0;
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (result.length() != length) {
+            return new MicrohomologyContext(result.position(), readSequence, length);
+        }
+
+        return result;
     }
 }

@@ -24,8 +24,7 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder =
                 createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
 
-        List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(
-                pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
+        List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
                 pairedDisruptionBuilder.exonUp(8).exonDown(9).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
@@ -49,7 +48,9 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
         List<ReportableDisruption> pairedDisruptions =
-                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").build(), pairedDisruptionBuilder.gene("SETD2").build());
+                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).ploidy(1.0).build(),
+                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.0).build(),
+                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.6).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 

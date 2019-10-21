@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -21,9 +20,10 @@ public final class LoadMetricsData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadCanonicalTranscripts.class);
 
-    private static final String METRICS_DIR = "metrics_dir";
-    private static final String REF_SAMPLE = "ref_sample";
-    private static final String TUMOR_SAMPLE = "tumor_sample";
+    private static final String SAMPLE = "sample";
+
+    private static final String REF_METRICS_FILE = "ref_metrics_file";
+    private static final String TUMOR_METRICS_FILE = "tumor_metrics_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -37,41 +37,30 @@ public final class LoadMetricsData {
         String password = cmd.getOptionValue(DB_PASS);
         String databaseUrl = cmd.getOptionValue(DB_URL);
 
-        String metricsDirectory = cmd.getOptionValue(METRICS_DIR);
-        String refSample = cmd.getOptionValue(REF_SAMPLE);
-        String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE);
+        String sample = cmd.getOptionValue(SAMPLE);
+        String refMetricsFile = cmd.getOptionValue(REF_METRICS_FILE);
+        String tumorMetricsFile = cmd.getOptionValue(TUMOR_METRICS_FILE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, metricsDirectory, refSample, tumorSample)) {
+        if (Utils.anyNull(userName, password, databaseUrl, sample, refMetricsFile, tumorMetricsFile)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
-            final File metricsDir = new File(metricsDirectory);
-            if (metricsDir.isDirectory()) {
-                final String jdbcUrl = "jdbc:" + databaseUrl;
-                final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+            final String jdbcUrl = "jdbc:" + databaseUrl;
+            final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                LOGGER.info(String.format("Extracting and writing metrics for %s", tumorSample));
-                String refFile = WGSMetricsFile.generateFilename(metricsDirectory, refSample);
-                String tumorFile = WGSMetricsFile.generateFilename(metricsDirectory, tumorSample);
+            LOGGER.info("Extracting and writing metrics for {}", sample);
 
-                WGSMetrics metrics = WGSMetricsFile.read(refFile, tumorFile);
-                dbWriter.writeMetrics(tumorSample, metrics);
-            } else {
-                if (!metricsDir.exists()) {
-                    LOGGER.warn("Dir " + metricsDir + " does not exist.");
-                }
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("patient-db - load metrics data", options);
-            }
+            WGSMetrics metrics = WGSMetricsFile.read(refMetricsFile, tumorMetricsFile);
+            dbWriter.writeMetrics(sample, metrics);
         }
     }
 
     @NotNull
     private static Options createOptions() {
         Options options = new Options();
-        options.addOption(METRICS_DIR, true, "Path towards the folder containing the metrics files.");
-        options.addOption(REF_SAMPLE, true, "ID of the reference sample of set.");
-        options.addOption(TUMOR_SAMPLE, true, "ID of the tumor sample of set.");
+        options.addOption(SAMPLE, true, "Sample for which we are going to load the metrics");
+        options.addOption(REF_METRICS_FILE, true, "Path towards the metrics file holding the ref sample metrics");
+        options.addOption(TUMOR_METRICS_FILE, true, "Path towards the metrics file holding the tumor sample metrics");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");

@@ -46,11 +46,7 @@ public class SomaticVariantAnalyzerTest {
                         builder().gene(WRONG_GENE).canonicalCodingEffect(MISSENSE).worstCodingEffect(MISSENSE).build(),
                         builder().gene(WRONG_GENE).canonicalCodingEffect(SYNONYMOUS).worstCodingEffect(SYNONYMOUS).build());
 
-        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants,
-                driverGeneView,
-                testAnalysedReportData().actionabilityAnalyzer(),
-                null,
-                Collections.emptyList());
+        SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, driverGeneView, Collections.emptyList());
 
         assertEquals(2, analysis.tumorMutationalLoad());
 

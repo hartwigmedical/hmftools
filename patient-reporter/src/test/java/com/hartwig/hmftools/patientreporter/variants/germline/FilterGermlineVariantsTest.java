@@ -23,9 +23,23 @@ public class FilterGermlineVariantsTest {
     private static final DriverGeneView TEST_DRIVER_GENE_VIEW = PatientReporterTestFactory.createTestDriverGeneView(ONCOGENE, TSG);
 
     @NotNull
-    private static ChordAnalysis createChordAnalysis() {
+    private static ChordAnalysis createChordAnalysisNoHRD() {
         double brca1Value = 0.3;
         double brca2Value = 0.19;
+
+        return ImmutableChordAnalysis.builder()
+                .noneValue(1 - (brca1Value + brca2Value))
+                .BRCA1Value(brca1Value)
+                .BRCA2Value(brca2Value)
+                .hrdValue(brca1Value + brca2Value)
+                .predictedResponseValue(brca1Value + brca2Value > 0.5 ? true : false)
+                .build();
+    }
+
+    @NotNull
+    private static ChordAnalysis createChordAnalysisHRD() {
+        double brca1Value = 0.6;
+        double brca2Value = 0.2;
 
         return ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
@@ -44,11 +58,11 @@ public class FilterGermlineVariantsTest {
         List<SomaticVariant> somaticVariants = Lists.newArrayList();
 
         List<GermlineVariant> germlineVariants = createTestGermlineVariantsONCOGene();
-        List<GermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariants,
+        List<InterpretGermlineVariant> filteredGermlineVariantMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariants,
                 TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbers,
-                somaticVariants, createChordAnalysis());
+                somaticVariants, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantMatch.size());
     }
 
@@ -59,92 +73,102 @@ public class FilterGermlineVariantsTest {
         List<GermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersMatch = createCopyNumberListForTSG(1);
         List<SomaticVariant> variantsMatch = createEnrichedListForGene(TSG);
-        List<GermlineVariant> filteredGermlineVariantMatch =
+        List<InterpretGermlineVariant> filteredGermlineVariantMatch =
                 FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsMatch, TEST_DRIVER_GENE_VIEW,
                         germlineReportingModel,
                         geneCopyNumbersMatch,
-                        variantsMatch, createChordAnalysis());
+                        variantsMatch, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantMatch.size()); // all three options matched
 
         List<GermlineVariant> germlineVariantsNonMatchBiallelic = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatchBiallelic = createCopyNumberListForTSG(1);
         List<SomaticVariant> variantsNonMatchBiallelic = createEnrichedListForGene(TSG);
-        List<GermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsNonMatchBiallelic, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatchBiallelic,
-                variantsNonMatchBiallelic, createChordAnalysis());
+                variantsNonMatchBiallelic, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
         List<GermlineVariant> germlineVariantsNonMatchVariant = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatchVariant = createCopyNumberListForTSG(1);
         List<SomaticVariant> variantsNonMatchVariant = createEnrichedListForGene("AAAA");
-        List<GermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsNonMatchVariant, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatchVariant,
-                variantsNonMatchVariant, createChordAnalysis());
+                variantsNonMatchVariant, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
         List<GermlineVariant> germlineVariantsNonMatchCopy = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatchCopy = createCopyNumberListForTSG(2);
         List<SomaticVariant> variantsNonMatchCopy = createEnrichedListForGene(TSG);
-        List<GermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsNonMatchCopy, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatchCopy,
-                variantsNonMatchCopy, createChordAnalysis());
+                variantsNonMatchCopy, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
         List<GermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersNonMatch = createCopyNumberListForTSG(2);
         List<SomaticVariant> variantsNonMatch = createEnrichedListForGene("AAAA");
-        List<GermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsNonMatch, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
-                variantsNonMatch, createChordAnalysis());
+                variantsNonMatch, createChordAnalysisNoHRD());
         assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
         List<GermlineVariant> germlineVariantsOptionBiallelic = createTestGermlineVariantsTSGGene(true, 1);
         List<GeneCopyNumber> geneCopyNumbersOptionBiallelic = createCopyNumberListForTSG(2);
         List<SomaticVariant> variantsOptionBiallelic = createEnrichedListForGene("AAAA");
-        List<GermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsOptionBiallelic, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersOptionBiallelic,
-                variantsOptionBiallelic, createChordAnalysis());
+                variantsOptionBiallelic, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
         List<GermlineVariant> germlineVariantsOptionVariant = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersOptionVariant = createCopyNumberListForTSG(2);
         List<SomaticVariant> variantsOptionVariant = createEnrichedListForGene(TSG);
-        List<GermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsOptionVariant, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersOptionVariant,
-                variantsOptionVariant, createChordAnalysis());
+                variantsOptionVariant, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
         List<GermlineVariant> germlineVariantsOptionCopyNumberPartialLoss = createTestGermlineVariantsTSGGene(false, 1);
         List<GeneCopyNumber> geneCopyNumbersCopyNumberPartialLoss = createCopyNumberListForTSG(1);
         List<SomaticVariant> variantsOptionCopyNumberPartialLoss = createEnrichedListForGene("AAAA");
-        List<GermlineVariant> filteredGermlineVariantOptionCopyNumberPartialLoss = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantOptionCopyNumberPartialLoss = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsOptionCopyNumberPartialLoss, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersCopyNumberPartialLoss,
-                variantsOptionCopyNumberPartialLoss, createChordAnalysis());
+                variantsOptionCopyNumberPartialLoss, createChordAnalysisNoHRD());
         assertEquals(0, filteredGermlineVariantOptionCopyNumberPartialLoss.size()); // only match copy number
 
         List<GermlineVariant> germlineVariantsOptionCopyNumberFullLoss = createTestGermlineVariantsTSGGene(false, 2);
         List<GeneCopyNumber> geneCopyNumbersCopyNumberFullLoss = createCopyNumberListForTSG(1);
         List<SomaticVariant> variantsOptionCopyNumberFullLoss = createEnrichedListForGene("AAAA");
-        List<GermlineVariant> filteredGermlineVariantOptionCopyNumberFullLoss = FilterGermlineVariants.filterGermlineVariantsForReporting(
+        List<InterpretGermlineVariant> filteredGermlineVariantOptionCopyNumberFullLoss = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineVariantsOptionCopyNumberFullLoss, TEST_DRIVER_GENE_VIEW,
                 germlineReportingModel,
                 geneCopyNumbersCopyNumberFullLoss,
-                variantsOptionCopyNumberFullLoss, createChordAnalysis());
+                variantsOptionCopyNumberFullLoss, createChordAnalysisNoHRD());
         assertEquals(1, filteredGermlineVariantOptionCopyNumberFullLoss.size()); // only match copy number
+
+        List<GermlineVariant> germlineVariantsOptionCopyNumberHRD = createTestGermlineVariantsTSGGene(false, 2);
+        List<GeneCopyNumber> geneCopyNumbersCopyNumberHRD = createCopyNumberListForTSG(4);
+        List<SomaticVariant> variantsOptionCopyNumberHRD = createEnrichedListForGene("AAAA");
+        List<InterpretGermlineVariant> filteredGermlineVariantOptionCopyNumberHRD = FilterGermlineVariants.filterGermlineVariantsForReporting(
+                germlineVariantsOptionCopyNumberHRD, TEST_DRIVER_GENE_VIEW,
+                germlineReportingModel,
+                geneCopyNumbersCopyNumberHRD,
+                variantsOptionCopyNumberHRD, createChordAnalysisHRD());
+        assertEquals(1, filteredGermlineVariantOptionCopyNumberHRD.size()); // only match HRD
     }
 
     @NotNull

@@ -17,10 +17,11 @@ public class DeleteSampleFromDatabase {
 
     private static final Logger LOGGER = LogManager.getLogger(DeleteSampleFromDatabase.class);
 
+    private static final String SAMPLE = "sample";
+
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-    private static final String SAMPLE = "sample";
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException {
         final Options options = createBasicOptions();
@@ -36,10 +37,10 @@ public class DeleteSampleFromDatabase {
     @NotNull
     private static Options createBasicOptions() {
         final Options options = new Options();
+        options.addOption(SAMPLE, true, "Tumor sample to delete.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(SAMPLE, true, "Tumor sample.");
 
         return options;
     }

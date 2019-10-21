@@ -35,23 +35,25 @@ public class SageVCF implements AutoCloseable {
     private final static String READ_CONTEXT_COUNT = "RCC";
     private final static String READ_CONTEXT_QUALITY = "RCQ";
 
+    private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final String filename, @NotNull final String normalSample,
-            @NotNull final List<String> tumorSamples) {
+    SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+        this.config = config;
 
-        writer = new VariantContextWriterBuilder().setOutputFile(filename)
-                .modifyOption(Options.INDEX_ON_THE_FLY, true)
-                .build();
+        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
 
-        final VCFHeader header = refContextEnrichment.enrichHeader(header(normalSample, tumorSamples));
+        final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
         writer.writeHeader(header);
     }
 
     public void write(@NotNull final List<AltContext> altContexts) {
-        refContextEnrichment.accept(create(altContexts));
+        final AltContext normal = altContexts.get(0);
+        if (normal.altSupport() <= config.maxNormalAltSupport()) {
+            refContextEnrichment.accept(create(altContexts));
+        }
     }
 
     @NotNull
@@ -63,7 +65,7 @@ public class SageVCF implements AutoCloseable {
                 .attribute("SDP", evidence.subprimeReadDepth())
                 .attribute("QUAL",
                         new int[] { readContextCounter.quality(), readContextCounter.baseQuality(), readContextCounter.mapQuality() })
-                .attribute("RCC", new int[] { readContextCounter.full(), readContextCounter.partial(), readContextCounter.realigned() })
+                .attribute("RCC", readContextCounter.rcc())
                 .attribute("RCQ", readContextCounter.rcq())
                 .alleles(alleles)
                 .make();
@@ -74,7 +76,7 @@ public class SageVCF implements AutoCloseable {
         assert (altContexts.size() > 1);
 
         final AltContext normal = altContexts.get(0);
-        //        final AltContext firstTumor = altContexts.get(1);
+        final AltContext firstTumor = altContexts.get(1);
 
         final Allele ref = Allele.create(normal.ref(), true);
         final Allele alt = Allele.create(normal.alt(), false);
@@ -102,7 +104,7 @@ public class SageVCF implements AutoCloseable {
                 .alleles(alleles);
 
         final VariantContext context = builder.make();
-        //        context.getCommonInfo().setLog10PError(firstTumor.altQuality() / -10d);
+        context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
         return context;
     }
 
@@ -128,7 +130,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 3, VCFHeaderLineType.Integer, "[Full, Partial, Realigned]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 5, VCFHeaderLineType.Integer, "[Full, Partial, Realigned, J-, J+]"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
                 3,
                 VCFHeaderLineType.Integer,

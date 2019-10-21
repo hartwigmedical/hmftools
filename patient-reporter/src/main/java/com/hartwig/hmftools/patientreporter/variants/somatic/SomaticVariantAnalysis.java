@@ -19,9 +19,6 @@ public abstract class SomaticVariantAnalysis {
     public abstract List<SomaticVariant> variantsToReport();
 
     @NotNull
-    public abstract List<EvidenceItem> evidenceItems();
-
-    @NotNull
     public abstract List<DriverCatalog> driverCatalog();
 
     public abstract double microsatelliteIndelsPerMb();

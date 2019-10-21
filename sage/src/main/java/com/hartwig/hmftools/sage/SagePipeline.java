@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.context.TumorReadContextSupplier;
-import com.hartwig.hmftools.sage.context.TumorRefContextCandidates;
 import com.hartwig.hmftools.sage.context.TumorRefContextSupplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,14 +27,14 @@ public class SagePipeline {
     private final GenomeRegion region;
     private final SageConfig config;
     private final Executor executor;
-    private final IndexedFastaSequenceFile refGenome;
+    private final RefSequence refSequence;
 
     public SagePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
             final IndexedFastaSequenceFile refGenome) {
         this.region = region;
         this.config = config;
         this.executor = executor;
-        this.refGenome = refGenome;
+        this.refSequence = new RefSequence(region, refGenome);
     }
 
     @NotNull
@@ -50,24 +50,12 @@ public class SagePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config.minMapQuality(),
-                            sample,
-                            region,
-                            bam,
-                            refGenome,
-                            new TumorRefContextCandidates(sample)), executor)
-                            .thenApply(refContexts -> refContexts.stream()
-                                    .flatMap(x -> x.alts().stream())
-                                    .filter(x -> x.altSupport() > 2)
-                                    .collect(Collectors.toList()))
-                            .thenApply(altContexts -> new TumorReadContextSupplier(config.minMapQuality(),
-                                    sample,
-                                    region,
-                                    bam,
-                                    altContexts).get());
+                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config, sample, region, bam, refSequence), executor)
+                            .thenApply(this::altSupportFilter)
+                            .thenApply(x -> new TumorReadContextSupplier(config.minMapQuality(), sample, region, bam, x).get())
+                            .thenApply(this::qualityFilter);
 
             tumorFutures.add(candidateFuture);
-
         }
 
         final CompletableFuture<Void> doneTumor = CompletableFuture.allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()]));
@@ -79,10 +67,10 @@ public class SagePipeline {
                 sagePipelineData.addTumor(i, future.join());
             }
 
-            return new NormalRefContextSupplier(config.minMapQuality(),
+            return new NormalRefContextSupplier(config,
                     region,
                     config.referenceBam(),
-                    refGenome,
+                    refSequence,
                     sagePipelineData.normalCandidates()).get();
         });
 
@@ -92,6 +80,19 @@ public class SagePipeline {
 
             return sagePipelineData.altContexts();
         });
+    }
+
+    @NotNull
+    private List<AltContext> altSupportFilter(@NotNull final List<RefContext> refContexts) {
+        return refContexts.stream()
+                .flatMap(x -> x.alts().stream())
+                .filter(x -> x.altSupport() >= config.minTumorAltSupport())
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private List<AltContext> qualityFilter(@NotNull final List<AltContext> contexts) {
+        return contexts.stream().filter(x -> x.primaryReadContext().quality() >= config.minVariantQuality()).collect(Collectors.toList());
     }
 
 }

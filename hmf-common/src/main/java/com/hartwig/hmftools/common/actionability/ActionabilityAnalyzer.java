@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFa
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
@@ -96,6 +97,22 @@ public class ActionabilityAnalyzer {
 
         for (SomaticVariant variant : variantsOnActionableGenes) {
             evidencePerVariant.put(variant, variantAnalyzer.evidenceForSomaticVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
+        }
+
+        return evidencePerVariant;
+    }
+
+    @NotNull
+    public Map<ReportableVariant, List<EvidenceItem>> evidenceForAllVariants(@NotNull List<ReportableVariant> variants,
+            @Nullable String primaryTumorLocation) {
+        Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
+
+        List<ReportableVariant> variantsOnActionableGenes = variants.stream()
+                .filter(variant -> variantAnalyzer.actionableGenes().contains(variant.gene()))
+                .collect(Collectors.toList());
+
+        for (ReportableVariant variant : variantsOnActionableGenes) {
+            evidencePerVariant.put(variant, variantAnalyzer.evidenceForAllVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerVariant;

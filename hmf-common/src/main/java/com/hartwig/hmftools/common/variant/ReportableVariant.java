@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.patientreporter.variants;
+package com.hartwig.hmftools.common.variant;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 
 import org.immutables.value.Value;
@@ -15,6 +16,20 @@ public abstract class ReportableVariant implements AllelicDepth {
 
     @NotNull
     public abstract String gene();
+
+    public abstract long position();
+
+    @NotNull
+    public abstract String chromosome();
+
+    @NotNull
+    public abstract String ref();
+
+    @NotNull
+    public abstract String alt();
+
+    @NotNull
+    public abstract CodingEffect canonicalCodingEffect();
 
     @NotNull
     public abstract String gDNA();

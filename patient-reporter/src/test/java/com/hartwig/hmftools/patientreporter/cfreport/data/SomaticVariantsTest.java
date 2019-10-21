@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.junit.Test;
 

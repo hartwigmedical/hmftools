@@ -1,31 +1,24 @@
 package com.hartwig.hmftools.patientreporter.variants.somatic;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantAnalyzer {
 
@@ -43,29 +36,12 @@ public final class SomaticVariantAnalyzer {
 
     @NotNull
     public static SomaticVariantAnalysis run(@NotNull List<SomaticVariant> variants, @NotNull DriverGeneView driverGeneView,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) {
         List<SomaticVariant> variantsToReport = variants.stream().filter(includeFilter(driverGeneView)).collect(Collectors.toList());
-
-        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
-        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForSomaticVariants(variants, primaryTumorLocation);
 
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
         driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
-
-        // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
-        List<EvidenceItem> filteredEvidence =
-                ReportableEvidenceItemFactory.reportableFlatListDriversOnly(evidencePerVariant, driverCatalog);
-
-        // Check that all variants with high level evidence are reported (since they are in the driver catalog).
-        for (Map.Entry<SomaticVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
-            SomaticVariant variant = entry.getKey();
-            if (!variantsToReport.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
-                LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
-            }
-        }
 
         // Check that we miss no drivers
         for (DriverCatalog driver : driverCatalog) {
@@ -81,7 +57,6 @@ public final class SomaticVariantAnalyzer {
         }
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
-                filteredEvidence,
                 driverCatalog,
                 MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants),
                 MutationalLoadAnalyzer.determineTumorMutationalLoad(variants),

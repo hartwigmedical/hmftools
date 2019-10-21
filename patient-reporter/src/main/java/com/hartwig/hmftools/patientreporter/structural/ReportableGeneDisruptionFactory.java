@@ -26,24 +26,41 @@ final class ReportableGeneDisruptionFactory {
     public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
-        Set<Double> valueDisruption = Sets.newHashSet();
-        for (Pair<ReportableDisruption, ReportableDisruption> pairedDisruption : pairedMap.values()) {
-            ReportableDisruption primaryDisruption = pairedDisruption.getLeft();
-            valueDisruption.add(primaryDisruption.undisruptedCopyNumber());
-            if (valueDisruption.size() > 1) {
-                LOGGER.warn("The undisrupted copy number of the sv is not the same");
-            }
-            double lowestUndisruptedCopyNumber = valueDisruption.stream().findFirst().get();
 
-            reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
-                    .location(primaryDisruption.chromosome() + primaryDisruption.chrBand())
-                    .gene(primaryDisruption.gene())
-                    .type(primaryDisruption.type())
-                    .range(rangeField(pairedDisruption))
-                    .ploidy(primaryDisruption.ploidy())
-                    .firstAffectedExon(primaryDisruption.exonUp())
-                    .undisruptedCopyNumber(lowestUndisruptedCopyNumber)
-                    .build());
+        for (Pair<ReportableDisruption, ReportableDisruption> pairedDisruption : pairedMap.values()) {
+            ReportableDisruption primaryDisruptionLeft = pairedDisruption.getLeft();
+            ReportableDisruption primaryDisruptionRight = pairedDisruption.getRight();
+
+            if (primaryDisruptionRight != null) {
+                double lowestUndisruptedCopyNumber =
+                        primaryDisruptionLeft.undisruptedCopyNumber() > primaryDisruptionRight.undisruptedCopyNumber()
+                                ? primaryDisruptionRight.undisruptedCopyNumber() : primaryDisruptionLeft.undisruptedCopyNumber();
+
+                boolean valueDisruptedCopyNumber = primaryDisruptionLeft.ploidy().equals(primaryDisruptionRight.ploidy()) ? true : false;
+
+                if (!valueDisruptedCopyNumber) {
+                    LOGGER.warn("The disrupted copy number of the sv is not the same");
+                }
+                reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
+                        .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
+                        .gene(primaryDisruptionLeft.gene())
+                        .type(primaryDisruptionLeft.type())
+                        .range(rangeField(pairedDisruption))
+                        .ploidy(primaryDisruptionLeft.ploidy())
+                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
+                        .undisruptedCopyNumber(lowestUndisruptedCopyNumber)
+                        .build());
+            } else {
+                reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
+                        .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
+                        .gene(primaryDisruptionLeft.gene())
+                        .type(primaryDisruptionLeft.type())
+                        .range(rangeField(pairedDisruption))
+                        .ploidy(primaryDisruptionLeft.ploidy())
+                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
+                        .undisruptedCopyNumber(primaryDisruptionLeft.undisruptedCopyNumber())
+                        .build());
+            }
         }
 
         LOGGER.debug("Generated {} reportable disruptions based on {} disruptions", reportableDisruptions.size(), disruptions.size());

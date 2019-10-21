@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.context;
 
+import static com.hartwig.hmftools.sage.context.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.context.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.context.ReadContextMatch.PARTIAL;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.logging.log4j.util.Strings;
@@ -17,9 +21,10 @@ public class ReadContextImproved {
     private final byte[] readBases;
     private final int distance;
     private final String distanceCigar;
+    private final int jitter;
 
-    public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
-            final int flankSize, final byte[] readBases) {
+    public ReadContextImproved(final int jitter, final int refPosition, final int readIndex, final int leftCentreIndex,
+            final int rightCentreIndex, final int flankSize, final byte[] readBases) {
         assert (leftCentreIndex > 0);
         assert (rightCentreIndex < readBases.length);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -32,12 +37,12 @@ public class ReadContextImproved {
         this.readIndex = readIndex;
         this.distance = 0;
         this.distanceCigar = Strings.EMPTY;
-
+        this.jitter = Math.abs(jitter);
     }
 
-    public ReadContextImproved(final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
-            final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
-        assert (leftCentreIndex > 0);
+    public ReadContextImproved(final int jitter, final int refPosition, final int readIndex, final int leftCentreIndex,
+            final int rightCentreIndex, final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
+        assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
         this.position = refPosition;
@@ -50,6 +55,7 @@ public class ReadContextImproved {
         ReadContextDistance distance = new ReadContextDistance(leftFlankStartIndex(), rightFlankEndIndex(), record, refBases);
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
+        this.jitter = Math.abs(jitter);
 
     }
 
@@ -57,12 +63,38 @@ public class ReadContextImproved {
         return position;
     }
 
+    int baseQuality(int readIndex, SAMRecord record) {
+        int leftOffset = this.readIndex - leftCentreIndex;
+        int rightOffset = rightCentreIndex - this.readIndex;
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        int leftQuality = record.getBaseQualities()[leftIndex];
+        if (leftIndex == rightIndex) {
+            return leftQuality;
+        }
+
+        int rightQuality = record.getBaseQualities()[rightIndex];
+        return Math.min(leftQuality, rightQuality);
+    }
+
+    int distanceFromReadEdge(int readIndex, SAMRecord record) {
+        int leftOffset = this.readIndex - leftCentreIndex;
+        int rightOffset = rightCentreIndex - this.readIndex;
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        return Math.min(leftIndex, record.getReadBases().length - rightIndex - 1);
+    }
+
     public boolean isComplete() {
         return leftFlankLength() == flankSize && rightFlankLength() == flankSize;
     }
 
     public boolean isFullMatch(@NotNull final ReadContextImproved other) {
-        return isComplete() && other.isComplete() && centerMatch(other.readIndex, other.readBases)
+        return isComplete() && other.isComplete() && centreMatch(other.readIndex, other.readBases) == ReadContextMatch.FULL
                 && leftFlankMatchingBases(other.readIndex, other.readBases) == flankSize
                 && rightFlankMatchingBases(other.readIndex, other.readBases) == flankSize;
     }
@@ -70,21 +102,45 @@ public class ReadContextImproved {
     @NotNull
     public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
 
-        if (!isComplete() || !centerMatch(otherReadIndex, otherBases)) {
-            return ReadContextMatch.NONE;
+        if (!isComplete()) {
+            return NONE;
+        }
+
+        ReadContextMatch centreMatch = centreMatch(otherReadIndex, otherBases);
+        if (centreMatch == NONE) {
+            return NONE;
         }
 
         int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases);
         if (leftFlankingBases < 0) {
-            return ReadContextMatch.NONE;
+            return NONE;
         }
 
-        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases);
+        final int rightFlankingStartIndex;
+        switch (centreMatch) {
+            case FULL:
+                rightFlankingStartIndex = otherReadIndex;
+                break;
+            case JITTER_ADDED:
+                rightFlankingStartIndex = otherReadIndex + jitter;
+                break;
+            case JITTER_REMOVED:
+                rightFlankingStartIndex = otherReadIndex - jitter;
+                break;
+            default:
+                throw new IllegalStateException("Unable to handle centre match type " + centreMatch);
+        }
+
+        int rightFlankingBases = rightFlankMatchingBases(rightFlankingStartIndex, otherBases);
         if (rightFlankingBases < 0) {
-            return ReadContextMatch.NONE;
+            return NONE;
         }
 
-        return leftFlankingBases == flankSize && rightFlankingBases == flankSize ? ReadContextMatch.FULL : ReadContextMatch.PARTIAL;
+        if (centreMatch == ReadContextMatch.FULL) {
+            return leftFlankingBases == flankSize && rightFlankingBases == flankSize ? FULL : PARTIAL;
+        }
+
+        return centreMatch;
     }
 
     public boolean isWithin(byte[] bases) {
@@ -116,24 +172,54 @@ public class ReadContextImproved {
     }
 
     @VisibleForTesting
-    boolean centerMatch(int otherRefIndex, byte[] otherBases) {
+    @NotNull
+    ReadContextMatch centreMatch(int otherRefIndex, byte[] otherBases) {
         int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
         if (otherLeftCentreIndex < 0) {
-            return false;
+            return NONE;
         }
 
-        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1;
-        if (otherRightCentreIndex >= otherBases.length) {
-            return false;
+        // Up to jitter
+        int lengthUntilJitter = centreLength() - 1 - jitter;
+        if (otherLeftCentreIndex + lengthUntilJitter - 1 >= otherBases.length) {
+            return NONE;
         }
-
-        for (int i = 0; i < centreLength(); i++) {
+        for (int i = 0; i < lengthUntilJitter; i++) {
             if (readBases[leftCentreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
-                return false;
+                return NONE;
             }
         }
 
-        return true;
+        boolean fullMatch = true;
+        for (int i = lengthUntilJitter; i < centreLength(); i++) {
+            if (otherLeftCentreIndex + i >= otherBases.length || readBases[leftCentreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
+                fullMatch = false;
+                break;
+            }
+        }
+
+        if (fullMatch) {
+            return FULL;
+        }
+
+        if (jitter == 0) {
+            return NONE;
+        }
+
+        if (otherLeftCentreIndex + lengthUntilJitter < otherBases.length && readBases[rightCentreIndex] == otherBases[otherLeftCentreIndex
+                + lengthUntilJitter]) {
+            return ReadContextMatch.JITTER_REMOVED;
+        }
+
+        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1 + jitter;
+        for (int i = 0; i <= jitter; i++) {
+            if (otherRightCentreIndex - jitter + i >= otherBases.length || readBases[rightCentreIndex - jitter + i] != otherBases[
+                    otherRightCentreIndex - jitter + i]) {
+                return ReadContextMatch.NONE;
+            }
+        }
+
+        return ReadContextMatch.JITTER_ADDED;
     }
 
     @VisibleForTesting
@@ -164,6 +250,14 @@ public class ReadContextImproved {
         }
 
         return maxLength;
+    }
+
+    int centreStartIndex() {
+        return leftCentreIndex;
+    }
+
+    int centreEndIndex() {
+        return rightCentreIndex;
     }
 
     private int leftFlankStartIndex() {
@@ -201,5 +295,11 @@ public class ReadContextImproved {
 
     public String distanceCigar() {
         return distanceCigar;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    String centerBases() {
+        return new String(readBases, leftCentreIndex, rightCentreIndex - leftCentreIndex + 1);
     }
 }

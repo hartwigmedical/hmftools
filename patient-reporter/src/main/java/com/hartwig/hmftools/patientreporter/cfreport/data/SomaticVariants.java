@@ -9,7 +9,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

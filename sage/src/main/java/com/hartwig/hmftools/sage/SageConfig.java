@@ -31,7 +31,7 @@ public interface SageConfig {
     String MIN_BASE_QUALITY = "min_base_quality";
 
     int DEFAULT_THREADS = 2;
-    int DEFAULT_MIN_MAP_QUALITY = 1;
+    int DEFAULT_MIN_MAP_QUALITY = 0;
     int DEFAULT_MIN_BASE_QUALITY = 13;
 
     @NotNull
@@ -77,6 +77,22 @@ public interface SageConfig {
     int minMapQuality();
 
     int minBaseQuality();
+
+    default int maxDepthCoverage() {
+        return 1000;
+    }
+
+    default int minVariantQuality() {
+        return 100;
+    }
+
+    default int minTumorAltSupport() {
+        return 3;
+    }
+
+    default int maxNormalAltSupport() {
+        return 3;
+    }
 
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {

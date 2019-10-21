@@ -52,7 +52,7 @@ public class ReportableEvidenceItemFactoryTest {
         List<DriverCatalog> catalog = Lists.newArrayList(catalogBuilder("GENE").driverLikelihood(0.9).build());
 
         List<EvidenceItem> evidenceForHighDrivers =
-                ReportableEvidenceItemFactory.reportableFlatListDriversOnly(evidencePerVariant, catalog);
+                ReportableEvidenceItemFactory.reportableFlatListDriversSomaticVariantOnly(evidencePerVariant, catalog);
 
         assertEquals(1, evidenceForHighDrivers.size());
     }
@@ -69,7 +69,7 @@ public class ReportableEvidenceItemFactoryTest {
         List<DriverCatalog> catalog = Lists.newArrayList(catalogBuilder("GENE").driverLikelihood(0.6).build());
 
         List<EvidenceItem> evidenceForHighDrivers =
-                ReportableEvidenceItemFactory.reportableFlatListDriversOnly(evidencePerVariant, catalog);
+                ReportableEvidenceItemFactory.reportableFlatListDriversSomaticVariantOnly(evidencePerVariant, catalog);
 
         assertEquals(0, evidenceForHighDrivers.size());
     }
