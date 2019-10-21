@@ -12,11 +12,11 @@ public class RepeatContextFactoryTest {
 
     @Test
     public void canDetermineRepeatContext() {
-        String refGenome = "GATCGATCGATCGAAAAA";
+        String refGenome = "GATCGATCGATCGGAAAA";
 
         assertRepeatContext(3, "GATC", 5, refGenome);
         assertRepeatContext(3, "ATCG", 12, refGenome);
-        assertRepeatContext(5, "A", 15, refGenome);
+        assertRepeatContext(4, "A", 15, refGenome);
     }
 
     @Test

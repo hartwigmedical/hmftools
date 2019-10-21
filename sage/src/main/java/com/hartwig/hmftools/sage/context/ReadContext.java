@@ -68,22 +68,6 @@ public class ReadContext {
         return position;
     }
 
-    int baseQuality(int readIndex, SAMRecord record) {
-        int leftOffset = this.readIndex - leftCentreIndex;
-        int rightOffset = rightCentreIndex - this.readIndex;
-
-        int leftIndex = readIndex - leftOffset;
-        int rightIndex = readIndex + rightOffset;
-
-        int leftQuality = record.getBaseQualities()[leftIndex];
-        if (leftIndex == rightIndex) {
-            return leftQuality;
-        }
-
-        int rightQuality = record.getBaseQualities()[rightIndex];
-        return Math.min(leftQuality, rightQuality);
-    }
-
     int distanceFromReadEdge(int readIndex, SAMRecord record) {
         int leftOffset = this.readIndex - leftCentreIndex;
         int rightOffset = rightCentreIndex - this.readIndex;

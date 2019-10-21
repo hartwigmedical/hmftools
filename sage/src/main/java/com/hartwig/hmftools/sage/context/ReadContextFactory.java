@@ -85,7 +85,7 @@ public class ReadContextFactory {
 
         int startIndex = readIndex;
         int endIndex = readIndex;
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
+        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex , record.getReadBases());
         if (repeatContext.isPresent()) {
             final RepeatContext repeat = repeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
