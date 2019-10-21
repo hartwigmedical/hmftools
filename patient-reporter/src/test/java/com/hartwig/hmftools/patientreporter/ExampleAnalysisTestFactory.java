@@ -22,7 +22,9 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
@@ -32,8 +34,7 @@ import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableDriver
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
@@ -504,6 +505,11 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createCOLO829SomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
@@ -521,6 +527,11 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
@@ -538,6 +549,11 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .gene("TERT")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
@@ -555,6 +571,11 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .gene("SF3B1")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("2:198266779")
@@ -572,6 +593,11 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .gene("TP63")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
@@ -594,6 +620,11 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createAllSomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("TP63")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
@@ -611,6 +642,11 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("KIT")
+                .position(189604330)
+                .chromosome("3")
+                .ref("C")
+                .alt("T")
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(true)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:81627197")

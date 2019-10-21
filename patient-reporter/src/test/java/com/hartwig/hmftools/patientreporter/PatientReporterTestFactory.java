@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
@@ -101,6 +101,9 @@ public final class PatientReporterTestFactory {
         return ImmutableGermlineVariant.builder()
                 .passFilter(true)
                 .gene(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .codingEffect(CodingEffect.UNDEFINED)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .hgvsCodingImpact(Strings.EMPTY)
@@ -116,6 +119,11 @@ public final class PatientReporterTestFactory {
     public static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
                 .gene(Strings.EMPTY)
+                .position(0)
+                .chromosome(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .gDNA(Strings.EMPTY)
                 .hgvsCodingImpact(Strings.EMPTY)
                 .hgvsProteinImpact(Strings.EMPTY)

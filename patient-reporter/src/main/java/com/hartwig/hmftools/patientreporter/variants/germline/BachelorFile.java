@@ -6,10 +6,10 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class BachelorFile {
@@ -52,6 +52,9 @@ public final class BachelorFile {
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("PASS"))
                 .gene(values[6].trim())
+                .ref(values[4].trim())
+                .alt(values[5].trim())
+                .codingEffect(CodingEffect.valueOf(values[11].trim()))
                 .chromosome(values[0].trim())
                 .position(Integer.parseInt(values[1].trim()))
                 .hgvsCodingImpact(values[21].trim())

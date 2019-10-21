@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,15 @@ public abstract class GermlineVariant implements GenomePosition, AllelicDepth {
 
     @NotNull
     public abstract String gene();
+
+    @NotNull
+    public abstract String ref();
+
+    @NotNull
+    public abstract String alt();
+
+    @NotNull
+    public abstract CodingEffect codingEffect();
 
     @Override
     @NotNull

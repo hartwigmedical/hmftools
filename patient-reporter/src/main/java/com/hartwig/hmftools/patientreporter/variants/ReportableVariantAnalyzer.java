@@ -1,13 +1,22 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
@@ -26,10 +35,11 @@ public final class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
+    public static ReportVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<InterpretGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingChoice germlineReportingChoice) {
+            @NotNull LimsGermlineReportingChoice germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         Double driverLikelihood = null;
         for (SomaticVariant variant : somaticVariantsReport) {
@@ -37,7 +47,7 @@ public final class ReportableVariantAnalyzer {
             if (catalog == null) {
                 LOGGER.warn("No driver entry found for gene {}!", variant.gene());
             }
-            for (InterpretGermlineVariant interpretGermlineVariant: germlineVariantsToReport) {
+            for (InterpretGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
                 if (interpretGermlineVariant.germlineVariant().gene().equals(variant.gene())) {
                     driverLikelihood = interpretGermlineVariant.driverLikelihood();
                 }
@@ -60,7 +70,23 @@ public final class ReportableVariantAnalyzer {
                     .build());
 
         }
-        return reportableVariants;
+
+        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
+                actionabilityAnalyzer.evidenceForAllVariants(reportableVariants, primaryTumorLocation);
+
+        // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
+        List<EvidenceItem> filteredEvidence =
+                ReportableEvidenceItemFactory.reportableFlatListDriversAllVariant(evidencePerVariant, driverCatalog);
+
+        // Check that all variants with high level evidence are reported (since they are in the driver catalog).
+        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
+            ReportableVariant variant = entry.getKey();
+            if (!reportableVariants.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
+                LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
+            }
+        }
+        return ImmutableReportVariantAnalysis.of(reportableVariants, filteredEvidence);
     }
 
     @Nullable
@@ -77,6 +103,11 @@ public final class ReportableVariantAnalyzer {
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull GermlineVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
+                .position(variant.position())
+                .chromosome(variant.chromosome())
+                .ref(variant.ref())
+                .alt(variant.alt())
+                .canonicalCodingEffect(variant.codingEffect())
                 .gDNA(toGDNA(variant))
                 .hgvsCodingImpact(variant.hgvsCodingImpact())
                 .hgvsProteinImpact(variant.hgvsProteinImpact())
@@ -93,6 +124,11 @@ public final class ReportableVariantAnalyzer {
     private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant) {
         return ImmutableReportableVariant.builder()
                 .gene(variant.gene())
+                .position(variant.position())
+                .chromosome(variant.chromosome())
+                .ref(variant.ref())
+                .alt(variant.alt())
+                .canonicalCodingEffect(variant.canonicalCodingEffect())
                 .gDNA(toGDNA(variant))
                 .hgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .hgvsProteinImpact(variant.canonicalHgvsProteinImpact())

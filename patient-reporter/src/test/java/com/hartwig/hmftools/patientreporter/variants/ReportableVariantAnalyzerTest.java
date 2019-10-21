@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -11,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
@@ -41,12 +44,14 @@ public class ReportableVariantAnalyzerTest {
 
         List<InterpretGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
 
-        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+        ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingChoice.ALL);
+                LimsGermlineReportingChoice.ALL, testAnalysedReportData().actionabilityAnalyzer(), null);
+
+        List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
         assertEquals(4, reportableVariants.size());
         assertEquals(1.0, reportableVariants.get(0).driverLikelihood(), EPSILON);
@@ -62,12 +67,14 @@ public class ReportableVariantAnalyzerTest {
 
         List<SomaticVariant> variantsToReport = Lists.newArrayList(variant1, variant2);
 
-        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+        ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
                 TEST_DRIVER_GENE_VIEW,
                 Lists.newArrayList(),
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingChoice.ALL);
+                LimsGermlineReportingChoice.ALL, testAnalysedReportData().actionabilityAnalyzer(), null);
+
+        List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
         assertEquals(2, reportableVariants.size());
 
@@ -86,12 +93,14 @@ public class ReportableVariantAnalyzerTest {
         List<InterpretGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
-        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+        ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.ALL);
+                LimsGermlineReportingChoice.ALL, testAnalysedReportData().actionabilityAnalyzer(), null);
+
+        List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
         assertEquals(3, reportableVariants.size());
         assertEquals(GENE_2, reportableVariants.get(0).gene());
@@ -114,12 +123,14 @@ public class ReportableVariantAnalyzerTest {
         List<InterpretGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
-        List<ReportableVariant> reportableVariants = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
+        ReportVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(variantsToReport,
                 TEST_DRIVER_CATALOG,
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.NONE_ALLOW_FAMILY);
+                LimsGermlineReportingChoice.NONE_ALLOW_FAMILY, testAnalysedReportData().actionabilityAnalyzer(), null);
+
+        List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
         assertEquals(3, reportableVariants.size());
         assertEquals(GENE_2, reportableVariants.get(0).gene());

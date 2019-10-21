@@ -33,7 +33,8 @@ import com.hartwig.hmftools.patientreporter.copynumber.HomozygousDisruptionAnaly
 import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
@@ -41,7 +42,6 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.InterpretGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.InterpretViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
@@ -80,10 +80,8 @@ class AnalysedPatientReporter {
         List<ReportableDriverCatalog> reportableDriverCatalogs = analyzeDriverCatalog(linxDriversCatalogTsv);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
-        SomaticVariantAnalysis somaticVariantAnalysis = analyzeSomaticVariants(sampleMetadata.tumorSampleId(),
-                somaticVariantVcf,
-                patientTumorLocation,
-                copyNumberAnalysis.exomeGeneCopyNumbers());
+        SomaticVariantAnalysis somaticVariantAnalysis =
+                analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, copyNumberAnalysis.exomeGeneCopyNumbers());
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionFile);
         List<InterpretGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
@@ -92,13 +90,15 @@ class AnalysedPatientReporter {
                 somaticVariantAnalysis,
                 chordAnalysis);
 
-        List<ReportableVariant> reportableVariants =
+        ReportVariantAnalysis reportableVariantsAnalysis =
                 ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantAnalysis.variantsToReport(),
                         somaticVariantAnalysis.driverCatalog(),
                         reportData.driverGeneView(),
                         germlineVariantsToReport,
                         reportData.germlineReportingModel(),
-                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()));
+                        reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()),
+                        reportData.actionabilityAnalyzer(),
+                        patientTumorLocation);
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionFile);
@@ -106,7 +106,7 @@ class AnalysedPatientReporter {
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
         List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
-        allEvidenceItems.addAll(somaticVariantAnalysis.evidenceItems());
+        allEvidenceItems.addAll(reportableVariantsAnalysis.evidenceItems());
         allEvidenceItems.addAll(copyNumberAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
@@ -120,7 +120,7 @@ class AnalysedPatientReporter {
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
-                .reportableVariants(reportableVariants)
+                .reportableVariants(reportableVariantsAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(somaticVariantAnalysis.microsatelliteIndelsPerMb())
                 .tumorMutationalLoad(somaticVariantAnalysis.tumorMutationalLoad())
                 .tumorMutationalBurden(somaticVariantAnalysis.tumorMutationalBurden())
@@ -149,7 +149,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException{
+    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionFile) throws IOException {
         return InterpretViralInsertion.interpretVirals(linxViralInsertionFile);
 
     }
@@ -173,16 +173,12 @@ class AnalysedPatientReporter {
 
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
+            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
 
         final List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        return SomaticVariantAnalyzer.run(variants,
-                reportData.driverGeneView(),
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation,
-                exomeGeneCopyNumbers);
+        return SomaticVariantAnalyzer.run(variants, reportData.driverGeneView(), exomeGeneCopyNumbers);
     }
 
     @NotNull
