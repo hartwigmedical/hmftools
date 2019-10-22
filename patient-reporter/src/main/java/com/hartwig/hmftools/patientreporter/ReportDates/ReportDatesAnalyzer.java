@@ -7,10 +7,13 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportDatesAnalyzer {
     private static final String DELIMITER = "\t";
+    private static final Logger LOGGER = LogManager.getLogger(ReportDatesAnalyzer.class);
 
     private ReportDatesAnalyzer() {
 
@@ -24,12 +27,24 @@ public final class ReportDatesAnalyzer {
         for (String line : linesReportDates) {
             String[] values = line.split(DELIMITER);
 
-            reportDatesList.add(ImmutableReportDates.builder()
-                    .sampleId(values[0])
-                    .tumorBarcode(values[1])
-                    .reportDate(values[2])
-                    .sourceReport(values[3])
-                    .build());
+            if (values.length == 4) {
+                reportDatesList.add(ImmutableReportDates.builder()
+                        .sampleId(values[0])
+                        .tumorBarcode(values[1])
+                        .reportDate(values[2])
+                        .sourceReport(values[3])
+                        .build());
+            } else {
+                reportDatesList.add(ImmutableReportDates.builder()
+                        .sampleId(values[0])
+                        .tumorBarcode(values[1])
+                        .reportDate(values[2])
+                        .sourceReport(values[3])
+                        .purity(values[4])
+                        .status(values[5])
+                        .qcStatus(values[6])
+                        .build());
+            }
         }
 
         return reportDatesList;

@@ -170,8 +170,7 @@ public class PatientReporterApplication {
                 String reasonCorrect = corrected ? reason + "_corrected" : reason.toString();
 
                 String stringForFile =
-                        sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + Strings.EMPTY + "\t"
-                                + Strings.EMPTY + "\t" + Strings.EMPTY + "\n";
+                        sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\n";
 
                 BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV), true));
                 writer.write(stringForFile);

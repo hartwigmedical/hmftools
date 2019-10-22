@@ -21,4 +21,13 @@ public abstract class ReportDates {
     @NotNull
     public abstract String sourceReport();
 
+    @Nullable
+    public abstract String purity();
+
+    @Nullable
+    public abstract String status();
+
+    @Nullable
+    public abstract String qcStatus();
+
 }

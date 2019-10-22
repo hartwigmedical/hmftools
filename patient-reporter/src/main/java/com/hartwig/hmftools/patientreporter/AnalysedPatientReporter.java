@@ -164,15 +164,25 @@ class AnalysedPatientReporter {
         String sampleId = sampleMetadata.tumorSampleId();
         String tumorBarcode = sampleMetadata.tumorSampleBarcode();
 
+        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+
+        String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
+        FittedPurityStatus status = purityContext.status();
+        PurpleQCStatus qcStatus = purpleQC.status();
+
         List<ReportDates> allReportDates = ReportDatesAnalyzer.read(reportDatesTsv);
         String reasonCorrect = correctReport ? "sequence_report" + "_corrected" : "sequence_report";
         String keySample = sampleId + tumorBarcode + reportDate + reasonCorrect;
+        String keySample2 = sampleId + tumorBarcode  + reasonCorrect + purity + status + qcStatus;
 
         boolean present = false;
         for (ReportDates dates: allReportDates) {
             String keyFile =
                     dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
-            if (keySample.equals(keyFile)) {
+            String keyFile2 =
+                    dates.sampleId() + dates.tumorBarcode()  + dates.sourceReport() + dates.purity() + dates.status() + dates.qcStatus();
+            if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
                 LOGGER.warn("Sample is already reported");
                 present = true;
 
@@ -183,19 +193,13 @@ class AnalysedPatientReporter {
 
             LOGGER.info("Writing report date to tsv file");
 
-            PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-            final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
-
-            String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
-            FittedPurityStatus status = purityContext.status();
-            PurpleQCStatus qcStatus = purpleQC.status();
-
             String stringForFile =
                     sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + status + "\t"
                             + qcStatus + "\n";
 
             BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
             writer.write(stringForFile);
+
             writer.close();
         }
 
