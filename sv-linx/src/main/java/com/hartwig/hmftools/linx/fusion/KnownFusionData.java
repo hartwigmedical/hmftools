@@ -48,13 +48,7 @@ public class KnownFusionData
 
     public boolean hasKnownFusion(final String fiveGene, final String threeGene)
     {
-        for(String[] pair : mKnownPairs)
-        {
-            if(pair[FIVE_GENE].equals(fiveGene) && pair[THREE_GENE].equals(threeGene))
-                return true;
-        }
-
-        return false;
+        return mKnownPairs.stream().anyMatch(x -> x[FIVE_GENE].equals(fiveGene) && x[THREE_GENE].equals(threeGene));
     }
 
     public boolean hasPromiscuousFiveGene(final String gene) { return mPromiscuousFiveGenes.contains(gene); }

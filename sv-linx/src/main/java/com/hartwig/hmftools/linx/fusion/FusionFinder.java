@@ -221,6 +221,12 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
                 return null;
             }
+            else if(downstreamTrans.preCoding() && upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId))
+            {
+                // skip pre-coding to pre-coding within the same gene
+                logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to pre-coding");
+                return null;
+            }
         }
         else if(upstreamTrans.isCoding())
         {

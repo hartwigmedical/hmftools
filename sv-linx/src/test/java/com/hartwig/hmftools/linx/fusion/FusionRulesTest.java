@@ -154,6 +154,17 @@ public class FusionRulesTest
         assertTrue(trans2.isIntronic());
         assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
+        // pre-coding to pre-coding same gene
+        trans1 = new Transcript(gene1, transId1, transName1, 1, -1, 2, -1,
+                0, getCodingBases(codingStart, codingEnd),10, true, 50, 450, codingStart, codingEnd);
+
+        trans2 = new Transcript(gene1, transId1, transName1, 4, -1, 5, -1,
+                0, getCodingBases(codingStart, codingEnd),10, true, 50, 450, codingStart, codingEnd);
+
+        assertTrue(trans1.preCoding());
+        assertTrue(trans2.preCoding());
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+
         // unmatched phasing exon to exon
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
