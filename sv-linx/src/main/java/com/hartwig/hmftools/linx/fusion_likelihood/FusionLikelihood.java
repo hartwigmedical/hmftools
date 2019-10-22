@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_MEDIUM_INV;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData.NON_PROX_TYPE_SHORT_INV;
+import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcGeneOverlapAreas;
 import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.reportGeneOverlaps;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
@@ -439,7 +440,7 @@ public class FusionLikelihood
 
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
 
-            writer.write("GeneIdUp,GeneNameUp,GeneIdDown,GeneNameDown,Type,LengthMin,LengthMax,Likelihood");
+            writer.write("GeneIdUp,GeneNameUp,GeneIdDown,GeneNameDown,Type,LengthMin,LengthMax,FusionRate,GenePairRate");
             writer.newLine();
 
             long proximateLimit = mCohortCalculator.getMaxBucketLength();
@@ -500,6 +501,8 @@ public class FusionLikelihood
                             mCohortCalculator.generateProximateCounts(genePairList, 0);
                         }
 
+                        final Map<Integer, Long> geneOverlapAreas = calcGeneOverlapAreas(mProximateBucketLengths, geneUp, geneDown);
+
                         for(int i = 0; i <= 1; ++i)
                         {
                             boolean isDel = (i == 0);
@@ -517,11 +520,14 @@ public class FusionLikelihood
                                 long[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
                                 long bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
 
+                                long geneOverlapArea = geneOverlapAreas.get(bucketIndex);
+                                double genePairRate = geneOverlapArea / (bucketWidth * GENOME_BASE_COUNT);
+
                                 double fusionRate = overlapArea / (bucketWidth * GENOME_BASE_COUNT);
 
-                                writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f",
+                                writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,%.12f",
                                         geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
-                                        isDel ? "DEL" : "DUP", bucketMinMax[BUCKET_MIN], bucketMinMax[BUCKET_MAX], fusionRate));
+                                        isDel ? "DEL" : "DUP", bucketMinMax[BUCKET_MIN], bucketMinMax[BUCKET_MAX], fusionRate, genePairRate));
 
                                 writer.newLine();
                             }
@@ -537,7 +543,7 @@ public class FusionLikelihood
                         {
                             double shortInvFusionFactor = 1.0 / (SHORT_INV_BUCKET * GENOME_BASE_COUNT);
 
-                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f",
+                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                     "INV", 1000, SHORT_INV_BUCKET,
                                     geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor));
@@ -550,7 +556,7 @@ public class FusionLikelihood
                             long maxBucketLength = mCohortCalculator.getMaxBucketLength();
                             double mediumInvFusionFactor = 1.0 / ((maxBucketLength - SHORT_INV_BUCKET) * GENOME_BASE_COUNT);
 
-                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f",
+                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                     "INV", SHORT_INV_BUCKET, LONG_DDI_BUCKET,
                                     geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_MEDIUM_INV) * mediumInvFusionFactor));
@@ -562,7 +568,7 @@ public class FusionLikelihood
                         {
                             double sameArmFusionFactor = 1.0 / mCohortCalculator.getArmLengthFactor();
 
-                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f",
+                            writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                     "LONG_DDI", LONG_DDI_BUCKET, LONG_DDI_BUCKET,
                                     geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_LONG_SAME_ARM) * sameArmFusionFactor));
@@ -593,7 +599,7 @@ public class FusionLikelihood
                         double remoteFusionFactor = 1.0 / (GENOME_BASE_COUNT * GENOME_BASE_COUNT);
 
                         // GeneIdUp,GeneIdDown,Type,LengthMin,LengthMax,Likelihood
-                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f",
+                        writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
                                 geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
                                 "BND", 0, 0, overlapArea * remoteFusionFactor));
 
