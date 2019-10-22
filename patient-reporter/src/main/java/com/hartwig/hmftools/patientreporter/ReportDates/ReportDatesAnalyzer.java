@@ -7,13 +7,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportDatesAnalyzer {
     private static final String DELIMITER = "\t";
-    private static final Logger LOGGER = LogManager.getLogger(ReportDatesAnalyzer.class);
 
     private ReportDatesAnalyzer() {
 

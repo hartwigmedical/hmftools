@@ -185,12 +185,10 @@ class AnalysedPatientReporter {
             if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
                 LOGGER.warn("Sample is already reported");
                 present = true;
-
             }
         }
 
         if (!present) {
-
             LOGGER.info("Writing report date to tsv file");
 
             String stringForFile =
@@ -202,7 +200,6 @@ class AnalysedPatientReporter {
 
             writer.close();
         }
-
     }
 
     @NotNull
