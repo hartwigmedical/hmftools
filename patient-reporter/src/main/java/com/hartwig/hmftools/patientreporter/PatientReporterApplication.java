@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -28,6 +32,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -70,6 +75,8 @@ public class PatientReporterApplication {
     private static final String LINX_VIRALINSERTION_TSV = "viral_insertion_tsv";
     private static final String LINX_DRIVERS_CATALOG_TSV = "linx_drivers_catalog_tsv";
 
+    private static final String REPORT_DATES_TSV = "report_dates_tsv";
+
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
@@ -105,6 +112,8 @@ public class PatientReporterApplication {
             QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
+            generateOutputReportDatesQCFailReport(reason, cmd);
+
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
@@ -120,12 +129,27 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(CIRCOS_FILE),
                     cmd.getOptionValue(LINX_VIRALINSERTION_TSV),
                     cmd.getOptionValue(LINX_DRIVERS_CATALOG_TSV),
+                    cmd.getOptionValue(REPORT_DATES_TSV),
                     cmd.getOptionValue(COMMENTS),
                     cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
             printUsageAndExit(options);
+        }
+    }
+
+    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd) throws IOException {
+
+        if (fileExists(cmd, REPORT_DATES_TSV)) {
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+            String reportDate = formatter.format(new Date());
+
+            String stringForFile = reportDate + "\t" + reason;
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV)));
+            writer.write(stringForFile);
+            writer.close();
         }
     }
 
@@ -173,7 +197,6 @@ public class PatientReporterApplication {
         String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
         LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
-
         return ImmutableQCFailReportData.builder()
                 .patientTumorLocations(patientTumorLocations)
                 .limsModel(lims)
@@ -197,7 +220,7 @@ public class PatientReporterApplication {
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_TSV)
                 && fileExists(cmd, CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV)
                 && fileExists(cmd, LINX_DRIVERS_CATALOG_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
-                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
+                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV) && fileExists(cmd, REPORT_DATES_TSV);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
@@ -304,6 +327,8 @@ public class PatientReporterApplication {
         options.addOption(LINX_VIRALINSERTION_TSV, true, "Path towards the LINX viral integration TSV.");
         options.addOption(LINX_DRIVERS_CATALOG_TSV, true, "Path towards the LINX drivers catalog TSV.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
+
+        options.addOption(REPORT_DATES_TSV, true, "Path towards output file for the report dates TSV.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");

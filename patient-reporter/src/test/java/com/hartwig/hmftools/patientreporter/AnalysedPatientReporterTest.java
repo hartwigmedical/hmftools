@@ -28,6 +28,7 @@ public class AnalysedPatientReporterTest {
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String LINX_VIRAL_INSERTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
+    private static final String REPORT_DATES_TSV =  Resources.getResource("lims/report_dates_lims.tsv").getPath();
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -52,6 +53,7 @@ public class AnalysedPatientReporterTest {
                 CIRCOS_FILE,
                 LINX_VIRAL_INSERTIONS_TSV,
                 LINX_DRIVER_CATALOG_TSV,
+                REPORT_DATES_TSV,
                 null,
                 false));
     }

@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.patientreporter;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +22,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
@@ -66,8 +71,8 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorTSV, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @Nullable String comments,
-            boolean correctedReport) throws IOException {
+            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @NotNull String reportDatesTsv,
+            @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -139,8 +144,28 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
+        generateOutputReportDates(reportDatesTsv, purplePurityTsv);
 
         return report;
+    }
+
+    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv) throws IOException {
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        String reportDate = formatter.format(new Date());
+
+        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+
+        String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
+        FittedPurityStatus status = purityContext.status();
+        String qcStatus = "";
+
+        String stringForFile = reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus;
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv));
+        writer.write(stringForFile);
+        writer.close();
+
     }
 
     @NotNull
