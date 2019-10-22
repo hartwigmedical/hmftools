@@ -34,6 +34,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.patientreporter.ReportDates.ReportDates;
+import com.hartwig.hmftools.patientreporter.ReportDates.ReportDatesAnalyzer;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
@@ -75,8 +77,8 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorTSV, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @NotNull String reportDatesTsv, @NotNull String purpleQCFile,
-            @Nullable String comments, boolean correctedReport) throws IOException {
+            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @NotNull String reportDatesTsv,
+            @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -148,31 +150,55 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
-        generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata().tumorSampleId(), purpleQCFile);
+        generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata(), purpleQCFile, correctedReport);
 
         return report;
     }
 
-    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv, @NotNull String sampleId,
-            @NotNull String purpleQCFile) throws IOException {
+    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv,
+            @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport) throws IOException {
 
-        LOGGER.info("Writing report date to tsv file");
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         String reportDate = formatter.format(new Date());
 
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+        String sampleId = sampleMetadata.tumorSampleId();
+        String tumorBarcode = sampleMetadata.tumorSampleBarcode();
 
+        List<ReportDates> allReportDates = ReportDatesAnalyzer.read(reportDatesTsv);
+        String reasonCorrect = correctReport ? "sequence_report" + "_corrected" : "sequence_report";
+        String keySample = sampleId + tumorBarcode + reportDate + reasonCorrect;
 
-        String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
-        FittedPurityStatus status = purityContext.status();
-        PurpleQCStatus qcStatus = purpleQC.status();
+        boolean present = false;
+        for (ReportDates dates: allReportDates) {
+            String keyFile =
+                    dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
+            if (keySample.equals(keyFile)) {
+                LOGGER.warn("Sample is already reported");
+                present = true;
 
-        String stringForFile = sampleId + "\t" + reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus + "\n";
+            }
+        }
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
-        writer.write(stringForFile);
-        writer.close();
+        if (!present) {
+
+            LOGGER.info("Writing report date to tsv file");
+
+            PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+            final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+
+            String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
+            FittedPurityStatus status = purityContext.status();
+            PurpleQCStatus qcStatus = purpleQC.status();
+
+            String stringForFile =
+                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + status + "\t"
+                            + qcStatus + "\n";
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
+            writer.write(stringForFile);
+            writer.close();
+        }
+
     }
 
     @NotNull

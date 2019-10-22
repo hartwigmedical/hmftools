@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.patientreporter.ReportDates.ReportDates;
+import com.hartwig.hmftools.patientreporter.ReportDates.ReportDatesAnalyzer;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -32,6 +34,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -112,7 +115,7 @@ public class PatientReporterApplication {
             QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
-            generateOutputReportDatesQCFailReport(reason, cmd, report.sampleReport().sampleMetadata().tumorSampleId());
+            generateOutputReportDatesQCFailReport(reason, cmd, report.sampleReport().sampleMetadata(), cmd.hasOption(CORRECTED_REPORT));
 
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
@@ -140,19 +143,40 @@ public class PatientReporterApplication {
         }
     }
 
-    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd, @NotNull String sampleId)
-            throws IOException {
+    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd,
+            @NotNull SampleMetadata sampleMetadata, boolean corrected) throws IOException {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        String reportDate = formatter.format(new Date());
 
-        if (fileExists(cmd, REPORT_DATES_TSV)) {
-            LOGGER.info("Writing report date to tsv file");
-            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-            String reportDate = formatter.format(new Date());
+        String sampleId = sampleMetadata.tumorSampleId();
+        String tumorBarcode = sampleMetadata.tumorSampleBarcode();
 
-            String stringForFile = sampleId + "\t" + reportDate + "\t" + reason + "\n";
+        List<ReportDates> allReportDates = ReportDatesAnalyzer.read(cmd.getOptionValue(REPORT_DATES_TSV));
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV), true));
-            writer.write(stringForFile);
-            writer.close();
+        String keySample = sampleId + tumorBarcode + reportDate + reason;
+
+        boolean present = false;
+        for (ReportDates dates : allReportDates) {
+            String keyFile = dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
+            if (keySample.equals(keyFile)) {
+                LOGGER.warn("Sample is already reported");
+                present = true;
+            }
+        }
+
+        if (!present) {
+            if (fileExists(cmd, REPORT_DATES_TSV)) {
+                LOGGER.info("Writing report date to tsv file");
+                String reasonCorrect = corrected ? reason + "_corrected" : reason.toString();
+
+                String stringForFile =
+                        sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + Strings.EMPTY + "\t"
+                                + Strings.EMPTY + "\t" + Strings.EMPTY + "\n";
+
+                BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV), true));
+                writer.write(stringForFile);
+                writer.close();
+            }
         }
     }
 
