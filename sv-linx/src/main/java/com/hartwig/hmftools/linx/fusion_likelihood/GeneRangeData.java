@@ -108,7 +108,7 @@ public class GeneRangeData
 
     public String toString()
     {
-        return String.format("{}:{} {} {} -> {}", GeneData.GeneId, GeneData.GeneName, ChromosomeArm, GeneData.GeneStart, GeneData.GeneEnd);
+        return String.format("%s:%s %s %d -> %d", GeneData.GeneId, GeneData.GeneName, ChromosomeArm, GeneData.GeneStart, GeneData.GeneEnd);
     }
 
 }

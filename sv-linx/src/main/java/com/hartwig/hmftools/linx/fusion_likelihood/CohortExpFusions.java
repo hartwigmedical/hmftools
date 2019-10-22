@@ -738,7 +738,7 @@ public class CohortExpFusions
             boolean lowerGeneIsUpstream = (isDel == isForwardStrand);
             boolean upperGeneIsUpstream = !lowerGeneIsUpstream;
 
-            if(upperGene.isStreamRestricted() && lowerGeneIsUpstream != upperGene.isOnlyUpstreamPartner())
+            if(upperGene.isStreamRestricted() && upperGeneIsUpstream != upperGene.isOnlyUpstreamPartner())
                 continue;
 
             if(lowerGene.isStreamRestricted() && lowerGeneIsUpstream != lowerGene.isOnlyUpstreamPartner())

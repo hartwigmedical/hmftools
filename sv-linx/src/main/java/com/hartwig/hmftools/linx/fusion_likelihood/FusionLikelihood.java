@@ -449,32 +449,56 @@ public class FusionLikelihood
                 final GeneRangeData geneUp = geneIdRangeDataMap.get(genePair[0]);
                 final GeneRangeData geneDown = geneIdRangeDataMap.get(genePair[1]);
 
-                geneUp.setRestrictedStream(true);
-                geneUp.setRestrictedStream(false);
+                geneUp.clearOverlapCounts();
+                geneDown.clearOverlapCounts();
+
+                boolean sameGene = geneUp.GeneData.GeneId.equals(geneDown.GeneData.GeneId);
+
+                if(!sameGene)
+                {
+                    geneUp.setRestrictedStream(true);
+                    geneDown.setRestrictedStream(false);
+                }
+                else
+                {
+                    geneUp.setRestrictedStream(null);
+                    geneDown.setRestrictedStream(null);
+                }
 
                 final List<GeneRangeData> genePairList = Lists.newArrayList(geneUp, geneDown);
 
-                // work out whether these genes are proximate to each other or not
-                boolean areProximate = false;
-
                 if(geneUp.GeneData.Chromosome.equals(geneDown.GeneData.Chromosome))
                 {
-                    long minDistance = min(abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneStart),
-                            abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneEnd));
+                    // work out whether these genes are proximate to each other or not
+                    boolean areProximate = false;
 
-                    minDistance = min(minDistance, abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneEnd));
-                    minDistance = min(minDistance, abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneStart));
-
-                    if(minDistance <= proximateLimit)
+                    if(!sameGene)
                     {
-                        areProximate = true;
+                        long minDistance = min(abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneStart),
+                                abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneEnd));
+
+                        minDistance = min(minDistance, abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneEnd));
+                        minDistance = min(minDistance, abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneStart));
+
+                        if (minDistance <= proximateLimit)
+                        {
+                            areProximate = true;
+                        }
                     }
 
-                    if(areProximate)
+                    if(areProximate || sameGene)
                     {
-                        mCohortCalculator.generateProximateCounts(genePairList, 1);
-                        mCohortCalculator.generateProximateCounts(genePairList, -1);
-                        mCohortCalculator.generateProximateCounts(genePairList, 0);
+                        if (sameGene)
+                        {
+                            if(geneUp.hasProteinCoding())
+                                mCohortCalculator.generateSameGeneCounts(geneUp);
+                        }
+                        else
+                        {
+                            mCohortCalculator.generateProximateCounts(genePairList, 1);
+                            mCohortCalculator.generateProximateCounts(genePairList, -1);
+                            mCohortCalculator.generateProximateCounts(genePairList, 0);
+                        }
 
                         for(int i = 0; i <= 1; ++i)
                         {
@@ -576,9 +600,6 @@ public class FusionLikelihood
                         writer.newLine();
                     }
                 }
-
-                geneUp.clearOverlapCounts();
-                geneDown.clearOverlapCounts();
             }
 
             closeBufferedWriter(writer);

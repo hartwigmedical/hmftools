@@ -191,30 +191,6 @@ public class PhaseRegionUtils
         }
     }
 
-    public static void combineGeneIntronicPhaseRegion(final GenePhaseRegion regionToAdd, final List<GenePhaseRegion> regions)
-    {
-        // only combine regions which have exact matching boundaries
-
-        // clone to avoid changing the contents of the original
-        GenePhaseRegion newRegion = GenePhaseRegion.from(regionToAdd);
-
-        int index = 0;
-        while (index < regions.size())
-        {
-            GenePhaseRegion region = regions.get(index);
-
-            if (region.start() == newRegion.start() && region.end() == newRegion.end())
-            {
-                region.addPhases(newRegion.getPhaseArray(), newRegion.getPreGenePhaseStatus());
-                return;
-            }
-
-            ++index;
-        }
-
-        addRegionInOrder(newRegion, regions);
-    }
-
     private static void addRegionInOrder(final GenePhaseRegion region, List<GenePhaseRegion> regions)
     {
         if(region.length() <= 0)
