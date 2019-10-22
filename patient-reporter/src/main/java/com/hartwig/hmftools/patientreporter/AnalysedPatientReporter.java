@@ -168,8 +168,7 @@ class AnalysedPatientReporter {
         FittedPurityStatus status = purityContext.status();
         PurpleQCStatus qcStatus = purpleQC.status();
 
-        String stringForFile =
-                "\t" + sampleId + "\t" + reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus + "\n";
+        String stringForFile = sampleId + "\t" + reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus + "\n";
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
         writer.write(stringForFile);
