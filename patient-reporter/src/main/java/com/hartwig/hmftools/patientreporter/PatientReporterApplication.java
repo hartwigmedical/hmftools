@@ -112,7 +112,7 @@ public class PatientReporterApplication {
             QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
-            generateOutputReportDatesQCFailReport(reason, cmd);
+            generateOutputReportDatesQCFailReport(reason, cmd, report.sampleReport().sampleMetadata().tumorSampleId());
 
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
@@ -139,15 +139,15 @@ public class PatientReporterApplication {
         }
     }
 
-    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd) throws IOException {
+    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd, @NotNull String sampleId) throws IOException {
 
         if (fileExists(cmd, REPORT_DATES_TSV)) {
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
             String reportDate = formatter.format(new Date());
 
-            String stringForFile = reportDate + "\t" + reason;
+            String stringForFile = sampleId + "\t" + reportDate + "\t" + reason + "\n";
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV)));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV), true));
             writer.write(stringForFile);
             writer.close();
         }

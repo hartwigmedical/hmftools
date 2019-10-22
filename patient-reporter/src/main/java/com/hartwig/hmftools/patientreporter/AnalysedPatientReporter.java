@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -144,12 +145,13 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
-        generateOutputReportDates(reportDatesTsv, purplePurityTsv);
+        generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata().tumorSampleId());
 
         return report;
     }
 
-    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv) throws IOException {
+    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv, @NotNull String sampleId)
+            throws IOException {
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         String reportDate = formatter.format(new Date());
@@ -160,9 +162,9 @@ class AnalysedPatientReporter {
         FittedPurityStatus status = purityContext.status();
         String qcStatus = "";
 
-        String stringForFile = reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus;
+        String stringForFile = "\t" + sampleId + "\t" + reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus + "\n";
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
         writer.write(stringForFile);
         writer.close();
 
