@@ -26,8 +26,8 @@ public class ReadContext {
     private final String microhomology;
     private final int jitter;
 
-    public ReadContext(final String microhomology, final String repeat, final int refPosition, final int readIndex,
-            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, final byte[] readBases) {
+    ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+            final int flankSize, final byte[] readBases) {
         assert (leftCentreIndex > 0);
         assert (rightCentreIndex < readBases.length);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -42,11 +42,11 @@ public class ReadContext {
         this.distanceCigar = Strings.EMPTY;
         this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
         this.repeat = repeat;
-        this.microhomology = microhomology;
+        this.microhomology = Strings.EMPTY;
         this.repeatCount = 0;
     }
 
-    public ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
+    ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -296,14 +296,6 @@ public class ReadContext {
         }
 
         return maxLength;
-    }
-
-    int centreStartIndex() {
-        return leftCentreIndex;
-    }
-
-    int centreEndIndex() {
-        return rightCentreIndex;
     }
 
     private int leftFlankStartIndex() {

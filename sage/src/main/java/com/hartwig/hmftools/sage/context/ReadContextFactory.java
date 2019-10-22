@@ -106,7 +106,7 @@ public class ReadContextFactory {
 
     @NotNull
     public static ReadContext dummy(int refPosition, @NotNull final String alt) {
-        return new ReadContext(Strings.EMPTY, Strings.EMPTY, refPosition, 0, 0, 0, DEFAULT_BUFFER, alt.getBytes());
+        return new ReadContext(Strings.EMPTY, refPosition, 0, 0, 0, DEFAULT_BUFFER, alt.getBytes());
     }
 
 }
