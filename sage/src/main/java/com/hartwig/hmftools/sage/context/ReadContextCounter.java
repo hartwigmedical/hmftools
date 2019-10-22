@@ -59,7 +59,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     }
 
     public int quality() {
-        return quality;
+        return quality - qualityJitterPenalty();
     }
 
     public int baseQuality() {
@@ -125,29 +125,28 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         }
     }
 
-    private void incrementQualityScores(int readBasePosition, final SAMRecord record) {
-        final int baseQuality = baseQuality(readBasePosition, readBasePosition + Math.max(1, hotspot.alt().length()), record);
-        final int distanceFromReadEdge = readContext.distanceFromReadEdge(readBasePosition, record);
+    private void incrementQualityScores(int readBaseIndex, final SAMRecord record) {
+        final int baseQuality = baseQuality(readBaseIndex, record);
+        final int distanceFromReadEdge = readContext.distanceFromReadEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
+
+        int modifiedMapQuality = mapQuality - 24 - 4 * (readContext.distance() - 1) - 5 * (record.getProperPairFlag() ? 1 : 0);
+        int modifiedBaseQuality = Math.min(baseQuality, distanceFromReadEdge) - 12;
+
         this.mapQuality += mapQuality;
         this.baseQuality += baseQuality;
-        this.quality += quality(mapQuality, baseQuality, distanceFromReadEdge);
+        this.quality += Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
-    private static int baseQuality(int leftIndex, int rightIndex, SAMRecord record) {
-        int leftQuality = record.getBaseQualities()[leftIndex];
-        if (leftIndex == rightIndex || rightIndex >= record.getBaseQualities().length) {
-            return leftQuality;
-        }
-
-        int rightQuality = record.getBaseQualities()[rightIndex];
-        return Math.min(leftQuality, rightQuality);
+    private int baseQuality(int readBaseIndex, SAMRecord record) {
+        return hotspot.ref().length() == hotspot.alt().length()
+                ? record.getBaseQualities()[readBaseIndex]
+                : readContext.minCentreQuality(readBaseIndex, record);
     }
 
-    private double quality(int mapQuality, int baseQuality, int distanceFromEdge) {
-        final int quality = Math.min(Math.min(Math.max(0, mapQuality - 12), baseQuality), distanceFromEdge);
-        return Math.max(0, quality - 12);
+    public int qualityJitterPenalty() {
+        return (int) (0.25 * Math.max(0, readContext.repeatCount() - 3) * (lengthened + shortened));
     }
 
     public boolean incrementCounters(@NotNull final ReadContext other) {

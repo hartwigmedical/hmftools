@@ -20,8 +20,8 @@ public class ReadContextFactory {
     private static final int DEFAULT_BUFFER = 25;
 
     @NotNull
-    public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex,
-            @NotNull final SAMRecord record, int refIndex, byte[] refBases) {
+    public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
+            int refIndex, byte[] refBases) {
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -37,9 +37,9 @@ public class ReadContextFactory {
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-        final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
         return new ReadContext(microhomologyContext.toString(),
-                repeat,
+                repeatContext.map(RepeatContext::count).orElse(0),
+                repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
                 Math.max(startIndex, 0),
@@ -67,9 +67,9 @@ public class ReadContextFactory {
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-        final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
         return new ReadContext(microhomologyContext.toString(),
-                repeat,
+                repeatContext.map(RepeatContext::count).orElse(0),
+                repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
                 Math.max(startIndex, 0),
@@ -85,17 +85,16 @@ public class ReadContextFactory {
 
         int startIndex = readIndex;
         int endIndex = readIndex;
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex , record.getReadBases());
+        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex, record.getReadBases());
         if (repeatContext.isPresent()) {
             final RepeatContext repeat = repeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-        final String repeat = repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY);
-
         return new ReadContext(Strings.EMPTY,
-                repeat,
+                repeatContext.map(RepeatContext::count).orElse(0),
+                repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
                 Math.max(startIndex, 0),

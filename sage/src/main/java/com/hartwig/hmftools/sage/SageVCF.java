@@ -104,6 +104,7 @@ public class SageVCF implements AutoCloseable {
                 .attribute("RDIS", normal.primaryReadContext().readContext().distance())
                 .attribute("RCMH", firstTumor.primaryReadContext().readContext().microhomology())
                 .attribute("RCR", firstTumor.primaryReadContext().readContext().repeat())
+                .attribute("JITTER", firstTumor.primaryReadContext().qualityJitterPenalty())
                 .computeEndFromAlleles(alleles, (int) normal.position())
                 .source("SAGE")
                 .genotypes(genotypes)
@@ -157,6 +158,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine("RCR", 1, VCFHeaderLineType.String, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RCMH", 1, VCFHeaderLineType.String, "TODO"));
         header.addMetaDataLine(new VCFInfoHeaderLine("PHASE", 1, VCFHeaderLineType.Integer, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("JITTER", 1, VCFHeaderLineType.Integer, "TODO"));
 
         return header;
     }

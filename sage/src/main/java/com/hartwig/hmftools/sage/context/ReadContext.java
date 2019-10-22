@@ -22,6 +22,7 @@ public class ReadContext {
     private final int distance;
     private final String distanceCigar;
     private final String repeat;
+    private final int repeatCount;
     private final String microhomology;
     private final int jitter;
 
@@ -42,9 +43,10 @@ public class ReadContext {
         this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
         this.repeat = repeat;
         this.microhomology = microhomology;
+        this.repeatCount = 0;
     }
 
-    public ReadContext(final String microhomology, final String repeat, final int refPosition, final int readIndex,
+    public ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, byte[] refBases, @NotNull final SAMRecord record) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -61,6 +63,7 @@ public class ReadContext {
         this.distanceCigar = distance.cigar();
         this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
         this.repeat = repeat;
+        this.repeatCount = repeatCount;
         this.microhomology = microhomology;
     }
 
@@ -86,6 +89,20 @@ public class ReadContext {
         return isComplete() && other.isComplete() && centreMatch(other.readIndex, other.readBases) == ReadContextMatch.FULL
                 && leftFlankMatchingBases(other.readIndex, other.readBases) == flankSize
                 && rightFlankMatchingBases(other.readIndex, other.readBases) == flankSize;
+    }
+
+    int minCentreQuality(int readIndex, SAMRecord record) {
+        int leftOffset = this.readIndex - leftCentreIndex;
+        int rightOffset = rightCentreIndex - this.readIndex;
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        int quality = Integer.MAX_VALUE;
+        for (int i = leftIndex; i <= rightIndex; i++) {
+            quality = Math.min(quality, record.getBaseQualities()[i]);
+        }
+        return quality;
     }
 
     public boolean phased(@NotNull final ReadContext other) {
@@ -340,5 +357,9 @@ public class ReadContext {
     @NotNull
     public String repeat() {
         return repeat;
+    }
+
+    public int repeatCount() {
+        return repeatCount;
     }
 }
