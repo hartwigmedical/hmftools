@@ -20,6 +20,12 @@ public class RepeatContextFactoryTest {
     }
 
     @Test
+    public void testAdditionalBasesAtEnd() {
+        String refGenome = "ATGTTTGTTTGTTTGAA";
+        assertRepeatContext(1, 14, 3, "TGTT", 2, refGenome);
+    }
+
+    @Test
     public void testForwardsAndBackwardsCount() {
         assertRepeatContext(1, 6, 3, "CA", 5, "TCACACATTT");
 

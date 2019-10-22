@@ -35,8 +35,19 @@ public final class RepeatContextFactory {
                     int repeatLength = repeatEndIndex - repeatStartIndex + 1;
                     int forwardsCount = forwardRepeats(repeatStartIndex, repeatLength, readSequence);
                     int backwardsCount = backwardRepeats(repeatStartIndex, repeatLength, readSequence);
+
                     if (forwardsCount + backwardsCount > MIN_COUNT) {
-                        repeatContexts.add(new RepeatContext(readSequence, repeatStartIndex, repeatLength, forwardsCount, backwardsCount));
+                        int startIndex = repeatStartIndex - backwardsCount * repeatLength;
+                        int endIndex = repeatStartIndex + forwardsCount * repeatLength - 1;
+                        int additionalBasesAtEnd = matchingBasesFromLeft(repeatStartIndex, repeatLength, endIndex + 1, readSequence);
+
+                        repeatContexts.add(new RepeatContext(readSequence,
+                                repeatStartIndex,
+                                startIndex,
+                                endIndex + additionalBasesAtEnd,
+                                repeatLength,
+                                forwardsCount,
+                                backwardsCount));
                     }
                 }
             }
@@ -73,17 +84,22 @@ public final class RepeatContextFactory {
 
     @VisibleForTesting
     static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
-        if (readIndex + repeatLength > readSequence.length || readIndex < 0 || repeatIndex + repeatLength > readSequence.length) {
-            return false;
-        }
+        return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
+    }
 
+    private static int matchingBasesFromLeft(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
         for (int i = 0; i < repeatLength; i++) {
-            if (readSequence[repeatIndex + i] != readSequence[readIndex + i]) {
-                return false;
+            if (outOfBounds(repeatIndex + i, readSequence) || outOfBounds(readIndex + i, readSequence)
+                    || readSequence[repeatIndex + i] != readSequence[readIndex + i]) {
+                return i;
             }
         }
 
-        return true;
+        return repeatLength;
+    }
+
+    private static boolean outOfBounds(int index, byte[] sequence) {
+        return index < 0 || index >= sequence.length;
     }
 
 }
