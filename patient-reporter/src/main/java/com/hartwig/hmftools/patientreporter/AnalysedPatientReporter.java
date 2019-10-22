@@ -156,6 +156,7 @@ class AnalysedPatientReporter {
     private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv, @NotNull String sampleId,
             @NotNull String purpleQCFile) throws IOException {
 
+        LOGGER.info("Writing report date to tsv file");
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         String reportDate = formatter.format(new Date());
 
@@ -173,7 +174,6 @@ class AnalysedPatientReporter {
         BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
         writer.write(stringForFile);
         writer.close();
-
     }
 
     @NotNull

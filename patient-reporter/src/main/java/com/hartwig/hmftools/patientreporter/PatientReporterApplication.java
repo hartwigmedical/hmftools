@@ -144,6 +144,7 @@ public class PatientReporterApplication {
             throws IOException {
 
         if (fileExists(cmd, REPORT_DATES_TSV)) {
+            LOGGER.info("Writing report date to tsv file");
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
             String reportDate = formatter.format(new Date());
 
