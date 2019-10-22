@@ -19,6 +19,7 @@ public class AnalysedPatientReporterTest {
     private static final String REF_SAMPLE_ID = "ref_sample";
 
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
+    private static final String PURPLE_QC_TSV = BASE_DIRECTORY + "/purple/sample.purple.qc";
     private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.gene.cnv";
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
@@ -54,6 +55,7 @@ public class AnalysedPatientReporterTest {
                 LINX_VIRAL_INSERTIONS_TSV,
                 LINX_DRIVER_CATALOG_TSV,
                 REPORT_DATES_TSV,
+                PURPLE_QC_TSV,
                 null,
                 false));
     }

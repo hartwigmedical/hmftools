@@ -32,7 +32,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class PatientReporterApplication {
@@ -65,6 +64,7 @@ public class PatientReporterApplication {
 
     // Params specific for actual patient reports
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
+    private static final String PURPLE_QC = "purple_qc";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
@@ -130,6 +130,7 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(LINX_VIRALINSERTION_TSV),
                     cmd.getOptionValue(LINX_DRIVERS_CATALOG_TSV),
                     cmd.getOptionValue(REPORT_DATES_TSV),
+                    cmd.getOptionValue(PURPLE_QC),
                     cmd.getOptionValue(COMMENTS),
                     cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
@@ -139,7 +140,8 @@ public class PatientReporterApplication {
         }
     }
 
-    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd, @NotNull String sampleId) throws IOException {
+    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd, @NotNull String sampleId)
+            throws IOException {
 
         if (fileExists(cmd, REPORT_DATES_TSV)) {
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
@@ -220,7 +222,8 @@ public class PatientReporterApplication {
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_TSV)
                 && fileExists(cmd, CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV)
                 && fileExists(cmd, LINX_DRIVERS_CATALOG_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
-                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV) && fileExists(cmd, REPORT_DATES_TSV);
+                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV) && fileExists(cmd, REPORT_DATES_TSV)
+                && fileExists(cmd, PURPLE_QC);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
@@ -318,6 +321,7 @@ public class PatientReporterApplication {
                 "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
+        options.addOption(PURPLE_QC, true, "Path towards the purple qc.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");

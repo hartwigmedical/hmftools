@@ -25,6 +25,9 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
@@ -72,7 +75,7 @@ class AnalysedPatientReporter {
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
             @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
             @NotNull String bachelorTSV, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @NotNull String reportDatesTsv,
+            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @NotNull String reportDatesTsv, @NotNull String purpleQCFile,
             @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
@@ -145,24 +148,27 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
-        generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata().tumorSampleId());
+        generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata().tumorSampleId(), purpleQCFile);
 
         return report;
     }
 
-    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv, @NotNull String sampleId)
-            throws IOException {
+    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv, @NotNull String sampleId,
+            @NotNull String purpleQCFile) throws IOException {
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         String reportDate = formatter.format(new Date());
 
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+
 
         String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
         FittedPurityStatus status = purityContext.status();
-        String qcStatus = "";
+        PurpleQCStatus qcStatus = purpleQC.status();
 
-        String stringForFile = "\t" + sampleId + "\t" + reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus + "\n";
+        String stringForFile =
+                "\t" + sampleId + "\t" + reportDate + "\t" + "sequence report" + "\t" + purity + "\t" + status + "\t" + qcStatus + "\n";
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
         writer.write(stringForFile);
