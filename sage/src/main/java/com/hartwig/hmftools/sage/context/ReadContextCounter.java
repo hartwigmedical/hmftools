@@ -96,30 +96,28 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
             coverage++;
             if (coverage < 1000) {
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                if (readIndex >= 0) {
-                    ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
-                    switch (match) {
-                        case FULL:
-                            full++;
-                            incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record);
-                            break;
-                        case PARTIAL:
-                            partial++;
-                            incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record);
-                            break;
-                        case JITTER_REMOVED:
-                            shortened++;
-                            break;
-                        case JITTER_ADDED:
-                            lengthened++;
-                            break;
-                        default:
-                            if (readContext.isWithin(record.getReadBases())) {
-                                realigned++;
-                            }
-                    }
+                ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                switch (match) {
+                    case FULL:
+                        full++;
+                        incrementQualityFlags(record);
+                        incrementQualityScores(readIndex, record);
+                        break;
+                    case PARTIAL:
+                        partial++;
+                        incrementQualityFlags(record);
+                        incrementQualityScores(readIndex, record);
+                        break;
+                    case JITTER_REMOVED:
+                        shortened++;
+                        break;
+                    case JITTER_ADDED:
+                        lengthened++;
+                        break;
+                    default:
+                        if (readContext.isWithin(record.getReadBases())) {
+                            realigned++;
+                        }
                 }
             }
         }

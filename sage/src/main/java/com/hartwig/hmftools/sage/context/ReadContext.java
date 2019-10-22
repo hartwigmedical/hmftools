@@ -136,7 +136,7 @@ public class ReadContext {
     @NotNull
     public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
 
-        if (!isComplete()) {
+        if (otherReadIndex <0 || !isComplete()) {
             return NONE;
         }
 
