@@ -88,6 +88,7 @@ public final class ReportDatesAnalyzer {
             String keyFile = dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
             String keyFile2 =
                     dates.sampleId() + dates.tumorBarcode() + dates.sourceReport() + dates.purity() + dates.status() + dates.qcStatus();
+
             if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
                 LOGGER.warn("Sample is already reported");
                 present = true;
@@ -96,10 +97,10 @@ public final class ReportDatesAnalyzer {
                 present = true;
             } else if (sampleId.startsWith("CORE")) {
                 if (!sampleId.startsWith("CORE01LR") && clinicalSummary.isEmpty()) {
-                    LOGGER.warn("Add summary to report for CORE1");
+                    LOGGER.warn("Add summary to report for CORE");
                     present = true;
                 } else if (!sampleId.startsWith("CORE01RI") && clinicalSummary.isEmpty()) {
-                    LOGGER.warn("Add summary to report for CORE2");
+                    LOGGER.warn("Add summary to report for CORE");
                     present = true;
                 }
             } else {
