@@ -165,8 +165,8 @@ public class KataegisAnnotator
         if(filename.isEmpty())
             return;
 
-        try {
-
+        try
+        {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             int recordCount = 0;
