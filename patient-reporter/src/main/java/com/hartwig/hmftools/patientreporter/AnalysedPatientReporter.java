@@ -1,14 +1,9 @@
 package com.hartwig.hmftools.patientreporter;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,18 +18,13 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
-import com.hartwig.hmftools.patientreporter.ReportDates.ReportDates;
 import com.hartwig.hmftools.patientreporter.ReportDates.ReportDatesAnalyzer;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -150,56 +140,9 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
-        generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata(), purpleQCFile, correctedReport);
+        ReportDatesAnalyzer.generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata(), purpleQCFile, correctedReport, clinicalSummary);
 
         return report;
-    }
-
-    private static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv,
-            @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport) throws IOException {
-
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        String reportDate = formatter.format(new Date());
-
-        String sampleId = sampleMetadata.tumorSampleId();
-        String tumorBarcode = sampleMetadata.tumorSampleBarcode();
-
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
-
-        String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
-        FittedPurityStatus status = purityContext.status();
-        PurpleQCStatus qcStatus = purpleQC.status();
-
-        List<ReportDates> allReportDates = ReportDatesAnalyzer.read(reportDatesTsv);
-        String reasonCorrect = correctReport ? "sequence_report" + "_corrected" : "sequence_report";
-        String keySample = sampleId + tumorBarcode + reportDate + reasonCorrect;
-        String keySample2 = sampleId + tumorBarcode  + reasonCorrect + purity + status + qcStatus;
-
-        boolean present = false;
-        for (ReportDates dates: allReportDates) {
-            String keyFile =
-                    dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
-            String keyFile2 =
-                    dates.sampleId() + dates.tumorBarcode()  + dates.sourceReport() + dates.purity() + dates.status() + dates.qcStatus();
-            if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
-                LOGGER.warn("Sample is already reported");
-                present = true;
-            }
-        }
-
-        if (!present) {
-            LOGGER.info("Writing report date to tsv file");
-
-            String stringForFile =
-                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + status + "\t"
-                            + qcStatus + "\n";
-
-            BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
-            writer.write(stringForFile);
-
-            writer.close();
-        }
     }
 
     @NotNull

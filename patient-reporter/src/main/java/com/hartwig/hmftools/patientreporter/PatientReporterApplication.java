@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.patientreporter;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -15,7 +11,6 @@ import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.patientreporter.ReportDates.ReportDates;
 import com.hartwig.hmftools.patientreporter.ReportDates.ReportDatesAnalyzer;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
@@ -114,7 +109,12 @@ public class PatientReporterApplication {
             QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
-            generateOutputReportDatesQCFailReport(reason, cmd, report.sampleReport().sampleMetadata(), cmd.hasOption(CORRECTED_REPORT));
+
+            if (fileExists(cmd, REPORT_DATES_TSV)) {
+                ReportDatesAnalyzer.generateOutputReportDatesQCFailReport(reason,
+                        cmd.getOptionValue(REPORT_DATES_TSV),
+                        report.sampleReport().sampleMetadata());
+            }
 
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
@@ -139,42 +139,6 @@ public class PatientReporterApplication {
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
         } else {
             printUsageAndExit(options);
-        }
-    }
-
-    private static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull CommandLine cmd,
-            @NotNull SampleMetadata sampleMetadata, boolean corrected) throws IOException {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        String reportDate = formatter.format(new Date());
-
-        String sampleId = sampleMetadata.tumorSampleId();
-        String tumorBarcode = sampleMetadata.tumorSampleBarcode();
-
-        List<ReportDates> allReportDates = ReportDatesAnalyzer.read(cmd.getOptionValue(REPORT_DATES_TSV));
-
-        String keySample = sampleId + tumorBarcode + reportDate + reason;
-
-        boolean present = false;
-        for (ReportDates dates : allReportDates) {
-            String keyFile = dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
-            if (keySample.equals(keyFile)) {
-                LOGGER.warn("Sample is already reported");
-                present = true;
-            }
-        }
-
-        if (!present) {
-            if (fileExists(cmd, REPORT_DATES_TSV)) {
-                LOGGER.info("Writing report date to tsv file");
-                String reasonCorrect = corrected ? reason + "_corrected" : reason.toString();
-
-                String stringForFile =
-                        sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\n";
-
-                BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(REPORT_DATES_TSV), true));
-                writer.write(stringForFile);
-                writer.close();
-            }
         }
     }
 
