@@ -37,7 +37,7 @@ public final class ReportDatesAnalyzer {
 
         List<String> linesReportDates = LineReader.build().readLines(new File(filePath).toPath(), line -> line.length() > 0);
         List<ReportDates> reportDatesList = Lists.newArrayList();
-        for (String line : linesReportDates) {
+        for (String line : linesReportDates.subList(1, linesReportDates.size())) {
             String[] values = line.split(DELIMITER);
 
             if (values.length == 4) {
@@ -103,8 +103,6 @@ public final class ReportDatesAnalyzer {
                     LOGGER.warn("Add summary to report for CORE");
                     present = true;
                 }
-            } else {
-                present = false;
             }
         }
 
