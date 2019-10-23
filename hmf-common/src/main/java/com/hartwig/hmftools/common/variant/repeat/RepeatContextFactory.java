@@ -74,7 +74,7 @@ public final class RepeatContextFactory {
     }
 
     @VisibleForTesting
-    static int backwardRepeats(int index, int repeatLength, final byte[] readSequence) {
+    public static int backwardRepeats(int index, int repeatLength, final byte[] readSequence) {
         for (int count = 1; ; count++) {
             if (!match(index, repeatLength, index - count * repeatLength, readSequence)) {
                 return count - 1;
