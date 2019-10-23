@@ -129,7 +129,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
 
         final int mapQuality = record.getMappingQuality();
 
-        int modifiedMapQuality = mapQuality - 24 - 5 * (readContext.distance() - 1) - 15 * (record.getProperPairFlag() ? 1 : 0);
+        int modifiedMapQuality = mapQuality - 24 - 5 * (readContext.distance() - 1) - 15 * (record.getProperPairFlag() ? 0 : 1);
         int modifiedBaseQuality = Math.min(baseQuality, distanceFromReadEdge) - 12;
 
         this.mapQuality += mapQuality;
