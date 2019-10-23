@@ -140,7 +140,12 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
-        ReportDatesAnalyzer.generateOutputReportDates(reportDatesTsv, purplePurityTsv, sampleReport.sampleMetadata(), purpleQCFile, correctedReport, clinicalSummary);
+        ReportDatesAnalyzer.generateOutputReportDatesSeqRapports(reportDatesTsv,
+                purplePurityTsv,
+                sampleReport.sampleMetadata(),
+                purpleQCFile,
+                correctedReport,
+                clinicalSummary, true);
 
         return report;
     }

@@ -62,9 +62,9 @@ public final class ReportDatesAnalyzer {
         return reportDatesList;
     }
 
-    public static void generateOutputReportDates(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv,
-            @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport, String clinicalSummary)
-            throws IOException {
+    public static void generateOutputReportDatesSeqRapports(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv,
+            @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport, String clinicalSummary,
+            boolean addToFile) throws IOException {
 
         String reportDate = currentDate();
 
@@ -103,7 +103,7 @@ public final class ReportDatesAnalyzer {
             }
         }
 
-        if (!present) {
+        if (!present && addToFile) {
             LOGGER.info("Writing report date to tsv file");
             String stringForFile =
                     sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + status + "\t"
@@ -113,7 +113,7 @@ public final class ReportDatesAnalyzer {
     }
 
     public static void generateOutputReportDatesQCFailReport(QCFailReason reason, @NotNull String reportDatesTSV,
-            @NotNull SampleMetadata sampleMetadata) throws IOException {
+            @NotNull SampleMetadata sampleMetadata, boolean addToFile) throws IOException {
         String reportDate = currentDate();
 
         String sampleId = sampleMetadata.tumorSampleId();
@@ -132,7 +132,7 @@ public final class ReportDatesAnalyzer {
             }
         }
 
-        if (!present) {
+        if (!present && addToFile) {
             LOGGER.info("Writing report date to tsv file");
             String stringForFile = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reason + "\n";
             writeToTSV(stringForFile, reportDatesTSV);

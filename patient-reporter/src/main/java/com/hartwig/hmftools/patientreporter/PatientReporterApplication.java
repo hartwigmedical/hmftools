@@ -113,7 +113,7 @@ public class PatientReporterApplication {
             if (fileExists(cmd, REPORT_DATES_TSV)) {
                 ReportDatesAnalyzer.generateOutputReportDatesQCFailReport(reason,
                         cmd.getOptionValue(REPORT_DATES_TSV),
-                        report.sampleReport().sampleMetadata());
+                        report.sampleReport().sampleMetadata(), true);
             }
 
         } else if (validInputForAnalysedSample(cmd)) {
