@@ -21,7 +21,7 @@ public class ReportDatesAnalyzerTest {
 
     private static final String REPORT_DATES_TSV = Resources.getResource("lims/report_dates_lims.tsv").getPath();
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
-    private static final boolean WRITE_TO_TSV = true;
+    private static final boolean WRITE_TO_TSV = false;
 
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
     private static final String PURPLE_QC = BASE_DIRECTORY + "/purple/sample.purple.qc";
