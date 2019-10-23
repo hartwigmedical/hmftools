@@ -92,14 +92,18 @@ public final class ReportDatesAnalyzer {
                 LOGGER.warn("Sample is already reported");
                 present = true;
             } else if (sampleId.startsWith("WIDE") && clinicalSummary.isEmpty()) {
-                LOGGER.warn("Add summary to report");
+                LOGGER.warn("Add summary to report for WIDE");
                 present = true;
-            } else if (!sampleId.startsWith("CORE01LR") && clinicalSummary.isEmpty()) {
-                LOGGER.warn("Add summary to report");
-                present = true;
-            } else if (!sampleId.startsWith("CORE01RI") && clinicalSummary.isEmpty()) {
-                LOGGER.warn("Add summary to report");
-                present = true;
+            } else if (sampleId.startsWith("CORE")) {
+                if (!sampleId.startsWith("CORE01LR") && clinicalSummary.isEmpty()) {
+                    LOGGER.warn("Add summary to report for CORE1");
+                    present = true;
+                } else if (!sampleId.startsWith("CORE01RI") && clinicalSummary.isEmpty()) {
+                    LOGGER.warn("Add summary to report for CORE2");
+                    present = true;
+                }
+            } else {
+                present = false;
             }
         }
 

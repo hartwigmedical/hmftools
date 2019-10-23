@@ -16,7 +16,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import org.junit.Test;
 
 public class ReportDatesAnalyzerTest {
-
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
 
     private static final String REPORT_DATES_TSV = Resources.getResource("lims/report_dates_lims.tsv").getPath();
