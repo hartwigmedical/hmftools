@@ -56,7 +56,7 @@ drug,type,mechanism,synonyms
 "Capecitabine, Ixabepilone",Chemotherapy,"Pyrimidine (ant)agonist, other","capecitabine ixabepilone"
 "Capecitabine, Oxaliplatin (CAPOX)",Chemotherapy,"Pyrimidine (ant)agonist, platinum","Capox,Capecitabine/oxaliplatin"
 "Capmatinib",Targeted therapy,"Anti-cMET",""
-"Carboplatin",Chemotherapy,"Platinum","Carboplatine,Carbpolatine,Paraplatin,carbo platin,carbosin,carbo,CARBOPLATINE AUC5,Carboplatin AUC5,Carboplatinum,Carboplatine AUC 6"
+"Carboplatin",Chemotherapy,"Platinum","Carboplatine,Carbpolatine,Paraplatin,carbosin,carbo,CARBOPLATINE AUC5,Carboplatin AUC5,Carboplatinum,Carboplatine AUC 6"
 "Carboplatin, Gemcitabine",Chemotherapy,"Platinum, Pyrimidine (ant)agonist","carboplatin/gem,Gemcitabine + Carboplatin"
 "Carboplatin, Paclitaxel (PC)",Chemotherapy,"Platinum, taxane","Carbotaxol,carboplatin taxol,carboplatin - paclitaxel 75%,Carboplatin + Paclitaxel"
 "Carmustine, Etoposide, Cytarabine, Melphalan (BEAM)",Chemotherapy,"Alkylating, alkaloid, pyrimidine (ant)agonist, alkylating","BEAM"
