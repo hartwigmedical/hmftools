@@ -96,6 +96,9 @@ public final class ReportDatesAnalyzer {
             if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
                 LOGGER.warn("Sample is already reported!");
                 present = true;
+            } else if (tumorSampleId.startsWith("COLO")) {
+                LOGGER.warn("It is a COLO sample. This sample will not be reported!");
+                present = true;
             } else if (type.equals(LimsSampleType.WIDE) && clinicalSummary.isEmpty()) {
                 LOGGER.warn("Add summary to report for WIDE!");
                 present = true;
