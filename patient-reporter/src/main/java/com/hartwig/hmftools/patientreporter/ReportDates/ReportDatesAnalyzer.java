@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.reader.LineReader;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.logging.log4j.LogManager;
@@ -64,7 +66,9 @@ public final class ReportDatesAnalyzer {
 
     public static void generateOutputReportDatesSeqRapports(@NotNull String reportDatesTsv, @NotNull String purplePurityTsv,
             @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport, String clinicalSummary,
-            boolean addToFile) throws IOException {
+            boolean addToFile, @NotNull String tumorSampleId) throws IOException {
+
+        LimsSampleType type = LimsSampleType.fromSampleId(tumorSampleId);
 
         String reportDate = currentDate();
 
@@ -90,17 +94,17 @@ public final class ReportDatesAnalyzer {
                     dates.sampleId() + dates.tumorBarcode() + dates.sourceReport() + dates.purity() + dates.status() + dates.qcStatus();
 
             if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
-                LOGGER.warn("Sample is already reported");
+                LOGGER.warn("Sample is already reported!");
                 present = true;
-            } else if (sampleId.startsWith("WIDE") && clinicalSummary.isEmpty()) {
-                LOGGER.warn("Add summary to report for WIDE");
+            } else if (type.equals(LimsSampleType.WIDE) && clinicalSummary.isEmpty()) {
+                LOGGER.warn("Add summary to report for WIDE!");
                 present = true;
-            } else if (sampleId.startsWith("CORE")) {
+            } else if (type.equals(LimsSampleType.CORE)) {
                 if (!sampleId.startsWith("CORE01LR") && clinicalSummary.isEmpty()) {
-                    LOGGER.warn("Add summary to report for CORE");
+                    LOGGER.warn("Add summary to report for CORE!");
                     present = true;
                 } else if (!sampleId.startsWith("CORE01RI") && clinicalSummary.isEmpty()) {
-                    LOGGER.warn("Add summary to report for CORE");
+                    LOGGER.warn("Add summary to report for CORE!");
                     present = true;
                 }
             }
@@ -130,7 +134,7 @@ public final class ReportDatesAnalyzer {
         for (ReportDates dates : allReportDates) {
             String keyFile = dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
             if (keySample.equals(keyFile)) {
-                LOGGER.warn("Sample is already reported");
+                LOGGER.warn("Sample is already reported!");
                 present = true;
             }
         }

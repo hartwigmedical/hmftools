@@ -55,6 +55,8 @@ public class PatientReporterApplication {
     private static final String COMPANY_LOGO = "company_logo";
     private static final String SIGNATURE = "signature";
 
+    private static final String REPORT_DATES_TSV = "report_dates_tsv";
+
     // Params specific for QC Fail reports
     private static final String QC_FAIL = "qc_fail";
     private static final String QC_FAIL_REASON = "qc_fail_reason";
@@ -71,8 +73,6 @@ public class PatientReporterApplication {
     private static final String CIRCOS_FILE = "circos_file";
     private static final String LINX_VIRALINSERTION_TSV = "viral_insertion_tsv";
     private static final String LINX_DRIVERS_CATALOG_TSV = "linx_drivers_catalog_tsv";
-
-    private static final String REPORT_DATES_TSV = "report_dates_tsv";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";

@@ -77,7 +77,7 @@ public class ReportDatesAnalyzerTest {
                     PURPLE_QC,
                     false,
                     clinicalSummary,
-                    WRITE_TO_TSV);
+                    WRITE_TO_TSV, "sampleId");
 
             QCFailReason reason = QCFailReason.fromIdentifier("shallow_seq_low_purity");
 

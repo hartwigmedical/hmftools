@@ -145,7 +145,7 @@ class AnalysedPatientReporter {
                 sampleReport.sampleMetadata(),
                 purpleQCFile,
                 correctedReport,
-                clinicalSummary, true);
+                clinicalSummary, true, report.sampleReport().tumorSampleId());
 
         return report;
     }
