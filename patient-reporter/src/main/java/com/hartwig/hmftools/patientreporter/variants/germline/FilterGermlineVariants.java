@@ -18,11 +18,11 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<InterpretGermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
+    public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
             @NotNull ChordAnalysis chordAnalysis) {
-        List<InterpretGermlineVariant> filteredGermlineVariants = Lists.newArrayList();
+        List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
         Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
@@ -33,7 +33,7 @@ public final class FilterGermlineVariants {
                 // Note: Reporting germline genes when chord predicted response is true
                 if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
-                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
+                    reportableGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
                 } else {
                     // Only report germline variants on TSGs if there is a 2nd hit.
                     boolean filterBiallelic = germlineVariant.biallelic();
@@ -52,18 +52,18 @@ public final class FilterGermlineVariants {
                     }
 
                     if (filterBiallelic || filterSomaticVariantInSameGene) {
-                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
+                        reportableGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
                     } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
-                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
+                        reportableGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
                     }
                 }
             }
         }
-        return filteredGermlineVariants;
+        return reportableGermlineVariants;
     }
 
     @NotNull
-    private static InterpretGermlineVariant mergeInterpretGermlineVariants(@NotNull GermlineVariant germlineVariant,
+    private static ReportableGermlineVariant mergeInterpretGermlineVariants(@NotNull GermlineVariant germlineVariant,
             double driverLikelihood) {
         return ImmutableInterpretGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }

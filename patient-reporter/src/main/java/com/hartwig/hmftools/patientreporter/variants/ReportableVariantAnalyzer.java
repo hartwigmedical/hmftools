@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -20,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.germline.InterpretGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,23 +36,23 @@ public final class ReportableVariantAnalyzer {
     @NotNull
     public static ReportVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
-            @NotNull List<InterpretGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingChoice germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableVariant> reportableVariants = Lists.newArrayList();
+        List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         Double driverLikelihood = null;
         for (SomaticVariant variant : somaticVariantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
             if (catalog == null) {
                 LOGGER.warn("No driver entry found for gene {}!", variant.gene());
             }
-            for (InterpretGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
+            for (ReportableGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
                 if (interpretGermlineVariant.germlineVariant().gene().equals(variant.gene())) {
                     driverLikelihood = interpretGermlineVariant.driverLikelihood();
                 }
             }
             Double somaticDriverCatalog = catalog != null ? catalog.driverLikelihood() : null;
-            reportableVariants.add(fromSomaticVariant(variant).driverCategory(driverGeneView.category(variant.gene()))
+            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(driverGeneView.category(variant.gene()))
                     .driverLikelihood(driverLikelihood != null ? driverLikelihood : somaticDriverCatalog)
                     .notifyClinicalGeneticist(false)
                     .build());
@@ -61,19 +60,19 @@ public final class ReportableVariantAnalyzer {
 
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
-        for (InterpretGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
-            reportableVariants.add(fromGermlineVariant(interpretGermlineVariant.germlineVariant()).driverCategory(driverGeneView.category(
-                    interpretGermlineVariant.germlineVariant().gene()))
-                    .driverLikelihood(interpretGermlineVariant.driverLikelihood())
+        for (ReportableGermlineVariant reportableGermlineVariant : germlineVariantsToReport) {
+            allReportableVariants.add(fromGermlineVariant(reportableGermlineVariant.germlineVariant()).driverCategory(driverGeneView.category(
+                    reportableGermlineVariant.germlineVariant().gene()))
+                    .driverLikelihood(reportableGermlineVariant.driverLikelihood())
                     .notifyClinicalGeneticist(
-                            wantsToBeNotified && germlineReportingModel.notifyAboutGene(interpretGermlineVariant.germlineVariant().gene()))
+                            wantsToBeNotified && germlineReportingModel.notifyAboutGene(reportableGermlineVariant.germlineVariant().gene()))
                     .build());
 
         }
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForAllVariants(reportableVariants, primaryTumorLocation);
+                actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation);
 
         // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
         List<EvidenceItem> filteredEvidence =
@@ -82,11 +81,11 @@ public final class ReportableVariantAnalyzer {
         // Check that all variants with high level evidence are reported (since they are in the driver catalog).
         for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
             ReportableVariant variant = entry.getKey();
-            if (!reportableVariants.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
+            if (!allReportableVariants.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
                 LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
             }
         }
-        return ImmutableReportVariantAnalysis.of(reportableVariants, filteredEvidence);
+        return ImmutableReportVariantAnalysis.of(allReportableVariants, filteredEvidence);
     }
 
     @Nullable

@@ -40,7 +40,7 @@ import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.germline.InterpretGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.InterpretViralInsertion;
@@ -85,7 +85,7 @@ class AnalysedPatientReporter {
                 analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, copyNumberAnalysis.exomeGeneCopyNumbers());
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
-        List<InterpretGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
+        List<ReportableGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
                 bachelorTSV,
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
@@ -189,12 +189,12 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<InterpretGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTSV,
+    private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTSV,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
             @NotNull ChordAnalysis chordAnalysis) throws IOException {
 
         List<GermlineVariant> variants =
-                BachelorFile.loadBachelorCsv(bachelorTSV).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+                BachelorFile.loadBachelorTsv(bachelorTSV).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTSV);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);

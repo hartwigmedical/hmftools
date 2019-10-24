@@ -22,7 +22,7 @@ public final class BachelorFile {
     }
 
     @NotNull
-    public static List<GermlineVariant> loadBachelorCsv(@NotNull String filePath) throws IOException {
+    public static List<GermlineVariant> loadBachelorTsv(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 

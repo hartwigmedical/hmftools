@@ -18,7 +18,7 @@ public class BachelorFileTest {
 
     @Test
     public void canReadTestBachelorFile() throws IOException {
-        List<GermlineVariant> germlineVariants = BachelorFile.loadBachelorCsv(BACHELOR_FILE);
+        List<GermlineVariant> germlineVariants = BachelorFile.loadBachelorTsv(BACHELOR_FILE);
 
         assertEquals(1, germlineVariants.size());
 
