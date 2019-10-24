@@ -20,6 +20,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     private int shortened;
 
     private int quality;
+    private double jitterPenalty;
     private int baseQuality;
     private int mapQuality;
 
@@ -59,7 +60,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     }
 
     public int quality() {
-        return quality - qualityJitterPenalty();
+        return Math.max(0, quality - (int) jitterPenalty);
     }
 
     public int baseQuality() {
@@ -96,28 +97,35 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
             coverage++;
             if (coverage < 1000) {
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
-                switch (match) {
-                    case FULL:
-                        full++;
-                        incrementQualityFlags(record);
-                        incrementQualityScores(readIndex, record);
-                        break;
-                    case PARTIAL:
-                        partial++;
-                        incrementQualityFlags(record);
-                        incrementQualityScores(readIndex, record);
-                        break;
-                    case JITTER_REMOVED:
-                        shortened++;
-                        break;
-                    case JITTER_ADDED:
-                        lengthened++;
-                        break;
-                    default:
-                        if (readContext.isWithin(record.getReadBases())) {
+                MatchType match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                if (!match.equals(MatchType.NONE)) {
+                    switch (match) {
+                        case FULL:
+                            full++;
+                            incrementQualityFlags(record);
+                            incrementQualityScores(readIndex, record);
+                            break;
+                        case PARTIAL:
+                            partial++;
+                            incrementQualityFlags(record);
+                            incrementQualityScores(readIndex, record);
+                            break;
+                    }
+                } else {
+                    final RealignedContext context = new Realigned().realigned(readContext, record.getReadBases());
+                    switch (context.type()) {
+                        case EXACT:
                             realigned++;
-                        }
+                            break;
+                        case LENGTHENED:
+                            jitterPenalty += jitterPenalty(context);
+                            lengthened++;
+                            break;
+                        case SHORTENED:
+                            jitterPenalty += jitterPenalty(context);
+                            shortened++;
+                            break;
+                    }
                 }
             }
         }
@@ -144,8 +152,13 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
     }
 
     public int qualityJitterPenalty() {
-        return (int) (0.25 * Math.max(0, readContext.repeatCount() - 3) * (lengthened + shortened));
+        return (int) jitterPenalty;
     }
+
+    private double jitterPenalty(RealignedContext context) {
+        return (0.25 * Math.max(0, context.repeatCount() - 3));
+    }
+
 
     public boolean incrementCounters(@NotNull final ReadContext other) {
         if (readContext.isFullMatch(other)) {

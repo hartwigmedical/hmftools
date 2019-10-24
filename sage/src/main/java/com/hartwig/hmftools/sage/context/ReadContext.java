@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.context;
 
-import static com.hartwig.hmftools.sage.context.ReadContextMatch.FULL;
-import static com.hartwig.hmftools.sage.context.ReadContextMatch.NONE;
-import static com.hartwig.hmftools.sage.context.ReadContextMatch.PARTIAL;
+import static com.hartwig.hmftools.sage.context.MatchType.FULL;
+import static com.hartwig.hmftools.sage.context.MatchType.NONE;
+import static com.hartwig.hmftools.sage.context.MatchType.PARTIAL;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -24,7 +24,6 @@ public class ReadContext {
     private final String repeat;
     private final int repeatCount;
     private final String microhomology;
-    private final int jitter;
 
     ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases) {
@@ -40,7 +39,6 @@ public class ReadContext {
         this.readIndex = readIndex;
         this.distance = 0;
         this.distanceCigar = Strings.EMPTY;
-        this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
         this.repeat = repeat;
         this.microhomology = Strings.EMPTY;
         this.repeatCount = 0;
@@ -61,7 +59,6 @@ public class ReadContext {
         ReadContextDistance distance = new ReadContextDistance(leftFlankStartIndex(), rightFlankEndIndex(), record, refBases);
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
-        this.jitter = repeat.length() >= centreLength() ? 0 : repeat.length();
         this.repeat = repeat;
         this.repeatCount = repeatCount;
         this.microhomology = microhomology;
@@ -86,7 +83,7 @@ public class ReadContext {
     }
 
     public boolean isFullMatch(@NotNull final ReadContext other) {
-        return isComplete() && other.isComplete() && centreMatch(other.readIndex, other.readBases) == ReadContextMatch.FULL
+        return isComplete() && other.isComplete() && centreMatch(other.readIndex, other.readBases)
                 && leftFlankMatchingBases(other.readIndex, other.readBases) == flankSize
                 && rightFlankMatchingBases(other.readIndex, other.readBases) == flankSize;
     }
@@ -109,8 +106,8 @@ public class ReadContext {
         int offset = position - other.position;
         int otherReadIndex = other.readIndex + offset;
 
-        ReadContextMatch centreMatch = centreMatch(otherReadIndex, other.readBases);
-        if (centreMatch != FULL) {
+        boolean centreMatch = centreMatch(otherReadIndex, other.readBases);
+        if (!centreMatch) {
             return false;
         }
 
@@ -134,14 +131,14 @@ public class ReadContext {
     }
 
     @NotNull
-    public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
+    public MatchType matchAtPosition(int otherReadIndex, byte[] otherBases) {
 
-        if (otherReadIndex <0 || !isComplete()) {
+        if (otherReadIndex < 0 || !isComplete()) {
             return NONE;
         }
 
-        ReadContextMatch centreMatch = centreMatch(otherReadIndex, otherBases);
-        if (centreMatch == NONE) {
+        boolean centreMatch = centreMatch(otherReadIndex, otherBases);
+        if (!centreMatch) {
             return NONE;
         }
 
@@ -150,22 +147,7 @@ public class ReadContext {
             return NONE;
         }
 
-        final int rightFlankingStartIndex;
-        switch (centreMatch) {
-            case FULL:
-                rightFlankingStartIndex = otherReadIndex;
-                break;
-            case JITTER_ADDED:
-                rightFlankingStartIndex = otherReadIndex + jitter;
-                break;
-            case JITTER_REMOVED:
-                rightFlankingStartIndex = otherReadIndex - jitter;
-                break;
-            default:
-                throw new IllegalStateException("Unable to handle centre match type " + centreMatch);
-        }
-
-        int rightFlankingBases = rightFlankMatchingBases(rightFlankingStartIndex, otherBases);
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases);
         if (rightFlankingBases < 0) {
             return NONE;
         }
@@ -174,90 +156,30 @@ public class ReadContext {
             return NONE;
         }
 
-        if (centreMatch == ReadContextMatch.FULL) {
-            return leftFlankingBases == rightFlankingBases ? FULL : PARTIAL;
-        }
-
-        return centreMatch;
-    }
-
-    public boolean isWithin(byte[] bases) {
-        if (!isComplete()) {
-            return false;
-        }
-
-        for (int i = 0; i < bases.length - length(); i++) {
-            if (isWithin(i, bases)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean isWithin(int index, byte[] bases) {
-        int startIndex = leftFlankStartIndex();
-        for (int i = 0; i < length(); i++) {
-            if (index + i >= bases.length) {
-                return false;
-            }
-
-            if (bases[index + i] != this.readBases[startIndex + i]) {
-                return false;
-            }
-        }
-        return true;
+        return leftFlankingBases == rightFlankingBases ? FULL : PARTIAL;
     }
 
     @VisibleForTesting
-    @NotNull
-    ReadContextMatch centreMatch(int otherRefIndex, byte[] otherBases) {
+    boolean centreMatch(int otherRefIndex, byte[] otherBases) {
+
         int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
         if (otherLeftCentreIndex < 0) {
-            return NONE;
+            return false;
         }
 
-        // Up to jitter
-        int lengthUntilJitter = centreLength() - 1 - jitter;
-        if (otherLeftCentreIndex + lengthUntilJitter - 1 >= otherBases.length) {
-            return NONE;
+        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1;
+        if (otherRightCentreIndex >= otherBases.length) {
+            return false;
         }
-        for (int i = 0; i < lengthUntilJitter; i++) {
+
+        for (int i = 0; i < centreLength(); i++) {
             if (readBases[leftCentreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
-                return NONE;
+                return false;
             }
         }
 
-        boolean fullMatch = true;
-        for (int i = lengthUntilJitter; i < centreLength(); i++) {
-            if (otherLeftCentreIndex + i >= otherBases.length || readBases[leftCentreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
-                fullMatch = false;
-                break;
-            }
-        }
+        return true;
 
-        if (fullMatch) {
-            return FULL;
-        }
-
-        if (jitter == 0) {
-            return NONE;
-        }
-
-        if (otherLeftCentreIndex + lengthUntilJitter < otherBases.length && readBases[rightCentreIndex] == otherBases[otherLeftCentreIndex
-                + lengthUntilJitter]) {
-            return ReadContextMatch.JITTER_REMOVED;
-        }
-
-        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1 + jitter;
-        for (int i = 0; i <= jitter; i++) {
-            if (otherRightCentreIndex - jitter + i >= otherBases.length || readBases[rightCentreIndex - jitter + i] != otherBases[
-                    otherRightCentreIndex - jitter + i]) {
-                return ReadContextMatch.NONE;
-            }
-        }
-
-        return ReadContextMatch.JITTER_ADDED;
     }
 
     @VisibleForTesting
@@ -265,7 +187,7 @@ public class ReadContext {
         return leftFlankMatchingBases(otherRefIndex, otherBases, flankSize);
     }
 
-    int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases, int flankSize) {
+    private int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases, int flankSize) {
         int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
         int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - flankSize);
         int totalLength = Math.min(leftFlankLength(), otherLeftFlankLength);
@@ -284,7 +206,7 @@ public class ReadContext {
         return rightFlankMatchingBases(otherRefIndex, otherBases, flankSize);
     }
 
-    int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases, int flankSize) {
+    private int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases, int flankSize) {
         int otherRightCentreIndex = otherRefIndex + rightCentreIndex - readIndex;
         int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + flankSize) - otherRightCentreIndex;
         int maxLength = Math.min(rightFlankLength(), otherRightFlankLength);
@@ -298,7 +220,7 @@ public class ReadContext {
         return maxLength;
     }
 
-    private int leftFlankStartIndex() {
+    int leftFlankStartIndex() {
         return Math.max(0, leftCentreIndex - flankSize);
     }
 
@@ -306,7 +228,7 @@ public class ReadContext {
         return leftCentreIndex - leftFlankStartIndex();
     }
 
-    private int rightFlankEndIndex() {
+    int rightFlankEndIndex() {
         return Math.min(readBases.length - 1, rightCentreIndex + flankSize);
     }
 
@@ -353,5 +275,9 @@ public class ReadContext {
 
     public int repeatCount() {
         return repeatCount;
+    }
+
+    public byte[] readBases() {
+        return readBases;
     }
 }

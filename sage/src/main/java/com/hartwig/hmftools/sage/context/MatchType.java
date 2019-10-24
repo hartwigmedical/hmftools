@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.sage.context;
 
-public enum ReadContextMatch {
+public enum MatchType {
     NONE,
     PARTIAL,
     FULL,
-    JITTER_ADDED,
-    JITTER_REMOVED;
 }

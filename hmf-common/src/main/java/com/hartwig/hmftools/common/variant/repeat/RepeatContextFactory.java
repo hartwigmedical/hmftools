@@ -83,7 +83,7 @@ public final class RepeatContextFactory {
     }
 
     @VisibleForTesting
-    static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
+    public static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
         return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
     }
 
