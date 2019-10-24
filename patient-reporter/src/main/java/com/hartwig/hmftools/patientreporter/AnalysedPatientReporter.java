@@ -31,7 +31,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.copynumber.HomozygousDisruptionAnalyzer;
-import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -78,7 +78,7 @@ class AnalysedPatientReporter {
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
-        List<ReportableDriverCatalog> reportableDriverCatalogs = analyzeDriverCatalog(linxDriversCatalogTsv);
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = analyzeDriverCatalog(linxDriversCatalogTsv);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis =
@@ -129,7 +129,7 @@ class AnalysedPatientReporter {
                 .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
-                .reportableDriverCatalogs(reportableDriverCatalogs)
+                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
                 .viralInsertion(viralInsertions)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
@@ -151,7 +151,7 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    public List<ReportableDriverCatalog> analyzeDriverCatalog(@NotNull String linxDriversCatalogTsv) throws IOException {
+    public List<ReportableHomozygousDisruption> analyzeDriverCatalog(@NotNull String linxDriversCatalogTsv) throws IOException {
         return HomozygousDisruptionAnalyzer.interpetDriverCatalog(linxDriversCatalogTsv);
     }
 

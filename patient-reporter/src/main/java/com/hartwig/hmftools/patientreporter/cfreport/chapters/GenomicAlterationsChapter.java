@@ -13,7 +13,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
@@ -54,7 +54,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurityFit));
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
-        reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableDriverCatalogs()));
+        reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
         // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
@@ -129,7 +129,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createHomozygousDelDisruptionsTable(@NotNull List<ReportableDriverCatalog> homozygoudDelDisruptions) {
+    private static Table createHomozygousDelDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygoudDelDisruptions) {
         final String title = "Tumor specific homozygous disruptions";
         if (homozygoudDelDisruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -139,7 +139,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("chromosome band"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("driver")});
 
-        for (ReportableDriverCatalog homozygousDisruption : homozygoudDelDisruptions) {
+        for (ReportableHomozygousDisruption homozygousDisruption : homozygoudDelDisruptions) {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));

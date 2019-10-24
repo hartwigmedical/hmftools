@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
@@ -66,7 +66,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<ReportableGeneDisruption> geneDisruptions();
 
     @NotNull
-    public abstract List<ReportableDriverCatalog> reportableDriverCatalogs();
+    public abstract List<ReportableHomozygousDisruption> reportableHomozygousDisruptions();
 
     @NotNull
     public abstract List<ViralInsertion> viralInsertion();

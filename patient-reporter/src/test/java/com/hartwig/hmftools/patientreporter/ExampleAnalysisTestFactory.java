@@ -32,7 +32,7 @@ import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLo
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
@@ -69,7 +69,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        final List<ReportableDriverCatalog> reportableDriverCatalogs = Lists.newArrayList();
+        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
 
         final String sampleId = "PNT00012345T";
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -98,7 +98,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
-                reportableDriverCatalogs,
+                reportableHomozygousDisruptions,
                 viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and is based off COLO829"),
@@ -128,7 +128,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        final List<ReportableDriverCatalog> reportableDriverCatalogs = createReportableHomozygousDisruptions();
+        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createReportableHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -149,7 +149,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
-                reportableDriverCatalogs,
+                reportableHomozygousDisruptions,
                 viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
@@ -160,8 +160,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableDriverCatalog> createReportableHomozygousDisruptions() {
-        List<ReportableDriverCatalog> homozygousDisruptions = Lists.newArrayList(ImmutableReportableDriverCatalog.builder()
+    private static List<ReportableHomozygousDisruption> createReportableHomozygousDisruptions() {
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableDriverCatalog.builder()
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")
@@ -197,7 +197,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        final List<ReportableDriverCatalog> reportableDriverCatalogs = createReportableHomozygousDisruptions();
+        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createReportableHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -218,7 +218,7 @@ public final class ExampleAnalysisTestFactory {
                 gainsAndLosses,
                 fusions,
                 disruptions,
-                reportableDriverCatalogs,
+                reportableHomozygousDisruptions,
                 viralInsertions,
                 CIRCOS_PATH,
                 Optional.of("this is a test report and does not relate to any real patient"),
