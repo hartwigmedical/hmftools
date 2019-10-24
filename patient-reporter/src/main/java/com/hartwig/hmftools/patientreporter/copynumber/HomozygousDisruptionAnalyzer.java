@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableDriverCatalog;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +36,7 @@ public final class HomozygousDisruptionAnalyzer {
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         for (DriverCatalog driverCatalog : allDriversCatalog) {
             if (driverCatalog.driver().equals(DriverType.HOM_DISRUPTION) && driverCatalog.likelihoodMethod().equals(LikelihoodMethod.DEL)) {
-                reportableHomozygousDisruptions.add(ImmutableReportableDriverCatalog.builder()
+                reportableHomozygousDisruptions.add(ImmutableReportableHomozygousDisruption.builder()
                         .chromosome(driverCatalog.chromosome())
                         .chromosomeBand(driverCatalog.chromosomeBand())
                         .gene(driverCatalog.gene())
