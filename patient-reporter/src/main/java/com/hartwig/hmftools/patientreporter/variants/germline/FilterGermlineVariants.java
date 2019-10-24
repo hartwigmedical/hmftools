@@ -65,7 +65,7 @@ public final class FilterGermlineVariants {
     @NotNull
     private static ReportableGermlineVariant mergeInterpretGermlineVariants(@NotNull GermlineVariant germlineVariant,
             double driverLikelihood) {
-        return ImmutableInterpretGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
+        return ImmutableReportableGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }
 
     @NotNull
