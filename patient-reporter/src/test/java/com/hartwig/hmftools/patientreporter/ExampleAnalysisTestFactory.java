@@ -724,7 +724,7 @@ public final class ExampleAnalysisTestFactory {
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
                 .ploidy(2D)
-                .undisruptedCopyNumber(0.5)
+                .undisruptedCopyNumber(0)
                 .build();
 
         return Lists.newArrayList(disruption1);
