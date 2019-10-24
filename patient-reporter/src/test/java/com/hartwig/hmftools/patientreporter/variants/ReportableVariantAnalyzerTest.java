@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
-import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableInterpretGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -156,9 +156,9 @@ public class ReportableVariantAnalyzerTest {
 
     @NotNull
     private static List<ReportableGermlineVariant> createBiallelicGermlineVariantsOnOncoAndTSG() {
-        ReportableGermlineVariant germlineVariant1 = ImmutableInterpretGermlineVariant.builder().germlineVariant(
+        ReportableGermlineVariant germlineVariant1 = ImmutableReportableGermlineVariant.builder().germlineVariant(
                 PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(GENE_1).biallelic(true).build()).driverLikelihood(1.0).build();
-        ReportableGermlineVariant germlineVariant2 =ImmutableInterpretGermlineVariant.builder().germlineVariant(
+        ReportableGermlineVariant germlineVariant2 =ImmutableReportableGermlineVariant.builder().germlineVariant(
                 PatientReporterTestFactory.createTestGermlineVariantBuilder().gene(GENE_2).biallelic(false).build()).driverLikelihood(0.5).build();
         return Lists.newArrayList(germlineVariant1, germlineVariant2);
     }

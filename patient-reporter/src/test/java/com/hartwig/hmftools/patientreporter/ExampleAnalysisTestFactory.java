@@ -29,8 +29,8 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReport
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableDriverCatalog;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
@@ -161,7 +161,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableHomozygousDisruption> createReportableHomozygousDisruptions() {
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableDriverCatalog.builder()
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")

@@ -50,7 +50,7 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
         List<ReportableDisruption> pairedDisruptions =
-                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).ploidy(1.0).build(),
+                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).ploidy(1.0).undisruptedCopyNumber(1.0).build(),
                         pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.0).undisruptedCopyNumber(2.3).build(),
                         pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.6).undisruptedCopyNumber(1.7).build());
 
