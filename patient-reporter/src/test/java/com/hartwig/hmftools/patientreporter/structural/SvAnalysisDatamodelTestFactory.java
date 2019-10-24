@@ -32,7 +32,6 @@ final class SvAnalysisDatamodelTestFactory {
                 .chrBand(Strings.EMPTY)
                 .strand(1)
                 .exonUp(0)
-                .exonDown(0)
-                .undisruptedCopyNumber(1);
+                .exonDown(0);
     }
 }
