@@ -123,7 +123,7 @@ public final class ExampleAnalysisTestFactory {
         final List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         final List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         final List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        final List<ReportableGainLoss> gainsAndLosses = createAllGainsLosses();
+        final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = createTestFusions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
@@ -505,10 +505,10 @@ public final class ExampleAnalysisTestFactory {
     private static List<ReportableVariant> createCOLO829SomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .gene("BRAF")
-                .position(189604330)
-                .chromosome("3")
-                .ref("C")
-                .alt("T")
+                .position(140453136)
+                .chromosome("7")
+                .ref("T")
+                .alt("A")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
@@ -527,8 +527,8 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("CDKN2A")
-                .position(189604330)
-                .chromosome("3")
+                .position(21971153)
+                .chromosome("9")
                 .ref("C")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
@@ -549,8 +549,8 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .gene("TERT")
-                .position(189604330)
-                .chromosome("3")
+                .position(1295228)
+                .chromosome("5")
                 .ref("C")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
@@ -571,8 +571,8 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .gene("SF3B1")
-                .position(189604330)
-                .chromosome("3")
+                .position(198266779)
+                .chromosome("2")
                 .ref("C")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
@@ -595,7 +595,7 @@ public final class ExampleAnalysisTestFactory {
                 .gene("TP63")
                 .position(189604330)
                 .chromosome("3")
-                .ref("C")
+                .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
@@ -622,7 +622,7 @@ public final class ExampleAnalysisTestFactory {
                 .gene("TP63")
                 .position(189604330)
                 .chromosome("3")
-                .ref("C")
+                .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(false)
@@ -642,9 +642,9 @@ public final class ExampleAnalysisTestFactory {
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .gene("KIT")
-                .position(189604330)
+                .position(81627197)
                 .chromosome("3")
-                .ref("C")
+                .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .notifyClinicalGeneticist(true)
@@ -667,19 +667,6 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableGainLoss> createCOLO829GainsLosses() {
-        ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
-                .chromosome("10")
-                .chromosomeBand("q23.31")
-                .gene("PTEN")
-                .copies(0)
-                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
-                .build();
-
-        return Lists.newArrayList(gainLoss1);
-    }
-
-    @NotNull
-    private static List<ReportableGainLoss> createAllGainsLosses() {
         ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
                 .chromosome("10")
                 .chromosomeBand("q23.31")
