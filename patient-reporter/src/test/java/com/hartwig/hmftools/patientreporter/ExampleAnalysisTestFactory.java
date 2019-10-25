@@ -29,10 +29,10 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReport
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.copynumber.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;

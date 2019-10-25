@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.copynumber;
+package com.hartwig.hmftools.patientreporter.homozygousdisruption;
 
 import java.io.IOException;
 import java.util.List;

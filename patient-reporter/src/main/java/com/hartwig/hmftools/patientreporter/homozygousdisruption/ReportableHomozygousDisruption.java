@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.copynumber;
+package com.hartwig.hmftools.patientreporter.homozygousdisruption;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

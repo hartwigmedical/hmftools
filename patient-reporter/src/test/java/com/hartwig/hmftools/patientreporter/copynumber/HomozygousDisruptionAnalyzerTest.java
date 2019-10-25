@@ -9,6 +9,8 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
+import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 
 import org.junit.Test;
 
