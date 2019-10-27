@@ -55,6 +55,10 @@ public class SagePipeline {
                             .thenApply(x -> new TumorReadContextSupplier(config.minMapQuality(), sample, region, bam, x).get())
                             .thenApply(this::qualityFilter);
 
+//            CompletableFuture<List<AltContext>> candidateFuture =
+//                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence), executor)
+//                            .thenApply(this::qualityFilter);
+
             tumorFutures.add(candidateFuture);
         }
 
