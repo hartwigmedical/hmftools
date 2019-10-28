@@ -206,7 +206,7 @@ public class PatientReporterApplication {
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_TSV)
+                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && fileExists(cmd, BACHELOR_TSV)
                 && fileExists(cmd, CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV)
                 && fileExists(cmd, LINX_DRIVERS_CATALOG_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
                 && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV) && fileExists(cmd, REPORT_DATES_TSV)
@@ -241,17 +241,6 @@ public class PatientReporterApplication {
             LOGGER.warn(param + " has to be provided");
             return false;
         }
-        return true;
-    }
-
-    private static boolean valueMissingOrFileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-
-        if (value != null && !Files.exists(new File(value).toPath())) {
-            LOGGER.warn(param + " is optional, but when provided it has to be an existing file: " + value);
-            return false;
-        }
-
         return true;
     }
 
