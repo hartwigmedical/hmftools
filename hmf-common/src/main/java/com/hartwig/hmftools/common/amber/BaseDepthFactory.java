@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-class BaseDepthFactory {
+public class BaseDepthFactory {
 
     private final int minBaseQuality;
 
@@ -24,6 +24,16 @@ class BaseDepthFactory {
                 .setChromosome(pos.chromosome())
                 .setPosition(pos.position())
                 .setRef(pos.ref())
+                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
+                .setIndelCount(0)
+                .setReadDepth(0);
+    }
+
+    @NotNull
+    public static ModifiableBaseDepth create(@NotNull final GenomePosition pos) {
+        return ModifiableBaseDepth.create()
+                .setChromosome(pos.chromosome())
+                .setPosition(pos.position())
                 .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
                 .setIndelCount(0)
                 .setReadDepth(0);

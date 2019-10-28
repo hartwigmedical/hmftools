@@ -29,6 +29,7 @@ public interface AmberConfig {
     double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
+    String TUMOR_ONLY = "tumor_only";
     String TUMOR = "tumor";
     String BED_FILE = "bed";
     String THREADS = "threads";
@@ -48,6 +49,7 @@ public interface AmberConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
+        options.addOption(TUMOR_ONLY, false, "Tumor only mode");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -67,6 +69,8 @@ public interface AmberConfig {
         options.addOption(SNP_BED_FILE, true, "Optional bed file to report on germline SNPs");
         return options;
     }
+
+    boolean tumorOnly();
 
     int threadCount();
 
@@ -108,6 +112,8 @@ public interface AmberConfig {
 
     @NotNull
     static AmberConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
+        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
+
         final int threadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final int minBaseQuality = defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY);
         final int minMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
@@ -119,7 +125,6 @@ public interface AmberConfig {
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String bedFilePath = parameter(cmd, BED_FILE, missingJoiner);
-        final String snpBedFilePath =  cmd.getOptionValue(SNP_BED_FILE, "");
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
         final String referenceBamPath = parameter(cmd, REFERENCE_BAM, missingJoiner);
         final String refGenomePath = parameter(cmd, REF_GENOME, missingJoiner);
@@ -128,11 +133,14 @@ public interface AmberConfig {
         final String tumor = parameter(cmd, TUMOR, missingJoiner);
         final String missing = missingJoiner.toString();
 
+        final String snpBedFilePath =  cmd.getOptionValue(SNP_BED_FILE, "");
+
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
         return ImmutableAmberConfig.builder()
+                .tumorOnly(isTumorOnly)
                 .threadCount(threadCount)
                 .minBaseQuality(minBaseQuality)
                 .minMappingQuality(minMappingQuality)

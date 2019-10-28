@@ -41,7 +41,7 @@ public interface BaseDepth extends GenomePosition {
         assert (isValid(1));
 
         Base result = Base.N;
-        int maxCount = 0;
+        int maxCount = -1;
         for (Map.Entry<Base, Integer> entry : baseMap().entrySet()) {
             if (!entry.getKey().equals(ref()) && entry.getValue() > maxCount) {
                 maxCount = entry.getValue();
