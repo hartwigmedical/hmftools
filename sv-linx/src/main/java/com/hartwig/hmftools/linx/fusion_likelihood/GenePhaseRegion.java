@@ -91,6 +91,8 @@ public class GenePhaseRegion
         calcCombinedPhase();
     }
 
+    public boolean hasPreGeneStatus() { return mCombinedPreGeneStatus > 0; }
+
     public void setProteinCoding(boolean toggle) { mProteinCoding = toggle; }
     public boolean proteinCoding() { return mProteinCoding; }
 

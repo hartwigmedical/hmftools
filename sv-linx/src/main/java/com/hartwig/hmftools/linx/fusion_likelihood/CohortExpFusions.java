@@ -281,13 +281,12 @@ public class CohortExpFusions
             // add the new transcript's set of regions only if they aren't a very close overlap with any existing regions of the same phase
             for(GenePhaseRegion transRegion : transcriptRegions)
             {
-                if(!overlapsOtherRegions(transRegion, allTranscriptRegions, true, 0.75))
+                if(transRegion.hasPreGeneStatus() || !transRegion.hasPhasedType())
+                    continue;
+
+                if(!overlapsOtherRegions(transRegion, allTranscriptRegions, true, 0.90))
                     allTranscriptRegions.add(transRegion);
             }
-
-            // only looking at canonical simplies the overlap logic but misses about 1/2 the actual same-gene fusions seen in prod
-            // if(transcript.IsCanonical)
-            //    geneRangeData.setTranscriptPhaseRegions(transcriptRegions);
 
             // consolidate regions where phases and pre-gene status overlap
             transcriptRegions.stream().forEach(x -> checkAddCombinedGenePhaseRegion(x, phaseRegions));
@@ -413,7 +412,7 @@ public class CohortExpFusions
         regions.add(GenePhaseRegion.from(newRegion, 0, newRegion.length()));
     }
 
-    private static int DEFAULT_BUCKET_REGION_RATIO = 10;
+    public static final int DEFAULT_BUCKET_REGION_RATIO = 10;
 
     public void generateSameGeneCounts(GeneRangeData geneData)
     {

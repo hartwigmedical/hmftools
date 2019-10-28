@@ -52,13 +52,14 @@ public class KmerGenerator
         mOutputDir = outputDir;
     }
 
-    private static final int COL_CHR = 0;
-    private static final int COL_POS_START = 1;
-    private static final int COL_ORIENT_START = 2;
-    private static final int COL_POS_END = 3;
-    private static final int COL_ORIENT_END = 4;
-    private static final int COL_BASE_LENGTH = 5;
-    private static final int COL_INSERT_SEQ = 6;
+    private static final int COL_KMER_ID = 0;
+    private static final int COL_CHR = 1;
+    private static final int COL_POS_START = 2;
+    private static final int COL_ORIENT_START = 3;
+    private static final int COL_POS_END = 4;
+    private static final int COL_ORIENT_END = 5;
+    private static final int COL_BASE_LENGTH = 6;
+    private static final int COL_INSERT_SEQ = 7;
 
     public void generateKmerData()
     {
@@ -87,6 +88,7 @@ public class KmerGenerator
                 if(items.length < COL_INSERT_SEQ+1)
                     continue;
 
+                final String kmerId = items[COL_KMER_ID];
                 final String chromosome = items[COL_CHR];
                 long posStart = Long.parseLong(items[COL_POS_START]);
                 int orientStart = Integer.parseInt(items[COL_ORIENT_START]);
@@ -95,15 +97,15 @@ public class KmerGenerator
                 int baseLength = Integer.parseInt(items[COL_BASE_LENGTH]);
                 final String insertSeq = items[COL_INSERT_SEQ];
 
-                LOGGER.debug("producing KMER for chr({}) pos({} -> {})", chromosome, posStart, posEnd);
+                LOGGER.debug("producing KMER({}) for chr({}) pos({} -> {})", kmerId, chromosome, posStart, posEnd);
 
                 final String kmerStringStart = getBaseString(chromosome, posStart, orientStart, baseLength);
                 final String kmerStringEnd = getBaseString(chromosome, posEnd, orientEnd, baseLength);
                 final String kmerPosStrand = kmerStringStart + insertSeq + kmerStringEnd;
                 final String kmerNegStrand = reverseString(kmerPosStrand);
 
-                writer.write(String.format("%s,%d,%d,%d,%d,%s,%s",
-                        chromosome, posStart, orientStart, posEnd, orientEnd, kmerPosStrand, kmerNegStrand));
+                writer.write(String.format("%s,%s,%d,%d,%d,%d,%s,%s",
+                        kmerId, chromosome, posStart, orientStart, posEnd, orientEnd, kmerPosStrand, kmerNegStrand));
                 writer.newLine();
             }
 
@@ -112,7 +114,7 @@ public class KmerGenerator
         }
         catch(IOException exception)
         {
-            LOGGER.error("Failed to read kataegis CSV file({})", mKmerInputFile);
+            LOGGER.error("Failed to read k-mer CSV file({})", mKmerInputFile);
         }
     }
 

@@ -167,113 +167,126 @@ public class LikelihoodCalc
         return bucketOverlapCounts;
     }
 
-    public static Map<Integer, Long> calcGeneOverlapAreas(final List<Long> bucketLengths, GeneRangeData geneUp, GeneRangeData geneDown)
+    public static long calcGeneOverlapAreas(GeneRangeData geneUp, GeneRangeData geneDown,
+            boolean isDel, long minBucketLen, long maxBucketLen, final RegionAllocator regionAllocator)
     {
-        Map<Integer, Long> bucketOverlapCounts = Maps.newHashMap();
+        long upGeneTransStart = geneUp.getPhaseRegions().stream().mapToLong(x -> x.start()).min().orElse(0);
+        long upGeneTransEnd = geneUp.getPhaseRegions().stream().mapToLong(x -> x.end()).max().orElse(0);
+        long downGeneTransStart = geneDown.getPhaseRegions().stream().mapToLong(x -> x.start()).min().orElse(0);
+        long downGeneTransEnd = geneDown.getPhaseRegions().stream().mapToLong(x -> x.end()).max().orElse(0);
 
         long upGeneStart = geneUp.GeneData.GeneStart;
         long upGeneEnd = geneUp.GeneData.GeneEnd;
-
         long downGeneStart = geneDown.GeneData.GeneStart;
         long downGeneEnd = geneDown.GeneData.GeneEnd;
 
-        if(geneDown.GeneData.Strand == 1)
-            downGeneStart -= PRE_GENE_3P_DISTANCE;
-        else
-            downGeneEnd += PRE_GENE_3P_DISTANCE;
+        int strand = geneDown.GeneData.Strand;
+        boolean sameGene = geneUp.GeneData.GeneId.equals(geneDown.GeneData.GeneId);
+
+        if(!sameGene)
+        {
+            if (strand == 1)
+                downGeneStart -= PRE_GENE_3P_DISTANCE;
+            else
+                downGeneEnd += PRE_GENE_3P_DISTANCE;
+        }
+
+        upGeneStart = min(upGeneStart, upGeneTransStart);
+        upGeneEnd = max(upGeneEnd, upGeneTransEnd);
+        downGeneStart = min(downGeneStart, downGeneTransStart);
+        downGeneEnd = max(downGeneEnd, downGeneTransEnd);
 
         long lowerRegionStart, lowerRegionEnd, upperRegionStart, upperRegionEnd;
 
-        if(upGeneStart < downGeneStart)
+        if(sameGene)
         {
-            lowerRegionStart = upGeneStart;
-            lowerRegionEnd = upGeneEnd;
-            upperRegionStart = downGeneStart;
-            upperRegionEnd = downGeneEnd;
+            upperRegionStart = lowerRegionStart = downGeneStart;
+            upperRegionEnd = lowerRegionEnd = downGeneEnd;
         }
         else
         {
-            lowerRegionStart = downGeneStart;
-            lowerRegionEnd = downGeneEnd;
-            upperRegionStart = upGeneStart;
-            upperRegionEnd = upGeneEnd;
-        }
-
-        for (int i = 0; i < bucketLengths.size() - 1; ++i)
-        {
-            long minBucketLen = bucketLengths.get(i);
-            long maxBucketLen = bucketLengths.get(i + 1);
-
-            // first check whether the bucket can link these 2 genes
-            if(lowerRegionStart + minBucketLen >= upperRegionEnd || lowerRegionEnd + maxBucketLen <= upperRegionStart)
+            // remove any overlaps by the DEL or DUP context
+            if((isDel && strand == 1) || (!isDel && strand == -1))
             {
-                continue;
-            }
-
-
-            long baseOverlapArea = 0;
-
-            if(minBucketLen <= upperRegionStart - lowerRegionEnd && maxBucketLen >= upperRegionEnd - lowerRegionStart)
-            {
-                baseOverlapArea = (lowerRegionEnd - lowerRegionStart) * (upperRegionEnd - upperRegionStart);
+                lowerRegionStart = upGeneStart;
+                lowerRegionEnd = upGeneEnd;
+                upperRegionStart = max(downGeneStart, lowerRegionStart);
+                upperRegionEnd = downGeneEnd;
             }
             else
             {
-                long lowerStart, lowerEnd, upperStart;
+                upperRegionStart = upGeneStart;
+                upperRegionEnd = upGeneEnd;
+                lowerRegionStart = downGeneStart;
+                lowerRegionEnd = min(downGeneEnd, upperRegionEnd);
+            }
+        }
 
-                long upperEnd = min(upperRegionEnd, lowerRegionEnd + maxBucketLen);
+        regionAllocator.reset();
 
-                if(lowerRegionStart + minBucketLen > upperRegionStart)
+        if(upperRegionEnd - upperRegionStart < 0 || lowerRegionEnd - lowerRegionStart < 0)
+            return 0;
+
+        // first check whether the bucket can link these 2 genes
+        if(lowerRegionStart + minBucketLen >= upperRegionEnd || lowerRegionEnd + maxBucketLen <= upperRegionStart)
+        {
+            return 0;
+        }
+
+        long baseOverlapArea = 0;
+
+        if(minBucketLen <= upperRegionStart - lowerRegionEnd && maxBucketLen >= upperRegionEnd - lowerRegionStart)
+        {
+            // no restriction on the overlap
+            baseOverlapArea = regionAllocator.allocateBases(
+                    lowerRegionStart, lowerRegionEnd, upperRegionStart, upperRegionEnd,
+                    minBucketLen, maxBucketLen, true);
+        }
+        else
+        {
+            long lowerStart, lowerEnd, upperStart;
+
+            long upperEnd = min(upperRegionEnd, lowerRegionEnd + maxBucketLen);
+
+            if(lowerRegionStart + minBucketLen > upperRegionStart)
+            {
+                // min bucket length limits bases in the upper region
+                lowerStart = lowerRegionStart;
+                upperStart = lowerRegionStart + minBucketLen;
+
+                if(lowerRegionEnd + minBucketLen > upperRegionEnd)
                 {
-                    // min bucket length limits bases in the upper region
-                    lowerStart = lowerRegionStart;
-                    upperStart = lowerRegionStart + minBucketLen;
-
-                    if(lowerRegionEnd + minBucketLen > upperRegionEnd)
-                    {
-                        lowerEnd = upperRegionEnd - minBucketLen;
-                    }
-                    else
-                    {
-                        lowerEnd = lowerRegionEnd;
-                    }
+                    lowerEnd = upperRegionEnd - minBucketLen;
                 }
                 else
                 {
-                    // no min length restrictions, so just check if the max length is restrictive
-                    upperStart = upperRegionStart;
                     lowerEnd = lowerRegionEnd;
-
-                    if(lowerRegionStart + maxBucketLen < upperRegionStart)
-                    {
-                        lowerStart = upperRegionStart - maxBucketLen;
-                    }
-                    else
-                    {
-                        lowerStart = lowerRegionStart;
-                    }
                 }
+            }
+            else
+            {
+                // no min length restrictions, so just check if the max length is restrictive
+                upperStart = upperRegionStart;
+                lowerEnd = lowerRegionEnd;
 
-                long actUpperStart = max(upperStart, lowerStart + minBucketLen);
-                long actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
-
-                // per-base allocation without memory
-                for (long base = lowerStart; base <= lowerEnd; ++base)
+                if(lowerRegionStart + maxBucketLen < upperRegionStart)
                 {
-                    long overlap = min(upperEnd, base + maxBucketLen) - max(upperStart, base + minBucketLen);
-
-                    if (overlap > 0)
-                        baseOverlapArea += overlap;
-
-                    // is there any early exit here once overlap starts to be negative?
+                    lowerStart = upperRegionStart - maxBucketLen;
+                }
+                else
+                {
+                    lowerStart = lowerRegionStart;
                 }
             }
 
-            if(baseOverlapArea > 0)
-                bucketOverlapCounts.put(i, baseOverlapArea);
+            long actUpperStart = max(upperStart, lowerStart + minBucketLen);
+            long actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
+
+            baseOverlapArea += regionAllocator.allocateBases(
+                    lowerStart, lowerEnd, actUpperStart, actUpperEnd, minBucketLen, maxBucketLen, true);
         }
 
-        return bucketOverlapCounts;
+        return baseOverlapArea;
     }
 
     public static void setBucketLengthData(Map<Integer,Long> countsData, int bucketIndex, long newCounts)

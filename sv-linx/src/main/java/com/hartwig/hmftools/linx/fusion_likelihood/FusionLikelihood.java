@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.BUCKET_MIN;
+import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.DEFAULT_BUCKET_REGION_RATIO;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.GENE_PAIR_DELIM;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.GENOME_BASE_COUNT;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.LONG_DDI_BUCKET;
@@ -445,6 +446,16 @@ public class FusionLikelihood
 
             long proximateLimit = mCohortCalculator.getMaxBucketLength();
 
+            int bucketLengths = mProximateBucketLengths.size() - 1;
+            final RegionAllocator[] regionAllocators = new RegionAllocator[bucketLengths];
+
+            for(int i = 0; i < bucketLengths; ++i)
+            {
+                int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
+                blockSize = max(blockSize, MIN_BUCKET_LENGTH);
+                regionAllocators[i] = new RegionAllocator(blockSize);
+            }
+
             for(final String[] genePair : mGeneFusionPairs)
             {
                 final GeneRangeData geneUp = geneIdRangeDataMap.get(genePair[0]);
@@ -501,8 +512,6 @@ public class FusionLikelihood
                             mCohortCalculator.generateProximateCounts(genePairList, 0);
                         }
 
-                        final Map<Integer, Long> geneOverlapAreas = calcGeneOverlapAreas(mProximateBucketLengths, geneUp, geneDown);
-
                         for(int i = 0; i <= 1; ++i)
                         {
                             boolean isDel = (i == 0);
@@ -518,11 +527,24 @@ public class FusionLikelihood
                                 int bucketIndex = bEntry.getKey();
 
                                 long[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
-                                long bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
+                                long minBucketLen = bucketMinMax[BUCKET_MIN];
+                                long maxBucketLen = bucketMinMax[BUCKET_MAX];
+                                long bucketWidth = maxBucketLen - minBucketLen;
 
-                                long geneOverlapArea = geneOverlapAreas.get(bucketIndex);
+                                long geneOverlapArea = calcGeneOverlapAreas(
+                                        geneUp, geneDown, isDel, minBucketLen, maxBucketLen, regionAllocators[bucketIndex]);
+
+                                if(geneOverlapArea < overlapArea)
+                                {
+                                    // occurs rarely and not by more than 50%, not sure why
+                                    double percent = overlapArea / (double)geneOverlapArea;
+                                    LOGGER.debug("genes({} & {}) bucket({} -> {}) have inconsistent overlaps(fus={} gene={} perc={})",
+                                            geneUp, geneDown, minBucketLen, maxBucketLen, overlapArea, geneOverlapArea, String.format("%.3f", percent));
+
+                                    geneOverlapArea = overlapArea;
+                                }
+
                                 double genePairRate = geneOverlapArea / (bucketWidth * GENOME_BASE_COUNT);
-
                                 double fusionRate = overlapArea / (bucketWidth * GENOME_BASE_COUNT);
 
                                 writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,%.12f",

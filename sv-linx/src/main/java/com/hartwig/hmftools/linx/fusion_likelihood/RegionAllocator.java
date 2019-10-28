@@ -16,14 +16,14 @@ import com.google.common.collect.Maps;
 public class RegionAllocator
 {
     private final int mBlockSize;
-    private final int mBlockArea;
+    private final long mBlockArea;
 
     private Map<String,Boolean> mAllocations;
 
     public RegionAllocator(int blockSize)
     {
         mBlockSize = blockSize;
-        mBlockArea = blockSize * blockSize;
+        mBlockArea = (long)blockSize * blockSize;
 
         mAllocations = Maps.newHashMap();
     }
@@ -62,7 +62,7 @@ public class RegionAllocator
         if(lowerStart >= lowerEnd || upperStart >= upperEnd)
             return 0;
 
-        int overlapCount = 0;
+        long overlapCount = 0;
 
         for (long base = lowerStart; base <= lowerEnd;)
         {
