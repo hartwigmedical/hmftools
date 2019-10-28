@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.amber;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.TumorBAF;
+import com.hartwig.hmftools.common.amber.TumorContamination;
 
 import org.jetbrains.annotations.NotNull;
 
