@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthEvidence;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.amber.BaseDepthFilter;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
 import com.hartwig.hmftools.common.amber.NormalHomozygousFilter;
 import com.hartwig.hmftools.common.amber.TumorBAF;
@@ -78,8 +77,10 @@ public class AmberApplication implements AutoCloseable {
 
         final CommandLine cmd = createCommandLine(args, options);
         config = AmberConfig.createConfig(cmd);
-        homozygousFilter = new NormalHomozygousFilter();
-        heterozygousFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
+
+        final Predicate<BaseDepth> isValidFilter = BaseDepth::isValid;
+        homozygousFilter = new NormalHomozygousFilter().and(isValidFilter);
+        heterozygousFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent()).and(isValidFilter);
         persistence = new AmberPersistence(config);
 
         final File outputDir = new File(config.outputDirectory());
@@ -120,10 +121,12 @@ public class AmberApplication implements AutoCloseable {
                 ? SamReaderFactory.make()
                 : SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
 
-        final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory, sites);
-        final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
-        final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
-        final ListMultimap<Chromosome, BaseDepth> snpCheck = Multimaps.filterEntries(allNormal, snpCheckFilter);
+        final ListMultimap<Chromosome, BaseDepth> unfilteredNormal = normalDepth(readerFactory, sites);
+
+        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), unfilteredNormal);
+        final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(unfilteredNormal, depthFilter.and(homozygousFilter));
+        final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(unfilteredNormal, depthFilter.and(heterozygousFilter));
+        final ListMultimap<Chromosome, BaseDepth> snpCheck = Multimaps.filterEntries(unfilteredNormal, snpCheckFilter);
 
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, hetNormal);
 
@@ -187,22 +190,9 @@ public class AmberApplication implements AutoCloseable {
             }
         }
 
-        final ListMultimap<Chromosome, ModifiableBaseDepth> normalEvidence = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, BaseDepth> normalEvidence = ArrayListMultimap.create();
         getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
-        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
-        final ListMultimap<Chromosome, BaseDepth> normalBafs = ArrayListMultimap.create();
-        for (final Chromosome chromosome : normalEvidence.keySet()) {
-            final List<BaseDepth> normalHetLocations = normalEvidence.get(chromosome)
-                    .stream()
-                    .filter(x -> x.indelCount() == 0)
-                    .filter(depthFilter.or(snpCheckFilter))
-                    .filter(heterozygousFilter.or(homozygousFilter).or(snpCheckFilter)::test)
-                    .collect(Collectors.toList());
-
-            normalBafs.putAll(chromosome, normalHetLocations);
-        }
-
-        return normalBafs;
+        return normalEvidence;
     }
 
     @NotNull

@@ -49,7 +49,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
     }
 
     @NotNull
-    public List<ModifiableBaseDepth> evidence() {
+    public List<BaseDepth> evidence() {
         return evidence.stream().filter(x -> x.readDepth() > 0).collect(Collectors.toList());
     }
 
