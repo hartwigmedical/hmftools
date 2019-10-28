@@ -3,8 +3,6 @@ package com.hartwig.hmftools.amber;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.BaseDepth;
@@ -144,26 +142,13 @@ public class AmberVCF {
     @NotNull
     private VariantContext create(@NotNull final BaseDepth snp) {
 
-        final List<BaseDepth.Base> alts = snp.baseMap()
-                .entrySet()
-                .stream()
-                .filter(x -> x.getValue() > 0)
-                .sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
         final List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(snp.ref().toString(), true));
+        alleles.add(Allele.create(snp.alt().toString(), false));
 
         final List<Integer> adField = Lists.newArrayList();
         adField.add(snp.refSupport());
-
-        for (BaseDepth.Base alt : alts) {
-            if (!alt.equals(snp.ref())) {
-                alleles.add(Allele.create(alt.toString(), false));
-                adField.add(snp.baseMap().get(alt));
-            }
-        }
+        adField.add(snp.altSupport());
 
         final Genotype normal = new GenotypeBuilder(normalSample).DP(snp.readDepth())
                 .AD(adField.stream().mapToInt(i -> i).toArray())

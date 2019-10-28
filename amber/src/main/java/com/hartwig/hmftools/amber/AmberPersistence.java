@@ -54,7 +54,7 @@ class AmberPersistence {
         persistTumorBAF(true, tumorBAFList);
     }
 
-    void persistTumorBAF(boolean tumorOnly, @NotNull final List<TumorBAF> tumorBAFList) {
+    private void persistTumorBAF(boolean tumorOnly, @NotNull final List<TumorBAF> tumorBAFList) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
         new AmberVCF(tumorOnly, config.normal(), config.tumor()).write(outputVcf, tumorBAFList);

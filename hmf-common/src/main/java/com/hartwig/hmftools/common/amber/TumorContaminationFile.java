@@ -50,15 +50,13 @@ public class TumorContaminationFile {
                 .setChromosome(values[0])
                 .setPosition(Long.valueOf(values[1]))
                 .setRef(BaseDepth.Base.valueOf(values[2]))
+                .setAlt(BaseDepth.Base.valueOf(values[3]))
                 .setIndelCount(0);
 
-        final BaseDepth normalDepth = ModifiableBaseDepth.create().from(template).setReadDepth(Integer.valueOf(values[4]));
-        normalDepth.baseMap().put(BaseDepth.Base.valueOf(values[2]), Integer.valueOf(values[5]));
-        normalDepth.baseMap().put(BaseDepth.Base.valueOf(values[3]), Integer.valueOf(values[6]));
-
-        final BaseDepth tumorDepth = ModifiableBaseDepth.create().from(template).setReadDepth(Integer.valueOf(values[7]));
-        normalDepth.baseMap().put(BaseDepth.Base.valueOf(values[2]), Integer.valueOf(values[8]));
-        normalDepth.baseMap().put(BaseDepth.Base.valueOf(values[3]), Integer.valueOf(values[9]));
+        final BaseDepth normalDepth =
+                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.valueOf(values[4])).setRefSupport(5).setAltSupport(6);
+        final BaseDepth tumorDepth =
+                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.valueOf(values[7])).setRefSupport(9).setAltSupport(9);
 
         return ImmutableTumorContamination.builder().from(template).normal(normalDepth).tumor(tumorDepth).build();
     }

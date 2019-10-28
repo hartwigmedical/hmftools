@@ -14,4 +14,6 @@ public interface AmberSite extends GenomePosition {
 
     @NotNull
     String alt();
+
+    boolean snpCheck();
 }

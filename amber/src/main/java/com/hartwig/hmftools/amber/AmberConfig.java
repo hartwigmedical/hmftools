@@ -32,11 +32,10 @@ public interface AmberConfig {
 
     String TUMOR_ONLY = "tumor_only";
     String TUMOR = "tumor";
-    String BED_FILE = "bed";
+    String BAF_LOCI = "loci";
     String THREADS = "threads";
     String REFERENCE = "reference";
     String TUMOR_BAM = "tumor_bam";
-    String SNP_BED_FILE = "snp_bed";
     String REF_GENOME = "ref_genome";
     String OUTPUT_DIR = "output_dir";
     String REFERENCE_BAM = "reference_bam";
@@ -57,7 +56,7 @@ public interface AmberConfig {
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(BED_FILE, true, "Path to BAF locations bed file");
+        options.addOption(BAF_LOCI, true, "Path to BAF loci vcf file");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(MIN_BASE_QUALITY, true, "Minimum quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
         options.addOption(MIN_MAPPING_QUALITY,
@@ -67,7 +66,6 @@ public interface AmberConfig {
         options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MAX_HET_AF_PERCENTAGE + "]");
         options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
         options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
-        options.addOption(SNP_BED_FILE, true, "Optional bed file to report on germline SNPs");
         return options;
     }
 
@@ -87,20 +85,25 @@ public interface AmberConfig {
 
     double maxHetAfPercent();
 
-    String bedFilePath();
+    @NotNull
+    String bafLociPath();
 
-    String snpBedFilePath();
-
+    @NotNull
     String tumorBamPath();
 
+    @NotNull
     String referenceBamPath();
 
+    @NotNull
     String refGenomePath();
 
+    @NotNull
     String outputDirectory();
 
+    @NotNull
     String normal();
 
+    @NotNull
     String tumor();
 
     default int typicalReadDepth() {
@@ -123,18 +126,16 @@ public interface AmberConfig {
         final double maxDepthPercent = defaultDoubleValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE);
         final double minHetAfPercent = defaultDoubleValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE);
         final double maxHetAfPercent = defaultDoubleValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
+        final String refGenomePath = cmd.getOptionValue(REF_GENOME, Strings.EMPTY);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String reference = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE, missingJoiner);
         final String referenceBamPath = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE_BAM, missingJoiner);
-        final String bedFilePath = parameter(cmd, BED_FILE, missingJoiner);
+        final String bafLociPath = parameter(cmd, BAF_LOCI, missingJoiner);
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
-        final String refGenomePath = parameter(cmd, REF_GENOME, missingJoiner);
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
         final String tumor = parameter(cmd, TUMOR, missingJoiner);
         final String missing = missingJoiner.toString();
-
-        final String snpBedFilePath =  cmd.getOptionValue(SNP_BED_FILE, "");
 
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
@@ -149,12 +150,11 @@ public interface AmberConfig {
                 .maxDepthPercent(maxDepthPercent)
                 .minHetAfPercent(minHetAfPercent)
                 .maxHetAfPercent(maxHetAfPercent)
-                .bedFilePath(bedFilePath)
+                .bafLociPath(bafLociPath)
                 .tumorBamPath(tumorBamPath)
                 .referenceBamPath(referenceBamPath)
                 .refGenomePath(refGenomePath)
                 .outputDirectory(outputDirectory)
-                .snpBedFilePath(snpBedFilePath)
                 .normal(reference)
                 .tumor(tumor)
                 .build();

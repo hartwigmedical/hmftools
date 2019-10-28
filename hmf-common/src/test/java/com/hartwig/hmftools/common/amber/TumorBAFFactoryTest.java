@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.amber;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 import com.hartwig.hmftools.common.sam.SAMRecordsTest;
 
@@ -29,11 +28,15 @@ public class TumorBAFFactoryTest {
     }
 
     private ModifiableTumorBAF createDefault(@NotNull final String chromosome, final long position) {
-        final ModifiableBaseDepth normal =
-                BaseDepthFactory.create(GenomeRegions.create(chromosome, position, position)).setRef(BaseDepth.Base.A);
-
-        normal.baseMap().put(BaseDepth.Base.A, 3);
-        normal.baseMap().put(BaseDepth.Base.T, 3);
+        final ModifiableBaseDepth normal = ModifiableBaseDepth.create()
+                .setChromosome(chromosome)
+                .setPosition(position)
+                .setRef(BaseDepth.Base.A)
+                .setRefSupport(3)
+                .setAlt(BaseDepth.Base.T)
+                .setAltSupport(3)
+                .setReadDepth(6)
+                .setIndelCount(0);
         return TumorBAFFactory.create(normal);
     }
 

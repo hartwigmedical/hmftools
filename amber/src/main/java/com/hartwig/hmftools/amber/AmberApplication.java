@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.SortedSetMultimap;
-import com.google.common.collect.TreeMultimap;
 import com.google.common.primitives.Doubles;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -35,9 +33,6 @@ import com.hartwig.hmftools.common.amber.TumorContaminationEvidence;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.region.BEDFileLoader;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.common.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
@@ -64,7 +59,6 @@ public class AmberApplication implements AutoCloseable {
     private final AmberPersistence persistence;
     private final VersionInfo versionInfo;
     private final ListMultimap<Chromosome, AmberSite> sites;
-    private final SortedSetMultimap<String, GenomeRegion> bedRegions;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
@@ -86,7 +80,6 @@ public class AmberApplication implements AutoCloseable {
         config = AmberConfig.createConfig(cmd);
         homozygousFilter = new NormalHomozygousFilter();
         heterozygousFilter = new NormalHetrozygousFilter(config.minHetAfPercent(), config.maxHetAfPercent());
-
         persistence = new AmberPersistence(config);
 
         final File outputDir = new File(config.outputDirectory());
@@ -94,12 +87,8 @@ public class AmberApplication implements AutoCloseable {
             throw new IOException("Unable to write directory " + config.outputDirectory());
         }
 
-        if (!new File(config.bedFilePath()).exists()) {
-            throw new IOException("Unable to locate bed file " + config.bedFilePath());
-        }
-
-        if (!config.snpBedFilePath().isEmpty() && !new File(config.snpBedFilePath()).exists()) {
-            throw new IOException("Unable to locate snp bed file " + config.snpBedFilePath());
+        if (!new File(config.bafLociPath()).exists()) {
+            throw new IOException("Unable to locate vcf file " + config.bafLociPath());
         }
 
         if (!new File(config.tumorBamPath()).exists()) {
@@ -113,21 +102,9 @@ public class AmberApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
 
-        bedRegions = TreeMultimap.create();
-        LOGGER.info("Loading vcf file {}", config.bedFilePath());
-        sites = AmberSiteFactory.sites(config.bedFilePath());
-        sites.values().forEach(x -> bedRegions.put(x.chromosome(), GenomeRegions.create(x.chromosome(), x.position(), x.position())));
-
-        final SortedSetMultimap<String, GenomeRegion> snpBedRegionsSortedSet;
-        if (!config.snpBedFilePath().isEmpty()) {
-            LOGGER.info("Loading germline snp bed file {}", config.snpBedFilePath());
-            snpBedRegionsSortedSet = BEDFileLoader.fromBedFile(config.snpBedFilePath());
-        } else {
-            snpBedRegionsSortedSet = TreeMultimap.create();
-        }
-
-        snpCheckFilter = new SnpCheckFilter(snpBedRegionsSortedSet);
-        bedRegions.putAll(snpBedRegionsSortedSet);
+        LOGGER.info("Loading vcf file {}", config.bafLociPath());
+        sites = AmberSiteFactory.sites(config.bafLociPath());
+        snpCheckFilter = new SnpCheckFilter(sites);
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
@@ -139,11 +116,11 @@ public class AmberApplication implements AutoCloseable {
     }
 
     private void runNormalMode() throws InterruptedException, ExecutionException, IOException {
+        final SamReaderFactory readerFactory = config.refGenomePath().isEmpty()
+                ? SamReaderFactory.make()
+                : SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
 
-        final SamReaderFactory readerFactory =
-                SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
-
-        final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory, bedRegions);
+        final ListMultimap<Chromosome, BaseDepth> allNormal = normalDepth(readerFactory, sites);
         final ListMultimap<Chromosome, BaseDepth> homNormal = Multimaps.filterEntries(allNormal, homozygousFilter);
         final ListMultimap<Chromosome, BaseDepth> hetNormal = Multimaps.filterEntries(allNormal, heterozygousFilter);
         final ListMultimap<Chromosome, BaseDepth> snpCheck = Multimaps.filterEntries(allNormal, snpCheckFilter);
@@ -166,8 +143,9 @@ public class AmberApplication implements AutoCloseable {
     }
 
     private void runTumorOnly() throws InterruptedException, ExecutionException, IOException {
-        final SamReaderFactory readerFactory =
-                SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
+        final SamReaderFactory readerFactory = config.refGenomePath().isEmpty()
+                ? SamReaderFactory.make()
+                : SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
 
         final ListMultimap<Chromosome, BaseDepth> allNormal = emptyNormalHetSites(sites);
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, allNormal);
@@ -188,8 +166,7 @@ public class AmberApplication implements AutoCloseable {
 
     @NotNull
     private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory,
-            final SortedSetMultimap<String, GenomeRegion> bedRegionsSortedSet)
-            throws IOException, InterruptedException, ExecutionException {
+            final ListMultimap<Chromosome, AmberSite> bedRegionsSortedSet) throws InterruptedException, ExecutionException {
 
         final int partitionSize = Math.max(config.minPartition(), bedRegionsSortedSet.size() / config.threadCount());
 
@@ -197,18 +174,16 @@ public class AmberApplication implements AutoCloseable {
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
         final List<Future<BaseDepthEvidence>> futures = Lists.newArrayList();
-        for (final String contig : bedRegionsSortedSet.keySet()) {
-            if (HumanChromosome.contains(contig)) {
-                for (final List<GenomeRegion> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
-                    final BaseDepthEvidence evidence = new BaseDepthEvidence(config.typicalReadDepth(),
-                            config.minMappingQuality(),
-                            config.minBaseQuality(),
-                            contig,
-                            config.referenceBamPath(),
-                            readerFactory,
-                            inner);
-                    futures.add(executorService.submit(completion.task(evidence)));
-                }
+        for (final Chromosome contig : bedRegionsSortedSet.keySet()) {
+            for (final List<AmberSite> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize)) {
+                final BaseDepthEvidence evidence = new BaseDepthEvidence(config.typicalReadDepth(),
+                        config.minMappingQuality(),
+                        config.minBaseQuality(),
+                        inner.get(0).chromosome(),
+                        config.referenceBamPath(),
+                        readerFactory,
+                        inner);
+                futures.add(executorService.submit(completion.task(evidence)));
             }
         }
 
@@ -216,18 +191,15 @@ public class AmberApplication implements AutoCloseable {
         getFuture(futures).forEach(x -> normalEvidence.putAll(HumanChromosome.fromString(x.contig()), x.evidence()));
         final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), normalEvidence);
         final ListMultimap<Chromosome, BaseDepth> normalBafs = ArrayListMultimap.create();
-        try (final RefEnricher refEnricher = new RefEnricher(config.refGenomePath())) {
-            for (final Chromosome chromosome : normalEvidence.keySet()) {
-                final List<BaseDepth> normalHetLocations = normalEvidence.get(chromosome)
-                        .stream()
-                        .filter(x -> x.indelCount() == 0)
-                        .filter(depthFilter.or(snpCheckFilter))
-                        .map(refEnricher::enrich)
-                        .filter(heterozygousFilter.or(homozygousFilter).or(snpCheckFilter)::test)
-                        .collect(Collectors.toList());
+        for (final Chromosome chromosome : normalEvidence.keySet()) {
+            final List<BaseDepth> normalHetLocations = normalEvidence.get(chromosome)
+                    .stream()
+                    .filter(x -> x.indelCount() == 0)
+                    .filter(depthFilter.or(snpCheckFilter))
+                    .filter(heterozygousFilter.or(homozygousFilter).or(snpCheckFilter)::test)
+                    .collect(Collectors.toList());
 
-                normalBafs.putAll(chromosome, normalHetLocations);
-            }
+            normalBafs.putAll(chromosome, normalHetLocations);
         }
 
         return normalBafs;
@@ -242,8 +214,6 @@ public class AmberApplication implements AutoCloseable {
 
         return result;
     }
-
-
 
     @NotNull
     private ListMultimap<Chromosome, TumorBAF> tumorBAF(@NotNull final SamReaderFactory readerFactory,

@@ -94,6 +94,12 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
  
 
 # Version History and Download Links
+- Upcoming
+  - Support for `tumor_only` mode
+  - Replaced input bed file with VCF file and will match only on specified target allele. Any entries with SNPCHECK info flags will be used for sample matching locations. 
+  - `ref_genome` argument now only required when using CRAM files
+  - remove `snp_bed` argument in favour of SNPCHECK flag in loci VCF
+  - `reference` and `reference_bam` arguments only required when not in `tumor_only` mode
 - [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.5)
   - Fixed bug in contamination model if absolute zero contamination
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.4)

@@ -32,6 +32,7 @@ public class AmberSiteFactory {
                                         .position(variant.getStart())
                                         .ref(variant.getReference().getBaseString())
                                         .alt(variant.getAlternateAllele(0).getBaseString())
+                                        .snpCheck(variant.hasAttribute("SNPCHECK"))
                                         .build());
                     }
                 }

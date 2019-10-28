@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.common.amber;
 
-import java.util.EnumMap;
-
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,42 +17,18 @@ public class BaseDepthFactory {
 
     @NotNull
     public static ModifiableBaseDepth create(@NotNull final BaseDepth pos) {
-        return ModifiableBaseDepth.create()
-                .setChromosome(pos.chromosome())
-                .setPosition(pos.position())
-                .setRef(pos.ref())
-                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
-                .setIndelCount(0)
-                .setReadDepth(0);
+        return ModifiableBaseDepth.create().from(pos).setIndelCount(0).setRefSupport(0).setAltSupport(0).setReadDepth(0);
     }
 
     @NotNull
-    public static ModifiableBaseDepth create(@NotNull final GenomePosition pos) {
-        return ModifiableBaseDepth.create()
-                .setChromosome(pos.chromosome())
-                .setPosition(pos.position())
-                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
-                .setIndelCount(0)
-                .setReadDepth(0);
-    }
-
-    @NotNull
-    public static ModifiableBaseDepth create(@NotNull final GenomeRegion pos) {
-        return ModifiableBaseDepth.create()
-                .setChromosome(pos.chromosome())
-                .setPosition(pos.start())
-                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
-                .setIndelCount(0)
-                .setReadDepth(0);
-    }
-
-    @NotNull
-    private BaseDepth create(@NotNull final AmberSite site) {
+    public static ModifiableBaseDepth create(@NotNull final AmberSite site) {
         return ModifiableBaseDepth.create()
                 .setChromosome(site.chromosome())
                 .setPosition(site.position())
                 .setRef(BaseDepth.Base.valueOf(site.ref()))
-                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
+                .setAlt(BaseDepth.Base.valueOf(site.alt()))
+                .setAltSupport(0)
+                .setRefSupport(0)
                 .setIndelCount(0)
                 .setReadDepth(0);
     }
@@ -72,7 +45,11 @@ public class BaseDepthFactory {
                 if (!indel(bafPosition, readPosition, samRecord)) {
                     final char baseChar = samRecord.getReadString().charAt(readPosition - 1);
                     final BaseDepth.Base base = BaseDepth.Base.valueOf(String.valueOf(baseChar).toUpperCase());
-                    evidence.baseMap().merge(base, 1, (integer, integer2) -> integer + integer2);
+                    if (base.equals(evidence.ref())) {
+                        evidence.setRefSupport(evidence.refSupport() + 1);
+                    } else if (base.equals(evidence.alt())) {
+                        evidence.setAltSupport(evidence.altSupport() + 1);
+                    }
                 } else {
                     evidence.setIndelCount(evidence.indelCount() + 1);
                 }

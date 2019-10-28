@@ -11,6 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 
@@ -79,8 +80,8 @@ public enum AmberBAFFile {
                 .add(FORMAT.format(ratio.tumorBAF()))
                 .add(FORMAT.format(ratio.tumorModifiedBAF()))
                 .add(String.valueOf(ratio.tumorDepth()))
-                .add(FORMAT.format(ratio.normalBAF()))
-                .add(FORMAT.format(ratio.normalModifiedBAF()))
+                .add(Doubles.isFinite(ratio.normalBAF()) ? FORMAT.format(ratio.normalBAF()) : "0")
+                .add(Doubles.isFinite(ratio.normalModifiedBAF()) ? FORMAT.format(ratio.normalModifiedBAF()) : "0")
                 .add(String.valueOf(ratio.normalDepth()))
                 .toString();
     }
