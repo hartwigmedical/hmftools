@@ -44,18 +44,20 @@ import org.apache.logging.log4j.Logger;
 public class CohortExpFusions
 {
     // config
-    private List<Long> mProximateBucketLengths;
+    private final List<Long> mProximateBucketLengths;
 
     private final Map<String, List<GeneRangeData>> mChrGeneDataMap;
 
-    private Map<String,Map<Integer,Long>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
-    private Map<String,Map<Integer,Long>> mDupGenePairCounts;
+    private final Map<String,Map<Integer,Long>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
+    private final Map<String,Map<Integer,Long>> mDupGenePairCounts;
 
     // global counts by type and buck length
     private List<Integer> mGlobalProximateCounts; // indexed as per the proximate lengths
     private int mGlobalShortInvCount;
     private int mGlobalLongDelDupInvCount;
     private long mArmLengthFactor;
+    private final List<RegionAllocator> mDelRegionAllocators;
+    private final List<RegionAllocator> mDupRegionAllocators;
 
     private boolean mLogVerbose;
 
@@ -76,9 +78,12 @@ public class CohortExpFusions
         mDelGenePairCounts = Maps.newHashMap();
         mDupGenePairCounts = Maps.newHashMap();
         mGlobalProximateCounts = Lists.newArrayList();
+        mProximateBucketLengths = Lists.newArrayList();
         mGlobalShortInvCount = 0;
         mGlobalLongDelDupInvCount = 0;
         mArmLengthFactor = 0;
+        mDelRegionAllocators = Lists.newArrayList();
+        mDupRegionAllocators = Lists.newArrayList();
         mLogVerbose = false;
     }
 
@@ -90,7 +95,7 @@ public class CohortExpFusions
 
     public void initialiseLengths(final List<Long> proximateBucketLengths, final List<String> restrictedChromosomes)
     {
-        mProximateBucketLengths = proximateBucketLengths;
+        mProximateBucketLengths.addAll(proximateBucketLengths);
 
         mProximateBucketLengths.stream().forEach(x -> mGlobalProximateCounts.add(0));
 
@@ -116,6 +121,17 @@ public class CohortExpFusions
         }
 
         LOGGER.debug("arm length factor: {}", mArmLengthFactor);
+
+        // create region allocators for same-gene fusions
+        int bucketLengths = mProximateBucketLengths.size() - 1;
+
+        for(int i = 0; i < bucketLengths; ++i)
+        {
+            int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
+            blockSize = max(blockSize, MIN_BUCKET_LENGTH);
+            mDelRegionAllocators.add(i, new RegionAllocator(blockSize));
+            mDupRegionAllocators.add(i, new RegionAllocator(blockSize));
+        }
     }
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
@@ -423,15 +439,9 @@ public class CohortExpFusions
         if(transcriptRegions.isEmpty())
             return;
 
-        int bucketLengths = mProximateBucketLengths.size() - 1;
-        RegionAllocator[] regionAllocators = new RegionAllocator[bucketLengths];
-
-        for(int i = 0; i < bucketLengths; ++i)
-        {
-            int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
-            blockSize = max(blockSize, MIN_BUCKET_LENGTH);
-            regionAllocators[i] = new RegionAllocator(blockSize);
-        }
+        // clear any previous allocations from earlier genes
+        mDelRegionAllocators.forEach(RegionAllocator::reset);
+        mDupRegionAllocators.forEach(RegionAllocator::reset);
 
         for (int i = 0; i < transcriptRegions.size(); ++i)
         {
@@ -444,7 +454,7 @@ public class CohortExpFusions
                 if (region1.transId() != region2.transId())
                     break;
 
-                testProximatePhaseRegions(geneData, geneData, region1, region2, regionAllocators);
+                testProximatePhaseRegions(geneData, geneData, region1, region2, true);
             }
         }
     }
@@ -486,7 +496,7 @@ public class CohortExpFusions
                 {
                     for (GenePhaseRegion upperRegion : upperGene.getPhaseRegions())
                     {
-                        testProximatePhaseRegions(lowerGene, upperGene, lowerRegion, upperRegion);
+                        testProximatePhaseRegions(lowerGene, upperGene, lowerRegion, upperRegion, false);
                     }
                 }
             }
@@ -703,13 +713,8 @@ public class CohortExpFusions
 
     public static int PERMITTED_REGION_OVERLAP = 5;
 
-    public boolean testProximatePhaseRegions(GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2)
-    {
-        return testProximatePhaseRegions(gene1, gene2, region1, region2, null);
-    }
-
-    public boolean testProximatePhaseRegions(GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2,
-            RegionAllocator[] regionAllocators)
+    public boolean testProximatePhaseRegions(
+            GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2, boolean trackAllocations)
     {
         // ignore overlapping regions (allowing a small buffer) for now since it's not clear whether a DUP or DEL would be required
         if (haveOverlap(region1, region2, -PERMITTED_REGION_OVERLAP))
@@ -757,7 +762,8 @@ public class CohortExpFusions
                 continue;
 
             Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(
-                    mProximateBucketLengths, regionAllocators, lowerGene, upperGene, lowerRegion, upperRegion, isDel);
+                    mProximateBucketLengths, trackAllocations ? (isDel ? mDelRegionAllocators : mDupRegionAllocators) : null,
+                    lowerGene, upperGene, lowerRegion, upperRegion, isDel);
 
             if (!bucketOverlapCounts.isEmpty())
             {
@@ -838,6 +844,12 @@ public class CohortExpFusions
         for(final String geneId : geneIds)
         {
             final EnsemblGeneData geneData = geneTransCache.getGeneDataById(geneId);
+
+            if(geneData == null)
+            {
+                LOGGER.error("geneId({}) not found", geneId);
+                continue;
+            }
 
             GeneRangeData geneRangeData = new GeneRangeData(geneData);
 
