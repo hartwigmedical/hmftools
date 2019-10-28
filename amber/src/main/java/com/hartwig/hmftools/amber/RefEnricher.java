@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
+@Deprecated
 public class RefEnricher implements AutoCloseable {
 
     private final IndexedFastaSequenceFile indexedFastaSequenceFile;

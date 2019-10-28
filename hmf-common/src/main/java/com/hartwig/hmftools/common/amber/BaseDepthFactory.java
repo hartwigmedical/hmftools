@@ -50,6 +50,17 @@ public class BaseDepthFactory {
     }
 
     @NotNull
+    private BaseDepth create(@NotNull final AmberSite site) {
+        return ModifiableBaseDepth.create()
+                .setChromosome(site.chromosome())
+                .setPosition(site.position())
+                .setRef(BaseDepth.Base.valueOf(site.ref()))
+                .setBaseMap(new EnumMap<>(BaseDepth.Base.class))
+                .setIndelCount(0)
+                .setReadDepth(0);
+    }
+
+    @NotNull
     public ModifiableBaseDepth addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord) {
         int quality = getBaseQuality(evidence, samRecord);
         if (quality >= minBaseQuality) {

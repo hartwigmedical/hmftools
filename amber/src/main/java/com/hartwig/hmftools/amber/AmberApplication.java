@@ -18,9 +18,9 @@ import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.primitives.Doubles;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.amber.site.AmberSite;
-import com.hartwig.hmftools.amber.site.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberSite;
+import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthEvidence;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
@@ -237,18 +237,13 @@ public class AmberApplication implements AutoCloseable {
     private ListMultimap<Chromosome, BaseDepth> emptyNormalHetSites(@NotNull final ListMultimap<Chromosome, AmberSite> sites) {
         final ListMultimap<Chromosome, BaseDepth> result = ArrayListMultimap.create();
         for (Chromosome chromosome : sites.keySet()) {
-            result.putAll(chromosome, sites.get(chromosome).stream().map(this::emptyDepth).collect(Collectors.toList()));
+            result.putAll(chromosome, sites.get(chromosome).stream().map(BaseDepthFactory::create).collect(Collectors.toList()));
         }
 
         return result;
     }
 
-    @NotNull
-    private BaseDepth emptyDepth(@NotNull final AmberSite site) {
-        BaseDepth result = BaseDepthFactory.create(site).setRef(BaseDepth.Base.valueOf(site.ref()));
-        result.baseMap().put(BaseDepth.Base.valueOf(site.alt()), 0);
-        return result;
-    }
+
 
     @NotNull
     private ListMultimap<Chromosome, TumorBAF> tumorBAF(@NotNull final SamReaderFactory readerFactory,

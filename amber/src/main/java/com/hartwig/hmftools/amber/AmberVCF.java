@@ -30,7 +30,6 @@ public class AmberVCF {
 
     private final static String PASS = "PASS";
 
-    private final boolean tumorOnly;
     private final String tumorSample;
     private final String normalSample;
     private final VCFHeader header;
@@ -39,11 +38,9 @@ public class AmberVCF {
         this.tumorSample = "";
         this.normalSample = normalSample;
         this.header = header(normalSample);
-        this.tumorOnly = false;
     }
 
     public AmberVCF(boolean tumorOnly, @NotNull final String normalSample, @NotNull final String tumorSample) {
-        this.tumorOnly = tumorOnly;
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
         this.header = tumorOnly ? header(tumorSample) : header(normalSample, tumorSample);

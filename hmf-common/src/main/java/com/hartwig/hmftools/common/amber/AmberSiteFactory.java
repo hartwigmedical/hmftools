@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.amber.site;
+package com.hartwig.hmftools.common.amber;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
