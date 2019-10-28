@@ -46,10 +46,17 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
 
+        double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
+
+        String MSIStatus = MicroSatelliteStatus.interpretToString(microSatelliteStability);
+        String microSatelliteStabilityString =
+                hasReliablePurityFit ? MSIStatus + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
+
         double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        String hrDeficiencyLabel = hasReliablePurityFit ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
-        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", hasReliablePurityFit);
-        hrChart.enabled(hasReliablePurityFit);
+        String hrDeficiencyLabel =
+                hasReliablePurityFit && MSIStatus.equals("Stable") ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+        BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
+        hrChart.enabled(hasReliablePurityFit && MSIStatus.equals("Stable"));
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
@@ -57,11 +64,6 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
                 hrChart));
 
-        double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
-
-        String microSatelliteStabilityString =
-                hasReliablePurityFit ? MicroSatelliteStatus.interpretToString(microSatelliteStability) + " " + doubleDecimalFormat.format(
-                        microSatelliteStability) : DataUtil.NA_STRING;
         BarChart satelliteChart =
                 new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI", false);
         satelliteChart.enabled(hasReliablePurityFit);
