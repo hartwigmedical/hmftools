@@ -25,12 +25,13 @@ public interface AmberConfig {
     int DEFAULT_MIN_PARTITION = 10000;
     int DEFAULT_MIN_MAPPING_QUALITY = 1;
     int DEFAULT_TYPICAL_READ_DEPTH = 151;
+    int DEFAULT_TUMOR_ONLY_MIN_SUPPORT = 2;
+    double DEFAULT_TUMOR_ONLY_MIN_VAF = 0.05;
     double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
     double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
     double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
-    String TUMOR_ONLY = "tumor_only";
     String TUMOR = "tumor";
     String BAF_LOCI = "loci";
     String THREADS = "threads";
@@ -45,6 +46,10 @@ public interface AmberConfig {
     String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
     String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
     String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
+
+    String TUMOR_ONLY = "tumor_only";
+    String TUMOR_ONLY_MIN_VAF = "tumor_only_min_vaf";
+    String TUMOR_ONLY_MIN_SUPPORT = "tumor_only_min_support";
 
     @NotNull
     static Options createOptions() {
@@ -66,10 +71,19 @@ public interface AmberConfig {
         options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MAX_HET_AF_PERCENTAGE + "]");
         options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
         options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
+
+        options.addOption(TUMOR_ONLY_MIN_VAF, true, "Min support in ref and alt in tumor only mode [" + DEFAULT_TUMOR_ONLY_MIN_VAF + "]");
+        options.addOption(TUMOR_ONLY_MIN_SUPPORT,
+                true,
+                "Min VAF in ref and alt in tumor only mode [" + DEFAULT_TUMOR_ONLY_MIN_SUPPORT + "]");
         return options;
     }
 
     boolean tumorOnly();
+
+    int tumorOnlyMinSupport();
+
+    double tumorOnlyMinVaf();
 
     int threadCount();
 
@@ -121,12 +135,13 @@ public interface AmberConfig {
         final int threadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final int minBaseQuality = defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY);
         final int minMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
+        final int tumorOnlyMinSupport = defaultIntValue(cmd, TUMOR_ONLY_MIN_SUPPORT, DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
 
         final double minDepthPercent = defaultDoubleValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE);
         final double maxDepthPercent = defaultDoubleValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE);
         final double minHetAfPercent = defaultDoubleValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE);
         final double maxHetAfPercent = defaultDoubleValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
-        final String refGenomePath = cmd.getOptionValue(REF_GENOME, Strings.EMPTY);
+        final double tumorOnlyMinVaf = defaultDoubleValue(cmd, TUMOR_ONLY_MIN_VAF, DEFAULT_TUMOR_ONLY_MIN_VAF);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String reference = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE, missingJoiner);
@@ -136,6 +151,7 @@ public interface AmberConfig {
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
         final String tumor = parameter(cmd, TUMOR, missingJoiner);
         final String missing = missingJoiner.toString();
+        final String refGenomePath = cmd.getOptionValue(REF_GENOME, Strings.EMPTY);
 
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
@@ -143,6 +159,8 @@ public interface AmberConfig {
 
         return ImmutableAmberConfig.builder()
                 .tumorOnly(isTumorOnly)
+                .tumorOnlyMinVaf(tumorOnlyMinVaf)
+                .tumorOnlyMinSupport(tumorOnlyMinSupport)
                 .threadCount(threadCount)
                 .minBaseQuality(minBaseQuality)
                 .minMappingQuality(minMappingQuality)
