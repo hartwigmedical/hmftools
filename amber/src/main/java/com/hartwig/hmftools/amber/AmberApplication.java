@@ -69,8 +69,7 @@ public class AmberApplication implements AutoCloseable {
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = AmberConfig.createOptions();
         try (final AmberApplication application = new AmberApplication(options, args)) {
-
-            application.runTumorOnly();
+            application.run();
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
@@ -107,7 +106,7 @@ public class AmberApplication implements AutoCloseable {
             throw new IOException("Unable to locate tumor bam file " + config.tumorBamPath());
         }
 
-        if (!new File(config.referenceBamPath()).exists()) {
+        if (!config.tumorOnly() && !new File(config.referenceBamPath()).exists()) {
             throw new IOException("Unable to locate reference bam file " + config.referenceBamPath());
         }
 
@@ -115,7 +114,7 @@ public class AmberApplication implements AutoCloseable {
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
 
         bedRegions = TreeMultimap.create();
-        LOGGER.info("Loading bed file {}", config.bedFilePath());
+        LOGGER.info("Loading vcf file {}", config.bedFilePath());
         sites = AmberSiteFactory.sites(config.bedFilePath());
         sites.values().forEach(x -> bedRegions.put(x.chromosome(), GenomeRegions.create(x.chromosome(), x.position(), x.position())));
 
@@ -183,7 +182,7 @@ public class AmberApplication implements AutoCloseable {
 
         persistence.persisQC(amberBAFList, Lists.newArrayList());
         persistence.persistVersionInfo(versionInfo);
-        persistence.persistTumorBAF(tumorBAFList);
+        persistence.persistTumorOnlyBAF(tumorBAFList);
         persistence.persistAmberBAF(amberBAFList);
     }
 

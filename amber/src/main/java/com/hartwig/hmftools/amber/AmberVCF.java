@@ -21,16 +21,16 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class AmberVCF {
 
     private final static String PASS = "PASS";
 
+    private final boolean tumorOnly;
     private final String tumorSample;
     private final String normalSample;
     private final VCFHeader header;
@@ -38,23 +38,15 @@ public class AmberVCF {
     public AmberVCF(@NotNull final String normalSample) {
         this.tumorSample = "";
         this.normalSample = normalSample;
-
-        this.header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(normalSample));
-        header.addMetaDataLine(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, "Genotype"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+        this.header = header(normalSample);
+        this.tumorOnly = false;
     }
 
-    public AmberVCF(@NotNull final String normalSample, @NotNull final String tumorSample) {
+    public AmberVCF(boolean tumorOnly, @NotNull final String normalSample, @NotNull final String tumorSample) {
+        this.tumorOnly = tumorOnly;
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
-
-        this.header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(normalSample, tumorSample));
-        header.addMetaDataLine(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, "Genotype"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+        this.header = tumorOnly ? header(tumorSample) : header(normalSample, tumorSample);
     }
 
     public void write(@NotNull final String filename, @NotNull final Collection<TumorBAF> evidence) {
@@ -189,4 +181,17 @@ public class AmberVCF {
 
         return builder.make();
     }
+
+    @NotNull
+    private static VCFHeader header(final String... samples) {
+
+        VCFHeader header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(samples));
+        header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
+        header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
+        header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+
+        return header;
+    }
+
 }

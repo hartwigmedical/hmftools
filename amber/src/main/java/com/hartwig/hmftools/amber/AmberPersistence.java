@@ -47,9 +47,17 @@ class AmberPersistence {
     }
 
     void persistTumorBAF(@NotNull final List<TumorBAF> tumorBAFList) {
+        persistTumorBAF(false, tumorBAFList);
+    }
+
+    void persistTumorOnlyBAF(@NotNull final List<TumorBAF> tumorBAFList) {
+        persistTumorBAF(true, tumorBAFList);
+    }
+
+    void persistTumorBAF(boolean tumorOnly, @NotNull final List<TumorBAF> tumorBAFList) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
-        new AmberVCF(config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
+        new AmberVCF(tumorOnly, config.normal(), config.tumor()).write(outputVcf, tumorBAFList);
     }
 
     void persisQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
@@ -64,7 +72,7 @@ class AmberPersistence {
 
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.contamination.vcf.gz";
         LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
-        new AmberVCF(config.normal(), config.tumor()).writeContamination(outputVcf, contaminationList);
+        new AmberVCF(false, config.normal(), config.tumor()).writeContamination(outputVcf, contaminationList);
 
         final String filename = TumorContaminationFile.generateContaminationFilename(config.outputDirectory(), config.tumor());
         TumorContaminationFile.write(filename, contaminationList);

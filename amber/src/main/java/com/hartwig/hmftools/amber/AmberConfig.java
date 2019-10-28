@@ -9,6 +9,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -124,12 +125,12 @@ public interface AmberConfig {
         final double maxHetAfPercent = defaultDoubleValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
+        final String reference = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE, missingJoiner);
+        final String referenceBamPath = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE_BAM, missingJoiner);
         final String bedFilePath = parameter(cmd, BED_FILE, missingJoiner);
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
-        final String referenceBamPath = parameter(cmd, REFERENCE_BAM, missingJoiner);
         final String refGenomePath = parameter(cmd, REF_GENOME, missingJoiner);
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
-        final String normal = parameter(cmd, REFERENCE, missingJoiner);
         final String tumor = parameter(cmd, TUMOR, missingJoiner);
         final String missing = missingJoiner.toString();
 
@@ -154,7 +155,7 @@ public interface AmberConfig {
                 .refGenomePath(refGenomePath)
                 .outputDirectory(outputDirectory)
                 .snpBedFilePath(snpBedFilePath)
-                .normal(normal)
+                .normal(reference)
                 .tumor(tumor)
                 .build();
     }
