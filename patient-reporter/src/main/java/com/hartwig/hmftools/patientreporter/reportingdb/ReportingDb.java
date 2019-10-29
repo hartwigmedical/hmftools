@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +37,7 @@ public final class ReportingDb {
 
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
-        String reportDate = currentDate();
+        String reportDate = ReportResources.REPORT_DATE;
 
         String purity = new DecimalFormat("#'%'").format(report.impliedPurity() * 100);
         String hasReliablePurity = String.valueOf(report.hasReliablePurity());
@@ -83,7 +84,7 @@ public final class ReportingDb {
 
     public static void generateOutputReportDatesQCFailReport(@NotNull String reportingDbTsv, @NotNull QCFailReport report)
             throws IOException {
-        String reportDate = currentDate();
+        String reportDate = ReportResources.REPORT_DATE;
 
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
@@ -134,12 +135,6 @@ public final class ReportingDb {
             }
         }
         return reportingEntryList;
-    }
-
-    @NotNull
-    private static String currentDate() {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        return formatter.format(new Date());
     }
 
     private static void writeToTSV(@NotNull String stringForFile, @NotNull String reportDatesTSV) throws IOException {
