@@ -18,24 +18,23 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<InterpretGermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
+    public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
             @NotNull ChordAnalysis chordAnalysis) {
-        List<InterpretGermlineVariant> filteredGermlineVariants = Lists.newArrayList();
+        List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
-        Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
+        Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
             assert germlineVariant.passFilter();
 
-            if (reportingGermlineGenes.contains(germlineVariant.gene())) {
-                // Note: Reporting germline genes may not necessarily be present in driverGeneView!
-                // Note: Reporting germline genes when chord predicted response is true
+            if (reportableGermlineGenes.contains(germlineVariant.gene())) {
+                // Note: Reportable germline genes may not necessarily be present in driverGeneView!
                 if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
-                    filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
+                    reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                 } else {
-                    // Only report germline variants on TSGs if there is a 2nd hit.
+                    // Only report germline variants on TSGs if there is a 2nd hit or CHORD suggests HRD
                     boolean filterBiallelic = germlineVariant.biallelic();
 
                     boolean filterMinCopyNumberTumor = false;
@@ -51,21 +50,28 @@ public final class FilterGermlineVariants {
                         }
                     }
 
-                    if (filterBiallelic || filterSomaticVariantInSameGene) {
-                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
+                    boolean filterGermlineVariantInSameGene = false;
+                    for (GermlineVariant variant : germlineVariants) {
+                        if (variant != germlineVariant && variant.gene().equals(germlineVariant.gene())) {
+                            filterGermlineVariantInSameGene = true;
+                        }
+                    }
+
+                    if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
+                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                     } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
-                        filteredGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
+                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }
             }
         }
-        return filteredGermlineVariants;
+        return reportableGermlineVariants;
     }
 
     @NotNull
-    private static InterpretGermlineVariant mergeInterpretGermlineVariants(@NotNull GermlineVariant germlineVariant,
+    private static ReportableGermlineVariant reportableGermlineVariantWithDriverLikelihood(@NotNull GermlineVariant germlineVariant,
             double driverLikelihood) {
-        return ImmutableInterpretGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
+        return ImmutableReportableGermlineVariant.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }
 
     @NotNull

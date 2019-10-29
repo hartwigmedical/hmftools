@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItem
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.germline.InterpretGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,56 +37,65 @@ public final class ReportableVariantAnalyzer {
     @NotNull
     public static ReportVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
-            @NotNull List<InterpretGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingChoice germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableVariant> reportableVariants = Lists.newArrayList();
-        Double driverLikelihood = null;
+        List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
+            DriverCategory category = driverGeneView.category(variant.gene());
+            assert category != null;
+
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
-            if (catalog == null) {
-                LOGGER.warn("No driver entry found for gene {}!", variant.gene());
-            }
-            for (InterpretGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
-                if (interpretGermlineVariant.germlineVariant().gene().equals(variant.gene())) {
-                    driverLikelihood = interpretGermlineVariant.driverLikelihood();
+            Double driverLikelihood = null;
+            if (catalog != null) {
+                driverLikelihood = catalog.driverLikelihood();
+                for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+                    if (germlineVariant.variant().gene().equals(variant.gene())) {
+                        driverLikelihood = Math.max(driverLikelihood, germlineVariant.driverLikelihood());
+                    }
                 }
             }
-            Double somaticDriverCatalog = catalog != null ? catalog.driverLikelihood() : null;
-            reportableVariants.add(fromSomaticVariant(variant).driverCategory(driverGeneView.category(variant.gene()))
-                    .driverLikelihood(driverLikelihood != null ? driverLikelihood : somaticDriverCatalog)
+
+            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(category)
+                    .driverLikelihood(driverLikelihood)
                     .notifyClinicalGeneticist(false)
                     .build());
         }
 
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
-        for (InterpretGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
-            reportableVariants.add(fromGermlineVariant(interpretGermlineVariant.germlineVariant()).driverCategory(driverGeneView.category(
-                    interpretGermlineVariant.germlineVariant().gene()))
-                    .driverLikelihood(interpretGermlineVariant.driverLikelihood())
-                    .notifyClinicalGeneticist(
-                            wantsToBeNotified && germlineReportingModel.notifyAboutGene(interpretGermlineVariant.germlineVariant().gene()))
+        for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+            DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
+            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
+            double driverLikelihood = germlineVariant.driverLikelihood();
+            if (catalog != null) {
+                driverLikelihood = Math.max(driverLikelihood, catalog.driverLikelihood());
+            }
+            allReportableVariants.add(fromGermlineVariant(germlineVariant.variant()).driverCategory(category)
+                    .driverLikelihood(driverLikelihood)
+                    .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
                     .build());
-
         }
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        // Extract somatic evidence for high drivers variants only (See DEV-824)
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForAllVariants(reportableVariants, primaryTumorLocation);
+                filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
 
-        // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
-        List<EvidenceItem> filteredEvidence =
-                ReportableEvidenceItemFactory.reportableFlatListDriversAllVariant(evidencePerVariant, driverCatalog);
+        return ImmutableReportVariantAnalysis.of(allReportableVariants,
+                ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant));
+    }
 
-        // Check that all variants with high level evidence are reported (since they are in the driver catalog).
-        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
-            ReportableVariant variant = entry.getKey();
-            if (!reportableVariants.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
-                LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
+    @NotNull
+    private static Map<ReportableVariant, List<EvidenceItem>> filterHighDriverLikelihood(
+            final Map<ReportableVariant, List<EvidenceItem>> evidenceForAllVariants) {
+        Map<ReportableVariant, List<EvidenceItem>> evidencePerHighDriverVariant = Maps.newHashMap();
+        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
+            if (DriverInterpretation.interpret(entry.getKey().driverLikelihood()) == DriverInterpretation.HIGH) {
+                evidencePerHighDriverVariant.put(entry.getKey(), entry.getValue());
             }
         }
-        return ImmutableReportVariantAnalysis.of(reportableVariants, filteredEvidence);
+        return evidencePerHighDriverVariant;
     }
 
     @Nullable

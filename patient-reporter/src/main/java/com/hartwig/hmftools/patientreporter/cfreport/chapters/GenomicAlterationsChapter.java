@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -13,9 +14,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.structural.ReportableDriverCatalog;
+import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -50,19 +50,19 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+        final boolean hasReliablePurity = patientReport.hasReliablePurity();
 
-        reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurityFit));
-        reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
-        reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableDriverCatalogs()));
-        reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
-        reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
-        // reportDocument.add(createViralInsertionTable(patientReport.viralInsertion()));
-
+        reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurity));
+        reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurity));
+        reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
+        reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurity));
+        reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
+        // TODO: Disable viral insertions before making a final release
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
     }
 
     @NotNull
-    private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurityFit) {
+    private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurity) {
         final String title = "Tumor specific variants";
         if (reportableVariants.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -102,13 +102,13 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.ploidyString(variant.totalPloidy(), hasReliablePurityFit))
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.ploidyString(variant.totalPloidy(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.vafString(variant, hasReliablePurityFit))
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.vafString(variant, hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(),
                     variant.driverCategory(),
-                    hasReliablePurityFit)).setTextAlignment(TextAlignment.CENTER));
+                    hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot()))
                     .setTextAlignment(TextAlignment.CENTER));
             if (DISPLAY_CLONAL_COLUMN) {
@@ -129,21 +129,20 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createHomozygousDelDisruptionsTable(@NotNull List<ReportableDriverCatalog> homozygoudDelDisruptions) {
+    private static Table createHomozygousDelDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         final String title = "Tumor specific homozygous disruptions";
-        if (homozygoudDelDisruptions.isEmpty()) {
+        if (homozygousDisruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 80 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("chromosome band"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("driver")});
+                        TableUtil.createHeaderCell("Gene")});
 
-        for (ReportableDriverCatalog homozygousDisruption : homozygoudDelDisruptions) {
+        for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
-            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.driver().toString()));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -177,7 +176,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createSomaticFusionsTable(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurityFit) {
-        final String title = "Somatic gene fusions";
+        final String title = "Tumor specific gene fusions";
         if (fusions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -234,19 +233,18 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertion) {
-        final String title = "Tumor viral insertions";
-        if (viralInsertion.isEmpty()) {
+    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions) {
+        final String title = "Tumor specific viral insertions";
+        if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 50 },
-                new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("Number of viral integrations") });
+                new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("Number of viral insertions") });
 
-        for (ViralInsertion viralInsert : viralInsertion) {
+        for (ViralInsertion viralInsert : viralInsertions) {
             contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
-            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.countVirus())));
-
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount())));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

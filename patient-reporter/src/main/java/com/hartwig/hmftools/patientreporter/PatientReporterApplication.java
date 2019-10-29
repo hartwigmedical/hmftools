@@ -17,6 +17,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
+import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,9 +47,10 @@ public class PatientReporterApplication {
     private static final String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     private static final String OUTPUT_DIRECTORY = "output_dir";
 
+    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
+    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String HOSPITAL_DIRECTORY = "hospital_dir";
-    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
 
     private static final String RVA_LOGO = "rva_logo";
     private static final String COMPANY_LOGO = "company_logo";
@@ -60,15 +62,16 @@ public class PatientReporterApplication {
 
     // Params specific for actual patient reports
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
+    private static final String PURPLE_QC_FILE = "purple_qc_file";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
+    private static final String BACHELOR_TSV = "bachelor_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
-    private static final String BACHELOR_TSV = "bachelor_tsv";
+    private static final String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
+    private static final String LINX_DRIVERS_TSV = "linx_drivers_tsv";
     private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     private static final String CIRCOS_FILE = "circos_file";
-    private static final String LINX_VIRALINSERTION_TSV = "viral_insertion_tsv";
-    private static final String LINX_DRIVERS_CATALOG_TSV = "linx_drivers_catalog_tsv";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
@@ -83,7 +86,7 @@ public class PatientReporterApplication {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(options, args);
 
-        if (!validInputForReportWriter(cmd) || !validInputForBaseReportData(cmd)) {
+        if (!validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
         }
 
@@ -105,25 +108,30 @@ public class PatientReporterApplication {
             QCFailReport report = reporter.run(sampleMetadata, reason, cmd.getOptionValue(COMMENTS), cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
+
+            ReportingDb.addQCFailReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
             AnalysedPatientReport report = reporter.run(sampleMetadata,
                     cmd.getOptionValue(PURPLE_PURITY_TSV),
+                    cmd.getOptionValue(PURPLE_QC_FILE),
                     cmd.getOptionValue(PURPLE_GENE_CNV_TSV),
                     cmd.getOptionValue(SOMATIC_VARIANT_VCF),
+                    cmd.getOptionValue(BACHELOR_TSV),
                     cmd.getOptionValue(LINX_FUSION_TSV),
                     cmd.getOptionValue(LINX_DISRUPTION_TSV),
-                    cmd.getOptionValue(BACHELOR_TSV),
+                    cmd.getOptionValue(LINX_VIRAL_INSERTION_TSV),
+                    cmd.getOptionValue(LINX_DRIVERS_TSV),
                     cmd.getOptionValue(CHORD_PREDICTION_TXT),
                     cmd.getOptionValue(CIRCOS_FILE),
-                    cmd.getOptionValue(LINX_VIRALINSERTION_TSV),
-                    cmd.getOptionValue(LINX_DRIVERS_CATALOG_TSV),
                     cmd.getOptionValue(COMMENTS),
                     cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+
+            ReportingDb.addSequenceReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else {
             printUsageAndExit(options);
         }
@@ -173,7 +181,6 @@ public class PatientReporterApplication {
         String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
         LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
-
         return ImmutableQCFailReportData.builder()
                 .patientTumorLocations(patientTumorLocations)
                 .limsModel(lims)
@@ -192,12 +199,21 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(SAMPLE_SUMMARY_TSV));
     }
 
+    private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
+        return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
+                cmd,
+                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORTING_DB_TSV) && fileExists(cmd,
+                TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY) && fileExists(cmd, SIGNATURE)
+                && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO);
+    }
+
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
-        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && valueMissingOrFileExists(cmd, BACHELOR_TSV)
-                && fileExists(cmd, CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV)
-                && fileExists(cmd, LINX_DRIVERS_CATALOG_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
-                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
+        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(
+                cmd,
+                SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
+                LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
+                CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
+                GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
@@ -211,34 +227,12 @@ public class PatientReporterApplication {
         return false;
     }
 
-    private static boolean validInputForReportWriter(@NotNull CommandLine cmd) {
-        return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
-                cmd,
-                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY);
-    }
-
-    private static boolean validInputForBaseReportData(@NotNull CommandLine cmd) {
-        return fileExists(cmd, TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY)
-                && fileExists(cmd, SIGNATURE) && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO);
-    }
-
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
         String value = cmd.getOptionValue(param);
         if (value == null) {
             LOGGER.warn(param + " has to be provided");
             return false;
         }
-        return true;
-    }
-
-    private static boolean valueMissingOrFileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-
-        if (value != null && !Files.exists(new File(value).toPath())) {
-            LOGGER.warn(param + " is optional, but when provided it has to be an existing file: " + value);
-            return false;
-        }
-
         return true;
     }
 
@@ -281,6 +275,7 @@ public class PatientReporterApplication {
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF reports have to be written to.");
 
+        options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
         options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
@@ -295,14 +290,15 @@ public class PatientReporterApplication {
                 "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
+        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
+        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
+        options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
+        options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
-        options.addOption(LINX_VIRALINSERTION_TSV, true, "Path towards the LINX viral integration TSV.");
-        options.addOption(LINX_DRIVERS_CATALOG_TSV, true, "Path towards the LINX drivers catalog TSV.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");

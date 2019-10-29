@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.structural;
+package com.hartwig.hmftools.patientreporter.homozygousdisruption;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReportableDriverCatalog {
+public abstract class ReportableHomozygousDisruption {
 
     @NotNull
     public abstract String chromosome();
@@ -17,7 +17,4 @@ public abstract class ReportableDriverCatalog {
 
     @NotNull
     public abstract String gene();
-
-    @NotNull
-    public abstract String driver();
 }

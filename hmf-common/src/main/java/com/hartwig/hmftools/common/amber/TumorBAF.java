@@ -30,4 +30,13 @@ public interface TumorBAF extends GenomePosition {
     int tumorAltQuality();
 
     int tumorIndelCount();
+
+    default double refFrequency() {
+        return tumorRefSupport() / (double) tumorReadDepth();
+    }
+
+    default double altFrequency() {
+        return tumorAltSupport() / (double) tumorReadDepth();
+    }
+
 }

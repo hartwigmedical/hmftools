@@ -8,13 +8,13 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-class ContextSelector<P extends GenomePosition> {
+public class ContextSelector<P extends GenomePosition> {
 
     @NotNull
     private final List<P> positions;
     private int index = 0;
 
-    ContextSelector(@NotNull final List<P> positions) {
+    public ContextSelector(@NotNull final List<P> positions) {
         this.positions = positions;
     }
 

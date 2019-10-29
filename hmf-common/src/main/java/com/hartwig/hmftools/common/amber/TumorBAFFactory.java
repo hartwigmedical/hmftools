@@ -23,7 +23,7 @@ class TumorBAFFactory {
                 .setAlt(normal.alt().toString())
                 .setNormalReadDepth(normal.readDepth())
                 .setNormalRefSupport(normal.refSupport())
-                .setNormalAltSupport(normal.baseMap().get(normal.alt()))
+                .setNormalAltSupport(normal.altSupport())
                 .setTumorIndelCount(0)
                 .setTumorReadDepth(0)
                 .setTumorRefSupport(0)

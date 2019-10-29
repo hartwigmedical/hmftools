@@ -26,8 +26,4 @@ public final class GeneDisruptions {
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    public static String copyNumberString(int copies, boolean hasReliablePurityFit) {
-        return hasReliablePurityFit ? String.valueOf(copies) : DataUtil.NA_STRING;
-    }
 }

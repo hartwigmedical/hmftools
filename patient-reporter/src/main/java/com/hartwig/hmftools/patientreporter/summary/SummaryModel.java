@@ -23,11 +23,11 @@ public class SummaryModel {
 
     @NotNull
     public String findSummaryForSample(@NotNull String sample) {
-        boolean sampleExists = samplePresentInSummaries(sample);
-        if (!sampleExists && LimsSampleType.fromSampleId(sample) == LimsSampleType.WIDE) {
-            LOGGER.warn("Could not find a summary for WIDE sample: " + sample);
+        boolean sampleHasSummary = samplePresentInSummaries(sample);
+        if (!sampleHasSummary && LimsSampleType.fromSampleId(sample) == LimsSampleType.WIDE) {
+            LOGGER.warn("Could not find a summary for WIDE sample: {}", sample);
         }
-        return sampleExists ? sampleToSummaryMap.get(sample) : Strings.EMPTY;
+        return sampleHasSummary ? sampleToSummaryMap.get(sample) : Strings.EMPTY;
     }
 
     @VisibleForTesting

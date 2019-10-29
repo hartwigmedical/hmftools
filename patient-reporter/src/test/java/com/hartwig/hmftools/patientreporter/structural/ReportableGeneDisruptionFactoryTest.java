@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestDisruptionBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -9,7 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
@@ -24,8 +22,9 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder =
                 createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").ploidy(1.12);
 
-        List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).build(),
-                pairedDisruptionBuilder.exonUp(8).exonDown(9).build());
+        List<ReportableDisruption> pairedDisruptions =
+                Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build(),
+                        pairedDisruptionBuilder.exonUp(8).exonDown(9).undisruptedCopyNumber(2.1).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 
@@ -37,6 +36,7 @@ public class ReportableGeneDisruptionFactoryTest {
         assertEquals("ROPN1B", disruption.gene());
         assertEquals("Intron 3 -> Intron 8", disruption.range());
         assertEquals(3, disruption.firstAffectedExon());
+        assertEquals(2.1, disruption.undisruptedCopyNumber(), EPSILON);
 
         Double ploidy = disruption.ploidy();
         assertNotNull(ploidy);
@@ -48,9 +48,9 @@ public class ReportableGeneDisruptionFactoryTest {
         ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
         List<ReportableDisruption> pairedDisruptions =
-                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).ploidy(1.0).build(),
-                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.0).build(),
-                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.6).build());
+                Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B").svId(1).ploidy(1.0).undisruptedCopyNumber(1.0).build(),
+                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.0).undisruptedCopyNumber(2.3).build(),
+                        pairedDisruptionBuilder.gene("SETD2").svId(1).ploidy(1.6).undisruptedCopyNumber(1.7).build());
 
         List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
 

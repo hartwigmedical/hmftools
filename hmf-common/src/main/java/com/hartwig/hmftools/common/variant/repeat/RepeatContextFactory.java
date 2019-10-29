@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.variant.repeat;
 
 import java.util.Comparator;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,67 +22,84 @@ public final class RepeatContextFactory {
     }
 
     @NotNull
-    public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
-        final Map<String, Integer> result = Maps.newHashMap();
+    public static Optional<RepeatContext> repeats(int index, final byte[] readSequence) {
 
-        if (sequence.length() >= index) {
-            for (int start = Math.max(0, index - MAX_LENGTH); start <= index; start++) {
-                final String prior = sequence.substring(0, start);
-                final String post = sequence.substring(start);
+        final List<RepeatContext> repeatContexts = Lists.newArrayList();
 
-                for (int end = index; end <= Math.min(sequence.length(), start + MAX_LENGTH); end++) {
-                    if (end != index) {
-                        int count = 0;
-                        final String bases = sequence.substring(Math.min(start, end), Math.max(start, end));
+        if (readSequence.length >= index) {
 
-                        count += backwardRepeats(bases, prior);
-                        count += forwardRepeats(bases, post);
+            for (int repeatStartIndex = Math.max(0, index - MAX_LENGTH); repeatStartIndex <= index; repeatStartIndex++) {
+                for (int repeatEndIndex = index;
+                        repeatEndIndex <= Math.min(readSequence.length, repeatStartIndex + MAX_LENGTH); repeatEndIndex++) {
 
-                        if (count >= MIN_COUNT) {
-                            result.merge(bases, count, Math::max);
-                        }
+                    int repeatLength = repeatEndIndex - repeatStartIndex + 1;
+                    int forwardsCount = forwardRepeats(repeatStartIndex, repeatLength, readSequence);
+                    int backwardsCount = backwardRepeats(repeatStartIndex, repeatLength, readSequence);
+
+                    if (forwardsCount + backwardsCount > MIN_COUNT) {
+                        int startIndex = repeatStartIndex - backwardsCount * repeatLength;
+                        int endIndex = repeatStartIndex + forwardsCount * repeatLength - 1;
+                        int additionalBasesAtEnd = matchingBasesFromLeft(repeatStartIndex, repeatLength, endIndex + 1, readSequence);
+
+                        repeatContexts.add(new RepeatContext(readSequence,
+                                repeatStartIndex,
+                                startIndex,
+                                endIndex + additionalBasesAtEnd,
+                                repeatLength,
+                                forwardsCount,
+                                backwardsCount));
                     }
                 }
             }
         } else {
             LOGGER.warn("Repeats requested outside of sequence length");
         }
-        return result.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).map(RepeatContextFactory::create);
+
+        repeatContexts.sort(Comparator.comparingInt(RepeatContext::count).reversed());
+        return repeatContexts.isEmpty() ? Optional.empty() : Optional.of(repeatContexts.get(0));
     }
 
     @NotNull
-    private static RepeatContext create(@NotNull Map.Entry<String, Integer> entry) {
-        return ImmutableRepeatContext.builder().sequence(entry.getKey()).count(entry.getValue()).build();
+    public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
+        return repeats(index, sequence.getBytes());
     }
 
     @VisibleForTesting
-    static int forwardRepeats(@NotNull final String bases, @NotNull final String sequence) {
-        int count = 0;
-        int basesLength = bases.length();
-        for (int j = 0; j < sequence.length() - basesLength + 1; j += basesLength) {
-            final String subSequence = sequence.substring(j, j + basesLength);
-            if (!subSequence.equals(bases)) {
-                break;
+    static int forwardRepeats(int index, int repeatLength, final byte[] readSequence) {
+        for (int count = 1; ; count++) {
+            if (!match(index, repeatLength, index + count * repeatLength, readSequence)) {
+                return count;
             }
-            count++;
         }
-
-        return count;
     }
 
     @VisibleForTesting
-    static int backwardRepeats(@NotNull final String bases, @NotNull final String sequence) {
-        int count = 0;
-        int basesLength = bases.length();
-
-        for (int j = sequence.length() - basesLength; j >= 0; j -= basesLength) {
-            final String subSequence = sequence.substring(j, j + basesLength);
-            if (!subSequence.equals(bases)) {
-                break;
+    public static int backwardRepeats(int index, int repeatLength, final byte[] readSequence) {
+        for (int count = 1; ; count++) {
+            if (!match(index, repeatLength, index - count * repeatLength, readSequence)) {
+                return count - 1;
             }
-            count++;
+        }
+    }
+
+    @VisibleForTesting
+    public static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
+        return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
+    }
+
+    private static int matchingBasesFromLeft(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
+        for (int i = 0; i < repeatLength; i++) {
+            if (outOfBounds(repeatIndex + i, readSequence) || outOfBounds(readIndex + i, readSequence)
+                    || readSequence[repeatIndex + i] != readSequence[readIndex + i]) {
+                return i;
+            }
         }
 
-        return count;
+        return repeatLength;
     }
+
+    private static boolean outOfBounds(int index, byte[] sequence) {
+        return index < 0 || index >= sequence.length;
+    }
+
 }

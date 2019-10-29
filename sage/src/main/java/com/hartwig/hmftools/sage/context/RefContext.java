@@ -59,7 +59,7 @@ public class RefContext implements GenomePosition {
         return alts.computeIfAbsent(refAltKey, key -> new AltContext(RefContext.this, ref, alt));
     }
 
-    public void altRead(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContextImproved interimReadContext) {
+    public void altRead(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext interimReadContext) {
         this.readDepth++;
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead();

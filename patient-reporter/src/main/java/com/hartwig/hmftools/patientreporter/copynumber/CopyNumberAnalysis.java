@@ -13,9 +13,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CopyNumberAnalysis {
 
-    public abstract boolean hasReliablePurityFit();
-
     public abstract double purity();
+
+    public abstract boolean hasReliablePurity();
+
+    public abstract boolean hasReliableQuality();
 
     public abstract double ploidy();
 

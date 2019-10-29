@@ -29,13 +29,13 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
     private final SAMSlicer supplier;
 
     public BaseDepthEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
-            final SamReaderFactory samReaderFactory, final List<GenomeRegion> bafRegions) {
+            final SamReaderFactory samReaderFactory, final List<AmberSite> bafRegions) {
         this.bafFactory = new BaseDepthFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
         final GenomeRegions builder = new GenomeRegions(contig, typicalReadDepth);
-        bafRegions.forEach(x -> builder.addPosition(x.start()));
+        bafRegions.forEach(x -> builder.addPosition(x.position()));
         final List<GenomeRegion> bafRegions1 = builder.build();
 
         this.evidence = bafRegions.stream().map(BaseDepthFactory::create).collect(Collectors.toList());
@@ -49,7 +49,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
     }
 
     @NotNull
-    public List<ModifiableBaseDepth> evidence() {
+    public List<BaseDepth> evidence() {
         return evidence.stream().filter(x -> x.readDepth() > 0).collect(Collectors.toList());
     }
 

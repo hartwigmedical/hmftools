@@ -38,7 +38,7 @@ public class SagePipeline {
     }
 
     @NotNull
-    public CompletableFuture<List<List<AltContext>>> submit() {
+    public CompletableFuture<List<SageEntry>> submit() {
 
         final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size());
         List<String> samples = config.tumor();
@@ -54,6 +54,10 @@ public class SagePipeline {
                             .thenApply(this::altSupportFilter)
                             .thenApply(x -> new TumorReadContextSupplier(config.minMapQuality(), sample, region, bam, x).get())
                             .thenApply(this::qualityFilter);
+
+//            CompletableFuture<List<AltContext>> candidateFuture =
+//                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence), executor)
+//                            .thenApply(this::qualityFilter);
 
             tumorFutures.add(candidateFuture);
         }
@@ -78,7 +82,7 @@ public class SagePipeline {
 
             sagePipelineData.addNormal(normalFuture.join());
 
-            return sagePipelineData.altContexts();
+            return sagePipelineData.results();
         });
     }
 

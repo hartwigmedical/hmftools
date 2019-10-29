@@ -1,12 +1,13 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.amber;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.TumorBAF;
+import com.hartwig.hmftools.common.amber.TumorContamination;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,11 +19,10 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
-import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class AmberVCF {
 
@@ -35,23 +35,13 @@ public class AmberVCF {
     public AmberVCF(@NotNull final String normalSample) {
         this.tumorSample = "";
         this.normalSample = normalSample;
-
-        this.header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(normalSample));
-        header.addMetaDataLine(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, "Genotype"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+        this.header = header(normalSample);
     }
 
-    public AmberVCF(@NotNull final String normalSample, @NotNull final String tumorSample) {
+    public AmberVCF(boolean tumorOnly, @NotNull final String normalSample, @NotNull final String tumorSample) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
-
-        this.header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(normalSample, tumorSample));
-        header.addMetaDataLine(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, "Genotype"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "Read Depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("AD", VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Allelic Depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+        this.header = tumorOnly ? header(tumorSample) : header(normalSample, tumorSample);
     }
 
     public void write(@NotNull final String filename, @NotNull final Collection<TumorBAF> evidence) {
@@ -152,26 +142,13 @@ public class AmberVCF {
     @NotNull
     private VariantContext create(@NotNull final BaseDepth snp) {
 
-        final List<BaseDepth.Base> alts = snp.baseMap()
-                .entrySet()
-                .stream()
-                .filter(x -> x.getValue() > 0)
-                .sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
         final List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(snp.ref().toString(), true));
+        alleles.add(Allele.create(snp.alt().toString(), false));
 
         final List<Integer> adField = Lists.newArrayList();
         adField.add(snp.refSupport());
-
-        for (BaseDepth.Base alt : alts) {
-            if (!alt.equals(snp.ref())) {
-                alleles.add(Allele.create(alt.toString(), false));
-                adField.add(snp.baseMap().get(alt));
-            }
-        }
+        adField.add(snp.altSupport());
 
         final Genotype normal = new GenotypeBuilder(normalSample).DP(snp.readDepth())
                 .AD(adField.stream().mapToInt(i -> i).toArray())
@@ -186,4 +163,17 @@ public class AmberVCF {
 
         return builder.make();
     }
+
+    @NotNull
+    private static VCFHeader header(final String... samples) {
+
+        VCFHeader header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(samples));
+        header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
+        header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
+        header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+
+        return header;
+    }
+
 }

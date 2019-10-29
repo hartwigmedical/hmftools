@@ -11,24 +11,24 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class InterpretViralInsertion {
-    private static final Logger LOGGER = LogManager.getLogger(InterpretViralInsertion.class);
+public final class ViralInsertionAnalyzer {
 
-    private InterpretViralInsertion() {
+    private static final Logger LOGGER = LogManager.getLogger(ViralInsertionAnalyzer.class);
+
+    private ViralInsertionAnalyzer() {
 
     }
 
     @NotNull
-    public static List<ViralInsertion> interpretVirals(@NotNull String viralInsertTsv) throws IOException {
+    public static List<ViralInsertion> loadViralInsertions(@NotNull String viralInsertTsv) throws IOException {
         List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(viralInsertTsv);
         LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), viralInsertTsv);
 
-        Map<InterpretViralInsertion.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
+        Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
         for (LinxViralInsertFile viralInsertion : viralInsertFileList) {
-            InterpretViralInsertion.VirusKey key = new InterpretViralInsertion.VirusKey(viralInsertion.VirusId);
+            ViralInsertionAnalyzer.VirusKey key = new ViralInsertionAnalyzer.VirusKey(viralInsertion.VirusId);
             List<LinxViralInsertFile> items = itemsPerKey.get(key);
 
             if (items == null) {
@@ -39,17 +39,14 @@ public final class InterpretViralInsertion {
         }
 
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        String virusName = Strings.EMPTY;
-        int count = 0;
-        for (Map.Entry<InterpretViralInsertion.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
+        for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
             List<LinxViralInsertFile> itemsForKey = entry.getValue();
-            for (LinxViralInsertFile virus : itemsForKey) {
-                virusName = virus.VirusName;
-            }
 
-            count = itemsForKey.size();
+            int count = itemsForKey.size();
+            assert count > 0;
+            String virusName = itemsForKey.get(0).VirusName;
 
-            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).countVirus(count).build());
+            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
         }
         return viralInsertions;
     }
@@ -71,7 +68,7 @@ public final class InterpretViralInsertion {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final InterpretViralInsertion.VirusKey key = (InterpretViralInsertion.VirusKey) o;
+            final ViralInsertionAnalyzer.VirusKey key = (ViralInsertionAnalyzer.VirusKey) o;
             return Objects.equals(virusId, key.virusId);
         }
 
@@ -79,6 +76,5 @@ public final class InterpretViralInsertion {
         public int hashCode() {
             return Objects.hash(virusId);
         }
-
     }
 }
