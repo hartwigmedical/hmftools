@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -78,21 +78,25 @@ public final class ReportableVariantAnalyzer {
         }
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        // Extract somatic evidence for high drivers variants only (See DEV-824)
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation);
+                filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
 
-        // Extract somatic evidence for high drivers variants into flat list (See DEV-824)
-        List<EvidenceItem> filteredEvidence =
-                ReportableEvidenceItemFactory.reportableFlatListDriversAllVariant(evidencePerVariant, driverCatalog);
+        return ImmutableReportVariantAnalysis.of(allReportableVariants,
+                ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant));
+    }
 
-        // Check that all variants with high level evidence are reported (since they are in the driver catalog).
-        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidencePerVariant.entrySet()) {
-            ReportableVariant variant = entry.getKey();
-            if (!allReportableVariants.contains(variant) && !Collections.disjoint(entry.getValue(), filteredEvidence)) {
-                LOGGER.warn("Evidence found on somatic variant on gene {} which is not included in driver catalog!", variant.gene());
+    @NotNull
+    private static Map<ReportableVariant, List<EvidenceItem>> filterHighDriverLikelihood(
+            final Map<ReportableVariant, List<EvidenceItem>> evidenceForAllVariants) {
+        Map<ReportableVariant, List<EvidenceItem>> evidencePerHighDriverVariant = Maps.newHashMap();
+        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
+
+            if (DriverInterpretation.interpret(entry.getKey().driverLikelihood()) == DriverInterpretation.HIGH) {
+                evidencePerHighDriverVariant.put(entry.getKey(), entry.getValue());
             }
         }
-        return ImmutableReportVariantAnalysis.of(allReportableVariants, filteredEvidence);
+        return evidencePerHighDriverVariant;
     }
 
     @Nullable

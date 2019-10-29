@@ -25,7 +25,7 @@ public class RefGenomeEnrichedSomaticVariantFactory {
 
     private final IndexedFastaSequenceFile reference;
 
-    public RefGenomeEnrichedSomaticVariantFactory(@NotNull final IndexedFastaSequenceFile reference) {
+    RefGenomeEnrichedSomaticVariantFactory(@NotNull final IndexedFastaSequenceFile reference) {
         this.reference = reference;
     }
 

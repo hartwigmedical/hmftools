@@ -156,7 +156,7 @@ public class FilterGermlineVariantsTest {
 
     @NotNull
     private static List<SomaticVariant> createSomaticVariantListForGene(@NotNull String gene) {
-        return Lists.newArrayList(PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene(gene).build());
+        return Lists.newArrayList(PatientReporterTestFactory.createTestSomaticVariantBuilder().gene(gene).build());
     }
 
     @NotNull

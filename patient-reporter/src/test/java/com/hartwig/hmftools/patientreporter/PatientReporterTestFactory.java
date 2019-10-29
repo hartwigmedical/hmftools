@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
@@ -59,8 +59,8 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static ImmutableEnrichedSomaticVariant.Builder createTestEnrichedSomaticVariantBuilder() {
-        return ImmutableEnrichedSomaticVariant.builder()
+    public static ImmutableSomaticVariantImpl.Builder createTestSomaticVariantBuilder() {
+        return ImmutableSomaticVariantImpl.builder()
                 .trinucleotideContext(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)

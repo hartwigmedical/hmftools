@@ -9,9 +9,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,25 +26,6 @@ public final class ReportableEvidenceItemFactory {
     @NotNull
     public static List<EvidenceItem> toReportableFlatList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
         return filterForReporting(toList(evidenceItemMap)); // fusion and copy number
-    }
-
-    @NotNull
-    public static List<EvidenceItem> reportableFlatListDriversAllVariant(
-            @NotNull Map<ReportableVariant, List<EvidenceItem>> evidenceItemMap, @NotNull List<DriverCatalog> driverCatalog) {
-        Map<ReportableVariant, List<EvidenceItem>> evidencePerVariantHighDriver = Maps.newHashMap();
-        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidenceItemMap.entrySet()) {
-            String gene = entry.getKey().gene();
-            for (DriverCatalog catalog : driverCatalog) {
-                if (catalog.gene().equals(gene)) {
-                    DriverInterpretation interpretation = DriverInterpretation.interpret(catalog.driverLikelihood());
-                    if (interpretation == DriverInterpretation.HIGH) {
-                        evidencePerVariantHighDriver.put(entry.getKey(), entry.getValue());
-                    }
-                }
-            }
-        }
-
-        return filterForReporting(toList(evidencePerVariantHighDriver)); // somatic + germline variants
     }
 
     @NotNull
