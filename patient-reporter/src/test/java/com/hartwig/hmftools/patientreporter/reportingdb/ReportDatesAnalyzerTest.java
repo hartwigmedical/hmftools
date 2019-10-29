@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.patientreporter.ReportDates;
+package com.hartwig.hmftools.patientreporter.reportingdb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedWriter;
 import java.io.File;

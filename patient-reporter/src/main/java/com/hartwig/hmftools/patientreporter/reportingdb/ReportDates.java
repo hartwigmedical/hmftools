@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.ReportDates;
+package com.hartwig.hmftools.patientreporter.reportingdb;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

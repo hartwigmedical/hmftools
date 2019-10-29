@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.ReportDates;
+package com.hartwig.hmftools.patientreporter.reportingdb;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
-import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.logging.log4j.LogManager;
