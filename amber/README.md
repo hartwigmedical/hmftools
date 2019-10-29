@@ -1,18 +1,21 @@
 # AMBER
-AMBER is designed primarily to generate a tumor BAF file for use in PURPLE. 
+AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
-AMBER locates heterozygous sites within the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
+When using paired reference/tumor bams, AMBER confirms which of these sites is heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
+
+In tumor only mode, all provided sites are examined in the tumor, but additional filtering is applied. 
+ 
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
-Additionally, AMBER is able to: 
+When using paired reference/tumor data, AMBER is also able to: 
   - detect evidence of contamination in the tumor from homozygous sites in the reference; and
   - facilitate sample matching by recording SNPs in the germline
 
 ## Installation
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
-AMBER requires a set of likely heterozygous sites (to determine BAF) and an optional set of SNP sites (to facilitate sample matching).  
-Both are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+
+A set of likely heterozygous sites must be provided. HG19 and HG38 versions are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
 
 AMBER depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
@@ -23,17 +26,9 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
 
 AMBER requires Java 1.8+ and can be run with the minimum set of arguments as follows:
 
-```
-java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
-   -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
-   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
-   -output_dir /run_dir/amber/ \
-   -threads 16 \
-   -ref_genome /path/to/refGenome/refGenome.fasta \
-   -bed /path/to/GermlineHetPon.hg19.bed.gz 
-```
+## Pared Normal/Tumor Mode
 
-## Mandatory Arguments
+### Mandatory Arguments
 
 Argument | Description 
 ---|---
@@ -42,20 +37,18 @@ reference_bam | Path to indexed reference BAM file
 tumor | Name of the tumor sample
 tumor_bam | Path to indexed tumor BAM file
 output_dir | Path to the output directory. This directory will be created if it does not already exist.
-ref_genome | Path to the reference genome fasta file
-bed | Path to bed file containing likely heterozygous sites (see below). Gz files supported.  
+loci | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.  
 
-The bed file used by HMF (GermlineHetPon.hg19.bed.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+The bed file used by HMF (GermlineHetPon.hg19.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
 The 1.3 million sites provided in this file typically result in 450k+ BAF points. A HG38 equivalent is also available.
 
 AMBER supports both BAM and CRAM file formats. 
 
-## Optional Arguments
+### Optional Arguments
 
 Argument | Default | Description 
 ---|---|---
-snp_bed| None | Locations to record SNPs in the germline
 threads | 1 | Number of threads to use
 min_mapping_quality | 1| Minimum mapping quality for an alignment to be used
 min_base_quality | 13| Minimum quality for a base to be considered
@@ -63,6 +56,52 @@ min_depth_percent | 0.5 | Only include reference sites with read depth within mi
 max_depth_percent | 1.5 | Only include reference sites with read depth within max percentage of median reference read depth
 min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
 max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
+ref_genome | NA | Path to the reference genome fasta file. Required only when using CRAM files.
+
+### Example Usage
+
+```
+java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
+   -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
+   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
+   -output_dir /run_dir/amber/ \
+   -threads 16 \
+   -loci /path/to/GermlineHetPon.hg19.vcf.gz 
+```
+
+## Tumor Only Mode
+
+### Mandatory Arguments
+
+Argument | Description 
+---|---
+tumor_only | Flag to put AMBER into tumor only mode
+tumor | Name of the tumor sample
+tumor_bam | Path to indexed tumor BAM file
+output_dir | Path to the output directory. This directory will be created if it does not already exist.
+loci | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.  
+
+### Optional Arguments
+
+Argument | Default | Description 
+---|---|---
+threads | 1 | Number of threads to use
+min_mapping_quality | 1| Minimum mapping quality for an alignment to be used
+min_base_quality | 13| Minimum quality for a base to be considered
+tumor_only_min_vaf | 0.05 | Min VAF in ref and alt in tumor only mode
+tumor_only_min_support | 2 | Min support in ref and alt in tumor only mode
+ref_genome | NA | Path to the reference genome fasta file. Required only when using CRAM files.
+
+### Example Usage
+
+```
+java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
+   -tumor_only \
+   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
+   -output_dir /run_dir/amber/ \
+   -threads 16 \
+   -loci /path/to/GermlineHetPon.hg19.vcf.gz 
+```
 
 
 ## Performance Characteristics
@@ -71,16 +110,15 @@ Elapsed time is measured in minutes.
 CPU time is minutes spent in user mode. 
 Peak memory is measure in gigabytes.
 
-Reading directly from the bam, AMBER has the following characteristics:
 
-Amber Method | Threads | Elapsed Time| CPU Time | Peak Mem
----|---|---|---|---
-Bam | 1 | 144 | 230 | 15.04
-Bam | 8 | 22 | 164 | 18.40
-Bam | 16 | 12 | 164 | 21.00
-Bam | 32 | 8 | 170 | 21.60
-Bam | 48 | 7 | 199 | 21.43
-Bam | 64 | 6 | 221 | 21.78
+Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---
+1 | 144 | 230 | 15.04
+8 | 22 | 164 | 18.40
+16 | 12 | 164 | 21.00
+32 | 8 | 170 | 21.60
+48 | 7 | 199 | 21.43
+64 | 6 | 221 | 21.78
 
 ## Output
 File | Description
@@ -92,9 +130,10 @@ TUMOR.amber.baf.vcf.gz | Similar information as BAF file but in VCF format.
 TUMOR.amber.contamination.vcf.gz | Entry at each homozygous site in the reference and tumor.
 REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference. 
  
-
 # Version History and Download Links
-- Upcoming
+To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
+
+- [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.0)
   - Support for `tumor_only` mode
   - Replaced input bed file with VCF file and will match only on specified target allele. Any entries with SNPCHECK info flags will be used for sample matching locations. 
   - `ref_genome` argument now only required when using CRAM files
