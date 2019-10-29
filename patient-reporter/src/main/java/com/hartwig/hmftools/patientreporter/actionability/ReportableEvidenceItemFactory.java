@@ -25,7 +25,7 @@ public final class ReportableEvidenceItemFactory {
 
     @NotNull
     public static List<EvidenceItem> toReportableFlatList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
-        return filterForReporting(toList(evidenceItemMap)); // fusion and copy number
+        return filterForReporting(toList(evidenceItemMap));
     }
 
     @NotNull

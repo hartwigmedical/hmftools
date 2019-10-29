@@ -17,7 +17,4 @@ public abstract class ReportableHomozygousDisruption {
 
     @NotNull
     public abstract String gene();
-
-    @NotNull
-    public abstract String driver();
 }

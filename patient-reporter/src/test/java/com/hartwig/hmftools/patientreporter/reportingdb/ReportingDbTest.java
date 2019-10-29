@@ -16,7 +16,7 @@ import org.junit.Test;
 
 public class ReportingDbTest {
 
-    private static final String REPORT_DATES_TSV = Resources.getResource("lims/reporting_db_example.tsv").getPath();
+    private static final String REPORT_DATES_TSV = Resources.getResource("reporting_db/reporting_db_example.tsv").getPath();
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final boolean WRITE_TO_TSV = false;

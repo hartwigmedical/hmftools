@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -136,7 +135,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createReportableHomozygousDisruptions();
+        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -190,7 +189,7 @@ public final class ExampleAnalysisTestFactory {
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final List<ViralInsertion> viralInsertions = createTestViralInsertions();
-        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createReportableHomozygousDisruptions();
+        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = createTestHomozygousDisruptions();
 
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
@@ -759,12 +758,11 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableHomozygousDisruption> createReportableHomozygousDisruptions() {
+    private static List<ReportableHomozygousDisruption> createTestHomozygousDisruptions() {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")
-                .driver(DriverType.HOM_DISRUPTION.toString().toLowerCase())
                 .build());
         return Lists.newArrayList(homozygousDisruptions);
     }
@@ -772,7 +770,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ViralInsertion> createTestViralInsertions() {
         List<ViralInsertion> viralInsertions =
-                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus(2).build());
+                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").viralInsertionCount(2).build());
         return Lists.newArrayList(viralInsertions);
     }
 

@@ -44,8 +44,8 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
 import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.viralInsertion.InterpretViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
+import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertionAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -153,7 +153,7 @@ class AnalysedPatientReporter {
 
     @NotNull
     private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
-        return InterpretViralInsertion.interpretVirals(linxViralInsertionTsv);
+        return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv);
     }
 
     @NotNull
