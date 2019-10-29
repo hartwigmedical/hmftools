@@ -47,15 +47,14 @@ public class PatientReporterApplication {
     private static final String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     private static final String OUTPUT_DIRECTORY = "output_dir";
 
+    private static final String REPORT_DATES_TSV = "report_dates_tsv";
+    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String HOSPITAL_DIRECTORY = "hospital_dir";
-    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
 
     private static final String RVA_LOGO = "rva_logo";
     private static final String COMPANY_LOGO = "company_logo";
     private static final String SIGNATURE = "signature";
-
-    private static final String REPORT_DATES_TSV = "report_dates_tsv";
 
     // Params specific for QC Fail reports
     private static final String QC_FAIL = "qc_fail";
@@ -70,7 +69,7 @@ public class PatientReporterApplication {
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
     private static final String LINX_VIRALINSERTION_TSV = "linx_viral_insertion_tsv";
-    private static final String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
+    private static final String LINX_DRIVERS_TSV = "linx_drivers_tsv";
     private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     private static final String CIRCOS_FILE = "circos_file";
 
@@ -128,7 +127,7 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(CHORD_PREDICTION_TXT),
                     cmd.getOptionValue(CIRCOS_FILE),
                     cmd.getOptionValue(LINX_VIRALINSERTION_TSV),
-                    cmd.getOptionValue(LINX_DRIVER_CATALOG_TSV),
+                    cmd.getOptionValue(LINX_DRIVERS_TSV),
                     cmd.getOptionValue(REPORT_DATES_TSV),
                     cmd.getOptionValue(PURPLE_QC),
                     cmd.getOptionValue(COMMENTS),
@@ -218,7 +217,7 @@ public class PatientReporterApplication {
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && fileExists(cmd, BACHELOR_TSV) && fileExists(
                 cmd,
                 CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV) && fileExists(cmd,
-                LINX_DRIVER_CATALOG_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
+                LINX_DRIVERS_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
                 GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV) && fileExists(cmd, PURPLE_QC);
     }
 
@@ -281,6 +280,7 @@ public class PatientReporterApplication {
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF reports have to be written to.");
 
+        options.addOption(REPORT_DATES_TSV, true, "Path towards output file for the report dates TSV.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
         options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
@@ -288,8 +288,6 @@ public class PatientReporterApplication {
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards a image file containing the signature to be appended at the end of the report.");
-
-        options.addOption(REPORT_DATES_TSV, true, "Path towards output file for the report dates TSV.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON,
@@ -304,7 +302,7 @@ public class PatientReporterApplication {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
         options.addOption(LINX_VIRALINSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
-        options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
+        options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
