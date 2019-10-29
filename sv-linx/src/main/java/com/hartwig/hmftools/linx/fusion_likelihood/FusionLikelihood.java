@@ -465,6 +465,8 @@ public class FusionLikelihood
                 geneDown.clearOverlapCounts();
 
                 boolean sameGene = geneUp.GeneData.GeneId.equals(geneDown.GeneData.GeneId);
+                boolean sameStrand = geneUp.GeneData.Strand == geneDown.GeneData.Strand;
+                boolean sameChromosome = geneUp.GeneData.Chromosome.equals(geneDown.GeneData.Chromosome);
 
                 if(!sameGene)
                 {
@@ -479,12 +481,12 @@ public class FusionLikelihood
 
                 final List<GeneRangeData> genePairList = Lists.newArrayList(geneUp, geneDown);
 
-                if(geneUp.GeneData.Chromosome.equals(geneDown.GeneData.Chromosome))
+                if(sameChromosome)
                 {
                     // work out whether these genes are proximate to each other or not
-                    boolean areProximate = false;
+                    boolean proximateDelDup = false;
 
-                    if(!sameGene)
+                    if(!sameGene && sameStrand)
                     {
                         long minDistance = min(abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneStart),
                                 abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneEnd));
@@ -494,11 +496,11 @@ public class FusionLikelihood
 
                         if (minDistance <= proximateLimit)
                         {
-                            areProximate = true;
+                            proximateDelDup = true;
                         }
                     }
 
-                    if(areProximate || sameGene)
+                    if(proximateDelDup || sameGene)
                     {
                         if (sameGene)
                         {
